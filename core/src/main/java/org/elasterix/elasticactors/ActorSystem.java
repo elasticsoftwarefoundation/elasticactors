@@ -16,9 +16,20 @@
 
 package org.elasterix.elasticactors;
 
+import org.springframework.core.serializer.Deserializer;
+import org.springframework.core.serializer.Serializer;
+
 /**
- * @author  Joost van de Wijgerd
+ * @author Joost van de Wijgerd
  */
-public interface PhysicalNode {
-    void signalMessage(ActorSystem actorSystem,VirtualNode node);
+public interface ActorSystem<I> {
+    String getName();
+
+    int getNumberOfVirtualNodes();
+
+    ActorRef createActor(I actorId,Class<?> actorClass);
+
+    Serializer<?> getSerializer(Class<?> messageClass);
+
+    Deserializer<?> getDeserializer(Class<?> messageClass);
 }

@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors;
+package org.elasterix.elasticactors.cluster;
 
 /**
- * @author  Joost van de Wijgerd
+ * @author Joost van de Wijgerd
  */
-public interface PhysicalNode {
-    void signalMessage(ActorSystem actorSystem,VirtualNode node);
+public class LocalVirtualNode {
 }

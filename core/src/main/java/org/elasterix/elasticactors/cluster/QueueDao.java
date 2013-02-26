@@ -14,11 +14,20 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors;
+package org.elasterix.elasticactors.cluster;
+
+import org.elasterix.elasticactors.VirtualNodeKey;
+
+import java.nio.ByteBuffer;
+import java.util.UUID;
 
 /**
- * @author  Joost van de Wijgerd
+ * @author Joost van de Wijgerd
  */
-public interface PhysicalNode {
-    void signalMessage(ActorSystem actorSystem,VirtualNode node);
+public interface QueueDao {
+    InternalMessage put(VirtualNodeKey queue, ByteBuffer messageBytes);
+
+    InternalMessage peek(VirtualNodeKey queue);
+
+    void delete(VirtualNodeKey queue,UUID messageId);
 }

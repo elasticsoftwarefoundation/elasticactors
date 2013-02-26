@@ -16,9 +16,11 @@
 
 package org.elasterix.elasticactors;
 
+import java.io.Serializable;
+
 /**
- * @author  Joost van de Wijgerd
+ * @author Joost van de Wijgerd
  */
-public interface PhysicalNode {
-    void signalMessage(ActorSystem actorSystem,VirtualNode node);
+public interface ActorRef {
+    void tell(Object message ,ActorRef sender);
 }
