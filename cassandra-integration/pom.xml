@@ -34,6 +34,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <cassandra.version>1.2.2</cassandra.version>
+        <hectorclient.version>1.1-2</hectorclient.version>
         <spring.version>3.2.1.RELEASE</spring.version>
         <aspectj.version>1.7.1</aspectj.version>
         <!-- testing -->
@@ -42,6 +43,29 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.hectorclient</groupId>
+            <artifactId>hector-core</artifactId>
+            <version>${hectorclient.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>properties-maven-plugin</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.cassandra</groupId>
+                    <artifactId>cassandra-all</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.cassandra</groupId>
+                    <artifactId>cassandra-thrift</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency>
             <groupId>org.apache.cassandra</groupId>
             <artifactId>cassandra-all</artifactId>
@@ -198,17 +222,22 @@
                                 </goals>
                                 <configuration>
                                     <transformers>
-                                        <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                        <transformer
+                                                implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                             <resource>META-INF/spring.handlers</resource>
                                         </transformer>
-                                        <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                        <transformer
+                                                implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                             <resource>META-INF/spring.schemas</resource>
                                         </transformer>
-                                        <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                        <transformer
+                                                implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                             <resource>META-INF/spring.tooling</resource>
                                         </transformer>
-                                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                            <mainClass>org.elasterix.elasticactors.cassandra.CassandraDaemonWrapper</mainClass>
+                                        <transformer
+                                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                            <mainClass>org.elasterix.elasticactors.cassandra.CassandraDaemonWrapper
+                                            </mainClass>
                                         </transformer>
                                     </transformers>
                                     <artifactSet>
