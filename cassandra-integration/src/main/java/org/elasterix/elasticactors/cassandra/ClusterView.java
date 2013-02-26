@@ -25,22 +25,22 @@ import java.net.InetAddress;
 public class ClusterView implements IEndpointLifecycleSubscriber {
     @Override
     public void onJoinCluster(InetAddress endpoint) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        System.out.println(String.format("%s joined the cluster",endpoint.getHostName()));
     }
 
     @Override
     public void onLeaveCluster(InetAddress endpoint) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        System.out.println(String.format("%s left the cluster",endpoint.getHostName()));
     }
 
     @Override
     public void onUp(InetAddress endpoint) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        System.out.println(String.format("%s is now UP",endpoint.getHostName()));
     }
 
     @Override
     public void onDown(InetAddress endpoint) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        System.out.println(String.format("%s is now DOWN",endpoint.getHostName()));
     }
 
     @Override
