@@ -29,5 +29,6 @@ public interface QueueDao {
 
     InternalMessage peek(VirtualNodeKey queue);
 
+
     void delete(VirtualNodeKey queue,UUID messageId);
 }
