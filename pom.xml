@@ -28,64 +28,65 @@
     <url>https://github.com/elasterix/elasticactors</url>
 
     <properties>
-            <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-            <cassandra.version>1.2.2</cassandra.version>
-            <hectorclient.version>1.1-2</hectorclient.version>
-            <spring.version>3.2.1.RELEASE</spring.version>
-            <aspectj.version>1.7.1</aspectj.version>
-            <!-- testing -->
-            <testng-version>5.10</testng-version>
-            <mockito.version>1.9.5</mockito.version>
-        </properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <cassandra.version>1.2.2</cassandra.version>
+        <hectorclient.version>1.1-2</hectorclient.version>
+        <spring.version>3.2.1.RELEASE</spring.version>
+        <aspectj.version>1.7.1</aspectj.version>
+        <netty.version>3.6.3.Final</netty.version>
+        <!-- testing -->
+        <testng-version>5.10</testng-version>
+        <mockito.version>1.9.5</mockito.version>
+    </properties>
     <dependencies>
         <dependency>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-context</artifactId>
-                    <version>${spring.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-aspects</artifactId>
-                    <version>${spring.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-tx</artifactId>
-                    <version>${spring.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>javax.persistence</groupId>
-                    <artifactId>persistence-api</artifactId>
-                    <version>1.0.2</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.aspectj</groupId>
-                    <artifactId>aspectjrt</artifactId>
-                    <version>${aspectj.version}</version>
-                </dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aspects</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.persistence</groupId>
+            <artifactId>persistence-api</artifactId>
+            <version>1.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjrt</artifactId>
+            <version>${aspectj.version}</version>
+        </dependency>
 
-                <!-- testing -->
-                <dependency>
-                    <groupId>org.testng</groupId>
-                    <artifactId>testng</artifactId>
-                    <version>${testng-version}</version>
-                    <scope>test</scope>
-                    <classifier>jdk15</classifier>
-                </dependency>
+        <!-- testing -->
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${testng-version}</version>
+            <scope>test</scope>
+            <classifier>jdk15</classifier>
+        </dependency>
 
-                <dependency>
-                    <groupId>org.mockito</groupId>
-                    <artifactId>mockito-all</artifactId>
-                    <version>${mockito.version}</version>
-                    <scope>test</scope>
-                </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
 
-                <dependency>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-test</artifactId>
-                    <version>${spring.version}</version>
-                    <scope>test</scope>
-                </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>${spring.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <modules>
@@ -94,69 +95,89 @@
     </modules>
 
     <build>
+        <resources>
+            <resource>
+                <filtering>false</filtering>
+                <directory>${basedir}/src/main/resources</directory>
+                <includes>
+                    <include>*.xml</include>
+                    <include>*.properties</include>
+                </includes>
+            </resource>
+        </resources>
+        <testResources>
+            <testResource>
+                <filtering>true</filtering>
+                <directory>${basedir}/src/test/resources</directory>
+                <includes>
+                    <include>*.xml</include>
+                    <include>*.properties</include>
+                </includes>
+            </testResource>
+        </testResources>
         <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <version>2.3.2</version>
-                        <configuration>
-                            <fork>true</fork>
-                            <source>1.7</source>
-                            <target>1.7</target>
-                            <encoding>UTF-8</encoding>
-                            <!--
-                                     <meminitial>128m</meminitial> <maxmem>512m</maxmem>
-                                     <verbose>false</verbose>
-                                 -->
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.12</version>
-                        <configuration>
-                            <systemProperties>
-                            </systemProperties>
-                            <parallel>both</parallel>
-                            <threadCount>10</threadCount>
-                            <reportFormat>plain</reportFormat>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>aspectj-maven-plugin</artifactId>
-                        <version>1.4</version>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.aspectj</groupId>
-                                <artifactId>aspectjtools</artifactId>
-                                <version>${aspectj.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.aspectj</groupId>
-                                <artifactId>aspectjweaver</artifactId>
-                                <version>${aspectj.version}</version>
-                            </dependency>
-                        </dependencies>
-                        <configuration>
-                            <aspectLibraries combine.children="append">
-                                <aspectLibrary>
-                                    <groupId>org.springframework</groupId>
-                                    <artifactId>spring-aspects</artifactId>
-                                </aspectLibrary>
-                            </aspectLibraries>
-                            <complianceLevel>1.6</complianceLevel>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>compile</id>
-                                <phase>compile</phase>
-                                <goals>
-                                    <goal>compile</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <fork>true</fork>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                    <encoding>UTF-8</encoding>
+                    <!--
+                        <meminitial>128m</meminitial> <maxmem>512m</maxmem>
+                        <verbose>false</verbose>
+                    -->
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.12</version>
+                <configuration>
+                    <systemProperties>
+                    </systemProperties>
+                    <parallel>both</parallel>
+                    <threadCount>10</threadCount>
+                    <reportFormat>plain</reportFormat>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>aspectj-maven-plugin</artifactId>
+                <version>1.4</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjtools</artifactId>
+                        <version>${aspectj.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjweaver</artifactId>
+                        <version>${aspectj.version}</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <aspectLibraries combine.children="append">
+                        <aspectLibrary>
+                            <groupId>org.springframework</groupId>
+                            <artifactId>spring-aspects</artifactId>
+                        </aspectLibrary>
+                    </aspectLibraries>
+                    <complianceLevel>1.6</complianceLevel>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
 </project>

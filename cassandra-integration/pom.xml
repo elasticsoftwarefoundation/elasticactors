@@ -65,26 +65,7 @@
 
     </dependencies>
     <build>
-        <resources>
-            <resource>
-                <filtering>false</filtering>
-                <directory>${basedir}/src/main/resources</directory>
-                <includes>
-                    <include>*.xml</include>
-                    <include>*.properties</include>
-                </includes>
-            </resource>
-        </resources>
-        <testResources>
-            <testResource>
-                <filtering>true</filtering>
-                <directory>${basedir}/src/test/resources</directory>
-                <includes>
-                    <include>*.xml</include>
-                    <include>*.properties</include>
-                </includes>
-            </testResource>
-        </testResources>
+
 
     </build>
     <profiles>
