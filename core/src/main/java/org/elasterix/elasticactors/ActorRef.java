@@ -16,8 +16,6 @@
 
 package org.elasterix.elasticactors;
 
-import java.io.Serializable;
-
 /**
  * @author Joost van de Wijgerd
  */

@@ -14,22 +14,37 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.cluster;
-
-import org.elasterix.elasticactors.VirtualNodeKey;
-import org.elasterix.elasticactors.messaging.InternalMessage;
+package org.elasterix.elasticactors.messaging;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.UUID;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface QueueDao {
-    InternalMessage put(VirtualNodeKey queue, ByteBuffer messageBytes);
+public interface CommitLog {
+    void append(String segment,UUID messageId,byte[] data);
 
-    InternalMessage peek(VirtualNodeKey queue);
+    void delete(String segment,UUID messageId);
 
+    List<CommitLogMessage> replay(String segment);
 
-    void delete(VirtualNodeKey queue,UUID messageId);
+    public class CommitLogMessage {
+        private final UUID messageId;
+        private final byte[] data;
+
+        public CommitLogMessage(UUID messageId, byte[] data) {
+            this.messageId = messageId;
+            this.data = data;
+        }
+
+        public UUID getMessageId() {
+            return messageId;
+        }
+
+        public byte[] getData() {
+            return data;
+        }
+    }
 }

@@ -1,0 +1,17 @@
+package org.elasterix.elasticactors.serialization.protobuf;
+
+option optimize_for = SPEED;
+
+// WARNING:
+//    you must not change the tag numbers of any existing fields.
+//    you must not add or delete any required fields.
+//    you may delete optional or repeated fields.
+//    you may add new optional or repeated fields but you must use fresh tag numbers (i.e. tag numbers that were never
+//        used in this protocol buffer, not even by deleted fields).
+
+message InternalMessage {
+    required string receiver = 1;
+    optional string sender = 2;
+    required string payloadClass = 3;
+    required bytes payload = 4;
+}

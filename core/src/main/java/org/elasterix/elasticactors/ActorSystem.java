@@ -16,8 +16,8 @@
 
 package org.elasterix.elasticactors;
 
-import org.springframework.core.serializer.Deserializer;
-import org.springframework.core.serializer.Serializer;
+import org.elasterix.elasticactors.serialization.Deserializer;
+import org.elasterix.elasticactors.serialization.Serializer;
 
 /**
  * @author Joost van de Wijgerd
@@ -29,7 +29,7 @@ public interface ActorSystem<I> {
 
     ActorRef createActor(I actorId,Class<?> actorClass);
 
-    Serializer<?> getSerializer(Class<?> messageClass);
+    Serializer getSerializer(Class<?> messageClass);
 
-    Deserializer<?> getDeserializer(Class<?> messageClass);
+    Deserializer getDeserializer(Class<?> messageClass);
 }

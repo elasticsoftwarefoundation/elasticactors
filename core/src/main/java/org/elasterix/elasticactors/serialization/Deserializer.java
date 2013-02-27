@@ -14,22 +14,11 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.cluster;
-
-import org.elasterix.elasticactors.VirtualNodeKey;
-import org.elasterix.elasticactors.messaging.InternalMessage;
-
-import java.nio.ByteBuffer;
-import java.util.UUID;
+package org.elasterix.elasticactors.serialization;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface QueueDao {
-    InternalMessage put(VirtualNodeKey queue, ByteBuffer messageBytes);
-
-    InternalMessage peek(VirtualNodeKey queue);
-
-
-    void delete(VirtualNodeKey queue,UUID messageId);
+public interface Deserializer<I,O> {
+    O deserialize(I serializedObject);
 }

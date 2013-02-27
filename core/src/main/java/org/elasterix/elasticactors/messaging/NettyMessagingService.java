@@ -76,4 +76,32 @@ public class NettyMessagingService implements ChannelPipelineFactory {
         //pipeline.addLast(HANDLER, socketConnectorHandler);
         return pipeline;
     }
+
+    public void setSocketBacklog(int socketBacklog) {
+        this.socketBacklog = socketBacklog;
+    }
+
+    public void setSocketReuseAddress(boolean socketReuseAddress) {
+        this.socketReuseAddress = socketReuseAddress;
+    }
+
+    public void setChildSocketKeepAlive(int childSocketKeepAlive) {
+        this.childSocketKeepAlive = childSocketKeepAlive;
+    }
+
+    public void setChildSocketTcpNoDelay(boolean childSocketTcpNoDelay) {
+        this.childSocketTcpNoDelay = childSocketTcpNoDelay;
+    }
+
+    public void setChildSocketReceiveBufferSize(int childSocketReceiveBufferSize) {
+        this.childSocketReceiveBufferSize = childSocketReceiveBufferSize;
+    }
+
+    public void setChildSocketSendBufferSize(int childSocketSendBufferSize) {
+        this.childSocketSendBufferSize = childSocketSendBufferSize;
+    }
+
+    public void setServerChannel(Channel serverChannel) {
+        this.serverChannel = serverChannel;
+    }
 }

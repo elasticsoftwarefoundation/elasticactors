@@ -14,22 +14,12 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.cluster;
+package org.elasterix.elasticactors.serialization;
 
-import org.elasterix.elasticactors.ActorRef;
-
-import java.nio.ByteBuffer;
-import java.util.UUID;
 
 /**
- * @author  Joost van de Wijgerd
+ * @author Joost van de Wijgerd
  */
-public interface InternalMessage {
-    UUID getId();
-
-    ActorRef getSender();
-
-    ActorRef getRecipient();
-
-    ByteBuffer getPayload();
+public interface Serializer<I,O> {
+    O serialize(I object);
 }

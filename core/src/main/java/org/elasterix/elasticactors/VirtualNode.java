@@ -22,5 +22,5 @@ package org.elasterix.elasticactors;
 public interface VirtualNode {
     VirtualNodeKey getKey();
 
-    void sendMessage(ActorRef from,ActorRef to,Object message);
+    void sendMessage(ActorRef from,ActorRef to,Object message) throws Exception;
 }

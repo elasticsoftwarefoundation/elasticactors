@@ -14,22 +14,28 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.cluster;
+package org.elasterix.elasticactors.serialization.internal;
 
-import org.elasterix.elasticactors.VirtualNodeKey;
-import org.elasterix.elasticactors.messaging.InternalMessage;
+import org.elasterix.elasticactors.ActorRef;
+import org.elasterix.elasticactors.serialization.Serializer;
 
 import java.nio.ByteBuffer;
-import java.util.UUID;
 
 /**
- * @author Joost van de Wijgerd
+ * @author Joost van de Wijger
  */
-public interface QueueDao {
-    InternalMessage put(VirtualNodeKey queue, ByteBuffer messageBytes);
+public class ActorRefSerializer implements Serializer<ActorRef,String> {
+    private static final ActorRefSerializer INSTANCE = new ActorRefSerializer();
 
-    InternalMessage peek(VirtualNodeKey queue);
+    public static ActorRefSerializer get() {
+        return INSTANCE;
+    }
+
+    @Override
+    public String serialize(ActorRef actorRef) {
+        // @todo: implement, for now return toString()
+        return actorRef.toString();
+    }
 
 
-    void delete(VirtualNodeKey queue,UUID messageId);
 }

@@ -35,9 +35,27 @@
 
     <dependencies>
         <dependency>
-        	<groupId>io.netty</groupId>
-        	<artifactId>netty</artifactId>
-        	<version>${netty.version}</version>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+            <version>${netty.version}</version>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <!--
+            <plugin>
+                <groupId>com.github.igor-petruk.protobuf</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>0.6.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            -->
+        </plugins>
+    </build>
 </project>
