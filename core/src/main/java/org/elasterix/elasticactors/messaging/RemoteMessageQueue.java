@@ -17,14 +17,30 @@
 package org.elasterix.elasticactors.messaging;
 
 /**
- * @author Joost van de Wijgerd
+ * @author  Joost van de Wijgerd
  */
-public interface MessageQueue {
-    boolean offer(InternalMessage message);
+public class RemoteMessageQueue extends PersistentMessageQueue {
 
-    boolean add(InternalMessage message);
+    public RemoteMessageQueue(String name) {
+        super(name);
+    }
 
-    InternalMessage poll();
+    @Override
+    protected void doOffer(InternalMessage message, byte[] serializedMessage) {
+        // @todo: send message to the remote queue
+    }
 
-    String getName();
+    @Override
+    public boolean add(InternalMessage message) {
+        return offer(message);
+    }
+
+    /**
+     *
+     * @return  this will always return null as a {@link RemoteMessageQueue} cannot be polled locally
+     */
+    @Override
+    public InternalMessage poll() {
+        return null;
+    }
 }

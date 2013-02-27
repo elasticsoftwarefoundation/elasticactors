@@ -20,6 +20,7 @@ import com.google.protobuf.ByteString;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.serialization.internal.ActorRefSerializer;
 import org.elasterix.elasticactors.serialization.protobuf.Elasticactors.InternalMessage;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 
 import java.nio.ByteBuffer;
@@ -51,7 +52,7 @@ public abstract class PersistentMessageQueue implements MessageQueue {
         byte[] messageData = builder.build().toByteArray();
         try {
             commitLog.append(name, message.getId(), messageData);
-            doOffer(message.getId(),messageData);
+            doOffer(message,messageData);
         } catch(Exception e) {
             logger.error("Exception on offer",e);
             return false;
@@ -64,5 +65,10 @@ public abstract class PersistentMessageQueue implements MessageQueue {
         return name;
     }
 
-    protected abstract void doOffer(UUID messageId,byte[] messageData);
+    protected abstract void doOffer(org.elasterix.elasticactors.messaging.InternalMessage message,byte[] serializedMessage);
+
+    @Autowired
+    public void setCommitLog(CommitLog commitLog) {
+        this.commitLog = commitLog;
+    }
 }
