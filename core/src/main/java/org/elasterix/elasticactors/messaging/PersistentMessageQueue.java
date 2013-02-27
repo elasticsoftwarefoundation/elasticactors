@@ -23,9 +23,6 @@ import org.elasterix.elasticactors.serialization.protobuf.Elasticactors.Internal
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 
-import java.nio.ByteBuffer;
-import java.util.UUID;
-
 /**
  * @author Joost van de Wijgerd
  */

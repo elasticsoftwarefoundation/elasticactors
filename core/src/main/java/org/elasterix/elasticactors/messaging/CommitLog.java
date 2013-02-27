@@ -16,7 +16,6 @@
 
 package org.elasterix.elasticactors.messaging;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.UUID;
 
