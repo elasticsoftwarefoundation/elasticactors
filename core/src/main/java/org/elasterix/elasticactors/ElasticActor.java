@@ -19,7 +19,7 @@ package org.elasterix.elasticactors;
 import java.io.Serializable;
 
 /**
- * @author  Joost van de Wijgerd
+ * @author Joost van de Wijgerd
  */
 public interface ElasticActor<T extends Serializable> {
     void onMessage(T message) throws Exception;

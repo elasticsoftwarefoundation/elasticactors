@@ -44,15 +44,15 @@ public abstract class PersistentMessageQueue implements MessageQueue {
         builder.setPayload(ByteString.copyFrom(message.getPayload()));
         builder.setPayloadClass(message.getPayloadClass().getName());
         builder.setReceiver(actorRefSerializer.serialize(message.getReceiver()));
-        if(message.getSender() != null) {
+        if (message.getSender() != null) {
             builder.setSender(actorRefSerializer.serialize(message.getSender()));
         }
         byte[] messageData = builder.build().toByteArray();
         try {
             commitLog.append(name, message.getId(), messageData);
-            doOffer(message,messageData);
-        } catch(Exception e) {
-            logger.error("Exception on offer",e);
+            doOffer(message, messageData);
+        } catch (Exception e) {
+            logger.error("Exception on offer", e);
             return false;
         }
         return true;
@@ -63,7 +63,7 @@ public abstract class PersistentMessageQueue implements MessageQueue {
         return name;
     }
 
-    protected abstract void doOffer(org.elasterix.elasticactors.messaging.InternalMessage message,byte[] serializedMessage);
+    protected abstract void doOffer(org.elasterix.elasticactors.messaging.InternalMessage message, byte[] serializedMessage);
 
     @Autowired
     public void setCommitLog(CommitLog commitLog) {

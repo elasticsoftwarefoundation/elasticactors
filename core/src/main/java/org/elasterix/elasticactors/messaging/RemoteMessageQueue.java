@@ -17,7 +17,7 @@
 package org.elasterix.elasticactors.messaging;
 
 /**
- * @author  Joost van de Wijgerd
+ * @author Joost van de Wijgerd
  */
 public class RemoteMessageQueue extends PersistentMessageQueue {
 
@@ -36,8 +36,7 @@ public class RemoteMessageQueue extends PersistentMessageQueue {
     }
 
     /**
-     *
-     * @return  this will always return null as a {@link RemoteMessageQueue} cannot be polled locally
+     * @return this will always return null as a {@link RemoteMessageQueue} cannot be polled locally
      */
     @Override
     public InternalMessage poll() {

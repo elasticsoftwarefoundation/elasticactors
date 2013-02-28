@@ -19,6 +19,6 @@ package org.elasterix.elasticactors.serialization;
 /**
  * @author Joost van de Wijgerd
  */
-public interface Deserializer<ByteBuffer,O> {
+public interface Deserializer<ByteBuffer, O> {
     O deserialize(ByteBuffer serializedObject);
 }

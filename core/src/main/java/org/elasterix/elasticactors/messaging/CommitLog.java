@@ -23,9 +23,9 @@ import java.util.UUID;
  * @author Joost van de Wijgerd
  */
 public interface CommitLog {
-    void append(String segment,UUID messageId,byte[] data);
+    void append(String segment, UUID messageId, byte[] data);
 
-    void delete(String segment,UUID messageId);
+    void delete(String segment, UUID messageId);
 
     List<CommitLogMessage> replay(String segment);
 

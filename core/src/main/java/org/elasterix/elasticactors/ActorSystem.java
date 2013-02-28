@@ -27,7 +27,7 @@ public interface ActorSystem<I> {
 
     int getNumberOfVirtualNodes();
 
-    ActorRef createActor(I actorId,Class<?> actorClass);
+    ActorRef createActor(I actorId, Class<?> actorClass);
 
     Serializer getSerializer(Class<?> messageClass);
 

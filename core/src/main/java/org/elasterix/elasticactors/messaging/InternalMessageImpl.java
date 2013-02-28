@@ -32,7 +32,7 @@ public class InternalMessageImpl implements InternalMessage {
     private final Class<?> payloadClass;
 
     public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, Class<?> payloadClass) {
-        this(UUIDTools.createTimeBasedUUID(),sender,receiver,payload,payloadClass);
+        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass);
     }
 
     public InternalMessageImpl(UUID id, ActorRef sender, ActorRef receiver, ByteBuffer payload, Class<?> payloadClass) {

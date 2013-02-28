@@ -20,5 +20,5 @@ package org.elasterix.elasticactors;
  * @author Joost van de Wijgerd
  */
 public interface ActorRef {
-    void tell(Object message ,ActorRef sender);
+    void tell(Object message, ActorRef sender);
 }

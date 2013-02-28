@@ -38,7 +38,7 @@ public class RemoteActorSystemShard implements ActorSystemShard {
         this.actorSystem = actorSystem;
         this.remoteNode = remoteNode;
         this.messageQueue = remoteMessageQueue;
-        this.shardKey = new ShardKey(actorSystem.getName(),vNodeKey);
+        this.shardKey = new ShardKey(actorSystem.getName(), vNodeKey);
     }
 
     @Override
@@ -47,10 +47,10 @@ public class RemoteActorSystemShard implements ActorSystemShard {
     }
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
-        Serializer<Object,ByteBuffer> messageSerializer = actorSystem.getSerializer(message.getClass());
-        messageQueue.offer(new InternalMessageImpl(from,to,messageSerializer.serialize(message), message.getClass()));
+        Serializer<Object, ByteBuffer> messageSerializer = actorSystem.getSerializer(message.getClass());
+        messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message), message.getClass()));
         // signal remote node
-        remoteNode.signalMessage(actorSystem,this);
+        remoteNode.signalMessage(actorSystem, this);
     }
 
 

@@ -25,10 +25,10 @@ public class LocalMessageQueue extends PersistentMessageQueue {
     private final LinkedBlockingQueue<InternalMessage> queue;
 
     public LocalMessageQueue(String name) {
-        this(name,Integer.MAX_VALUE);
+        this(name, Integer.MAX_VALUE);
     }
 
-    public LocalMessageQueue(String name,int capacity) {
+    public LocalMessageQueue(String name, int capacity) {
         super(name);
         queue = new LinkedBlockingQueue<InternalMessage>(capacity);
 

@@ -48,7 +48,7 @@ public final class UUIDTools {
     }
 
     public static java.util.UUID toUUID(byte[] uuid) {
-        if(uuid == null || uuid.length != 16) {
+        if (uuid == null || uuid.length != 16) {
             throw new IllegalArgumentException("UUID byte array must contain exactly 16 bytes");
         }
         long msb = 0;

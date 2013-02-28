@@ -22,7 +22,7 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 
 /**
- * @author  Joost van de Wijgerd
+ * @author Joost van de Wijgerd
  */
 public interface InternalMessage {
     UUID getId();

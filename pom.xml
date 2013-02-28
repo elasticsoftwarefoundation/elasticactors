@@ -41,34 +41,34 @@
     </properties>
     <dependencies>
         <dependency>
-                    <groupId>org.hectorclient</groupId>
-                    <artifactId>hector-core</artifactId>
-                    <version>${hectorclient.version}</version>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>org.codehaus.mojo</groupId>
-                            <artifactId>properties-maven-plugin</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>org.apache.cassandra</groupId>
-                            <artifactId>cassandra-all</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>org.apache.cassandra</groupId>
-                            <artifactId>cassandra-thrift</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>com.google.guava</groupId>
-                            <artifactId>guava</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-                <dependency>
+            <groupId>org.hectorclient</groupId>
+            <artifactId>hector-core</artifactId>
+            <version>${hectorclient.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>properties-maven-plugin</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.apache.cassandra</groupId>
                     <artifactId>cassandra-all</artifactId>
-                    <version>${cassandra.version}</version>
-                    <scope>provided</scope>
-                </dependency>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.cassandra</groupId>
+                    <artifactId>cassandra-thrift</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cassandra</groupId>
+            <artifactId>cassandra-all</artifactId>
+            <version>${cassandra.version}</version>
+            <scope>provided</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework</groupId>
@@ -97,9 +97,9 @@
         </dependency>
 
         <dependency>
-        	<groupId>com.google.protobuf</groupId>
-        	<artifactId>protobuf-java</artifactId>
-        	<version>${protobuf.version}</version>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobuf.version}</version>
         </dependency>
 
         <!-- testing -->
