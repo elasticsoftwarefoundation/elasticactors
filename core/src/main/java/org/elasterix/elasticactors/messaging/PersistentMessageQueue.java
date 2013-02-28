@@ -39,6 +39,7 @@ public abstract class PersistentMessageQueue implements MessageQueue {
 
     @Override
     public boolean offer(org.elasterix.elasticactors.messaging.InternalMessage message) {
+        // @todo: this should also be done with a serializer
         InternalMessage.Builder builder = InternalMessage.newBuilder();
         builder.setPayload(ByteString.copyFrom(message.getPayload()));
         builder.setPayloadClass(message.getPayloadClass().getName());
