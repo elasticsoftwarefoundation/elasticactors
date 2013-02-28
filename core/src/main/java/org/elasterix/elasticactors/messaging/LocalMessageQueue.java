@@ -23,26 +23,45 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class LocalMessageQueue extends PersistentMessageQueue {
     private final LinkedBlockingQueue<InternalMessage> queue;
+    private final MessageQueueEventListener eventListener;
+    private final MessageHandler messageHandler;
 
-    public LocalMessageQueue(String name) {
-        this(name, Integer.MAX_VALUE);
+    protected LocalMessageQueue(String name, MessageQueueEventListener eventListener, MessageHandler messageHandler) {
+        this(name, Integer.MAX_VALUE, eventListener, messageHandler);
     }
 
-    public LocalMessageQueue(String name, int capacity) {
+    protected LocalMessageQueue(String name, int capacity, MessageQueueEventListener eventListener, MessageHandler messageHandler) {
         super(name);
+        this.eventListener = eventListener;
+        this.messageHandler = messageHandler;
         queue = new LinkedBlockingQueue<InternalMessage>(capacity);
+    }
 
+    public void destroy() {
+        eventListener.onDestroy(this);
     }
 
     @Override
     protected void doOffer(InternalMessage message, byte[] serializedMessage) {
         queue.offer(message);
-        // @todo: need to notify listeners somehow
+        eventListener.signal();
+    }
+
+    protected InternalMessage peek() {
+        return queue.peek();
+    }
+
+    protected MessageHandler getMessageHandler() {
+        return messageHandler;
     }
 
     @Override
     public boolean add(InternalMessage message) {
-        return queue.add(message);
+        try {
+            return queue.add(message);
+        } finally {
+            eventListener.signal();
+        }
     }
 
     @Override

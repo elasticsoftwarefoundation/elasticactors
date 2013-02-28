@@ -63,6 +63,10 @@ public abstract class PersistentMessageQueue implements MessageQueue {
         return name;
     }
 
+    protected void ack(org.elasterix.elasticactors.messaging.InternalMessage message) {
+        commitLog.delete(name,message.getId());
+    }
+
     protected abstract void doOffer(org.elasterix.elasticactors.messaging.InternalMessage message, byte[] serializedMessage);
 
     @Autowired
