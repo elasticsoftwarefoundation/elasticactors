@@ -25,13 +25,17 @@ import java.io.IOException;
 
 public class CassandraDaemonWrapper {
 
-    public static void main(String... args) throws IOException {
+    public static void main(String... args) throws Exception {
+        // make sure log4j is initialized
+        //CassandraDaemon.initLog4j();
+        Class.forName("org.apache.cassandra.service.CassandraDaemon");
         // Initialize Spring
         ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("cluster-beans.xml");
         // register the Lifecycle Listener
         StorageService.instance.register(applicationContext.getBean(IEndpointLifecycleSubscriber.class));
         // Initialize Cassandra
         CassandraDaemon.main(args);
+
     }
 
 }
