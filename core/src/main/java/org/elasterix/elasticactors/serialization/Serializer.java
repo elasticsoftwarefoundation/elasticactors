@@ -20,6 +20,6 @@ package org.elasterix.elasticactors.serialization;
 /**
  * @author Joost van de Wijgerd
  */
-public interface Serializer<I,O> {
-    O serialize(I object);
+public interface Serializer<I,ByteBuffer> {
+    ByteBuffer serialize(I object);
 }
