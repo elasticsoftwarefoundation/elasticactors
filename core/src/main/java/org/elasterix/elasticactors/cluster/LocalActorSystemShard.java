@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors;
+package org.elasterix.elasticactors.cluster;
 
 /**
- * @author  Joost van de Wijgerd
+ * @author Joost van de Wijgerd
  */
-public interface VirtualNode {
-    VirtualNodeKey getKey();
-
-    void sendMessage(ActorRef from,ActorRef to,Object message) throws Exception;
+public class LocalActorSystemShard {
 }

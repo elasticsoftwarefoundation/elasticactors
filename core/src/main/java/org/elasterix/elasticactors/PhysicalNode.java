@@ -20,5 +20,5 @@ package org.elasterix.elasticactors;
  * @author  Joost van de Wijgerd
  */
 public interface PhysicalNode {
-    void signalMessage(ActorSystem actorSystem,VirtualNode node);
+    void signalMessage(ActorSystem actorSystem,ActorSystemShard node);
 }

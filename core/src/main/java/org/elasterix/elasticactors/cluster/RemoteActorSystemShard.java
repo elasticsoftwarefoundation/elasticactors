@@ -28,22 +28,22 @@ import java.nio.ByteBuffer;
  * @author Joost van de Wijgerd
  */
 @Configurable
-public class RemoteVirtualNode implements VirtualNode {
+public class RemoteActorSystemShard implements ActorSystemShard {
     private final ActorSystem actorSystem;
     private final PhysicalNode remoteNode;
-    private final VirtualNodeKey virtualNodeKey;
+    private final ShardKey shardKey;
     private final MessageQueue messageQueue;
 
-    public RemoteVirtualNode(PhysicalNode remoteNode, ActorSystem actorSystem, int vNodeKey, MessageQueue remoteMessageQueue) {
+    public RemoteActorSystemShard(PhysicalNode remoteNode, ActorSystem actorSystem, int vNodeKey, MessageQueue remoteMessageQueue) {
         this.actorSystem = actorSystem;
         this.remoteNode = remoteNode;
         this.messageQueue = remoteMessageQueue;
-        this.virtualNodeKey = new VirtualNodeKey(actorSystem.getName(),vNodeKey);
+        this.shardKey = new ShardKey(actorSystem.getName(),vNodeKey);
     }
 
     @Override
-    public VirtualNodeKey getKey() {
-        return virtualNodeKey;
+    public ShardKey getKey() {
+        return shardKey;
     }
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {

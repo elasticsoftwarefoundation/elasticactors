@@ -1,11 +1,11 @@
 /*
- * Copyright 2013 Joost van de Wijgerd
+ * Copyright (c) 2013 Joost van de Wijgerd <jwijgerd@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *  	http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,17 +19,17 @@ package org.elasterix.elasticactors;
 /**
  *
  */
-public final class VirtualNodeKey {
+public final class ShardKey {
     private final String actorSystemName;
-    private final int virtualNodeId;
+    private final int shardId;
 
-    public VirtualNodeKey(String actorSystemName, int virtualNodeId) {
+    public ShardKey(String actorSystemName, int shardId) {
         this.actorSystemName = actorSystemName;
-        this.virtualNodeId = virtualNodeId;
+        this.shardId = shardId;
     }
 
-    public int getVirtualNodeId() {
-        return virtualNodeId;
+    public int getShardId() {
+        return shardId;
     }
 
     public String getActorSystemName() {
@@ -41,9 +41,9 @@ public final class VirtualNodeKey {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        VirtualNodeKey that = (VirtualNodeKey) o;
+        ShardKey that = (ShardKey) o;
 
-        if (virtualNodeId != that.virtualNodeId) return false;
+        if (shardId != that.shardId) return false;
         if (!actorSystemName.equals(that.actorSystemName)) return false;
 
         return true;
@@ -52,7 +52,7 @@ public final class VirtualNodeKey {
     @Override
     public int hashCode() {
         int result = actorSystemName.hashCode();
-        result = 31 * result + virtualNodeId;
+        result = 31 * result + shardId;
         return result;
     }
 }

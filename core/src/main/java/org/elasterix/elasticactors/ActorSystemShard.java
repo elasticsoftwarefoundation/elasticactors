@@ -14,22 +14,13 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.cluster;
-
-import org.elasterix.elasticactors.VirtualNodeKey;
-import org.elasterix.elasticactors.messaging.InternalMessage;
-
-import java.nio.ByteBuffer;
-import java.util.UUID;
+package org.elasterix.elasticactors;
 
 /**
- * @author Joost van de Wijgerd
+ * @author  Joost van de Wijgerd
  */
-public interface QueueDao {
-    InternalMessage put(VirtualNodeKey queue, ByteBuffer messageBytes);
+public interface ActorSystemShard {
+    ShardKey getKey();
 
-    InternalMessage peek(VirtualNodeKey queue);
-
-
-    void delete(VirtualNodeKey queue,UUID messageId);
+    void sendMessage(ActorRef from,ActorRef to,Object message) throws Exception;
 }
