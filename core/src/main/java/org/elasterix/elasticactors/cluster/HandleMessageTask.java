@@ -24,6 +24,7 @@ import org.elasterix.elasticactors.ActorSystem;
 import org.elasterix.elasticactors.ElasticActor;
 import org.elasterix.elasticactors.messaging.InternalMessage;
 import org.elasterix.elasticactors.serialization.Deserializer;
+import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.util.concurrent.ElasticActorRunnable;
 
 import java.nio.ByteBuffer;
@@ -60,7 +61,7 @@ public final class HandleMessageTask implements ElasticActorRunnable<String> {
     public void run() {
         try {
             // first see if we can deserialize the actual internalMessage
-            Deserializer<ByteBuffer,Class<?>> deserializer = actorSystem.getDeserializer(internalMessage.getPayloadClass());
+            MessageDeserializer<Object> deserializer = actorSystem.getDeserializer(internalMessage.getPayloadClass());
             if(deserializer != null) {
                 Object message = deserializer.deserialize(internalMessage.getPayload());
                 handleMessage(message);

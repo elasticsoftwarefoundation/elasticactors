@@ -19,6 +19,7 @@ package org.elasterix.elasticactors.cluster;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.messaging.InternalMessageImpl;
 import org.elasterix.elasticactors.messaging.MessageQueue;
+import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.serialization.Serializer;
 import org.springframework.beans.factory.annotation.Configurable;
 
@@ -47,7 +48,7 @@ public class RemoteActorSystemShard implements ActorSystemShard {
     }
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
-        Serializer<Object,ByteBuffer> messageSerializer = actorSystem.getSerializer(message.getClass());
+        MessageSerializer<Object> messageSerializer = actorSystem.getSerializer(message.getClass());
         messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message), message.getClass()));
     }
 

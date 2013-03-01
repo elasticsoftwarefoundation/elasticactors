@@ -17,6 +17,8 @@
 package org.elasterix.elasticactors;
 
 import org.elasterix.elasticactors.serialization.Deserializer;
+import org.elasterix.elasticactors.serialization.MessageDeserializer;
+import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.serialization.Serializer;
 
 import java.nio.ByteBuffer;
@@ -31,9 +33,9 @@ public interface ActorSystem<I> {
 
     ActorRef createActor(I actorId, Class<?> actorClass);
 
-    Serializer<Class<?>,ByteBuffer> getSerializer(Class<?> messageClass);
+    MessageSerializer<?> getSerializer(Class<?> messageClass);
 
-    Deserializer<ByteBuffer,Class<?>> getDeserializer(Class<?> messageClass);
+    MessageDeserializer<?> getDeserializer(Class<?> messageClass);
 
     ElasticActor<?> getActorInstance(ActorRef actorRef);
 }

@@ -20,6 +20,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.messaging.*;
+import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.serialization.Serializer;
 import org.elasterix.elasticactors.util.concurrent.ActorSystemShardExecutor;
 import org.elasterix.elasticactors.util.concurrent.ElasticActorRunnable;
@@ -66,7 +67,7 @@ public class LocalActorSystemShard implements ActorSystemShard, MessageHandler {
     }
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
-        Serializer<Object,ByteBuffer> messageSerializer = actorSystem.getSerializer(message.getClass());
+        MessageSerializer<Object> messageSerializer = actorSystem.getSerializer(message.getClass());
         messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message), message.getClass()));
     }
 
