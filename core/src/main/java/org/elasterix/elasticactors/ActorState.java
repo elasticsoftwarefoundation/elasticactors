@@ -23,4 +23,6 @@ import java.util.Map;
  */
 public interface ActorState {
     Map<String,Object> getAsMap();
+
+    <T> T getAsObject(Class<T> objectClass);
 }

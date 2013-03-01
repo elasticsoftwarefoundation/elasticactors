@@ -32,6 +32,11 @@ public class ActorStateMap implements ActorState {
 
     @Override
     public Map<String, Object> getAsMap() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return state;
+    }
+
+    @Override
+    public <T> T getAsObject(Class<T> objectClass) {
+        return null;
     }
 }
