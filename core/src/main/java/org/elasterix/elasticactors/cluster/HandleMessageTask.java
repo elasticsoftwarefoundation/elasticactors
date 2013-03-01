@@ -23,11 +23,8 @@ import org.elasterix.elasticactors.ActorState;
 import org.elasterix.elasticactors.ActorSystem;
 import org.elasterix.elasticactors.ElasticActor;
 import org.elasterix.elasticactors.messaging.InternalMessage;
-import org.elasterix.elasticactors.serialization.Deserializer;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.util.concurrent.ElasticActorRunnable;
-
-import java.nio.ByteBuffer;
 
 /**
  * Task that is responsible for internalMessage deserialization, error handling and state updates

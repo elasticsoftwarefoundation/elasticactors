@@ -16,12 +16,8 @@
 
 package org.elasterix.elasticactors;
 
-import org.elasterix.elasticactors.serialization.Deserializer;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
-import org.elasterix.elasticactors.serialization.Serializer;
-
-import java.nio.ByteBuffer;
 
 /**
  * @author Joost van de Wijgerd

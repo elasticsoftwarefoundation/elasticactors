@@ -16,11 +16,8 @@
 
 package org.elasterix.elasticactors.serialization.internal;
 
-import com.google.common.base.Charsets;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.serialization.Serializer;
-
-import java.nio.ByteBuffer;
 
 /**
  * @author Joost van de Wijgerd

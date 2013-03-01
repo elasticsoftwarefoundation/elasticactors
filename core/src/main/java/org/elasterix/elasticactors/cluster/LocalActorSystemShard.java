@@ -21,14 +21,10 @@ import com.google.common.cache.CacheBuilder;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.messaging.*;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
-import org.elasterix.elasticactors.serialization.Serializer;
 import org.elasterix.elasticactors.util.concurrent.ActorSystemShardExecutor;
-import org.elasterix.elasticactors.util.concurrent.ElasticActorRunnable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
-
-import java.nio.ByteBuffer;
 
 /**
  * @author Joost van de Wijgerd

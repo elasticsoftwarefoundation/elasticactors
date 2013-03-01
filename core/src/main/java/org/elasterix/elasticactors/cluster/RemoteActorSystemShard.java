@@ -20,10 +20,7 @@ import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.messaging.InternalMessageImpl;
 import org.elasterix.elasticactors.messaging.MessageQueue;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
-import org.elasterix.elasticactors.serialization.Serializer;
 import org.springframework.beans.factory.annotation.Configurable;
-
-import java.nio.ByteBuffer;
 
 /**
  * @author Joost van de Wijgerd

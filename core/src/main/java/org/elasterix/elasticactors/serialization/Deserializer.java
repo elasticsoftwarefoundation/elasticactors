@@ -16,8 +16,6 @@
 
 package org.elasterix.elasticactors.serialization;
 
-import java.nio.ByteBuffer;
-
 /**
  * @author Joost van de Wijgerd
  */
