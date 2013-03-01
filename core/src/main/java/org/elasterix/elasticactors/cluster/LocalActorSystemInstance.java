@@ -16,9 +16,11 @@
 
 package org.elasterix.elasticactors.cluster;
 
+import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.ActorShard;
 import org.elasterix.elasticactors.ActorSystem;
 import org.elasterix.elasticactors.PhysicalNode;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 
 import java.util.List;
@@ -28,8 +30,10 @@ import java.util.List;
  */
 @Configurable
 public class LocalActorSystemInstance {
+    private static final Logger log = Logger.getLogger(LocalActorSystemInstance.class);
     private final ActorSystem actorSystem;
     private final ActorShard[] shards;
+    private NodeSelectorFactory nodeSelectorFactory;
 
     public LocalActorSystemInstance(ActorSystem actorSystem) {
         this.actorSystem = actorSystem;
@@ -42,8 +46,14 @@ public class LocalActorSystemInstance {
      * @param nodes
      */
     public void distributeShards(List<PhysicalNode> nodes) {
+        NodeSelector nodeSelector = nodeSelectorFactory.create(nodes);
+        for(int i = 0; i < actorSystem.getNumberOfShards(); i++) {
 
+        }
     }
 
-
+    @Autowired
+    public void setNodeSelectorFactory(NodeSelectorFactory nodeSelectorFactory) {
+        this.nodeSelectorFactory = nodeSelectorFactory;
+    }
 }
