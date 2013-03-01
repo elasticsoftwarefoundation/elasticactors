@@ -28,5 +28,7 @@ public interface MessageQueue {
 
     String getName();
 
+    void initialize() throws Exception;
+
     void destroy();
 }

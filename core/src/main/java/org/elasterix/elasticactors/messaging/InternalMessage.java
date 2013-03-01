@@ -33,5 +33,5 @@ public interface InternalMessage {
 
     ByteBuffer getPayload();
 
-    Class<?> getPayloadClass();
+    String getPayloadClass();
 }

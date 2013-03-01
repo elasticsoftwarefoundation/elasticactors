@@ -1,11 +1,11 @@
 /*
- * Copyright 2013 Joost van de Wijgerd
+ * Copyright (c) 2013 Joost van de Wijgerd <jwijgerd@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *  	http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -58,17 +58,17 @@ public final class HandleMessageTask implements ElasticActorRunnable<String> {
     public void run() {
         try {
             // first see if we can deserialize the actual internalMessage
-            MessageDeserializer<Object> deserializer = actorSystem.getDeserializer(internalMessage.getPayloadClass());
+            MessageDeserializer<Object> deserializer = actorSystem.getDeserializer(Class.forName(internalMessage.getPayloadClass()));
             if(deserializer != null) {
                 Object message = deserializer.deserialize(internalMessage.getPayload());
                 handleMessage(message);
             } else {
                 log.error(String.format("No Deserializer found for Message class %s in ActorSystem [%s]",
-                                        internalMessage.getPayloadClass().getName(),actorSystem.getName()));
+                                        internalMessage.getPayloadClass(),actorSystem.getName()));
             }
         } catch(Exception e) {
             log.error(String.format("Exception while Deserializing Message class %s in ActorSystem [%s]",
-                                    internalMessage.getPayloadClass().getName(),actorSystem.getName()), e);
+                                    internalMessage.getPayloadClass(),actorSystem.getName()), e);
         }
     }
 

@@ -29,13 +29,13 @@ public class InternalMessageImpl implements InternalMessage {
     private final ActorRef receiver;
     private final UUID id;
     private final ByteBuffer payload;
-    private final Class<?> payloadClass;
+    private final String payloadClass;
 
-    public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, Class<?> payloadClass) {
+    public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass) {
         this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass);
     }
 
-    public InternalMessageImpl(UUID id, ActorRef sender, ActorRef receiver, ByteBuffer payload, Class<?> payloadClass) {
+    public InternalMessageImpl(UUID id, ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass) {
         this.id = id;
         this.sender = sender;
         this.receiver = receiver;
@@ -60,7 +60,7 @@ public class InternalMessageImpl implements InternalMessage {
     }
 
     @Override
-    public Class<?> getPayloadClass() {
+    public String getPayloadClass() {
         return payloadClass;
     }
 }

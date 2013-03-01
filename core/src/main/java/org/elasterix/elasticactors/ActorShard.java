@@ -19,7 +19,7 @@ package org.elasterix.elasticactors;
 /**
  * @author Joost van de Wijgerd
  */
-public interface ActorSystemShard {
+public interface ActorShard {
     ShardKey getKey();
 
     void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception;

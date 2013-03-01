@@ -30,7 +30,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
  * @author Joost van de Wijgerd
  */
 @Configurable
-public class LocalActorSystemShard implements ActorSystemShard, MessageHandler {
+public class LocalActorShard implements ActorShard, MessageHandler {
     private final ActorSystem actorSystem;
     private final PhysicalNode localNode;
     private final ShardKey shardKey;
@@ -39,14 +39,14 @@ public class LocalActorSystemShard implements ActorSystemShard, MessageHandler {
     private ActorSystemShardExecutor actorExecutor;
     private Cache<String,ActorState> actorStateCache;
 
-    public LocalActorSystemShard(PhysicalNode node, ActorSystem actorSystem, int vNodeKey, MessageQueue remoteMessageQueue) {
+    public LocalActorShard(PhysicalNode node, ActorSystem actorSystem, int vNodeKey, MessageQueue remoteMessageQueue) {
         this.actorSystem = actorSystem;
         this.localNode = node;
         this.messageQueue = remoteMessageQueue;
         this.shardKey = new ShardKey(actorSystem.getName(), vNodeKey);
     }
 
-    public void init() {
+    public void init() throws Exception {
         this.messageQueue = messageQueueFactory.create(shardKey.toString(),this);
         //@todo: this cache needs to be parameterized
         this.actorStateCache = CacheBuilder.newBuilder().build();
@@ -64,7 +64,7 @@ public class LocalActorSystemShard implements ActorSystemShard, MessageHandler {
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
         MessageSerializer<Object> messageSerializer = actorSystem.getSerializer(message.getClass());
-        messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message), message.getClass()));
+        messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message), message.getClass().getName()));
     }
 
     @Override

@@ -26,13 +26,13 @@ import org.springframework.beans.factory.annotation.Configurable;
  * @author Joost van de Wijgerd
  */
 @Configurable
-public class RemoteActorSystemShard implements ActorSystemShard {
+public class RemoteActorShard implements ActorShard {
     private final ActorSystem actorSystem;
     private final PhysicalNode remoteNode;
     private final ShardKey shardKey;
     private final MessageQueue messageQueue;
 
-    public RemoteActorSystemShard(PhysicalNode remoteNode, ActorSystem actorSystem, int vNodeKey, MessageQueue remoteMessageQueue) {
+    public RemoteActorShard(PhysicalNode remoteNode, ActorSystem actorSystem, int vNodeKey, MessageQueue remoteMessageQueue) {
         this.actorSystem = actorSystem;
         this.remoteNode = remoteNode;
         this.messageQueue = remoteMessageQueue;
@@ -46,7 +46,8 @@ public class RemoteActorSystemShard implements ActorSystemShard {
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
         MessageSerializer<Object> messageSerializer = actorSystem.getSerializer(message.getClass());
-        messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message), message.getClass()));
+        messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message),
+                                                   message.getClass().getName()));
     }
 
 

@@ -16,9 +16,11 @@
 
 package org.elasterix.elasticactors.serialization;
 
+import java.io.IOException;
+
 /**
  * @author Joost van de Wijgerd
  */
 public interface Deserializer<I,O> {
-    O deserialize(I serializedObject);
+    O deserialize(I serializedObject) throws IOException;
 }

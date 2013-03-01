@@ -16,6 +16,9 @@
 
 package org.elasterix.elasticactors.messaging;
 
+import org.elasterix.elasticactors.serialization.internal.InternalMessageDeserializer;
+
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -38,6 +41,16 @@ public class LocalMessageQueue extends PersistentMessageQueue {
     }
 
     @Override
+    public void initialize() throws Exception {
+        List<CommitLog.CommitLogEntry> pendingEntries = commitLog.replay(getName());
+        for (CommitLog.CommitLogEntry pendingEntry : pendingEntries) {
+            queue.offer(InternalMessageDeserializer.get().deserialize(pendingEntry.getData()));
+        }
+        // wake up the listener
+        eventListener.wakeUp();
+    }
+
+    @Override
     public void destroy() {
         eventListener.onDestroy(this);
     }
@@ -45,7 +58,7 @@ public class LocalMessageQueue extends PersistentMessageQueue {
     @Override
     protected void doOffer(InternalMessage message, byte[] serializedMessage) {
         queue.offer(message);
-        eventListener.signal();
+        eventListener.wakeUp();
     }
 
     protected InternalMessage peek() {
@@ -61,7 +74,7 @@ public class LocalMessageQueue extends PersistentMessageQueue {
         try {
             return queue.add(message);
         } finally {
-            eventListener.signal();
+            eventListener.wakeUp();
         }
     }
 

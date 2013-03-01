@@ -19,6 +19,7 @@ package org.elasterix.elasticactors.messaging;
 import com.google.protobuf.ByteString;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.serialization.internal.ActorRefSerializer;
+import org.elasterix.elasticactors.serialization.internal.InternalMessageSerializer;
 import org.elasterix.elasticactors.serialization.protobuf.Elasticactors.InternalMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
@@ -31,7 +32,7 @@ public abstract class PersistentMessageQueue implements MessageQueue {
     private static final Logger logger = Logger.getLogger(PersistentMessageQueue.class);
     private final ActorRefSerializer actorRefSerializer = ActorRefSerializer.get();
     private final String name;
-    private CommitLog commitLog;
+    protected CommitLog commitLog;
 
     protected PersistentMessageQueue(String name) {
         this.name = name;
@@ -39,16 +40,8 @@ public abstract class PersistentMessageQueue implements MessageQueue {
 
     @Override
     public boolean offer(org.elasterix.elasticactors.messaging.InternalMessage message) {
-        // @todo: this should also be done with a serializer
-        InternalMessage.Builder builder = InternalMessage.newBuilder();
-        builder.setPayload(ByteString.copyFrom(message.getPayload()));
-        builder.setPayloadClass(message.getPayloadClass().getName());
-        builder.setReceiver(actorRefSerializer.serialize(message.getReceiver()));
-        if (message.getSender() != null) {
-            builder.setSender(actorRefSerializer.serialize(message.getSender()));
-        }
-        byte[] messageData = builder.build().toByteArray();
         try {
+            byte[] messageData = InternalMessageSerializer.get().serialize(message);
             commitLog.append(name, message.getId(), messageData);
             doOffer(message, messageData);
         } catch (Exception e) {

@@ -21,7 +21,7 @@ import org.elasterix.elasticactors.ActorState;
 import java.util.Map;
 
 /**
- *
+ * @author Joost van de Wijgerd
  */
 public class ActorStateMap implements ActorState {
     private final Map<String,Object> state;

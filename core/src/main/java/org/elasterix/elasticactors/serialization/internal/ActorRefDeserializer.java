@@ -14,24 +14,26 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors;
+package org.elasterix.elasticactors.serialization.internal;
 
-import org.elasterix.elasticactors.serialization.MessageDeserializer;
-import org.elasterix.elasticactors.serialization.MessageSerializer;
+import org.elasterix.elasticactors.ActorRef;
+import org.elasterix.elasticactors.serialization.Deserializer;
+
+import java.io.IOException;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface ActorSystem<I> {
-    String getName();
+public class ActorRefDeserializer implements Deserializer<String,ActorRef> {
+    private static final ActorRefDeserializer INSTANCE = new ActorRefDeserializer();
 
-    int getNumberOfShards();
+    public static ActorRefDeserializer get() {
+        return INSTANCE;
+    }
 
-    ActorRef createActor(I actorId, Class<?> actorClass);
-
-    MessageSerializer<?> getSerializer(Class<?> messageClass);
-
-    MessageDeserializer<?> getDeserializer(Class<?> messageClass);
-
-    ElasticActor<?> getActorInstance(ActorRef actorRef);
+    @Override
+    public ActorRef deserialize(String serializedObject) throws IOException {
+        // @todo: create actor reference
+        return null;
+    }
 }

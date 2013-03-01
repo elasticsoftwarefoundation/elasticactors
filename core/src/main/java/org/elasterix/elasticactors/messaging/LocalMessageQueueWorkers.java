@@ -1,11 +1,11 @@
 /*
- * Copyright 2013 Joost van de Wijgerd
+ * Copyright (c) 2013 Joost van de Wijgerd <jwijgerd@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *  	http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -68,12 +68,14 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
         return workers[Math.abs(workerIndex.getAndIncrement() % workers.length)];
     }
 
-    public MessageQueue create(String name,MessageHandler messageHandler) {
+    public MessageQueue create(String name,MessageHandler messageHandler) throws Exception {
         // pick the next worker (round-robin)
         RunnableWorker worker = nextWorker();
         LocalMessageQueue messageQueue = new LocalMessageQueue(name,worker,messageHandler);
         // add the queue to the worker
         worker.add(messageQueue);
+        // initialize the queue (will read commit log and start emitting pending messages
+        messageQueue.initialize();
         return messageQueue;
     }
 
@@ -92,8 +94,8 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
         }
 
         @Override
-        public void signal() {
-            // register the signal to avoid race condition
+        public void wakeUp() {
+            // register the wakeUp to avoid race condition
             pendingSignals.incrementAndGet();
             // wake up the waiting worker thread
             try {

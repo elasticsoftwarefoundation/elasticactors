@@ -16,6 +16,7 @@
 
 package org.elasterix.elasticactors.serialization;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -23,5 +24,5 @@ import java.nio.ByteBuffer;
  */
 public interface MessageDeserializer<O> extends Deserializer<ByteBuffer,O> {
     @Override
-    O deserialize(ByteBuffer serializedObject);
+    O deserialize(ByteBuffer serializedObject) throws IOException;
 }

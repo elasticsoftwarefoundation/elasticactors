@@ -20,7 +20,7 @@ package org.elasterix.elasticactors.messaging;
  * @author  Joost van de Wijgerd
  */
 public interface MessageQueueEventListener {
-    void signal();
+    void wakeUp();
 
     void onDestroy(MessageQueue queue);
 }
