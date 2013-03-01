@@ -14,11 +14,16 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.messaging;
+package org.elasterix.elasticactors.util.concurrent;
 
 /**
+ *
+ * @param <T>   the type of the key
+ *
  * @author Joost van de Wijgerd
  */
-public interface MessageHandler {
-    void handleMessage(InternalMessage message);
+public interface ElasticActorRunnable<T> extends Runnable {
+
+    T getKey();
+
 }

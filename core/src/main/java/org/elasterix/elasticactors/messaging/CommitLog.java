@@ -23,17 +23,41 @@ import java.util.UUID;
  * @author Joost van de Wijgerd
  */
 public interface CommitLog {
+    /**
+     * Append a message to the commit log for the give segment (queue / actor system shard)
+     *
+     * @param segment           the name of the shard
+     * @param messageId         a time based UUID of the message {@link org.elasterix.elasticactors.messaging.UUIDTools#createTimeBasedUUID()}
+     * @param data              the serialized payload of the message
+     */
     void append(String segment, UUID messageId, byte[] data);
 
+    /**
+     * Delete a message from the commit log. Meant to be called after message was successfully added
+     *
+     * @param segment           the name of the shard
+     * @param messageId         message id to delete
+     */
     void delete(String segment, UUID messageId);
 
-    List<CommitLogMessage> replay(String segment);
+    /**
+     * Return the non-deleted messages for this shard. To be used when starting up a queue
+     *
+     * @todo: this should probably be implemented with the Visitor pattern
+     *
+     * @param segment
+     * @return
+     */
+    List<CommitLogEntry> replay(String segment);
 
-    public class CommitLogMessage {
+    /**
+     * Representation of and entry in the {@link CommitLog}
+     */
+    public class CommitLogEntry {
         private final UUID messageId;
         private final byte[] data;
 
-        public CommitLogMessage(UUID messageId, byte[] data) {
+        public CommitLogEntry(UUID messageId, byte[] data) {
             this.messageId = messageId;
             this.data = data;
         }

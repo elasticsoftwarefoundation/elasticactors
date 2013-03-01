@@ -1,0 +1,143 @@
+/*
+ * Copyright (c) 2013 Joost van de Wijgerd <jwijgerd@gmail.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.elasterix.elasticactors.util.concurrent;
+
+import org.apache.log4j.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+/**
+ * @author Joost van de Wijgerd
+ */
+public final class ActorSystemShardExecutorImpl implements ActorSystemShardExecutor<UUID> {
+
+    private static final Logger LOG = Logger.getLogger(ActorSystemShardExecutorImpl.class);
+
+    private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
+    private final List<BlockingQueue<Runnable>> queues = new ArrayList<BlockingQueue<Runnable>>();
+
+    /**
+     * Create an executor with numberOfThreads worker threads.
+     *
+     * @param numberOfThreads
+     */
+    public ActorSystemShardExecutorImpl(ThreadFactory threadFactory, String threadName, int numberOfThreads) {
+
+        for (int i = 0; i < numberOfThreads; i++) {
+            BlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
+            Thread t = threadFactory.newThread(new Consumer(queue));
+            queues.add(queue);
+            t.setName(threadName + "-" + i);
+            t.setDaemon(true);
+            t.start();
+        }
+    }
+
+    /**
+     * Schedule a runnable for execution.
+     *
+     * @param runnable The runnable to execute
+     */
+    public void execute(ElasticActorRunnable<UUID> runnable) {
+        if (shuttingDown.get()) {
+            throw new RejectedExecutionException("The system is shutting down.");
+        }
+        int bucket = getBucket(runnable.getKey());
+        BlockingQueue<Runnable> queue = queues.get(bucket);
+        queue.add(runnable);
+    }
+
+
+    private int getBucket(Object key) {
+        return Math.abs(key.hashCode()) % queues.size();
+    }
+
+    public void shutdown() {
+        LOG.info("shutting down the ActorSystemShardExecutor");
+        if (shuttingDown.compareAndSet(false, true)) {
+            CountDownLatch shuttingDownLatch = new CountDownLatch(queues.size());
+            for (BlockingQueue<Runnable> queue : queues) {
+                queue.add(new ShutdownTask(shuttingDownLatch));
+            }
+            try {
+                if (!shuttingDownLatch.await(30, TimeUnit.SECONDS)) {
+                    LOG.error("timeout while waiting for ActorSystemShardExecutor queues to empty");
+                }
+            } catch (InterruptedException ignore) {
+                //we are shutting down anyway
+                LOG.warn("ActorSystemShardExecutor shutdown interrupted.");
+            }
+        }
+        LOG.info("ActorSystemShardExecutor shut down completed");
+    }
+
+
+    private static final class Consumer implements Runnable {
+        private final BlockingQueue<Runnable> queue;
+
+        public Consumer(BlockingQueue<Runnable> queue) {
+            this.queue = queue;
+        }
+
+        @Override
+        public void run() {
+            boolean running = true;
+            Runnable r = null;
+            while (running) {
+                try {
+                    r = queue.take();
+                    r.run();
+                } catch (InterruptedException e) {
+                    LOG.warn(String.format("Consumer on queue %s interrupted.", Thread.currentThread().getName()));
+                    //ignore
+                } catch (Exception exception) {
+                    LOG.error(String.format("exception on queue %s while executing runnable: %s", Thread.currentThread().getName(), r), exception);
+                } finally {
+                    if (r != null && r.getClass().equals(ShutdownTask.class)) {
+                        running = false;
+                    }
+                    // reset r so that we get a correct null value if the queue.take() is interrupted
+                    r = null;
+                }
+            }
+        }
+    }
+
+    private static final class ShutdownTask implements Runnable {
+
+        private final CountDownLatch latch;
+
+        public ShutdownTask(CountDownLatch latch) {
+            this.latch = latch;
+        }
+
+        @Override
+        public void run() {
+            latch.countDown();
+        }
+
+        @Override
+        public String toString() {
+            return "ShutdownTask";
+        }
+    }
+
+}
