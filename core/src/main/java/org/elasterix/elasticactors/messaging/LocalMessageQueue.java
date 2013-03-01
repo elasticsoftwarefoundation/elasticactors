@@ -37,6 +37,7 @@ public class LocalMessageQueue extends PersistentMessageQueue {
         queue = new LinkedBlockingQueue<InternalMessage>(capacity);
     }
 
+    @Override
     public void destroy() {
         eventListener.onDestroy(this);
     }

@@ -27,4 +27,6 @@ public interface MessageQueue {
     InternalMessage poll();
 
     String getName();
+
+    void destroy();
 }

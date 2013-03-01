@@ -21,6 +21,6 @@ import java.io.Serializable;
 /**
  * @author Joost van de Wijgerd
  */
-public interface ElasticActor<T extends Serializable> {
-    void onMessage(T message) throws Exception;
+public interface ElasticActor<T> {
+    void onMessage(T message,ActorRef sender) throws Exception;
 }

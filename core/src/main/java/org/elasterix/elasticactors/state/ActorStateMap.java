@@ -14,14 +14,24 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.serialization;
+package org.elasterix.elasticactors.state;
 
+import org.elasterix.elasticactors.ActorState;
 
-import java.nio.ByteBuffer;
+import java.util.Map;
 
 /**
- * @author Joost van de Wijgerd
+ *
  */
-public interface Serializer<I,O> {
-    O serialize(I object);
+public class ActorStateMap implements ActorState {
+    private final Map<String,Object> state;
+
+    public ActorStateMap(Map<String, Object> state) {
+        this.state = state;
+    }
+
+    @Override
+    public Map<String, Object> getAsMap() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 }

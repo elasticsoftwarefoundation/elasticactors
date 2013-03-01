@@ -16,13 +16,16 @@
 
 package org.elasterix.elasticactors.serialization.internal;
 
+import com.google.common.base.Charsets;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.serialization.Serializer;
+
+import java.nio.ByteBuffer;
 
 /**
  * @author Joost van de Wijgerd
  */
-public class ActorRefSerializer implements Serializer<ActorRef, String> {
+public class ActorRefSerializer implements Serializer<ActorRef,String> {
     private static final ActorRefSerializer INSTANCE = new ActorRefSerializer();
 
     public static ActorRefSerializer get() {

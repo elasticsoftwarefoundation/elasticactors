@@ -20,8 +20,6 @@ import org.apache.log4j.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
@@ -30,7 +28,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * @author Joost van de Wijgerd
  */
-public final class LocalMessageQueueWorkers {
+public final class LocalMessageQueueWorkers implements MessageQueueFactory {
     private static final Logger LOGGER = Logger.getLogger(LocalMessageQueueWorkers.class);
 
     private final ExecutorService executor;
@@ -68,7 +66,7 @@ public final class LocalMessageQueueWorkers {
         return workers[Math.abs(workerIndex.getAndIncrement() % workers.length)];
     }
 
-    public LocalMessageQueue create(String name,MessageHandler messageHandler) {
+    public MessageQueue create(String name,MessageHandler messageHandler) {
         // pick the next worker (round-robin)
         RunnableWorker worker = nextWorker();
         LocalMessageQueue messageQueue = new LocalMessageQueue(name,worker,messageHandler);

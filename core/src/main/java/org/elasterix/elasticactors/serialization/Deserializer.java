@@ -16,9 +16,11 @@
 
 package org.elasterix.elasticactors.serialization;
 
+import java.nio.ByteBuffer;
+
 /**
  * @author Joost van de Wijgerd
  */
-public interface Deserializer<ByteBuffer, O> {
-    O deserialize(ByteBuffer serializedObject);
+public interface Deserializer<I,O> {
+    O deserialize(I serializedObject);
 }

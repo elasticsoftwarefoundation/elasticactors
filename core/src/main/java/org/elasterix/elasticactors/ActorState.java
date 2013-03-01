@@ -16,8 +16,11 @@
 
 package org.elasterix.elasticactors;
 
+import java.util.Map;
+
 /**
  *
  */
 public interface ActorState {
+    Map<String,Object> getAsMap();
 }
