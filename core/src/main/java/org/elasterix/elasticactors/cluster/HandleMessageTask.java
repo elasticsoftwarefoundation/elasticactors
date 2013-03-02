@@ -48,7 +48,6 @@ public final class HandleMessageTask implements ElasticActorRunnable<String> {
     }
 
 
-
     @Override
     public String getKey() {
         return receiverRef.toString();

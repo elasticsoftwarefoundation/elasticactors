@@ -22,5 +22,11 @@ package org.elasterix.elasticactors;
 public interface ActorShard {
     ShardKey getKey();
 
-    void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception;
+    PhysicalNode getOwningNode();
+
+    void sendMessage(ActorRef sender, ActorRef receiver, Object message) throws Exception;
+
+    void init() throws Exception;
+
+    void destroy();
 }

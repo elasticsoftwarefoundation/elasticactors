@@ -37,7 +37,7 @@ public class RemoteMessageQueue extends PersistentMessageQueue {
 
     @Override
     protected void doOffer(InternalMessage message, byte[] serializedMessage) {
-        // messa
+        // @todo: send message to remote server via messaging service
     }
 
     @Override

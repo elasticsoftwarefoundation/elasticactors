@@ -26,6 +26,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import java.util.concurrent.locks.ReadWriteLock;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -34,27 +36,34 @@ public class LocalActorShard implements ActorShard, MessageHandler {
     private final ActorSystem actorSystem;
     private final PhysicalNode localNode;
     private final ShardKey shardKey;
+    private final MessageQueueFactory messageQueueFactory;
     private MessageQueue messageQueue;
-    private MessageQueueFactory messageQueueFactory;
     private ActorSystemShardExecutor actorExecutor;
     private Cache<String,ActorState> actorStateCache;
 
-    public LocalActorShard(PhysicalNode node, ActorSystem actorSystem, int vNodeKey, MessageQueue remoteMessageQueue) {
+    public LocalActorShard(PhysicalNode node, ActorSystem actorSystem, int shard, MessageQueueFactory messageQueueFactory) {
         this.actorSystem = actorSystem;
         this.localNode = node;
-        this.messageQueue = remoteMessageQueue;
-        this.shardKey = new ShardKey(actorSystem.getName(), vNodeKey);
+        this.shardKey = new ShardKey(actorSystem.getName(), shard);
+        this.messageQueueFactory = messageQueueFactory;
     }
 
+    @Override
     public void init() throws Exception {
-        this.messageQueue = messageQueueFactory.create(shardKey.toString(),this);
         //@todo: this cache needs to be parameterized
         this.actorStateCache = CacheBuilder.newBuilder().build();
+        this.messageQueue = messageQueueFactory.create(shardKey.toString(), this);
     }
 
+    @Override
     public void destroy() {
-        // release all recources
+        // release all resources
         this.messageQueue.destroy();
+    }
+
+    @Override
+    public PhysicalNode getOwningNode() {
+        return localNode;
     }
 
     @Override
@@ -73,11 +82,6 @@ public class LocalActorShard implements ActorShard, MessageHandler {
         ElasticActor actorInstance = actorSystem.getActorInstance(message.getReceiver());
         // execute on it's own thread
         actorExecutor.execute(new HandleMessageTask(actorSystem,actorInstance,message,actorStateCache));
-    }
-
-    @Autowired
-    public void setMessageQueueFactory(@Qualifier("localMessageQueueFactory") MessageQueueFactory messageQueueFactory) {
-        this.messageQueueFactory = messageQueueFactory;
     }
 
     @Autowired
