@@ -20,8 +20,10 @@ import org.apache.log4j.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
@@ -35,7 +37,7 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
 
     private final ExecutorService executor;
     private final int numberOfWorkers;
-    private final RunnableWorker[] workers;
+    private final MessageQueueWorker[] workers;
     private final AtomicInteger workerIndex = new AtomicInteger();
 
     private volatile boolean stop;
@@ -43,14 +45,14 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
     public LocalMessageQueueWorkers(ExecutorService executor, int numberOfWorkers) {
         this.executor = executor;
         this.numberOfWorkers = Math.max(1, numberOfWorkers);
-        workers = new RunnableWorker[this.numberOfWorkers];
+        workers = new MessageQueueWorker[this.numberOfWorkers];
     }
 
     @PostConstruct
     public void init() {
         stop = false;
         for (int i = 0; i < numberOfWorkers; i++) {
-            workers[i] = new RunnableWorker();
+            workers[i] = new MessageQueueWorker();
             executor.submit(workers[i]);
         }
     }
@@ -59,18 +61,18 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
     public void destroy() {
         // @todo: this needs to be synchronized on the workers actually stopping
         stop = true;
-        for (RunnableWorker worker : workers) {
+        for (MessageQueueWorker worker : workers) {
             worker.shutdown();
         }
     }
 
-    private RunnableWorker nextWorker() {
+    private MessageQueueWorker nextWorker() {
         return workers[Math.abs(workerIndex.getAndIncrement() % workers.length)];
     }
 
     public MessageQueue create(String name,MessageHandler messageHandler) throws Exception {
         // pick the next worker (round-robin)
-        RunnableWorker worker = nextWorker();
+        MessageQueueWorker worker = nextWorker();
         LocalMessageQueue messageQueue = new LocalMessageQueue(name,worker,messageHandler);
         // add the queue to the worker
         worker.add(messageQueue);
@@ -79,14 +81,16 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
         return messageQueue;
     }
 
-    private final class RunnableWorker implements Runnable, MessageQueueEventListener {
+    private final class MessageQueueWorker implements Runnable, MessageQueueEventListener {
         private final ReentrantLock waitLock = new ReentrantLock();
         private final Condition waitCondition = waitLock.newCondition();
         private final ConcurrentMap<String,LocalMessageQueue> messageQueues;
         private final AtomicInteger pendingSignals = new AtomicInteger(0);
+        private final ConcurrentMap<String,CountDownLatch> destroyLatches;
 
-        public RunnableWorker() {
+        public MessageQueueWorker() {
             messageQueues = new ConcurrentHashMap<String,LocalMessageQueue>();
+            destroyLatches = new ConcurrentHashMap<String,CountDownLatch>();
         }
 
         public void add(LocalMessageQueue queue) {
@@ -113,15 +117,22 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
 
         @Override
         public void onDestroy(MessageQueue queue) {
-            // @todo: we need to remove the queue, but it could be executing at this very moment
-            // for now just remove it, this needs to become smarter
-            messageQueues.remove(queue.getName());
+            final CountDownLatch destroyLatch = new CountDownLatch(1);
+            destroyLatches.put(queue.getName(),destroyLatch);
+            wakeUp();
         }
 
         @Override
         public void run() {
             try {
                 while (!stop) {
+                    // first see if we have waiting queue removals
+                    if(!destroyLatches.isEmpty()) {
+                        for (String queueName : destroyLatches.keySet()) {
+                            messageQueues.remove(queueName);
+                            destroyLatches.remove(queueName).countDown();
+                        }
+                    }
                     // reset pending signals as we are starting the loop
                     pendingSignals.set(0);
                     boolean moreWaiting = false;
@@ -164,6 +175,8 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
                 infoMessage("Worker thread stopped");
             }
         }
+
+
 
         private void shutdown() {
             Thread.currentThread().interrupt();

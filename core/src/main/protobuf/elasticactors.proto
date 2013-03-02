@@ -10,9 +10,15 @@ option optimize_for = SPEED;
 //        used in this protocol buffer, not even by deleted fields).
 
 message InternalMessage {
-    required string receiver = 1;
+    optional string receiver = 1;
     optional string sender = 2;
     required string payloadClass = 3;
     required bytes payload = 4;
     required bytes id = 5;
+}
+
+message PersistentActor {
+    required string actorRef = 1;
+    required string actorClass = 2;
+    optional bytes state = 3;
 }
