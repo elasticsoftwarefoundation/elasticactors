@@ -21,6 +21,7 @@ import com.google.common.cache.CacheBuilder;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.messaging.*;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
+import org.elasterix.elasticactors.state.PersistentActor;
 import org.elasterix.elasticactors.util.concurrent.ActorSystemShardExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
@@ -39,7 +40,7 @@ public class LocalActorShard implements ActorShard, MessageHandler {
     private final MessageQueueFactory messageQueueFactory;
     private MessageQueue messageQueue;
     private ActorSystemShardExecutor actorExecutor;
-    private Cache<String,ActorState> actorStateCache;
+    private Cache<ActorRef,PersistentActor> actorCache;
 
     public LocalActorShard(PhysicalNode node, ActorSystem actorSystem, int shard, MessageQueueFactory messageQueueFactory) {
         this.actorSystem = actorSystem;
@@ -51,7 +52,7 @@ public class LocalActorShard implements ActorShard, MessageHandler {
     @Override
     public void init() throws Exception {
         //@todo: this cache needs to be parameterized
-        this.actorStateCache = CacheBuilder.newBuilder().build();
+        this.actorCache = CacheBuilder.newBuilder().build();
         this.messageQueue = messageQueueFactory.create(shardKey.toString(), this);
     }
 
@@ -78,10 +79,17 @@ public class LocalActorShard implements ActorShard, MessageHandler {
 
     @Override
     public void handleMessage(InternalMessage message) {
-        // find actor class behind receiver ActorRef
-        ElasticActor actorInstance = actorSystem.getActorInstance(message.getReceiver());
-        // execute on it's own thread
-        actorExecutor.execute(new HandleMessageTask(actorSystem,actorInstance,message,actorStateCache));
+        ActorRef receiverRef = message.getReceiver();
+        if(receiverRef != null) {
+            // find actor class behind receiver ActorRef
+            ElasticActor actorInstance = actorSystem.getActorInstance(message.getReceiver());
+            // execute on it's own thread
+            actorExecutor.execute(new HandleMessageTask(actorSystem,actorInstance,message,actorCache.getIfPresent(message.getReceiver())));
+        } else {
+            // the message is intended for the shard, this means it's about creating or stopping an actor
+            // we will handle this on the messaging thread as it's all serialized and we can change the
+
+        }
     }
 
     @Autowired

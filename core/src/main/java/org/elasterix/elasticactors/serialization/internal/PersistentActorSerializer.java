@@ -17,33 +17,30 @@
 package org.elasterix.elasticactors.serialization.internal;
 
 import com.google.protobuf.ByteString;
-import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.messaging.InternalMessage;
 import org.elasterix.elasticactors.messaging.UUIDTools;
 import org.elasterix.elasticactors.serialization.Serializer;
 import org.elasterix.elasticactors.serialization.protobuf.Elasticactors;
-
-import java.nio.ByteBuffer;
+import org.elasterix.elasticactors.state.PersistentActor;
 
 /**
  * @author Joost van de Wijgerd
  */
-public class InternalMessageSerializer implements Serializer<InternalMessage,byte[]> {
-    private static final InternalMessageSerializer INSTANCE = new InternalMessageSerializer();
+public class PersistentActorSerializer implements Serializer<PersistentActor,byte[]> {
+    private static final PersistentActorSerializer INSTANCE = new PersistentActorSerializer();
 
-    public static InternalMessageSerializer get() {
+    public static PersistentActorSerializer get() {
         return INSTANCE;
     }
 
     @Override
-    public byte[] serialize(InternalMessage internalMessage) {
-        Elasticactors.InternalMessage.Builder builder = Elasticactors.InternalMessage.newBuilder();
-        builder.setId(ByteString.copyFrom(UUIDTools.toByteArray(internalMessage.getId())));
-        builder.setPayload(ByteString.copyFrom(internalMessage.getPayload()));
-        builder.setPayloadClass(internalMessage.getPayloadClass());
-        builder.setReceiver(ActorRefSerializer.get().serialize(internalMessage.getReceiver()));
-        if (internalMessage.getSender() != null) {
-            builder.setSender(ActorRefSerializer.get().serialize(internalMessage.getSender()));
+    public byte[] serialize(PersistentActor persistentActor) {
+        Elasticactors.PersistentActor.Builder builder = Elasticactors.PersistentActor.newBuilder();
+        builder.setActorSystemVersion(persistentActor.getActorSystemVersion());
+        builder.setActorClass(persistentActor.getActorClass());
+        builder.setActorRef(persistentActor.getRef());
+        if (persistentActor.getSerializedState() != null) {
+            builder.setState(ByteString.copyFrom(persistentActor.getSerializedState()));
         }
         return builder.build().toByteArray();
     }

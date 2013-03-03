@@ -30,7 +30,6 @@ import java.util.List;
 public class ClusterView implements IEndpointLifecycleSubscriber {
     private static final Logger log = Logger.getLogger(ClusterView.class);
     private NodeProbe nodeProbe;
-    private ClassPathXmlApplicationContext applicationContext;
 
     @Override
     public void onJoinCluster(InetAddress endpoint) {
@@ -44,18 +43,16 @@ public class ClusterView implements IEndpointLifecycleSubscriber {
 
     @Override
     public void onUp(InetAddress endpoint) {
-        System.out.println("************************** Node Marked UP ****************************");
-
-
+        log.info("************************** ElasticActors Node Marked UP ****************************");
         log.info(String.format("%s is now UP", endpoint.getHostName()));
         try {
             nodeProbe = new NodeProbe("localhost");
         } catch (Exception e) {
             log.error("Exception starting ApplicationContext & NodeProbe", e);
         }
-        System.out.println(String.format("localNode id = %s", nodeProbe.getLocalHostId()));
+        log.info(String.format("localNode id = %s", nodeProbe.getLocalHostId()));
         List<InetAddress> naturalEndpoints = nodeProbe.getEndpoints("ElasticActors", "ActorSystems", "testKey");
-        System.out.println(String.format("Primary endpoint for key 'testKey' is %s ", naturalEndpoints.get(0).getHostName()));
+        log.info(String.format("Primary endpoint for key 'testKey' is %s ", naturalEndpoints.get(0).getHostName()));
 
     }
 

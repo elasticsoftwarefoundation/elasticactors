@@ -20,5 +20,6 @@ message InternalMessage {
 message PersistentActor {
     required string actorRef = 1;
     required string actorClass = 2;
-    optional bytes state = 3;
+    required string actorSystemVersion = 3;
+    optional bytes state = 4;
 }

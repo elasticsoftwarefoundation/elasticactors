@@ -19,6 +19,10 @@ package org.elasterix.elasticactors.cluster;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.messaging.MessageQueueFactory;
+import org.elasterix.elasticactors.serialization.Deserializer;
+import org.elasterix.elasticactors.serialization.MessageDeserializer;
+import org.elasterix.elasticactors.serialization.MessageSerializer;
+import org.elasterix.elasticactors.serialization.Serializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -113,6 +117,14 @@ public class LocalActorSystemInstance {
         }
     }
 
+    public int getNumberOfShards() {
+        return actorSystem.getNumberOfShards();
+    }
+
+    public ActorShard getShard(int shardId) {
+        return shardAdapters[shardId];
+    }
+
     @Autowired
     public void setNodeSelectorFactory(NodeSelectorFactory nodeSelectorFactory) {
         this.nodeSelectorFactory = nodeSelectorFactory;
@@ -173,4 +185,6 @@ public class LocalActorSystemInstance {
             // should not be called on the adapter, just do nothing
         }
     }
+
+
 }

@@ -16,7 +16,6 @@
 
 package org.elasterix.elasticactors.cluster;
 
-import com.google.common.cache.Cache;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ActorState;
@@ -24,6 +23,8 @@ import org.elasterix.elasticactors.ActorSystem;
 import org.elasterix.elasticactors.ElasticActor;
 import org.elasterix.elasticactors.messaging.InternalMessage;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
+import org.elasterix.elasticactors.serialization.Serializer;
+import org.elasterix.elasticactors.state.PersistentActor;
 import org.elasterix.elasticactors.util.concurrent.ElasticActorRunnable;
 
 /**
@@ -37,13 +38,13 @@ public final class HandleMessageTask implements ElasticActorRunnable<String> {
     private final ElasticActor receiver;
     private final ActorSystem actorSystem;
     private final InternalMessage internalMessage;
-    private final Cache<String,ActorState> stateCache;
+    private final PersistentActor persistentActor;
 
-    public HandleMessageTask(ActorSystem actorSystem, ElasticActor receiver, InternalMessage internalMessage, Cache<String, ActorState> stateCache) {
+    public HandleMessageTask(ActorSystem actorSystem, ElasticActor receiver, InternalMessage internalMessage, PersistentActor persistentActor) {
         this.actorSystem = actorSystem;
         this.receiver = receiver;
         this.internalMessage = internalMessage;
-        this.stateCache = stateCache;
+        this.persistentActor = persistentActor;
         this.receiverRef = internalMessage.getReceiver();
     }
 
@@ -72,10 +73,11 @@ public final class HandleMessageTask implements ElasticActorRunnable<String> {
     }
 
     private void handleMessage(Object message) {
-        // setup the state
-        final ActorState stateBefore = stateCache.getIfPresent(receiverRef.toString());
-        ActorStateContext.setState(stateBefore);
+        ActorState stateBefore = null;
         try {
+            // setup the state
+            stateBefore = persistentActor.getState(actorSystem.getActorStateDeserializer());
+            ActorStateContext.setState(stateBefore);
             receiver.onMessage(message,internalMessage.getSender());
         } catch(Exception e) {
             // @todo: handle by sending back a message (if possible)
@@ -84,12 +86,11 @@ public final class HandleMessageTask implements ElasticActorRunnable<String> {
             // clear the state
             ActorState stateAfter = ActorStateContext.getAndClearState();
             // check if we have state now that needs to be put in the cache
-            if(stateBefore == null && stateAfter != null) {
-                stateCache.put(receiverRef.toString(),stateAfter);
-            }
+            Serializer<ActorState,byte[]> stateSerializer = actorSystem.getActorStateSerializer();
+            persistentActor.setSerializedState(stateSerializer.serialize(stateAfter));
             // flush state if it was changed
             if(stateAfter != null) {
-                // @todo: implement persistent state
+                // @todo: implement flushing of persistent actor
             }
         }
     }
