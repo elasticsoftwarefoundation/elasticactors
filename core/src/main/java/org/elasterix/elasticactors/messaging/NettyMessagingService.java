@@ -27,7 +27,7 @@ import java.net.SocketAddress;
 /**
  * @author Joost van de Wijgerd
  */
-public class NettyMessagingService implements ChannelPipelineFactory {
+public class NettyMessagingService implements ChannelPipelineFactory, MessageQueueFactory {
 
     public static final String HANDLER = "handler";
 
@@ -103,5 +103,10 @@ public class NettyMessagingService implements ChannelPipelineFactory {
 
     public void setServerChannel(Channel serverChannel) {
         this.serverChannel = serverChannel;
+    }
+
+    @Override
+    public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }
