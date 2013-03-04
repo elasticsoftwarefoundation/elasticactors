@@ -47,7 +47,7 @@ public interface ActorSystem<I> {
      */
     int getNumberOfShards();
 
-    ActorRef createActor(I actorId, Class<?> actorClass);
+    ActorRef createActor(String actorId, Class<?> actorClass);
 
     MessageSerializer<?> getSerializer(Class<?> messageClass);
 

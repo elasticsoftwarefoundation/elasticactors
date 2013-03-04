@@ -17,7 +17,9 @@
 package org.elasterix.elasticactors.serialization.internal;
 
 import org.elasterix.elasticactors.ActorRef;
+import org.elasterix.elasticactors.cluster.ActorRefFactory;
 import org.elasterix.elasticactors.serialization.Deserializer;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 
@@ -26,6 +28,7 @@ import java.io.IOException;
  */
 public class ActorRefDeserializer implements Deserializer<String,ActorRef> {
     private static final ActorRefDeserializer INSTANCE = new ActorRefDeserializer();
+    private ActorRefFactory actorRefFactory;
 
     public static ActorRefDeserializer get() {
         return INSTANCE;
@@ -33,7 +36,11 @@ public class ActorRefDeserializer implements Deserializer<String,ActorRef> {
 
     @Override
     public ActorRef deserialize(String serializedObject) throws IOException {
-        // @todo: create actor reference
-        return null;
+        return actorRefFactory.create(serializedObject);
+    }
+
+    @Autowired
+    public void setActorRefFactory(ActorRefFactory actorRefFactory) {
+        this.actorRefFactory = actorRefFactory;
     }
 }

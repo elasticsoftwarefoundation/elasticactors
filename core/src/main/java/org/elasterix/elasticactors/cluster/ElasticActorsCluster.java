@@ -72,6 +72,7 @@ public class ElasticActorsCluster implements ActorRefFactory, ApplicationContext
             }
             int nextIndex = refSpec.indexOf('/',actorSeparatorIndex);
             String actorId = (nextIndex == -1) ? null : refSpec.substring(nextIndex);
+            actorSeparatorIndex = (nextIndex == -1) ? actorSeparatorIndex : nextIndex;
             String[] components = refSpec.substring(8,actorSeparatorIndex).split("/");
             if(components.length == 4) {
                 String cluster = components[0];
