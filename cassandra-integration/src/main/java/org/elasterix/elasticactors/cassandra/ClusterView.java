@@ -19,17 +19,22 @@ package org.elasterix.elasticactors.cassandra;
 import org.apache.cassandra.service.IEndpointLifecycleSubscriber;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.net.InetAddress;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
  */
 public class ClusterView implements IEndpointLifecycleSubscriber {
     private static final Logger log = Logger.getLogger(ClusterView.class);
-    private NodeProbe nodeProbe;
+    private AtomicBoolean initialStartup = new AtomicBoolean(true);
+    private volatile NodeProbe nodeProbe;
+    private ClusterEventListener eventListener;
 
     @Override
     public void onJoinCluster(InetAddress endpoint) {
@@ -44,16 +49,40 @@ public class ClusterView implements IEndpointLifecycleSubscriber {
     @Override
     public void onUp(InetAddress endpoint) {
         log.info("************************** ElasticActors Node Marked UP ****************************");
-        log.info(String.format("%s is now UP", endpoint.getHostName()));
-        try {
-            nodeProbe = new NodeProbe("localhost");
-        } catch (Exception e) {
-            log.error("Exception starting ApplicationContext & NodeProbe", e);
+        log.info(String.format("%s is now UP", endpoint.getHostAddress()));
+        initializeNodeProbe();
+        String localHostId = nodeProbe.getLocalHostId();
+        Map<String,String> hostIdMap = nodeProbe.getHostIdMap();
+        if(localHostId.equals(hostIdMap.get(endpoint.getHostAddress()))) {
+            if(initialStartup.compareAndSet(true,false)) {
+                log.info("Own host marked as UP, Initiating ElasticActors Cluster");
+                try {
+                    eventListener.onJoined(localHostId,endpoint);
+                } catch (Exception e) {
+                    // @todo: we probably want to shut down the whole system now
+                    log.error("Exception initializing ElasticActors Cluster",e);
+                }
+            }
         }
+        log.info(String.format("Current Live Nodes: %s", nodeProbe.getLiveNodes().toString()));
+
+        /*
         log.info(String.format("localNode id = %s", nodeProbe.getLocalHostId()));
         List<InetAddress> naturalEndpoints = nodeProbe.getEndpoints("ElasticActors", "ActorSystems", "testKey");
         log.info(String.format("Primary endpoint for key 'testKey' is %s ", naturalEndpoints.get(0).getHostName()));
+        */
 
+    }
+
+    private synchronized void initializeNodeProbe() {
+        if(nodeProbe == null) {
+            try {
+                nodeProbe = new NodeProbe("localhost");
+            } catch (Exception e) {
+                log.error("Exception starting NodeProbe on localhost", e);
+                nodeProbe = null;
+            }
+        }
     }
 
     @Override
@@ -64,5 +93,10 @@ public class ClusterView implements IEndpointLifecycleSubscriber {
     @Override
     public void onMove(InetAddress endpoint) {
         //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Autowired
+    public void setEventListener(ClusterEventListener eventListener) {
+        this.eventListener = eventListener;
     }
 }

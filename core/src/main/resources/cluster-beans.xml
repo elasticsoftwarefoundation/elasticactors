@@ -22,6 +22,10 @@
 	                       http://www.springframework.org/schema/context/spring-context-3.2.xsd">
     <context:spring-configured/>
     <context:annotation-config/>
+    <!-- @todo: add external properties here -->
+    <context:property-placeholder ignore-resource-not-found="true"
+                                  location="classpath:cluster-default.properties"
+                                  system-properties-mode="OVERRIDE"/>
 
     <bean id="clusterView" class="org.elasterix.elasticactors.cassandra.ClusterView"/>
 

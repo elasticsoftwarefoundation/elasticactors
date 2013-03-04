@@ -1,11 +1,11 @@
 /*
- * Copyright 2013 Joost van de Wijgerd
+ * Copyright (c) 2013 Joost van de Wijgerd <jwijgerd@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *  	http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,12 +19,17 @@ package org.elasterix.elasticactors.cluster;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ActorSystem;
 import org.elasterix.elasticactors.ActorSystemConfiguration;
+import org.elasterix.elasticactors.PhysicalNode;
+import org.elasterix.elasticactors.cassandra.ClusterEventListener;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
+import javax.annotation.PostConstruct;
+import java.net.InetAddress;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -33,10 +38,11 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Joost van de Wijgerd
  */
 @Configurable
-public class ElasticActorsCluster implements ActorRefFactory, ApplicationContextAware {
+public class ElasticActorsCluster implements ActorRefFactory, ApplicationContextAware, ClusterEventListener {
     private static final AtomicReference<ElasticActorsCluster> INSTANCE = new AtomicReference<ElasticActorsCluster>(null);
     private final ConcurrentMap<String,LocalActorSystemInstance> managedActorSystems = new ConcurrentHashMap<String,LocalActorSystemInstance>();
     private String clusterName;
+    private PhysicalNode localNode;
 
     public static ElasticActorsCluster getInstance() {
         return INSTANCE.get();
@@ -45,6 +51,22 @@ public class ElasticActorsCluster implements ActorRefFactory, ApplicationContext
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         INSTANCE.set(applicationContext.getBean(ElasticActorsCluster.class));
+    }
+
+    @Override
+    public void onJoined(String hostId, InetAddress hostAddress) throws Exception {
+        this.localNode = new PhysicalNodeImpl(hostId,hostAddress,true);
+        // load all actor systems (but not start them yet since we are not officially part of the cluster)
+    }
+
+    @Override
+    public void onTopologyChanged(List<String> topology) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void onLeft() {
+        // shutdown all actor systems
     }
 
     ActorSystem getOrCreateActorSystem(String name,ActorSystemConfiguration configuration) {
