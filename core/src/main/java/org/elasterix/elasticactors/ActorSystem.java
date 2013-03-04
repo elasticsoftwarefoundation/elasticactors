@@ -49,9 +49,9 @@ public interface ActorSystem<I> {
 
     ActorRef createActor(String actorId, Class<?> actorClass);
 
-    MessageSerializer<?> getSerializer(Class<?> messageClass);
+    <T> MessageSerializer<T> getSerializer(Class<T> messageClass);
 
-    MessageDeserializer<?> getDeserializer(Class<?> messageClass);
+    <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass);
 
     Serializer<ActorState,byte[]> getActorStateSerializer();
 

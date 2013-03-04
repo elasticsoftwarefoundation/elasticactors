@@ -20,7 +20,6 @@ import org.apache.log4j.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
@@ -175,8 +174,6 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
                 infoMessage("Worker thread stopped");
             }
         }
-
-
 
         private void shutdown() {
             Thread.currentThread().interrupt();

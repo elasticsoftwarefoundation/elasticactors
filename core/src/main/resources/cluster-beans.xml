@@ -1,11 +1,11 @@
 <!--
-  ~ Copyright 2013 Joost van de Wijgerd
+  ~ Copyright (c) 2013 Joost van de Wijgerd <jwijgerd@gmail.com>
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
   ~ You may obtain a copy of the License at
   ~
-  ~       http://www.apache.org/licenses/LICENSE-2.0
+  ~  	http://www.apache.org/licenses/LICENSE-2.0
   ~
   ~ Unless required by applicable law or agreed to in writing, software
   ~ distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,24 +25,47 @@
 
     <bean id="clusterView" class="org.elasterix.elasticactors.cassandra.ClusterView"/>
 
-        <bean id="cassandraHostConfigurator" class="me.prettyprint.cassandra.service.CassandraHostConfigurator">
-            <constructor-arg index="0" value="localhost:9160"/>
-            <property name="maxActive" value="40"/>
-            <property name="maxWaitTimeWhenExhausted" value="1000"/>
-        </bean>
+    <bean id="cassandraHostConfigurator" class="me.prettyprint.cassandra.service.CassandraHostConfigurator">
+        <constructor-arg index="0" value="localhost:9160"/>
+        <property name="maxActive" value="40"/>
+        <property name="maxWaitTimeWhenExhausted" value="1000"/>
+    </bean>
 
-        <bean id="cassandraCluster" class="me.prettyprint.hector.api.factory.HFactory" factory-method="getOrCreateCluster">
-            <constructor-arg value="${elasticactors.cluster.name}"/>
-            <constructor-arg ref="cassandraHostConfigurator"/>
-        </bean>
+    <bean id="cassandraCluster" class="me.prettyprint.hector.api.factory.HFactory" factory-method="getOrCreateCluster">
+        <constructor-arg value="${elasticactors.cluster.name}"/>
+        <constructor-arg ref="cassandraHostConfigurator"/>
+    </bean>
 
-        <bean id="elasticActorsKeyspace" class="me.prettyprint.hector.api.factory.HFactory"
-              factory-method="createKeyspace">
-            <constructor-arg value="ElasticActors"/>
-            <constructor-arg ref="cassandraCluster"/>
-            <!-- constructor-arg ref="consistencyPolicy" non-default consistency policy could be set here -->
-        </bean>
+    <bean id="elasticActorsKeyspace" class="me.prettyprint.hector.api.factory.HFactory"
+          factory-method="createKeyspace">
+        <constructor-arg value="ElasticActors"/>
+        <constructor-arg ref="cassandraCluster"/>
+        <!-- constructor-arg ref="consistencyPolicy" non-default consistency policy could be set here -->
+    </bean>
 
+    <bean id="actorSystemsColumnFamilyTemplate" class="me.prettyprint.cassandra.service.template.ThriftColumnFamilyTemplate">
+        <constructor-arg index="0" ref="elasticActorsKeyspace"/>
+        <constructor-arg index="1" value="ActorSystems"/>
+        <constructor-arg index="2">
+            <bean class="me.prettyprint.cassandra.serializers.StringSerializer" factory-method="get"/>
+        </constructor-arg>
+        <constructor-arg index="3">
+            <bean class="me.prettyprint.cassandra.serializers.StringSerializer" factory-method="get"/>
+        </constructor-arg>
+    </bean>
+
+    <bean id="messageQueuesColumnFamilyTemplate" class="me.prettyprint.cassandra.service.template.ThriftColumnFamilyTemplate">
+        <constructor-arg index="0" ref="elasticActorsKeyspace"/>
+        <constructor-arg index="1" value="ActorSystems"/>
+        <constructor-arg index="2">
+            <bean class="me.prettyprint.cassandra.serializers.StringSerializer" factory-method="get"/>
+        </constructor-arg>
+        <constructor-arg index="3">
+            <bean class="me.prettyprint.cassandra.serializers.TimeUUIDSerializer" factory-method="get"/>
+        </constructor-arg>
+    </bean>
+
+    <bean id="commitLog" class="org.elasterix.elasticactors.messaging.journal.CassandraCommitLog"/>
 
     <bean id="elasticActorsCluster" class="org.elasterix.elasticactors.cluster.ElasticActorsCluster"/>
 
@@ -53,7 +76,7 @@
             </bean>
         </constructor-arg>
     </bean>
-    
+
     <bean id="messageQueueWorkers" class="org.elasterix.elasticactors.messaging.LocalMessageQueueWorkers">
         <constructor-arg index="0" ref="messageQueueWorkerExecutor"/>
         <constructor-arg index="1" value="4"/>
