@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.net.InetAddress;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -50,21 +51,23 @@ public class ClusterView implements IEndpointLifecycleSubscriber {
     public void onUp(InetAddress endpoint) {
         log.info("************************** ElasticActors Node Marked UP ****************************");
         log.info(String.format("%s is now UP", endpoint.getHostAddress()));
-        initializeNodeProbe();
-        String localHostId = nodeProbe.getLocalHostId();
-        Map<String,String> hostIdMap = nodeProbe.getHostIdMap();
-        if(localHostId.equals(hostIdMap.get(endpoint.getHostAddress()))) {
-            if(initialStartup.compareAndSet(true,false)) {
-                log.info("Own host marked as UP, Initiating ElasticActors Cluster");
-                try {
-                    eventListener.onJoined(localHostId,endpoint);
-                } catch (Exception e) {
-                    // @todo: we probably want to shut down the whole system now
-                    log.error("Exception initializing ElasticActors Cluster",e);
+        try {
+            initializeNodeProbe();
+            String localHostId = nodeProbe.getLocalHostId();
+            Map<InetAddress, String> clusterMembers = getClusterMembers();
+            if (localHostId.equals(clusterMembers.get(endpoint))) {
+                if (initialStartup.compareAndSet(true, false)) {
+                    log.info("Own host marked as UP, Initiating ElasticActors Cluster");
+                    eventListener.onJoined(localHostId, endpoint);
                 }
             }
+            log.info(String.format("Current Live Nodes: %s", nodeProbe.getLiveNodes().toString()));
+            // notify listener
+            eventListener.onTopologyChanged(clusterMembers);
+        } catch (Exception e) {
+            // @todo: we probably want to shut down the whole system now
+            log.error("Exception initializing ElasticActors Cluster", e);
         }
-        log.info(String.format("Current Live Nodes: %s", nodeProbe.getLiveNodes().toString()));
 
         /*
         log.info(String.format("localNode id = %s", nodeProbe.getLocalHostId()));
@@ -74,8 +77,24 @@ public class ClusterView implements IEndpointLifecycleSubscriber {
 
     }
 
+    private Map<InetAddress, String> getClusterMembers() {
+        Map<String, String> hostMap = nodeProbe.getHostIdMap();
+        List<String> liveNodes = nodeProbe.getLiveNodes();
+        Map<InetAddress, String> clusterMembers = new HashMap<InetAddress, String>();
+        try {
+            for (Map.Entry<String, String> hostEntry : hostMap.entrySet()) {
+                if (liveNodes.contains(hostEntry.getKey())) {
+                    clusterMembers.put(InetAddress.getByName(hostEntry.getKey()), hostEntry.getValue());
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return clusterMembers;
+    }
+
     private synchronized void initializeNodeProbe() {
-        if(nodeProbe == null) {
+        if (nodeProbe == null) {
             try {
                 nodeProbe = new NodeProbe("localhost");
             } catch (Exception e) {

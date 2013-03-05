@@ -16,9 +16,15 @@
 
 package org.elasterix.elasticactors;
 
+import java.net.InetAddress;
+
 /**
  * @author Joost van de Wijgerd
  */
 public interface PhysicalNode {
     boolean isLocal();
+
+    String getId();
+
+    InetAddress getAddress();
 }

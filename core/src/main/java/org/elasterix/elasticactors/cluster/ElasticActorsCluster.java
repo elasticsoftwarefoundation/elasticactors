@@ -16,6 +16,7 @@
 
 package org.elasterix.elasticactors.cluster;
 
+import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ActorSystem;
 import org.elasterix.elasticactors.ActorSystemConfiguration;
@@ -27,11 +28,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-import javax.annotation.PostConstruct;
 import java.net.InetAddress;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -39,8 +42,10 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 @Configurable
 public class ElasticActorsCluster implements ActorRefFactory, ApplicationContextAware, ClusterEventListener {
+    private static final Logger logger = Logger.getLogger(ElasticActorsCluster.class);
     private static final AtomicReference<ElasticActorsCluster> INSTANCE = new AtomicReference<ElasticActorsCluster>(null);
     private final ConcurrentMap<String,LocalActorSystemInstance> managedActorSystems = new ConcurrentHashMap<String,LocalActorSystemInstance>();
+    private final AtomicBoolean clusterStarted = new AtomicBoolean(false);
     private String clusterName;
     private PhysicalNode localNode;
 
@@ -60,8 +65,16 @@ public class ElasticActorsCluster implements ActorRefFactory, ApplicationContext
     }
 
     @Override
-    public void onTopologyChanged(List<String> topology) {
-        //To change body of implemented methods use File | Settings | File Templates.
+    public void onTopologyChanged(Map<InetAddress,String> topology) {
+        logger.info("Cluster topology changed");
+        List<PhysicalNode> clusterNodes = new LinkedList<PhysicalNode>();
+        for (Map.Entry<InetAddress, String> hostEntry : topology.entrySet()) {
+            if(localNode.getId().equals(hostEntry.getValue())) {
+                clusterNodes.add(localNode);
+            } else {
+                clusterNodes.add(new PhysicalNodeImpl(hostEntry.getValue(),hostEntry.getKey(),false));
+            }
+        }
     }
 
     @Override

@@ -18,6 +18,7 @@ package org.elasterix.elasticactors.cassandra;
 
 import java.net.InetAddress;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Joost van de Wijgerd
@@ -25,7 +26,7 @@ import java.util.List;
 public interface ClusterEventListener {
     void onJoined(String hostId,InetAddress hostAddress) throws Exception;
 
-    void onTopologyChanged(List<String> topology) throws Exception;
+    void onTopologyChanged(Map<InetAddress,String> topology) throws Exception;
 
     void onLeft();
 }

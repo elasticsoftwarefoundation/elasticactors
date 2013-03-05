@@ -39,12 +39,23 @@ public class PhysicalNodeImpl implements PhysicalNode {
         return local;
     }
 
+    @Override
     public String getId() {
         return id;
     }
 
+    @Override
     public InetAddress getAddress() {
         return address;
+    }
+
+    @Override
+    public String toString() {
+        return "PhysicalNodeImpl{" +
+                "id='" + id + '\'' +
+                ", address=" + address +
+                ", local=" + local +
+                '}';
     }
 
     @Override
