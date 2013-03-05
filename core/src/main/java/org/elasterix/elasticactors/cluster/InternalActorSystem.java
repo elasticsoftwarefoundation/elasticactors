@@ -16,10 +16,7 @@
 
 package org.elasterix.elasticactors.cluster;
 
-import org.elasterix.elasticactors.ActorRef;
-import org.elasterix.elasticactors.ActorSystem;
-import org.elasterix.elasticactors.ActorSystemConfiguration;
-import org.elasterix.elasticactors.ElasticActor;
+import org.elasterix.elasticactors.*;
 
 /**
  * @author Joost van de Wijgerd
@@ -27,4 +24,6 @@ import org.elasterix.elasticactors.ElasticActor;
 public interface InternalActorSystem extends ActorSystem, ActorSystemConfiguration {
 
     ElasticActor<?> getActorInstance(ActorRef actorRef);
+
+    ActorShard getShard(int shardId);
 }

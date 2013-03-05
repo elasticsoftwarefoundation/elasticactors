@@ -17,10 +17,7 @@
 package org.elasterix.elasticactors.cluster;
 
 import org.apache.log4j.Logger;
-import org.elasterix.elasticactors.ActorRef;
-import org.elasterix.elasticactors.ActorSystem;
-import org.elasterix.elasticactors.ActorSystemConfiguration;
-import org.elasterix.elasticactors.PhysicalNode;
+import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.cassandra.ClusterEventListener;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Configurable;
@@ -41,7 +38,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Joost van de Wijgerd
  */
 @Configurable
-public class ElasticActorsCluster implements ActorRefFactory, ApplicationContextAware, ClusterEventListener {
+public class ElasticActorsCluster implements ActorRefFactory, ApplicationContextAware, ClusterEventListener, ActorSystems {
     private static final Logger logger = Logger.getLogger(ElasticActorsCluster.class);
     private static final AtomicReference<ElasticActorsCluster> INSTANCE = new AtomicReference<ElasticActorsCluster>(null);
     private final ConcurrentMap<String,LocalActorSystemInstance> managedActorSystems = new ConcurrentHashMap<String,LocalActorSystemInstance>();
@@ -82,8 +79,14 @@ public class ElasticActorsCluster implements ActorRefFactory, ApplicationContext
         // shutdown all actor systems
     }
 
-    ActorSystem getOrCreateActorSystem(String name,ActorSystemConfiguration configuration) {
-        return null;
+    @Override
+    public String getClusterName() {
+        return clusterName;
+    }
+
+    @Override
+    public ActorSystem get(String actorSystemName) {
+        return managedActorSystems.get(actorSystemName);
     }
 
     @Value("${elasticactors.cluster.name}")
@@ -93,48 +96,6 @@ public class ElasticActorsCluster implements ActorRefFactory, ApplicationContext
 
     @Override
     public ActorRef create(String refSpec) throws IllegalArgumentException {
-        // refSpec should look like: actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId>
-        if(refSpec.startsWith("actor://")) {
-            int actorSeparatorIndex = 8;
-            for(int i = 0; i < 3; i++) {
-                int nextIndex = refSpec.indexOf('/',actorSeparatorIndex);
-                if(nextIndex == -1) {
-                    throw new IllegalArgumentException(
-                        String.format("Invalid ActorRef, required spec: [actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId (optional)>, actual spec: [%s]",refSpec));
-                } else {
-                    actorSeparatorIndex = nextIndex;
-                }
-            }
-            int nextIndex = refSpec.indexOf('/',actorSeparatorIndex);
-            String actorId = (nextIndex == -1) ? null : refSpec.substring(nextIndex);
-            actorSeparatorIndex = (nextIndex == -1) ? actorSeparatorIndex : nextIndex;
-            String[] components = refSpec.substring(8,actorSeparatorIndex).split("/");
-            if(components.length == 4) {
-                String cluster = components[0];
-                if(!this.clusterName.equals(cluster)) {
-                    throw new IllegalArgumentException(String.format("Cluster [%s] is not Local Cluster [%s]",cluster,clusterName));
-                }
-                String actorSystemName = components[1];
-                if(!"shards".equals(components[2])) {
-                    throw new IllegalArgumentException(
-                                            String.format("Invalid ActorRef, required spec: [actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId (optional)>, actual spec: [%s]",refSpec));
-                }
-                int shardId = Integer.parseInt(components[3]);
-                LocalActorSystemInstance actorSystem = managedActorSystems.get(actorSystemName);
-                if(actorSystem == null) {
-                    throw new IllegalArgumentException(String.format("Unknown ActorSystem: %s",actorSystemName));
-                }
-                if(shardId >= actorSystem.getNumberOfShards()) {
-                    throw new IllegalArgumentException(String.format("Unknown shard %d for ActorSystem %s. Available shards: %d",shardId,actorSystemName,actorSystem.getNumberOfShards()));
-                }
-                return new LocalClusterActorRef(clusterName,actorSystem.getShard(shardId),actorId);
-            } else {
-                throw new IllegalArgumentException(
-                    String.format("Invalid ActorRef, required spec: [actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId (optional)>, actual spec: [%s]",refSpec));
-            }
-        } else {
-            throw new IllegalArgumentException(
-                                String.format("Invalid ActorRef, required spec: [actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId (optional)>, actual spec: [%s]",refSpec));
-        }
+        return ActorRefTools.parse(refSpec,this);
     }
 }

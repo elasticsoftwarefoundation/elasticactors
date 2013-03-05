@@ -121,6 +121,7 @@ public class LocalActorSystemInstance implements InternalActorSystem {
         return configuration.getNumberOfShards();
     }
 
+    @Override
     public ActorShard getShard(int shardId) {
         return shardAdapters[shardId];
     }
