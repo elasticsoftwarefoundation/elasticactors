@@ -16,8 +16,40 @@
 
 package org.elasterix.elasticactors;
 
+import org.elasterix.elasticactors.serialization.Deserializer;
+import org.elasterix.elasticactors.serialization.MessageDeserializer;
+import org.elasterix.elasticactors.serialization.MessageSerializer;
+import org.elasterix.elasticactors.serialization.Serializer;
+
 /**
- *
+ * @author Joost van de Wijgerd
  */
 public interface ActorSystemConfiguration {
+    /**
+     * The name of this {@link ActorSystem}. The name has to be unique within the same cluster
+     *
+     * @return
+     */
+    String getName();
+
+    /**
+     * The number of {@link org.elasterix.elasticactors.ActorShard} instances. This determines how big an {@link org.elasterix.elasticactors.ActorSystem} can scale. If a cluster
+     * contains more {@link org.elasterix.elasticactors.PhysicalNode}s than shards then not every node will have a shard.
+     *
+     * @return
+     */
+    int getNumberOfShards();
+
+    <T> MessageSerializer<T> getSerializer(Class<T> messageClass);
+
+    <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass);
+
+    Serializer<ActorState, byte[]> getActorStateSerializer();
+
+    /**
+     * Pluggable {@link org.elasterix.elasticactors.serialization.Deserializer} for the internal state of the actor
+     *
+     * @return the {@link org.elasterix.elasticactors.serialization.Deserializer} used to deserialize from a byte array to an {@link ActorState} instance
+     */
+    Deserializer<byte[], ActorState> getActorStateDeserializer();
 }

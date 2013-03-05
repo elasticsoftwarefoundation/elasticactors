@@ -36,9 +36,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author Joost van de Wijgerd
  */
 @Configurable
-public class LocalActorSystemInstance {
+public class LocalActorSystemInstance implements InternalActorSystem {
     private static final Logger log = Logger.getLogger(LocalActorSystemInstance.class);
-    private final ActorSystem actorSystem;
+    private final ActorSystemConfiguration configuration;
     private final ActorShard[] shards;
     private final ReadWriteLock[] shardLocks;
     private final ActorShardAdapter[] shardAdapters;
@@ -46,9 +46,9 @@ public class LocalActorSystemInstance {
     private MessageQueueFactory localMessageQueueFactory;
     private MessageQueueFactory remoteMessageQueueFactory;
 
-    public LocalActorSystemInstance(ActorSystem actorSystem) {
-        this.actorSystem = actorSystem;
-        this.shards = new ActorShard[actorSystem.getNumberOfShards()];
+    public LocalActorSystemInstance(ActorSystemConfiguration actorSystem) {
+        this.configuration = actorSystem;
+        this.shards = new ActorShard[configuration.getNumberOfShards()];
         this.shardLocks = new ReadWriteLock[shards.length];
         this.shardAdapters = new ActorShardAdapter[shards.length];
         for (int i = 0; i < shards.length; i++) {
@@ -64,8 +64,8 @@ public class LocalActorSystemInstance {
      */
     public void distributeShards(List<PhysicalNode> nodes) throws Exception {
         NodeSelector nodeSelector = nodeSelectorFactory.create(nodes);
-        for(int i = 0; i < actorSystem.getNumberOfShards(); i++) {
-            PhysicalNode node = nodeSelector.getPrimary(new ShardKey(actorSystem.getName(),i));
+        for(int i = 0; i < configuration.getNumberOfShards(); i++) {
+            PhysicalNode node = nodeSelector.getPrimary(new ShardKey(configuration.getName(),i));
             if(node.isLocal()) {
                 // this instance should start owning the shard now
                 final ActorShard currentShard = shards[i];
@@ -79,7 +79,7 @@ public class LocalActorSystemInstance {
                             currentShard.destroy();
                         }
                         // create a new local shard and swap it
-                        LocalActorShard newShard = new LocalActorShard(node,actorSystem,i,localMessageQueueFactory);
+                        LocalActorShard newShard = new LocalActorShard(node,this,i,localMessageQueueFactory);
                         // initialize
                         newShard.init();
                         shards[i] = newShard;
@@ -103,7 +103,7 @@ public class LocalActorSystemInstance {
                             currentShard.destroy();
                         }
                         // create a new local shard and swap it
-                        RemoteActorShard newShard = new RemoteActorShard(node,actorSystem,i,remoteMessageQueueFactory);
+                        RemoteActorShard newShard = new RemoteActorShard(node,this,i,remoteMessageQueueFactory);
                         // initialize
                         newShard.init();
                         shards[i] = newShard;
@@ -118,11 +118,51 @@ public class LocalActorSystemInstance {
     }
 
     public int getNumberOfShards() {
-        return actorSystem.getNumberOfShards();
+        return configuration.getNumberOfShards();
     }
 
     public ActorShard getShard(int shardId) {
         return shardAdapters[shardId];
+    }
+
+    @Override
+    public ElasticActor<?> getActorInstance(ActorRef actorRef) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public String getName() {
+        return configuration.getName();
+    }
+
+    @Override
+    public <T> ActorRef actorOf(String actorId, Class<T> actorClass) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public ActorRef actorFor(String actorId) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
+        return configuration.getSerializer(messageClass);
+    }
+
+    @Override
+    public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
+        return configuration.getDeserializer(messageClass);
+    }
+
+    @Override
+    public Serializer<ActorState, byte[]> getActorStateSerializer() {
+        return configuration.getActorStateSerializer();
+    }
+
+    @Override
+    public Deserializer<byte[], ActorState> getActorStateDeserializer() {
+        return configuration.getActorStateDeserializer();
     }
 
     @Autowired

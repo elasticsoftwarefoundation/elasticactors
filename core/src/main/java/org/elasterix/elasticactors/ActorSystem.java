@@ -25,13 +25,13 @@ import org.elasterix.elasticactors.serialization.Serializer;
  * An {@link ActorSystem} is a collection of {@link ElasticActor} instances. {@link ElasticActor}s are persistent and
  * have an {@link ActorState}. An application implementing and {@link ActorSystem} should create classes that implement
  * the {@link ElasticActor#onMessage(Object, ActorRef)} method. Within this method the associated {@link ActorState} can
- * be obtained by calling the {@link org.elasterix.elasticactors.cluster.ActorStateContext#getState()} method.
+ * be obtained by calling the {@link org.elasterix.elasticactors.cluster.InternalActorStateContext#getState()} method.
  * The ElasticActors framework will take care of persisting the state. The application can control the serialization and
  * deserialization by providing appropriate {@link Deserializer} in the {@link org.elasterix.elasticactors.ActorSystem#getActorStateDeserializer()}
  *
  * @author Joost van de Wijgerd
  */
-public interface ActorSystem<I> {
+public interface ActorSystem {
     /**
      * The name of this {@link ActorSystem}. The name has to be unique within the same cluster
      *
@@ -39,28 +39,8 @@ public interface ActorSystem<I> {
      */
     String getName();
 
-    /**
-     * The number of {@link ActorShard} instances. This determines how big an {@link ActorSystem} can scale. If a cluster
-     * contains more {@link PhysicalNode}s than shards then not every node will have a shard.
-     *
-     * @return
-     */
-    int getNumberOfShards();
+    <T> ActorRef actorOf(String actorId, Class<T> actorClass);
 
-    ActorRef createActor(String actorId, Class<?> actorClass);
+    ActorRef actorFor(String actorId);
 
-    <T> MessageSerializer<T> getSerializer(Class<T> messageClass);
-
-    <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass);
-
-    Serializer<ActorState,byte[]> getActorStateSerializer();
-
-    /**
-     * Pluggable {@link Deserializer} for the internal state of the actor
-     *
-     * @return      the {@link Deserializer} used to deserialize from a byte array to an {@link ActorState} instance
-     */
-    Deserializer<byte[],ActorState> getActorStateDeserializer();
-
-    ElasticActor<?> getActorInstance(ActorRef actorRef);
 }

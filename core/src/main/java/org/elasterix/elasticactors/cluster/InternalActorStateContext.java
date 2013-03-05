@@ -17,6 +17,7 @@
 package org.elasterix.elasticactors.cluster;
 
 import org.elasterix.elasticactors.ActorState;
+import org.elasterix.elasticactors.ActorStateContext;
 import org.elasterix.elasticactors.state.ActorStateMap;
 
 import java.util.HashMap;
@@ -24,22 +25,12 @@ import java.util.HashMap;
 /**
  * @author Joost van de Wijgerd
  */
-public class ActorStateContext {
-    private static final ThreadLocal<ActorState> threadContext = new ThreadLocal<ActorState>();
+public class InternalActorStateContext extends ActorStateContext {
 
     protected static ActorState setState(ActorState context) {
         final ActorState currentContext = threadContext.get();
         threadContext.set(context);
         return currentContext;
-    }
-
-    public static ActorState getState() {
-        ActorState state =  threadContext.get();
-        if(state == null) {
-            state = new ActorStateMap(new HashMap<String,Object>());
-            threadContext.set(state);
-        }
-        return state;
     }
 
     protected static ActorState getAndClearState() {

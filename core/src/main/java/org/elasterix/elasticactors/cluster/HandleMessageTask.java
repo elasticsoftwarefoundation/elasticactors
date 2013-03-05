@@ -36,11 +36,11 @@ public final class HandleMessageTask implements ElasticActorRunnable<String> {
     private static final Logger log = Logger.getLogger(HandleMessageTask.class);
     private final ActorRef receiverRef;
     private final ElasticActor receiver;
-    private final ActorSystem actorSystem;
+    private final InternalActorSystem actorSystem;
     private final InternalMessage internalMessage;
     private final PersistentActor persistentActor;
 
-    public HandleMessageTask(ActorSystem actorSystem, ElasticActor receiver, InternalMessage internalMessage, PersistentActor persistentActor) {
+    public HandleMessageTask(InternalActorSystem actorSystem, ElasticActor receiver, InternalMessage internalMessage, PersistentActor persistentActor) {
         this.actorSystem = actorSystem;
         this.receiver = receiver;
         this.internalMessage = internalMessage;
@@ -58,7 +58,7 @@ public final class HandleMessageTask implements ElasticActorRunnable<String> {
     public void run() {
         try {
             // first see if we can deserialize the actual internalMessage
-            MessageDeserializer<Object> deserializer = actorSystem.getDeserializer(Class.forName(internalMessage.getPayloadClass()));
+            MessageDeserializer deserializer = actorSystem.getDeserializer(Class.forName(internalMessage.getPayloadClass()));
             if(deserializer != null) {
                 Object message = deserializer.deserialize(internalMessage.getPayload());
                 handleMessage(message);
@@ -77,14 +77,14 @@ public final class HandleMessageTask implements ElasticActorRunnable<String> {
         try {
             // setup the state
             stateBefore = persistentActor.getState(actorSystem.getActorStateDeserializer());
-            ActorStateContext.setState(stateBefore);
+            InternalActorStateContext.setState(stateBefore);
             receiver.onMessage(message,internalMessage.getSender());
         } catch(Exception e) {
             // @todo: handle by sending back a message (if possible)
             log.error(String.format("Exception while handling message for actor [%s]",receiverRef.toString()),e);
         } finally {
             // clear the state
-            ActorState stateAfter = ActorStateContext.getAndClearState();
+            ActorState stateAfter = InternalActorStateContext.getAndClearState();
             // check if we have state now that needs to be put in the cache
             Serializer<ActorState,byte[]> stateSerializer = actorSystem.getActorStateSerializer();
             persistentActor.setSerializedState(stateSerializer.serialize(stateAfter));

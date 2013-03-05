@@ -34,7 +34,7 @@ import java.util.concurrent.locks.ReadWriteLock;
  */
 @Configurable
 public class LocalActorShard implements ActorShard, MessageHandler {
-    private final ActorSystem actorSystem;
+    private final InternalActorSystem actorSystem;
     private final PhysicalNode localNode;
     private final ShardKey shardKey;
     private final MessageQueueFactory messageQueueFactory;
@@ -42,7 +42,7 @@ public class LocalActorShard implements ActorShard, MessageHandler {
     private ActorSystemShardExecutor actorExecutor;
     private Cache<ActorRef,PersistentActor> actorCache;
 
-    public LocalActorShard(PhysicalNode node, ActorSystem actorSystem, int shard, MessageQueueFactory messageQueueFactory) {
+    public LocalActorShard(PhysicalNode node, InternalActorSystem actorSystem, int shard, MessageQueueFactory messageQueueFactory) {
         this.actorSystem = actorSystem;
         this.localNode = node;
         this.shardKey = new ShardKey(actorSystem.getName(), shard);
