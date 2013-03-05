@@ -17,13 +17,10 @@
 package org.elasterix.elasticactors.serialization.internal;
 
 import com.google.protobuf.ByteString;
-import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.messaging.InternalMessage;
 import org.elasterix.elasticactors.messaging.UUIDTools;
 import org.elasterix.elasticactors.serialization.Serializer;
 import org.elasterix.elasticactors.serialization.protobuf.Elasticactors;
-
-import java.nio.ByteBuffer;
 
 /**
  * @author Joost van de Wijgerd

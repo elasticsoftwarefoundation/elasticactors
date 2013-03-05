@@ -18,9 +18,6 @@ package org.elasterix.elasticactors.cluster;
 
 import org.elasterix.elasticactors.ActorState;
 import org.elasterix.elasticactors.ActorStateContext;
-import org.elasterix.elasticactors.state.ActorStateMap;
-
-import java.util.HashMap;
 
 /**
  * @author Joost van de Wijgerd

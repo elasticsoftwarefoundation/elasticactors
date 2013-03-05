@@ -16,10 +16,6 @@
 
 package org.elasterix.elasticactors;
 
-import org.elasterix.elasticactors.state.ActorStateMap;
-
-import java.util.HashMap;
-
 /**
  * @author Joost van de Wijgerd
  */

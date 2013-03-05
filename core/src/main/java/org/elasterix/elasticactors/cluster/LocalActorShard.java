@@ -25,9 +25,6 @@ import org.elasterix.elasticactors.state.PersistentActor;
 import org.elasterix.elasticactors.util.concurrent.ActorSystemShardExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.beans.factory.annotation.Qualifier;
-
-import java.util.concurrent.locks.ReadWriteLock;
 
 /**
  * @author Joost van de Wijgerd

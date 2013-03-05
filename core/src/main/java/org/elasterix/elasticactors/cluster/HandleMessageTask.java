@@ -19,7 +19,6 @@ package org.elasterix.elasticactors.cluster;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ActorState;
-import org.elasterix.elasticactors.ActorSystem;
 import org.elasterix.elasticactors.ElasticActor;
 import org.elasterix.elasticactors.messaging.InternalMessage;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;

@@ -16,16 +16,11 @@
 
 package org.elasterix.elasticactors.serialization.internal;
 
-import org.elasterix.elasticactors.ActorRef;
-import org.elasterix.elasticactors.messaging.InternalMessage;
-import org.elasterix.elasticactors.messaging.InternalMessageImpl;
-import org.elasterix.elasticactors.messaging.UUIDTools;
 import org.elasterix.elasticactors.serialization.Deserializer;
 import org.elasterix.elasticactors.serialization.protobuf.Elasticactors;
 import org.elasterix.elasticactors.state.PersistentActor;
 
 import java.io.IOException;
-import java.util.UUID;
 
 /**
  * @author Joost van de Wijgerd
