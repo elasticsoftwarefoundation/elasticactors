@@ -23,7 +23,7 @@ import java.net.InetAddress;
 /**
  * @author Joost van de Wijgerd
  */
-public class PhysicalNodeImpl implements PhysicalNode {
+public final class PhysicalNodeImpl implements PhysicalNode {
     private final String id;
     private final InetAddress address;
     private final boolean local;

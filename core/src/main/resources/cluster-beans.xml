@@ -88,4 +88,8 @@
 
     <alias name="messageQueueWorkers" alias="localMessageQueueFactory"/>
 
+    <bean id="remoteMessageQueueFactory" class="org.elasterix.elasticactors.messaging.RemoteMessageQueueFactory"/>
+
+    <bean id="nodeSelectorFactory" class="org.elasterix.elasticactors.cluster.cassandra.CassandraNodeSelectorFactory"/>
+
 </beans>

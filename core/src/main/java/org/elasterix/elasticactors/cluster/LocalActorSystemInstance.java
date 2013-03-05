@@ -36,18 +36,19 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author Joost van de Wijgerd
  */
 @Configurable
-public class LocalActorSystemInstance implements InternalActorSystem {
+public final class LocalActorSystemInstance implements InternalActorSystem {
     private static final Logger log = Logger.getLogger(LocalActorSystemInstance.class);
     private final ActorSystemConfiguration configuration;
     private final ActorShard[] shards;
     private final ReadWriteLock[] shardLocks;
     private final ActorShardAdapter[] shardAdapters;
-    private NodeSelectorFactory nodeSelectorFactory;
+    private final NodeSelectorFactory nodeSelectorFactory;
     private MessageQueueFactory localMessageQueueFactory;
     private MessageQueueFactory remoteMessageQueueFactory;
 
-    public LocalActorSystemInstance(ActorSystemConfiguration actorSystem) {
+    public LocalActorSystemInstance(ActorSystemConfiguration actorSystem, NodeSelectorFactory nodeSelectorFactory) {
         this.configuration = actorSystem;
+        this.nodeSelectorFactory = nodeSelectorFactory;
         this.shards = new ActorShard[configuration.getNumberOfShards()];
         this.shardLocks = new ReadWriteLock[shards.length];
         this.shardAdapters = new ActorShardAdapter[shards.length];
@@ -164,11 +165,6 @@ public class LocalActorSystemInstance implements InternalActorSystem {
     @Override
     public Deserializer<byte[], ActorState> getActorStateDeserializer() {
         return configuration.getActorStateDeserializer();
-    }
-
-    @Autowired
-    public void setNodeSelectorFactory(NodeSelectorFactory nodeSelectorFactory) {
-        this.nodeSelectorFactory = nodeSelectorFactory;
     }
 
     @Autowired

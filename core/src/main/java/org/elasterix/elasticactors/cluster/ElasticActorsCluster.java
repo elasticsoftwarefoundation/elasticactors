@@ -20,11 +20,13 @@ import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.cassandra.ClusterEventListener;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
+import javax.xml.ws.Action;
 import java.net.InetAddress;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,6 +47,7 @@ public class ElasticActorsCluster implements ActorRefFactory, ApplicationContext
     private final AtomicBoolean clusterStarted = new AtomicBoolean(false);
     private String clusterName;
     private PhysicalNode localNode;
+    private NodeSelectorFactory nodeSelectorFactory;
 
     public static ElasticActorsCluster getInstance() {
         return INSTANCE.get();
@@ -58,6 +61,8 @@ public class ElasticActorsCluster implements ActorRefFactory, ApplicationContext
     @Override
     public void onJoined(String hostId, InetAddress hostAddress) throws Exception {
         this.localNode = new PhysicalNodeImpl(hostId,hostAddress,true);
+        // start NodeSelectorFactory
+        nodeSelectorFactory.start();
         // load all actor systems (but not start them yet since we are not officially part of the cluster)
     }
 
@@ -97,5 +102,10 @@ public class ElasticActorsCluster implements ActorRefFactory, ApplicationContext
     @Override
     public ActorRef create(String refSpec) throws IllegalArgumentException {
         return ActorRefTools.parse(refSpec,this);
+    }
+
+    @Autowired
+    public void setNodeSelectorFactory(NodeSelectorFactory nodeSelectorFactory) {
+        this.nodeSelectorFactory = nodeSelectorFactory;
     }
 }

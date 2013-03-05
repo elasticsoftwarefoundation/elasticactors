@@ -30,7 +30,7 @@ import org.springframework.beans.factory.annotation.Configurable;
  * @author Joost van de Wijgerd
  */
 @Configurable
-public class LocalActorShard implements ActorShard, MessageHandler {
+public final class LocalActorShard implements ActorShard, MessageHandler {
     private final InternalActorSystem actorSystem;
     private final PhysicalNode localNode;
     private final ShardKey shardKey;
