@@ -22,7 +22,7 @@ import org.elasterix.elasticactors.serialization.Serializer;
 /**
  * @author Joost van de Wijgerd
  */
-public class ActorRefSerializer implements Serializer<ActorRef,String> {
+public final class ActorRefSerializer implements Serializer<ActorRef,String> {
     private static final ActorRefSerializer INSTANCE = new ActorRefSerializer();
 
     public static ActorRefSerializer get() {

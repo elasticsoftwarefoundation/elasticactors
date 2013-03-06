@@ -24,7 +24,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * @author Joost van de Wijgerd
  */
-public class LocalMessageQueue extends PersistentMessageQueue {
+public final class LocalMessageQueue extends PersistentMessageQueue {
     private final LinkedBlockingQueue<InternalMessage> queue;
     private final MessageQueueEventListener eventListener;
     private final MessageHandler messageHandler;

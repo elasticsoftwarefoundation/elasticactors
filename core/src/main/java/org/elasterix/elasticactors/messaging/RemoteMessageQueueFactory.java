@@ -19,7 +19,7 @@ package org.elasterix.elasticactors.messaging;
 /**
  * @author Joost van de Wijgerd
  */
-public class RemoteMessageQueueFactory implements MessageQueueFactory {
+public final class RemoteMessageQueueFactory implements MessageQueueFactory {
     @Override
     public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
         return new RemoteMessageQueue(name);

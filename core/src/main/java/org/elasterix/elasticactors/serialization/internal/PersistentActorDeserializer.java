@@ -25,7 +25,7 @@ import java.io.IOException;
 /**
  * @author Joost van de Wijgerd
  */
-public class PersistentActorDeserializer implements Deserializer<byte[],PersistentActor> {
+public final class PersistentActorDeserializer implements Deserializer<byte[],PersistentActor> {
     private static final PersistentActorDeserializer INSTANCE = new PersistentActorDeserializer();
 
     public static PersistentActorDeserializer get() {

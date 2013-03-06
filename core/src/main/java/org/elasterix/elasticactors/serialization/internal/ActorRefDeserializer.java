@@ -26,7 +26,7 @@ import java.io.IOException;
 /**
  * @author Joost van de Wijgerd
  */
-public class ActorRefDeserializer implements Deserializer<String,ActorRef> {
+public final class ActorRefDeserializer implements Deserializer<String,ActorRef> {
     private static final ActorRefDeserializer INSTANCE = new ActorRefDeserializer();
     private ActorRefFactory actorRefFactory;
 

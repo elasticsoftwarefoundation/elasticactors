@@ -24,7 +24,7 @@ import java.io.IOException;
 /**
  * @author Joost van de Wijgerd
  */
-public class PersistentActor {
+public final class PersistentActor {
     private final String actorSystemVersion;
     private final String actorClass;
     private final String ref;

@@ -19,7 +19,7 @@ package org.elasterix.elasticactors.messaging;
 /**
  * @author Joost van de Wijgerd
  */
-public class RemoteMessageQueue extends PersistentMessageQueue {
+public final class RemoteMessageQueue extends PersistentMessageQueue {
 
     public RemoteMessageQueue(String name) {
         super(name);

@@ -25,7 +25,7 @@ import org.elasterix.elasticactors.serialization.protobuf.Elasticactors;
 /**
  * @author Joost van de Wijgerd
  */
-public class InternalMessageSerializer implements Serializer<InternalMessage,byte[]> {
+public final class InternalMessageSerializer implements Serializer<InternalMessage,byte[]> {
     private static final InternalMessageSerializer INSTANCE = new InternalMessageSerializer();
 
     public static InternalMessageSerializer get() {

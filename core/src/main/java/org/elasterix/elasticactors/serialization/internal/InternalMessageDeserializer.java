@@ -29,7 +29,7 @@ import java.util.UUID;
 /**
  * @author Joost van de Wijgerd
  */
-public class InternalMessageDeserializer implements Deserializer<byte[],InternalMessage> {
+public final class InternalMessageDeserializer implements Deserializer<byte[],InternalMessage> {
     private static final InternalMessageDeserializer INSTANCE = new InternalMessageDeserializer();
 
     public static InternalMessageDeserializer get() {

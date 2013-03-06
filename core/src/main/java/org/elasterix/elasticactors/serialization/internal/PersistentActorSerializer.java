@@ -24,7 +24,7 @@ import org.elasterix.elasticactors.state.PersistentActor;
 /**
  * @author Joost van de Wijgerd
  */
-public class PersistentActorSerializer implements Serializer<PersistentActor,byte[]> {
+public final class PersistentActorSerializer implements Serializer<PersistentActor,byte[]> {
     private static final PersistentActorSerializer INSTANCE = new PersistentActorSerializer();
 
     public static PersistentActorSerializer get() {
