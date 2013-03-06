@@ -130,6 +130,7 @@
         <module>cassandra-integration</module>
         <module>core</module>
         <module>api</module>
+        <module>petstore</module>
     </modules>
 
     <build>
