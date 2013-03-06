@@ -77,7 +77,7 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
     @Override
     public void handleMessage(InternalMessage message) {
         ActorRef receiverRef = message.getReceiver();
-        if(receiverRef != null) {
+        if(receiverRef.getActorId() != null) {
             // find actor class behind receiver ActorRef
             ElasticActor actorInstance = actorSystem.getActorInstance(message.getReceiver());
             // execute on it's own thread
@@ -85,6 +85,7 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
         } else {
             // the message is intended for the shard, this means it's about creating or stopping an actor
             // we will handle this on the messaging thread as it's all serialized and we can change the
+
 
         }
     }

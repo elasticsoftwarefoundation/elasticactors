@@ -39,6 +39,10 @@ public final class LocalClusterActorRef implements ActorRef {
         this(clusterName, shard,null);
     }
 
+    public String getActorId() {
+        return actorId;
+    }
+
     @Override
     public void tell(Object message, ActorRef sender) throws Exception {
         shard.sendMessage(sender,this,message);

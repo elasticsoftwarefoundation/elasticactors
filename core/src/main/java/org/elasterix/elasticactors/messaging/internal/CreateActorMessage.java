@@ -14,16 +14,27 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.cluster;
+package org.elasterix.elasticactors.messaging.internal;
 
-import org.elasterix.elasticactors.*;
+import java.io.Serializable;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface InternalActorSystem extends ActorSystem, ActorSystemConfiguration {
+public class CreateActorMessage implements Serializable {
+    private final String actorId;
+    private final byte[] initialState;
 
-    ElasticActor getActorInstance(ActorRef actorRef);
+    public CreateActorMessage(String actorId, byte[] initialState) {
+        this.actorId = actorId;
+        this.initialState = initialState;
+    }
 
-    ActorShard getShard(int shardId);
+    public String getActorId() {
+        return actorId;
+    }
+
+    public byte[] getInitialState() {
+        return initialState;
+    }
 }

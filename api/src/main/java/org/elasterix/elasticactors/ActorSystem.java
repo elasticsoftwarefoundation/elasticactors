@@ -36,7 +36,11 @@ public interface ActorSystem {
      */
     String getName();
 
-    <T> ActorRef actorOf(String actorId, Class<T> actorClass);
+    <T> ActorRef actorOf(String actorId, Class<T> actorClass) throws Exception;
+
+    <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception;
+
+    <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState, boolean persistent) throws Exception;
 
     ActorRef actorFor(String actorId);
 

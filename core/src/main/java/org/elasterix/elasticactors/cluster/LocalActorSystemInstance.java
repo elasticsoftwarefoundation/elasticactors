@@ -28,6 +28,8 @@ import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -43,6 +45,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private final ReadWriteLock[] shardLocks;
     private final ActorShardAdapter[] shardAdapters;
     private final NodeSelectorFactory nodeSelectorFactory;
+    private final ConcurrentMap<Class,ElasticActor> actorInstances = new ConcurrentHashMap<Class,ElasticActor>();
     private MessageQueueFactory localMessageQueueFactory;
     private MessageQueueFactory remoteMessageQueueFactory;
 
@@ -128,7 +131,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
-    public ElasticActor<?> getActorInstance(ActorRef actorRef) {
+    public ElasticActor getActorInstance(ActorRef actorRef) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
@@ -138,8 +141,26 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
-    public <T> ActorRef actorOf(String actorId, Class<T> actorClass) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public <T> ActorRef actorOf(String actorId, Class<T> actorClass) throws Exception {
+        return actorOf(actorId,actorClass,null,true);
+    }
+
+    @Override
+    public <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception {
+        return actorOf(actorId,actorClass,initialState,true);
+    }
+
+    @Override
+    public <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState, boolean persistent) throws Exception {
+        // ensure the actor instance is created
+        if(!actorInstances.containsKey(actorClass)) {
+            actorInstances.putIfAbsent(actorClass, (ElasticActor) actorClass.newInstance());
+        }
+        // determine shard
+        // send CreateActorMessage to shard
+        // create actor ref
+        // return
+        return null;
     }
 
     @Override

@@ -21,5 +21,7 @@ package org.elasterix.elasticactors;
  *
  */
 public interface ActorRef {
+    String getActorId();
+
     void tell(Object message, ActorRef sender) throws Exception;
 }
