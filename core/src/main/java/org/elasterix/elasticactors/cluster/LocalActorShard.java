@@ -22,9 +22,10 @@ import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.messaging.*;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.state.PersistentActor;
-import org.elasterix.elasticactors.util.concurrent.ActorSystemShardExecutor;
+import org.elasterix.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @author Joost van de Wijgerd
@@ -36,7 +37,7 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
     private final ShardKey shardKey;
     private final MessageQueueFactory messageQueueFactory;
     private MessageQueue messageQueue;
-    private ActorSystemShardExecutor actorExecutor;
+    private ThreadBoundExecutor<String> actorExecutor;
     private Cache<ActorRef,PersistentActor> actorCache;
 
     public LocalActorShard(PhysicalNode node, InternalActorSystem actorSystem, int shard, MessageQueueFactory messageQueueFactory) {
@@ -91,7 +92,7 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
     }
 
     @Autowired
-    public void setActorExecutor(ActorSystemShardExecutor actorExecutor) {
+    public void setActorExecutor(@Qualifier("clusterExecutor") ThreadBoundExecutor<String> actorExecutor) {
         this.actorExecutor = actorExecutor;
     }
 }

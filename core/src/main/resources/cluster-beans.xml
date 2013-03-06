@@ -92,4 +92,22 @@
 
     <bean id="nodeSelectorFactory" class="org.elasterix.elasticactors.cluster.cassandra.CassandraNodeSelectorFactory"/>
 
+    <bean id="clusterExecutor" class="org.elasterix.elasticactors.util.concurrent.ThreadBoundExecutorImpl">
+        <constructor-arg index="0">
+            <bean class="org.elasterix.elasticactors.util.concurrent.DaemonThreadFactory">
+                <constructor-arg index="0" value="CLUSTER-WORKER"/>
+            </bean>
+        </constructor-arg>
+        <constructor-arg index="1" value="4"/>
+    </bean>
+
+    <bean id="actorExecutor" class="org.elasterix.elasticactors.util.concurrent.ThreadBoundExecutorImpl">
+        <constructor-arg index="0">
+            <bean class="org.elasterix.elasticactors.util.concurrent.DaemonThreadFactory">
+                <constructor-arg index="0" value="ACTOR-WORKER"/>
+            </bean>
+        </constructor-arg>
+        <constructor-arg index="1" value="4"/>
+    </bean>
+
 </beans>

@@ -49,19 +49,19 @@ public class ClusterView implements IEndpointLifecycleSubscriber {
 
     @Override
     public void onUp(InetAddress endpoint) {
-        log.info("************************** ElasticActors Node Marked UP ****************************");
-        log.info(String.format("%s is now UP", endpoint.getHostAddress()));
+        //log.info(String.format("%s is now UP", endpoint.getHostAddress()));
         try {
             initializeNodeProbe();
             String localHostId = nodeProbe.getLocalHostId();
             Map<InetAddress, String> clusterMembers = getClusterMembers();
             if (localHostId.equals(clusterMembers.get(endpoint))) {
                 if (initialStartup.compareAndSet(true, false)) {
+                    log.info("************************** ElasticActors Node Marked UP ****************************");
                     log.info("Own host marked as UP, Initiating ElasticActors Cluster");
                     eventListener.onJoined(localHostId, endpoint);
                 }
             }
-            log.info(String.format("Current Live Nodes: %s", nodeProbe.getLiveNodes().toString()));
+            //log.info(String.format("Current Live Nodes: %s", nodeProbe.getLiveNodes().toString()));
             // notify listener
             eventListener.onTopologyChanged(clusterMembers);
         } catch (Exception e) {

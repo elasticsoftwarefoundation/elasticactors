@@ -51,7 +51,7 @@ public final class PhysicalNodeImpl implements PhysicalNode {
 
     @Override
     public String toString() {
-        return "PhysicalNodeImpl{" +
+        return "PhysicalNode{" +
                 "id='" + id + '\'' +
                 ", address=" + address +
                 ", local=" + local +

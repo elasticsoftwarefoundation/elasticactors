@@ -17,17 +17,13 @@
 package org.elasterix.elasticactors.util.concurrent;
 
 /**
- * ActorSystemShardExecutor
  *
- * <p/>
- * A same thread executor guarantees that a runnable executed on the executor that has the same key
- * will always be executed by the same thread.
+ * @param <T>   the type of the key
  *
- * @param <T> The type of the key
  * @author Joost van de Wijgerd
  */
-public interface ActorSystemShardExecutor<T> {
+public interface ThreadBoundRunnable<T> extends Runnable {
 
-    public void execute(ElasticActorRunnable<T> runnable);
+    T getKey();
 
 }

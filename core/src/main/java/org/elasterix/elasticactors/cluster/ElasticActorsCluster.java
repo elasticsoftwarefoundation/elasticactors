@@ -19,9 +19,12 @@ package org.elasterix.elasticactors.cluster;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.cassandra.ClusterEventListener;
+import org.elasterix.elasticactors.util.concurrent.ThreadBoundExecutor;
+import org.elasterix.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -48,6 +51,8 @@ public class ElasticActorsCluster implements ActorRefFactory, ApplicationContext
     private String clusterName;
     private PhysicalNode localNode;
     private NodeSelectorFactory nodeSelectorFactory;
+    private ThreadBoundExecutor<String> executor;
+
 
     public static ElasticActorsCluster getInstance() {
         return INSTANCE.get();
@@ -61,6 +66,7 @@ public class ElasticActorsCluster implements ActorRefFactory, ApplicationContext
     @Override
     public void onJoined(String hostId, InetAddress hostAddress) throws Exception {
         this.localNode = new PhysicalNodeImpl(hostId,hostAddress,true);
+        logger.info(String.format("%s running, starting ElasticActors Runtime",localNode.toString()));
         // start NodeSelectorFactory
         nodeSelectorFactory.start();
         // load all actor systems (but not start them yet since we are not officially part of the cluster)
@@ -75,6 +81,40 @@ public class ElasticActorsCluster implements ActorRefFactory, ApplicationContext
                 clusterNodes.add(localNode);
             } else {
                 clusterNodes.add(new PhysicalNodeImpl(hostEntry.getValue(),hostEntry.getKey(),false));
+            }
+        }
+        logger.info("New Cluster view: "+clusterNodes.toString());
+        // see if it's the first time
+        if(clusterStarted.compareAndSet(false,true)) {
+            // do some initialization
+        }
+
+        for (LocalActorSystemInstance actorSystemInstance : managedActorSystems.values()) {
+            executor.execute(new RebalancingRunnable(actorSystemInstance,clusterNodes));
+        }
+    }
+
+    private final class RebalancingRunnable implements ThreadBoundRunnable<String> {
+        private final LocalActorSystemInstance actorSystemInstance;
+        private final List<PhysicalNode> clusterNodes;
+
+        private RebalancingRunnable(LocalActorSystemInstance actorSystemInstance, List<PhysicalNode> clusterNodes) {
+            this.actorSystemInstance = actorSystemInstance;
+            this.clusterNodes = clusterNodes;
+        }
+
+        @Override
+        public String getKey() {
+            return actorSystemInstance.getName();
+        }
+
+        @Override
+        public void run() {
+            logger.info(String.format("Rebalancing %d shards for ActorSystem[%s]",actorSystemInstance.getNumberOfShards(),actorSystemInstance.getName()));
+            try {
+                actorSystemInstance.distributeShards(clusterNodes);
+            } catch (Exception e) {
+                logger.error(String.format("ActorSystem[%s] failed to (re-)distribute shards",actorSystemInstance.getName()),e);
             }
         }
     }
@@ -107,5 +147,10 @@ public class ElasticActorsCluster implements ActorRefFactory, ApplicationContext
     @Autowired
     public void setNodeSelectorFactory(NodeSelectorFactory nodeSelectorFactory) {
         this.nodeSelectorFactory = nodeSelectorFactory;
+    }
+
+    @Autowired
+    public void setExecutor(@Qualifier("clusterExecutor") ThreadBoundExecutor<String> executor) {
+        this.executor = executor;
     }
 }

@@ -24,14 +24,14 @@ import org.elasterix.elasticactors.messaging.InternalMessage;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.Serializer;
 import org.elasterix.elasticactors.state.PersistentActor;
-import org.elasterix.elasticactors.util.concurrent.ElasticActorRunnable;
+import org.elasterix.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 /**
  * Task that is responsible for internalMessage deserialization, error handling and state updates
  *
  * @author Joost van de Wijged
  */
-public final class HandleMessageTask implements ElasticActorRunnable<String> {
+public final class HandleMessageTask implements ThreadBoundRunnable<String> {
     private static final Logger log = Logger.getLogger(HandleMessageTask.class);
     private final ActorRef receiverRef;
     private final ElasticActor receiver;

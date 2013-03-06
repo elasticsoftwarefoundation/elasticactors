@@ -27,9 +27,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * @author Joost van de Wijgerd
  */
-public final class ActorSystemShardExecutorImpl implements ActorSystemShardExecutor<UUID> {
+public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor<String> {
 
-    private static final Logger LOG = Logger.getLogger(ActorSystemShardExecutorImpl.class);
+    private static final Logger LOG = Logger.getLogger(ThreadBoundExecutorImpl.class);
 
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
     private final List<BlockingQueue<Runnable>> queues = new ArrayList<BlockingQueue<Runnable>>();
@@ -39,14 +39,12 @@ public final class ActorSystemShardExecutorImpl implements ActorSystemShardExecu
      *
      * @param numberOfThreads
      */
-    public ActorSystemShardExecutorImpl(ThreadFactory threadFactory, String threadName, int numberOfThreads) {
+    public ThreadBoundExecutorImpl(ThreadFactory threadFactory, int numberOfThreads) {
 
         for (int i = 0; i < numberOfThreads; i++) {
             BlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
             Thread t = threadFactory.newThread(new Consumer(queue));
             queues.add(queue);
-            t.setName(threadName + "-" + i);
-            t.setDaemon(true);
             t.start();
         }
     }
@@ -56,7 +54,7 @@ public final class ActorSystemShardExecutorImpl implements ActorSystemShardExecu
      *
      * @param runnable The runnable to execute
      */
-    public void execute(ElasticActorRunnable<UUID> runnable) {
+    public void execute(ThreadBoundRunnable<String> runnable) {
         if (shuttingDown.get()) {
             throw new RejectedExecutionException("The system is shutting down.");
         }
@@ -71,7 +69,7 @@ public final class ActorSystemShardExecutorImpl implements ActorSystemShardExecu
     }
 
     public void shutdown() {
-        LOG.info("shutting down the ActorSystemShardExecutor");
+        LOG.info("shutting down the ThreadBoundExecutor");
         if (shuttingDown.compareAndSet(false, true)) {
             CountDownLatch shuttingDownLatch = new CountDownLatch(queues.size());
             for (BlockingQueue<Runnable> queue : queues) {
@@ -79,14 +77,14 @@ public final class ActorSystemShardExecutorImpl implements ActorSystemShardExecu
             }
             try {
                 if (!shuttingDownLatch.await(30, TimeUnit.SECONDS)) {
-                    LOG.error("timeout while waiting for ActorSystemShardExecutor queues to empty");
+                    LOG.error("timeout while waiting for ThreadBoundExecutor queues to empty");
                 }
             } catch (InterruptedException ignore) {
                 //we are shutting down anyway
-                LOG.warn("ActorSystemShardExecutor shutdown interrupted.");
+                LOG.warn("ThreadBoundExecutor shutdown interrupted.");
             }
         }
-        LOG.info("ActorSystemShardExecutor shut down completed");
+        LOG.info("ThreadBoundExecutor shut down completed");
     }
 
 
