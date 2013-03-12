@@ -16,7 +16,10 @@
 
 package org.elasterix.elasticactors.state;
 
+import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ActorState;
+import org.elasterix.elasticactors.ElasticActor;
+import org.elasterix.elasticactors.ShardKey;
 import org.elasterix.elasticactors.serialization.Deserializer;
 
 import java.io.IOException;
@@ -25,31 +28,37 @@ import java.io.IOException;
  * @author Joost van de Wijgerd
  */
 public final class PersistentActor {
+    private final ShardKey shardKey;
     private final String actorSystemVersion;
-    private final String actorClass;
-    private final String ref;
+    private final Class<? extends ElasticActor> actorClass;
+    private final ActorRef ref;
     private volatile byte[] serializedState;
 
-    public PersistentActor(String actorSystemVersion, String ref, String actorClass) {
-        this(actorSystemVersion,ref,actorClass,null);
+    public PersistentActor(ShardKey shardKey,String actorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass) {
+        this(shardKey,actorSystemVersion,ref,actorClass,null);
     }
 
-    public PersistentActor(String actorSystemVersion, String ref, String actorClass, byte[] serializedState) {
+    public PersistentActor(ShardKey shardKey, String actorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass, byte[] serializedState) {
+        this.shardKey = shardKey;
         this.actorSystemVersion = actorSystemVersion;
         this.ref = ref;
         this.actorClass = actorClass;
         this.serializedState = serializedState;
     }
 
+    public ShardKey getShardKey() {
+        return shardKey;
+    }
+
     public String getActorSystemVersion() {
         return actorSystemVersion;
     }
 
-    public String getActorClass() {
+    public Class<? extends ElasticActor> getActorClass() {
         return actorClass;
     }
 
-    public String getRef() {
+    public ActorRef getRef() {
         return ref;
     }
 

@@ -709,6 +709,10 @@ public final class Elasticactors {
     // optional bytes state = 4;
     boolean hasState();
     com.google.protobuf.ByteString getState();
+    
+    // optional string shardKey = 5;
+    boolean hasShardKey();
+    String getShardKey();
   }
   public static final class PersistentActor extends
       com.google.protobuf.GeneratedMessage
@@ -845,11 +849,44 @@ public final class Elasticactors {
       return state_;
     }
     
+    // optional string shardKey = 5;
+    public static final int SHARDKEY_FIELD_NUMBER = 5;
+    private java.lang.Object shardKey_;
+    public boolean hasShardKey() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    public String getShardKey() {
+      java.lang.Object ref = shardKey_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          shardKey_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getShardKeyBytes() {
+      java.lang.Object ref = shardKey_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        shardKey_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    
     private void initFields() {
       actorRef_ = "";
       actorClass_ = "";
       actorSystemVersion_ = "";
       state_ = com.google.protobuf.ByteString.EMPTY;
+      shardKey_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -875,6 +912,9 @@ public final class Elasticactors {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeBytes(4, state_);
       }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBytes(5, getShardKeyBytes());
+      }
       getUnknownFields().writeTo(output);
     }
     
@@ -899,6 +939,10 @@ public final class Elasticactors {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(4, state_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, getShardKeyBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1032,6 +1076,8 @@ public final class Elasticactors {
         bitField0_ = (bitField0_ & ~0x00000004);
         state_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000008);
+        shardKey_ = "";
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
       
@@ -1086,6 +1132,10 @@ public final class Elasticactors {
           to_bitField0_ |= 0x00000008;
         }
         result.state_ = state_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.shardKey_ = shardKey_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1113,6 +1163,9 @@ public final class Elasticactors {
         }
         if (other.hasState()) {
           setState(other.getState());
+        }
+        if (other.hasShardKey()) {
+          setShardKey(other.getShardKey());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1163,6 +1216,11 @@ public final class Elasticactors {
             case 34: {
               bitField0_ |= 0x00000008;
               state_ = input.readBytes();
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000010;
+              shardKey_ = input.readBytes();
               break;
             }
           }
@@ -1301,6 +1359,42 @@ public final class Elasticactors {
         state_ = getDefaultInstance().getState();
         onChanged();
         return this;
+      }
+      
+      // optional string shardKey = 5;
+      private java.lang.Object shardKey_ = "";
+      public boolean hasShardKey() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      public String getShardKey() {
+        java.lang.Object ref = shardKey_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          shardKey_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      public Builder setShardKey(String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        shardKey_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearShardKey() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        shardKey_ = getDefaultInstance().getShardKey();
+        onChanged();
+        return this;
+      }
+      void setShardKey(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000010;
+        shardKey_ = value;
+        onChanged();
       }
       
       // @@protoc_insertion_point(builder_scope:org.elasterix.elasticactors.serialization.protobuf.PersistentActor)
@@ -1871,12 +1965,12 @@ public final class Elasticactors {
       "2org.elasterix.elasticactors.serializati" +
       "on.protobuf\"f\n\017InternalMessage\022\020\n\010receiv" +
       "er\030\001 \001(\t\022\016\n\006sender\030\002 \001(\t\022\024\n\014payloadClass" +
-      "\030\003 \001(\t\022\017\n\007payload\030\004 \001(\014\022\n\n\002id\030\005 \001(\014\"b\n\017P" +
+      "\030\003 \001(\t\022\017\n\007payload\030\004 \001(\014\022\n\n\002id\030\005 \001(\014\"t\n\017P" +
       "ersistentActor\022\020\n\010actorRef\030\001 \001(\t\022\022\n\nacto" +
       "rClass\030\002 \001(\t\022\032\n\022actorSystemVersion\030\003 \001(\t" +
-      "\022\r\n\005state\030\004 \001(\014\"O\n\022CreateActorMessage\022\017\n" +
-      "\007actorId\030\001 \001(\t\022\024\n\014initialState\030\002 \001(\014\022\022\n\n" +
-      "actorClass\030\003 \001(\tB\002H\001"
+      "\022\r\n\005state\030\004 \001(\014\022\020\n\010shardKey\030\005 \001(\t\"O\n\022Cre" +
+      "ateActorMessage\022\017\n\007actorId\030\001 \001(\t\022\024\n\014init" +
+      "ialState\030\002 \001(\014\022\022\n\nactorClass\030\003 \001(\tB\002H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -1896,7 +1990,7 @@ public final class Elasticactors {
           internal_static_org_elasterix_elasticactors_serialization_protobuf_PersistentActor_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_org_elasterix_elasticactors_serialization_protobuf_PersistentActor_descriptor,
-              new java.lang.String[] { "ActorRef", "ActorClass", "ActorSystemVersion", "State", },
+              new java.lang.String[] { "ActorRef", "ActorClass", "ActorSystemVersion", "State", "ShardKey", },
               org.elasterix.elasticactors.serialization.protobuf.Elasticactors.PersistentActor.class,
               org.elasterix.elasticactors.serialization.protobuf.Elasticactors.PersistentActor.Builder.class);
           internal_static_org_elasterix_elasticactors_serialization_protobuf_CreateActorMessage_descriptor =

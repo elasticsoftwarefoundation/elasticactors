@@ -16,27 +16,41 @@
 
 package org.elasterix.elasticactors.serialization.internal;
 
+import org.elasterix.elasticactors.ElasticActor;
+import org.elasterix.elasticactors.ShardKey;
+import org.elasterix.elasticactors.cluster.ActorRefFactory;
 import org.elasterix.elasticactors.serialization.Deserializer;
 import org.elasterix.elasticactors.serialization.protobuf.Elasticactors;
 import org.elasterix.elasticactors.state.PersistentActor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Configurable;
 
 import java.io.IOException;
 
 /**
  * @author Joost van de Wijgerd
  */
+@Configurable
 public final class PersistentActorDeserializer implements Deserializer<byte[],PersistentActor> {
-    private static final PersistentActorDeserializer INSTANCE = new PersistentActorDeserializer();
+    private ActorRefFactory actorRefFactory;
 
-    public static PersistentActorDeserializer get() {
-        return INSTANCE;
+    @Autowired
+    public void setActorRefFactory(ActorRefFactory actorRefFactory) {
+        this.actorRefFactory = actorRefFactory;
     }
 
     @Override
     public PersistentActor deserialize(byte[] serializedObject) throws IOException {
         Elasticactors.PersistentActor protobufMessage = Elasticactors.PersistentActor.parseFrom(serializedObject);
         byte[] serializedState = protobufMessage.hasState() ? protobufMessage.getState().toByteArray(): null;
-        return new PersistentActor(protobufMessage.getActorSystemVersion(),protobufMessage.getActorRef(),
-                                   protobufMessage.getActorClass(),serializedState);
+        try {
+            return new PersistentActor(ShardKey.fromString(protobufMessage.getShardKey()),
+                                       protobufMessage.getActorSystemVersion(),
+                                       actorRefFactory.create(protobufMessage.getActorRef()),
+                                       (Class<? extends ElasticActor>) Class.forName(protobufMessage.getActorClass()),
+                                       serializedState);
+        } catch(Exception e) {
+            throw new IOException("Exception deserializing PersistentActor",e);
+        }
     }
 }

@@ -24,6 +24,7 @@ import org.elasterix.elasticactors.messaging.InternalMessage;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.Serializer;
 import org.elasterix.elasticactors.state.PersistentActor;
+import org.elasterix.elasticactors.state.PersistentActorRepository;
 import org.elasterix.elasticactors.util.SerializationTools;
 import org.elasterix.elasticactors.util.concurrent.ThreadBoundRunnable;
 
@@ -41,12 +42,14 @@ public final class HandleMessageTask implements ThreadBoundRunnable<String> {
     private final InternalActorSystem actorSystem;
     private final InternalMessage internalMessage;
     private final PersistentActor persistentActor;
+    private final PersistentActorRepository persistentActorRepository;
 
-    public HandleMessageTask(InternalActorSystem actorSystem, ElasticActor receiver, InternalMessage internalMessage, PersistentActor persistentActor) {
+    public HandleMessageTask(InternalActorSystem actorSystem, ElasticActor receiver, InternalMessage internalMessage, PersistentActor persistentActor, PersistentActorRepository persistentActorRepository) {
         this.actorSystem = actorSystem;
         this.receiver = receiver;
         this.internalMessage = internalMessage;
         this.persistentActor = persistentActor;
+        this.persistentActorRepository = persistentActorRepository;
         this.receiverRef = internalMessage.getReceiver();
     }
 
@@ -86,7 +89,7 @@ public final class HandleMessageTask implements ThreadBoundRunnable<String> {
                 persistentActor.setSerializedState(newActorState);
                 // flush state if it was changed
                 if(stateAfter != null) {
-                    // @todo: implement flushing of persistent actor
+                    persistentActorRepository.update(persistentActor.getShardKey(),persistentActor);
                 }
             } catch(Exception e) {
                 log.error(String.format("Exception while serializing ActorState for actor [%s]",receiverRef.getActorId()),e);

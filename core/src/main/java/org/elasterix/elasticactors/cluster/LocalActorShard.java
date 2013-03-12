@@ -24,11 +24,14 @@ import org.elasterix.elasticactors.messaging.*;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.state.PersistentActor;
-import org.elasterix.elasticactors.util.SerializationTools;
+import org.elasterix.elasticactors.state.PersistentActorRepository;
 import org.elasterix.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.EmptyResultDataAccessException;
+
+import java.util.concurrent.Callable;
 
 import static org.elasterix.elasticactors.util.SerializationTools.deserializeMessage;
 
@@ -45,6 +48,7 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
     private MessageQueue messageQueue;
     private ThreadBoundExecutor<String> actorExecutor;
     private Cache<ActorRef,PersistentActor> actorCache;
+    private PersistentActorRepository persistentActorRepository;
 
     public LocalActorShard(PhysicalNode node, InternalActorSystem actorSystem, int shard, MessageQueueFactory messageQueueFactory) {
         this.actorSystem = actorSystem;
@@ -88,19 +92,31 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
 
     @Override
     public void handleMessage(InternalMessage internalMessage) {
-        ActorRef receiverRef = internalMessage.getReceiver();
+        final ActorRef receiverRef = internalMessage.getReceiver();
         if(receiverRef.getActorId() != null) {
             try {
                 // load persistent actor from cache or persistent store
-                PersistentActor actor = actorCache.getIfPresent(internalMessage.getReceiver());
+                PersistentActor actor = actorCache.get(internalMessage.getReceiver(), new Callable<PersistentActor>() {
+                    @Override
+                    public PersistentActor call() throws Exception {
+                        PersistentActor loadedActor = persistentActorRepository.get(shardKey,receiverRef.getActorId());
+                        if(loadedActor == null) {
+                            // @todo: using Spring DataAccesException here, might want to change this or use in Repository implementation
+                            throw new EmptyResultDataAccessException(String.format("Actor [%s] not found in Shard [%s]",receiverRef.getActorId(),shardKey.toString()),1);
+                        } else {
+                            return loadedActor;
+                        }
+                    }
+                });
+
                 // find actor class behind receiver ActorRef
                 ElasticActor actorInstance = actorSystem.getActorInstance(internalMessage.getReceiver(),
-                                                                        (Class<? extends ElasticActor>) Class.forName(actor.getActorClass()));
+                                                                          actor.getActorClass());
                 // execute on it's own thread
                 actorExecutor.execute(new HandleMessageTask(actorSystem,
                                                             actorInstance,
                                                             internalMessage,
-                                                            actor));
+                                                            actor, persistentActorRepository));
             } catch(Exception e) {
                 //@todo: let the sender know his message could not be delivered
                 logger.error(String.format("Exception while handling InternalMessage or Actor [%s]",receiverRef.getActorId()),e);
@@ -124,23 +140,28 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
     }
 
     private boolean actorExists(String actorId) {
-        // @todo: also check the persistent store once it's implemented
-        return actorCache.getIfPresent(actorId) != null;
+        return actorCache.getIfPresent(actorId) != null || persistentActorRepository.contains(shardKey,actorId);
     }
 
-    private void createActor(CreateActorMessage createMessage) {
+    private void createActor(CreateActorMessage createMessage) throws Exception {
         ActorRef ref = actorSystem.actorFor(createMessage.getActorId());
-        PersistentActor persistentActor = new PersistentActor(actorSystem.getVersion(),
-                                                              ref.toString(),
-                                                              createMessage.getActorClass(),
-                                                              createMessage.getInitialState());
-        //@todo: store in cassandra as well
+        PersistentActor persistentActor =
+                new PersistentActor(shardKey, actorSystem.getVersion(),
+                                    ref,
+                                    (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass()),
+                                    createMessage.getInitialState());
+        persistentActorRepository.update(this.shardKey,persistentActor);
         actorCache.put(ref,persistentActor);
     }
 
     @Autowired
     public void setActorExecutor(@Qualifier("clusterExecutor") ThreadBoundExecutor<String> actorExecutor) {
         this.actorExecutor = actorExecutor;
+    }
+
+    @Autowired
+    public void setPersistentActorRepository(PersistentActorRepository persistentActorRepository) {
+        this.persistentActorRepository = persistentActorRepository;
     }
 }
 

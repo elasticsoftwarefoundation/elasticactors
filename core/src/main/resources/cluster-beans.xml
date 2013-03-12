@@ -69,6 +69,23 @@
         </constructor-arg>
     </bean>
 
+    <bean id="persistentActorsColumnFamilyTemplate" class="me.prettyprint.cassandra.service.template.ThriftColumnFamilyTemplate">
+            <constructor-arg index="0" ref="elasticActorsKeyspace"/>
+            <constructor-arg index="1" value="PersistentActors"/>
+            <constructor-arg index="2">
+                <bean class="me.prettyprint.cassandra.serializers.StringSerializer" factory-method="get"/>
+            </constructor-arg>
+            <constructor-arg index="3">
+                <bean class="me.prettyprint.cassandra.serializers.StringSerializer" factory-method="get"/>
+            </constructor-arg>
+        </bean>
+
+    <bean id="persistentActorSerializer" class="org.elasterix.elasticactors.serialization.internal.PersistentActorSerializer"/>
+
+    <bean id="persistentActorDeserializer" class="org.elasterix.elasticactors.serialization.internal.PersistentActorDeserializer"/>
+
+    <bean id="persistentActorRepository" class="org.elasterix.elasticactors.state.CassandraPersistentActorRepository"/>
+
     <bean id="commitLog" class="org.elasterix.elasticactors.messaging.journal.CassandraCommitLog"/>
 
     <bean id="elasticActorsCluster" class="org.elasterix.elasticactors.cluster.ElasticActorsCluster"/>

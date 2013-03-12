@@ -22,6 +22,7 @@ message PersistentActor {
     optional string actorClass = 2;
     optional string actorSystemVersion = 3;
     optional bytes state = 4;
+    optional string shardKey = 5;
 }
 
 message CreateActorMessage {

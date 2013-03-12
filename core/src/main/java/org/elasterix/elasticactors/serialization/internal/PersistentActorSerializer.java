@@ -34,9 +34,10 @@ public final class PersistentActorSerializer implements Serializer<PersistentAct
     @Override
     public byte[] serialize(PersistentActor persistentActor) {
         Elasticactors.PersistentActor.Builder builder = Elasticactors.PersistentActor.newBuilder();
+        builder.setShardKey(persistentActor.getShardKey().toString());
         builder.setActorSystemVersion(persistentActor.getActorSystemVersion());
-        builder.setActorClass(persistentActor.getActorClass());
-        builder.setActorRef(persistentActor.getRef());
+        builder.setActorClass(persistentActor.getActorClass().getName());
+        builder.setActorRef(persistentActor.getRef().toString());
         if (persistentActor.getSerializedState() != null) {
             builder.setState(ByteString.copyFrom(persistentActor.getSerializedState()));
         }
