@@ -18,20 +18,26 @@ package org.elasterix.elasticactors.cluster;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.messaging.*;
+import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.state.PersistentActor;
+import org.elasterix.elasticactors.util.SerializationTools;
 import org.elasterix.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
+
+import static org.elasterix.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
  * @author Joost van de Wijgerd
  */
 @Configurable
 public final class LocalActorShard implements ActorShard, MessageHandler {
+    private static final Logger logger = Logger.getLogger(LocalActorShard.class);
     private final InternalActorSystem actorSystem;
     private final PhysicalNode localNode;
     private final ShardKey shardKey;
@@ -70,25 +76,66 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
         return shardKey;
     }
 
+    @Override
+    public ActorRef getActorRef() {
+        throw new UnsupportedOperationException(String.format("Not meant to be called directly on %s",getClass().getSimpleName()));
+    }
+
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
         MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
         messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message), message.getClass().getName()));
     }
 
     @Override
-    public void handleMessage(InternalMessage message) {
-        ActorRef receiverRef = message.getReceiver();
+    public void handleMessage(InternalMessage internalMessage) {
+        ActorRef receiverRef = internalMessage.getReceiver();
         if(receiverRef.getActorId() != null) {
-            // find actor class behind receiver ActorRef
-            ElasticActor actorInstance = actorSystem.getActorInstance(message.getReceiver());
-            // execute on it's own thread
-            actorExecutor.execute(new HandleMessageTask(actorSystem,actorInstance,message,actorCache.getIfPresent(message.getReceiver())));
+            try {
+                // load persistent actor from cache or persistent store
+                PersistentActor actor = actorCache.getIfPresent(internalMessage.getReceiver());
+                // find actor class behind receiver ActorRef
+                ElasticActor actorInstance = actorSystem.getActorInstance(internalMessage.getReceiver(),
+                                                                        (Class<? extends ElasticActor>) Class.forName(actor.getActorClass()));
+                // execute on it's own thread
+                actorExecutor.execute(new HandleMessageTask(actorSystem,
+                                                            actorInstance,
+                                                            internalMessage,
+                                                            actor));
+            } catch(Exception e) {
+                //@todo: let the sender know his message could not be delivered
+                logger.error(String.format("Exception while handling InternalMessage or Actor [%s]",receiverRef.getActorId()),e);
+            }
         } else {
-            // the message is intended for the shard, this means it's about creating or stopping an actor
-            // we will handle this on the messaging thread as it's all serialized and we can change the
-
+            // the internalMessage is intended for the shard, this means it's about creating or destroying an actor
+            try {
+                Object message = deserializeMessage(actorSystem, internalMessage);
+                // check if the actor exists
+                if(message instanceof CreateActorMessage) {
+                    CreateActorMessage createActorMessage = (CreateActorMessage) message;
+                    if(!actorExists(createActorMessage.getActorId())) {
+                        createActor(createActorMessage);
+                    }
+                }
+            } catch(Exception e) {
+                logger.error(String.format("Exception while handling InternalMessage for Shard [%s]",shardKey.toString()),e);
+            }
 
         }
+    }
+
+    private boolean actorExists(String actorId) {
+        // @todo: also check the persistent store once it's implemented
+        return actorCache.getIfPresent(actorId) != null;
+    }
+
+    private void createActor(CreateActorMessage createMessage) {
+        ActorRef ref = actorSystem.actorFor(createMessage.getActorId());
+        PersistentActor persistentActor = new PersistentActor(actorSystem.getVersion(),
+                                                              ref.toString(),
+                                                              createMessage.getActorClass(),
+                                                              createMessage.getInitialState());
+        //@todo: store in cassandra as well
+        actorCache.put(ref,persistentActor);
     }
 
     @Autowired

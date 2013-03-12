@@ -24,7 +24,10 @@ import org.elasterix.elasticactors.messaging.InternalMessage;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.Serializer;
 import org.elasterix.elasticactors.state.PersistentActor;
+import org.elasterix.elasticactors.util.SerializationTools;
 import org.elasterix.elasticactors.util.concurrent.ThreadBoundRunnable;
+
+import static org.elasterix.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
  * Task that is responsible for internalMessage deserialization, error handling and state updates
@@ -50,21 +53,13 @@ public final class HandleMessageTask implements ThreadBoundRunnable<String> {
 
     @Override
     public String getKey() {
-        return receiverRef.toString();
+        return receiverRef.getActorId();
     }
 
     @Override
     public void run() {
         try {
-            // first see if we can deserialize the actual internalMessage
-            MessageDeserializer deserializer = actorSystem.getDeserializer(Class.forName(internalMessage.getPayloadClass()));
-            if(deserializer != null) {
-                Object message = deserializer.deserialize(internalMessage.getPayload());
-                handleMessage(message);
-            } else {
-                log.error(String.format("No Deserializer found for Message class %s in ActorSystem [%s]",
-                                        internalMessage.getPayloadClass(),actorSystem.getName()));
-            }
+            handleMessage(deserializeMessage(actorSystem, internalMessage));
         } catch(Exception e) {
             log.error(String.format("Exception while Deserializing Message class %s in ActorSystem [%s]",
                                     internalMessage.getPayloadClass(),actorSystem.getName()), e);
@@ -86,10 +81,15 @@ public final class HandleMessageTask implements ThreadBoundRunnable<String> {
             ActorState stateAfter = InternalActorStateContext.getAndClearState();
             // check if we have state now that needs to be put in the cache
             Serializer<ActorState,byte[]> stateSerializer = actorSystem.getActorStateSerializer();
-            persistentActor.setSerializedState(stateSerializer.serialize(stateAfter));
-            // flush state if it was changed
-            if(stateAfter != null) {
-                // @todo: implement flushing of persistent actor
+            try {
+                byte[] newActorState = stateSerializer.serialize(stateAfter);
+                persistentActor.setSerializedState(newActorState);
+                // flush state if it was changed
+                if(stateAfter != null) {
+                    // @todo: implement flushing of persistent actor
+                }
+            } catch(Exception e) {
+                log.error(String.format("Exception while serializing ActorState for actor [%s]",receiverRef.getActorId()),e);
             }
         }
     }

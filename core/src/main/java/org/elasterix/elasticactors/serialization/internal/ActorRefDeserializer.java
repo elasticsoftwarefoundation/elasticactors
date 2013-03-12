@@ -20,12 +20,14 @@ import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.cluster.ActorRefFactory;
 import org.elasterix.elasticactors.serialization.Deserializer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Configurable;
 
 import java.io.IOException;
 
 /**
  * @author Joost van de Wijgerd
  */
+@Configurable
 public final class ActorRefDeserializer implements Deserializer<String,ActorRef> {
     private static final ActorRefDeserializer INSTANCE = new ActorRefDeserializer();
     private ActorRefFactory actorRefFactory;

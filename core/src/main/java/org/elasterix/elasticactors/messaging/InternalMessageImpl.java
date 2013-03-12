@@ -25,7 +25,7 @@ import java.util.UUID;
 /**
  * @author Joost van de Wijgerd
  */
-public class InternalMessageImpl implements InternalMessage,Serializable {
+public final class InternalMessageImpl implements InternalMessage,Serializable {
     private final ActorRef sender;
     private final ActorRef receiver;
     private final UUID id;

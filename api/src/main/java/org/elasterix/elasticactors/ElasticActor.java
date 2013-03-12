@@ -20,5 +20,13 @@ package org.elasterix.elasticactors;
  * @author Joost van de Wijgerd
  */
 public interface ElasticActor<T> {
+    void postCreate(ActorRef creator) throws Exception;
+
+    void postActivate(String previousVersion) throws Exception;
+
     void onMessage(T message,ActorRef sender) throws Exception;
+
+    void prePassivate() throws Exception;
+
+    void preDestroy(ActorRef destroyer) throws Exception;
 }

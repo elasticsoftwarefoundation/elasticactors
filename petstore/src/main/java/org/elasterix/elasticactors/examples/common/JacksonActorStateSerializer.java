@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.serialization.internal;
+package org.elasterix.elasticactors.examples.common;
 
-import org.elasterix.elasticactors.ActorRef;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.elasterix.elasticactors.ActorState;
 import org.elasterix.elasticactors.serialization.Serializer;
-import org.springframework.beans.factory.annotation.Configurable;
+
+import java.io.IOException;
 
 /**
- * @author Joost van de Wijgerd
+ *
  */
-public final class ActorRefSerializer implements Serializer<ActorRef,String> {
-    private static final ActorRefSerializer INSTANCE = new ActorRefSerializer();
+public final class JacksonActorStateSerializer implements Serializer<ActorState,byte[]> {
+    private final ObjectMapper objectMapper;
 
-    public static ActorRefSerializer get() {
-        return INSTANCE;
+    public JacksonActorStateSerializer(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
     @Override
-    public String serialize(ActorRef actorRef) {
-        return actorRef.toString();
+    public byte[] serialize(ActorState object) throws IOException {
+        return objectMapper.writeValueAsBytes(object.getAsMap());
     }
-
-
 }

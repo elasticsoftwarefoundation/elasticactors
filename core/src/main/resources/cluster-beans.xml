@@ -60,7 +60,7 @@
 
     <bean id="messageQueuesColumnFamilyTemplate" class="me.prettyprint.cassandra.service.template.ThriftColumnFamilyTemplate">
         <constructor-arg index="0" ref="elasticActorsKeyspace"/>
-        <constructor-arg index="1" value="ActorSystems"/>
+        <constructor-arg index="1" value="MessageQueues"/>
         <constructor-arg index="2">
             <bean class="me.prettyprint.cassandra.serializers.StringSerializer" factory-method="get"/>
         </constructor-arg>

@@ -21,13 +21,19 @@ import java.io.Serializable;
 /**
  * @author Joost van de Wijgerd
  */
-public class CreateActorMessage implements Serializable {
+public final class CreateActorMessage implements Serializable {
     private final String actorId;
+    private final String actorClass;
     private final byte[] initialState;
 
-    public CreateActorMessage(String actorId, byte[] initialState) {
+    public CreateActorMessage(String actorClass, String actorId, byte[] initialState) {
         this.actorId = actorId;
+        this.actorClass = actorClass;
         this.initialState = initialState;
+    }
+
+    public String getActorClass() {
+        return actorClass;
     }
 
     public String getActorId() {

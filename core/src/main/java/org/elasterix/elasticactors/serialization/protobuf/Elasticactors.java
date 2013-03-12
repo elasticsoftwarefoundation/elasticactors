@@ -19,15 +19,15 @@ public final class Elasticactors {
     boolean hasSender();
     String getSender();
     
-    // required string payloadClass = 3;
+    // optional string payloadClass = 3;
     boolean hasPayloadClass();
     String getPayloadClass();
     
-    // required bytes payload = 4;
+    // optional bytes payload = 4;
     boolean hasPayload();
     com.google.protobuf.ByteString getPayload();
     
-    // required bytes id = 5;
+    // optional bytes id = 5;
     boolean hasId();
     com.google.protobuf.ByteString getId();
   }
@@ -124,7 +124,7 @@ public final class Elasticactors {
       }
     }
     
-    // required string payloadClass = 3;
+    // optional string payloadClass = 3;
     public static final int PAYLOADCLASS_FIELD_NUMBER = 3;
     private java.lang.Object payloadClass_;
     public boolean hasPayloadClass() {
@@ -156,7 +156,7 @@ public final class Elasticactors {
       }
     }
     
-    // required bytes payload = 4;
+    // optional bytes payload = 4;
     public static final int PAYLOAD_FIELD_NUMBER = 4;
     private com.google.protobuf.ByteString payload_;
     public boolean hasPayload() {
@@ -166,7 +166,7 @@ public final class Elasticactors {
       return payload_;
     }
     
-    // required bytes id = 5;
+    // optional bytes id = 5;
     public static final int ID_FIELD_NUMBER = 5;
     private com.google.protobuf.ByteString id_;
     public boolean hasId() {
@@ -188,18 +188,6 @@ public final class Elasticactors {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized != -1) return isInitialized == 1;
       
-      if (!hasPayloadClass()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasPayload()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasId()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -479,18 +467,6 @@ public final class Elasticactors {
       }
       
       public final boolean isInitialized() {
-        if (!hasPayloadClass()) {
-          
-          return false;
-        }
-        if (!hasPayload()) {
-          
-          return false;
-        }
-        if (!hasId()) {
-          
-          return false;
-        }
         return true;
       }
       
@@ -620,7 +596,7 @@ public final class Elasticactors {
         onChanged();
       }
       
-      // required string payloadClass = 3;
+      // optional string payloadClass = 3;
       private java.lang.Object payloadClass_ = "";
       public boolean hasPayloadClass() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
@@ -656,7 +632,7 @@ public final class Elasticactors {
         onChanged();
       }
       
-      // required bytes payload = 4;
+      // optional bytes payload = 4;
       private com.google.protobuf.ByteString payload_ = com.google.protobuf.ByteString.EMPTY;
       public boolean hasPayload() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
@@ -680,7 +656,7 @@ public final class Elasticactors {
         return this;
       }
       
-      // required bytes id = 5;
+      // optional bytes id = 5;
       private com.google.protobuf.ByteString id_ = com.google.protobuf.ByteString.EMPTY;
       public boolean hasId() {
         return ((bitField0_ & 0x00000010) == 0x00000010);
@@ -718,15 +694,15 @@ public final class Elasticactors {
   public interface PersistentActorOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
     
-    // required string actorRef = 1;
+    // optional string actorRef = 1;
     boolean hasActorRef();
     String getActorRef();
     
-    // required string actorClass = 2;
+    // optional string actorClass = 2;
     boolean hasActorClass();
     String getActorClass();
     
-    // required string actorSystemVersion = 3;
+    // optional string actorSystemVersion = 3;
     boolean hasActorSystemVersion();
     String getActorSystemVersion();
     
@@ -763,7 +739,7 @@ public final class Elasticactors {
     }
     
     private int bitField0_;
-    // required string actorRef = 1;
+    // optional string actorRef = 1;
     public static final int ACTORREF_FIELD_NUMBER = 1;
     private java.lang.Object actorRef_;
     public boolean hasActorRef() {
@@ -795,7 +771,7 @@ public final class Elasticactors {
       }
     }
     
-    // required string actorClass = 2;
+    // optional string actorClass = 2;
     public static final int ACTORCLASS_FIELD_NUMBER = 2;
     private java.lang.Object actorClass_;
     public boolean hasActorClass() {
@@ -827,7 +803,7 @@ public final class Elasticactors {
       }
     }
     
-    // required string actorSystemVersion = 3;
+    // optional string actorSystemVersion = 3;
     public static final int ACTORSYSTEMVERSION_FIELD_NUMBER = 3;
     private java.lang.Object actorSystemVersion_;
     public boolean hasActorSystemVersion() {
@@ -880,18 +856,6 @@ public final class Elasticactors {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized != -1) return isInitialized == 1;
       
-      if (!hasActorRef()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasActorClass()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasActorSystemVersion()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -1155,18 +1119,6 @@ public final class Elasticactors {
       }
       
       public final boolean isInitialized() {
-        if (!hasActorRef()) {
-          
-          return false;
-        }
-        if (!hasActorClass()) {
-          
-          return false;
-        }
-        if (!hasActorSystemVersion()) {
-          
-          return false;
-        }
         return true;
       }
       
@@ -1219,7 +1171,7 @@ public final class Elasticactors {
       
       private int bitField0_;
       
-      // required string actorRef = 1;
+      // optional string actorRef = 1;
       private java.lang.Object actorRef_ = "";
       public boolean hasActorRef() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
@@ -1255,7 +1207,7 @@ public final class Elasticactors {
         onChanged();
       }
       
-      // required string actorClass = 2;
+      // optional string actorClass = 2;
       private java.lang.Object actorClass_ = "";
       public boolean hasActorClass() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
@@ -1291,7 +1243,7 @@ public final class Elasticactors {
         onChanged();
       }
       
-      // required string actorSystemVersion = 3;
+      // optional string actorSystemVersion = 3;
       private java.lang.Object actorSystemVersion_ = "";
       public boolean hasActorSystemVersion() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
@@ -1362,6 +1314,535 @@ public final class Elasticactors {
     // @@protoc_insertion_point(class_scope:org.elasterix.elasticactors.serialization.protobuf.PersistentActor)
   }
   
+  public interface CreateActorMessageOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+    
+    // optional string actorId = 1;
+    boolean hasActorId();
+    String getActorId();
+    
+    // optional bytes initialState = 2;
+    boolean hasInitialState();
+    com.google.protobuf.ByteString getInitialState();
+    
+    // optional string actorClass = 3;
+    boolean hasActorClass();
+    String getActorClass();
+  }
+  public static final class CreateActorMessage extends
+      com.google.protobuf.GeneratedMessage
+      implements CreateActorMessageOrBuilder {
+    // Use CreateActorMessage.newBuilder() to construct.
+    private CreateActorMessage(Builder builder) {
+      super(builder);
+    }
+    private CreateActorMessage(boolean noInit) {}
+    
+    private static final CreateActorMessage defaultInstance;
+    public static CreateActorMessage getDefaultInstance() {
+      return defaultInstance;
+    }
+    
+    public CreateActorMessage getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+    
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.elasterix.elasticactors.serialization.protobuf.Elasticactors.internal_static_org_elasterix_elasticactors_serialization_protobuf_CreateActorMessage_descriptor;
+    }
+    
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.elasterix.elasticactors.serialization.protobuf.Elasticactors.internal_static_org_elasterix_elasticactors_serialization_protobuf_CreateActorMessage_fieldAccessorTable;
+    }
+    
+    private int bitField0_;
+    // optional string actorId = 1;
+    public static final int ACTORID_FIELD_NUMBER = 1;
+    private java.lang.Object actorId_;
+    public boolean hasActorId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    public String getActorId() {
+      java.lang.Object ref = actorId_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          actorId_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getActorIdBytes() {
+      java.lang.Object ref = actorId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        actorId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    
+    // optional bytes initialState = 2;
+    public static final int INITIALSTATE_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString initialState_;
+    public boolean hasInitialState() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    public com.google.protobuf.ByteString getInitialState() {
+      return initialState_;
+    }
+    
+    // optional string actorClass = 3;
+    public static final int ACTORCLASS_FIELD_NUMBER = 3;
+    private java.lang.Object actorClass_;
+    public boolean hasActorClass() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    public String getActorClass() {
+      java.lang.Object ref = actorClass_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          actorClass_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getActorClassBytes() {
+      java.lang.Object ref = actorClass_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        actorClass_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    
+    private void initFields() {
+      actorId_ = "";
+      initialState_ = com.google.protobuf.ByteString.EMPTY;
+      actorClass_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+      
+      memoizedIsInitialized = 1;
+      return true;
+    }
+    
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getActorIdBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, initialState_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, getActorClassBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+    
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getActorIdBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, initialState_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, getActorClassBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+    
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+    
+    public static org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+    
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessageOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.elasterix.elasticactors.serialization.protobuf.Elasticactors.internal_static_org_elasterix_elasticactors_serialization_protobuf_CreateActorMessage_descriptor;
+      }
+      
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.elasterix.elasticactors.serialization.protobuf.Elasticactors.internal_static_org_elasterix_elasticactors_serialization_protobuf_CreateActorMessage_fieldAccessorTable;
+      }
+      
+      // Construct using org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+      
+      private Builder(BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+      
+      public Builder clear() {
+        super.clear();
+        actorId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        initialState_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        actorClass_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+      
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage.getDescriptor();
+      }
+      
+      public org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage getDefaultInstanceForType() {
+        return org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage.getDefaultInstance();
+      }
+      
+      public org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage build() {
+        org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+      
+      private org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage buildParsed()
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(
+            result).asInvalidProtocolBufferException();
+        }
+        return result;
+      }
+      
+      public org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage buildPartial() {
+        org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage result = new org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.actorId_ = actorId_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.initialState_ = initialState_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.actorClass_ = actorClass_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+      
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage) {
+          return mergeFrom((org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+      
+      public Builder mergeFrom(org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage other) {
+        if (other == org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage.getDefaultInstance()) return this;
+        if (other.hasActorId()) {
+          setActorId(other.getActorId());
+        }
+        if (other.hasInitialState()) {
+          setInitialState(other.getInitialState());
+        }
+        if (other.hasActorClass()) {
+          setActorClass(other.getActorClass());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+      
+      public final boolean isInitialized() {
+        return true;
+      }
+      
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder(
+            this.getUnknownFields());
+        while (true) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              this.setUnknownFields(unknownFields.build());
+              onChanged();
+              return this;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                this.setUnknownFields(unknownFields.build());
+                onChanged();
+                return this;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              actorId_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              initialState_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              actorClass_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      }
+      
+      private int bitField0_;
+      
+      // optional string actorId = 1;
+      private java.lang.Object actorId_ = "";
+      public boolean hasActorId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      public String getActorId() {
+        java.lang.Object ref = actorId_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          actorId_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      public Builder setActorId(String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        actorId_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearActorId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        actorId_ = getDefaultInstance().getActorId();
+        onChanged();
+        return this;
+      }
+      void setActorId(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000001;
+        actorId_ = value;
+        onChanged();
+      }
+      
+      // optional bytes initialState = 2;
+      private com.google.protobuf.ByteString initialState_ = com.google.protobuf.ByteString.EMPTY;
+      public boolean hasInitialState() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      public com.google.protobuf.ByteString getInitialState() {
+        return initialState_;
+      }
+      public Builder setInitialState(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        initialState_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearInitialState() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        initialState_ = getDefaultInstance().getInitialState();
+        onChanged();
+        return this;
+      }
+      
+      // optional string actorClass = 3;
+      private java.lang.Object actorClass_ = "";
+      public boolean hasActorClass() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      public String getActorClass() {
+        java.lang.Object ref = actorClass_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          actorClass_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      public Builder setActorClass(String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        actorClass_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearActorClass() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        actorClass_ = getDefaultInstance().getActorClass();
+        onChanged();
+        return this;
+      }
+      void setActorClass(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000004;
+        actorClass_ = value;
+        onChanged();
+      }
+      
+      // @@protoc_insertion_point(builder_scope:org.elasterix.elasticactors.serialization.protobuf.CreateActorMessage)
+    }
+    
+    static {
+      defaultInstance = new CreateActorMessage(true);
+      defaultInstance.initFields();
+    }
+    
+    // @@protoc_insertion_point(class_scope:org.elasterix.elasticactors.serialization.protobuf.CreateActorMessage)
+  }
+  
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_org_elasterix_elasticactors_serialization_protobuf_InternalMessage_descriptor;
   private static
@@ -1372,6 +1853,11 @@ public final class Elasticactors {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_org_elasterix_elasticactors_serialization_protobuf_PersistentActor_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_org_elasterix_elasticactors_serialization_protobuf_CreateActorMessage_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_org_elasterix_elasticactors_serialization_protobuf_CreateActorMessage_fieldAccessorTable;
   
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -1385,10 +1871,12 @@ public final class Elasticactors {
       "2org.elasterix.elasticactors.serializati" +
       "on.protobuf\"f\n\017InternalMessage\022\020\n\010receiv" +
       "er\030\001 \001(\t\022\016\n\006sender\030\002 \001(\t\022\024\n\014payloadClass" +
-      "\030\003 \002(\t\022\017\n\007payload\030\004 \002(\014\022\n\n\002id\030\005 \002(\014\"b\n\017P" +
-      "ersistentActor\022\020\n\010actorRef\030\001 \002(\t\022\022\n\nacto" +
-      "rClass\030\002 \002(\t\022\032\n\022actorSystemVersion\030\003 \002(\t" +
-      "\022\r\n\005state\030\004 \001(\014B\002H\001"
+      "\030\003 \001(\t\022\017\n\007payload\030\004 \001(\014\022\n\n\002id\030\005 \001(\014\"b\n\017P" +
+      "ersistentActor\022\020\n\010actorRef\030\001 \001(\t\022\022\n\nacto" +
+      "rClass\030\002 \001(\t\022\032\n\022actorSystemVersion\030\003 \001(\t" +
+      "\022\r\n\005state\030\004 \001(\014\"O\n\022CreateActorMessage\022\017\n" +
+      "\007actorId\030\001 \001(\t\022\024\n\014initialState\030\002 \001(\014\022\022\n\n" +
+      "actorClass\030\003 \001(\tB\002H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -1411,6 +1899,14 @@ public final class Elasticactors {
               new java.lang.String[] { "ActorRef", "ActorClass", "ActorSystemVersion", "State", },
               org.elasterix.elasticactors.serialization.protobuf.Elasticactors.PersistentActor.class,
               org.elasterix.elasticactors.serialization.protobuf.Elasticactors.PersistentActor.Builder.class);
+          internal_static_org_elasterix_elasticactors_serialization_protobuf_CreateActorMessage_descriptor =
+            getDescriptor().getMessageTypes().get(2);
+          internal_static_org_elasterix_elasticactors_serialization_protobuf_CreateActorMessage_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_org_elasterix_elasticactors_serialization_protobuf_CreateActorMessage_descriptor,
+              new java.lang.String[] { "ActorId", "InitialState", "ActorClass", },
+              org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage.class,
+              org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage.Builder.class);
           return null;
         }
       };

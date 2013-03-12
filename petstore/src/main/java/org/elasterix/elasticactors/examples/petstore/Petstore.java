@@ -16,44 +16,72 @@
 
 package org.elasterix.elasticactors.examples.petstore;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.elasterix.elasticactors.ActorState;
 import org.elasterix.elasticactors.ActorSystemConfiguration;
+import org.elasterix.elasticactors.examples.common.JacksonActorStateDeserializer;
+import org.elasterix.elasticactors.examples.common.JacksonActorStateSerializer;
 import org.elasterix.elasticactors.serialization.Deserializer;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.serialization.Serializer;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  *
  */
 public class Petstore implements ActorSystemConfiguration {
+    private final String name;
+    private final int numberOfShards;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final Serializer<ActorState, byte[]> actorStateSerializer = new JacksonActorStateSerializer(objectMapper);
+    private final Deserializer<byte[],ActorState> actorStateDeserializer = new JacksonActorStateDeserializer(objectMapper);
+    private final Map<Class<?>,MessageSerializer<?>> messageSerializers = new HashMap<Class<?>,MessageSerializer<?>>() {{
+
+    }};
+    private final Map<Class<?>,MessageDeserializer<?>> messageDeserializers = new HashMap<Class<?>,MessageDeserializer<?>>() {{
+
+    }};
+
+    public Petstore(String name, int numberOfShards) {
+        this.name = name;
+        this.numberOfShards = numberOfShards;
+    }
+
     @Override
     public String getName() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return name;
     }
 
     @Override
     public int getNumberOfShards() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return numberOfShards;
+    }
+
+    @Override
+    public String getVersion() {
+        return "0.1.0";
     }
 
     @Override
     public <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return (MessageSerializer<T>) messageSerializers.get(messageClass);
     }
 
     @Override
     public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return (MessageDeserializer<T>) messageDeserializers.get(messageClass);
     }
 
     @Override
     public Serializer<ActorState, byte[]> getActorStateSerializer() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return actorStateSerializer;
     }
 
     @Override
     public Deserializer<byte[], ActorState> getActorStateDeserializer() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return actorStateDeserializer;
     }
 }

@@ -16,6 +16,9 @@
 
 package org.elasterix.elasticactors.serialization;
 
+import org.codehaus.jackson.JsonGenerationException;
+
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -23,5 +26,5 @@ import java.nio.ByteBuffer;
  */
 public interface MessageSerializer<I> extends Serializer<I,ByteBuffer> {
     @Override
-    ByteBuffer serialize(I object);
+    ByteBuffer serialize(I object) throws IOException;
 }

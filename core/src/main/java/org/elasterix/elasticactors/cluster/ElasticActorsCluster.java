@@ -19,6 +19,8 @@ package org.elasterix.elasticactors.cluster;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.cassandra.ClusterEventListener;
+import org.elasterix.elasticactors.serialization.MessageDeserializer;
+import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasterix.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.springframework.beans.BeansException;
@@ -132,6 +134,16 @@ public class ElasticActorsCluster implements ActorRefFactory, ApplicationContext
     @Override
     public ActorSystem get(String actorSystemName) {
         return managedActorSystems.get(actorSystemName);
+    }
+
+    @Override
+    public <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass) {
+        return null;
+    }
+
+    @Override
+    public <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass) {
+        return null;
     }
 
     @Value("${elasticactors.cluster.name}")

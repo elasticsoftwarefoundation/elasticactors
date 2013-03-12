@@ -28,7 +28,7 @@ public final class PersistentActor {
     private final String actorSystemVersion;
     private final String actorClass;
     private final String ref;
-    private byte[] serializedState;
+    private volatile byte[] serializedState;
 
     public PersistentActor(String actorSystemVersion, String ref, String actorClass) {
         this(actorSystemVersion,ref,actorClass,null);

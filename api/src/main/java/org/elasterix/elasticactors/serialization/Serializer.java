@@ -17,9 +17,13 @@
 package org.elasterix.elasticactors.serialization;
 
 
+import org.codehaus.jackson.JsonGenerationException;
+
+import java.io.IOException;
+
 /**
  * @author Joost van de Wijgerd
  */
 public interface Serializer<I,O> {
-    O serialize(I object);
+    O serialize(I object) throws IOException;
 }

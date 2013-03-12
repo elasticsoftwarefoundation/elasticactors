@@ -14,20 +14,27 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors;
+package org.elasterix.elasticactors.examples.common;
 
-import org.elasterix.elasticactors.serialization.MessageDeserializer;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 /**
- * @author Joost van de Wijgerd
+ *
  */
-public interface ActorSystems {
-    String getClusterName();
+public final class JacksonMessageSerializer<T> implements MessageSerializer<T> {
+    private final ObjectMapper objectMapper;
 
-    ActorSystem get(String actorSystemName);
+    public JacksonMessageSerializer(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
-    <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass);
-
-    <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass);
+    @Override
+    public ByteBuffer serialize(T object) throws IOException {
+        return ByteBuffer.wrap(objectMapper.writeValueAsBytes(object));
+    }
 }

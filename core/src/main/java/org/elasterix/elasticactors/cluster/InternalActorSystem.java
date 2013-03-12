@@ -23,7 +23,7 @@ import org.elasterix.elasticactors.*;
  */
 public interface InternalActorSystem extends ActorSystem, ActorSystemConfiguration {
 
-    ElasticActor getActorInstance(ActorRef actorRef);
+    ElasticActor getActorInstance(ActorRef actorRef,Class<? extends ElasticActor> actorClass);
 
     ActorShard getShard(int shardId);
 }

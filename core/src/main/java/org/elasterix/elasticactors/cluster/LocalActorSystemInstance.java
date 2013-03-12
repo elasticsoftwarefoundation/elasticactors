@@ -19,6 +19,7 @@ package org.elasterix.elasticactors.cluster;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.messaging.MessageQueueFactory;
+import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasterix.elasticactors.serialization.Deserializer;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
@@ -27,8 +28,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import java.math.BigInteger;
+import java.nio.charset.Charset;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -46,12 +52,15 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private final ActorShardAdapter[] shardAdapters;
     private final NodeSelectorFactory nodeSelectorFactory;
     private final ConcurrentMap<Class,ElasticActor> actorInstances = new ConcurrentHashMap<Class,ElasticActor>();
+    private final KetamaHashAlgorithm hashAlgorithm = new KetamaHashAlgorithm();
+    private final ActorSystems cluster;
     private MessageQueueFactory localMessageQueueFactory;
     private MessageQueueFactory remoteMessageQueueFactory;
 
-    public LocalActorSystemInstance(ActorSystemConfiguration actorSystem, NodeSelectorFactory nodeSelectorFactory) {
+    public LocalActorSystemInstance(ActorSystems cluster,ActorSystemConfiguration actorSystem, NodeSelectorFactory nodeSelectorFactory) {
         this.configuration = actorSystem;
         this.nodeSelectorFactory = nodeSelectorFactory;
+        this.cluster = cluster;
         this.shards = new ActorShard[configuration.getNumberOfShards()];
         this.shardLocks = new ReadWriteLock[shards.length];
         this.shardAdapters = new ActorShardAdapter[shards.length];
@@ -131,13 +140,31 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
-    public ElasticActor getActorInstance(ActorRef actorRef) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public ElasticActor getActorInstance(ActorRef actorRef,Class<? extends ElasticActor> actorClass) {
+        // ensure the actor instance is created
+        ElasticActor actorInstance = actorInstances.get(actorClass);
+        if(actorInstance == null) {
+            try {
+                actorInstance = actorClass.newInstance();
+                ElasticActor existingInstance = actorInstances.putIfAbsent(actorClass, actorInstance);
+                return existingInstance == null ? actorInstance : existingInstance;
+            } catch(Exception e) {
+                //@todo: throw a proper exception here
+                return null;
+            }
+        } else {
+            return actorInstance;
+        }
     }
 
     @Override
     public String getName() {
         return configuration.getName();
+    }
+
+    @Override
+    public String getVersion() {
+        return configuration.getVersion();
     }
 
     @Override
@@ -152,30 +179,41 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState, boolean persistent) throws Exception {
-        // ensure the actor instance is created
-        if(!actorInstances.containsKey(actorClass)) {
-            actorInstances.putIfAbsent(actorClass, (ElasticActor) actorClass.newInstance());
-        }
+
         // determine shard
+        ActorShard shard = shardFor(actorId);
         // send CreateActorMessage to shard
+        CreateActorMessage createActorMessage = new CreateActorMessage(actorClass.getName(),actorId, null);
+        //@todo: see if we need to get the sender from the context
+        shard.sendMessage(null,shard.getActorRef(),createActorMessage);
         // create actor ref
-        // return
-        return null;
+        // @todo: add cache to speed up performance
+        return new LocalClusterActorRef(cluster.getClusterName(),shard,actorId);
+    }
+
+    private ActorShard shardFor(String actorId) {
+        return shardAdapters[hashAlgorithm.hash(actorId).mod(BigInteger.valueOf(shards.length)).intValue()];
     }
 
     @Override
     public ActorRef actorFor(String actorId) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        // determine shard
+        ActorShard shard = shardFor(actorId);
+        // return actor ref
+        // @todo: add cache to speed up performance
+        return new LocalClusterActorRef(cluster.getClusterName(),shard,actorId);
     }
 
     @Override
     public <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
-        return configuration.getSerializer(messageClass);
+        MessageSerializer<T> messageSerializer = cluster.getSystemMessageSerializer(messageClass);
+        return messageSerializer == null ? configuration.getSerializer(messageClass) : messageSerializer;
     }
 
     @Override
     public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
-        return configuration.getDeserializer(messageClass);
+        MessageDeserializer<T> messageDeserializer = cluster.getSystemMessageDeserializer(messageClass);
+        return messageDeserializer == null ? configuration.getDeserializer(messageClass) : messageDeserializer;
     }
 
     @Override
@@ -200,9 +238,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     private final class ActorShardAdapter implements ActorShard {
         private final ShardKey key;
+        private final ActorRef myRef;
 
         private ActorShardAdapter(ShardKey key) {
             this.key = key;
+            this.myRef = new LocalClusterActorRef(cluster.getClusterName(),this);
         }
 
         @Override
@@ -219,7 +259,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
             } finally {
                 readLock.unlock();
             }
+        }
 
+        @Override
+        public ActorRef getActorRef() {
+            return myRef;
         }
 
         @Override
@@ -242,6 +286,53 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         public void destroy() {
             // should not be called on the adapter, just do nothing
         }
+    }
+
+    public static final class KetamaHashAlgorithm {
+        private static final Charset UTF_8 = Charset.forName("UTF-8");
+    	private final ConcurrentLinkedQueue<MessageDigest> digestCache = new ConcurrentLinkedQueue<MessageDigest>();
+
+        /**
+    	 * Compute the hash for the given key.
+    	 *
+    	 * @param k the key to hash
+         * @return a positive integer hash of 128 bits
+    	 */
+        public BigInteger hash(final String k) {
+            return new BigInteger(computeMd5(k)).abs();
+        }
+
+        /**
+    	 * Get the md5 of the given key.
+         * @param k the key to compute an MD5 on
+         * @return an MD5 hash
+         */
+        public byte[] computeMd5(String k) {
+    		MessageDigest md5 = borrow();
+    		try {
+    			md5.reset();
+    			md5.update(k.getBytes(UTF_8));
+    			return md5.digest();
+    		} finally {
+    			release(md5);
+    		}
+    	}
+
+    	private MessageDigest borrow() {
+    		MessageDigest md5 = digestCache.poll();
+    		if(md5 == null) {
+    			try {
+    				md5 = MessageDigest.getInstance("MD5");
+    			} catch (NoSuchAlgorithmException e) {
+    				throw new RuntimeException("MD5 not supported", e);
+    			}
+    		}
+    		return md5;
+    	}
+
+    	private void release(MessageDigest digest) {
+    		digestCache.offer(digest);
+    	}
     }
 
 

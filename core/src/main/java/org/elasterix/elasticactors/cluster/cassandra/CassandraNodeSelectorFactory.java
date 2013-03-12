@@ -30,7 +30,6 @@ import java.util.List;
 public class CassandraNodeSelectorFactory implements NodeSelectorFactory {
     private NodeProbe nodeProbe;
 
-
     @Override
     public void start() throws Exception {
         nodeProbe = new NodeProbe("localhost");

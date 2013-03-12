@@ -24,6 +24,8 @@ public interface ActorShard {
 
     PhysicalNode getOwningNode();
 
+    ActorRef getActorRef();
+
     void sendMessage(ActorRef sender, ActorRef receiver, Object message) throws Exception;
 
     void init() throws Exception;

@@ -40,6 +40,8 @@ public interface ActorSystemConfiguration {
      */
     int getNumberOfShards();
 
+    String getVersion();
+
     <T> MessageSerializer<T> getSerializer(Class<T> messageClass);
 
     <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass);
