@@ -22,7 +22,9 @@ import org.elasterix.elasticactors.ActorSystems;
 /**
  * @author Joost van de Wijgerd
  */
-public class ActorRefTools {
+public final class ActorRefTools {
+    private ActorRefTools() {}
+
     public static ActorRef parse(String refSpec, ActorSystems cluster) {
         // refSpec should look like: actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId>
         if (refSpec.startsWith("actor://")) {

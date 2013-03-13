@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.messaging.MessageQueueFactory;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
+import org.elasterix.elasticactors.scheduler.Scheduler;
 import org.elasterix.elasticactors.serialization.Deserializer;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
@@ -56,6 +57,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private final ActorSystems cluster;
     private MessageQueueFactory localMessageQueueFactory;
     private MessageQueueFactory remoteMessageQueueFactory;
+    private Scheduler scheduler;
 
     public LocalActorSystemInstance(ActorSystems cluster,ActorSystemConfiguration actorSystem, NodeSelectorFactory nodeSelectorFactory) {
         this.configuration = actorSystem;
@@ -168,6 +170,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
+    public Scheduler getScheduler() {
+        return scheduler;
+    }
+
+    @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass) throws Exception {
         return actorOf(actorId,actorClass,null,true);
     }
@@ -179,7 +186,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState, boolean persistent) throws Exception {
-
         // determine shard
         ActorShard shard = shardFor(actorId);
         // send CreateActorMessage to shard
@@ -234,6 +240,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     @Autowired
     public void setRemoteMessageQueueFactory(@Qualifier("remoteMessageQueueFactory") MessageQueueFactory remoteMessageQueueFactory) {
         this.remoteMessageQueueFactory = remoteMessageQueueFactory;
+    }
+
+    @Autowired
+    public void setScheduler(Scheduler scheduler) {
+        this.scheduler = scheduler;
     }
 
     private final class ActorShardAdapter implements ActorShard {

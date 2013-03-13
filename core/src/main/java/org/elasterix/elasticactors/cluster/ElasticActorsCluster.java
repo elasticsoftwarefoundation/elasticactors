@@ -16,11 +16,19 @@
 
 package org.elasterix.elasticactors.cluster;
 
+import me.prettyprint.cassandra.serializers.SerializerTypeInferer;
+import me.prettyprint.cassandra.serializers.StringSerializer;
+import me.prettyprint.hector.api.Serializer;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.cassandra.ClusterEventListener;
+import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
+import org.elasterix.elasticactors.serialization.internal.CreateActorMessageDeserializer;
+import org.elasterix.elasticactors.serialization.internal.CreateActorMessageSerializer;
+import org.elasterix.elasticactors.serialization.internal.HectorMessageDeserializer;
+import org.elasterix.elasticactors.serialization.internal.HectorMessageSerializer;
 import org.elasterix.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasterix.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.springframework.beans.BeansException;
@@ -31,8 +39,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-import javax.xml.ws.Action;
 import java.net.InetAddress;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +53,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Joost van de Wijgerd
  */
 @Configurable
-public class ElasticActorsCluster implements ActorRefFactory, ApplicationContextAware, ClusterEventListener, ActorSystems {
+public final class ElasticActorsCluster implements ActorRefFactory, ApplicationContextAware, ClusterEventListener, ActorSystems {
     private static final Logger logger = Logger.getLogger(ElasticActorsCluster.class);
     private static final AtomicReference<ElasticActorsCluster> INSTANCE = new AtomicReference<ElasticActorsCluster>(null);
     private final ConcurrentMap<String,LocalActorSystemInstance> managedActorSystems = new ConcurrentHashMap<String,LocalActorSystemInstance>();
@@ -54,6 +62,16 @@ public class ElasticActorsCluster implements ActorRefFactory, ApplicationContext
     private PhysicalNode localNode;
     private NodeSelectorFactory nodeSelectorFactory;
     private ThreadBoundExecutor<String> executor;
+    private final Map<Class,MessageSerializer> systemSerializers = new HashMap<Class,MessageSerializer>() {{
+        put(CreateActorMessage.class,new CreateActorMessageSerializer());
+        put(String.class,new HectorMessageSerializer<String>(StringSerializer.get()));
+        //@todo: add more serializers here
+    }};
+    private final Map<Class,MessageDeserializer> systemDeserializers = new HashMap<Class,MessageDeserializer>() {{
+        put(CreateActorMessage.class,new CreateActorMessageDeserializer());
+        put(String.class,new HectorMessageDeserializer<String>(StringSerializer.get()));
+        //@todo: add more deserializers here
+    }};
 
 
     public static ElasticActorsCluster getInstance() {
@@ -138,12 +156,12 @@ public class ElasticActorsCluster implements ActorRefFactory, ApplicationContext
 
     @Override
     public <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass) {
-        return null;
+        return systemSerializers.get(messageClass);
     }
 
     @Override
     public <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass) {
-        return null;
+        return systemDeserializers.get(messageClass);
     }
 
     @Value("${elasticactors.cluster.name}")

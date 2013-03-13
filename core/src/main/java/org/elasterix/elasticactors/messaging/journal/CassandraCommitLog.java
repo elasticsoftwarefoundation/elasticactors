@@ -32,7 +32,7 @@ import java.util.UUID;
 /**
  * @author Joost van de Wijgerd
  */
-public class CassandraCommitLog implements CommitLog {
+public final class CassandraCommitLog implements CommitLog {
     private ColumnFamilyTemplate<String,UUID> columnFamilyTemplate;
     private final CommitLogEntryColumnMapper columnMapper = new CommitLogEntryColumnMapper();
 

@@ -16,6 +16,7 @@
 
 package org.elasterix.elasticactors;
 
+import org.elasterix.elasticactors.scheduler.Scheduler;
 import org.elasterix.elasticactors.serialization.Deserializer;
 
 /**
@@ -43,5 +44,7 @@ public interface ActorSystem {
     <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState, boolean persistent) throws Exception;
 
     ActorRef actorFor(String actorId);
+
+    Scheduler getScheduler();
 
 }

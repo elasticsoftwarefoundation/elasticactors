@@ -109,6 +109,8 @@
 
     <bean id="nodeSelectorFactory" class="org.elasterix.elasticactors.cluster.cassandra.CassandraNodeSelectorFactory"/>
 
+    <bean id="simpleScheduler" class="org.elasterix.elasticactors.cluster.scheduler.SimpleScheduler"/>
+
     <bean id="clusterExecutor" class="org.elasterix.elasticactors.util.concurrent.ThreadBoundExecutorImpl">
         <constructor-arg index="0">
             <bean class="org.elasterix.elasticactors.util.concurrent.DaemonThreadFactory">

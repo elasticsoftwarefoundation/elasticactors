@@ -33,7 +33,7 @@ import java.io.IOException;
 /**
  * @author Joost van de Wijgerd
  */
-public class CassandraPersistentActorRepository implements PersistentActorRepository {
+public final class CassandraPersistentActorRepository implements PersistentActorRepository {
     private ColumnFamilyTemplate<String,String> columnFamilyTemplate;
     private Deserializer<byte[],PersistentActor> deserializer;
     private Serializer<PersistentActor,byte[]> serializer;
