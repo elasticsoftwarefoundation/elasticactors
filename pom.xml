@@ -32,7 +32,7 @@
         <cassandra.version>1.2.2</cassandra.version>
         <hectorclient.version>1.1-2</hectorclient.version>
         <spring.version>3.2.1.RELEASE</spring.version>
-        <aspectj.version>1.7.1</aspectj.version>
+        <aspectj.version>1.7.2</aspectj.version>
         <netty.version>3.6.3.Final</netty.version>
         <protobuf.version>2.4.1</protobuf.version>
         <!-- testing -->
