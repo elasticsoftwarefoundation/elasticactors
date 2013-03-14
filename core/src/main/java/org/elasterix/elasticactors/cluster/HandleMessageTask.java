@@ -21,11 +21,9 @@ import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ActorState;
 import org.elasterix.elasticactors.ElasticActor;
 import org.elasterix.elasticactors.messaging.InternalMessage;
-import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.Serializer;
 import org.elasterix.elasticactors.state.PersistentActor;
 import org.elasterix.elasticactors.state.PersistentActorRepository;
-import org.elasterix.elasticactors.util.SerializationTools;
 import org.elasterix.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import static org.elasterix.elasticactors.util.SerializationTools.deserializeMessage;
@@ -70,29 +68,23 @@ public final class HandleMessageTask implements ThreadBoundRunnable<String> {
     }
 
     private void handleMessage(Object message) {
-        ActorState stateBefore = null;
         try {
-            // setup the state
-            stateBefore = persistentActor.getState(actorSystem.getActorStateDeserializer());
-            InternalActorStateContext.setState(stateBefore);
-            receiver.onMessage(message,internalMessage.getSender());
+            // setup the context
+            InternalActorContext.setContext(persistentActor);
+            receiver.onReceive(message, internalMessage.getSender());
         } catch(Exception e) {
             // @todo: handle by sending back a message (if possible)
             log.error(String.format("Exception while handling message for actor [%s]",receiverRef.toString()),e);
         } finally {
-            // clear the state
-            ActorState stateAfter = InternalActorStateContext.getAndClearState();
+            // clear the state from the thread
+            InternalActorContext.getAndClearContext();
             // check if we have state now that needs to be put in the cache
-            Serializer<ActorState,byte[]> stateSerializer = actorSystem.getActorStateSerializer();
-            try {
-                byte[] newActorState = stateSerializer.serialize(stateAfter);
-                persistentActor.setSerializedState(newActorState);
-                // flush state if it was changed
-                if(stateAfter != null) {
-                    persistentActorRepository.update(persistentActor.getShardKey(),persistentActor);
+            if(persistentActor.getState() != null) {
+                try {
+                        persistentActorRepository.update(persistentActor.getShardKey(),persistentActor);
+                } catch(Exception e) {
+                    log.error(String.format("Exception while serializing ActorState for actor [%s]",receiverRef.getActorId()),e);
                 }
-            } catch(Exception e) {
-                log.error(String.format("Exception while serializing ActorState for actor [%s]",receiverRef.getActorId()),e);
             }
         }
     }

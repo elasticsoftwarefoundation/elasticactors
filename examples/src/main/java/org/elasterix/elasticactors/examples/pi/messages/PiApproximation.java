@@ -14,25 +14,31 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.cluster;
+package org.elasterix.elasticactors.examples.pi.messages;
 
-import org.elasterix.elasticactors.ActorState;
-import org.elasterix.elasticactors.ActorStateContext;
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  * @author Joost van de Wijgerd
  */
-public class InternalActorStateContext extends ActorStateContext {
+public class PiApproximation {
+    private final double pi;
+    private final long duration;
 
-    protected static ActorState setState(ActorState context) {
-        final ActorState currentContext = threadContext.get();
-        threadContext.set(context);
-        return currentContext;
+    @JsonCreator
+    public PiApproximation(@JsonProperty("pi") double pi, @JsonProperty("duration") long duration) {
+        this.pi = pi;
+        this.duration = duration;
     }
 
-    protected static ActorState getAndClearState() {
-        ActorState state = threadContext.get();
-        threadContext.set(null);
-        return state;
+    @JsonProperty("pi")
+    public double getPi() {
+        return pi;
+    }
+
+    @JsonProperty("duration")
+    public long getDuration() {
+        return duration;
     }
 }

@@ -19,14 +19,22 @@ package org.elasterix.elasticactors;
 /**
  * @author Joost van de Wijgerd
  */
-public interface ElasticActor<T> {
-    void postCreate(ActorRef creator) throws Exception;
+public class ActorContextHolder {
+    protected static final ThreadLocal<ActorContext> threadContext = new ThreadLocal<ActorContext>();
 
-    void postActivate(String previousVersion) throws Exception;
+    public static ActorState getState(ActorStateFactory stateFactory) {
+        ActorContext actorContext = threadContext.get();
+        ActorState state = actorContext.getState();
+        if(state == null) {
+            actorContext.setState(stateFactory.create());
+            return actorContext.getState();
+        } else {
+            return state;
+        }
+    }
 
-    void onReceive(T message, ActorRef sender) throws Exception;
-
-    void prePassivate() throws Exception;
-
-    void preDestroy(ActorRef destroyer) throws Exception;
+    public static ActorRef getSelf() {
+        ActorContext actorContext =  threadContext.get();
+        return actorContext.getSelf();
+    }
 }

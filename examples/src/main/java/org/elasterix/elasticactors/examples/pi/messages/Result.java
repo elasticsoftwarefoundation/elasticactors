@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors;
+package org.elasterix.elasticactors.examples.pi.messages;
+
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  * @author Joost van de Wijgerd
  */
-public class ActorStateContext {
-    protected static final ThreadLocal<ActorState> threadContext = new ThreadLocal<ActorState>();
+public class Result {
+    private final double value;
+      @JsonCreator
+      public Result(@JsonProperty("value") double value) {
+        this.value = value;
+      }
 
-    public static ActorState getState(ActorStateFactory stateFactory) {
-        ActorState state =  threadContext.get();
-        if(state == null) {
-            state = stateFactory.create();
-            threadContext.set(state);
-        }
-        return state;
-    }
+    @JsonProperty("value")
+      public double getValue() {
+        return value;
+      }
 }

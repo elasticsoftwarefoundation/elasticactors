@@ -16,20 +16,28 @@
 
 package org.elasterix.elasticactors.messaging.internal;
 
+import org.elasterix.elasticactors.ActorState;
+
 import java.io.Serializable;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class CreateActorMessage implements Serializable {
+    private final String actorSystem;
     private final String actorId;
     private final String actorClass;
-    private final byte[] initialState;
+    private final ActorState initialState;
 
-    public CreateActorMessage(String actorClass, String actorId, byte[] initialState) {
+    public CreateActorMessage(String actorSystem, String actorClass, String actorId, ActorState initialState) {
+        this.actorSystem = actorSystem;
         this.actorId = actorId;
         this.actorClass = actorClass;
         this.initialState = initialState;
+    }
+
+    public String getActorSystem() {
+        return actorSystem;
     }
 
     public String getActorClass() {
@@ -40,7 +48,7 @@ public final class CreateActorMessage implements Serializable {
         return actorId;
     }
 
-    public byte[] getInitialState() {
+    public ActorState getInitialState() {
         return initialState;
     }
 }

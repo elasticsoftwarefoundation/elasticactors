@@ -16,10 +16,7 @@
 
 package org.elasterix.elasticactors.state;
 
-import org.elasterix.elasticactors.ActorRef;
-import org.elasterix.elasticactors.ActorState;
-import org.elasterix.elasticactors.ElasticActor;
-import org.elasterix.elasticactors.ShardKey;
+import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.serialization.Deserializer;
 
 import java.io.IOException;
@@ -27,23 +24,23 @@ import java.io.IOException;
 /**
  * @author Joost van de Wijgerd
  */
-public final class PersistentActor {
+public final class PersistentActor implements ActorContext {
     private final ShardKey shardKey;
     private final String actorSystemVersion;
     private final Class<? extends ElasticActor> actorClass;
     private final ActorRef ref;
-    private volatile byte[] serializedState;
+    private volatile ActorState serializedState;
 
     public PersistentActor(ShardKey shardKey,String actorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass) {
         this(shardKey,actorSystemVersion,ref,actorClass,null);
     }
 
-    public PersistentActor(ShardKey shardKey, String actorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass, byte[] serializedState) {
+    public PersistentActor(ShardKey shardKey, String actorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass, ActorState state) {
         this.shardKey = shardKey;
         this.actorSystemVersion = actorSystemVersion;
         this.ref = ref;
         this.actorClass = actorClass;
-        this.serializedState = serializedState;
+        this.serializedState = state;
     }
 
     public ShardKey getShardKey() {
@@ -58,23 +55,18 @@ public final class PersistentActor {
         return actorClass;
     }
 
-    public ActorRef getRef() {
+    @Override
+    public ActorRef getSelf() {
         return ref;
     }
 
-    public byte[] getSerializedState() {
+    @Override
+    public ActorState getState() {
         return serializedState;
     }
 
-    public void setSerializedState(byte[] serializedState) {
-        this.serializedState = serializedState;
-    }
-
-    public ActorState getState(Deserializer<byte[],ActorState> stateDeserializer) throws IOException {
-        if(serializedState == null) {
-            return null;
-        } else {
-            return stateDeserializer.deserialize(this.serializedState);
-        }
+    @Override
+    public void setState(ActorState state) {
+        this.serializedState = state;
     }
 }

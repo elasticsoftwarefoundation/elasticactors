@@ -17,6 +17,9 @@
 package org.elasterix.elasticactors.serialization.internal;
 
 import com.google.protobuf.ByteString;
+import org.elasterix.elasticactors.ActorState;
+import org.elasterix.elasticactors.cluster.InternalActorSystem;
+import org.elasterix.elasticactors.cluster.InternalActorSystems;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.protobuf.Elasticactors;
@@ -28,11 +31,26 @@ import java.nio.ByteBuffer;
  * @author Joost van de Wijgerd
  */
 public final class CreateActorMessageDeserializer implements MessageDeserializer<CreateActorMessage> {
+    private final InternalActorSystems actorSystems;
+
+    public CreateActorMessageDeserializer(InternalActorSystems actorSystems) {
+        this.actorSystems = actorSystems;
+    }
+
     @Override
     public CreateActorMessage deserialize(ByteBuffer serializedObject) throws IOException {
         Elasticactors.CreateActorMessage protobufMessage = Elasticactors.CreateActorMessage.parseFrom(ByteString.copyFrom(serializedObject));
-        return new CreateActorMessage(protobufMessage.getActorClass(),
+        return new CreateActorMessage(protobufMessage.getActorSystem(),
+                                      protobufMessage.getActorClass(),
                                       protobufMessage.getActorId(),
-                                      protobufMessage.hasInitialState() ? protobufMessage.getInitialState().toByteArray() : null);
+                                      protobufMessage.hasInitialState()
+                                              ? deserializeState(protobufMessage.getActorSystem(),
+                                                                 protobufMessage.getInitialState().toByteArray())
+                                              : null);
+    }
+
+    private ActorState deserializeState(String actorSystemName,byte[] serializedState) throws IOException {
+        InternalActorSystem actorSystem = actorSystems.get(actorSystemName);
+        return actorSystem.getActorStateDeserializer().deserialize(serializedState);
     }
 }

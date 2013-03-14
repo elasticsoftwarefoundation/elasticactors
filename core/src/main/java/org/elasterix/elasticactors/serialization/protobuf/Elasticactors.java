@@ -1422,6 +1422,10 @@ public final class Elasticactors {
     // optional string actorClass = 3;
     boolean hasActorClass();
     String getActorClass();
+    
+    // optional string actorSystem = 4;
+    boolean hasActorSystem();
+    String getActorSystem();
   }
   public static final class CreateActorMessage extends
       com.google.protobuf.GeneratedMessage
@@ -1526,10 +1530,43 @@ public final class Elasticactors {
       }
     }
     
+    // optional string actorSystem = 4;
+    public static final int ACTORSYSTEM_FIELD_NUMBER = 4;
+    private java.lang.Object actorSystem_;
+    public boolean hasActorSystem() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    public String getActorSystem() {
+      java.lang.Object ref = actorSystem_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          actorSystem_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getActorSystemBytes() {
+      java.lang.Object ref = actorSystem_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        actorSystem_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    
     private void initFields() {
       actorId_ = "";
       initialState_ = com.google.protobuf.ByteString.EMPTY;
       actorClass_ = "";
+      actorSystem_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1552,6 +1589,9 @@ public final class Elasticactors {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeBytes(3, getActorClassBytes());
       }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, getActorSystemBytes());
+      }
       getUnknownFields().writeTo(output);
     }
     
@@ -1572,6 +1612,10 @@ public final class Elasticactors {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, getActorClassBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, getActorSystemBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1703,6 +1747,8 @@ public final class Elasticactors {
         bitField0_ = (bitField0_ & ~0x00000002);
         actorClass_ = "";
         bitField0_ = (bitField0_ & ~0x00000004);
+        actorSystem_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
       
@@ -1753,6 +1799,10 @@ public final class Elasticactors {
           to_bitField0_ |= 0x00000004;
         }
         result.actorClass_ = actorClass_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.actorSystem_ = actorSystem_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1777,6 +1827,9 @@ public final class Elasticactors {
         }
         if (other.hasActorClass()) {
           setActorClass(other.getActorClass());
+        }
+        if (other.hasActorSystem()) {
+          setActorSystem(other.getActorSystem());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1822,6 +1875,11 @@ public final class Elasticactors {
             case 26: {
               bitField0_ |= 0x00000004;
               actorClass_ = input.readBytes();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              actorSystem_ = input.readBytes();
               break;
             }
           }
@@ -1926,6 +1984,42 @@ public final class Elasticactors {
         onChanged();
       }
       
+      // optional string actorSystem = 4;
+      private java.lang.Object actorSystem_ = "";
+      public boolean hasActorSystem() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      public String getActorSystem() {
+        java.lang.Object ref = actorSystem_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          actorSystem_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      public Builder setActorSystem(String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        actorSystem_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearActorSystem() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        actorSystem_ = getDefaultInstance().getActorSystem();
+        onChanged();
+        return this;
+      }
+      void setActorSystem(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000008;
+        actorSystem_ = value;
+        onChanged();
+      }
+      
       // @@protoc_insertion_point(builder_scope:org.elasterix.elasticactors.serialization.protobuf.CreateActorMessage)
     }
     
@@ -1968,9 +2062,10 @@ public final class Elasticactors {
       "\030\003 \001(\t\022\017\n\007payload\030\004 \001(\014\022\n\n\002id\030\005 \001(\014\"t\n\017P" +
       "ersistentActor\022\020\n\010actorRef\030\001 \001(\t\022\022\n\nacto" +
       "rClass\030\002 \001(\t\022\032\n\022actorSystemVersion\030\003 \001(\t" +
-      "\022\r\n\005state\030\004 \001(\014\022\020\n\010shardKey\030\005 \001(\t\"O\n\022Cre" +
+      "\022\r\n\005state\030\004 \001(\014\022\020\n\010shardKey\030\005 \001(\t\"d\n\022Cre" +
       "ateActorMessage\022\017\n\007actorId\030\001 \001(\t\022\024\n\014init" +
-      "ialState\030\002 \001(\014\022\022\n\nactorClass\030\003 \001(\tB\002H\001"
+      "ialState\030\002 \001(\014\022\022\n\nactorClass\030\003 \001(\t\022\023\n\013ac",
+      "torSystem\030\004 \001(\tB\002H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -1998,7 +2093,7 @@ public final class Elasticactors {
           internal_static_org_elasterix_elasticactors_serialization_protobuf_CreateActorMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_org_elasterix_elasticactors_serialization_protobuf_CreateActorMessage_descriptor,
-              new java.lang.String[] { "ActorId", "InitialState", "ActorClass", },
+              new java.lang.String[] { "ActorId", "InitialState", "ActorClass", "ActorSystem", },
               org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage.class,
               org.elasterix.elasticactors.serialization.protobuf.Elasticactors.CreateActorMessage.Builder.class);
           return null;

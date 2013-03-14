@@ -29,4 +29,5 @@ message CreateActorMessage {
     optional string actorId = 1;
     optional bytes initialState = 2;
     optional string actorClass = 3;
+    optional string actorSystem = 4;
 }

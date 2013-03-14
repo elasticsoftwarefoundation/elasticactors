@@ -17,9 +17,13 @@
 package org.elasterix.elasticactors.serialization.internal;
 
 import com.google.protobuf.ByteString;
+import org.elasterix.elasticactors.ActorState;
+import org.elasterix.elasticactors.cluster.InternalActorSystem;
+import org.elasterix.elasticactors.cluster.InternalActorSystems;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.serialization.protobuf.Elasticactors;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -28,14 +32,28 @@ import java.nio.ByteBuffer;
  * @author Joost van de Wijgerd
  */
 public final class CreateActorMessageSerializer implements MessageSerializer<CreateActorMessage> {
+    private final InternalActorSystems actorSystems;
+
+    public CreateActorMessageSerializer(InternalActorSystems actorSystems) {
+        this.actorSystems = actorSystems;
+    }
+
+
     @Override
     public ByteBuffer serialize(CreateActorMessage message) throws IOException {
         Elasticactors.CreateActorMessage.Builder builder = Elasticactors.CreateActorMessage.newBuilder();
+        builder.setActorSystem(message.getActorSystem());
         builder.setActorClass(message.getActorClass());
         builder.setActorId(message.getActorId());
         if(message.getInitialState() != null) {
-            builder.setInitialState(ByteString.copyFrom(message.getInitialState()));
+            builder.setInitialState(ByteString.copyFrom(serializeState(message.getActorSystem(),
+                                                                       message.getInitialState())));
         }
         return ByteBuffer.wrap(builder.build().toByteArray());
+    }
+
+    private byte[] serializeState(String actorSystemName,ActorState state) throws IOException {
+        InternalActorSystem actorSystem = actorSystems.get(actorSystemName);
+        return actorSystem.getActorStateSerializer().serialize(state);
     }
 }

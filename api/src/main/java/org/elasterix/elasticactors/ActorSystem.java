@@ -22,8 +22,8 @@ import org.elasterix.elasticactors.serialization.Deserializer;
 /**
  * An {@link ActorSystem} is a collection of {@link ElasticActor} instances. {@link ElasticActor}s are persistent and
  * have an {@link ActorState}. An application implementing and {@link ActorSystem} should create classes that implement
- * the {@link ElasticActor#onMessage(Object, ActorRef)} method. Within this method the associated {@link ActorState} can
- * be obtained by calling the {@link org.elasterix.elasticactors.ActorStateContext#getState(ActorStateFactory)} method.
+ * the {@link ElasticActor#onReceive(Object, ActorRef)} method. Within this method the associated {@link ActorState} can
+ * be obtained by calling the {@link ActorContextHolder#getState(ActorStateFactory)} method.
  * The ElasticActors framework will take care of persisting the state. The application can control the serialization and
  * deserialization by providing appropriate {@link Deserializer} in the {@link org.elasterix.elasticactors.ActorSystemConfiguration#getActorStateDeserializer()}
  *

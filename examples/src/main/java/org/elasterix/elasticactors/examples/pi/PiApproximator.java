@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.examples.petstore;
+package org.elasterix.elasticactors.examples.pi;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.elasterix.elasticactors.ActorState;
@@ -32,7 +32,7 @@ import java.util.Map;
 /**
  *
  */
-public class Petstore implements ActorSystemConfiguration {
+public class PiApproximator implements ActorSystemConfiguration {
     private final String name;
     private final int numberOfShards;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -45,7 +45,7 @@ public class Petstore implements ActorSystemConfiguration {
 
     }};
 
-    public Petstore(String name, int numberOfShards) {
+    public PiApproximator(String name, int numberOfShards) {
         this.name = name;
         this.numberOfShards = numberOfShards;
     }

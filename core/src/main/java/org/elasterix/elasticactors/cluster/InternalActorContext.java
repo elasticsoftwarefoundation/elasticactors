@@ -14,19 +14,26 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors;
+package org.elasterix.elasticactors.cluster;
+
+import org.elasterix.elasticactors.ActorContext;
+import org.elasterix.elasticactors.ActorContextHolder;
+import org.elasterix.elasticactors.ActorState;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface ElasticActor<T> {
-    void postCreate(ActorRef creator) throws Exception;
+public class InternalActorContext extends ActorContextHolder {
 
-    void postActivate(String previousVersion) throws Exception;
+    protected static ActorContext setContext(ActorContext context) {
+        final ActorContext currentContext = threadContext.get();
+        threadContext.set(context);
+        return currentContext;
+    }
 
-    void onReceive(T message, ActorRef sender) throws Exception;
-
-    void prePassivate() throws Exception;
-
-    void preDestroy(ActorRef destroyer) throws Exception;
+    protected static ActorContext getAndClearContext() {
+        ActorContext state = threadContext.get();
+        threadContext.set(null);
+        return state;
+    }
 }

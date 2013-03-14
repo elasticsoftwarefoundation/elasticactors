@@ -14,19 +14,30 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors;
+package org.elasterix.elasticactors.examples.pi.messages;
+
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface ElasticActor<T> {
-    void postCreate(ActorRef creator) throws Exception;
+public class Work {
+    private final int start;
+      private final int nrOfElements;
 
-    void postActivate(String previousVersion) throws Exception;
+    @JsonCreator
+      public Work(@JsonProperty("start") int start,@JsonProperty("nrOfElements") int nrOfElements) {
+        this.start = start;
+        this.nrOfElements = nrOfElements;
+      }
 
-    void onReceive(T message, ActorRef sender) throws Exception;
-
-    void prePassivate() throws Exception;
-
-    void preDestroy(ActorRef destroyer) throws Exception;
+    @JsonProperty("start")
+      public int getStart() {
+        return start;
+      }
+    @JsonProperty("nrOfElements")
+      public int getNrOfElements() {
+        return nrOfElements;
+      }
 }

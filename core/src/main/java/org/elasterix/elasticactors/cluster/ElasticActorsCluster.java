@@ -16,9 +16,7 @@
 
 package org.elasterix.elasticactors.cluster;
 
-import me.prettyprint.cassandra.serializers.SerializerTypeInferer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
-import me.prettyprint.hector.api.Serializer;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.cassandra.ClusterEventListener;
@@ -53,7 +51,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Joost van de Wijgerd
  */
 @Configurable
-public final class ElasticActorsCluster implements ActorRefFactory, ApplicationContextAware, ClusterEventListener, ActorSystems {
+public final class ElasticActorsCluster implements ActorRefFactory, ApplicationContextAware, ClusterEventListener, InternalActorSystems {
     private static final Logger logger = Logger.getLogger(ElasticActorsCluster.class);
     private static final AtomicReference<ElasticActorsCluster> INSTANCE = new AtomicReference<ElasticActorsCluster>(null);
     private final ConcurrentMap<String,LocalActorSystemInstance> managedActorSystems = new ConcurrentHashMap<String,LocalActorSystemInstance>();
@@ -63,12 +61,12 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
     private NodeSelectorFactory nodeSelectorFactory;
     private ThreadBoundExecutor<String> executor;
     private final Map<Class,MessageSerializer> systemSerializers = new HashMap<Class,MessageSerializer>() {{
-        put(CreateActorMessage.class,new CreateActorMessageSerializer());
+        put(CreateActorMessage.class,new CreateActorMessageSerializer(ElasticActorsCluster.this));
         put(String.class,new HectorMessageSerializer<String>(StringSerializer.get()));
         //@todo: add more serializers here
     }};
     private final Map<Class,MessageDeserializer> systemDeserializers = new HashMap<Class,MessageDeserializer>() {{
-        put(CreateActorMessage.class,new CreateActorMessageDeserializer());
+        put(CreateActorMessage.class,new CreateActorMessageDeserializer(ElasticActorsCluster.this));
         put(String.class,new HectorMessageDeserializer<String>(StringSerializer.get()));
         //@todo: add more deserializers here
     }};
@@ -150,7 +148,7 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
     }
 
     @Override
-    public ActorSystem get(String actorSystemName) {
+    public InternalActorSystem get(String actorSystemName) {
         return managedActorSystems.get(actorSystemName);
     }
 

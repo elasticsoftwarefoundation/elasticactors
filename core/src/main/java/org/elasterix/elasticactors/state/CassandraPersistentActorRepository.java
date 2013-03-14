@@ -46,7 +46,7 @@ public final class CassandraPersistentActorRepository implements PersistentActor
     @Override
     public void update(ShardKey shard, PersistentActor persistentActor) throws IOException {
         ColumnFamilyUpdater<String,String> updater = columnFamilyTemplate.createUpdater(shard.toString());
-        updater.setByteArray(persistentActor.getRef().getActorId(), serializer.serialize(persistentActor));
+        updater.setByteArray(persistentActor.getSelf().getActorId(), serializer.serialize(persistentActor));
     }
 
     @Override
