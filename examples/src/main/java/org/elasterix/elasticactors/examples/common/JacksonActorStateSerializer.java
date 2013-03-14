@@ -23,9 +23,9 @@ import org.elasterix.elasticactors.serialization.Serializer;
 import java.io.IOException;
 
 /**
- *
+ * @author Joost van de Wijgerd
  */
-public final class JacksonActorStateSerializer implements Serializer<ActorState,byte[]> {
+public final class JacksonActorStateSerializer implements Serializer<ActorState, byte[]> {
     private final ObjectMapper objectMapper;
 
     public JacksonActorStateSerializer(ObjectMapper objectMapper) {

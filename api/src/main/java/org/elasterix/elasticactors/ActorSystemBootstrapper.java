@@ -17,15 +17,8 @@
 package org.elasterix.elasticactors;
 
 /**
- * @author Joost van de Wijgerd
+ *
  */
-public interface ActorContext {
-    ActorRef getSelf();
-
-    ActorState getState();
-
-    void setState(ActorState state);
-
-    ActorSystem getActorSystem();
-
+public interface ActorSystemBootstrapper {
+    void bootstrap(ActorSystem actorSystem,String... arguments) throws Exception;
 }

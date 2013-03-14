@@ -46,6 +46,14 @@ public abstract class UntypedActor implements ElasticActor<Object> {
         return ActorContextHolder.getSelf();
     }
 
+    protected final ActorState getState(ActorStateFactory actorStateFactory) {
+        return ActorContextHolder.getState(actorStateFactory);
+    }
+
+    protected final ActorSystem getSystem() {
+        return ActorContextHolder.getSystem();
+    }
+
     protected final void unhandled(Object message) {
         //@todo: implement logic for unhandled messages
     }

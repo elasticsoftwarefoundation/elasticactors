@@ -66,12 +66,12 @@ public final class CassandraPersistentActorRepository implements PersistentActor
     }
 
     @Autowired
-    public void setDeserializer(Deserializer<byte[], PersistentActor> deserializer) {
+    public void setDeserializer(@Qualifier("persistentActorDeserializer") Deserializer<byte[], PersistentActor> deserializer) {
         this.deserializer = deserializer;
     }
 
     @Autowired
-    public void setSerializer(Serializer<PersistentActor, byte[]> serializer) {
+    public void setSerializer(@Qualifier("persistentActorSerializer") Serializer<PersistentActor, byte[]> serializer) {
         this.serializer = serializer;
     }
 }

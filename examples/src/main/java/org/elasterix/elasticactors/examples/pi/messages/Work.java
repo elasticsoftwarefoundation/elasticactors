@@ -24,20 +24,21 @@ import org.codehaus.jackson.annotate.JsonProperty;
  */
 public class Work {
     private final int start;
-      private final int nrOfElements;
+    private final int nrOfElements;
 
     @JsonCreator
-      public Work(@JsonProperty("start") int start,@JsonProperty("nrOfElements") int nrOfElements) {
+    public Work(@JsonProperty("start") int start, @JsonProperty("nrOfElements") int nrOfElements) {
         this.start = start;
         this.nrOfElements = nrOfElements;
-      }
+    }
 
     @JsonProperty("start")
-      public int getStart() {
+    public int getStart() {
         return start;
-      }
+    }
+
     @JsonProperty("nrOfElements")
-      public int getNrOfElements() {
+    public int getNrOfElements() {
         return nrOfElements;
-      }
+    }
 }

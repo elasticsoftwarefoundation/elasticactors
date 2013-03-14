@@ -14,24 +14,22 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.examples.pi.messages;
+package org.elasterix.elasticactors.examples.common;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.JsonProcessingException;
+import org.codehaus.jackson.map.JsonSerializer;
+import org.codehaus.jackson.map.SerializerProvider;
+import org.elasterix.elasticactors.ActorRef;
+
+import java.io.IOException;
 
 /**
- * @author Joost van de Wijgerd
+ *
  */
-public class Result {
-    private final double value;
-
-    @JsonCreator
-    public Result(@JsonProperty("value") double value) {
-        this.value = value;
-    }
-
-    @JsonProperty("value")
-    public double getValue() {
-        return value;
+public final class JacksonActorRefSerializer extends JsonSerializer<ActorRef> {
+    @Override
+    public void serialize(ActorRef value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+        jgen.writeString(value.toString());
     }
 }

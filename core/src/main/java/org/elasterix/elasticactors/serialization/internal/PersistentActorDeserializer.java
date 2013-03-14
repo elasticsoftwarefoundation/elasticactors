@@ -56,6 +56,7 @@ public final class PersistentActorDeserializer implements Deserializer<byte[],Pe
                 protobufMessage.hasState() ? deserializeState(shardKey,protobufMessage.getState().toByteArray()): null;
         try {
             return new PersistentActor(shardKey,
+                                       actorSystems.get(shardKey.getActorSystemName()),
                                        protobufMessage.getActorSystemVersion(),
                                        actorRefFactory.create(protobufMessage.getActorRef()),
                                        (Class<? extends ElasticActor>) Class.forName(protobufMessage.getActorClass()),

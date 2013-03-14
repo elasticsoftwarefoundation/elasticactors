@@ -22,27 +22,38 @@ import org.elasterix.elasticactors.ActorState;
 import java.util.Map;
 
 /**
- *
+ * @author Joost van de Wijgerd
  */
 public final class JacksonActorState implements ActorState {
     private final ObjectMapper objectMapper;
-    private final Map<String,Object> stateMap;
-    private Object stateObject;
+    private final Map<String, Object> stateMap;
+    private volatile Object stateObject;
 
     public JacksonActorState(ObjectMapper objectMapper, Map<String, Object> stateMap) {
         this.objectMapper = objectMapper;
         this.stateMap = stateMap;
     }
 
+    public JacksonActorState(ObjectMapper objectMapper, Object stateObject) {
+        this.objectMapper = objectMapper;
+        this.stateObject = stateObject;
+        this.stateMap = null;
+    }
+
+    // @todo: this setup is a bit dangerous and we might loose state updates when used the wrong way
+
     @Override
     public Map<String, Object> getAsMap() {
+        if(stateObject != null) {
+            return objectMapper.convertValue(stateObject,JacksonActorStateDeserializer.MAP_TYPE);
+        }
         return stateMap;
     }
 
     @Override
     public <T> T getAsObject(Class<T> objectClass) {
-        if(stateObject == null) {
-            stateObject = objectMapper.convertValue(stateMap,objectClass);
+        if (stateObject == null) {
+            stateObject = objectMapper.convertValue(stateMap, objectClass);
         }
         return (T) stateObject;
     }

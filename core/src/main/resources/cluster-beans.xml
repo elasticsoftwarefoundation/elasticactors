@@ -80,6 +80,10 @@
             </constructor-arg>
         </bean>
 
+    <bean id="actorRefSerializer" class="org.elasterix.elasticactors.serialization.internal.ActorRefSerializer" factory-method="get"/>
+
+    <bean id="actorRefDeserializer" class="org.elasterix.elasticactors.serialization.internal.ActorRefDeserializer" factory-method="get" depends-on="elasticActorsCluster"/>
+
     <bean id="persistentActorSerializer" class="org.elasterix.elasticactors.serialization.internal.PersistentActorSerializer"/>
 
     <bean id="persistentActorDeserializer" class="org.elasterix.elasticactors.serialization.internal.PersistentActorDeserializer"/>

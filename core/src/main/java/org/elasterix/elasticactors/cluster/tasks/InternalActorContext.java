@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.cluster;
+package org.elasterix.elasticactors.cluster.tasks;
 
 import org.elasterix.elasticactors.ActorContext;
 import org.elasterix.elasticactors.ActorContextHolder;
@@ -23,7 +23,11 @@ import org.elasterix.elasticactors.ActorState;
 /**
  * @author Joost van de Wijgerd
  */
-public class InternalActorContext extends ActorContextHolder {
+public final class InternalActorContext extends ActorContextHolder {
+
+    private InternalActorContext() {
+        super();
+    }
 
     protected static ActorContext setContext(ActorContext context) {
         final ActorContext currentContext = threadContext.get();

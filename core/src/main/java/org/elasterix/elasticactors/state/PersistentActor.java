@@ -17,6 +17,7 @@
 package org.elasterix.elasticactors.state;
 
 import org.elasterix.elasticactors.*;
+import org.elasterix.elasticactors.cluster.InternalActorSystem;
 import org.elasterix.elasticactors.serialization.Deserializer;
 
 import java.io.IOException;
@@ -26,29 +27,31 @@ import java.io.IOException;
  */
 public final class PersistentActor implements ActorContext {
     private final ShardKey shardKey;
-    private final String actorSystemVersion;
+    private final InternalActorSystem actorSystem;
+    private final String previousActorSystemVersion;
     private final Class<? extends ElasticActor> actorClass;
     private final ActorRef ref;
     private volatile ActorState serializedState;
 
-    public PersistentActor(ShardKey shardKey,String actorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass) {
-        this(shardKey,actorSystemVersion,ref,actorClass,null);
+    public PersistentActor(ShardKey shardKey,InternalActorSystem actorSystem,String previousActorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass) {
+        this(shardKey,actorSystem,previousActorSystemVersion,ref,actorClass,null);
     }
 
-    public PersistentActor(ShardKey shardKey, String actorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass, ActorState state) {
+    public PersistentActor(ShardKey shardKey, InternalActorSystem actorSystem,String previousActorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass, ActorState state) {
         this.shardKey = shardKey;
-        this.actorSystemVersion = actorSystemVersion;
+        this.actorSystem = actorSystem;
         this.ref = ref;
         this.actorClass = actorClass;
         this.serializedState = state;
+        this.previousActorSystemVersion = previousActorSystemVersion;
     }
 
     public ShardKey getShardKey() {
         return shardKey;
     }
 
-    public String getActorSystemVersion() {
-        return actorSystemVersion;
+    public String getPreviousActorSystemVersion() {
+        return previousActorSystemVersion;
     }
 
     public Class<? extends ElasticActor> getActorClass() {
@@ -68,5 +71,10 @@ public final class PersistentActor implements ActorContext {
     @Override
     public void setState(ActorState state) {
         this.serializedState = state;
+    }
+
+    @Override
+    public ActorSystem getActorSystem() {
+        return actorSystem;
     }
 }

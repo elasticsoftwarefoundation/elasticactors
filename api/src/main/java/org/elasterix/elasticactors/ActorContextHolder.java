@@ -22,10 +22,14 @@ package org.elasterix.elasticactors;
 public class ActorContextHolder {
     protected static final ThreadLocal<ActorContext> threadContext = new ThreadLocal<ActorContext>();
 
+    protected ActorContextHolder() {
+
+    }
+
     public static ActorState getState(ActorStateFactory stateFactory) {
         ActorContext actorContext = threadContext.get();
         ActorState state = actorContext.getState();
-        if(state == null) {
+        if(state == null && stateFactory != null) {
             actorContext.setState(stateFactory.create());
             return actorContext.getState();
         } else {
@@ -36,5 +40,9 @@ public class ActorContextHolder {
     public static ActorRef getSelf() {
         ActorContext actorContext =  threadContext.get();
         return actorContext.getSelf();
+    }
+
+    public static ActorSystem getSystem() {
+        return threadContext.get().getActorSystem();
     }
 }

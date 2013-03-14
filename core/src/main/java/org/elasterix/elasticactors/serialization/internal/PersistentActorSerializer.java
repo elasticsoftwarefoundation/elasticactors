@@ -41,7 +41,7 @@ public final class PersistentActorSerializer implements Serializer<PersistentAct
     public byte[] serialize(PersistentActor persistentActor) throws IOException {
         Elasticactors.PersistentActor.Builder builder = Elasticactors.PersistentActor.newBuilder();
         builder.setShardKey(persistentActor.getShardKey().toString());
-        builder.setActorSystemVersion(persistentActor.getActorSystemVersion());
+        builder.setActorSystemVersion(persistentActor.getPreviousActorSystemVersion());
         builder.setActorClass(persistentActor.getActorClass().getName());
         builder.setActorRef(persistentActor.getSelf().toString());
 

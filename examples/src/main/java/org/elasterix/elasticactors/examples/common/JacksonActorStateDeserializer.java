@@ -17,16 +17,21 @@
 package org.elasterix.elasticactors.examples.common;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.type.MapType;
+import org.codehaus.jackson.map.type.SimpleType;
 import org.elasterix.elasticactors.ActorState;
 import org.elasterix.elasticactors.serialization.Deserializer;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- *
+ * @author Joost van de Wijgerd
  */
-public final class JacksonActorStateDeserializer implements Deserializer<byte[],ActorState> {
+public final class JacksonActorStateDeserializer implements Deserializer<byte[], ActorState> {
     private final ObjectMapper objectMapper;
+    public static final MapType MAP_TYPE = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(Object.class));
 
     public JacksonActorStateDeserializer(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -34,6 +39,7 @@ public final class JacksonActorStateDeserializer implements Deserializer<byte[],
 
     @Override
     public ActorState deserialize(byte[] serializedObject) throws IOException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        Map<String,Object> jsonMap = objectMapper.readValue(serializedObject, MAP_TYPE);
+        return new JacksonActorState(objectMapper,jsonMap);
     }
 }
