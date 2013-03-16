@@ -23,7 +23,6 @@ import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.examples.common.*;
 import org.elasterix.elasticactors.examples.pi.actors.Listener;
 import org.elasterix.elasticactors.examples.pi.actors.Master;
-import org.elasterix.elasticactors.examples.pi.actors.Worker;
 import org.elasterix.elasticactors.examples.pi.messages.Calculate;
 import org.elasterix.elasticactors.examples.pi.messages.PiApproximation;
 import org.elasterix.elasticactors.examples.pi.messages.Result;
@@ -35,7 +34,6 @@ import org.elasterix.elasticactors.serialization.Serializer;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * @author Joost van de Wijgerd
@@ -56,20 +54,16 @@ public class PiApproximator implements ActorSystemConfiguration, ActorSystemBoot
     }};
 
     private final Map<Class<?>, MessageDeserializer<?>> messageDeserializers = new HashMap<Class<?>, MessageDeserializer<?>>() {{
-        put(Calculate.class, new JacksonMessageDeserializer<Calculate>(objectMapper));
-        put(PiApproximation.class, new JacksonMessageDeserializer<PiApproximation>(objectMapper));
-        put(Result.class, new JacksonMessageDeserializer<Result>(objectMapper));
-        put(Work.class, new JacksonMessageDeserializer<Work>(objectMapper));
+        put(Calculate.class, new JacksonMessageDeserializer<Calculate>(Calculate.class,objectMapper));
+        put(PiApproximation.class, new JacksonMessageDeserializer<PiApproximation>(PiApproximation.class,objectMapper));
+        put(Result.class, new JacksonMessageDeserializer<Result>(Result.class,objectMapper));
+        put(Work.class, new JacksonMessageDeserializer<Work>(Work.class,objectMapper));
     }};
 
     public PiApproximator(String name, int numberOfShards) {
         this.name = name;
         this.numberOfShards = numberOfShards;
-        // register jackson module for Actor ref ser/de
-        objectMapper.registerModule(
-                new SimpleModule("ElasticActorsModule",new Version(0,1,0,"SNAPSHOT"))
-                .addSerializer(ActorRef.class,new JacksonActorRefSerializer())
-                .addDeserializer(ActorRef.class,new JacksonActorRefDeserializer()));
+
     }
 
     @Override
@@ -112,7 +106,11 @@ public class PiApproximator implements ActorSystemConfiguration, ActorSystemBoot
     @Override
     public void bootstrap(ActorSystem actorSystem,String... arguments) throws Exception {
         // we need to add the Jackson module here
-
+        // register jackson module for Actor ref ser/de
+        objectMapper.registerModule(
+                new SimpleModule("ElasticActorsModule",new Version(0,1,0,"SNAPSHOT"))
+                .addSerializer(ActorRef.class, new JacksonActorRefSerializer())
+                .addDeserializer(ActorRef.class, new JacksonActorRefDeserializer(actorSystem.getParent().getActorRefFactory())));
 
         // @todo: make configurable by arguments
 
@@ -120,7 +118,7 @@ public class PiApproximator implements ActorSystemConfiguration, ActorSystemBoot
         ActorRef listener = actorSystem.actorOf("listener",Listener.class);
         // create master
         Master.MasterState masterState = new Master.MasterState(listener,4,10000,10000);
-        ActorRef master = actorSystem.actorOf("master",Worker.class,new JacksonActorState(objectMapper,masterState));
+        ActorRef master = actorSystem.actorOf("master",Master.class,new JacksonActorState(objectMapper,masterState));
 
         // tell the master to start calculating
         master.tell(new Calculate(),null);

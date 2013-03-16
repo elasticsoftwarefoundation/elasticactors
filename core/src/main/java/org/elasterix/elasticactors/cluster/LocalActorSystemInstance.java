@@ -72,6 +72,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         }
     }
 
+    @Override
+    public ActorSystems getParent() {
+        return cluster;
+    }
+
     /**
      * Distribute the shards over the list of physical nodes
      *

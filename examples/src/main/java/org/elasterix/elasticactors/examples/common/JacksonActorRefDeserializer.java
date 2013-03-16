@@ -23,6 +23,7 @@ import org.codehaus.jackson.map.DeserializationContext;
 import org.codehaus.jackson.map.JsonDeserializer;
 import org.codehaus.jackson.map.deser.std.StdScalarDeserializer;
 import org.elasterix.elasticactors.ActorRef;
+import org.elasterix.elasticactors.cluster.ActorRefFactory;
 import org.elasterix.elasticactors.serialization.Deserializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
@@ -32,17 +33,12 @@ import java.io.IOException;
 /**
  *
  */
-@Configurable
 public final class JacksonActorRefDeserializer extends StdScalarDeserializer<ActorRef> {
-    private Deserializer<String,ActorRef> actorRefDeserializer;
+    private final ActorRefFactory actorRefFactory;
 
-    public JacksonActorRefDeserializer() {
+    public JacksonActorRefDeserializer(ActorRefFactory actorRefFactory) {
         super(ActorRef.class);
-    }
-
-    @Autowired
-    public void setActorRefDeserializer(Deserializer<String, ActorRef> actorRefDeserializer) {
-        this.actorRefDeserializer = actorRefDeserializer;
+        this.actorRefFactory = actorRefFactory;
     }
 
     @Override
@@ -50,7 +46,7 @@ public final class JacksonActorRefDeserializer extends StdScalarDeserializer<Act
         JsonToken curr = jp.getCurrentToken();
         // Usually should just get string value:
         if (curr == JsonToken.VALUE_STRING) {
-            return actorRefDeserializer.deserialize(jp.getText());
+            return actorRefFactory.create(jp.getText());
         }
         throw ctxt.mappingException(_valueClass, curr);
     }

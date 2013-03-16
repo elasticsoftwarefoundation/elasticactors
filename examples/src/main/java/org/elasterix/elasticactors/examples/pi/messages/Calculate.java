@@ -16,8 +16,28 @@
 
 package org.elasterix.elasticactors.examples.pi.messages;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
+
+import java.util.UUID;
+
 /**
  * @author Joost van de Wijgerd
  */
 public class Calculate {
+    private final String id;
+
+    public Calculate() {
+        this(UUID.randomUUID().toString());
+    }
+
+    @JsonCreator
+    public Calculate(@JsonProperty("id") String id) {
+        this.id = id;
+    }
+
+    @JsonProperty("id")
+    public String getId() {
+        return id;
+    }
 }

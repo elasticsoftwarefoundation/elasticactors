@@ -16,6 +16,7 @@
 
 package org.elasterix.elasticactors;
 
+import org.elasterix.elasticactors.cluster.ActorRefFactory;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 
@@ -30,4 +31,6 @@ public interface ActorSystems {
     <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass);
 
     <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass);
+
+    ActorRefFactory getActorRefFactory();
 }

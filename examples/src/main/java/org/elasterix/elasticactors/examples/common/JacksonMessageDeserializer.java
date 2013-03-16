@@ -27,18 +27,19 @@ import java.nio.ByteBuffer;
  *
  */
 public final class JacksonMessageDeserializer<T> implements MessageDeserializer<T> {
-    private final TypeReference<T> typeReference = new TypeReference<T>() {
-    };
+    //private final TypeReference<T> typeReference = new TypeReference<T>() {};
     private final ObjectMapper objectMapper;
+    private final Class<T> objectClass;
 
-    public JacksonMessageDeserializer(ObjectMapper objectMapper) {
+    public JacksonMessageDeserializer(Class<T> objectClass,ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+        this.objectClass = objectClass;
     }
 
     @Override
     public T deserialize(ByteBuffer serializedObject) throws IOException {
         byte[] buf = new byte[serializedObject.remaining()];
         serializedObject.get(buf);
-        return objectMapper.readValue(buf, typeReference);
+        return objectMapper.readValue(buf, objectClass);
     }
 }

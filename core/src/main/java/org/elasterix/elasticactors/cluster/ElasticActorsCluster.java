@@ -148,6 +148,11 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
     }
 
     @Override
+    public ActorRefFactory getActorRefFactory() {
+        return this;
+    }
+
+    @Override
     public InternalActorSystem get(String actorSystemName) {
         return managedActorSystems.get(actorSystemName);
     }
