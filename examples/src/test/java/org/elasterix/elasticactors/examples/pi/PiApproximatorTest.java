@@ -16,21 +16,25 @@
 
 package org.elasterix.elasticactors.examples.pi;
 
+import org.apache.log4j.BasicConfigurator;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ActorState;
 import org.elasterix.elasticactors.ActorSystem;
 import org.elasterix.elasticactors.ActorSystems;
 import org.elasterix.elasticactors.cluster.ActorRefFactory;
-import org.elasterix.elasticactors.examples.common.JacksonActorState;
 import org.elasterix.elasticactors.examples.pi.actors.Listener;
 import org.elasterix.elasticactors.examples.pi.actors.Master;
 import org.elasterix.elasticactors.examples.pi.messages.Calculate;
+import org.elasterix.elasticactors.examples.pi.messages.PiApproximation;
+import org.elasterix.elasticactors.examples.pi.messages.Result;
 import org.elasterix.elasticactors.examples.pi.messages.Work;
 import org.elasterix.elasticactors.serialization.Deserializer;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.serialization.Serializer;
+import org.elasterix.elasticactors.test.TestActorSystem;
 import org.mockito.ArgumentCaptor;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -46,6 +50,13 @@ import static org.testng.Assert.assertNotNull;
  * @author Joost van de Wijgerd
  */
 public class PiApproximatorTest {
+
+    @BeforeMethod
+    public void setUp() {
+        BasicConfigurator.resetConfiguration();
+        BasicConfigurator.configure();
+    }
+
     @Test
     public void testMessageSerializers() throws IOException {
         PiApproximator piApproximator = new PiApproximator("PiTest",1);
@@ -73,6 +84,27 @@ public class PiApproximatorTest {
         assertEquals(work.getStart(),1);
         assertEquals(work.getNrOfElements(),100);
 
+        // REsult
+        MessageSerializer<Result> resultMessageSerializer = piApproximator.getSerializer(Result.class);
+        assertNotNull(workMessageSerializer);
+        serializedForm = resultMessageSerializer.serialize(new Result(0.8376d));
+        assertNotNull(serializedForm);
+        MessageDeserializer<Result> resultMessageDeserializer = piApproximator.getDeserializer(Result.class);
+        assertNotNull(workMessageDeserializer);
+        Result result = resultMessageDeserializer.deserialize(serializedForm);
+        assertNotNull(result);
+        assertEquals(result.getValue(),0.8376d);
+
+        // PiApproximation
+        MessageSerializer<PiApproximation> piApproximationMessageSerializer = piApproximator.getSerializer(PiApproximation.class);
+        assertNotNull(piApproximationMessageSerializer);
+        serializedForm = piApproximationMessageSerializer.serialize(new PiApproximation(3.14827683d,19283827262l));
+        MessageDeserializer<PiApproximation> piApproximationMessageDeserializer = piApproximator.getDeserializer(PiApproximation.class);
+        assertNotNull(piApproximationMessageDeserializer);
+        PiApproximation piApproximation = piApproximationMessageDeserializer.deserialize(serializedForm);
+        assertNotNull(piApproximation);
+        assertEquals(piApproximation.getPi(),3.14827683d);
+        assertEquals(piApproximation.getDuration(),19283827262l);
     }
 
     @Test
@@ -96,12 +128,14 @@ public class PiApproximatorTest {
         when(actorRefFactory.create("listenerRef")).thenReturn(listenerRef);
         when(actorRefFactory.create("masterRef")).thenReturn(masterRef);
 
-        piApproximator.bootstrap(actorSystem);
+        piApproximator.initialize(actorSystem);
+        piApproximator.create(actorSystem);
 
         Serializer<ActorState,byte[]> actorStateSerializer = piApproximator.getActorStateSerializer();
         assertNotNull(actorStateSerializer);
 
         byte[] serializedBytes = actorStateSerializer.serialize(stateArgumentCaptor.getValue());
+        //System.out.println(new String(serializedBytes, Charsets.UTF_8));
         assertNotNull(serializedBytes);
 
         Deserializer<byte[],ActorState> actorStateDeserializer = piApproximator.getActorStateDeserializer();
@@ -116,5 +150,14 @@ public class PiApproximatorTest {
         assertEquals(masterState.getNrOfMessages(),10000);
         assertEquals(masterState.getNrOfElements(),10000);
 
+    }
+
+    @Test
+    public void testInContainer() throws Exception {
+        ActorSystem piSystem = TestActorSystem.create(new PiApproximator("Pi",8));
+        ActorRef actorRef = piSystem.actorFor("master");
+        //actorRef.tell(new Calculate(),null);
+        // wait
+        Thread.sleep(30000);
     }
 }

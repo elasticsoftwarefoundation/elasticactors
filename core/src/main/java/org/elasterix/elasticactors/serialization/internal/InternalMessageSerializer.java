@@ -37,6 +37,8 @@ public final class InternalMessageSerializer implements Serializer<InternalMessa
         Elasticactors.InternalMessage.Builder builder = Elasticactors.InternalMessage.newBuilder();
         builder.setId(ByteString.copyFrom(UUIDTools.toByteArray(internalMessage.getId())));
         builder.setPayload(ByteString.copyFrom(internalMessage.getPayload()));
+        // rewind the payload to not fuck up the internal message
+        internalMessage.getPayload().rewind(); // @todo: this is a bit ugly
         builder.setPayloadClass(internalMessage.getPayloadClass());
         builder.setReceiver(ActorRefSerializer.get().serialize(internalMessage.getReceiver()));
         if (internalMessage.getSender() != null) {

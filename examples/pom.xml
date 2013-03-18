@@ -24,5 +24,10 @@
             <artifactId>elasticactors-api</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+                    <groupId>org.elasterix.elasticactors</groupId>
+                    <artifactId>elasticactors-core</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
     </dependencies>
 </project>

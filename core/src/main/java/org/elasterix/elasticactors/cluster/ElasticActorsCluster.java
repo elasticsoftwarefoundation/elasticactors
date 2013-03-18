@@ -23,10 +23,7 @@ import org.elasterix.elasticactors.cassandra.ClusterEventListener;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
-import org.elasterix.elasticactors.serialization.internal.CreateActorMessageDeserializer;
-import org.elasterix.elasticactors.serialization.internal.CreateActorMessageSerializer;
-import org.elasterix.elasticactors.serialization.internal.HectorMessageDeserializer;
-import org.elasterix.elasticactors.serialization.internal.HectorMessageSerializer;
+import org.elasterix.elasticactors.serialization.internal.*;
 import org.elasterix.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasterix.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.springframework.beans.BeansException;
@@ -60,16 +57,8 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
     private PhysicalNode localNode;
     private NodeSelectorFactory nodeSelectorFactory;
     private ThreadBoundExecutor<String> executor;
-    private final Map<Class,MessageSerializer> systemSerializers = new HashMap<Class,MessageSerializer>() {{
-        put(CreateActorMessage.class,new CreateActorMessageSerializer(ElasticActorsCluster.this));
-        put(String.class,new HectorMessageSerializer<String>(StringSerializer.get()));
-        //@todo: add more serializers here
-    }};
-    private final Map<Class,MessageDeserializer> systemDeserializers = new HashMap<Class,MessageDeserializer>() {{
-        put(CreateActorMessage.class,new CreateActorMessageDeserializer(ElasticActorsCluster.this));
-        put(String.class,new HectorMessageDeserializer<String>(StringSerializer.get()));
-        //@todo: add more deserializers here
-    }};
+    private final SystemSerializers systemSerializers = new SystemSerializers(this);
+    private final SystemDeserializers systemDeserializers = new SystemDeserializers(this);
 
 
     public static ElasticActorsCluster getInstance() {

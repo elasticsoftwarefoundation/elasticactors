@@ -194,7 +194,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         // determine shard
         ActorShard shard = shardFor(actorId);
         // send CreateActorMessage to shard
-        CreateActorMessage createActorMessage = new CreateActorMessage(getName(), actorClass.getName(),actorId, null);
+        CreateActorMessage createActorMessage = new CreateActorMessage(getName(), actorClass.getName(),actorId, initialState);
         //@todo: see if we need to get the sender from the context
         shard.sendMessage(null,shard.getActorRef(),createActorMessage);
         // create actor ref

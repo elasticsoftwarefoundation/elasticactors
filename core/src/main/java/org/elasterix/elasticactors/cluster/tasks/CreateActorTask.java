@@ -39,6 +39,9 @@ public final class CreateActorTask extends ActorLifecycleTask {
 
     @Override
     protected void doInActorContext(InternalActorSystem actorSystem, ElasticActor receiver, ActorRef receiverRef) {
+        if(logger.isDebugEnabled()) {
+            logger.debug(String.format("Creating Actor for ref [%s] of type [%s]",receiverRef.toString(),receiver.getClass().getName()));
+        }
         try {
             // @todo: somehow figure out the creator
             receiver.postCreate(null);

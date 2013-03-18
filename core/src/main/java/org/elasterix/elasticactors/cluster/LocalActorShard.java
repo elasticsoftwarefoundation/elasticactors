@@ -169,7 +169,7 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
     }
 
     @Autowired
-    public void setActorExecutor(@Qualifier("clusterExecutor") ThreadBoundExecutor<String> actorExecutor) {
+    public void setActorExecutor(@Qualifier("actorExecutor") ThreadBoundExecutor<String> actorExecutor) {
         this.actorExecutor = actorExecutor;
     }
 

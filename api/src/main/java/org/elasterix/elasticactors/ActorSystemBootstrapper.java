@@ -17,8 +17,33 @@
 package org.elasterix.elasticactors;
 
 /**
- *
+ * @author Joost van de Wijgerd
  */
 public interface ActorSystemBootstrapper {
-    void bootstrap(ActorSystem actorSystem,String... arguments) throws Exception;
+    /**
+     * Called when the ActorSystem is initialized. This will happen always when the instance is created. Can be used
+     * to hook into internal structures (like {@link org.elasterix.elasticactors.cluster.ActorRefFactory}) needed to
+     * implement serializers.
+     *
+     * @param actorSystem
+     * @throws Exception
+     */
+    void initialize(ActorSystem actorSystem) throws Exception;
+
+    /**
+     * Called when an {@link ActorSystem} instance is created, gives the ability to create default actors etc
+     *
+     * @param actorSystem
+     * @param arguments
+     * @throws Exception
+     */
+    void create(ActorSystem actorSystem, String... arguments) throws Exception;
+
+    /**
+     * Called when an {@link ActorSystem} instance is activated (most of the times after a restart of a node)
+     *
+     * @param actorSystem
+     * @throws Exception
+     */
+    void activate(ActorSystem actorSystem) throws Exception;
 }

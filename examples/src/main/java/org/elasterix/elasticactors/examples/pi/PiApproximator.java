@@ -103,14 +103,18 @@ public class PiApproximator implements ActorSystemConfiguration, ActorSystemBoot
 
     // bootstrapper
 
+
     @Override
-    public void bootstrap(ActorSystem actorSystem,String... arguments) throws Exception {
-        // we need to add the Jackson module here
+    public void initialize(ActorSystem actorSystem) throws Exception {
         // register jackson module for Actor ref ser/de
         objectMapper.registerModule(
                 new SimpleModule("ElasticActorsModule",new Version(0,1,0,"SNAPSHOT"))
                 .addSerializer(ActorRef.class, new JacksonActorRefSerializer())
                 .addDeserializer(ActorRef.class, new JacksonActorRefDeserializer(actorSystem.getParent().getActorRefFactory())));
+    }
+
+    @Override
+    public void create(ActorSystem actorSystem, String... arguments) throws Exception {
 
         // @todo: make configurable by arguments
 
@@ -120,7 +124,18 @@ public class PiApproximator implements ActorSystemConfiguration, ActorSystemBoot
         Master.MasterState masterState = new Master.MasterState(listener,4,10000,10000);
         ActorRef master = actorSystem.actorOf("master",Master.class,new JacksonActorState(objectMapper,masterState));
 
+        // wait a little for the actors to be created
+        Thread.sleep(50);
+
+
+    }
+
+    @Override
+    public void activate(ActorSystem actorSystem) {
+        ActorRef listener = actorSystem.actorFor("listener");
+        ActorRef master = actorSystem.actorFor("master");
+
         // tell the master to start calculating
-        master.tell(new Calculate(),null);
+        master.tell(new Calculate(),listener);
     }
 }

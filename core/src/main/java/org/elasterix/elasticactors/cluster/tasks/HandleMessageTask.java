@@ -51,6 +51,10 @@ public final class HandleMessageTask extends ActorLifecycleTask {
     }
 
     private void handleMessage(ElasticActor receiver,ActorRef receiverRef,Object message) {
+        /*if(log.isDebugEnabled()) {
+            log.debug(String.format("Actor [%s] of type [%s] is receiving message of type [%s]",receiverRef.toString(),
+                                    receiver.getClass().getName(),message.getClass().getName()));
+        }*/
         try {
 
             receiver.onReceive(message, internalMessage.getSender());

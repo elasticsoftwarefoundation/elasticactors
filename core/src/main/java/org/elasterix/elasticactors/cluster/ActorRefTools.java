@@ -30,7 +30,7 @@ public final class ActorRefTools {
         if (refSpec.startsWith("actor://")) {
             int actorSeparatorIndex = 8;
             for (int i = 0; i < 3; i++) {
-                int nextIndex = refSpec.indexOf('/', actorSeparatorIndex);
+                int nextIndex = refSpec.indexOf('/', actorSeparatorIndex+1);
                 if (nextIndex == -1) {
                     throw new IllegalArgumentException(
                             String.format("Invalid ActorRef, required spec: [actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId (optional)>, actual spec: [%s]", refSpec));
@@ -38,8 +38,8 @@ public final class ActorRefTools {
                     actorSeparatorIndex = nextIndex;
                 }
             }
-            int nextIndex = refSpec.indexOf('/', actorSeparatorIndex);
-            String actorId = (nextIndex == -1) ? null : refSpec.substring(nextIndex);
+            int nextIndex = refSpec.indexOf('/', actorSeparatorIndex+1);
+            String actorId = (nextIndex == -1) ? null : refSpec.substring(nextIndex+1);
             actorSeparatorIndex = (nextIndex == -1) ? actorSeparatorIndex : nextIndex;
             String[] components = refSpec.substring(8, actorSeparatorIndex).split("/");
             if (components.length == 4) {
