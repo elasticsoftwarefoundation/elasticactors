@@ -22,7 +22,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 /**
  * @author Joost van de Wijgerd
  */
-public class Result {
+public final class Result {
     private final double value;
 
     @JsonCreator

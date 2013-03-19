@@ -24,7 +24,7 @@ import java.util.UUID;
 /**
  * @author Joost van de Wijgerd
  */
-public class Calculate {
+public final class Calculate {
     private final String id;
 
     public Calculate() {

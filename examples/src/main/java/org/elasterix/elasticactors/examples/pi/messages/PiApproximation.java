@@ -22,7 +22,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 /**
  * @author Joost van de Wijgerd
  */
-public class PiApproximation {
+public final class PiApproximation {
     private final double pi;
     private final long duration;
 

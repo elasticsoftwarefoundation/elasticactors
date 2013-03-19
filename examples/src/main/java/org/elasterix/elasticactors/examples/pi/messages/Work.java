@@ -22,7 +22,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 /**
  * @author Joost van de Wijgerd
  */
-public class Work {
+public final class Work {
     private final int start;
     private final int nrOfElements;
 
