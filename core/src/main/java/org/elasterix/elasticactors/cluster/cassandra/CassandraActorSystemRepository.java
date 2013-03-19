@@ -17,7 +17,12 @@
 package org.elasterix.elasticactors.cluster.cassandra;
 
 import me.prettyprint.cassandra.serializers.StringSerializer;
+import me.prettyprint.cassandra.service.KeyIterator;
 import me.prettyprint.cassandra.service.template.*;
+import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.factory.HFactory;
+import me.prettyprint.hector.api.query.QueryResult;
+import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import org.elasterix.elasticactors.cluster.ActorSystemRepository;
 import org.elasterix.elasticactors.cluster.RegisteredActorSystem;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +35,7 @@ import java.util.List;
  * @author Joost van de Wijgerd
  */
 public class CassandraActorSystemRepository implements ActorSystemRepository {
+    private Keyspace keyspace;
     private ColumnFamilyTemplate<String,String> columnFamilyTemplate;
     private final SingleMapper singleResultMapper = new SingleMapper();
     private final ListMapper listResultMapper = new ListMapper();
@@ -41,11 +47,14 @@ public class CassandraActorSystemRepository implements ActorSystemRepository {
 
     @Override
     public List<RegisteredActorSystem> findAll() {
-        //@todo: this is not correct, implement correctly
-        IndexedSlicesPredicate allPredicate = new IndexedSlicesPredicate<String,String,String>(StringSerializer.get(),
-                StringSerializer.get(),StringSerializer.get());
-        MappedColumnFamilyResult<String,String,List<RegisteredActorSystem>> result = columnFamilyTemplate.queryColumns(allPredicate,listResultMapper);
+        KeyIterator<String> keyIterator = new KeyIterator<String>(keyspace,"ActorSystems",StringSerializer.get());
+        MappedColumnFamilyResult<String,String,List<RegisteredActorSystem>> result = columnFamilyTemplate.queryColumns(keyIterator,listResultMapper);
         return result.getRow();
+    }
+
+    @Autowired
+    public void setKeyspace(Keyspace keyspace) {
+        this.keyspace = keyspace;
     }
 
     @Autowired
@@ -69,15 +78,20 @@ public class CassandraActorSystemRepository implements ActorSystemRepository {
             public List<RegisteredActorSystem> mapRow(ColumnFamilyResult<String, String> results) {
                 LinkedList<RegisteredActorSystem> resultList = new LinkedList<RegisteredActorSystem>();
                 //@todo: implement this properly
-                /*if(results.hasResults()) {
+                if(results.hasResults()) {
+                   resultList.add(new RegisteredActorSystem(results.getKey(),
+                                                            results.getInteger("nrOfShards"),
+                                                            results.getString("configurationClass")));
+                }
+                if(results.hasNext()) {
                     do {
+                        results = results.next();
                         resultList.add(new RegisteredActorSystem(results.getKey(),
                                                                  results.getInteger("nrOfShards"),
                                                                  results.getString("configurationClass")));
-                        if(results.hasNext()) {
-                            results = results.next();
-                        } else {
-                }*/
+                    } while(results.hasNext());
+                }
+
                 return resultList;
             }
         }

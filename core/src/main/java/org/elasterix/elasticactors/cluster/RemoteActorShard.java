@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Configurable;
  * @author Joost van de Wijgerd
  */
 @Configurable
-public class RemoteActorShard implements ActorShard {
+public final class RemoteActorShard implements ActorShard {
     private final InternalActorSystem actorSystem;
     private final PhysicalNode remoteNode;
     private final ShardKey shardKey;

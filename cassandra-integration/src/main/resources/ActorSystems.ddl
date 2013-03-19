@@ -6,7 +6,10 @@ create column family ActorSystems
   with column_type = 'Standard'
   and key_validation_class = 'UTF8Type'
   and comparator = 'UTF8Type'
-  and default_validation_class = 'UTF8Type';
+  and default_validation_class = 'UTF8Type'
+  and column_metadata=[
+    {column_name:nrOfShards,validation_class:IntegerType}
+    {column_name:configurationClass,validation_class:UTF8Type}];
 
 create column family MessageQueues
   with column_type = 'Standard'

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.state;
+package org.elasterix.elasticactors.state.cassandra;
 
 import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
@@ -24,6 +24,8 @@ import me.prettyprint.hector.api.beans.HColumn;
 import org.elasterix.elasticactors.ShardKey;
 import org.elasterix.elasticactors.serialization.Deserializer;
 import org.elasterix.elasticactors.serialization.Serializer;
+import org.elasterix.elasticactors.state.PersistentActor;
+import org.elasterix.elasticactors.state.PersistentActorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -47,6 +49,7 @@ public final class CassandraPersistentActorRepository implements PersistentActor
     public void update(ShardKey shard, PersistentActor persistentActor) throws IOException {
         ColumnFamilyUpdater<String,String> updater = columnFamilyTemplate.createUpdater(shard.toString());
         updater.setByteArray(persistentActor.getSelf().getActorId(), serializer.serialize(persistentActor));
+        columnFamilyTemplate.update(updater);
     }
 
     @Override

@@ -22,7 +22,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 /**
  * @author Joost van de Wijgerd
  */
-public class RegisteredActorSystem {
+public final class RegisteredActorSystem {
     private final String name;
     private final int nrOfShards;
     private final String configurationClass;

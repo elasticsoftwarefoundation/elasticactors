@@ -88,9 +88,11 @@
 
     <bean id="persistentActorDeserializer" class="org.elasterix.elasticactors.serialization.internal.PersistentActorDeserializer"/>
 
-    <bean id="persistentActorRepository" class="org.elasterix.elasticactors.state.CassandraPersistentActorRepository"/>
+    <bean id="persistentActorRepository" class="org.elasterix.elasticactors.state.cassandra.CassandraPersistentActorRepository"/>
 
     <bean id="commitLog" class="org.elasterix.elasticactors.messaging.journal.CassandraCommitLog"/>
+
+    <bean id="actorSystemRepository" class="org.elasterix.elasticactors.cluster.cassandra.CassandraActorSystemRepository"/>
 
     <bean id="elasticActorsCluster" class="org.elasterix.elasticactors.cluster.ElasticActorsCluster"/>
 

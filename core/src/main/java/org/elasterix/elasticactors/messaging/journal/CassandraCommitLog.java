@@ -33,19 +33,22 @@ import java.util.UUID;
  * @author Joost van de Wijgerd
  */
 public final class CassandraCommitLog implements CommitLog {
-    private ColumnFamilyTemplate<String,UUID> columnFamilyTemplate;
+    private ColumnFamilyTemplate<String,com.eaio.uuid.UUID> columnFamilyTemplate;
     private final CommitLogEntryColumnMapper columnMapper = new CommitLogEntryColumnMapper();
 
     @Override
     public void append(String segment, UUID messageId, byte[] data) {
-        ColumnFamilyUpdater<String,UUID> updater = columnFamilyTemplate.createUpdater(segment);
-        updater.setByteArray(messageId,data);
+        // convert to other UUID impl
+
+        ColumnFamilyUpdater<String,com.eaio.uuid.UUID> updater = columnFamilyTemplate.createUpdater(segment);
+        updater.setByteArray(new com.eaio.uuid.UUID(messageId.getMostSignificantBits(),messageId.getLeastSignificantBits()),
+                             data);
         columnFamilyTemplate.update(updater);
     }
 
     @Override
     public void delete(String segment, UUID messageId) {
-        columnFamilyTemplate.deleteColumn(segment,messageId);
+        columnFamilyTemplate.deleteColumn(segment,new com.eaio.uuid.UUID(messageId.getMostSignificantBits(),messageId.getLeastSignificantBits()));
     }
 
     @Override
@@ -55,19 +58,19 @@ public final class CassandraCommitLog implements CommitLog {
     }
 
     @Autowired
-    public void setColumnFamilyTemplate(@Qualifier("messageQueuesColumnFamilyTemplate") ColumnFamilyTemplate<String, UUID> columnFamilyTemplate) {
+    public void setColumnFamilyTemplate(@Qualifier("messageQueuesColumnFamilyTemplate") ColumnFamilyTemplate<String, com.eaio.uuid.UUID> columnFamilyTemplate) {
         this.columnFamilyTemplate = columnFamilyTemplate;
     }
 
-    private static final class CommitLogEntryColumnMapper implements ColumnFamilyRowMapper<String,UUID,List<CommitLogEntry>> {
+    private static final class CommitLogEntryColumnMapper implements ColumnFamilyRowMapper<String,com.eaio.uuid.UUID,List<CommitLogEntry>> {
 
         @Override
-        public List<CommitLogEntry> mapRow(final ColumnFamilyResult<String, UUID> results) {
+        public List<CommitLogEntry> mapRow(final ColumnFamilyResult<String, com.eaio.uuid.UUID> results) {
             List<CommitLogEntry> entries = new LinkedList<CommitLogEntry>();
             if(results.hasResults()) {
-                Collection<UUID> messageIds = results.getColumnNames();
-                for(UUID messageId : messageIds) {
-                    entries.add(new CommitLogEntry(messageId, results.getByteArray(messageId)));
+                Collection<com.eaio.uuid.UUID> messageIds = results.getColumnNames();
+                for(com.eaio.uuid.UUID messageId : messageIds) {
+                    entries.add(new CommitLogEntry(UUID.fromString(messageId.toString()), results.getByteArray(messageId)));
                 }
             }
             return entries;

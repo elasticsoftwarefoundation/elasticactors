@@ -46,7 +46,7 @@ public final class ShardKey {
         if(separator < 0) {
             throw new IllegalArgumentException("Missing : separator");
         }
-        return new ShardKey(shardKey.substring(0,separator),Integer.parseInt(shardKey.substring(separator)));
+        return new ShardKey(shardKey.substring(0,separator),Integer.parseInt(shardKey.substring(separator+1)));
     }
 
     @Override
