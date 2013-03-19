@@ -29,8 +29,7 @@ import org.springframework.beans.factory.annotation.Configurable;
  */
 @Configurable
 public abstract class PersistentMessageQueue implements MessageQueue {
-    private static final Logger logger = Logger.getLogger(PersistentMessageQueue.class);
-    private final ActorRefSerializer actorRefSerializer = ActorRefSerializer.get();
+    protected final Logger logger = Logger.getLogger(getClass());
     private final String name;
     protected CommitLog commitLog;
 
@@ -39,7 +38,7 @@ public abstract class PersistentMessageQueue implements MessageQueue {
     }
 
     @Override
-    public boolean offer(org.elasterix.elasticactors.messaging.InternalMessage message) {
+    public final boolean offer(org.elasterix.elasticactors.messaging.InternalMessage message) {
         try {
             byte[] messageData = InternalMessageSerializer.get().serialize(message);
             commitLog.append(name, message.getId(), messageData);
@@ -52,18 +51,18 @@ public abstract class PersistentMessageQueue implements MessageQueue {
     }
 
     @Override
-    public String getName() {
+    public final String getName() {
         return name;
     }
 
-    protected void ack(org.elasterix.elasticactors.messaging.InternalMessage message) {
+    protected final void ack(org.elasterix.elasticactors.messaging.InternalMessage message) {
         commitLog.delete(name,message.getId());
     }
 
     protected abstract void doOffer(org.elasterix.elasticactors.messaging.InternalMessage message, byte[] serializedMessage);
 
     @Autowired
-    public void setCommitLog(CommitLog commitLog) {
+    public final void setCommitLog(CommitLog commitLog) {
         this.commitLog = commitLog;
     }
 }

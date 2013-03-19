@@ -158,6 +158,6 @@ public class PiApproximatorTest {
         ActorRef actorRef = piSystem.actorFor("master");
         //actorRef.tell(new Calculate(),null);
         // wait
-        Thread.sleep(30000);
+        Thread.sleep(7500);
     }
 }

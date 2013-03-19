@@ -94,7 +94,8 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
     }
 
     @Override
-    public void handleMessage(final InternalMessage internalMessage) {
+    public void handleMessage(final InternalMessage internalMessage,
+                              final MessageHandlerEventListener messageHandlerEventListener) {
         final ActorRef receiverRef = internalMessage.getReceiver();
         if(receiverRef.getActorId() != null) {
             try {
@@ -126,9 +127,13 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
                 actorExecutor.execute(new HandleMessageTask(actorSystem,
                                                             actorInstance,
                                                             internalMessage,
-                                                            actor, persistentActorRepository));
+                                                            actor,
+                                                            persistentActorRepository,
+                                                            messageHandlerEventListener));
             } catch(Exception e) {
                 //@todo: let the sender know his message could not be delivered
+                // we ack the message anyway
+                messageHandlerEventListener.onError(internalMessage,e);
                 logger.error(String.format("Exception while handling InternalMessage or Actor [%s]",receiverRef.getActorId()),e);
             }
         } else {
@@ -139,10 +144,15 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
                 if(message instanceof CreateActorMessage) {
                     CreateActorMessage createActorMessage = (CreateActorMessage) message;
                     if(!actorExists(createActorMessage.getActorId())) {
-                        createActor(createActorMessage);
+                        createActor(createActorMessage,internalMessage,messageHandlerEventListener);
+                    } else {
+                        // ack message anyway
+                        messageHandlerEventListener.onDone(internalMessage);
                     }
                 }
             } catch(Exception e) {
+                // @todo: determine if this is a recoverable error case or just a programming error
+                messageHandlerEventListener.onError(internalMessage,e);
                 logger.error(String.format("Exception while handling InternalMessage for Shard [%s]",shardKey.toString()),e);
             }
 
@@ -153,7 +163,7 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
         return actorCache.getIfPresent(actorId) != null || persistentActorRepository.contains(shardKey,actorId);
     }
 
-    private void createActor(CreateActorMessage createMessage) throws Exception {
+    private void createActor(CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         ActorRef ref = actorSystem.actorFor(createMessage.getActorId());
         PersistentActor persistentActor =
                 new PersistentActor(shardKey, actorSystem,actorSystem.getVersion(),
@@ -165,7 +175,13 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
         // find actor class behind receiver ActorRef
         ElasticActor actorInstance = actorSystem.getActorInstance(ref,persistentActor.getActorClass());
         // call postCreate
-        actorExecutor.execute(new CreateActorTask(persistentActorRepository,persistentActor,actorSystem,actorInstance,ref));
+        actorExecutor.execute(new CreateActorTask(persistentActorRepository,
+                                                  persistentActor,
+                                                  actorSystem,
+                                                  actorInstance,
+                                                  ref,
+                                                  internalMessage,
+                                                  messageHandlerEventListener));
     }
 
     @Autowired

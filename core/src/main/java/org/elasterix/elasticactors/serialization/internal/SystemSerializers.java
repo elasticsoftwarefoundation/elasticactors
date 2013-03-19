@@ -28,11 +28,9 @@ import java.util.Map;
  * @author Joost van de Wijgerd
  */
 public final class SystemSerializers {
-    private final InternalActorSystems cluster;
     private final Map<Class,MessageSerializer> systemSerializers = new HashMap<Class,MessageSerializer>();
 
     public SystemSerializers(InternalActorSystems cluster) {
-        this.cluster = cluster;
         systemSerializers.put(CreateActorMessage.class,new CreateActorMessageSerializer(cluster));
         systemSerializers.put(String.class,new HectorMessageSerializer<String>(StringSerializer.get()));
                 //@todo: add more serializers here

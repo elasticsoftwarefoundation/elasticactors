@@ -20,6 +20,8 @@ import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ElasticActor;
 import org.elasterix.elasticactors.cluster.InternalActorSystem;
+import org.elasterix.elasticactors.messaging.InternalMessage;
+import org.elasterix.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasterix.elasticactors.state.PersistentActor;
 import org.elasterix.elasticactors.state.PersistentActorRepository;
 
@@ -35,12 +37,15 @@ public final class ActivateActorTask extends ActorLifecycleTask {
                              InternalActorSystem actorSystem,
                              ElasticActor receiver,
                              ActorRef receiverRef) {
-        super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef);
+        super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, null, null);
         this.previousActorSystemVersion = persistentActor.getPreviousActorSystemVersion();
     }
 
     @Override
-    protected void doInActorContext(InternalActorSystem actorSystem, ElasticActor receiver, ActorRef receiverRef) {
+    protected void doInActorContext(InternalActorSystem actorSystem,
+                                    ElasticActor receiver,
+                                    ActorRef receiverRef,
+                                    InternalMessage internalMessage) {
         try {
             // @todo: somehow figure out the creator
             receiver.postActivate(previousActorSystemVersion);

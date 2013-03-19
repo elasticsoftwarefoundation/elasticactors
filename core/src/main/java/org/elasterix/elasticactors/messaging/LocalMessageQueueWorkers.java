@@ -140,11 +140,9 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
                         InternalMessage message = messageQueue.poll();
                         if (message != null) {
                             try {
-                                messageQueue.getMessageHandler().handleMessage(message);
+                                messageQueue.getMessageHandler().handleMessage(message,messageQueue);
                             } catch (Exception e) {
                                 LOGGER.error("Exception while executing work!", e);
-                            } finally {
-                                messageQueue.ack(message);
                             }
                             if(messageQueue.peek() != null) {
                                 moreWaiting = true;

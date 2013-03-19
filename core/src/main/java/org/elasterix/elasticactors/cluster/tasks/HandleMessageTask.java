@@ -21,6 +21,7 @@ import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ElasticActor;
 import org.elasterix.elasticactors.cluster.InternalActorSystem;
 import org.elasterix.elasticactors.messaging.InternalMessage;
+import org.elasterix.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasterix.elasticactors.state.PersistentActor;
 import org.elasterix.elasticactors.state.PersistentActorRepository;
 
@@ -33,34 +34,37 @@ import static org.elasterix.elasticactors.util.SerializationTools.deserializeMes
  */
 public final class HandleMessageTask extends ActorLifecycleTask {
     private static final Logger log = Logger.getLogger(HandleMessageTask.class);
-    private final InternalMessage internalMessage;
 
-    public HandleMessageTask(InternalActorSystem actorSystem, ElasticActor receiver, InternalMessage internalMessage, PersistentActor persistentActor, PersistentActorRepository persistentActorRepository) {
-        super(persistentActorRepository, persistentActor, actorSystem, receiver, internalMessage.getReceiver());
-        this.internalMessage = internalMessage;
+    public HandleMessageTask(InternalActorSystem actorSystem,
+                             ElasticActor receiver,
+                             InternalMessage internalMessage,
+                             PersistentActor persistentActor,
+                             PersistentActorRepository persistentActorRepository,
+                             MessageHandlerEventListener messageHandlerEventListener) {
+        super(persistentActorRepository, persistentActor, actorSystem, receiver, internalMessage.getReceiver(), messageHandlerEventListener, internalMessage);
     }
 
 
-    protected void doInActorContext(InternalActorSystem actorSystem, ElasticActor receiver, ActorRef receiverRef) {
+    protected void doInActorContext(InternalActorSystem actorSystem,
+                                    ElasticActor receiver,
+                                    ActorRef receiverRef,
+                                    InternalMessage internalMessage) {
         try {
-            handleMessage(receiver, receiverRef, deserializeMessage(actorSystem, internalMessage));
+            Object message = deserializeMessage(actorSystem, internalMessage);
+            /*if(log.isDebugEnabled()) {
+                        log.debug(String.format("Actor [%s] of type [%s] is receiving message of type [%s]",receiverRef.toString(),
+                                                receiver.getClass().getName(),message.getClass().getName()));
+                    }*/
+                    try {
+
+                        receiver.onReceive(message,internalMessage.getSender());
+                    } catch (Exception e) {
+                        // @todo: handle by sending back a message (if possible)
+                        log.error(String.format("Exception while handling message for actor [%s]", receiverRef.toString()), e);
+                    }
         } catch (Exception e) {
             log.error(String.format("Exception while Deserializing Message class %s in ActorSystem [%s]",
                     internalMessage.getPayloadClass(), actorSystem.getName()), e);
-        }
-    }
-
-    private void handleMessage(ElasticActor receiver,ActorRef receiverRef,Object message) {
-        /*if(log.isDebugEnabled()) {
-            log.debug(String.format("Actor [%s] of type [%s] is receiving message of type [%s]",receiverRef.toString(),
-                                    receiver.getClass().getName(),message.getClass().getName()));
-        }*/
-        try {
-
-            receiver.onReceive(message, internalMessage.getSender());
-        } catch (Exception e) {
-            // @todo: handle by sending back a message (if possible)
-            log.error(String.format("Exception while handling message for actor [%s]", receiverRef.toString()), e);
         }
     }
 }

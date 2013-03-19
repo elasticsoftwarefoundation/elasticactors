@@ -24,7 +24,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * @author Joost van de Wijgerd
  */
-public final class LocalMessageQueue extends PersistentMessageQueue {
+public final class LocalMessageQueue extends PersistentMessageQueue implements MessageHandlerEventListener {
     private final LinkedBlockingQueue<InternalMessage> queue;
     private final MessageQueueEventListener eventListener;
     private final MessageHandler messageHandler;
@@ -81,5 +81,18 @@ public final class LocalMessageQueue extends PersistentMessageQueue {
     @Override
     public InternalMessage poll() {
         return queue.poll();
+    }
+
+    @Override
+    public void onError(InternalMessage message, Throwable exception) {
+        logger.error(String.format("Exception when handling message of type [%s] for Actor [%s]", message.getPayloadClass(),
+                                                                                                  message.getReceiver().toString()));
+        //@todo: determine what to do, for now just ack anyway
+        ack(message);
+    }
+
+    @Override
+    public void onDone(InternalMessage message) {
+        ack(message);
     }
 }
