@@ -17,6 +17,8 @@
 package org.elasterix.elasticactors.cluster;
 
 import me.prettyprint.cassandra.serializers.StringSerializer;
+import me.prettyprint.cassandra.service.CassandraHost;
+import me.prettyprint.hector.api.Cluster;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.cassandra.ClusterEventListener;
@@ -63,6 +65,7 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
     private final SystemDeserializers systemDeserializers = new SystemDeserializers(this);
     private ActorSystemRepository actorSystemRepository;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("CLUSTER_SCHEDULER"));
+    private Cluster cassandraCluster;
 
 
     public static ElasticActorsCluster getInstance() {
@@ -137,6 +140,8 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
                 public void run() {
                     logger.info("Loading ActorSystems...");
                     try {
+                        // some trickery to get hector to work
+                        cassandraCluster.addHost(new CassandraHost("localhost:9160"),false);
                         loadActorSystems();
                         rebalance(clusterNodes);
                     } catch(Exception e) {
@@ -234,5 +239,10 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
     @Autowired
     public void setActorSystemRepository(ActorSystemRepository actorSystemRepository) {
         this.actorSystemRepository = actorSystemRepository;
+    }
+
+    @Autowired
+    public void setCassandraCluster(Cluster cassandraCluster) {
+        this.cassandraCluster = cassandraCluster;
     }
 }

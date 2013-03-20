@@ -30,7 +30,7 @@
     <bean id="clusterView" class="org.elasterix.elasticactors.cassandra.ClusterView"/>
 
     <bean id="cassandraHostConfigurator" class="me.prettyprint.cassandra.service.CassandraHostConfigurator">
-        <constructor-arg index="0" value="localhost:9160"/>
+        <constructor-arg index="0" value=""/>
         <property name="maxActive" value="40"/>
         <property name="maxWaitTimeWhenExhausted" value="1000"/>
     </bean>
