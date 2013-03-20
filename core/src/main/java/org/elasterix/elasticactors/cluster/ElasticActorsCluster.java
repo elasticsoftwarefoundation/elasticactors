@@ -24,6 +24,7 @@ import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.serialization.internal.*;
+import org.elasterix.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasterix.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasterix.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.springframework.beans.BeansException;
@@ -33,14 +34,15 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.util.ClassUtils;
 
+import java.lang.reflect.Constructor;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -59,6 +61,8 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
     private ThreadBoundExecutor<String> executor;
     private final SystemSerializers systemSerializers = new SystemSerializers(this);
     private final SystemDeserializers systemDeserializers = new SystemDeserializers(this);
+    private ActorSystemRepository actorSystemRepository;
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("CLUSTER_SCHEDULER"));
 
 
     public static ElasticActorsCluster getInstance() {
@@ -76,13 +80,46 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
         logger.info(String.format("%s running, starting ElasticActors Runtime",localNode.toString()));
         // start NodeSelectorFactory
         nodeSelectorFactory.start();
+
+
+    }
+
+    private void loadActorSystems() {
         // load all actor systems (but not start them yet since we are not officially part of the cluster)
+        List<RegisteredActorSystem> registeredActorSystems = actorSystemRepository.findAll();
+        logger.info(String.format("Loading %d ActorSystems",registeredActorSystems.size()));
+        for (RegisteredActorSystem registeredActorSystem : registeredActorSystems) {
+            try {
+                Class<? extends ActorSystemConfiguration> configurationClass =
+                        (Class<? extends ActorSystemConfiguration>) Class.forName(registeredActorSystem.getConfigurationClass());
+                Constructor<? extends ActorSystemConfiguration> constructor =
+                        ClassUtils.getConstructorIfAvailable(configurationClass, String.class, Integer.class);
+                if(constructor != null) {
+                    ActorSystemConfiguration configuration = constructor.newInstance(registeredActorSystem.getName(),
+                                                                                     registeredActorSystem.getNrOfShards());
+                    managedActorSystems.put(registeredActorSystem.getName(),
+                                            new LocalActorSystemInstance(this,configuration,nodeSelectorFactory));
+                } else {
+                    logger.warn(String.format("No matching constructor(String,int) found on configuration class [%s]",
+                                              registeredActorSystem.getConfigurationClass()));
+                    ActorSystemConfiguration configuration = configurationClass.newInstance();
+                    managedActorSystems.put(configuration.getName(),
+                                            new LocalActorSystemInstance(this,configuration,nodeSelectorFactory));
+                }
+                logger.info(String.format("Loaded ActorSystem [%s] with configuration class [%s]",
+                                          registeredActorSystem.getName(),registeredActorSystem.getConfigurationClass()));
+            } catch(Exception e) {
+                logger.error(String.format("Exception while initializing ActorSystem [%s] with configuration class [%s]",
+                                           registeredActorSystem.getName(),
+                                           registeredActorSystem.getConfigurationClass()),e);
+            }
+        }
     }
 
     @Override
     public void onTopologyChanged(Map<InetAddress,String> topology) {
         logger.info("Cluster topology changed");
-        List<PhysicalNode> clusterNodes = new LinkedList<PhysicalNode>();
+        final List<PhysicalNode> clusterNodes = new LinkedList<PhysicalNode>();
         for (Map.Entry<InetAddress, String> hostEntry : topology.entrySet()) {
             if(localNode.getId().equals(hostEntry.getValue())) {
                 clusterNodes.add(localNode);
@@ -93,9 +130,27 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
         logger.info("New Cluster view: "+clusterNodes.toString());
         // see if it's the first time
         if(clusterStarted.compareAndSet(false,true)) {
-            // do some initialization
-        }
+            logger.info("Initial startup detected, scheduling ActorSystem loading sequence");
+            // we need a delay here because thrift will start listening after this event
+            scheduledExecutorService.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    logger.info("Loading ActorSystems...");
+                    try {
+                        loadActorSystems();
+                        rebalance(clusterNodes);
+                    } catch(Exception e) {
+                        logger.error("Exception while loading ActorSystems",e);
+                    }
+                }
+            },1000, TimeUnit.MILLISECONDS);
 
+        } else {
+            rebalance(clusterNodes);
+        }
+    }
+
+    private void rebalance(List<PhysicalNode> clusterNodes) {
         for (LocalActorSystemInstance actorSystemInstance : managedActorSystems.values()) {
             executor.execute(new RebalancingRunnable(actorSystemInstance,clusterNodes));
         }
@@ -174,5 +229,10 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
     @Autowired
     public void setExecutor(@Qualifier("clusterExecutor") ThreadBoundExecutor<String> executor) {
         this.executor = executor;
+    }
+
+    @Autowired
+    public void setActorSystemRepository(ActorSystemRepository actorSystemRepository) {
+        this.actorSystemRepository = actorSystemRepository;
     }
 }
