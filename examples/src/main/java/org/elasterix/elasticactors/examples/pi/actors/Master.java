@@ -40,7 +40,7 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
         throw new IllegalStateException("Please initialize Master with state");
     }
 
-    public static final class MasterState {
+    public static final class State {
         private final ActorRef listener;
         private final int nrOfWorkers;
         private final int nrOfMessages;
@@ -51,16 +51,16 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
         private int nrOfResults;
         private int roundRobinCounter;
 
-        public MasterState(ActorRef listener, int nrOfWorkers, int nrOfMessages, int nrOfElements) {
+        public State(ActorRef listener, int nrOfWorkers, int nrOfMessages, int nrOfElements) {
             this(listener, nrOfWorkers, nrOfMessages, nrOfElements, System.currentTimeMillis());
         }
 
         @JsonCreator
-        public MasterState(@JsonProperty("listener") ActorRef listener,
-                           @JsonProperty("nrOfWorkers") int nrOfWorkers,
-                           @JsonProperty("nrOfMessages") int nrOfMessages,
-                           @JsonProperty("nrOfElements") int nrOfElements,
-                           @JsonProperty("start") long start) {
+        public State(@JsonProperty("listener") ActorRef listener,
+                     @JsonProperty("nrOfWorkers") int nrOfWorkers,
+                     @JsonProperty("nrOfMessages") int nrOfMessages,
+                     @JsonProperty("nrOfElements") int nrOfElements,
+                     @JsonProperty("start") long start) {
             this.listener = listener;
             this.nrOfWorkers = nrOfWorkers;
             this.nrOfMessages = nrOfMessages;
@@ -132,7 +132,7 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
 
     @Override
     public void postCreate(ActorRef creator) throws Exception {
-        MasterState state = getState(this).getAsObject(MasterState.class);
+        State state = getState(this).getAsObject(State.class);
         List<ActorRef> workers = new ArrayList<ActorRef>(state.nrOfWorkers);
         for (int i = 1; i <= state.nrOfWorkers; i++) {
             workers.add(getSystem().actorOf("worker-"+i,Worker.class));
@@ -141,7 +141,7 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
     }
 
     public void onReceive(Object message, ActorRef sender) {
-        MasterState state = getState(this).getAsObject(MasterState.class);
+        State state = getState(this).getAsObject(State.class);
         if (message instanceof Calculate) {
             for (int start = 0; start < state.getNrOfMessages(); start++) {
                 state.workers.get(state.roundRobinCounter++ % state.nrOfWorkers).tell(new Work(start, state.getNrOfElements()), getSelf());

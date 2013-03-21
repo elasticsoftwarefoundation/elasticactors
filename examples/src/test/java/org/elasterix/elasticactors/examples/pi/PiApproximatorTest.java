@@ -143,7 +143,7 @@ public class PiApproximatorTest {
 
         ActorState actorState = actorStateDeserializer.deserialize(serializedBytes);
         assertNotNull(actorState);
-        Master.MasterState masterState = actorState.getAsObject(Master.MasterState.class);
+        Master.State masterState = actorState.getAsObject(Master.State.class);
         assertNotNull(masterState);
         assertEquals(masterState.getListener(),listenerRef);
         assertEquals(masterState.getNrOfWorkers(),4);

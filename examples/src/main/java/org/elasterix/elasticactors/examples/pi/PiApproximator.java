@@ -121,7 +121,7 @@ public class PiApproximator implements ActorSystemConfiguration, ActorSystemBoot
         // create listener
         ActorRef listener = actorSystem.actorOf("listener",Listener.class);
         // create master
-        Master.MasterState masterState = new Master.MasterState(listener,4,10000,10000);
+        Master.State masterState = new Master.State(listener,4,10000,10000);
         ActorRef master = actorSystem.actorOf("master",Master.class,new JacksonActorState(objectMapper,masterState));
 
         // wait a little for the actors to be created
