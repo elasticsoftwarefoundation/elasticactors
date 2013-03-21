@@ -16,6 +16,7 @@
 
 package org.elasterix.elasticactors.examples.pi.actors;
 
+import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.UntypedActor;
 import org.elasterix.elasticactors.examples.pi.messages.PiApproximation;
@@ -24,10 +25,12 @@ import org.elasterix.elasticactors.examples.pi.messages.PiApproximation;
  * @author Joost van de Wijgerd
  */
 public final class Listener extends UntypedActor {
+    private static final Logger logger = Logger.getLogger(Listener.class);
+
     public void onReceive(Object message, ActorRef sender) {
         if (message instanceof PiApproximation) {
             PiApproximation approximation = (PiApproximation) message;
-            System.out.println(String.format("\n\tPi approximation: " +
+            logger.info(String.format("\n\tPi approximation: " +
                     "\t\t%s\n\tCalculation time: \t%d",
                     approximation.getPi(), approximation.getDuration()));
             // @todo: figure out if and how to do this

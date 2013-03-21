@@ -16,6 +16,7 @@
 
 package org.elasterix.elasticactors.examples.pi.actors;
 
+import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.UntypedActor;
 import org.elasterix.elasticactors.examples.pi.messages.Result;
@@ -25,8 +26,11 @@ import org.elasterix.elasticactors.examples.pi.messages.Work;
  * @author Joost van de Wijgerd
  */
 public final class Worker extends UntypedActor {
+    private static final Logger logger = Logger.getLogger(Worker.class);
+
     public void onReceive(Object message, ActorRef sender) {
         if (message instanceof Work) {
+            logger.info("Got work");
             Work work = (Work) message;
             double result = calculatePiFor(work.getStart(), work.getNrOfElements());
             sender.tell(new Result(result), getSelf());

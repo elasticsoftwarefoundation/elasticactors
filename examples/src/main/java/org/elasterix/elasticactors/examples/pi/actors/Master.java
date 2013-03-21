@@ -16,6 +16,7 @@
 
 package org.elasterix.elasticactors.examples.pi.actors;
 
+import org.apache.log4j.Logger;
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.elasterix.elasticactors.ActorRef;
@@ -34,6 +35,7 @@ import java.util.List;
  * @author Joost van de Wijgerd
  */
 public final class  Master extends UntypedActor implements ActorStateFactory {
+    private static final Logger logger = Logger.getLogger(Master.class);
 
     @Override
     public ActorState create() {
@@ -45,7 +47,7 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
         private final int nrOfWorkers;
         private final int nrOfMessages;
         private final int nrOfElements;
-        private final long start;
+        private long start;
         private List<ActorRef> workers;
         private double pi;
         private int nrOfResults;
@@ -140,9 +142,18 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
         state.setWorkers(workers);
     }
 
+    @Override
+    public void postActivate(String previousVersion) throws Exception {
+        State state = getState(this).getAsObject(State.class);
+        state.nrOfResults = 0;
+        state.pi = 0.0d;
+        state.roundRobinCounter = 0;
+    }
+
     public void onReceive(Object message, ActorRef sender) {
         State state = getState(this).getAsObject(State.class);
         if (message instanceof Calculate) {
+            state.start = System.currentTimeMillis();
             for (int start = 0; start < state.getNrOfMessages(); start++) {
                 state.workers.get(state.roundRobinCounter++ % state.nrOfWorkers).tell(new Work(start, state.getNrOfElements()), getSelf());
             }
@@ -150,10 +161,15 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
             Result result = (Result) message;
             state.pi += result.getValue();
             state.nrOfResults += 1;
+            logger.info(String.format("Got %d results out of %d messages",state.getNrOfResults(),state.getNrOfMessages()));
             if (state.nrOfResults == state.nrOfMessages) {
                 // Send the result to the listener
                 long duration = System.currentTimeMillis() - state.start;
                 state.listener.tell(new PiApproximation(state.pi, duration), getSelf());
+                // reset state
+                state.nrOfResults = 0;
+                state.pi = 0.0d;
+                state.roundRobinCounter = 0;
                 // Stops this actor and all its supervised children
                 // @todo: figure out how to do this
                 // getContext().stop(getSelf());

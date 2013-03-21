@@ -16,6 +16,7 @@
 
 package org.elasterix.elasticactors.examples.pi;
 
+import org.apache.log4j.Logger;
 import org.codehaus.jackson.Version;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.module.SimpleModule;
@@ -38,7 +39,8 @@ import java.util.Map;
 /**
  * @author Joost van de Wijgerd
  */
-public class PiApproximator implements ActorSystemConfiguration, ActorSystemBootstrapper {
+public final class PiApproximator implements ActorSystemConfiguration, ActorSystemBootstrapper {
+    private static final Logger logger = Logger.getLogger(PiApproximator.class);
     private final String name;
     private final int numberOfShards;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -136,6 +138,7 @@ public class PiApproximator implements ActorSystemConfiguration, ActorSystemBoot
         ActorRef master = actorSystem.actorFor("master");
 
         // tell the master to start calculating
+        logger.info("Starting to calculate Pi");
         master.tell(new Calculate(),listener);
     }
 }
