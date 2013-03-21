@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -58,6 +59,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private MessageQueueFactory localMessageQueueFactory;
     private MessageQueueFactory remoteMessageQueueFactory;
     private Scheduler scheduler;
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
 
     public LocalActorSystemInstance(ActorSystems cluster,ActorSystemConfiguration actorSystem, NodeSelectorFactory nodeSelectorFactory) {
         this.configuration = actorSystem;
@@ -132,6 +134,31 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                     }
                 } else {
                     // shard was already remote
+                }
+            }
+        }
+        // see if this was the first time, if so we need to initialize the ActorSystem
+        if(initialized.compareAndSet(false,true)) {
+            if(configuration instanceof ActorSystemBootstrapper) {
+                ActorSystemBootstrapper bootstrapper = (ActorSystemBootstrapper) configuration;
+                try {
+                    bootstrapper.initialize(this);
+                } catch(Exception e) {
+                    // @todo: we should probably abort here
+                    log.error(String.format("Exception while initializing ActorSystem [%s]",getName()),e);
+                }
+                // @todo: we should only do this on original creation of the ActorSystem, not when reloading
+                try {
+                    bootstrapper.create(this);
+                } catch(Exception e) {
+                    // @todo: we should probably abort here
+                    log.error(String.format("Exception while creating ActorSystem [%s]",getName()),e);
+                }
+                try {
+                    bootstrapper.activate(this);
+                } catch(Exception e) {
+                    // @todo: we should probably abort here
+                    log.error(String.format("Exception while activating ActorSystem [%s]",getName()),e);
                 }
             }
         }

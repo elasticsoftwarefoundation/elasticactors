@@ -16,10 +16,8 @@
 
 package org.elasterix.elasticactors.test;
 
-import me.prettyprint.cassandra.serializers.StringSerializer;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.cluster.*;
-import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasterix.elasticactors.serialization.Deserializer;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
@@ -30,9 +28,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.net.InetAddress;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Joost van de Wijgerd
@@ -76,18 +72,15 @@ public class TestActorSystem implements InternalActorSystems,ActorRefFactory {
             }
         };
         TestActorSystem testActorSystem = applicationContext.getBean(TestActorSystem.class);
-        ActorSystemConfiguration wrapper = new ActorSystemConversationWrapper(configuration);
+        ActorSystemConfiguration wrapper = (configuration instanceof ActorSystemBootstrapper) ?
+                                            new ActorSystemConfigurationAndBootstrapperWrapper(configuration,(ActorSystemBootstrapper)configuration)
+                                            : new ActorSystemConfigurationWrapper(configuration);
         LocalActorSystemInstance actorSystemInstance = new LocalActorSystemInstance(testActorSystem,
                                                                                     wrapper,
                                                                                     factory);
         testActorSystem.setActorSystemInstance(actorSystemInstance);
         actorSystemInstance.distributeShards(Arrays.asList(localNode));
-        if(configuration instanceof ActorSystemBootstrapper) {
-            ActorSystemBootstrapper bootstrapper = (ActorSystemBootstrapper) configuration;
-            bootstrapper.initialize(actorSystemInstance);
-            bootstrapper.create(actorSystemInstance);
-            bootstrapper.activate(actorSystemInstance);
-        }
+
         return actorSystemInstance;
     }
 
@@ -96,10 +89,98 @@ public class TestActorSystem implements InternalActorSystems,ActorRefFactory {
         return ActorRefTools.parse(refSpec,this);
     }
 
-    private static final class ActorSystemConversationWrapper implements ActorSystemConfiguration {
+
+
+    @Override
+    public String getClusterName() {
+        return "LocalNode";
+    }
+
+    @Override
+    public InternalActorSystem get(String actorSystemName) {
+        return actorSystemInstance;
+    }
+
+    @Override
+    public <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass) {
+        return systemSerializers.get(messageClass);
+    }
+
+    @Override
+    public <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass) {
+        return systemDeserializers.get(messageClass);
+    }
+
+    @Override
+    public ActorRefFactory getActorRefFactory() {
+        return this;
+    }
+
+    private static final class ActorSystemConfigurationAndBootstrapperWrapper implements ActorSystemConfiguration,ActorSystemBootstrapper {
+        private final ActorSystemConfiguration configuration;
+        private final ActorSystemBootstrapper bootstrapper;
+
+        private ActorSystemConfigurationAndBootstrapperWrapper(ActorSystemConfiguration configuration, ActorSystemBootstrapper bootstrapper) {
+            this.configuration = configuration;
+            this.bootstrapper = bootstrapper;
+        }
+
+
+        @Override
+        public String getName() {
+            return configuration.getName();
+        }
+
+        @Override
+        public int getNumberOfShards() {
+            return 1;
+        }
+
+        @Override
+        public String getVersion() {
+            return configuration.getVersion();
+        }
+
+        @Override
+        public <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
+            return configuration.getSerializer(messageClass);
+        }
+
+        @Override
+        public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
+            return configuration.getDeserializer(messageClass);
+        }
+
+        @Override
+        public Serializer<ActorState, byte[]> getActorStateSerializer() {
+            return configuration.getActorStateSerializer();
+        }
+
+        @Override
+        public Deserializer<byte[], ActorState> getActorStateDeserializer() {
+            return configuration.getActorStateDeserializer();
+        }
+
+        @Override
+        public void initialize(ActorSystem actorSystem) throws Exception {
+            bootstrapper.initialize(actorSystem);
+        }
+
+        @Override
+        public void create(ActorSystem actorSystem, String... arguments) throws Exception {
+            bootstrapper.create(actorSystem,arguments);
+        }
+
+        @Override
+        public void activate(ActorSystem actorSystem) throws Exception {
+            bootstrapper.activate(actorSystem);
+        }
+    }
+
+    private static final class ActorSystemConfigurationWrapper implements ActorSystemConfiguration {
         private final ActorSystemConfiguration configuration;
 
-        private ActorSystemConversationWrapper(ActorSystemConfiguration configuration) {
+        private ActorSystemConfigurationWrapper(ActorSystemConfiguration configuration) {
             this.configuration = configuration;
         }
 
@@ -138,30 +219,5 @@ public class TestActorSystem implements InternalActorSystems,ActorRefFactory {
         public Deserializer<byte[], ActorState> getActorStateDeserializer() {
             return configuration.getActorStateDeserializer();
         }
-    }
-
-    @Override
-    public String getClusterName() {
-        return "LocalNode";
-    }
-
-    @Override
-    public InternalActorSystem get(String actorSystemName) {
-        return actorSystemInstance;
-    }
-
-    @Override
-    public <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass) {
-        return systemSerializers.get(messageClass);
-    }
-
-    @Override
-    public <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass) {
-        return systemDeserializers.get(messageClass);
-    }
-
-    @Override
-    public ActorRefFactory getActorRefFactory() {
-        return this;
     }
 }

@@ -96,7 +96,7 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
                 Class<? extends ActorSystemConfiguration> configurationClass =
                         (Class<? extends ActorSystemConfiguration>) Class.forName(registeredActorSystem.getConfigurationClass());
                 Constructor<? extends ActorSystemConfiguration> constructor =
-                        ClassUtils.getConstructorIfAvailable(configurationClass, String.class, Integer.class);
+                        ClassUtils.getConstructorIfAvailable(configurationClass, String.class, Integer.TYPE);
                 if(constructor != null) {
                     ActorSystemConfiguration configuration = constructor.newInstance(registeredActorSystem.getName(),
                                                                                      registeredActorSystem.getNrOfShards());

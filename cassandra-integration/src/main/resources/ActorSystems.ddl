@@ -22,3 +22,6 @@ create column family PersistentActors
   and key_validation_class = 'UTF8Type'
   and comparator = 'UTF8Type'
   and default_validation_class = 'BytesType';
+
+set ActorSystems['PiTest']['nrOfShards'] = int(8);
+set ActorSystems['PiTest']['configurationClass'] = 'org.elasterix.elasticactors.examples.pi.PiApproximator';
