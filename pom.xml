@@ -24,8 +24,8 @@
 
     <packaging>pom</packaging>
 
-    <name>Elasterix :: ElasticActors</name>
-    <url>https://github.com/elasterix/elasticactors</url>
+    <name>Elastic Software Foundation :: ElasticActors</name>
+    <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -10,8 +10,8 @@
     <artifactId>elasticactors-api</artifactId>
     <packaging>jar</packaging>
 
-    <name>Elasterix :: ElasticActors :: API</name>
-    <url>https://github.com/elasterix/elasticactors</url>
+    <name>Elastic Software Foundation :: ElasticActors :: API</name>
+    <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
