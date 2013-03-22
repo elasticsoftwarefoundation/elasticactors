@@ -30,7 +30,6 @@ public final class Worker extends UntypedActor {
 
     public void onReceive(Object message, ActorRef sender) {
         if (message instanceof Work) {
-            logger.info("Got work");
             Work work = (Work) message;
             double result = calculatePiFor(work.getStart(), work.getNrOfElements());
             sender.tell(new Result(result), getSelf());

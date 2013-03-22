@@ -161,7 +161,7 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
             Result result = (Result) message;
             state.pi += result.getValue();
             state.nrOfResults += 1;
-            logger.info(String.format("Got %d results out of %d messages",state.getNrOfResults(),state.getNrOfMessages()));
+
             if (state.nrOfResults == state.nrOfMessages) {
                 // Send the result to the listener
                 long duration = System.currentTimeMillis() - state.start;
