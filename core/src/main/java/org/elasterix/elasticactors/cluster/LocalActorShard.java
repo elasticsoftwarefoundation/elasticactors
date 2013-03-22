@@ -94,6 +94,11 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
     }
 
     @Override
+    public PhysicalNode getPhysicalNode() {
+        return localNode;
+    }
+
+    @Override
     public void handleMessage(final InternalMessage internalMessage,
                               final MessageHandlerEventListener messageHandlerEventListener) {
         final ActorRef receiverRef = internalMessage.getReceiver();

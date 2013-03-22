@@ -16,13 +16,12 @@
 
 package org.elasterix.elasticactors.messaging;
 
+import com.google.protobuf.MessageLite;
 import org.elasterix.elasticactors.PhysicalNode;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface MessageHandler {
-    PhysicalNode getPhysicalNode();
-
-    void handleMessage(InternalMessage message,MessageHandlerEventListener messageHandlerEventListener);
+public interface MessagingService {
+    void sendWireMessage(MessageLite message,PhysicalNode receiver);
 }

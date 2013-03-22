@@ -31,3 +31,8 @@ message CreateActorMessage {
     optional string actorClass = 3;
     optional string actorSystem = 4;
 }
+
+message WireMessage {
+    optional string queueName = 1;
+    optional bytes internalMessage = 2;
+}

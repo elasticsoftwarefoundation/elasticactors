@@ -14,10 +14,21 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.messaging;
+package org.elasterix.elasticactors.messaging.netty;
 
+import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
+import org.elasterix.elasticactors.PhysicalNode;
+import org.elasterix.elasticactors.messaging.*;
+import org.elasterix.elasticactors.serialization.protobuf.Elasticactors;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.*;
+import org.jboss.netty.handler.codec.frame.LengthFieldBasedFrameDecoder;
+import org.jboss.netty.handler.codec.frame.LengthFieldPrepender;
+import org.jboss.netty.handler.codec.protobuf.ProtobufDecoder;
+import org.jboss.netty.handler.codec.protobuf.ProtobufEncoder;
+import org.jboss.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
+import org.jboss.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -27,7 +38,7 @@ import java.net.SocketAddress;
 /**
  * @author Joost van de Wijgerd
  */
-public class NettyMessagingService implements ChannelPipelineFactory, MessageQueueFactory {
+public class NettyMessagingService extends SimpleChannelUpstreamHandler implements ChannelPipelineFactory, MessageQueueFactory, MessagingService {
 
     public static final String HANDLER = "handler";
 
@@ -41,7 +52,7 @@ public class NettyMessagingService implements ChannelPipelineFactory, MessageQue
     private int childSocketReceiveBufferSize = 8192;
     private int childSocketSendBufferSize = 8192;
 
-    private Channel serverChannel;
+    private volatile Channel serverChannel;
 
     public NettyMessagingService(ChannelFactory channelFactory, int listenPort) {
         this.channelFactory = channelFactory;
@@ -70,11 +81,16 @@ public class NettyMessagingService implements ChannelPipelineFactory, MessageQue
 
     @Override
     public ChannelPipeline getPipeline() throws Exception {
-        ChannelPipeline pipeline = Channels.pipeline();
-        //@todo: add encoder and decoder
-        //@todo: imlement handler
-        //pipeline.addLast(HANDLER, socketConnectorHandler);
-        return pipeline;
+       ChannelPipeline pipeline = Channels.pipeline();
+        // Decoder
+       pipeline.addLast("frameDecoder",new ProtobufVarint32FrameDecoder());
+       pipeline.addLast("protobufDecoder",new ProtobufDecoder(Elasticactors.InternalMessage.getDefaultInstance()));
+       // Encoder
+       pipeline.addLast("frameEncoder", new ProtobufVarint32LengthFieldPrepender());
+       pipeline.addLast("protobufEncoder", new ProtobufEncoder());
+        // incoming handler
+       pipeline.addLast(HANDLER, this);
+       return pipeline;
     }
 
     public void setSocketBacklog(int socketBacklog) {
@@ -101,12 +117,21 @@ public class NettyMessagingService implements ChannelPipelineFactory, MessageQue
         this.childSocketSendBufferSize = childSocketSendBufferSize;
     }
 
-    public void setServerChannel(Channel serverChannel) {
-        this.serverChannel = serverChannel;
+    @Override
+    public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
+        MessageQueue remoteMessageQueue = new RemoteMessageQueue(name,this,messageHandler);
+        remoteMessageQueue.initialize();
+        return remoteMessageQueue;
     }
 
     @Override
-    public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public void sendWireMessage(MessageLite message, PhysicalNode receiver) {
+        // find the channel for the receiver
+        Channel receivingChannel = getOrCreateChannel(receiver);
+        receivingChannel.write(message);
+    }
+
+    private Channel getOrCreateChannel(PhysicalNode receiver) {
+        return null;
     }
 }

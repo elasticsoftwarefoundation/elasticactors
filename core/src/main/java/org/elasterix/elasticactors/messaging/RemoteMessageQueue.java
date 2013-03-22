@@ -16,13 +16,20 @@
 
 package org.elasterix.elasticactors.messaging;
 
+import com.google.protobuf.ByteString;
+import org.elasterix.elasticactors.serialization.protobuf.Elasticactors;
+
 /**
  * @author Joost van de Wijgerd
  */
 public final class RemoteMessageQueue extends PersistentMessageQueue {
+    private final MessagingService messagingService;
+    private final MessageHandler messageHandler;
 
-    public RemoteMessageQueue(String name) {
+    public RemoteMessageQueue(String name, MessagingService messagingService, MessageHandler messageHandler) {
         super(name);
+        this.messagingService = messagingService;
+        this.messageHandler = messageHandler;
     }
 
     @Override
@@ -38,6 +45,10 @@ public final class RemoteMessageQueue extends PersistentMessageQueue {
     @Override
     protected void doOffer(InternalMessage message, byte[] serializedMessage) {
         // @todo: send message to remote server via messaging service
+        Elasticactors.WireMessage.Builder builder = Elasticactors.WireMessage.newBuilder();
+        builder.setQueueName(getName());
+        builder.setInternalMessage(ByteString.copyFrom(serializedMessage));
+        messagingService.sendWireMessage(builder.build(),messageHandler.getPhysicalNode());
     }
 
     @Override
