@@ -111,7 +111,7 @@
 
     <alias name="messageQueueWorkers" alias="localMessageQueueFactory"/>
 
-    <bean id="remoteMessageQueueFactory" class="org.elasterix.elasticactors.messaging.RemoteMessageQueueFactory"/>
+    <alias name="messagingService" alias="remoteMessageQueueFactory"/>
 
     <bean id="nodeSelectorFactory" class="org.elasterix.elasticactors.cluster.cassandra.CassandraNodeSelectorFactory"/>
 

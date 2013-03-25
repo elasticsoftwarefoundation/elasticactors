@@ -17,9 +17,7 @@
 package org.elasterix.elasticactors.cluster;
 
 import org.elasterix.elasticactors.*;
-import org.elasterix.elasticactors.messaging.InternalMessageImpl;
-import org.elasterix.elasticactors.messaging.MessageQueue;
-import org.elasterix.elasticactors.messaging.MessageQueueFactory;
+import org.elasterix.elasticactors.messaging.*;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.springframework.beans.factory.annotation.Configurable;
 
@@ -27,7 +25,7 @@ import org.springframework.beans.factory.annotation.Configurable;
  * @author Joost van de Wijgerd
  */
 @Configurable
-public final class RemoteActorShard implements ActorShard {
+public final class RemoteActorShard implements ActorShard, MessageHandler {
     private final InternalActorSystem actorSystem;
     private final PhysicalNode remoteNode;
     private final ShardKey shardKey;
@@ -53,7 +51,7 @@ public final class RemoteActorShard implements ActorShard {
 
     @Override
     public void init() throws Exception {
-        this.messageQueue = messageQueueFactory.create(shardKey.toString(),null);
+        this.messageQueue = messageQueueFactory.create(shardKey.toString(),this);
     }
 
     @Override
@@ -72,5 +70,20 @@ public final class RemoteActorShard implements ActorShard {
                                                    message.getClass().getName()));
     }
 
+    @Override
+    public void offerInternalMessage(InternalMessage message) {
+        // @todo: on scale out / fail over this will send the message to another node, the
+        // messageQueue.add(message);
+        // decide to do nothing for now
+    }
 
+    @Override
+    public PhysicalNode getPhysicalNode() {
+        return remoteNode;
+    }
+
+    @Override
+    public void handleMessage(InternalMessage message, MessageHandlerEventListener messageHandlerEventListener) {
+        // nothing to do
+    }
 }

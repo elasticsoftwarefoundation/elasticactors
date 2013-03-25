@@ -16,6 +16,8 @@
 
 package org.elasterix.elasticactors;
 
+import org.elasterix.elasticactors.messaging.InternalMessage;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -27,6 +29,8 @@ public interface ActorShard {
     ActorRef getActorRef();
 
     void sendMessage(ActorRef sender, ActorRef receiver, Object message) throws Exception;
+
+    void offerInternalMessage(InternalMessage message);
 
     void init() throws Exception;
 

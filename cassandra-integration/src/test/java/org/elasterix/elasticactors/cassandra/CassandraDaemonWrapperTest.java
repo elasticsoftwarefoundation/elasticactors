@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Joost van de Wijgerd
+ * Copyright 2013 eBuddy BV
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,23 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.messaging;
+package org.elasterix.elasticactors.cassandra;
+
+import org.apache.cassandra.service.CassandraDaemon;
+import org.testng.annotations.Test;
+
+import java.io.IOException;
+
+import static org.testng.Assert.assertNotNull;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class RemoteMessageQueueFactory implements MessageQueueFactory {
-    @Override
-    public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
-        return new RemoteMessageQueue(name, null, messageHandler);
+public class CassandraDaemonWrapperTest {
+    @Test
+    public void testJSVCLifecycle() throws IOException {
+        CassandraDaemonWrapper cassandraDaemonWrapper = new CassandraDaemonWrapper();
+        CassandraDaemon cassandraDaemon = cassandraDaemonWrapper.getCassandraDaemonInstance();
+        assertNotNull(cassandraDaemon);
     }
 }

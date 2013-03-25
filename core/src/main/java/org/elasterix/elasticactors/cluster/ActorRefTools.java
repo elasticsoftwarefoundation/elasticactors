@@ -41,7 +41,7 @@ public final class ActorRefTools {
             int nextIndex = refSpec.indexOf('/', actorSeparatorIndex+1);
             String actorId = (nextIndex == -1) ? null : refSpec.substring(nextIndex+1);
             actorSeparatorIndex = (nextIndex == -1) ? actorSeparatorIndex : nextIndex;
-            String[] components = refSpec.substring(8, actorSeparatorIndex).split("/");
+            String[] components = (actorId == null) ? refSpec.substring(8).split("/") : refSpec.substring(8, actorSeparatorIndex).split("/");
             if (components.length == 4) {
                 String clusterName = components[0];
                 if (!cluster.getClusterName().equals(clusterName)) {

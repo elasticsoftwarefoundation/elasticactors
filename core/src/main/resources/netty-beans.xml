@@ -52,8 +52,16 @@
         <constructor-arg index="2" type="int" ref="localMaxThread"/>
     </bean>
 
+    <bean id="nioClientSocketChannelFactory" class="org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory">
+        <constructor-arg index="0" ref="bossExecutor"/>
+        <constructor-arg index="1" ref="workerExecutor"/>
+        <constructor-arg index="2" type="int" ref="localMaxThread"/>
+    </bean>
+
     <bean id="messagingService" class="org.elasterix.elasticactors.messaging.netty.NettyMessagingService">
-        <constructor-arg index="0" ref="nioServerSocketChannelFactory"/>
-        <constructor-arg index="1" value="9172"/>
+        <constructor-arg index="0" ref="elasticActorsCluster"/>
+        <constructor-arg index="1" ref="nioServerSocketChannelFactory"/>
+        <constructor-arg index="2" ref="nioClientSocketChannelFactory"/>
+        <constructor-arg index="3" value="9172"/>
     </bean>
 </beans>

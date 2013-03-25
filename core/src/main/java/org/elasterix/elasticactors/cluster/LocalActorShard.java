@@ -94,6 +94,11 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
     }
 
     @Override
+    public void offerInternalMessage(InternalMessage message) {
+        messageQueue.add(message);
+    }
+
+    @Override
     public PhysicalNode getPhysicalNode() {
         return localNode;
     }

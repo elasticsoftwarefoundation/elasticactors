@@ -16,15 +16,21 @@
 
 package org.elasterix.elasticactors.messaging.netty;
 
-import com.google.protobuf.Message;
 import com.google.protobuf.MessageLite;
+import org.apache.log4j.Logger;
+import org.elasterix.elasticactors.ActorSystems;
 import org.elasterix.elasticactors.PhysicalNode;
+import org.elasterix.elasticactors.ShardKey;
+import org.elasterix.elasticactors.cluster.InternalActorSystem;
+import org.elasterix.elasticactors.cluster.InternalActorSystems;
 import org.elasterix.elasticactors.messaging.*;
+import org.elasterix.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasterix.elasticactors.serialization.protobuf.Elasticactors;
+import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.*;
-import org.jboss.netty.handler.codec.frame.LengthFieldBasedFrameDecoder;
-import org.jboss.netty.handler.codec.frame.LengthFieldPrepender;
+import org.jboss.netty.channel.socket.ClientSocketChannelFactory;
+import org.jboss.netty.channel.socket.ServerSocketChannelFactory;
 import org.jboss.netty.handler.codec.protobuf.ProtobufDecoder;
 import org.jboss.netty.handler.codec.protobuf.ProtobufEncoder;
 import org.jboss.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
@@ -34,16 +40,23 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author Joost van de Wijgerd
  */
-public class NettyMessagingService extends SimpleChannelUpstreamHandler implements ChannelPipelineFactory, MessageQueueFactory, MessagingService {
-
+public final class NettyMessagingService extends SimpleChannelUpstreamHandler implements ChannelPipelineFactory, MessageQueueFactory, MessagingService {
+    private static final Logger logger= Logger.getLogger(NettyMessagingService.class);
     public static final String HANDLER = "handler";
 
-    private final ChannelFactory channelFactory;
+    private final ServerSocketChannelFactory serverChannelFactory;
+    private final ClientSocketChannelFactory clientChannelFactory;
     private final int listenPort;
+    private volatile ClientBootstrap clientBootstrap;
+    private final ConcurrentMap<PhysicalNode,Channel> outgoingChannels = new ConcurrentHashMap<PhysicalNode,Channel>();
 
     private int socketBacklog = 128;
     private boolean socketReuseAddress = true;
@@ -54,14 +67,22 @@ public class NettyMessagingService extends SimpleChannelUpstreamHandler implemen
 
     private volatile Channel serverChannel;
 
-    public NettyMessagingService(ChannelFactory channelFactory, int listenPort) {
-        this.channelFactory = channelFactory;
+    private final InternalActorSystems cluster;
+
+    public NettyMessagingService(InternalActorSystems cluster,
+                                 ServerSocketChannelFactory serverChannelFactory,
+                                 ClientSocketChannelFactory clientChannelFactory,
+                                 int listenPort) {
+        this.serverChannelFactory = serverChannelFactory;
+        this.clientChannelFactory = clientChannelFactory;
         this.listenPort = listenPort;
+        this.cluster = cluster;
     }
 
     @PostConstruct
     public void start() {
-        ServerBootstrap bootstrap = new ServerBootstrap(channelFactory);
+        // start listening
+        ServerBootstrap bootstrap = new ServerBootstrap(serverChannelFactory);
         bootstrap.setOption("backlog", socketBacklog);
         bootstrap.setOption("reuseAddress", socketReuseAddress);
         bootstrap.setOption("child.keepAlive", childSocketKeepAlive);
@@ -72,11 +93,25 @@ public class NettyMessagingService extends SimpleChannelUpstreamHandler implemen
 
         SocketAddress addr = new InetSocketAddress(listenPort);
         serverChannel = bootstrap.bind(addr);
+        logger.info(String.format("listening on port [%d]",listenPort));
+
+        clientBootstrap = new ClientBootstrap(clientChannelFactory);
+        clientBootstrap.setOption("keepAlive", childSocketKeepAlive);
+        clientBootstrap.setOption("tcpNoDelay", childSocketTcpNoDelay);
+        clientBootstrap.setOption("receiveBufferSize", childSocketReceiveBufferSize);
+        clientBootstrap.setOption("sendBufferSize", childSocketSendBufferSize);
+        clientBootstrap.setPipelineFactory(this);
+
     }
 
     @PreDestroy
     public void stop() {
         serverChannel.close();
+        Iterator<Map.Entry<PhysicalNode,Channel>> entryIterator = outgoingChannels.entrySet().iterator();
+        while(entryIterator.hasNext()) {
+            entryIterator.next().getValue().close();
+            entryIterator.remove();
+        }
     }
 
     @Override
@@ -84,7 +119,7 @@ public class NettyMessagingService extends SimpleChannelUpstreamHandler implemen
        ChannelPipeline pipeline = Channels.pipeline();
         // Decoder
        pipeline.addLast("frameDecoder",new ProtobufVarint32FrameDecoder());
-       pipeline.addLast("protobufDecoder",new ProtobufDecoder(Elasticactors.InternalMessage.getDefaultInstance()));
+       pipeline.addLast("protobufDecoder",new ProtobufDecoder(Elasticactors.WireMessage.getDefaultInstance()));
        // Encoder
        pipeline.addLast("frameEncoder", new ProtobufVarint32LengthFieldPrepender());
        pipeline.addLast("protobufEncoder", new ProtobufEncoder());
@@ -129,9 +164,70 @@ public class NettyMessagingService extends SimpleChannelUpstreamHandler implemen
         // find the channel for the receiver
         Channel receivingChannel = getOrCreateChannel(receiver);
         receivingChannel.write(message);
+        //logger.info(String.format("written message to %s",receiver));
     }
 
     private Channel getOrCreateChannel(PhysicalNode receiver) {
-        return null;
+        // make sure we only have one active channel per remote node
+        Channel outgoingChannel = outgoingChannels.get(receiver);
+        if(outgoingChannel == null) {
+            ChannelFuture connectFuture = clientBootstrap.connect(new InetSocketAddress(receiver.getAddress(),listenPort));
+            try {
+                connectFuture.await();
+            } catch (InterruptedException e) {
+                // ignore
+            }
+            if(connectFuture.isSuccess()) {
+                // try to put
+                outgoingChannel = connectFuture.getChannel();
+                Channel existingChannel = outgoingChannels.putIfAbsent(receiver,outgoingChannel);
+                if(existingChannel != null && !existingChannel.equals(outgoingChannel)) {
+                    // somebody beat us to it, let's close and return existing channel
+                    outgoingChannel.close();
+                    return existingChannel;
+                } else {
+                    return outgoingChannel;
+                }
+            } else {
+                logger.error(String.format("Unable to open Channel to [%s]",receiver.toString()));
+                //@todo: throw a better exception here
+                throw new RuntimeException("Exception opening Channel",connectFuture.getCause());
+            }
+        } else {
+            return outgoingChannel;
+        }
+    }
+
+    @Override
+    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+
+        Object messageObject = e.getMessage();
+        if(messageObject instanceof Elasticactors.WireMessage) {
+            Elasticactors.WireMessage wireMessage = (Elasticactors.WireMessage) messageObject;
+            ShardKey queueName = ShardKey.fromString(wireMessage.getQueueName());
+
+            InternalActorSystem actorSystem = cluster.get(queueName.getActorSystemName());
+            actorSystem.getShard(queueName.getShardId()).offerInternalMessage(
+                                 InternalMessageDeserializer.get().deserialize(wireMessage.getInternalMessage().toByteArray()));
+            //logger.info(String.format("received message from %s for %s",ctx.getChannel().getRemoteAddress(),queueName));
+        }
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
+        logger.error(e.getCause());
+    }
+
+    @Override
+    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+
+        Iterator<Map.Entry<PhysicalNode,Channel>> iterator = outgoingChannels.entrySet().iterator();
+        while(iterator.hasNext()) {
+            Map.Entry<PhysicalNode,Channel> entry = iterator.next();
+            if(entry.getValue().equals(e.getChannel())) {
+                iterator.remove();
+                break;
+            }
+        }
     }
 }

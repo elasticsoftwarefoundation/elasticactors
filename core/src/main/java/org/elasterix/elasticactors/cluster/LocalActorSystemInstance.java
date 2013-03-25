@@ -18,6 +18,7 @@ package org.elasterix.elasticactors.cluster;
 
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.*;
+import org.elasterix.elasticactors.messaging.InternalMessage;
 import org.elasterix.elasticactors.messaging.MessageQueueFactory;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasterix.elasticactors.scheduler.Scheduler;
@@ -87,11 +88,13 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     public void distributeShards(List<PhysicalNode> nodes) throws Exception {
         NodeSelector nodeSelector = nodeSelectorFactory.create(nodes);
         for(int i = 0; i < configuration.getNumberOfShards(); i++) {
-            PhysicalNode node = nodeSelector.getPrimary(new ShardKey(configuration.getName(),i));
+            ShardKey shardKey = new ShardKey(configuration.getName(),i);
+            PhysicalNode node = nodeSelector.getPrimary(shardKey);
             if(node.isLocal()) {
                 // this instance should start owning the shard now
                 final ActorShard currentShard = shards[i];
                 if(currentShard == null || !currentShard.getOwningNode().isLocal()) {
+                    log.info(String.format("I will own %s",shardKey.toString()));
                     // first we need to obtain the writeLock on the shard
                     final Lock writeLock = shardLocks[i].writeLock();
                     try {
@@ -102,20 +105,22 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                         }
                         // create a new local shard and swap it
                         LocalActorShard newShard = new LocalActorShard(node,this,i,localMessageQueueFactory);
+
+                        shards[i] = newShard;
                         // initialize
                         newShard.init();
-                        shards[i] = newShard;
                     } finally {
                         writeLock.unlock();
                     }
                 } else {
                     // we own the shard already, no change needed
-                    log.info("");
+                    log.info(String.format("I already own %s",shardKey.toString()));
                 }
             } else {
                 // the shard will be managed by another node
                 final ActorShard currentShard = shards[i];
                 if(currentShard == null || currentShard.getOwningNode().isLocal()) {
+                    log.info(String.format("%s will own %s",node,shardKey));
                     // first we need to obtain the writeLock on the shard
                     final Lock writeLock = shardLocks[i].writeLock();
                     try {
@@ -126,14 +131,16 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                         }
                         // create a new local shard and swap it
                         RemoteActorShard newShard = new RemoteActorShard(node,this,i,remoteMessageQueueFactory);
+
+                        shards[i] = newShard;
                         // initialize
                         newShard.init();
-                        shards[i] = newShard;
                     } finally {
                         writeLock.unlock();
                     }
                 } else {
                     // shard was already remote
+                    log.info(String.format("%s will own %s",node,shardKey));
                 }
             }
         }
@@ -315,6 +322,17 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
             try {
                 readLock.lock();
                 shards[key.getShardId()].sendMessage(sender,receiver,message);
+            } finally {
+                readLock.unlock();
+            }
+        }
+
+        @Override
+        public void offerInternalMessage(InternalMessage message) {
+            final Lock readLock = shardLocks[key.getShardId()].readLock();
+            try {
+                readLock.lock();
+                shards[key.getShardId()].offerInternalMessage(message);
             } finally {
                 readLock.unlock();
             }

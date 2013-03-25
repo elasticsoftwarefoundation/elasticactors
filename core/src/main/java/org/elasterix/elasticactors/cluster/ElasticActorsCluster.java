@@ -18,7 +18,11 @@ package org.elasterix.elasticactors.cluster;
 
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.service.CassandraHost;
+import me.prettyprint.cassandra.service.ThriftCfDef;
+import me.prettyprint.cassandra.service.ThriftKsDef;
 import me.prettyprint.hector.api.Cluster;
+import me.prettyprint.hector.api.ddl.ColumnFamilyDefinition;
+import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.cassandra.ClusterEventListener;
@@ -124,7 +128,7 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
         logger.info("Cluster topology changed");
         final List<PhysicalNode> clusterNodes = new LinkedList<PhysicalNode>();
         for (Map.Entry<InetAddress, String> hostEntry : topology.entrySet()) {
-            if(localNode.getId().equals(hostEntry.getValue())) {
+            if(localNode != null && localNode.getId().equals(hostEntry.getValue())) {
                 clusterNodes.add(localNode);
             } else {
                 clusterNodes.add(new PhysicalNodeImpl(hostEntry.getValue(),hostEntry.getKey(),false));
@@ -132,26 +136,47 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
         }
         logger.info("New Cluster view: "+clusterNodes.toString());
         // see if it's the first time
-        if(clusterStarted.compareAndSet(false,true)) {
-            logger.info("Initial startup detected, scheduling ActorSystem loading sequence");
-            // we need a delay here because thrift will start listening after this event
-            scheduledExecutorService.schedule(new Runnable() {
-                @Override
-                public void run() {
-                    logger.info("Loading ActorSystems...");
-                    try {
-                        // some trickery to get hector to work
-                        cassandraCluster.addHost(new CassandraHost("localhost:9160"),false);
-                        loadActorSystems();
-                        rebalance(clusterNodes);
-                    } catch(Exception e) {
-                        logger.error("Exception while loading ActorSystems",e);
+        if(localNode != null) {
+            if(clusterStarted.compareAndSet(false,true)) {
+                logger.info("Initial startup detected, scheduling ActorSystem loading sequence");
+                // we need a delay here because thrift will start listening after this event
+                scheduledExecutorService.schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        logger.info("Loading ActorSystems...");
+                        try {
+                            // some trickery to get hector to work
+                            cassandraCluster.addHost(new CassandraHost(String.format("%s:9160",localNode.getAddress().getHostAddress())),false);
+                            //ensureKeyspace();
+                            loadActorSystems();
+                            rebalance(clusterNodes);
+                        } catch(Exception e) {
+                            logger.error("Exception while loading ActorSystems",e);
+                        }
                     }
-                }
-            },1000, TimeUnit.MILLISECONDS);
+                },1000, TimeUnit.MILLISECONDS);
 
-        } else {
-            rebalance(clusterNodes);
+            } else {
+                rebalance(clusterNodes);
+            }
+        }
+    }
+
+    private void ensureKeyspace() {
+        List<KeyspaceDefinition> keyspaces = cassandraCluster.describeKeyspaces();
+        boolean existing = false;
+        for (KeyspaceDefinition keyspace : keyspaces) {
+            if(keyspace.getName().equals("ElasticActors")) {
+                existing = true;
+                break;
+            }
+        }
+        if(!existing) {
+            logger.info("ElasticActors Keyspace not found, creating");
+            List<ColumnFamilyDefinition> cfDefs = new LinkedList<ColumnFamilyDefinition>();
+            ColumnFamilyDefinition actorSystems = new ThriftCfDef("ElasticActors","ActorSystems");
+            KeyspaceDefinition ksDef = new ThriftKsDef("ElasticActors",ThriftKsDef.NETWORK_TOPOLOGY_STRATEGY,1,cfDefs);
+            cassandraCluster.addKeyspace(ksDef,true);
         }
     }
 
