@@ -32,7 +32,7 @@ public final class Worker extends UntypedActor {
         if (message instanceof Work) {
             Work work = (Work) message;
             double result = calculatePiFor(work.getStart(), work.getNrOfElements());
-            sender.tell(new Result(result), getSelf());
+            sender.tell(new Result(result, work.getCalculationId()), getSelf());
         } else {
             unhandled(message);
         }

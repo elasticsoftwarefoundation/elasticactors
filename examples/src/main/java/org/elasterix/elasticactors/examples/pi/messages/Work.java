@@ -25,11 +25,13 @@ import org.codehaus.jackson.annotate.JsonProperty;
 public final class Work {
     private final int start;
     private final int nrOfElements;
+    private final String calculationId;
 
     @JsonCreator
-    public Work(@JsonProperty("start") int start, @JsonProperty("nrOfElements") int nrOfElements) {
+    public Work(@JsonProperty("start") int start, @JsonProperty("nrOfElements") int nrOfElements, @JsonProperty("calculationId") String calculationId) {
         this.start = start;
         this.nrOfElements = nrOfElements;
+        this.calculationId = calculationId;
     }
 
     @JsonProperty("start")
@@ -40,5 +42,10 @@ public final class Work {
     @JsonProperty("nrOfElements")
     public int getNrOfElements() {
         return nrOfElements;
+    }
+
+    @JsonProperty("calculationId")
+    public String getCalculationId() {
+        return calculationId;
     }
 }

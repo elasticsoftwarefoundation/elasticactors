@@ -24,14 +24,21 @@ import org.codehaus.jackson.annotate.JsonProperty;
  */
 public final class Result {
     private final double value;
+    private final String calculationId;
 
     @JsonCreator
-    public Result(@JsonProperty("value") double value) {
+    public Result(@JsonProperty("value") double value,@JsonProperty("calculationId") String calculationId) {
         this.value = value;
+        this.calculationId = calculationId;
     }
 
     @JsonProperty("value")
     public double getValue() {
         return value;
+    }
+
+    @JsonProperty("calculationId")
+    public String getCalculationId() {
+        return calculationId;
     }
 }

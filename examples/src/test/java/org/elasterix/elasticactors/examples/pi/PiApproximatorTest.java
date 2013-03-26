@@ -75,7 +75,7 @@ public class PiApproximatorTest {
         // Work
         MessageSerializer<Work> workMessageSerializer = piApproximator.getSerializer(Work.class);
         assertNotNull(workMessageSerializer);
-        serializedForm = workMessageSerializer.serialize(new Work(1,100));
+        serializedForm = workMessageSerializer.serialize(new Work(1,100, "testId"));
         assertNotNull(serializedForm);
         MessageDeserializer<Work> workMessageDeserializer = piApproximator.getDeserializer(Work.class);
         assertNotNull(workMessageDeserializer);
@@ -87,7 +87,7 @@ public class PiApproximatorTest {
         // REsult
         MessageSerializer<Result> resultMessageSerializer = piApproximator.getSerializer(Result.class);
         assertNotNull(workMessageSerializer);
-        serializedForm = resultMessageSerializer.serialize(new Result(0.8376d));
+        serializedForm = resultMessageSerializer.serialize(new Result(0.8376d, "testId"));
         assertNotNull(serializedForm);
         MessageDeserializer<Result> resultMessageDeserializer = piApproximator.getDeserializer(Result.class);
         assertNotNull(workMessageDeserializer);

@@ -28,8 +28,7 @@ import org.elasterix.elasticactors.examples.pi.messages.PiApproximation;
 import org.elasterix.elasticactors.examples.pi.messages.Result;
 import org.elasterix.elasticactors.examples.pi.messages.Work;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Joost van de Wijgerd
@@ -47,14 +46,56 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
         private final int nrOfWorkers;
         private final int nrOfMessages;
         private final int nrOfElements;
-        private long start;
         private List<ActorRef> workers;
-        private double pi;
-        private int nrOfResults;
-        private int roundRobinCounter;
+        private final Map<String,Calculation> calculations;
+
+        private static final class Calculation {
+            private final long start;
+            private double pi;
+            private int nrOfResults;
+            private int roundRobinCounter;
+
+            private Calculation() {
+                this(System.currentTimeMillis());
+            }
+
+            @JsonCreator
+            private Calculation(@JsonProperty("start") long start) {
+                this.start = start;
+            }
+
+            @JsonProperty("start")
+            public long getStart() {
+                return start;
+            }
+
+            public double getPi() {
+                return pi;
+            }
+
+            public void setPi(double pi) {
+                this.pi = pi;
+            }
+
+            public int getNrOfResults() {
+                return nrOfResults;
+            }
+
+            public void setNrOfResults(int nrOfResults) {
+                this.nrOfResults = nrOfResults;
+            }
+
+            public int getRoundRobinCounter() {
+                return roundRobinCounter;
+            }
+
+            public void setRoundRobinCounter(int roundRobinCounter) {
+                this.roundRobinCounter = roundRobinCounter;
+            }
+        }
 
         public State(ActorRef listener, int nrOfWorkers, int nrOfMessages, int nrOfElements) {
-            this(listener, nrOfWorkers, nrOfMessages, nrOfElements, System.currentTimeMillis());
+            this(listener, nrOfWorkers, nrOfMessages, nrOfElements, new HashMap<String,Calculation>());
         }
 
         @JsonCreator
@@ -62,12 +103,12 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
                      @JsonProperty("nrOfWorkers") int nrOfWorkers,
                      @JsonProperty("nrOfMessages") int nrOfMessages,
                      @JsonProperty("nrOfElements") int nrOfElements,
-                     @JsonProperty("start") long start) {
+                     @JsonProperty("calculations") Map<String,Calculation> calculations) {
             this.listener = listener;
             this.nrOfWorkers = nrOfWorkers;
             this.nrOfMessages = nrOfMessages;
             this.nrOfElements = nrOfElements;
-            this.start = start;
+            this.calculations = calculations;
         }
 
         @JsonProperty("listener")
@@ -99,36 +140,9 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
             return nrOfElements;
         }
 
-        @JsonProperty("start")
-        public long getStart() {
-            return start;
-        }
-
-        @JsonProperty("pi")
-        public double getPi() {
-            return pi;
-        }
-
-        public void setPi(double pi) {
-            this.pi = pi;
-        }
-
-        @JsonProperty("nrOfResults")
-        public int getNrOfResults() {
-            return nrOfResults;
-        }
-
-        public void setNrOfResults(int nrOfResults) {
-            this.nrOfResults = nrOfResults;
-        }
-
-        @JsonProperty("roundRobinCounter")
-        public int getRoundRobinCounter() {
-            return roundRobinCounter;
-        }
-
-        public void setRoundRobinCounter(int roundRobinCounter) {
-            this.roundRobinCounter = roundRobinCounter;
+        @JsonProperty("calculations")
+        public Map<String,Calculation> getCalculations() {
+            return calculations;
         }
     }
 
@@ -145,31 +159,29 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
     @Override
     public void postActivate(String previousVersion) throws Exception {
         State state = getState(this).getAsObject(State.class);
-        state.nrOfResults = 0;
-        state.pi = 0.0d;
-        state.roundRobinCounter = 0;
     }
 
     public void onReceive(Object message, ActorRef sender) {
         State state = getState(this).getAsObject(State.class);
         if (message instanceof Calculate) {
-            state.start = System.currentTimeMillis();
+            Calculate calculateRequest = (Calculate) message;
+            State.Calculation calculation = new State.Calculation();
             for (int start = 0; start < state.getNrOfMessages(); start++) {
-                state.workers.get(state.roundRobinCounter++ % state.nrOfWorkers).tell(new Work(start, state.getNrOfElements()), getSelf());
+                state.workers.get(calculation.roundRobinCounter++ % state.nrOfWorkers).tell(new Work(start, state.getNrOfElements(), calculateRequest.getId()), getSelf());
             }
+            state.getCalculations().put(calculateRequest.getId(), calculation);
         } else if (message instanceof Result) {
             Result result = (Result) message;
-            state.pi += result.getValue();
-            state.nrOfResults += 1;
+            State.Calculation calculation = state.getCalculations().get(result.getCalculationId());
+            calculation.pi += result.getValue();
+            calculation.nrOfResults += 1;
 
-            if (state.nrOfResults == state.nrOfMessages) {
+            if (calculation.nrOfResults == state.nrOfMessages) {
                 // Send the result to the listener
-                long duration = System.currentTimeMillis() - state.start;
-                state.listener.tell(new PiApproximation(state.pi, duration), getSelf());
-                // reset state
-                state.nrOfResults = 0;
-                state.pi = 0.0d;
-                state.roundRobinCounter = 0;
+                long duration = System.currentTimeMillis() - calculation.start;
+                state.listener.tell(new PiApproximation(calculation.pi, duration), getSelf());
+                // remove calculation
+                state.getCalculations().remove(result.getCalculationId());
                 // Stops this actor and all its supervised children
                 // @todo: figure out how to do this
                 // getContext().stop(getSelf());
