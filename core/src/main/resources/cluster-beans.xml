@@ -44,7 +44,7 @@
           factory-method="createKeyspace">
         <constructor-arg value="ElasticActors"/>
         <constructor-arg ref="cassandraCluster"/>
-        <!-- constructor-arg ref="consistencyPolicy" non-default consistency policy could be set here -->
+        <constructor-arg ref="elasticActorsCluster"/>
     </bean>
 
     <bean id="actorSystemsColumnFamilyTemplate" class="me.prettyprint.cassandra.service.template.ThriftColumnFamilyTemplate">

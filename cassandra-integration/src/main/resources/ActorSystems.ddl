@@ -1,4 +1,4 @@
-create keyspace ElasticActors;
+create keyspace ElasticActors with strategy_options = {datacenter1:3};
 
 use ElasticActors;
 

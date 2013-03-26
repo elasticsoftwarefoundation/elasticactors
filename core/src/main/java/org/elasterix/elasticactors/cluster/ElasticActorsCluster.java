@@ -16,11 +16,16 @@
 
 package org.elasterix.elasticactors.cluster;
 
+import me.prettyprint.cassandra.model.AllOneConsistencyLevelPolicy;
+import me.prettyprint.cassandra.model.QuorumAllConsistencyLevelPolicy;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.service.CassandraHost;
+import me.prettyprint.cassandra.service.OperationType;
 import me.prettyprint.cassandra.service.ThriftCfDef;
 import me.prettyprint.cassandra.service.ThriftKsDef;
 import me.prettyprint.hector.api.Cluster;
+import me.prettyprint.hector.api.ConsistencyLevelPolicy;
+import me.prettyprint.hector.api.HConsistencyLevel;
 import me.prettyprint.hector.api.ddl.ColumnFamilyDefinition;
 import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
 import org.apache.log4j.Logger;
@@ -56,7 +61,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Joost van de Wijgerd
  */
 @Configurable
-public final class ElasticActorsCluster implements ActorRefFactory, ApplicationContextAware, ClusterEventListener, InternalActorSystems {
+public final class ElasticActorsCluster implements ActorRefFactory, ApplicationContextAware, ClusterEventListener, InternalActorSystems, ConsistencyLevelPolicy {
     private static final Logger logger = Logger.getLogger(ElasticActorsCluster.class);
     private static final AtomicReference<ElasticActorsCluster> INSTANCE = new AtomicReference<ElasticActorsCluster>(null);
     private final ConcurrentMap<String,LocalActorSystemInstance> managedActorSystems = new ConcurrentHashMap<String,LocalActorSystemInstance>();
@@ -70,6 +75,9 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
     private ActorSystemRepository actorSystemRepository;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("CLUSTER_SCHEDULER"));
     private Cluster cassandraCluster;
+    private static final ConsistencyLevelPolicy DEFAULT_CONSISTENCY_LEVEL_POLICY = new QuorumAllConsistencyLevelPolicy();
+    private static final ConsistencyLevelPolicy FALLBACK_CONSISTENCY_LEVEL_POLICY = new AllOneConsistencyLevelPolicy();
+    private final AtomicReference<ConsistencyLevelPolicy> consistencyLevelPolicy = new AtomicReference<ConsistencyLevelPolicy>(FALLBACK_CONSISTENCY_LEVEL_POLICY);
 
 
     public static ElasticActorsCluster getInstance() {
@@ -134,6 +142,13 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
                 clusterNodes.add(new PhysicalNodeImpl(hostEntry.getValue(),hostEntry.getKey(),false));
             }
         }
+        // set correct consistency level
+        if(topology.size() >= 2) {
+            this.consistencyLevelPolicy.set(DEFAULT_CONSISTENCY_LEVEL_POLICY);
+        } else {
+            this.consistencyLevelPolicy.set(FALLBACK_CONSISTENCY_LEVEL_POLICY);
+        }
+
         logger.info("New Cluster view: "+clusterNodes.toString());
         // see if it's the first time
         if(localNode != null) {
@@ -176,7 +191,7 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
             List<ColumnFamilyDefinition> cfDefs = new LinkedList<ColumnFamilyDefinition>();
             ColumnFamilyDefinition actorSystems = new ThriftCfDef("ElasticActors","ActorSystems");
             KeyspaceDefinition ksDef = new ThriftKsDef("ElasticActors",ThriftKsDef.NETWORK_TOPOLOGY_STRATEGY,1,cfDefs);
-            cassandraCluster.addKeyspace(ksDef,true);
+            cassandraCluster.addKeyspace(ksDef, true);
         }
     }
 
@@ -249,6 +264,16 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
     @Override
     public ActorRef create(String refSpec) throws IllegalArgumentException {
         return ActorRefTools.parse(refSpec,this);
+    }
+
+    @Override
+    public HConsistencyLevel get(OperationType op) {
+        return consistencyLevelPolicy.get().get(op);
+    }
+
+    @Override
+    public HConsistencyLevel get(OperationType op, String cfName) {
+        return consistencyLevelPolicy.get().get(op,cfName);
     }
 
     @Autowired
