@@ -7,3 +7,11 @@
 
 # IntelliJ
 .idea/
+
+# Eclipse
+.classpath
+.project
+.settings
+
+# Other stuff
+*.bat
