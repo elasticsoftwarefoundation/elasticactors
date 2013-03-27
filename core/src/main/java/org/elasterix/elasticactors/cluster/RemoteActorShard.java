@@ -57,7 +57,8 @@ public final class RemoteActorShard implements ActorShard, MessageHandler {
 
     @Override
     public void init() throws Exception {
-        this.messageQueue = messageQueueFactory.create(myRef.getActorPath(),this);
+        // @todo: fix factory here
+        this.messageQueue = messageQueueFactory.create(myRef.getActorPath(),this,null);
     }
 
     @Override

@@ -40,7 +40,7 @@ public class ActorRefToolsTest {
         when(internalActorSystems.getClusterName()).thenReturn("LocalNode");
         when(internalActorSystems.get("Pi")).thenReturn(actorSystem);
         when(actorSystem.getNumberOfShards()).thenReturn(1);
-        when(actorSystem.getShard(0)).thenReturn(shard);
+        when(actorSystem.getShard("Pi/shards/0")).thenReturn(shard);
         when(shard.getKey()).thenReturn(shardKey);
         ActorRef actorRef = ActorRefTools.parse("actor://LocalNode/Pi/shards/0/master",internalActorSystems);
         assertNotNull(actorRef);
@@ -57,7 +57,7 @@ public class ActorRefToolsTest {
             when(internalActorSystems.getClusterName()).thenReturn("LocalNode");
             when(internalActorSystems.get("Pi")).thenReturn(actorSystem);
             when(actorSystem.getNumberOfShards()).thenReturn(1);
-            when(actorSystem.getShard(0)).thenReturn(shard);
+            when(actorSystem.getShard("Pi/shards/0")).thenReturn(shard);
             when(shard.getKey()).thenReturn(shardKey);
             ActorRef actorRef = ActorRefTools.parse("actor://LocalNode/Pi/shards/0",internalActorSystems);
             assertNotNull(actorRef);

@@ -69,10 +69,10 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
         return workers[Math.abs(workerIndex.getAndIncrement() % workers.length)];
     }
 
-    public MessageQueue create(String name,MessageHandler messageHandler) throws Exception {
+    public MessageQueue create(String name,MessageHandler messageHandler,InternalMessageQueueFactory internalFactory) throws Exception {
         // pick the next worker (round-robin)
         MessageQueueWorker worker = nextWorker();
-        LocalMessageQueue messageQueue = new LocalMessageQueue(name,worker,messageHandler);
+        MessageQueue messageQueue = internalFactory.create(name,worker,messageHandler);
         // add the queue to the worker
         worker.add(messageQueue);
         // initialize the queue (will read commit log and start emitting pending messages
@@ -92,7 +92,7 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
             destroyLatches = new ConcurrentHashMap<String,CountDownLatch>();
         }
 
-        public void add(LocalMessageQueue queue) {
+        public void add(MessageQueue queue) {
             messageQueues.put(queue.getName(),queue);
         }
 

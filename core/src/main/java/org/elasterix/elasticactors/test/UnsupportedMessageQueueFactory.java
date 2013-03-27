@@ -16,6 +16,7 @@
 
 package org.elasterix.elasticactors.test;
 
+import org.elasterix.elasticactors.messaging.InternalMessageQueueFactory;
 import org.elasterix.elasticactors.messaging.MessageHandler;
 import org.elasterix.elasticactors.messaging.MessageQueue;
 import org.elasterix.elasticactors.messaging.MessageQueueFactory;
@@ -25,7 +26,7 @@ import org.elasterix.elasticactors.messaging.MessageQueueFactory;
  */
 public class UnsupportedMessageQueueFactory implements MessageQueueFactory {
     @Override
-    public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
+    public MessageQueue create(String name, MessageHandler messageHandler,InternalMessageQueueFactory internalFactory) throws Exception {
         throw new UnsupportedOperationException("Remote Queues not supported in test mode");
     }
 }

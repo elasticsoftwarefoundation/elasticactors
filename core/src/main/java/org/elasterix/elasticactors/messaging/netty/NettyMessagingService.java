@@ -16,6 +16,7 @@
 
 package org.elasterix.elasticactors.messaging.netty;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageLite;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.ActorSystems;
@@ -153,17 +154,20 @@ public final class NettyMessagingService extends SimpleChannelUpstreamHandler im
     }
 
     @Override
-    public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
+    public MessageQueue create(String name, MessageHandler messageHandler,InternalMessageQueueFactory internalFactory) throws Exception {
         MessageQueue remoteMessageQueue = new RemoteMessageQueue(name,this,messageHandler);
         remoteMessageQueue.initialize();
         return remoteMessageQueue;
     }
 
     @Override
-    public void sendWireMessage(MessageLite message, PhysicalNode receiver) {
+    public void sendWireMessage(String queueName, byte[] serializedMessage, PhysicalNode receiver) {
+        Elasticactors.WireMessage.Builder builder = Elasticactors.WireMessage.newBuilder();
+        builder.setQueueName(queueName);
+        builder.setInternalMessage(ByteString.copyFrom(serializedMessage));
         // find the channel for the receiver
         Channel receivingChannel = getOrCreateChannel(receiver);
-        receivingChannel.write(message);
+        receivingChannel.write(builder.build());
         //logger.info(String.format("written message to %s",receiver));
     }
 
@@ -204,10 +208,11 @@ public final class NettyMessagingService extends SimpleChannelUpstreamHandler im
         Object messageObject = e.getMessage();
         if(messageObject instanceof Elasticactors.WireMessage) {
             Elasticactors.WireMessage wireMessage = (Elasticactors.WireMessage) messageObject;
-            ShardKey queueName = ShardKey.fromString(wireMessage.getQueueName());
+            // @todo: do this nice with some utility
+            String[] pathElements = wireMessage.getQueueName().split("/");
 
-            InternalActorSystem actorSystem = cluster.get(queueName.getActorSystemName());
-            actorSystem.getShard(queueName.getShardId()).offerInternalMessage(
+            InternalActorSystem actorSystem = cluster.get(pathElements[0]);
+            actorSystem.getShard(wireMessage.getQueueName()).offerInternalMessage(
                                  InternalMessageDeserializer.get().deserialize(wireMessage.getInternalMessage().toByteArray()));
             //logger.info(String.format("received message from %s for %s",ctx.getChannel().getRemoteAddress(),queueName));
         }

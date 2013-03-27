@@ -176,8 +176,15 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
-    public ActorShard getShard(int shardId) {
-        return shardAdapters[shardId];
+    public ActorShard getShard(String actorPath) {
+        // for now we support only <ActorSystemName>/shards/<shardId>
+        // @todo: do this with actorRef tools
+        String[] pathElements = actorPath.split("/");
+        if(pathElements[1].equals("shards")) {
+            return shardAdapters[Integer.parseInt(pathElements[2])];
+        } else {
+            throw new IllegalArgumentException(String.format("No ActorShard found for actorPath [%s]",actorPath));
+        }
     }
 
     @Override

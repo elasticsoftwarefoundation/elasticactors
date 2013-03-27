@@ -44,11 +44,7 @@ public final class RemoteMessageQueue extends PersistentMessageQueue {
 
     @Override
     protected void doOffer(InternalMessage message, byte[] serializedMessage) {
-        // @todo: send message to remote server via messaging service
-        Elasticactors.WireMessage.Builder builder = Elasticactors.WireMessage.newBuilder();
-        builder.setQueueName(getName());
-        builder.setInternalMessage(ByteString.copyFrom(serializedMessage));
-        messagingService.sendWireMessage(builder.build(),messageHandler.getPhysicalNode());
+        messagingService.sendWireMessage(getName(),serializedMessage,messageHandler.getPhysicalNode());
     }
 
     @Override

@@ -44,6 +44,7 @@ import static org.elasterix.elasticactors.util.SerializationTools.deserializeMes
 @Configurable
 public final class LocalActorShard implements ActorShard, MessageHandler {
     private static final Logger logger = Logger.getLogger(LocalActorShard.class);
+    private static final InternalMessageQueueFactory INTERNAL_MESSAGE_QUEUE_FACTORY = new LocalMessageQueueFactory();
     private final InternalActorSystem actorSystem;
     private final PhysicalNode localNode;
     private final ShardKey shardKey;
@@ -70,7 +71,7 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
     public void init() throws Exception {
         //@todo: this cache needs to be parameterized
         this.actorCache = CacheBuilder.newBuilder().build();
-        this.messageQueue = messageQueueFactory.create(myRef.getActorPath(), this);
+        this.messageQueue = messageQueueFactory.create(myRef.getActorPath(), this, INTERNAL_MESSAGE_QUEUE_FACTORY);
     }
 
     @Override

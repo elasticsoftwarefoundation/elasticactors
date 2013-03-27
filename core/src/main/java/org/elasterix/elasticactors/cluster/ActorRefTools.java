@@ -60,7 +60,7 @@ public final class ActorRefTools {
                 if (shardId >= actorSystem.getNumberOfShards()) {
                     throw new IllegalArgumentException(String.format("Unknown shard %d for ActorSystem %s. Available shards: %d", shardId, actorSystemName, actorSystem.getNumberOfShards()));
                 }
-                return new LocalClusterActorRef(clusterName, actorSystem.getShard(shardId), actorId);
+                return new LocalClusterActorRef(clusterName, actorSystem.getShard(String.format("%s/shards/%d",actorSystemName,shardId)), actorId);
             } else {
                 throw new IllegalArgumentException(
                         String.format("Invalid ActorRef, required spec: [actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId (optional)>, actual spec: [%s]", refSpec));

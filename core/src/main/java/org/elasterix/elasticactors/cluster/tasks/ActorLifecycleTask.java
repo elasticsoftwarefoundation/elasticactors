@@ -43,7 +43,9 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                                  PersistentActor persistentActor,
                                  InternalActorSystem actorSystem,
                                  ElasticActor receiver,
-                                 ActorRef receiverRef, MessageHandlerEventListener messageHandlerEventListener, InternalMessage internalMessage) {
+                                 ActorRef receiverRef,
+                                 MessageHandlerEventListener messageHandlerEventListener,
+                                 InternalMessage internalMessage) {
         this.persistentActorRepository = persistentActorRepository;
         this.receiverRef = receiverRef;
         this.persistentActor = persistentActor;

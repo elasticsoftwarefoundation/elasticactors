@@ -23,5 +23,5 @@ import org.elasterix.elasticactors.PhysicalNode;
  * @author Joost van de Wijgerd
  */
 public interface MessagingService {
-    void sendWireMessage(MessageLite message,PhysicalNode receiver);
+    void sendWireMessage(String queueName, byte[] serializedMessage, PhysicalNode receiver);
 }
