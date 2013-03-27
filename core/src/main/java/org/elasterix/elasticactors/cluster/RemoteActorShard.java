@@ -29,12 +29,18 @@ public final class RemoteActorShard implements ActorShard, MessageHandler {
     private final InternalActorSystem actorSystem;
     private final PhysicalNode remoteNode;
     private final ShardKey shardKey;
+    private final ActorRef myRef;
     private final MessageQueueFactory messageQueueFactory;
     private MessageQueue messageQueue;
 
-    public RemoteActorShard(PhysicalNode remoteNode, InternalActorSystem actorSystem, int vNodeKey, MessageQueueFactory messageQueueFactory) {
+    public RemoteActorShard(PhysicalNode remoteNode,
+                            InternalActorSystem actorSystem,
+                            int vNodeKey,
+                            ActorRef myRef,
+                            MessageQueueFactory messageQueueFactory) {
         this.actorSystem = actorSystem;
         this.remoteNode = remoteNode;
+        this.myRef = myRef;
         this.messageQueueFactory = messageQueueFactory;
         this.shardKey = new ShardKey(actorSystem.getName(), vNodeKey);
     }
@@ -51,7 +57,7 @@ public final class RemoteActorShard implements ActorShard, MessageHandler {
 
     @Override
     public void init() throws Exception {
-        this.messageQueue = messageQueueFactory.create(shardKey.toString(),this);
+        this.messageQueue = messageQueueFactory.create(myRef.getActorPath(),this);
     }
 
     @Override
@@ -61,7 +67,7 @@ public final class RemoteActorShard implements ActorShard, MessageHandler {
 
     @Override
     public ActorRef getActorRef() {
-        throw new UnsupportedOperationException(String.format("Not meant to be called directly on %s",getClass().getSimpleName()));
+        return myRef;
     }
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
@@ -72,7 +78,7 @@ public final class RemoteActorShard implements ActorShard, MessageHandler {
 
     @Override
     public void offerInternalMessage(InternalMessage message) {
-        // @todo: on scale out / fail over this will send the message to another node, the
+        // @todo: on scale out / fail over this will send the message to another node
         // messageQueue.add(message);
         // decide to do nothing for now
     }

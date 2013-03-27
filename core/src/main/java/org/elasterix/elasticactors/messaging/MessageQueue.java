@@ -31,4 +31,10 @@ public interface MessageQueue {
     void initialize() throws Exception;
 
     void destroy();
+
+    InternalMessage peek();
+
+    MessageHandler getMessageHandler();
+
+    MessageHandlerEventListener getMessageHandlerEventListener();
 }

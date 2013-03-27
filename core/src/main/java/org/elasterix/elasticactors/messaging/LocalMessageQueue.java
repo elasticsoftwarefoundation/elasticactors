@@ -61,11 +61,13 @@ public final class LocalMessageQueue extends PersistentMessageQueue implements M
         eventListener.wakeUp();
     }
 
-    protected InternalMessage peek() {
+    @Override
+    public InternalMessage peek() {
         return queue.peek();
     }
 
-    protected MessageHandler getMessageHandler() {
+    @Override
+    public MessageHandler getMessageHandler() {
         return messageHandler;
     }
 
@@ -81,6 +83,11 @@ public final class LocalMessageQueue extends PersistentMessageQueue implements M
     @Override
     public InternalMessage poll() {
         return queue.poll();
+    }
+
+    @Override
+    public MessageHandlerEventListener getMessageHandlerEventListener() {
+        return this;
     }
 
     @Override

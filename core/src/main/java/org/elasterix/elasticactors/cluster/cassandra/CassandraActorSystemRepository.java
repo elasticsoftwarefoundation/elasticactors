@@ -34,7 +34,7 @@ import java.util.List;
 /**
  * @author Joost van de Wijgerd
  */
-public class CassandraActorSystemRepository implements ActorSystemRepository {
+public final class CassandraActorSystemRepository implements ActorSystemRepository {
     private Keyspace keyspace;
     private ColumnFamilyTemplate<String,String> columnFamilyTemplate;
     private final SingleMapper singleResultMapper = new SingleMapper();

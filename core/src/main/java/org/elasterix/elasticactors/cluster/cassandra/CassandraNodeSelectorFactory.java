@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * @author Joost van de Wijgerd
  */
-public class CassandraNodeSelectorFactory implements NodeSelectorFactory {
+public final class CassandraNodeSelectorFactory implements NodeSelectorFactory {
     private NodeProbe nodeProbe;
 
     @Override

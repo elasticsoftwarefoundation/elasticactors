@@ -38,7 +38,12 @@ public final class LocalClusterActorRef implements ActorRef {
     }
 
     public LocalClusterActorRef(String clusterName,ActorShard shard) {
-        this(clusterName, shard,null);
+        this(clusterName, shard, null);
+    }
+
+    @Override
+    public String getActorPath() {
+        return String.format("%s/shards/%d",shard.getKey().getActorSystemName(),shard.getKey().getShardId());
     }
 
     public String getActorId() {

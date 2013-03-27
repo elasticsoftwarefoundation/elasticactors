@@ -104,7 +104,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                             currentShard.destroy();
                         }
                         // create a new local shard and swap it
-                        LocalActorShard newShard = new LocalActorShard(node,this,i,localMessageQueueFactory);
+                        LocalActorShard newShard = new LocalActorShard(node,this,i, shardAdapters[i].myRef, localMessageQueueFactory);
 
                         shards[i] = newShard;
                         // initialize
@@ -130,7 +130,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                             currentShard.destroy();
                         }
                         // create a new local shard and swap it
-                        RemoteActorShard newShard = new RemoteActorShard(node,this,i,remoteMessageQueueFactory);
+                        RemoteActorShard newShard = new RemoteActorShard(node,this,i, shardAdapters[i].myRef, remoteMessageQueueFactory);
 
                         shards[i] = newShard;
                         // initialize

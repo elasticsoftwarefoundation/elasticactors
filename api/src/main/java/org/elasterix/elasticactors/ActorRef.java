@@ -21,6 +21,8 @@ package org.elasterix.elasticactors;
  *
  */
 public interface ActorRef {
+    String getActorPath();
+
     String getActorId();
 
     void tell(Object message, ActorRef sender);

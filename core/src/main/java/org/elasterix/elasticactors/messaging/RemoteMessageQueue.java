@@ -63,4 +63,23 @@ public final class RemoteMessageQueue extends PersistentMessageQueue {
     public InternalMessage poll() {
         return null;
     }
+
+    /**
+     * @return this will always return null as a {@link RemoteMessageQueue} cannot be peeked locally
+     */
+    @Override
+    public InternalMessage peek() {
+        return null;
+    }
+
+    @Override
+    public MessageHandler getMessageHandler() {
+        return messageHandler;
+    }
+
+    @Override
+    public MessageHandlerEventListener getMessageHandlerEventListener() {
+        return null;
+    }
+
 }

@@ -83,12 +83,12 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
     private final class MessageQueueWorker implements Runnable, MessageQueueEventListener {
         private final ReentrantLock waitLock = new ReentrantLock();
         private final Condition waitCondition = waitLock.newCondition();
-        private final ConcurrentMap<String,LocalMessageQueue> messageQueues;
+        private final ConcurrentMap<String,MessageQueue> messageQueues;
         private final AtomicInteger pendingSignals = new AtomicInteger(0);
         private final ConcurrentMap<String,CountDownLatch> destroyLatches;
 
         public MessageQueueWorker() {
-            messageQueues = new ConcurrentHashMap<String,LocalMessageQueue>();
+            messageQueues = new ConcurrentHashMap<String,MessageQueue>();
             destroyLatches = new ConcurrentHashMap<String,CountDownLatch>();
         }
 
@@ -136,11 +136,12 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
                     pendingSignals.set(0);
                     boolean moreWaiting = false;
                     // make a fair loop
-                    for (LocalMessageQueue messageQueue : messageQueues.values()) {
+                    for (MessageQueue messageQueue : messageQueues.values()) {
                         InternalMessage message = messageQueue.poll();
                         if (message != null) {
                             try {
-                                messageQueue.getMessageHandler().handleMessage(message,messageQueue);
+                                messageQueue.getMessageHandler().handleMessage(message,
+                                                                               messageQueue.getMessageHandlerEventListener());
                             } catch (Exception e) {
                                 LOGGER.error("Exception while executing work!", e);
                             }
@@ -157,6 +158,7 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
                             try {
                                 // only block if there are no pending signals
                                 if(pendingSignals.get() == 0) {
+                                    // @todo: very tiny race condition here!!!
                                     waitCondition.await();
                                 }
                             } finally {

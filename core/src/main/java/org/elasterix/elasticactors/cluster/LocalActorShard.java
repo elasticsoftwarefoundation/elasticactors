@@ -47,15 +47,21 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
     private final InternalActorSystem actorSystem;
     private final PhysicalNode localNode;
     private final ShardKey shardKey;
+    private final ActorRef myRef;
     private final MessageQueueFactory messageQueueFactory;
     private MessageQueue messageQueue;
     private ThreadBoundExecutor<String> actorExecutor;
     private Cache<ActorRef,PersistentActor> actorCache;
     private PersistentActorRepository persistentActorRepository;
 
-    public LocalActorShard(PhysicalNode node, InternalActorSystem actorSystem, int shard, MessageQueueFactory messageQueueFactory) {
+    public LocalActorShard(PhysicalNode node,
+                           InternalActorSystem actorSystem,
+                           int shard,
+                           ActorRef myRef,
+                           MessageQueueFactory messageQueueFactory) {
         this.actorSystem = actorSystem;
         this.localNode = node;
+        this.myRef = myRef;
         this.shardKey = new ShardKey(actorSystem.getName(), shard);
         this.messageQueueFactory = messageQueueFactory;
     }
@@ -64,7 +70,7 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
     public void init() throws Exception {
         //@todo: this cache needs to be parameterized
         this.actorCache = CacheBuilder.newBuilder().build();
-        this.messageQueue = messageQueueFactory.create(shardKey.toString(), this);
+        this.messageQueue = messageQueueFactory.create(myRef.getActorPath(), this);
     }
 
     @Override
@@ -85,7 +91,7 @@ public final class LocalActorShard implements ActorShard, MessageHandler {
 
     @Override
     public ActorRef getActorRef() {
-        throw new UnsupportedOperationException(String.format("Not meant to be called directly on %s",getClass().getSimpleName()));
+        return myRef;
     }
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {

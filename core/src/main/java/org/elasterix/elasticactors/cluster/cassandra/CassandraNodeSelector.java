@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * @author Joost van de Wijgerd
  */
-public class CassandraNodeSelector implements NodeSelector {
+public final class CassandraNodeSelector implements NodeSelector {
     private final NodeProbe nodeProbe;
     private final List<PhysicalNode> clusterNodes;
 
