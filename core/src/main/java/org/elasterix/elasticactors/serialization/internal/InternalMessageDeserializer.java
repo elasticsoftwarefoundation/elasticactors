@@ -43,6 +43,7 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
         ActorRef receiver = ActorRefDeserializer.get().deserialize(protobufMessage.getReceiver());
         String messageClass = protobufMessage.getPayloadClass();
         UUID id = UUIDTools.toUUID(protobufMessage.getId().toByteArray());
-        return new InternalMessageImpl(id,sender,receiver,protobufMessage.getPayload().asReadOnlyByteBuffer(),messageClass);
+        boolean durable = (protobufMessage.hasDurable()) ? protobufMessage.getDurable() : true;
+        return new InternalMessageImpl(id,sender,receiver,protobufMessage.getPayload().asReadOnlyByteBuffer(),messageClass,durable);
     }
 }

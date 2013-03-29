@@ -60,7 +60,7 @@ public class TestActorSystem implements InternalActorSystems,ActorRefFactory {
                     }
 
                     @Override
-                    public PhysicalNode getPrimary(ShardKey shardKey) {
+                    public PhysicalNode getPrimary(String shardKey) {
                         return localNode;
                     }
                 };

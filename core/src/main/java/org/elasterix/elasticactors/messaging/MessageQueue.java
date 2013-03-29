@@ -32,9 +32,5 @@ public interface MessageQueue {
 
     void destroy();
 
-    InternalMessage peek();
 
-    MessageHandler getMessageHandler();
-
-    MessageHandlerEventListener getMessageHandlerEventListener();
 }

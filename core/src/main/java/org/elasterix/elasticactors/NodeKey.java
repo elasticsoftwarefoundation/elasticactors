@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Joost van de Wijgerd
+ * Copyright 2013 eBuddy BV
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,17 +19,17 @@ package org.elasterix.elasticactors;
 /**
  * @author Joost van de Wijgerd
  */
-public final class ShardKey {
+public final class NodeKey {
     private final String actorSystemName;
-    private final int shardId;
+    private final String nodeId;
 
-    public ShardKey(String actorSystemName, int shardId) {
+    public NodeKey(String actorSystemName, String nodeId) {
         this.actorSystemName = actorSystemName;
-        this.shardId = shardId;
+        this.nodeId = nodeId;
     }
 
-    public int getShardId() {
-        return shardId;
+    public String getNodeId() {
+        return nodeId;
     }
 
     public String getActorSystemName() {
@@ -38,16 +38,16 @@ public final class ShardKey {
 
     @Override
     public String toString() {
-        return String.format("%s/shards/%d",actorSystemName,shardId);
+        return String.format("%s/nodes/%s",actorSystemName,nodeId);
     }
 
-    public static ShardKey fromString(String shardKey) {
-        int separator = shardKey.lastIndexOf("/shards/");
+    public static NodeKey fromString(String shardKey) {
+        int separator = shardKey.lastIndexOf("/nodes/");
         if(separator < 0) {
-            throw new IllegalArgumentException("Missing /shards/ separator");
+            throw new IllegalArgumentException("Missing /nodes/ separator");
         }
         String[] components = shardKey.split("/");
-        return new ShardKey(components[0],Integer.parseInt(components[2]));
+        return new NodeKey(components[0],components[2]);
     }
 
     @Override
@@ -55,9 +55,9 @@ public final class ShardKey {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ShardKey that = (ShardKey) o;
+        NodeKey that = (NodeKey) o;
 
-        if (shardId != that.shardId) return false;
+        if (nodeId != that.nodeId) return false;
         if (!actorSystemName.equals(that.actorSystemName)) return false;
 
         return true;
@@ -66,7 +66,7 @@ public final class ShardKey {
     @Override
     public int hashCode() {
         int result = actorSystemName.hashCode();
-        result = 31 * result + shardId;
+        result = 31 * result + nodeId.hashCode();
         return result;
     }
 }

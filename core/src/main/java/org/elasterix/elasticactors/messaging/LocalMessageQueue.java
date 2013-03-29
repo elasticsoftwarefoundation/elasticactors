@@ -56,17 +56,16 @@ public final class LocalMessageQueue extends PersistentMessageQueue implements M
     }
 
     @Override
-    protected void doOffer(InternalMessage message, byte[] serializedMessage) {
+    protected void doOffer(InternalMessage message) {
         queue.offer(message);
         eventListener.wakeUp();
     }
 
-    @Override
     public InternalMessage peek() {
         return queue.peek();
     }
 
-    @Override
+
     public MessageHandler getMessageHandler() {
         return messageHandler;
     }
@@ -85,7 +84,6 @@ public final class LocalMessageQueue extends PersistentMessageQueue implements M
         return queue.poll();
     }
 
-    @Override
     public MessageHandlerEventListener getMessageHandlerEventListener() {
         return this;
     }

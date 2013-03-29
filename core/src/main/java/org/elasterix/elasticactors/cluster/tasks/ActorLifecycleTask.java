@@ -74,7 +74,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             // clear the state from the thread
             InternalActorContext.getAndClearContext();
             // check if we have state now that needs to be put in the cache
-            if (persistentActor.getState() != null) {
+            if (persistentActorRepository != null && persistentActor.getState() != null) {
                 try {
                     persistentActorRepository.update(persistentActor.getShardKey(), persistentActor);
                 } catch (Exception e) {

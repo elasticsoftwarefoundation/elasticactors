@@ -40,9 +40,10 @@ public abstract class PersistentMessageQueue implements MessageQueue {
     @Override
     public final boolean offer(org.elasterix.elasticactors.messaging.InternalMessage message) {
         try {
-            byte[] messageData = InternalMessageSerializer.get().serialize(message);
-            commitLog.append(name, message.getId(), messageData);
-            doOffer(message, messageData);
+            if(message.isDurable()) {
+                commitLog.append(name, message.getId(), message.toByteArray());
+            }
+            doOffer(message);
         } catch (Exception e) {
             logger.error("Exception on offer", e);
             return false;
@@ -56,10 +57,12 @@ public abstract class PersistentMessageQueue implements MessageQueue {
     }
 
     protected final void ack(org.elasterix.elasticactors.messaging.InternalMessage message) {
-        commitLog.delete(name,message.getId());
+        if(message.isDurable()) {
+            commitLog.delete(name,message.getId());
+        }
     }
 
-    protected abstract void doOffer(org.elasterix.elasticactors.messaging.InternalMessage message, byte[] serializedMessage);
+    protected abstract void doOffer(org.elasterix.elasticactors.messaging.InternalMessage message);
 
     @Autowired
     public final void setCommitLog(CommitLog commitLog) {

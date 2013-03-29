@@ -69,10 +69,10 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
         return workers[Math.abs(workerIndex.getAndIncrement() % workers.length)];
     }
 
-    public MessageQueue create(String name,MessageHandler messageHandler,InternalMessageQueueFactory internalFactory) throws Exception {
+    public MessageQueue create(String name,MessageHandler messageHandler) throws Exception {
         // pick the next worker (round-robin)
         MessageQueueWorker worker = nextWorker();
-        MessageQueue messageQueue = internalFactory.create(name,worker,messageHandler);
+        LocalMessageQueue messageQueue = new LocalMessageQueue(name,worker,messageHandler);
         // add the queue to the worker
         worker.add(messageQueue);
         // initialize the queue (will read commit log and start emitting pending messages
@@ -83,16 +83,16 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
     private final class MessageQueueWorker implements Runnable, MessageQueueEventListener {
         private final ReentrantLock waitLock = new ReentrantLock();
         private final Condition waitCondition = waitLock.newCondition();
-        private final ConcurrentMap<String,MessageQueue> messageQueues;
+        private final ConcurrentMap<String,LocalMessageQueue> messageQueues;
         private final AtomicInteger pendingSignals = new AtomicInteger(0);
         private final ConcurrentMap<String,CountDownLatch> destroyLatches;
 
         public MessageQueueWorker() {
-            messageQueues = new ConcurrentHashMap<String,MessageQueue>();
+            messageQueues = new ConcurrentHashMap<String,LocalMessageQueue>();
             destroyLatches = new ConcurrentHashMap<String,CountDownLatch>();
         }
 
-        public void add(MessageQueue queue) {
+        public void add(LocalMessageQueue queue) {
             messageQueues.put(queue.getName(),queue);
         }
 
@@ -136,7 +136,7 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
                     pendingSignals.set(0);
                     boolean moreWaiting = false;
                     // make a fair loop
-                    for (MessageQueue messageQueue : messageQueues.values()) {
+                    for (LocalMessageQueue messageQueue : messageQueues.values()) {
                         InternalMessage message = messageQueue.poll();
                         if (message != null) {
                             try {

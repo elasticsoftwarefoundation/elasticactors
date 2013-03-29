@@ -43,8 +43,8 @@ public final class RemoteMessageQueue extends PersistentMessageQueue {
     }
 
     @Override
-    protected void doOffer(InternalMessage message, byte[] serializedMessage) {
-        messagingService.sendWireMessage(getName(),serializedMessage,messageHandler.getPhysicalNode());
+    protected void doOffer(InternalMessage message) {
+        messagingService.sendWireMessage(getName(),message.toByteArray(),messageHandler.getPhysicalNode());
     }
 
     @Override
@@ -60,22 +60,8 @@ public final class RemoteMessageQueue extends PersistentMessageQueue {
         return null;
     }
 
-    /**
-     * @return this will always return null as a {@link RemoteMessageQueue} cannot be peeked locally
-     */
-    @Override
-    public InternalMessage peek() {
-        return null;
-    }
 
-    @Override
-    public MessageHandler getMessageHandler() {
-        return messageHandler;
-    }
 
-    @Override
-    public MessageHandlerEventListener getMessageHandlerEventListener() {
-        return null;
-    }
+
 
 }

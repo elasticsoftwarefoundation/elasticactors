@@ -27,5 +27,5 @@ import java.util.List;
 public interface NodeSelector {
     List<PhysicalNode> getAll();
 
-    PhysicalNode getPrimary(ShardKey shardKey);
+    PhysicalNode getPrimary(String shardKey);
 }

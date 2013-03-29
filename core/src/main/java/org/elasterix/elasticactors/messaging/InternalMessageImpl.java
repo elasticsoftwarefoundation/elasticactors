@@ -17,6 +17,7 @@
 package org.elasterix.elasticactors.messaging;
 
 import org.elasterix.elasticactors.ActorRef;
+import org.elasterix.elasticactors.serialization.internal.InternalMessageSerializer;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
@@ -31,17 +32,24 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
     private final UUID id;
     private final ByteBuffer payload;
     private final String payloadClass;
+    private final boolean durable;
+    private transient byte[] serializedForm;
 
     public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass) {
         this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass);
     }
 
     public InternalMessageImpl(UUID id, ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass) {
-        this.id = id;
+        this(id,sender,receiver,payload,payloadClass,true);
+    }
+
+    public InternalMessageImpl(UUID id,ActorRef sender, ActorRef receiver,ByteBuffer payload, String payloadClass, boolean durable) {
         this.sender = sender;
         this.receiver = receiver;
+        this.id = id;
         this.payload = payload;
         this.payloadClass = payloadClass;
+        this.durable = durable;
     }
 
     public ActorRef getSender() {
@@ -63,5 +71,18 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
     @Override
     public String getPayloadClass() {
         return payloadClass;
+    }
+
+    @Override
+    public boolean isDurable() {
+        return durable;
+    }
+
+    @Override
+    public byte[] toByteArray() {
+        if(serializedForm == null) {
+            serializedForm = InternalMessageSerializer.get().serialize(this);
+        }
+        return serializedForm;
     }
 }

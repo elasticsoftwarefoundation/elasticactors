@@ -34,4 +34,8 @@ public interface InternalMessage {
     ByteBuffer getPayload();
 
     String getPayloadClass();
+
+    boolean isDurable();
+
+    byte[] toByteArray();
 }

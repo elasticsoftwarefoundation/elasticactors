@@ -154,7 +154,7 @@ public final class NettyMessagingService extends SimpleChannelUpstreamHandler im
     }
 
     @Override
-    public MessageQueue create(String name, MessageHandler messageHandler,InternalMessageQueueFactory internalFactory) throws Exception {
+    public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
         MessageQueue remoteMessageQueue = new RemoteMessageQueue(name,this,messageHandler);
         remoteMessageQueue.initialize();
         return remoteMessageQueue;

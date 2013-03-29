@@ -18,9 +18,6 @@ package org.elasterix.elasticactors.state;
 
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.cluster.InternalActorSystem;
-import org.elasterix.elasticactors.serialization.Deserializer;
-
-import java.io.IOException;
 
 /**
  * @author Joost van de Wijgerd
@@ -31,7 +28,7 @@ public final class PersistentActor implements ActorContext {
     private final String previousActorSystemVersion;
     private final Class<? extends ElasticActor> actorClass;
     private final ActorRef ref;
-    private volatile ActorState serializedState;
+    private volatile ActorState actorState;
 
     public PersistentActor(ShardKey shardKey,InternalActorSystem actorSystem,String previousActorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass) {
         this(shardKey,actorSystem,previousActorSystemVersion,ref,actorClass,null);
@@ -42,7 +39,7 @@ public final class PersistentActor implements ActorContext {
         this.actorSystem = actorSystem;
         this.ref = ref;
         this.actorClass = actorClass;
-        this.serializedState = state;
+        this.actorState = state;
         this.previousActorSystemVersion = previousActorSystemVersion;
     }
 
@@ -65,12 +62,12 @@ public final class PersistentActor implements ActorContext {
 
     @Override
     public ActorState getState() {
-        return serializedState;
+        return actorState;
     }
 
     @Override
     public void setState(ActorState state) {
-        this.serializedState = state;
+        this.actorState = state;
     }
 
     @Override

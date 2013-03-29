@@ -89,7 +89,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         NodeSelector nodeSelector = nodeSelectorFactory.create(nodes);
         for(int i = 0; i < configuration.getNumberOfShards(); i++) {
             ShardKey shardKey = new ShardKey(configuration.getName(),i);
-            PhysicalNode node = nodeSelector.getPrimary(shardKey);
+            PhysicalNode node = nodeSelector.getPrimary(shardKey.toString());
             if(node.isLocal()) {
                 // this instance should start owning the shard now
                 final ActorShard currentShard = shards[i];

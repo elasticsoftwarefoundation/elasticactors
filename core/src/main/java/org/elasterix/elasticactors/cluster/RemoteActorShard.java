@@ -25,29 +25,23 @@ import org.springframework.beans.factory.annotation.Configurable;
  * @author Joost van de Wijgerd
  */
 @Configurable
-public final class RemoteActorShard implements ActorShard, MessageHandler {
+public final class RemoteActorShard extends AbstractActorContainer implements ActorShard {
     private final InternalActorSystem actorSystem;
-    private final PhysicalNode remoteNode;
     private final ShardKey shardKey;
-    private final ActorRef myRef;
-    private final MessageQueueFactory messageQueueFactory;
-    private MessageQueue messageQueue;
 
     public RemoteActorShard(PhysicalNode remoteNode,
                             InternalActorSystem actorSystem,
                             int vNodeKey,
                             ActorRef myRef,
                             MessageQueueFactory messageQueueFactory) {
+        super(messageQueueFactory,myRef,remoteNode);
         this.actorSystem = actorSystem;
-        this.remoteNode = remoteNode;
-        this.myRef = myRef;
-        this.messageQueueFactory = messageQueueFactory;
         this.shardKey = new ShardKey(actorSystem.getName(), vNodeKey);
     }
 
     @Override
     public PhysicalNode getOwningNode() {
-        return remoteNode;
+        return getPhysicalNode();
     }
 
     @Override
@@ -55,38 +49,10 @@ public final class RemoteActorShard implements ActorShard, MessageHandler {
         return shardKey;
     }
 
-    @Override
-    public void init() throws Exception {
-        // @todo: fix factory here
-        this.messageQueue = messageQueueFactory.create(myRef.getActorPath(),this,null);
-    }
-
-    @Override
-    public void destroy() {
-        this.messageQueue.destroy();
-    }
-
-    @Override
-    public ActorRef getActorRef() {
-        return myRef;
-    }
-
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
         MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
         messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message),
                                                    message.getClass().getName()));
-    }
-
-    @Override
-    public void offerInternalMessage(InternalMessage message) {
-        // @todo: on scale out / fail over this will send the message to another node
-        // messageQueue.add(message);
-        // decide to do nothing for now
-    }
-
-    @Override
-    public PhysicalNode getPhysicalNode() {
-        return remoteNode;
     }
 
     @Override
