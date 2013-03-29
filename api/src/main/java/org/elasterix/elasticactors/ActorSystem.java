@@ -41,9 +41,13 @@ public interface ActorSystem {
 
     <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception;
 
-    <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState, boolean persistent) throws Exception;
+    <T> ActorRef tempActorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception;
 
     ActorRef actorFor(String actorId);
+
+    ActorRef tempActorFor(String actorId);
+
+    ActorRef serviceActorFor(String actorId);
 
     Scheduler getScheduler();
 

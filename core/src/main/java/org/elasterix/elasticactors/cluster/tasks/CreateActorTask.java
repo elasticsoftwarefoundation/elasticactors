@@ -31,6 +31,15 @@ import org.elasterix.elasticactors.state.PersistentActorRepository;
 public final class CreateActorTask extends ActorLifecycleTask {
     private static final Logger logger = Logger.getLogger(CreateActorTask.class);
 
+    public CreateActorTask(PersistentActor persistentActor,
+                           InternalActorSystem actorSystem,
+                           ElasticActor receiver,
+                           ActorRef receiverRef,
+                           InternalMessage createActorMessage,
+                           MessageHandlerEventListener messageHandlerEventListener) {
+        this(null,persistentActor,actorSystem,receiver,receiverRef,createActorMessage,messageHandlerEventListener);
+    }
+
     public CreateActorTask(PersistentActorRepository persistentActorRepository,
                            PersistentActor persistentActor,
                            InternalActorSystem actorSystem,

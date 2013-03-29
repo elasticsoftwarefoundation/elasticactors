@@ -39,6 +39,10 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
         this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass);
     }
 
+    public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass,boolean durable) {
+        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass,durable);
+    }
+
     public InternalMessageImpl(UUID id, ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass) {
         this(id,sender,receiver,payload,payloadClass,true);
     }

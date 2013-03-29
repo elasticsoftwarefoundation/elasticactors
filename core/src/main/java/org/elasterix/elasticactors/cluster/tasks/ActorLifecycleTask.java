@@ -19,6 +19,7 @@ package org.elasterix.elasticactors.cluster.tasks;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ElasticActor;
+import org.elasterix.elasticactors.ShardKey;
 import org.elasterix.elasticactors.cluster.InternalActorSystem;
 import org.elasterix.elasticactors.messaging.InternalMessage;
 import org.elasterix.elasticactors.messaging.MessageHandlerEventListener;
@@ -76,7 +77,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             // check if we have state now that needs to be put in the cache
             if (persistentActorRepository != null && persistentActor.getState() != null) {
                 try {
-                    persistentActorRepository.update(persistentActor.getShardKey(), persistentActor);
+                    persistentActorRepository.update((ShardKey) persistentActor.getKey(), persistentActor);
                 } catch (Exception e) {
                     log.error(String.format("Exception while serializing ActorState for actor [%s]", receiverRef.getActorId()), e);
                 }

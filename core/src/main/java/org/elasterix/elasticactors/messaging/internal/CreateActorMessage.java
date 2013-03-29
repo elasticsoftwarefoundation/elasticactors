@@ -28,12 +28,24 @@ public final class CreateActorMessage implements Serializable {
     private final String actorId;
     private final String actorClass;
     private final ActorState initialState;
+    private final ActorType type;
+
+    public enum ActorType {
+        PERSISTENT,
+        TEMP,
+        SERVICE
+    }
 
     public CreateActorMessage(String actorSystem, String actorClass, String actorId, ActorState initialState) {
+        this(actorSystem,actorClass,actorId,initialState,ActorType.PERSISTENT);
+    }
+
+    public CreateActorMessage(String actorSystem, String actorClass, String actorId, ActorState initialState, ActorType type) {
         this.actorSystem = actorSystem;
         this.actorId = actorId;
         this.actorClass = actorClass;
         this.initialState = initialState;
+        this.type = type;
     }
 
     public String getActorSystem() {
@@ -50,5 +62,9 @@ public final class CreateActorMessage implements Serializable {
 
     public ActorState getInitialState() {
         return initialState;
+    }
+
+    public ActorType getType() {
+        return type;
     }
 }

@@ -48,19 +48,23 @@ public final class ActorRefTools {
                     throw new IllegalArgumentException(String.format("Cluster [%s] is not Local Cluster [%s]", cluster, clusterName));
                 }
                 String actorSystemName = components[1];
-                if (!"shards".equals(components[2])) {
-                    throw new IllegalArgumentException(
-                            String.format("Invalid ActorRef, required spec: [actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId (optional)>, actual spec: [%s]", refSpec));
-                }
-                int shardId = Integer.parseInt(components[3]);
                 InternalActorSystem actorSystem = (InternalActorSystem) cluster.get(actorSystemName);
                 if (actorSystem == null) {
                     throw new IllegalArgumentException(String.format("Unknown ActorSystem: %s", actorSystemName));
                 }
-                if (shardId >= actorSystem.getNumberOfShards()) {
-                    throw new IllegalArgumentException(String.format("Unknown shard %d for ActorSystem %s. Available shards: %d", shardId, actorSystemName, actorSystem.getNumberOfShards()));
+                if("shards".equals(components[2])) {
+                    int shardId = Integer.parseInt(components[3]);
+                    if (shardId >= actorSystem.getNumberOfShards()) {
+                        throw new IllegalArgumentException(String.format("Unknown shard %d for ActorSystem %s. Available shards: %d", shardId, actorSystemName, actorSystem.getNumberOfShards()));
+                    }
+                    return new LocalClusterActorShardRef(clusterName, actorSystem.getShard(String.format("%s/shards/%d",actorSystemName,shardId)), actorId);
+                } else if("nodes".equals(components[2])) {
+                    return new LocalClusterActorNodeRef(clusterName,actorSystem.getNode(components[3]),actorId);
+                } else {
+                    throw new IllegalArgumentException(
+                            String.format("Invalid ActorRef, required spec: [actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId (optional)>, actual spec: [%s]", refSpec));
                 }
-                return new LocalClusterActorRef(clusterName, actorSystem.getShard(String.format("%s/shards/%d",actorSystemName,shardId)), actorId);
+
             } else {
                 throw new IllegalArgumentException(
                         String.format("Invalid ActorRef, required spec: [actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId (optional)>, actual spec: [%s]", refSpec));

@@ -45,6 +45,7 @@ public class CreateActorMessageSerializationTest {
         assertEquals(deserializedMessage.getActorSystem(),"LocalNode");
         assertEquals(deserializedMessage.getActorId(),"listener");
         assertEquals(deserializedMessage.getInitialState(),null);
+        assertEquals(deserializedMessage.getType(), CreateActorMessage.ActorType.PERSISTENT);
 
     }
 }

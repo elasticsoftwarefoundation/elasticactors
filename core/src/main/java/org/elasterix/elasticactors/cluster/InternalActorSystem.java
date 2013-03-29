@@ -26,4 +26,6 @@ public interface InternalActorSystem extends ActorSystem, ActorSystemConfigurati
     ElasticActor getActorInstance(ActorRef actorRef,Class<? extends ElasticActor> actorClass);
 
     ActorShard getShard(String actorPath);
+
+    ActorNode getNode(String nodeId);
 }

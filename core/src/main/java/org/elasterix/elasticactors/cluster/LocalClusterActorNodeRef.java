@@ -1,11 +1,11 @@
 /*
- * Copyright 2013 Joost van de Wijgerd
+ * Copyright (c) 2013 Joost van de Wijgerd <jwijgerd@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *  	http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@
 package org.elasterix.elasticactors.cluster;
 
 import org.apache.log4j.Logger;
+import org.elasterix.elasticactors.ActorNode;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ActorShard;
 
@@ -25,25 +26,25 @@ import org.elasterix.elasticactors.ActorShard;
  *
  * @author  Joost van de Wijgerd
  */
-public final class LocalClusterActorRef implements ActorRef {
-    private static final Logger logger = Logger.getLogger(LocalClusterActorRef.class);
+public final class LocalClusterActorNodeRef implements ActorRef {
+    private static final Logger logger = Logger.getLogger(LocalClusterActorNodeRef.class);
     private final String clusterName;
-    private final ActorShard shard;
+    private final ActorNode node;
     private final String actorId;
 
-    public LocalClusterActorRef(String clusterName, ActorShard shard, String actorId) {
+    public LocalClusterActorNodeRef(String clusterName, ActorNode node, String actorId) {
         this.clusterName = clusterName;
-        this.shard = shard;
+        this.node = node;
         this.actorId = actorId;
     }
 
-    public LocalClusterActorRef(String clusterName,ActorShard shard) {
-        this(clusterName, shard, null);
+    public LocalClusterActorNodeRef(String clusterName, ActorNode node) {
+        this(clusterName, node, null);
     }
 
     @Override
     public String getActorPath() {
-        return String.format("%s/shards/%d",shard.getKey().getActorSystemName(),shard.getKey().getShardId());
+        return String.format("%s/nodes/%s",node.getKey().getActorSystemName(),node.getKey().getNodeId());
     }
 
     public String getActorId() {
@@ -53,7 +54,7 @@ public final class LocalClusterActorRef implements ActorRef {
     @Override
     public void tell(Object message, ActorRef sender) {
         try {
-            shard.sendMessage(sender,this,message);
+            node.sendMessage(sender,this,message);
         } catch (Exception e) {
             // @todo: notify sender of the failure
             logger.error(String.format("Failed to send message to %s",sender.toString()),e);
@@ -65,11 +66,11 @@ public final class LocalClusterActorRef implements ActorRef {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        LocalClusterActorRef that = (LocalClusterActorRef) o;
+        LocalClusterActorNodeRef that = (LocalClusterActorNodeRef) o;
 
         if (actorId != null ? !actorId.equals(that.actorId) : that.actorId != null) return false;
         if (!clusterName.equals(that.clusterName)) return false;
-        if (!shard.equals(that.shard)) return false;
+        if (!node.equals(that.node)) return false;
 
         return true;
     }
@@ -77,7 +78,7 @@ public final class LocalClusterActorRef implements ActorRef {
     @Override
     public int hashCode() {
         int result = clusterName.hashCode();
-        result = 31 * result + shard.hashCode();
+        result = 31 * result + node.hashCode();
         result = 31 * result + (actorId != null ? actorId.hashCode() : 0);
         return result;
     }
@@ -85,13 +86,13 @@ public final class LocalClusterActorRef implements ActorRef {
     @Override
     public String toString() {
         if(actorId != null) {
-            return String.format("actor://%s/%s/shards/%d/%s",
-                                 clusterName,shard.getKey().getActorSystemName(),
-                                 shard.getKey().getShardId(),actorId);
+            return String.format("actor://%s/%s/nodes/%s/%s",
+                                 clusterName,node.getKey().getActorSystemName(),
+                                 node.getKey().getNodeId(),actorId);
         } else {
-            return String.format("actor://%s/%s/shards/%d",
-                                 clusterName,shard.getKey().getActorSystemName(),
-                                 shard.getKey().getShardId());
+            return String.format("actor://%s/%s/nodes/%s",
+                                 clusterName,node.getKey().getActorSystemName(),
+                                 node.getKey().getNodeId());
         }
     }
 }

@@ -16,18 +16,12 @@
 
 package org.elasterix.elasticactors.state.cassandra;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
 import org.elasterix.elasticactors.ActorRef;
-import org.elasterix.elasticactors.ActorSystems;
 import org.elasterix.elasticactors.ShardKey;
 import org.elasterix.elasticactors.UntypedActor;
 import org.elasterix.elasticactors.cluster.ActorRefFactory;
 import org.elasterix.elasticactors.cluster.InternalActorSystem;
 import org.elasterix.elasticactors.cluster.InternalActorSystems;
-import org.elasterix.elasticactors.messaging.CommitLog;
-import org.elasterix.elasticactors.messaging.UUIDTools;
-import org.elasterix.elasticactors.messaging.journal.CassandraCommitLog;
 import org.elasterix.elasticactors.serialization.internal.PersistentActorDeserializer;
 import org.elasterix.elasticactors.serialization.internal.PersistentActorSerializer;
 import org.elasterix.elasticactors.state.PersistentActor;
@@ -37,8 +31,6 @@ import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -81,7 +73,7 @@ public class CassandraPersistentActorRepositoryTest extends AbstractTestNGSpring
         assertNotNull(persistentActor);
         assertEquals(persistentActor.getState(),null);
         assertEquals(persistentActor.getPreviousActorSystemVersion(),"1.0");
-        assertEquals(persistentActor.getShardKey(),shardKey);
+        assertEquals(persistentActor.getKey(),shardKey);
         assertEquals(persistentActor.getActorClass(),TestActor.class);
         assertEquals(persistentActor.getActorSystem(),actorSystem);
         assertEquals(persistentActor.getSelf(),actorRef);

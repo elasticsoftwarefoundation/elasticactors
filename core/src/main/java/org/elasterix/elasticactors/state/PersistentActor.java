@@ -22,20 +22,20 @@ import org.elasterix.elasticactors.cluster.InternalActorSystem;
 /**
  * @author Joost van de Wijgerd
  */
-public final class PersistentActor implements ActorContext {
-    private final ShardKey shardKey;
+public final class PersistentActor<K> implements ActorContext {
+    private final K key;
     private final InternalActorSystem actorSystem;
     private final String previousActorSystemVersion;
     private final Class<? extends ElasticActor> actorClass;
     private final ActorRef ref;
     private volatile ActorState actorState;
 
-    public PersistentActor(ShardKey shardKey,InternalActorSystem actorSystem,String previousActorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass) {
-        this(shardKey,actorSystem,previousActorSystemVersion,ref,actorClass,null);
+    public PersistentActor(K key,InternalActorSystem actorSystem,String previousActorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass) {
+        this(key,actorSystem,previousActorSystemVersion,ref,actorClass,null);
     }
 
-    public PersistentActor(ShardKey shardKey, InternalActorSystem actorSystem,String previousActorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass, ActorState state) {
-        this.shardKey = shardKey;
+    public PersistentActor(K key, InternalActorSystem actorSystem,String previousActorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass, ActorState state) {
+        this.key = key;
         this.actorSystem = actorSystem;
         this.ref = ref;
         this.actorClass = actorClass;
@@ -43,8 +43,8 @@ public final class PersistentActor implements ActorContext {
         this.previousActorSystemVersion = previousActorSystemVersion;
     }
 
-    public ShardKey getShardKey() {
-        return shardKey;
+    public K getKey() {
+        return key;
     }
 
     public String getPreviousActorSystemVersion() {

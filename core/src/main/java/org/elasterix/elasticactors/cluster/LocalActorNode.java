@@ -1,11 +1,11 @@
 /*
- * Copyright 2013 eBuddy BV
+ * Copyright (c) 2013 Joost van de Wijgerd <jwijgerd@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *  	http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -45,7 +45,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     private final InternalActorSystem actorSystem;
     private final NodeKey nodeKey;
     private ThreadBoundExecutor<String> actorExecutor;
-    private Cache<ActorRef,PersistentActor> actorCache;
+    private Cache<ActorRef,PersistentActor<NodeKey>> actorCache;
 
     public LocalActorNode(PhysicalNode node,
                           InternalActorSystem actorSystem,
@@ -71,7 +71,11 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
         MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-        messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message), message.getClass().getName()));
+        messageQueue.offer(new InternalMessageImpl(from,
+                                                   to,
+                                                   messageSerializer.serialize(message),
+                                                   message.getClass().getName(),
+                                                   false));
     }
 
     @Override
@@ -81,17 +85,23 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
         if(receiverRef.getActorId() != null) {
             try {
                 // load persistent actor from cache or persistent store
-                PersistentActor actor = actorCache.getIfPresent(internalMessage.getReceiver());
-                // find actor class behind receiver ActorRef
-                ElasticActor actorInstance = actorSystem.getActorInstance(internalMessage.getReceiver(),
-                        actor.getActorClass());
-                // execute on it's own thread
-                actorExecutor.execute(new HandleMessageTask(actorSystem,
-                                                            actorInstance,
-                                                            internalMessage,
-                                                            actor,
-                                                            null,
-                                                            messageHandlerEventListener));
+                PersistentActor<NodeKey> actor = actorCache.getIfPresent(internalMessage.getReceiver());
+                if(actor != null) {
+                    // find actor class behind receiver ActorRef
+                    ElasticActor actorInstance = actorSystem.getActorInstance(internalMessage.getReceiver(),
+                            actor.getActorClass());
+                    // execute on it's own thread
+                    actorExecutor.execute(new HandleMessageTask(actorSystem,
+                                                                actorInstance,
+                                                                internalMessage,
+                                                                actor,
+                                                                null,
+                                                                messageHandlerEventListener));
+                } else {
+                    //@todo: send a message undeliverable message
+                    // for now just ack it
+                    messageHandlerEventListener.onDone(internalMessage);
+                }
             } catch(Exception e) {
                 //@todo: let the sender know his message could not be delivered
                 // we ack the message anyway
@@ -127,18 +137,18 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
 
     private void createActor(CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         ActorRef ref = actorSystem.actorFor(createMessage.getActorId());
-        //@todo: fix this (need to solve ShardKey here
-        PersistentActor persistentActor =
-                new PersistentActor(null, actorSystem,actorSystem.getVersion(),
-                                    ref,
-                                    (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass()),
-                                    createMessage.getInitialState());
+        PersistentActor<NodeKey> persistentActor =
+                new PersistentActor<NodeKey>(nodeKey,
+                                             actorSystem,
+                                             actorSystem.getVersion(),
+                                             ref,
+                                             (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass()),
+                                             createMessage.getInitialState());
         actorCache.put(ref,persistentActor);
         // find actor class behind receiver ActorRef
         ElasticActor actorInstance = actorSystem.getActorInstance(ref,persistentActor.getActorClass());
         // call postCreate
-        actorExecutor.execute(new CreateActorTask(null,
-                                                  persistentActor,
+        actorExecutor.execute(new CreateActorTask(persistentActor,
                                                   actorSystem,
                                                   actorInstance,
                                                   ref,

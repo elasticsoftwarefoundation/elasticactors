@@ -46,7 +46,10 @@ public final class CreateActorMessageDeserializer implements MessageDeserializer
                                       protobufMessage.hasInitialState()
                                               ? deserializeState(protobufMessage.getActorSystem(),
                                                                  protobufMessage.getInitialState().toByteArray())
-                                              : null);
+                                              : null,
+                                      protobufMessage.hasType()
+                                              ? CreateActorMessage.ActorType.values()[protobufMessage.getType().getNumber()]
+                                              : CreateActorMessage.ActorType.PERSISTENT);
     }
 
     private ActorState deserializeState(String actorSystemName,byte[] serializedState) throws IOException {

@@ -35,6 +35,7 @@ import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -61,6 +62,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private MessageQueueFactory remoteMessageQueueFactory;
     private Scheduler scheduler;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
+    private final ConcurrentMap<String,ActorNode> activeNodes = new ConcurrentHashMap<String,ActorNode>();
 
     public LocalActorSystemInstance(ActorSystems cluster,ActorSystemConfiguration actorSystem, NodeSelectorFactory nodeSelectorFactory) {
         this.configuration = actorSystem;
@@ -188,6 +190,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
+    public ActorNode getNode(String nodeId) {
+        return activeNodes.get(nodeId);
+    }
+
+    @Override
     public ElasticActor getActorInstance(ActorRef actorRef,Class<? extends ElasticActor> actorClass) {
         // ensure the actor instance is created
         ElasticActor actorInstance = actorInstances.get(actorClass);
@@ -222,16 +229,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass) throws Exception {
-        return actorOf(actorId,actorClass,null,true);
+        return actorOf(actorId,actorClass,null);
     }
 
     @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception {
-        return actorOf(actorId,actorClass,initialState,true);
-    }
-
-    @Override
-    public <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState, boolean persistent) throws Exception {
         // determine shard
         ActorShard shard = shardFor(actorId);
         // send CreateActorMessage to shard
@@ -240,12 +242,18 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         shard.sendMessage(null,shard.getActorRef(),createActorMessage);
         // create actor ref
         // @todo: add cache to speed up performance
-        return new LocalClusterActorRef(cluster.getClusterName(),shard,actorId);
+        return new LocalClusterActorShardRef(cluster.getClusterName(),shard,actorId);
+    }
+
+    @Override
+    public <T> ActorRef tempActorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     private ActorShard shardFor(String actorId) {
         return shardAdapters[hashAlgorithm.hash(actorId).mod(BigInteger.valueOf(shards.length)).intValue()];
     }
+
 
     @Override
     public ActorRef actorFor(String actorId) {
@@ -253,7 +261,17 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         ActorShard shard = shardFor(actorId);
         // return actor ref
         // @todo: add cache to speed up performance
-        return new LocalClusterActorRef(cluster.getClusterName(),shard,actorId);
+        return new LocalClusterActorShardRef(cluster.getClusterName(),shard,actorId);
+    }
+
+    @Override
+    public ActorRef tempActorFor(String actorId) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public ActorRef serviceActorFor(String actorId) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
@@ -299,7 +317,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
         private ActorShardAdapter(ShardKey key) {
             this.key = key;
-            this.myRef = new LocalClusterActorRef(cluster.getClusterName(),this);
+            this.myRef = new LocalClusterActorShardRef(cluster.getClusterName(),this);
         }
 
         @Override

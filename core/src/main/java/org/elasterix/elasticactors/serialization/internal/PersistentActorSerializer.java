@@ -17,6 +17,7 @@
 package org.elasterix.elasticactors.serialization.internal;
 
 import com.google.protobuf.ByteString;
+import org.elasterix.elasticactors.ShardKey;
 import org.elasterix.elasticactors.cluster.InternalActorSystem;
 import org.elasterix.elasticactors.cluster.InternalActorSystems;
 import org.elasterix.elasticactors.serialization.Serializer;
@@ -29,7 +30,7 @@ import java.io.IOException;
 /**
  * @author Joost van de Wijgerd
  */
-public final class PersistentActorSerializer implements Serializer<PersistentActor,byte[]> {
+public final class PersistentActorSerializer implements Serializer<PersistentActor<ShardKey>,byte[]> {
     private static final PersistentActorSerializer INSTANCE = new PersistentActorSerializer();
     private InternalActorSystems actorSystems;
 
@@ -38,9 +39,9 @@ public final class PersistentActorSerializer implements Serializer<PersistentAct
     }
 
     @Override
-    public byte[] serialize(PersistentActor persistentActor) throws IOException {
+    public byte[] serialize(PersistentActor<ShardKey> persistentActor) throws IOException {
         Elasticactors.PersistentActor.Builder builder = Elasticactors.PersistentActor.newBuilder();
-        builder.setShardKey(persistentActor.getShardKey().toString());
+        builder.setShardKey(persistentActor.getKey().toString());
         builder.setActorSystemVersion(persistentActor.getPreviousActorSystemVersion());
         builder.setActorClass(persistentActor.getActorClass().getName());
         builder.setActorRef(persistentActor.getSelf().toString());
@@ -51,8 +52,8 @@ public final class PersistentActorSerializer implements Serializer<PersistentAct
         return builder.build().toByteArray();
     }
 
-    private byte[] getSerializedState(PersistentActor persistentActor) throws IOException {
-        InternalActorSystem actorSystem = actorSystems.get(persistentActor.getShardKey().getActorSystemName());
+    private byte[] getSerializedState(PersistentActor<ShardKey> persistentActor) throws IOException {
+        InternalActorSystem actorSystem = actorSystems.get(persistentActor.getKey().getActorSystemName());
         return actorSystem.getActorStateSerializer().serialize(persistentActor.getState());
     }
 
