@@ -23,6 +23,8 @@ import org.elasterix.elasticactors.ActorSystems;
  * @author Joost van de Wijgerd
  */
 public final class ActorRefTools {
+    private static final String EXCEPTION_FORMAT = "Invalid ActorRef, required spec: [actor://<cluster>/<actorSystem>/[shards|nodes|services]/<shardId>/<actorId (optional)>, actual spec: [%s]";
+
     private ActorRefTools() {}
 
     public static ActorRef parse(String refSpec, ActorSystems cluster) {
@@ -33,7 +35,7 @@ public final class ActorRefTools {
                 int nextIndex = refSpec.indexOf('/', actorSeparatorIndex+1);
                 if (nextIndex == -1) {
                     throw new IllegalArgumentException(
-                            String.format("Invalid ActorRef, required spec: [actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId (optional)>, actual spec: [%s]", refSpec));
+                            String.format(EXCEPTION_FORMAT, refSpec));
                 } else {
                     actorSeparatorIndex = nextIndex;
                 }
@@ -42,7 +44,7 @@ public final class ActorRefTools {
             String actorId = (nextIndex == -1) ? null : refSpec.substring(nextIndex+1);
             actorSeparatorIndex = (nextIndex == -1) ? actorSeparatorIndex : nextIndex;
             String[] components = (actorId == null) ? refSpec.substring(8).split("/") : refSpec.substring(8, actorSeparatorIndex).split("/");
-            if (components.length == 4) {
+
                 String clusterName = components[0];
                 if (!cluster.getClusterName().equals(clusterName)) {
                     throw new IllegalArgumentException(String.format("Cluster [%s] is not Local Cluster [%s]", cluster, clusterName));
@@ -60,18 +62,19 @@ public final class ActorRefTools {
                     return new LocalClusterActorShardRef(clusterName, actorSystem.getShard(String.format("%s/shards/%d",actorSystemName,shardId)), actorId);
                 } else if("nodes".equals(components[2])) {
                     return new LocalClusterActorNodeRef(clusterName,actorSystem.getNode(components[3]),actorId);
+                } else if("services".equals(components[2])) {
+                    return new ServiceActorRef(clusterName,actorSystem.getNode(),components[3]);
                 } else {
-                    throw new IllegalArgumentException(
-                            String.format("Invalid ActorRef, required spec: [actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId (optional)>, actual spec: [%s]", refSpec));
+                    throw new IllegalArgumentException(String.format(EXCEPTION_FORMAT, refSpec));
                 }
 
             } else {
-                throw new IllegalArgumentException(
-                        String.format("Invalid ActorRef, required spec: [actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId (optional)>, actual spec: [%s]", refSpec));
+                throw new IllegalArgumentException(String.format(EXCEPTION_FORMAT, refSpec));
             }
-        } else {
-            throw new IllegalArgumentException(
-                    String.format("Invalid ActorRef, required spec: [actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId (optional)>, actual spec: [%s]", refSpec));
-        }
+
+    }
+
+    public static boolean isService(ActorRef ref) {
+        return ref instanceof ServiceActorRef;
     }
 }

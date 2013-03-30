@@ -103,6 +103,11 @@ public final class PiApproximator implements ActorSystemConfiguration, ActorSyst
         return actorStateDeserializer;
     }
 
+    @Override
+    public ElasticActor getService(String serviceId) {
+        return null;
+    }
+
     // bootstrapper
 
 

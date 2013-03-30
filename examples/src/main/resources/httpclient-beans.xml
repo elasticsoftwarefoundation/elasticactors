@@ -1,0 +1,74 @@
+<!--
+  ~ Copyright 2013 Joost van de Wijgerd
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~       http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+	                       http://www.springframework.org/schema/context
+	                       http://www.springframework.org/schema/context/spring-context-3.2.xsd
+	                       http://www.springframework.org/schema/util
+	                       http://www.springframework.org/schema/util/spring-util-3.2.xsd">
+    <bean id="objectMapper" class="org.codehaus.jackson.map.ObjectMapper"/>
+
+    <bean id="actorStateSerializer" class="org.elasterix.elasticactors.examples.common.JacksonActorStateSerializer">
+        <constructor-arg ref="objectMapper"/>
+    </bean>
+
+    <bean id="actorStateDeserializer" class="org.elasterix.elasticactors.examples.common.JacksonActorStateDeserializer">
+        <constructor-arg ref="objectMapper"/>
+    </bean>
+
+    <util:map id="messageSerializers" key-type="java.lang.Class"
+                                      value-type="org.elasterix.elasticactors.serialization.MessageSerializer">
+        <entry key="org.elasterix.elasticactors.examples.httpclient.messages.HttpResponse">
+            <bean class="org.elasterix.elasticactors.examples.common.JacksonMessageSerializer">
+                <constructor-arg ref="objectMapper"/>
+            </bean>
+        </entry>
+        <entry key="org.elasterix.elasticactors.examples.httpclient.messages.HttpRequest">
+            <bean class="org.elasterix.elasticactors.examples.common.JacksonMessageSerializer">
+                <constructor-arg ref="objectMapper"/>
+            </bean>
+        </entry>
+    </util:map>
+
+    <util:map id="messageDeserializers" key-type="java.lang.Class"
+                                          value-type="org.elasterix.elasticactors.serialization.MessageDeserializer">
+        <entry key="org.elasterix.elasticactors.examples.httpclient.messages.HttpResponse">
+            <bean class="org.elasterix.elasticactors.examples.common.JacksonMessageDeserializer">
+                <constructor-arg value="org.elasterix.elasticactors.examples.httpclient.messages.HttpResponse"/>
+                <constructor-arg ref="objectMapper"/>
+            </bean>
+        </entry>
+        <entry key="org.elasterix.elasticactors.examples.httpclient.messages.HttpRequest">
+            <bean class="org.elasterix.elasticactors.examples.common.JacksonMessageDeserializer">
+                <constructor-arg value="org.elasterix.elasticactors.examples.httpclient.messages.HttpRequest"/>
+                <constructor-arg ref="objectMapper"/>
+            </bean>
+        </entry>
+    </util:map>
+
+    <bean id="asyncHttpClient" class="com.ning.http.client.AsyncHttpClient"/>
+
+    <bean id="httpClient" class="org.elasterix.elasticactors.examples.httpclient.actors.HttpClientService">
+        <constructor-arg ref="asyncHttpClient"/>
+    </bean>
+
+
+</beans>
+

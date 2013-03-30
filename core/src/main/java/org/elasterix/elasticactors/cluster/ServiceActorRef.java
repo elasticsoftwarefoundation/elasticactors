@@ -19,36 +19,31 @@ package org.elasterix.elasticactors.cluster;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.ActorNode;
 import org.elasterix.elasticactors.ActorRef;
-import org.elasterix.elasticactors.ActorShard;
 
 /**
  * {@link org.elasterix.elasticactors.ActorRef} that references an actor in the local cluster
  *
  * @author  Joost van de Wijgerd
  */
-public final class LocalClusterActorNodeRef implements ActorRef {
-    private static final Logger logger = Logger.getLogger(LocalClusterActorNodeRef.class);
+public final class ServiceActorRef implements ActorRef {
+    private static final Logger logger = Logger.getLogger(ServiceActorRef.class);
     private final String clusterName;
     private final ActorNode node;
-    private final String actorId;
+    private final String serviceId;
 
-    public LocalClusterActorNodeRef(String clusterName, ActorNode node, String actorId) {
+    public ServiceActorRef(String clusterName, ActorNode node, String serviceId) {
         this.clusterName = clusterName;
         this.node = node;
-        this.actorId = actorId;
-    }
-
-    public LocalClusterActorNodeRef(String clusterName, ActorNode node) {
-        this(clusterName, node, null);
+        this.serviceId = serviceId;
     }
 
     @Override
     public String getActorPath() {
-        return String.format("%s/nodes/%s",node.getKey().getActorSystemName(),node.getKey().getNodeId());
+        return String.format("%s/services",node.getKey().getActorSystemName());
     }
 
     public String getActorId() {
-        return actorId;
+        return serviceId;
     }
 
     @Override
@@ -66,9 +61,9 @@ public final class LocalClusterActorNodeRef implements ActorRef {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        LocalClusterActorNodeRef that = (LocalClusterActorNodeRef) o;
+        ServiceActorRef that = (ServiceActorRef) o;
 
-        if (actorId != null ? !actorId.equals(that.actorId) : that.actorId != null) return false;
+        if (serviceId != null ? !serviceId.equals(that.serviceId) : that.serviceId != null) return false;
         if (!clusterName.equals(that.clusterName)) return false;
         if (!node.equals(that.node)) return false;
 
@@ -79,20 +74,16 @@ public final class LocalClusterActorNodeRef implements ActorRef {
     public int hashCode() {
         int result = clusterName.hashCode();
         result = 31 * result + node.hashCode();
-        result = 31 * result + (actorId != null ? actorId.hashCode() : 0);
+        result = 31 * result + (serviceId != null ? serviceId.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
-        if(actorId != null) {
-            return String.format("actor://%s/%s/nodes/%s/%s",
-                                 clusterName,node.getKey().getActorSystemName(),
-                                 node.getKey().getNodeId(),actorId);
-        } else {
-            return String.format("actor://%s/%s/nodes/%s",
-                                 clusterName,node.getKey().getActorSystemName(),
-                                 node.getKey().getNodeId());
-        }
+        return String.format("actor://%s/%s/services/%s",
+                             clusterName,
+                             node.getKey().getActorSystemName(),
+                             serviceId);
+
     }
 }

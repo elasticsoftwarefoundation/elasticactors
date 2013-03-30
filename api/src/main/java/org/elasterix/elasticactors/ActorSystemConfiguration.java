@@ -54,4 +54,6 @@ public interface ActorSystemConfiguration {
      * @return the {@link org.elasterix.elasticactors.serialization.Deserializer} used to deserialize from a byte array to an {@link ActorState} instance
      */
     Deserializer<byte[], ActorState> getActorStateDeserializer();
+
+    ElasticActor getService(String serviceId);
 }

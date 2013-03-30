@@ -22,10 +22,43 @@ import org.elasterix.elasticactors.*;
  * @author Joost van de Wijgerd
  */
 public interface InternalActorSystem extends ActorSystem, ActorSystemConfiguration {
-
+    /**
+     * Return the singleton instance of an {@link ElasticActor}
+     *
+     * @param actorRef
+     * @param actorClass
+     * @return
+     */
     ElasticActor getActorInstance(ActorRef actorRef,Class<? extends ElasticActor> actorClass);
 
+    /**
+     * Return a service or null if the service was not found
+     *
+     * @param serviceRef
+     * @return
+     */
+    ElasticActor getServiceInstance(ActorRef serviceRef);
+
+    /**
+     * Return the {@link ActorShard} that belongs to the give path.
+     *
+     * @param actorPath
+     * @return
+     */
     ActorShard getShard(String actorPath);
 
+    /**
+     * Returns a {@link ActorNode} that can be either remote or local
+     *
+     * @param nodeId
+     * @return
+     */
     ActorNode getNode(String nodeId);
+
+    /**
+     * Returns the local {@link ActorNode}
+     *
+     * @return
+     */
+    ActorNode getNode();
 }

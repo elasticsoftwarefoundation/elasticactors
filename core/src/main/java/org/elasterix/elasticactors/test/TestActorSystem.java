@@ -72,14 +72,14 @@ public class TestActorSystem implements InternalActorSystems,ActorRefFactory {
             }
         };
         TestActorSystem testActorSystem = applicationContext.getBean(TestActorSystem.class);
-        ActorSystemConfiguration wrapper = (configuration instanceof ActorSystemBootstrapper) ?
-                                            new ActorSystemConfigurationAndBootstrapperWrapper(configuration,(ActorSystemBootstrapper)configuration)
-                                            : new ActorSystemConfigurationWrapper(configuration);
-        LocalActorSystemInstance actorSystemInstance = new LocalActorSystemInstance(testActorSystem,
-                                                                                    wrapper,
+        LocalActorSystemInstance actorSystemInstance = new LocalActorSystemInstance(localNode,
+                                                                                    testActorSystem,
+                                                                                    configuration,
                                                                                     factory);
         testActorSystem.setActorSystemInstance(actorSystemInstance);
-        actorSystemInstance.distributeShards(Arrays.asList(localNode));
+        List<PhysicalNode> nodeList = Arrays.asList(localNode);
+        actorSystemInstance.updateNodes(nodeList);
+        actorSystemInstance.distributeShards(nodeList);
 
         return actorSystemInstance;
     }
@@ -114,110 +114,5 @@ public class TestActorSystem implements InternalActorSystems,ActorRefFactory {
     @Override
     public ActorRefFactory getActorRefFactory() {
         return this;
-    }
-
-    private static final class ActorSystemConfigurationAndBootstrapperWrapper implements ActorSystemConfiguration,ActorSystemBootstrapper {
-        private final ActorSystemConfiguration configuration;
-        private final ActorSystemBootstrapper bootstrapper;
-
-        private ActorSystemConfigurationAndBootstrapperWrapper(ActorSystemConfiguration configuration, ActorSystemBootstrapper bootstrapper) {
-            this.configuration = configuration;
-            this.bootstrapper = bootstrapper;
-        }
-
-
-        @Override
-        public String getName() {
-            return configuration.getName();
-        }
-
-        @Override
-        public int getNumberOfShards() {
-            return 1;
-        }
-
-        @Override
-        public String getVersion() {
-            return configuration.getVersion();
-        }
-
-        @Override
-        public <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
-            return configuration.getSerializer(messageClass);
-        }
-
-        @Override
-        public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
-            return configuration.getDeserializer(messageClass);
-        }
-
-        @Override
-        public Serializer<ActorState, byte[]> getActorStateSerializer() {
-            return configuration.getActorStateSerializer();
-        }
-
-        @Override
-        public Deserializer<byte[], ActorState> getActorStateDeserializer() {
-            return configuration.getActorStateDeserializer();
-        }
-
-        @Override
-        public void initialize(ActorSystem actorSystem) throws Exception {
-            bootstrapper.initialize(actorSystem);
-        }
-
-        @Override
-        public void create(ActorSystem actorSystem, String... arguments) throws Exception {
-            bootstrapper.create(actorSystem,arguments);
-        }
-
-        @Override
-        public void activate(ActorSystem actorSystem) throws Exception {
-            bootstrapper.activate(actorSystem);
-        }
-    }
-
-    private static final class ActorSystemConfigurationWrapper implements ActorSystemConfiguration {
-        private final ActorSystemConfiguration configuration;
-
-        private ActorSystemConfigurationWrapper(ActorSystemConfiguration configuration) {
-            this.configuration = configuration;
-        }
-
-
-        @Override
-        public String getName() {
-            return configuration.getName();
-        }
-
-        @Override
-        public int getNumberOfShards() {
-            return 1;
-        }
-
-        @Override
-        public String getVersion() {
-            return configuration.getVersion();
-        }
-
-        @Override
-        public <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
-            return configuration.getSerializer(messageClass);
-        }
-
-        @Override
-        public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
-            return configuration.getDeserializer(messageClass);
-        }
-
-        @Override
-        public Serializer<ActorState, byte[]> getActorStateSerializer() {
-            return configuration.getActorStateSerializer();
-        }
-
-        @Override
-        public Deserializer<byte[], ActorState> getActorStateDeserializer() {
-            return configuration.getActorStateDeserializer();
-        }
     }
 }

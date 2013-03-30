@@ -63,8 +63,9 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private Scheduler scheduler;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private final ConcurrentMap<String,ActorNode> activeNodes = new ConcurrentHashMap<String,ActorNode>();
+    private final ActorNodeAdapter localNodeAdapter;
 
-    public LocalActorSystemInstance(ActorSystems cluster,ActorSystemConfiguration actorSystem, NodeSelectorFactory nodeSelectorFactory) {
+    public LocalActorSystemInstance(PhysicalNode localNode,ActorSystems cluster,ActorSystemConfiguration actorSystem, NodeSelectorFactory nodeSelectorFactory) {
         this.configuration = actorSystem;
         this.nodeSelectorFactory = nodeSelectorFactory;
         this.cluster = cluster;
@@ -75,11 +76,26 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
             shardLocks[i] = new ReentrantReadWriteLock();
             shardAdapters[i] = new ActorShardAdapter(new ShardKey(actorSystem.getName(),i));
         }
+        this.localNodeAdapter = new ActorNodeAdapter(new NodeKey(actorSystem.getName(),localNode.getId()));
     }
 
     @Override
     public ActorSystems getParent() {
         return cluster;
+    }
+
+    public void updateNodes(List<PhysicalNode> nodes) throws Exception {
+        // map the nodes
+        for (PhysicalNode node : nodes) {
+            if(node.isLocal() && !activeNodes.containsKey(node.getId())) {
+                LocalActorNode localActorNode = new LocalActorNode(node,
+                                                                   this,
+                                                                   localNodeAdapter.myRef,
+                                                                   localMessageQueueFactory);
+                activeNodes.put(node.getId(),localActorNode);
+                localActorNode.init();
+            }
+        }
     }
 
     /**
@@ -88,6 +104,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
      * @param nodes
      */
     public void distributeShards(List<PhysicalNode> nodes) throws Exception {
+
         NodeSelector nodeSelector = nodeSelectorFactory.create(nodes);
         for(int i = 0; i < configuration.getNumberOfShards(); i++) {
             ShardKey shardKey = new ShardKey(configuration.getName(),i);
@@ -148,6 +165,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         }
         // see if this was the first time, if so we need to initialize the ActorSystem
         if(initialized.compareAndSet(false,true)) {
+
             if(configuration instanceof ActorSystemBootstrapper) {
                 ActorSystemBootstrapper bootstrapper = (ActorSystemBootstrapper) configuration;
                 try {
@@ -195,6 +213,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
+    public ActorNode getNode() {
+        return this.localNodeAdapter;
+    }
+
+    @Override
     public ElasticActor getActorInstance(ActorRef actorRef,Class<? extends ElasticActor> actorClass) {
         // ensure the actor instance is created
         ElasticActor actorInstance = actorInstances.get(actorClass);
@@ -210,6 +233,14 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         } else {
             return actorInstance;
         }
+    }
+
+    @Override
+    public ElasticActor getServiceInstance(ActorRef serviceRef) {
+        if(ActorRefTools.isService(serviceRef)) {
+            return configuration.getService(serviceRef.getActorId());
+        }
+        return null;
     }
 
     @Override
@@ -247,7 +278,13 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     @Override
     public <T> ActorRef tempActorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        CreateActorMessage createActorMessage = new CreateActorMessage(getName(),
+                                                                       actorClass.getName(),
+                                                                       actorId,
+                                                                       initialState,
+                                                                       CreateActorMessage.ActorType.TEMP);
+        this.localNodeAdapter.sendMessage(null,localNodeAdapter.getActorRef(),createActorMessage);
+        return new LocalClusterActorNodeRef(cluster.getClusterName(),localNodeAdapter,actorId);
     }
 
     private ActorShard shardFor(String actorId) {
@@ -266,12 +303,12 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     @Override
     public ActorRef tempActorFor(String actorId) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return new LocalClusterActorNodeRef(cluster.getClusterName(),this.localNodeAdapter,actorId);
     }
 
     @Override
     public ActorRef serviceActorFor(String actorId) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return new ServiceActorRef(cluster.getClusterName(),this.localNodeAdapter,actorId);
     }
 
     @Override
@@ -294,6 +331,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     @Override
     public Deserializer<byte[], ActorState> getActorStateDeserializer() {
         return configuration.getActorStateDeserializer();
+    }
+
+    @Override
+    public ElasticActor getService(String serviceId) {
+        return configuration.getService(serviceId);
     }
 
     @Autowired
@@ -361,6 +403,47 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
             } finally {
                 readLock.unlock();
             }
+        }
+
+        @Override
+        public void init() throws Exception {
+            // should not be called on the adapter, just do nothing
+        }
+
+        @Override
+        public void destroy() {
+            // should not be called on the adapter, just do nothing
+        }
+    }
+
+    private final class ActorNodeAdapter implements ActorNode {
+        private final NodeKey key;
+        private final ActorRef myRef;
+
+        private ActorNodeAdapter(NodeKey key) {
+            this.key = key;
+            this.myRef = new LocalClusterActorNodeRef(cluster.getClusterName(),this);
+        }
+
+        @Override
+        public NodeKey getKey() {
+            return key;
+        }
+
+        @Override
+        public ActorRef getActorRef() {
+            return myRef;
+        }
+
+        @Override
+        public void sendMessage(ActorRef sender, ActorRef receiver, Object message) throws Exception {
+            // @todo: check if we need to lock here like with ActorShards
+            activeNodes.get(key.getNodeId()).sendMessage(sender,receiver,message);
+        }
+
+        @Override
+        public void offerInternalMessage(InternalMessage message) {
+            activeNodes.get(key.getNodeId()).offerInternalMessage(message);
         }
 
         @Override

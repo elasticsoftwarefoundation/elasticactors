@@ -113,13 +113,13 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
                     ActorSystemConfiguration configuration = constructor.newInstance(registeredActorSystem.getName(),
                                                                                      registeredActorSystem.getNrOfShards());
                     managedActorSystems.put(registeredActorSystem.getName(),
-                                            new LocalActorSystemInstance(this,configuration,nodeSelectorFactory));
+                                            new LocalActorSystemInstance(this.localNode,this,configuration,nodeSelectorFactory));
                 } else {
                     logger.warn(String.format("No matching constructor(String,int) found on configuration class [%s]",
                                               registeredActorSystem.getConfigurationClass()));
                     ActorSystemConfiguration configuration = configurationClass.newInstance();
                     managedActorSystems.put(configuration.getName(),
-                                            new LocalActorSystemInstance(this,configuration,nodeSelectorFactory));
+                                            new LocalActorSystemInstance(this.localNode,this,configuration,nodeSelectorFactory));
                 }
                 logger.info(String.format("Loaded ActorSystem [%s] with configuration class [%s]",
                                           registeredActorSystem.getName(),registeredActorSystem.getConfigurationClass()));
@@ -217,6 +217,12 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
 
         @Override
         public void run() {
+            logger.info(String.format("Updating %d nodes for ActorSystem[%s]",clusterNodes.size(),actorSystemInstance.getName()));
+            try {
+                actorSystemInstance.distributeShards(clusterNodes);
+            } catch (Exception e) {
+                logger.error(String.format("ActorSystem[%s] failed to update nodes",actorSystemInstance.getName()),e);
+            }
             logger.info(String.format("Rebalancing %d shards for ActorSystem[%s]",actorSystemInstance.getNumberOfShards(),actorSystemInstance.getName()));
             try {
                 actorSystemInstance.distributeShards(clusterNodes);

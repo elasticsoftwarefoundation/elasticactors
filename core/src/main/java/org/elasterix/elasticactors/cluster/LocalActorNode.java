@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.cluster.tasks.CreateActorTask;
 import org.elasterix.elasticactors.cluster.tasks.HandleMessageTask;
+import org.elasterix.elasticactors.cluster.tasks.HandleServiceMessageTask;
 import org.elasterix.elasticactors.messaging.InternalMessage;
 import org.elasterix.elasticactors.messaging.InternalMessageImpl;
 import org.elasterix.elasticactors.messaging.MessageHandlerEventListener;
@@ -98,9 +99,19 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                                                                 null,
                                                                 messageHandlerEventListener));
                 } else {
-                    //@todo: send a message undeliverable message
-                    // for now just ack it
-                    messageHandlerEventListener.onDone(internalMessage);
+                    // see if it is a service
+                    ElasticActor serviceInstance = actorSystem.getServiceInstance(internalMessage.getReceiver());
+                    if(serviceInstance != null) {
+                        actorExecutor.execute(new HandleServiceMessageTask(actorSystem,
+                                                                           internalMessage.getReceiver(),
+                                                                           serviceInstance,
+                                                                           internalMessage,
+                                                                           messageHandlerEventListener));
+                    } else {
+                        //@todo: send a message undeliverable message
+                        // for now just ack it
+                        messageHandlerEventListener.onDone(internalMessage);
+                    }
                 }
             } catch(Exception e) {
                 //@todo: let the sender know his message could not be delivered
@@ -136,14 +147,14 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     }
 
     private void createActor(CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
-        ActorRef ref = actorSystem.actorFor(createMessage.getActorId());
+        ActorRef ref = actorSystem.tempActorFor(createMessage.getActorId());
         PersistentActor<NodeKey> persistentActor =
                 new PersistentActor<NodeKey>(nodeKey,
-                                             actorSystem,
-                                             actorSystem.getVersion(),
-                                             ref,
-                                             (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass()),
-                                             createMessage.getInitialState());
+                                       actorSystem,
+                                       actorSystem.getVersion(),
+                                       ref,
+                                       (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass()),
+                                       createMessage.getInitialState());
         actorCache.put(ref,persistentActor);
         // find actor class behind receiver ActorRef
         ElasticActor actorInstance = actorSystem.getActorInstance(ref,persistentActor.getActorClass());
