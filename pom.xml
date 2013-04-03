@@ -143,6 +143,8 @@
         <module>api</module>
         <module>examples</module>
         <module>runtime</module>
+        <module>http</module>
+        <module>base</module>
     </modules>
 
     <build>

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.examples.common;
+package org.elasticsoftwarefoundation.elasticactors.base.serialization;
 
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonProcessingException;

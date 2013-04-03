@@ -21,7 +21,6 @@ import org.codehaus.jackson.Version;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.module.SimpleModule;
 import org.elasterix.elasticactors.*;
-import org.elasterix.elasticactors.examples.common.*;
 import org.elasterix.elasticactors.examples.pi.actors.Listener;
 import org.elasterix.elasticactors.examples.pi.actors.Master;
 import org.elasterix.elasticactors.examples.pi.messages.Calculate;
@@ -32,6 +31,8 @@ import org.elasterix.elasticactors.serialization.Deserializer;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.serialization.Serializer;
+import org.elasticsoftwarefoundation.elasticactors.base.state.JacksonActorState;
+import org.elasticsoftwarefoundation.elasticactors.base.serialization.*;
 
 import java.util.HashMap;
 import java.util.Map;

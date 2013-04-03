@@ -25,23 +25,23 @@
 	                       http://www.springframework.org/schema/util/spring-util-3.2.xsd">
     <bean id="objectMapper" class="org.codehaus.jackson.map.ObjectMapper"/>
 
-    <bean id="actorStateSerializer" class="org.elasterix.elasticactors.examples.common.JacksonActorStateSerializer">
+    <bean id="actorStateSerializer" class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonActorStateSerializer">
         <constructor-arg ref="objectMapper"/>
     </bean>
 
-    <bean id="actorStateDeserializer" class="org.elasterix.elasticactors.examples.common.JacksonActorStateDeserializer">
+    <bean id="actorStateDeserializer" class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonActorStateDeserializer">
         <constructor-arg ref="objectMapper"/>
     </bean>
 
     <util:map id="messageSerializers" key-type="java.lang.Class"
                                       value-type="org.elasterix.elasticactors.serialization.MessageSerializer">
         <entry key="org.elasterix.elasticactors.examples.httpclient.messages.HttpResponse">
-            <bean class="org.elasterix.elasticactors.examples.common.JacksonMessageSerializer">
+            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageSerializer">
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
         <entry key="org.elasterix.elasticactors.examples.httpclient.messages.HttpRequest">
-            <bean class="org.elasterix.elasticactors.examples.common.JacksonMessageSerializer">
+            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageSerializer">
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
@@ -50,20 +50,29 @@
     <util:map id="messageDeserializers" key-type="java.lang.Class"
                                           value-type="org.elasterix.elasticactors.serialization.MessageDeserializer">
         <entry key="org.elasterix.elasticactors.examples.httpclient.messages.HttpResponse">
-            <bean class="org.elasterix.elasticactors.examples.common.JacksonMessageDeserializer">
+            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
                 <constructor-arg value="org.elasterix.elasticactors.examples.httpclient.messages.HttpResponse"/>
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
         <entry key="org.elasterix.elasticactors.examples.httpclient.messages.HttpRequest">
-            <bean class="org.elasterix.elasticactors.examples.common.JacksonMessageDeserializer">
+            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
                 <constructor-arg value="org.elasterix.elasticactors.examples.httpclient.messages.HttpRequest"/>
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
     </util:map>
 
-    <bean id="asyncHttpClient" class="com.ning.http.client.AsyncHttpClient"/>
+    <bean id="asyncHttpClientConfigBuilder" class="com.ning.http.client.AsyncHttpClientConfig$Builder">
+        <property name="compressionEnabled" value="true"/>
+        <property name="followRedirects" value="true"/>
+    </bean>
+
+    <bean id="asyncHttpClient" class="com.ning.http.client.AsyncHttpClient">
+        <constructor-arg>
+            <bean factory-bean="asyncHttpClientConfigBuilder" factory-method="build"/>
+        </constructor-arg>
+    </bean>
 
     <bean id="httpClient" class="org.elasterix.elasticactors.examples.httpclient.actors.HttpClientService">
         <constructor-arg ref="asyncHttpClient"/>

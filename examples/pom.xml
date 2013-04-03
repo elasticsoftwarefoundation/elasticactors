@@ -25,6 +25,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+                    <groupId>org.elasterix.elasticactors</groupId>
+                    <artifactId>elasticactors-base</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+        <dependency>
                 <groupId>org.elasterix.elasticactors</groupId>
                 <artifactId>elasticactors-core</artifactId>
                 <version>${project.version}</version>

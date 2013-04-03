@@ -14,26 +14,32 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.examples.common;
+package org.elasticsoftwarefoundation.elasticactors.base.serialization;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.elasterix.elasticactors.ActorState;
-import org.elasterix.elasticactors.serialization.Serializer;
+import org.codehaus.jackson.type.TypeReference;
+import org.elasterix.elasticactors.serialization.MessageDeserializer;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
- * @author Joost van de Wijgerd
+ *
  */
-public final class JacksonActorStateSerializer implements Serializer<ActorState, byte[]> {
+public final class JacksonMessageDeserializer<T> implements MessageDeserializer<T> {
+    //private final TypeReference<T> typeReference = new TypeReference<T>() {};
     private final ObjectMapper objectMapper;
+    private final Class<T> objectClass;
 
-    public JacksonActorStateSerializer(ObjectMapper objectMapper) {
+    public JacksonMessageDeserializer(Class<T> objectClass,ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+        this.objectClass = objectClass;
     }
 
     @Override
-    public byte[] serialize(ActorState object) throws IOException {
-        return objectMapper.writeValueAsBytes(object.getAsMap());
+    public T deserialize(ByteBuffer serializedObject) throws IOException {
+        byte[] buf = new byte[serializedObject.remaining()];
+        serializedObject.get(buf);
+        return objectMapper.readValue(buf, objectClass);
     }
 }

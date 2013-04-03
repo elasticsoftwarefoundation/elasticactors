@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.examples.common;
+package org.elasticsoftwarefoundation.elasticactors.base.serialization;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.type.MapType;
 import org.codehaus.jackson.map.type.SimpleType;
 import org.elasterix.elasticactors.ActorState;
 import org.elasterix.elasticactors.serialization.Deserializer;
+import org.elasticsoftwarefoundation.elasticactors.base.state.JacksonActorState;
 
 import java.io.IOException;
 import java.util.HashMap;

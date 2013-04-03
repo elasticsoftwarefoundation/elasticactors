@@ -41,7 +41,7 @@ public interface ActorSystem {
 
     <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception;
 
-    <T> ActorRef tempActorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception;
+    <T> ActorRef tempActorOf(Class<T> actorClass, ActorState initialState) throws Exception;
 
     ActorRef actorFor(String actorId);
 

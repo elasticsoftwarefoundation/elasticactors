@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.examples.common;
+package org.elasticsoftwarefoundation.elasticactors.base.state;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.elasterix.elasticactors.ActorState;
+import org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonActorStateDeserializer;
 
 import java.util.Map;
 
@@ -45,7 +46,7 @@ public final class JacksonActorState implements ActorState {
     @Override
     public Map<String, Object> getAsMap() {
         if(stateObject != null) {
-            return objectMapper.convertValue(stateObject,JacksonActorStateDeserializer.MAP_TYPE);
+            return objectMapper.convertValue(stateObject, JacksonActorStateDeserializer.MAP_TYPE);
         }
         return stateMap;
     }

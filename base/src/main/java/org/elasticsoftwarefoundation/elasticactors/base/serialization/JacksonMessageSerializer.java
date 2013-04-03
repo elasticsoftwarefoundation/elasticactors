@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.examples.common;
+package org.elasticsoftwarefoundation.elasticactors.base.serialization;
 
+import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
-import org.elasterix.elasticactors.serialization.MessageDeserializer;
+import org.elasterix.elasticactors.serialization.MessageSerializer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -26,20 +26,15 @@ import java.nio.ByteBuffer;
 /**
  *
  */
-public final class JacksonMessageDeserializer<T> implements MessageDeserializer<T> {
-    //private final TypeReference<T> typeReference = new TypeReference<T>() {};
+public final class JacksonMessageSerializer<T> implements MessageSerializer<T> {
     private final ObjectMapper objectMapper;
-    private final Class<T> objectClass;
 
-    public JacksonMessageDeserializer(Class<T> objectClass,ObjectMapper objectMapper) {
+    public JacksonMessageSerializer(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-        this.objectClass = objectClass;
     }
 
     @Override
-    public T deserialize(ByteBuffer serializedObject) throws IOException {
-        byte[] buf = new byte[serializedObject.remaining()];
-        serializedObject.get(buf);
-        return objectMapper.readValue(buf, objectClass);
+    public ByteBuffer serialize(T object) throws IOException {
+        return ByteBuffer.wrap(objectMapper.writeValueAsBytes(object));
     }
 }

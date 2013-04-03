@@ -14,22 +14,17 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.examples.common;
+package org.elasticsoftwarefoundation.elasticactors.http.actors;
 
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.JsonProcessingException;
-import org.codehaus.jackson.map.JsonSerializer;
-import org.codehaus.jackson.map.SerializerProvider;
 import org.elasterix.elasticactors.ActorRef;
-
-import java.io.IOException;
+import org.elasterix.elasticactors.UntypedActor;
 
 /**
- *
+ * @author Joost van de Wijgerd
  */
-public final class JacksonActorRefSerializer extends JsonSerializer<ActorRef> {
+public class HttpService extends UntypedActor {
     @Override
-    public void serialize(ActorRef value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
-        jgen.writeString(value.toString());
+    public void onReceive(Object message, ActorRef sender) throws Exception {
+
     }
 }

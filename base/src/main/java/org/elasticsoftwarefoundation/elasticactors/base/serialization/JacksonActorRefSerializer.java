@@ -14,27 +14,22 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.examples.common;
+package org.elasticsoftwarefoundation.elasticactors.base.serialization;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.elasterix.elasticactors.serialization.MessageSerializer;
+import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.JsonProcessingException;
+import org.codehaus.jackson.map.JsonSerializer;
+import org.codehaus.jackson.map.SerializerProvider;
+import org.elasterix.elasticactors.ActorRef;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 /**
  *
  */
-public final class JacksonMessageSerializer<T> implements MessageSerializer<T> {
-    private final ObjectMapper objectMapper;
-
-    public JacksonMessageSerializer(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
-
+public final class JacksonActorRefSerializer extends JsonSerializer<ActorRef> {
     @Override
-    public ByteBuffer serialize(T object) throws IOException {
-        return ByteBuffer.wrap(objectMapper.writeValueAsBytes(object));
+    public void serialize(ActorRef value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+        jgen.writeString(value.toString());
     }
 }

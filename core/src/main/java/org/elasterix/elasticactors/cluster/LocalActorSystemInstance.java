@@ -36,6 +36,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -277,7 +278,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
-    public <T> ActorRef tempActorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception {
+    public <T> ActorRef tempActorOf(Class<T> actorClass, ActorState initialState) throws Exception {
+        String actorId = UUID.randomUUID().toString();
         CreateActorMessage createActorMessage = new CreateActorMessage(getName(),
                                                                        actorClass.getName(),
                                                                        actorId,

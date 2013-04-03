@@ -41,7 +41,7 @@ public class HttpClientActorSystemTest {
     public void testInContainer() throws Exception {
         ActorSystem httpClientSystem = TestActorSystem.create(new HttpClientActorSystem());
         ActorRef httpClientRef = httpClientSystem.serviceActorFor("httpClient");
-        ActorRef listenerRef = httpClientSystem.tempActorOf(UUID.randomUUID().toString(), HttpResponseListener.class, null);
+        ActorRef listenerRef = httpClientSystem.tempActorOf(HttpResponseListener.class, null);
         httpClientRef.tell(new HttpRequest("http://www.google.com/"),listenerRef);
         Thread.sleep(7500);
     }
