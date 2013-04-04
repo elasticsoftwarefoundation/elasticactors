@@ -20,13 +20,9 @@ import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.DeserializationContext;
-import org.codehaus.jackson.map.JsonDeserializer;
 import org.codehaus.jackson.map.deser.std.StdScalarDeserializer;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.cluster.ActorRefFactory;
-import org.elasterix.elasticactors.serialization.Deserializer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
 
 import java.io.IOException;
 

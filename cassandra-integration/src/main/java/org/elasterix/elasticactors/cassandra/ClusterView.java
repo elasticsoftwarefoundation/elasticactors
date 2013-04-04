@@ -20,7 +20,6 @@ import org.apache.cassandra.service.IEndpointLifecycleSubscriber;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.net.InetAddress;
 import java.util.HashMap;

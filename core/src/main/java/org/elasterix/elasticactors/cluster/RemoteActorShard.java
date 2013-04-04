@@ -16,8 +16,14 @@
 
 package org.elasterix.elasticactors.cluster;
 
-import org.elasterix.elasticactors.*;
-import org.elasterix.elasticactors.messaging.*;
+import org.elasterix.elasticactors.ActorRef;
+import org.elasterix.elasticactors.ActorShard;
+import org.elasterix.elasticactors.PhysicalNode;
+import org.elasterix.elasticactors.ShardKey;
+import org.elasterix.elasticactors.messaging.InternalMessage;
+import org.elasterix.elasticactors.messaging.InternalMessageImpl;
+import org.elasterix.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasterix.elasticactors.messaging.MessageQueueFactory;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.springframework.beans.factory.annotation.Configurable;
 

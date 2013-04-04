@@ -16,7 +16,6 @@
 
 package org.elasterix.elasticactors.serialization.internal;
 
-import me.prettyprint.cassandra.serializers.SerializerTypeInferer;
 import me.prettyprint.hector.api.Serializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 

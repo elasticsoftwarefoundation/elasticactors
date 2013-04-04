@@ -16,7 +16,6 @@
 
 package org.elasterix.elasticactors.messaging;
 
-import com.google.protobuf.MessageLite;
 import org.elasterix.elasticactors.PhysicalNode;
 
 /**

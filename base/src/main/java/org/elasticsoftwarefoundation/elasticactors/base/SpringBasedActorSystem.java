@@ -29,7 +29,6 @@ import org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonAct
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import java.util.Arrays;
 import java.util.Map;
 
 /**

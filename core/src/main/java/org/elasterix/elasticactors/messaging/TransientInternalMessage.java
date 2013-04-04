@@ -18,7 +18,6 @@ package org.elasterix.elasticactors.messaging;
 
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
-import org.elasterix.elasticactors.serialization.internal.InternalMessageSerializer;
 
 import java.io.IOException;
 import java.io.Serializable;

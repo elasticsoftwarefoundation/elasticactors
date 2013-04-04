@@ -17,7 +17,6 @@
 package org.elasterix.elasticactors.cluster;
 
 import org.elasterix.elasticactors.PhysicalNode;
-import org.elasterix.elasticactors.ShardKey;
 
 import java.util.List;
 

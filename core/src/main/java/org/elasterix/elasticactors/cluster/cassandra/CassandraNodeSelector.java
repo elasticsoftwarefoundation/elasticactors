@@ -20,11 +20,9 @@ import com.google.common.base.Charsets;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.PhysicalNode;
-import org.elasterix.elasticactors.ShardKey;
 import org.elasterix.elasticactors.cluster.NodeSelector;
 
 import java.math.BigInteger;
-import java.net.InetAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;

@@ -18,7 +18,6 @@ package org.elasterix.elasticactors.serialization.internal;
 
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.serialization.Serializer;
-import org.springframework.beans.factory.annotation.Configurable;
 
 /**
  * @author Joost van de Wijgerd

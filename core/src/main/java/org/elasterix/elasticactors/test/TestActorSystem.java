@@ -16,13 +16,15 @@
 
 package org.elasterix.elasticactors.test;
 
-import org.elasterix.elasticactors.*;
+import org.elasterix.elasticactors.ActorRef;
+import org.elasterix.elasticactors.ActorSystem;
+import org.elasterix.elasticactors.ActorSystemConfiguration;
+import org.elasterix.elasticactors.PhysicalNode;
 import org.elasterix.elasticactors.cluster.*;
-import org.elasterix.elasticactors.serialization.Deserializer;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
-import org.elasterix.elasticactors.serialization.Serializer;
-import org.elasterix.elasticactors.serialization.internal.*;
+import org.elasterix.elasticactors.serialization.internal.SystemDeserializers;
+import org.elasterix.elasticactors.serialization.internal.SystemSerializers;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;

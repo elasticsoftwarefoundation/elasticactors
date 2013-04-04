@@ -16,7 +16,6 @@
 
 package org.elasticsoftwarefoundation.elasticactors.base.serialization;
 
-import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 

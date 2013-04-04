@@ -17,7 +17,6 @@
 package org.elasterix.elasticactors.cassandra;
 
 import java.net.InetAddress;
-import java.util.List;
 import java.util.Map;
 
 /**

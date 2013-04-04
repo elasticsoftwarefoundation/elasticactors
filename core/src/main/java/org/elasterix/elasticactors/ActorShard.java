@@ -16,8 +16,6 @@
 
 package org.elasterix.elasticactors;
 
-import org.elasterix.elasticactors.messaging.InternalMessage;
-
 /**
  * @author Joost van de Wijgerd
  */

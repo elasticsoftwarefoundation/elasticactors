@@ -16,9 +16,6 @@
 
 package org.elasterix.elasticactors.messaging;
 
-import com.google.protobuf.ByteString;
-import org.elasterix.elasticactors.serialization.protobuf.Elasticactors;
-
 /**
  * @author Joost van de Wijgerd
  */

@@ -25,8 +25,6 @@ import org.elasterix.elasticactors.test.TestActorSystem;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.UUID;
-
 /**
  * @author Joost van de Wijgerd
  */

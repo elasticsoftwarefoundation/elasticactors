@@ -17,11 +17,9 @@
 package org.elasticsoftwarefoundation.elasticactors.http;
 
 import org.apache.log4j.BasicConfigurator;
-import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ActorSystem;
 import org.elasterix.elasticactors.test.TestActorSystem;
 import org.elasticsoftwarefoundation.elasticactors.http.actors.User;
-import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 

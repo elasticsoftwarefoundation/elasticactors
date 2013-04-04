@@ -28,7 +28,10 @@ import org.elasterix.elasticactors.examples.pi.messages.PiApproximation;
 import org.elasterix.elasticactors.examples.pi.messages.Result;
 import org.elasterix.elasticactors.examples.pi.messages.Work;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Joost van de Wijgerd

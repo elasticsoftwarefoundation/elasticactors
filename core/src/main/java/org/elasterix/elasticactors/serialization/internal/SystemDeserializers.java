@@ -17,7 +17,6 @@
 package org.elasterix.elasticactors.serialization.internal;
 
 import me.prettyprint.cassandra.serializers.StringSerializer;
-import org.elasterix.elasticactors.ActorSystems;
 import org.elasterix.elasticactors.cluster.InternalActorSystems;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;

@@ -18,8 +18,6 @@ package org.elasterix.elasticactors.messaging.journal;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
-import org.elasterix.elasticactors.cluster.RegisteredActorSystem;
-import org.elasterix.elasticactors.cluster.cassandra.CassandraActorSystemRepository;
 import org.elasterix.elasticactors.messaging.CommitLog;
 import org.elasterix.elasticactors.messaging.UUIDTools;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +29,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 /**

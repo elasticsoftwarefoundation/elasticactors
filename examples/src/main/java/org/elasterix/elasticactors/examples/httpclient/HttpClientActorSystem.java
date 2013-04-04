@@ -20,11 +20,12 @@ import org.codehaus.jackson.Version;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.module.SimpleModule;
 import org.elasterix.elasticactors.*;
-import org.elasticsoftwarefoundation.elasticactors.base.serialization.*;
 import org.elasterix.elasticactors.serialization.Deserializer;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.serialization.Serializer;
+import org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonActorRefDeserializer;
+import org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonActorRefSerializer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 

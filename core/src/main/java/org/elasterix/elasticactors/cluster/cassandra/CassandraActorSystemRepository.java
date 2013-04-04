@@ -18,11 +18,11 @@ package org.elasterix.elasticactors.cluster.cassandra;
 
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.service.KeyIterator;
-import me.prettyprint.cassandra.service.template.*;
+import me.prettyprint.cassandra.service.template.ColumnFamilyResult;
+import me.prettyprint.cassandra.service.template.ColumnFamilyRowMapper;
+import me.prettyprint.cassandra.service.template.ColumnFamilyTemplate;
+import me.prettyprint.cassandra.service.template.MappedColumnFamilyResult;
 import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.factory.HFactory;
-import me.prettyprint.hector.api.query.QueryResult;
-import me.prettyprint.hector.api.query.RangeSlicesQuery;
 import org.elasterix.elasticactors.cluster.ActorSystemRepository;
 import org.elasterix.elasticactors.cluster.RegisteredActorSystem;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -17,11 +17,8 @@
 package org.elasterix.elasticactors.messaging.netty;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.MessageLite;
 import org.apache.log4j.Logger;
-import org.elasterix.elasticactors.ActorSystems;
 import org.elasterix.elasticactors.PhysicalNode;
-import org.elasterix.elasticactors.ShardKey;
 import org.elasterix.elasticactors.cluster.InternalActorSystem;
 import org.elasterix.elasticactors.cluster.InternalActorSystems;
 import org.elasterix.elasticactors.messaging.*;

@@ -18,7 +18,6 @@ package org.elasterix.elasticactors.cluster.tasks;
 
 import org.elasterix.elasticactors.ActorContext;
 import org.elasterix.elasticactors.ActorContextHolder;
-import org.elasterix.elasticactors.ActorState;
 
 /**
  * @author Joost van de Wijgerd

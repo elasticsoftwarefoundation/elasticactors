@@ -21,7 +21,6 @@ import org.elasterix.elasticactors.PhysicalNode;
 import org.elasterix.elasticactors.cluster.NodeSelector;
 import org.elasterix.elasticactors.cluster.NodeSelectorFactory;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 
 /**

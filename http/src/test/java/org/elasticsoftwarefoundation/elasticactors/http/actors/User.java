@@ -18,7 +18,6 @@ package org.elasticsoftwarefoundation.elasticactors.http.actors;
 
 import com.google.common.base.Charsets;
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.annotate.JsonCreator;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.TypedActor;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest;
@@ -35,7 +34,7 @@ public final class User extends TypedActor<HttpRequest> {
     public void postActivate(String previousVersion) throws Exception {
         // register ourselves with the http server
         ActorRef httpServer = getSystem().getParent().get("Http").serviceActorFor("httpServer");
-        httpServer.tell(new RegisterRouteMessage(String.format("/%s",getSelf().getActorId()),getSelf()),getSelf());
+        httpServer.tell(new RegisterRouteMessage(String.format("/%s", getSelf().getActorId()),getSelf()),getSelf());
     }
 
     @Override

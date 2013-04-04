@@ -17,7 +17,6 @@
 package org.elasticsoftwarefoundation.elasticactors.base.serialization;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 
 import java.io.IOException;

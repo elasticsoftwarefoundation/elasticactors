@@ -16,11 +16,7 @@
 
 package org.elasterix.elasticactors.messaging;
 
-import com.google.protobuf.ByteString;
 import org.apache.log4j.Logger;
-import org.elasterix.elasticactors.serialization.internal.ActorRefSerializer;
-import org.elasterix.elasticactors.serialization.internal.InternalMessageSerializer;
-import org.elasterix.elasticactors.serialization.protobuf.Elasticactors.InternalMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 

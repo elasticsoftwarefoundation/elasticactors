@@ -25,21 +25,16 @@ import org.elasticsoftwarefoundation.elasticactors.http.actors.HttpService;
 import org.elasticsoftwarefoundation.elasticactors.http.actors.HttpServiceResponseHandler;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest;
 import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.ServerSocketChannelFactory;
 import org.jboss.netty.handler.codec.http.*;
-import org.jboss.netty.handler.stream.ChunkedWriteHandler;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import static org.jboss.netty.channel.Channels.*;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import static org.jboss.netty.channel.Channels.pipeline;
 
 /**
  * @author Joost van de Wijgerd

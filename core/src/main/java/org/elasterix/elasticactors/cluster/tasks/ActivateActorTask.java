@@ -21,7 +21,6 @@ import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ElasticActor;
 import org.elasterix.elasticactors.cluster.InternalActorSystem;
 import org.elasterix.elasticactors.messaging.InternalMessage;
-import org.elasterix.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasterix.elasticactors.state.PersistentActor;
 import org.elasterix.elasticactors.state.PersistentActorRepository;
 

@@ -16,8 +16,6 @@
 
 package org.elasterix.elasticactors.serialization;
 
-import org.codehaus.jackson.JsonGenerationException;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 

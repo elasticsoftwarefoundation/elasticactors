@@ -19,7 +19,6 @@ package org.elasterix.elasticactors.cluster;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.ActorNode;
 import org.elasterix.elasticactors.ActorRef;
-import org.elasterix.elasticactors.ActorShard;
 
 /**
  * {@link org.elasterix.elasticactors.ActorRef} that references an actor in the local cluster

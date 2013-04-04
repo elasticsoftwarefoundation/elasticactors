@@ -16,15 +16,9 @@
 
 package org.elasticsoftwarefoundation.elasticactors.http;
 
-import org.codehaus.jackson.Version;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.module.SimpleModule;
-import org.elasterix.elasticactors.*;
+import org.elasterix.elasticactors.ActorSystem;
 import org.elasticsoftwarefoundation.elasticactors.base.SpringBasedActorSystem;
-import org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonActorRefDeserializer;
-import org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonActorRefSerializer;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
  * @author Joost van de Wijgerd

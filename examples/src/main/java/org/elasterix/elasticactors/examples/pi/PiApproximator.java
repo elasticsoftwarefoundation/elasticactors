@@ -31,8 +31,8 @@ import org.elasterix.elasticactors.serialization.Deserializer;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.serialization.Serializer;
-import org.elasticsoftwarefoundation.elasticactors.base.state.JacksonActorState;
 import org.elasticsoftwarefoundation.elasticactors.base.serialization.*;
+import org.elasticsoftwarefoundation.elasticactors.base.state.JacksonActorState;
 
 import java.util.HashMap;
 import java.util.Map;
