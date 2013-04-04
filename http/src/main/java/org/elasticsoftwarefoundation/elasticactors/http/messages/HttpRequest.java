@@ -14,32 +14,24 @@
  * limitations under the License.
  */
 
-package org.elasterix.elasticactors.messaging;
+package org.elasticsoftwarefoundation.elasticactors.http.messages;
 
-import org.elasterix.elasticactors.ActorRef;
-import org.elasterix.elasticactors.serialization.MessageDeserializer;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.UUID;
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface InternalMessage {
-    UUID getId();
+public final class HttpRequest {
+    private final String url;
 
-    ActorRef getSender();
+    @JsonCreator
+    public HttpRequest(@JsonProperty("url") String url) {
+        this.url = url;
+    }
 
-    ActorRef getReceiver();
-
-    ByteBuffer getPayload();
-
-    String getPayloadClass();
-
-    boolean isDurable();
-
-    byte[] toByteArray();
-
-    <T> T getPayload(MessageDeserializer<T> deserializer) throws IOException;
+    @JsonProperty("url")
+    public String getUrl() {
+        return url;
+    }
 }

@@ -23,10 +23,7 @@ import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.cluster.tasks.CreateActorTask;
 import org.elasterix.elasticactors.cluster.tasks.HandleMessageTask;
 import org.elasterix.elasticactors.cluster.tasks.HandleServiceMessageTask;
-import org.elasterix.elasticactors.messaging.InternalMessage;
-import org.elasterix.elasticactors.messaging.InternalMessageImpl;
-import org.elasterix.elasticactors.messaging.MessageHandlerEventListener;
-import org.elasterix.elasticactors.messaging.MessageQueueFactory;
+import org.elasterix.elasticactors.messaging.*;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.state.PersistentActor;
@@ -71,12 +68,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     }
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
-        MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-        messageQueue.offer(new InternalMessageImpl(from,
-                                                   to,
-                                                   messageSerializer.serialize(message),
-                                                   message.getClass().getName(),
-                                                   false));
+        messageQueue.offer(new TransientInternalMessage(from,to,message));
     }
 
     @Override

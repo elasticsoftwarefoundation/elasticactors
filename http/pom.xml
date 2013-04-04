@@ -30,6 +30,10 @@
     <name>Elastic Software Foundation :: ElasticActors :: HTTP</name>
     <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
+    <properties>
+        <async-http-client.version>1.7.12</async-http-client.version>
+    </properties>
+
     <dependencies>
         <dependency>
                     <groupId>org.elasterix.elasticactors</groupId>
@@ -46,6 +50,19 @@
             <artifactId>netty</artifactId>
             <version>${netty.version}</version>
         </dependency>
+        <dependency>
+                  <groupId>com.ning</groupId>
+                  <artifactId>async-http-client</artifactId>
+                  <version>${async-http-client.version}</version>
+                </dependency>
+        <dependency>
+                        <groupId>org.elasterix.elasticactors</groupId>
+                        <artifactId>elasticactors-core</artifactId>
+                        <version>${project.version}</version>
+                        <scope>test</scope>
+                    </dependency>
+
+
     </dependencies>
 
 </project>

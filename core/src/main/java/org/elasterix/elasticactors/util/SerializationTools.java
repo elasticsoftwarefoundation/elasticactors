@@ -27,7 +27,7 @@ public final class SerializationTools {
     public static Object deserializeMessage(InternalActorSystem actorSystem,InternalMessage internalMessage) throws Exception {
         MessageDeserializer deserializer = actorSystem.getDeserializer(Class.forName(internalMessage.getPayloadClass()));
         if(deserializer != null) {
-            return deserializer.deserialize(internalMessage.getPayload());
+            return internalMessage.getPayload(deserializer);
         } else {
             //@todo: throw a more targeted exception
             throw new Exception(String.format("No Deserializer found for Message class %s in ActorSystem [%s]",

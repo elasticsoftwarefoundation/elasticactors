@@ -16,14 +16,19 @@
 
 package org.elasticsoftwarefoundation.elasticactors.http;
 
+import org.apache.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.elasterix.elasticactors.ActorRef;
+import org.elasterix.elasticactors.ActorSystem;
+import org.elasticsoftwarefoundation.elasticactors.base.state.JacksonActorState;
+import org.elasticsoftwarefoundation.elasticactors.http.actors.HttpService;
+import org.elasticsoftwarefoundation.elasticactors.http.actors.HttpServiceResponseHandler;
+import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest;
 import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.ServerSocketChannelFactory;
-import org.jboss.netty.handler.codec.http.HttpChunkAggregator;
-import org.jboss.netty.handler.codec.http.HttpRequestDecoder;
-import org.jboss.netty.handler.codec.http.HttpResponseEncoder;
+import org.jboss.netty.handler.codec.http.*;
 import org.jboss.netty.handler.stream.ChunkedWriteHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -32,12 +37,19 @@ import static org.jboss.netty.channel.Channels.*;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Joost van de Wijgerd
  */
 public class HttpServer extends SimpleChannelUpstreamHandler implements ChannelPipelineFactory {
+    private static final Logger logger = Logger.getLogger(HttpServer.class);
     private ServerSocketChannelFactory channelFactory;
+    private ActorSystem actorSystem;
+    private HttpService httpService;
+    private ObjectMapper objectMapper;
 
     @PostConstruct
     public void init() {
@@ -66,12 +78,49 @@ public class HttpServer extends SimpleChannelUpstreamHandler implements ChannelP
       pipeline.addLast("encoder", new HttpResponseEncoder());
       //pipeline.addLast("chunkedWriter", new ChunkedWriteHandler());
 
-      //pipeline.addLast("handler", new HttpStaticFileServerHandler());
+      pipeline.addLast("handler", this);
       return pipeline;
+    }
+
+    @Override
+    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+        org.jboss.netty.handler.codec.http.HttpRequest nettyRequest = (org.jboss.netty.handler.codec.http.HttpRequest) e.getMessage();
+        // convert request to our internal request
+        HttpRequest request = new HttpRequest(nettyRequest.getUri());
+        // create a temp actor to handle the response
+        ActorRef replyActor = actorSystem.tempActorOf(HttpServiceResponseHandler.class,
+                                                      new JacksonActorState(objectMapper,
+                                                                            new HttpServiceResponseHandler.State(ctx.getChannel())));
+        // async handling
+        if(!httpService.doDispatch(request,replyActor)) {
+            // send 404
+            ctx.getChannel().write(new DefaultHttpResponse(HttpVersion.HTTP_1_1,HttpResponseStatus.NOT_FOUND)).addListener(ChannelFutureListener.CLOSE);
+            // @todo: remove temp actor
+        }
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
+        logger.error("Exception caught",e.getCause());
+        ctx.getChannel().write(new DefaultHttpResponse(HttpVersion.HTTP_1_1,HttpResponseStatus.INTERNAL_SERVER_ERROR)).addListener(ChannelFutureListener.CLOSE);
     }
 
     @Autowired
     public void setChannelFactory(ServerSocketChannelFactory channelFactory) {
         this.channelFactory = channelFactory;
+    }
+
+    public void setActorSystem(ActorSystem actorSystem) {
+        this.actorSystem = actorSystem;
+    }
+
+    @Autowired
+    public void setHttpService(HttpService httpService) {
+        this.httpService = httpService;
+    }
+
+    @Autowired
+    public void setObjectMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 }

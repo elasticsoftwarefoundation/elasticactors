@@ -24,11 +24,15 @@ import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.serialization.Serializer;
 import org.elasterix.elasticactors.serialization.internal.*;
 import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Joost van de Wijgerd
@@ -37,18 +41,25 @@ import java.util.List;
 public class TestActorSystem implements InternalActorSystems,ActorRefFactory {
     private final SystemSerializers systemSerializers = new SystemSerializers(this);
     private final SystemDeserializers systemDeserializers = new SystemDeserializers(this);
-    private LocalActorSystemInstance actorSystemInstance;
+    private final ConcurrentMap<String,LocalActorSystemInstance> actorSystemInstances = new ConcurrentHashMap<String,LocalActorSystemInstance>();
+    private static final AtomicReference<ApplicationContext> applicationContextHolder = new AtomicReference<ApplicationContext>(null);
 
     private TestActorSystem() {
 
     }
 
-    private void setActorSystemInstance(LocalActorSystemInstance actorSystemInstance) {
-        this.actorSystemInstance = actorSystemInstance;
+    private void addActorSystemInstance(LocalActorSystemInstance instance) {
+        actorSystemInstances.putIfAbsent(instance.getName(),instance);
     }
 
     public static ActorSystem create(ActorSystemConfiguration configuration) throws Exception {
-        ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("local-beans.xml");
+        ApplicationContext applicationContext = applicationContextHolder.get();
+        if(applicationContext == null) {
+            applicationContext = new ClassPathXmlApplicationContext("local-beans.xml");
+            if(!applicationContextHolder.compareAndSet(null,applicationContext)) {
+                applicationContext = applicationContextHolder.get();
+            }
+        }
         final PhysicalNode localNode = new PhysicalNodeImpl("localnode",InetAddress.getLocalHost(),true);
         NodeSelectorFactory factory = new NodeSelectorFactory() {
             @Override
@@ -76,7 +87,7 @@ public class TestActorSystem implements InternalActorSystems,ActorRefFactory {
                                                                                     testActorSystem,
                                                                                     configuration,
                                                                                     factory);
-        testActorSystem.setActorSystemInstance(actorSystemInstance);
+        testActorSystem.addActorSystemInstance(actorSystemInstance);
         List<PhysicalNode> nodeList = Arrays.asList(localNode);
         actorSystemInstance.updateNodes(nodeList);
         actorSystemInstance.distributeShards(nodeList);
@@ -98,7 +109,7 @@ public class TestActorSystem implements InternalActorSystems,ActorRefFactory {
 
     @Override
     public InternalActorSystem get(String actorSystemName) {
-        return actorSystemInstance;
+        return actorSystemInstances.get(actorSystemName);
     }
 
     @Override

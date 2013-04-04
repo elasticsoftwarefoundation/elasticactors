@@ -28,34 +28,17 @@ import java.util.UUID;
 /**
  * @author Joost van de Wijgerd
  */
-public final class InternalMessageImpl implements InternalMessage,Serializable {
+public final class TransientInternalMessage implements InternalMessage,Serializable {
     private final ActorRef sender;
     private final ActorRef receiver;
     private final UUID id;
-    private final ByteBuffer payload;
-    private final String payloadClass;
-    private final boolean durable;
-    private transient byte[] serializedForm;
+    private final Object payload;
 
-    public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass);
-    }
-
-    public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass,boolean durable) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass,durable);
-    }
-
-    public InternalMessageImpl(UUID id, ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass) {
-        this(id,sender,receiver,payload,payloadClass,true);
-    }
-
-    public InternalMessageImpl(UUID id,ActorRef sender, ActorRef receiver,ByteBuffer payload, String payloadClass, boolean durable) {
+    public TransientInternalMessage(ActorRef sender, ActorRef receiver, Object payload) {
         this.sender = sender;
         this.receiver = receiver;
-        this.id = id;
+        this.id = UUIDTools.createTimeBasedUUID();
         this.payload = payload;
-        this.payloadClass = payloadClass;
-        this.durable = durable;
     }
 
     public ActorRef getSender() {
@@ -71,29 +54,26 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
     }
 
     public ByteBuffer getPayload() {
-        return payload;
+        throw new UnsupportedOperationException(String.format("This implementation is intended to be used local only, for remote use [%s]",InternalMessageImpl.class.getSimpleName()));
     }
 
     @Override
     public <T> T getPayload(MessageDeserializer<T> deserializer) throws IOException {
-        return deserializer.deserialize(payload);
+        return (T) payload;
     }
 
     @Override
     public String getPayloadClass() {
-        return payloadClass;
+        return payload.getClass().getName();
     }
 
     @Override
     public boolean isDurable() {
-        return durable;
+        return false;
     }
 
     @Override
     public byte[] toByteArray() {
-        if(serializedForm == null) {
-            serializedForm = InternalMessageSerializer.get().serialize(this);
-        }
-        return serializedForm;
+        throw new UnsupportedOperationException(String.format("This implementation is intended to be used local only, for remote use [%s]",InternalMessageImpl.class.getSimpleName()));
     }
 }

@@ -62,6 +62,7 @@ public final class CreateActorTask extends ActorLifecycleTask {
         try {
             // @todo: somehow figure out the creator
             receiver.postCreate(null);
+            receiver.postActivate(null);
         } catch (Exception e) {
             logger.error("Exception calling postCreate",e);
         }
