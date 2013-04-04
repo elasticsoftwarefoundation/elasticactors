@@ -227,7 +227,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                 ElasticActor existingInstance = actorInstances.putIfAbsent(actorClass, actorInstance);
                 return existingInstance == null ? actorInstance : existingInstance;
             } catch(Exception e) {
-                //@todo: throw a proper exception here
+                log.error("Exception creating actor instance",e);
                 return null;
             }
         } else {

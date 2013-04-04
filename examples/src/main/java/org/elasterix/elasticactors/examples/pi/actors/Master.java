@@ -182,7 +182,7 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
             if (calculation.nrOfResults == state.nrOfMessages) {
                 // Send the result to the listener
                 long duration = System.currentTimeMillis() - calculation.start;
-                state.listener.tell(new PiApproximation(calculation.pi, duration), getSelf());
+                state.listener.tell(new PiApproximation(result.getCalculationId(), calculation.pi, duration), getSelf());
                 // remove calculation
                 state.getCalculations().remove(result.getCalculationId());
                 // Stops this actor and all its supervised children

@@ -16,6 +16,9 @@
 
 package org.elasterix.elasticactors.examples.pi;
 
+import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.ListenableFuture;
+import com.ning.http.client.Response;
 import org.apache.log4j.BasicConfigurator;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ActorState;
@@ -33,13 +36,16 @@ import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.serialization.Serializer;
 import org.elasterix.elasticactors.test.TestActorSystem;
+import org.elasticsoftwarefoundation.elasticactors.http.HttpActorSystem;
 import org.mockito.ArgumentCaptor;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.UUID;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -98,7 +104,7 @@ public class PiApproximatorTest {
         // PiApproximation
         MessageSerializer<PiApproximation> piApproximationMessageSerializer = piApproximator.getSerializer(PiApproximation.class);
         assertNotNull(piApproximationMessageSerializer);
-        serializedForm = piApproximationMessageSerializer.serialize(new PiApproximation(3.14827683d,19283827262l));
+        serializedForm = piApproximationMessageSerializer.serialize(new PiApproximation(UUID.randomUUID().toString(), 3.14827683d,19283827262l));
         MessageDeserializer<PiApproximation> piApproximationMessageDeserializer = piApproximator.getDeserializer(PiApproximation.class);
         assertNotNull(piApproximationMessageDeserializer);
         PiApproximation piApproximation = piApproximationMessageDeserializer.deserialize(serializedForm);
@@ -120,7 +126,7 @@ public class PiApproximatorTest {
 
         when(actorSystem.getParent()).thenReturn(parent);
         when(parent.getActorRefFactory()).thenReturn(actorRefFactory);
-        when(actorSystem.actorOf("listener", Listener.class)).thenReturn(listenerRef);
+        when(actorSystem.actorOf(eq("pi/calculate"), eq(Listener.class), any(ActorState.class))).thenReturn(listenerRef);
         when(actorSystem.actorOf(eq("master"),eq(Master.class),stateArgumentCaptor.capture())).thenReturn(masterRef);
 
         when(listenerRef.toString()).thenReturn("listenerRef");
@@ -154,10 +160,14 @@ public class PiApproximatorTest {
 
     @Test
     public void testInContainer() throws Exception {
+        // make sure http system is loaded
+        TestActorSystem.create(new HttpActorSystem());
         ActorSystem piSystem = TestActorSystem.create(new PiApproximator("Pi",8));
-        ActorRef actorRef = piSystem.actorFor("master");
-        //actorRef.tell(new Calculate(),null);
-        // wait
-        Thread.sleep(7500);
+
+        AsyncHttpClient httpClient = new AsyncHttpClient();
+        ListenableFuture<Response> responseFuture = httpClient.prepareGet("http://localhost:8080/pi/calculate").execute();
+        Response response = responseFuture.get();
+        assertEquals(response.getContentType(),"application/json");
+        System.out.println(response.getResponseBody("UTF-8"));
     }
 }

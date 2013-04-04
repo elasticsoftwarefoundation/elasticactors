@@ -33,6 +33,8 @@ import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.serialization.Serializer;
 import org.elasticsoftwarefoundation.elasticactors.base.serialization.*;
 import org.elasticsoftwarefoundation.elasticactors.base.state.JacksonActorState;
+import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest;
+import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpResponse;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -54,6 +56,8 @@ public final class PiApproximator implements ActorSystemConfiguration, ActorSyst
         put(PiApproximation.class, new JacksonMessageSerializer<PiApproximation>(objectMapper));
         put(Result.class, new JacksonMessageSerializer<Result>(objectMapper));
         put(Work.class, new JacksonMessageSerializer<Work>(objectMapper));
+        put(HttpResponse.class,new JacksonMessageSerializer<HttpResponse>(objectMapper));
+        put(HttpRequest.class,new JacksonMessageSerializer<HttpRequest>(objectMapper));
     }};
 
     private final Map<Class<?>, MessageDeserializer<?>> messageDeserializers = new HashMap<Class<?>, MessageDeserializer<?>>() {{
@@ -61,6 +65,8 @@ public final class PiApproximator implements ActorSystemConfiguration, ActorSyst
         put(PiApproximation.class, new JacksonMessageDeserializer<PiApproximation>(PiApproximation.class,objectMapper));
         put(Result.class, new JacksonMessageDeserializer<Result>(Result.class,objectMapper));
         put(Work.class, new JacksonMessageDeserializer<Work>(Work.class,objectMapper));
+        put(HttpRequest.class, new JacksonMessageDeserializer<HttpRequest>(HttpRequest.class,objectMapper));
+        put(HttpResponse.class, new JacksonMessageDeserializer<HttpResponse>(HttpResponse.class,objectMapper));
     }};
 
     public PiApproximator(String name, int numberOfShards) {
@@ -127,7 +133,9 @@ public final class PiApproximator implements ActorSystemConfiguration, ActorSyst
         // @todo: make configurable by arguments
 
         // create listener
-        ActorRef listener = actorSystem.actorOf("listener",Listener.class);
+        ActorRef listener = actorSystem.actorOf("pi/calculate",
+                                                Listener.class,
+                                                new JacksonActorState(objectMapper,new Listener.State()));
         // create master
         Master.State masterState = new Master.State(listener,4,10000,10000);
         ActorRef master = actorSystem.actorOf("master",Master.class,new JacksonActorState(objectMapper,masterState));
@@ -140,11 +148,6 @@ public final class PiApproximator implements ActorSystemConfiguration, ActorSyst
 
     @Override
     public void activate(ActorSystem actorSystem) {
-        ActorRef listener = actorSystem.actorFor("listener");
-        ActorRef master = actorSystem.actorFor("master");
 
-        // tell the master to start calculating
-        logger.info("Starting to calculate Pi");
-        master.tell(new Calculate(),listener);
     }
 }

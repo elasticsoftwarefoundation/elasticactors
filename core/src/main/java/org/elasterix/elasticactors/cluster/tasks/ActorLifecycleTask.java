@@ -69,7 +69,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         try {
             doInActorContext(actorSystem, receiver, receiverRef, internalMessage);
         } catch (Exception e) {
-            // @todo: top level handler
+            log.error("Exception in doInActorContext",e);
             executionException = e;
         } finally {
             // clear the state from the thread

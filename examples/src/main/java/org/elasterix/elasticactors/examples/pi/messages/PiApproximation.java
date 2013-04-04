@@ -25,11 +25,20 @@ import org.codehaus.jackson.annotate.JsonProperty;
 public final class PiApproximation {
     private final double pi;
     private final long duration;
+    private final String calculationId;
 
     @JsonCreator
-    public PiApproximation(@JsonProperty("pi") double pi, @JsonProperty("duration") long duration) {
+    public PiApproximation(@JsonProperty("calculationId") String calculationId,
+                           @JsonProperty("pi") double pi,
+                           @JsonProperty("duration") long duration) {
+        this.calculationId = calculationId;
         this.pi = pi;
         this.duration = duration;
+    }
+
+    @JsonProperty("calculationId")
+    public String getCalculationId() {
+        return calculationId;
     }
 
     @JsonProperty("pi")

@@ -25,20 +25,25 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-                    <groupId>org.elasterix.elasticactors</groupId>
-                    <artifactId>elasticactors-base</artifactId>
-                    <version>${project.version}</version>
-                </dependency>
+            <groupId>org.elasterix.elasticactors</groupId>
+            <artifactId>elasticactors-base</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
-                <groupId>org.elasterix.elasticactors</groupId>
-                <artifactId>elasticactors-core</artifactId>
-                <version>${project.version}</version>
-                <scope>provided</scope>
-            </dependency>
+            <groupId>org.elasterix.elasticactors</groupId>
+            <artifactId>elasticactors-http</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
-          <groupId>com.ning</groupId>
-          <artifactId>async-http-client</artifactId>
-          <version>1.7.12</version>
+            <groupId>org.elasterix.elasticactors</groupId>
+            <artifactId>elasticactors-core</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ning</groupId>
+            <artifactId>async-http-client</artifactId>
+            <version>1.7.12</version>
         </dependency>
     </dependencies>
 </project>
