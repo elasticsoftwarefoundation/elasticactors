@@ -31,7 +31,7 @@ import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 /**
  * @author Joost van de Wijgerd
  */
-public class HttpServiceResponseHandler extends TypedActor<HttpResponse> {
+public final class HttpServiceResponseHandler extends TypedActor<HttpResponse> {
     public static final class State {
         private transient final Channel responseChannel;
 
@@ -50,7 +50,7 @@ public class HttpServiceResponseHandler extends TypedActor<HttpResponse> {
         // convert back to netty http response
         org.jboss.netty.handler.codec.http.HttpResponse nettyResponse = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(message.getStatusCode()));
         HttpHeaders.setHeader(nettyResponse,HttpHeaders.Names.CONTENT_TYPE,message.getContentType());
-        nettyResponse.setContent(ChannelBuffers.wrappedBuffer(message.getResponseBody()));
+        nettyResponse.setContent(ChannelBuffers.wrappedBuffer(message.getContent()));
         // we don't support keep alive as of yet
         state.getResponseChannel().write(nettyResponse).addListener(ChannelFutureListener.CLOSE);
         // need to remove myself

@@ -25,6 +25,9 @@ import org.elasterix.elasticactors.TypedActor;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpResponse;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -53,8 +56,11 @@ public final class HttpClientService extends TypedActor<HttpRequest> {
 
         @Override
         public Integer onCompleted(Response response) throws Exception {
+            // get the headers
+
+            Map<String,List<String>> headers = response.getHeaders();
             replyAddress.tell(new HttpResponse(response.getStatusCode(),
-                                               response.getContentType(),
+                                               headers,
                                                response.getResponseBodyAsBytes()),serviceAddress);
             return response.getStatusCode();
         }

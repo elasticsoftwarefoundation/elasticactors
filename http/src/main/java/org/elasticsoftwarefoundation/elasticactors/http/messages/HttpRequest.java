@@ -19,14 +19,29 @@ package org.elasticsoftwarefoundation.elasticactors.http.messages;
 import org.codehaus.jackson.annotate.JsonCreator;
 import org.codehaus.jackson.annotate.JsonProperty;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 /**
  * @author Joost van de Wijgerd
  */
-public final class HttpRequest {
+public final class HttpRequest extends HttpMessage {
     private final String url;
 
+    public HttpRequest(String url) {
+        this(url, Collections.<String,List<String>>emptyMap(),null);
+    }
+
+    public HttpRequest(String url,Map<String,List<String>> headers) {
+        this(url,headers,null);
+    }
+
     @JsonCreator
-    public HttpRequest(@JsonProperty("url") String url) {
+    public HttpRequest(@JsonProperty("url") String url,
+                       @JsonProperty("headers") Map<String,List<String>> headers,
+                       @JsonProperty("content") byte[] content) {
+        super(headers,content);
         this.url = url;
     }
 

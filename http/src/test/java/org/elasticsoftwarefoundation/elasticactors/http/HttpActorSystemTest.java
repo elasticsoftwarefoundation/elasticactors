@@ -16,12 +16,18 @@
 
 package org.elasticsoftwarefoundation.elasticactors.http;
 
+import com.google.common.base.Charsets;
+import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.ListenableFuture;
+import com.ning.http.client.Response;
 import org.apache.log4j.BasicConfigurator;
 import org.elasterix.elasticactors.ActorSystem;
 import org.elasterix.elasticactors.test.TestActorSystem;
 import org.elasticsoftwarefoundation.elasticactors.http.actors.User;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertEquals;
 
 /**
  * @author Joost van de Wijgerd
@@ -33,7 +39,7 @@ public class HttpActorSystemTest {
         BasicConfigurator.configure();
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void testInContainer() throws Exception {
         ActorSystem httpSystem = TestActorSystem.create(new HttpActorSystem());
         ActorSystem testSystem = TestActorSystem.create(new HttpTestActorSystem());
@@ -43,7 +49,17 @@ public class HttpActorSystemTest {
         testSystem.actorOf("users/2",User.class);
         testSystem.actorOf("users/3",User.class);
 
-        // @todo: use
-        Thread.sleep(600000L);
+        AsyncHttpClient testClient = new AsyncHttpClient();
+        for (int i = 1; i < 4; i++) {
+            ListenableFuture<Response> responseFuture = testClient.prepareGet(String.format("http://localhost:8080/users/%d",i)).execute();
+            Response response = responseFuture.get();
+
+            assertEquals(response.getContentType(),"text/plain");
+            assertEquals(response.getResponseBody("UTF-8"),"HelloWorld");
+
+        }
+
+
+
     }
 }

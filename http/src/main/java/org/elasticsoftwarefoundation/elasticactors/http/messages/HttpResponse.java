@@ -17,23 +17,25 @@
 package org.elasticsoftwarefoundation.elasticactors.http.messages;
 
 import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.jboss.netty.handler.codec.http.HttpHeaders;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class HttpResponse {
+public final class HttpResponse extends HttpMessage {
     private final int statusCode;
-    private final String contentType;
-    private final byte[] responseBody;
 
     @JsonCreator
     public HttpResponse(@JsonProperty("statusCode") int statusCode,
-                        @JsonProperty("contentType") String contentType,
-                        @JsonProperty("responseBody") byte[] responseBody) {
+                        @JsonProperty("headers") Map<String,List<String>> headers,
+                        @JsonProperty("content") byte[] content) {
+        super(headers, content);
         this.statusCode = statusCode;
-        this.contentType = contentType;
-        this.responseBody = responseBody;
     }
 
     @JsonProperty("statusCode")
@@ -41,13 +43,4 @@ public final class HttpResponse {
         return statusCode;
     }
 
-    @JsonProperty("contentType")
-    public String getContentType() {
-        return contentType;
-    }
-
-    @JsonProperty("responseBody")
-    public byte[] getResponseBody() {
-        return responseBody;
-    }
 }

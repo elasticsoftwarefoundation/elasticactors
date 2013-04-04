@@ -23,6 +23,12 @@ import org.elasterix.elasticactors.TypedActor;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpResponse;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.RegisterRouteMessage;
+import org.jboss.netty.handler.codec.http.HttpHeaders;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Joost van de Wijgerd
@@ -41,6 +47,8 @@ public final class User extends TypedActor<HttpRequest> {
     public void onReceive(HttpRequest message, ActorRef sender) throws Exception {
         logger.info("Got request");
         // send something back
-        sender.tell(new HttpResponse(200,"text/plain","HelloWorld".getBytes(Charsets.UTF_8)),getSelf());
+        Map<String,List<String>> headers = new HashMap<String,List<String>>();
+        headers.put(HttpHeaders.Names.CONTENT_TYPE, Arrays.asList("text/plain"));
+        sender.tell(new HttpResponse(200, headers, "HelloWorld".getBytes(Charsets.UTF_8)), getSelf());
     }
 }

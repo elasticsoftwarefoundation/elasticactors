@@ -25,6 +25,7 @@ import org.elasticsoftwarefoundation.elasticactors.http.actors.HttpService;
 import org.elasticsoftwarefoundation.elasticactors.http.actors.HttpServiceResponseHandler;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest;
 import org.jboss.netty.bootstrap.ServerBootstrap;
+import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.ServerSocketChannelFactory;
 import org.jboss.netty.handler.codec.http.*;
@@ -33,6 +34,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.jboss.netty.channel.Channels.pipeline;
 
@@ -81,7 +85,20 @@ public class HttpServer extends SimpleChannelUpstreamHandler implements ChannelP
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
         org.jboss.netty.handler.codec.http.HttpRequest nettyRequest = (org.jboss.netty.handler.codec.http.HttpRequest) e.getMessage();
         // convert request to our internal request
-        HttpRequest request = new HttpRequest(nettyRequest.getUri());
+        Map<String,List<String>> headers = new HashMap<String,List<String>>();
+        for (String headerName : nettyRequest.getHeaderNames()) {
+            headers.put(headerName,nettyRequest.getHeaders(headerName));
+        }
+        // see if we have a body
+        byte[] content = null;
+        if(nettyRequest.getContent().hasArray() && nettyRequest.getContent().array().length > 0) {
+            content = nettyRequest.getContent().array();
+        } else if(nettyRequest.getContent().readableBytes() > 0) {
+            // netty content not backed by array, need to copy
+            content = new byte[nettyRequest.getContent().readableBytes()];
+            nettyRequest.getContent().readBytes(content);
+        }
+        HttpRequest request = new HttpRequest(nettyRequest.getUri(),headers,content);
         // create a temp actor to handle the response
         ActorRef replyActor = actorSystem.tempActorOf(HttpServiceResponseHandler.class,
                                                       new JacksonActorState(objectMapper,
