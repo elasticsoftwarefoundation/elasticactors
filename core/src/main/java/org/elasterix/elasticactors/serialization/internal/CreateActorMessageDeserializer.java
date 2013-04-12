@@ -20,6 +20,7 @@ import com.google.protobuf.ByteString;
 import org.elasterix.elasticactors.ActorState;
 import org.elasterix.elasticactors.cluster.InternalActorSystem;
 import org.elasterix.elasticactors.cluster.InternalActorSystems;
+import org.elasterix.elasticactors.messaging.internal.ActorType;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.protobuf.Elasticactors;
@@ -48,8 +49,8 @@ public final class CreateActorMessageDeserializer implements MessageDeserializer
                                                                  protobufMessage.getInitialState().toByteArray())
                                               : null,
                                       protobufMessage.hasType()
-                                              ? CreateActorMessage.ActorType.values()[protobufMessage.getType().getNumber()]
-                                              : CreateActorMessage.ActorType.PERSISTENT);
+                                              ? ActorType.values()[protobufMessage.getType().getNumber()]
+                                              : ActorType.PERSISTENT);
     }
 
     private ActorState deserializeState(String actorSystemName,byte[] serializedState) throws IOException {

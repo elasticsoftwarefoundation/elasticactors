@@ -45,12 +45,12 @@ public interface ActorSystem {
 
     ActorRef actorFor(String actorId);
 
-    ActorRef tempActorFor(String actorId);
-
     ActorRef serviceActorFor(String actorId);
 
     Scheduler getScheduler();
 
     ActorSystems getParent();
+
+    void stop(ActorRef actorRef) throws Exception;
 
 }

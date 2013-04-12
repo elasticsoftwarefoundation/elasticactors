@@ -30,12 +30,6 @@ public final class CreateActorMessage implements Serializable {
     private final ActorState initialState;
     private final ActorType type;
 
-    public enum ActorType {
-        PERSISTENT,
-        TEMP,
-        SERVICE
-    }
-
     public CreateActorMessage(String actorSystem, String actorClass, String actorId, ActorState initialState) {
         this(actorSystem,actorClass,actorId,initialState,ActorType.PERSISTENT);
     }

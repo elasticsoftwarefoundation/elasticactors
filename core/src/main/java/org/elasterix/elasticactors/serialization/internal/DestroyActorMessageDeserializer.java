@@ -16,29 +16,31 @@
 
 package org.elasterix.elasticactors.serialization.internal;
 
-import me.prettyprint.cassandra.serializers.StringSerializer;
+import com.google.protobuf.ByteString;
+import org.elasterix.elasticactors.ActorState;
+import org.elasterix.elasticactors.cluster.InternalActorSystem;
 import org.elasterix.elasticactors.cluster.InternalActorSystems;
+import org.elasterix.elasticactors.messaging.internal.ActorType;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasterix.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
+import org.elasterix.elasticactors.serialization.protobuf.Elasticactors;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class SystemDeserializers {
-    private final Map<Class,MessageDeserializer> systemDeserializers = new HashMap<Class,MessageDeserializer>();
+public final class DestroyActorMessageDeserializer implements MessageDeserializer<DestroyActorMessage> {
 
-    public SystemDeserializers(InternalActorSystems cluster) {
-        systemDeserializers.put(CreateActorMessage.class,new CreateActorMessageDeserializer(cluster));
-        systemDeserializers.put(DestroyActorMessage.class,new DestroyActorMessageDeserializer());
-        systemDeserializers.put(String.class,new HectorMessageDeserializer<String>(StringSerializer.get()));
-        //@todo: add more deserializers here
+    public DestroyActorMessageDeserializer() {
     }
 
-    public <T> MessageDeserializer<T> get(Class<T> messageClass) {
-        return systemDeserializers.get(messageClass);
+    @Override
+    public DestroyActorMessage deserialize(ByteBuffer serializedObject) throws IOException {
+        Elasticactors.DestroyActorMessage protobufMessage = Elasticactors.DestroyActorMessage.parseFrom(ByteString.copyFrom(serializedObject));
+        return new DestroyActorMessage(ActorRefDeserializer.get().deserialize(protobufMessage.getActorRef()));
     }
+
 }

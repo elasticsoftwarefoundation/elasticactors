@@ -41,6 +41,10 @@ message CreateActorMessage {
     optional ActorType type = 5;
 }
 
+message DestroyActorMessage {
+    optional string actorRef = 1;
+}
+
 message WireMessage {
     optional string queueName = 1;
     optional bytes internalMessage = 2;

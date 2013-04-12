@@ -28,6 +28,7 @@ import org.elasterix.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasterix.elasticactors.messaging.MessageQueueFactory;
 import org.elasterix.elasticactors.messaging.TransientInternalMessage;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
+import org.elasterix.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasterix.elasticactors.state.PersistentActor;
 import org.elasterix.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -126,6 +127,12 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                         // ack message anyway
                         messageHandlerEventListener.onDone(internalMessage);
                     }
+                } else if(message instanceof DestroyActorMessage) {
+                    DestroyActorMessage destroyActorMessage = (DestroyActorMessage) message;
+                    // remove from cache
+                    this.actorCache.invalidate(destroyActorMessage.getActorRef());
+                    // ack message
+                    messageHandlerEventListener.onDone(internalMessage);
                 }
             } catch(Exception e) {
                 // @todo: determine if this is a recoverable error case or just a programming error

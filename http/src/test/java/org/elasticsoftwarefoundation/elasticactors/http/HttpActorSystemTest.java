@@ -21,6 +21,7 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.ListenableFuture;
 import com.ning.http.client.Response;
 import org.apache.log4j.BasicConfigurator;
+import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ActorSystem;
 import org.elasterix.elasticactors.test.TestActorSystem;
 import org.elasticsoftwarefoundation.elasticactors.http.actors.User;
@@ -45,9 +46,9 @@ public class HttpActorSystemTest {
         ActorSystem testSystem = TestActorSystem.create(new HttpTestActorSystem());
 
         // create a couple of users
-        testSystem.actorOf("users/1",User.class);
-        testSystem.actorOf("users/2",User.class);
-        testSystem.actorOf("users/3",User.class);
+        ActorRef user1Ref = testSystem.actorOf("users/1", User.class);
+        ActorRef user2Ref = testSystem.actorOf("users/2",User.class);
+        ActorRef user3Ref = testSystem.actorOf("users/3",User.class);
 
         AsyncHttpClient testClient = new AsyncHttpClient();
         for (int i = 1; i < 4; i++) {
@@ -59,6 +60,12 @@ public class HttpActorSystemTest {
 
         }
 
+        // remove users
+        testSystem.stop(user1Ref);
+        testSystem.stop(user2Ref);
+        testSystem.stop(user3Ref);
+
+        //@todo: now we should receive undeliverable errors but this has not been imlemented yet
 
 
     }

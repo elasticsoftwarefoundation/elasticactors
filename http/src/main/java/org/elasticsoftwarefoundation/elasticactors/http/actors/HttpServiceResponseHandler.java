@@ -54,6 +54,6 @@ public final class HttpServiceResponseHandler extends TypedActor<HttpResponse> {
         // we don't support keep alive as of yet
         state.getResponseChannel().write(nettyResponse).addListener(ChannelFutureListener.CLOSE);
         // need to remove myself
-        // @todo: add a stop/destroy method
+        getSystem().stop(getSelf());
     }
 }

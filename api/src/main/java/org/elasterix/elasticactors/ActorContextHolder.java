@@ -39,7 +39,7 @@ public class ActorContextHolder {
 
     public static ActorRef getSelf() {
         ActorContext actorContext =  threadContext.get();
-        return actorContext.getSelf();
+        return actorContext != null ? actorContext.getSelf() : null;
     }
 
     public static ActorSystem getSystem() {

@@ -17,6 +17,8 @@
 package org.elasterix.elasticactors.cluster;
 
 import org.apache.log4j.Logger;
+import org.elasterix.elasticactors.ActorContainer;
+import org.elasterix.elasticactors.ActorContainerRef;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ActorShard;
 
@@ -25,7 +27,7 @@ import org.elasterix.elasticactors.ActorShard;
  *
  * @author  Joost van de Wijgerd
  */
-public final class LocalClusterActorShardRef implements ActorRef {
+public final class LocalClusterActorShardRef implements ActorRef, ActorContainerRef {
     private static final Logger logger = Logger.getLogger(LocalClusterActorShardRef.class);
     private final String clusterName;
     private final ActorShard shard;
@@ -58,6 +60,11 @@ public final class LocalClusterActorShardRef implements ActorRef {
             // @todo: notify sender of the failure
             logger.error(String.format("Failed to send message to %s",sender.toString()),e);
         }
+    }
+
+    @Override
+    public ActorContainer get() {
+        return shard;
     }
 
     @Override

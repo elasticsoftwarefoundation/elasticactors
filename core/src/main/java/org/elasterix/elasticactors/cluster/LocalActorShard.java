@@ -28,6 +28,7 @@ import org.elasterix.elasticactors.messaging.InternalMessageImpl;
 import org.elasterix.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasterix.elasticactors.messaging.MessageQueueFactory;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
+import org.elasterix.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.state.PersistentActor;
 import org.elasterix.elasticactors.state.PersistentActorRepository;
@@ -136,8 +137,16 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                 // check if the actor exists
                 if(message instanceof CreateActorMessage) {
                     CreateActorMessage createActorMessage = (CreateActorMessage) message;
-                    if(!actorExists(createActorMessage.getActorId())) {
+                    if(!actorExists(actorSystem.actorFor(createActorMessage.getActorId()))) {
                         createActor(createActorMessage,internalMessage,messageHandlerEventListener);
+                    } else {
+                        // ack message anyway
+                        messageHandlerEventListener.onDone(internalMessage);
+                    }
+                } else if(message instanceof DestroyActorMessage) {
+                    DestroyActorMessage destroyActorMessage = (DestroyActorMessage) message;
+                    if(actorExists(destroyActorMessage.getActorRef())) {
+                        destroyActor(destroyActorMessage,internalMessage,messageHandlerEventListener);
                     } else {
                         // ack message anyway
                         messageHandlerEventListener.onDone(internalMessage);
@@ -152,8 +161,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         }
     }
 
-    private boolean actorExists(String actorId) {
-        return actorCache.getIfPresent(actorId) != null || persistentActorRepository.contains(shardKey,actorId);
+    private boolean actorExists(ActorRef actorRef) {
+        return actorCache.getIfPresent(actorRef) != null || persistentActorRepository.contains(shardKey,actorRef.getActorId());
     }
 
     private void createActor(CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
@@ -176,6 +185,22 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                                                   internalMessage,
                                                   messageHandlerEventListener));
     }
+
+    private void destroyActor(DestroyActorMessage destroyMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
+        ActorRef actorRef = destroyMessage.getActorRef();
+        PersistentActor persistentActor = actorCache.getIfPresent(actorRef);
+        persistentActorRepository.delete(this.shardKey,actorRef.getActorId());
+        actorCache.invalidate(actorRef);
+        // find actor class behind receiver ActorRef
+        ElasticActor actorInstance = actorSystem.getActorInstance(actorRef,persistentActor.getActorClass());
+        // call preDestroy
+        actorExecutor.execute(new CreateActorTask(persistentActor,
+                                                  actorSystem,
+                                                  actorInstance,
+                                                  actorRef,
+                                                  internalMessage,
+                                                  messageHandlerEventListener));
+        }
 
     @Autowired
     public void setActorExecutor(@Qualifier("actorExecutor") ThreadBoundExecutor<String> actorExecutor) {

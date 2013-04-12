@@ -17,6 +17,7 @@
 package org.elasterix.elasticactors.serialization.internal;
 
 import org.elasterix.elasticactors.cluster.InternalActorSystems;
+import org.elasterix.elasticactors.messaging.internal.ActorType;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.testng.annotations.Test;
 
@@ -45,7 +46,7 @@ public class CreateActorMessageSerializationTest {
         assertEquals(deserializedMessage.getActorSystem(),"LocalNode");
         assertEquals(deserializedMessage.getActorId(),"listener");
         assertEquals(deserializedMessage.getInitialState(),null);
-        assertEquals(deserializedMessage.getType(), CreateActorMessage.ActorType.PERSISTENT);
+        assertEquals(deserializedMessage.getType(), ActorType.PERSISTENT);
 
     }
 }

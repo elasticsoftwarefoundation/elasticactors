@@ -17,6 +17,8 @@
 package org.elasterix.elasticactors.cluster;
 
 import org.apache.log4j.Logger;
+import org.elasterix.elasticactors.ActorContainer;
+import org.elasterix.elasticactors.ActorContainerRef;
 import org.elasterix.elasticactors.ActorNode;
 import org.elasterix.elasticactors.ActorRef;
 
@@ -25,7 +27,7 @@ import org.elasterix.elasticactors.ActorRef;
  *
  * @author  Joost van de Wijgerd
  */
-public final class LocalClusterActorNodeRef implements ActorRef {
+public final class LocalClusterActorNodeRef implements ActorRef, ActorContainerRef {
     private static final Logger logger = Logger.getLogger(LocalClusterActorNodeRef.class);
     private final String clusterName;
     private final ActorNode node;
@@ -58,6 +60,11 @@ public final class LocalClusterActorNodeRef implements ActorRef {
             // @todo: notify sender of the failure
             logger.error(String.format("Failed to send message to %s",sender.toString()),e);
         }
+    }
+
+    @Override
+    public ActorContainer get() {
+        return node;
     }
 
     @Override

@@ -20,7 +20,9 @@ import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.messaging.InternalMessage;
 import org.elasterix.elasticactors.messaging.MessageQueueFactory;
+import org.elasterix.elasticactors.messaging.internal.ActorType;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
+import org.elasterix.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasterix.elasticactors.scheduler.Scheduler;
 import org.elasterix.elasticactors.serialization.Deserializer;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
@@ -283,7 +285,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                                                                        actorClass.getName(),
                                                                        actorId,
                                                                        initialState,
-                                                                       CreateActorMessage.ActorType.TEMP);
+                                                                       ActorType.TEMP);
         this.localNodeAdapter.sendMessage(null,localNodeAdapter.getActorRef(),createActorMessage);
         return new LocalClusterActorNodeRef(cluster.getClusterName(),localNodeAdapter,actorId);
     }
@@ -310,6 +312,14 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     @Override
     public ActorRef serviceActorFor(String actorId) {
         return new ServiceActorRef(cluster.getClusterName(),this.localNodeAdapter,actorId);
+    }
+
+    @Override
+    public void stop(ActorRef actorRef) throws Exception {
+        // set sender if we have any in the current context
+        ActorRef sender = ActorContextHolder.getSelf();
+        ActorContainer handlingContainer = ((ActorContainerRef) actorRef).get();
+        handlingContainer.sendMessage(sender, handlingContainer.getActorRef(), new DestroyActorMessage(actorRef));
     }
 
     @Override

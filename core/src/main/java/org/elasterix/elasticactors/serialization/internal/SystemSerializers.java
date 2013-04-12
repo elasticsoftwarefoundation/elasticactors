@@ -19,6 +19,7 @@ package org.elasterix.elasticactors.serialization.internal;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import org.elasterix.elasticactors.cluster.InternalActorSystems;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
+import org.elasterix.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 
 import java.util.HashMap;
@@ -32,8 +33,9 @@ public final class SystemSerializers {
 
     public SystemSerializers(InternalActorSystems cluster) {
         systemSerializers.put(CreateActorMessage.class,new CreateActorMessageSerializer(cluster));
+        systemSerializers.put(DestroyActorMessage.class,new DestroyActorMessageSerializer());
         systemSerializers.put(String.class,new HectorMessageSerializer<String>(StringSerializer.get()));
-                //@todo: add more serializers here
+        //@todo: add more serializers here
     }
 
     public <T> MessageSerializer<T> get(Class<T> messageClass) {
