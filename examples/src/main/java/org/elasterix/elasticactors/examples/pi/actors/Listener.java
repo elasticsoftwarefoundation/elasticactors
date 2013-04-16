@@ -62,6 +62,7 @@ public final class Listener extends UntypedActor {
 
     @Override
     public void postCreate(ActorRef creator) throws Exception {
+        logger.info("Listener.postCreate");
         // register ourselves with the http server
         ActorSystem httpSystem = getSystem().getParent().get("Http");
         if(httpSystem != null) {

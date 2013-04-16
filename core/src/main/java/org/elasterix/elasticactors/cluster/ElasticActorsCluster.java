@@ -222,14 +222,16 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
                 }
             } else {
                 // just add the node to the back of the list, order doesn't matter
-                nodeValueList.add(actorSystemInstance);
+                // @todo: this is not correct
+                // nodeValueList.add(actorSystemInstance);
             }
         }
 
         dependencyGraph.generateDependencies();
 
         for (LocalActorSystemInstance actorSystemInstance : nodeValueList) {
-            executor.execute(new RebalancingRunnable(actorSystemInstance,clusterNodes));
+            new RebalancingRunnable(actorSystemInstance,clusterNodes).run();
+            //executor.execute(new RebalancingRunnable(actorSystemInstance,clusterNodes));
         }
     }
 

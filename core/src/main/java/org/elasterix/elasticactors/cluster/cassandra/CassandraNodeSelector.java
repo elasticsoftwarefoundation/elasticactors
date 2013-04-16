@@ -44,16 +44,20 @@ public final class CassandraNodeSelector implements NodeSelector {
         for (PhysicalNode clusterNode : clusterNodes) {
             nodeMap.put(clusterNode.getAddress().getHostAddress(),clusterNode);
         }
+        /*
         logger.info("************************* NODES **************************");
         for (Map.Entry<String, PhysicalNode> nodeEntry : nodeMap.entrySet()) {
             logger.info(String.format("%s -> %s",nodeEntry.getKey(),nodeEntry.getValue()));
         }
+        */
 
         Map<String,String> tokensToNodes = nodeProbe.getTokenToEndpointMap();
+        /*
         logger.info("************************* TOKENS *************************");
         for (Map.Entry<String, String> tokenEntry : tokensToNodes.entrySet()) {
             logger.info(String.format("%s -> %s",tokenEntry.getKey(),tokenEntry.getValue()));
         }
+        */
 
         for (Map.Entry<String, String> tokenEntry : tokensToNodes.entrySet()) {
             if(nodeMap.containsKey(tokenEntry.getValue())) {
