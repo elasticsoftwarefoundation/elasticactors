@@ -42,6 +42,7 @@ import java.util.Map;
 /**
  * @author Joost van de Wijgerd
  */
+@DependsOn(dependencies = {"Http"})
 public final class PiApproximator implements ActorSystemConfiguration, ActorSystemBootstrapper {
     private static final Logger logger = Logger.getLogger(PiApproximator.class);
     private final String name;

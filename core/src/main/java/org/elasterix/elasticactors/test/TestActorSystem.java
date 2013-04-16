@@ -89,6 +89,10 @@ public class TestActorSystem implements InternalActorSystems,ActorRefFactory {
                                                                                     testActorSystem,
                                                                                     configuration,
                                                                                     factory);
+
+        // see if we have the dependencies
+
+
         testActorSystem.addActorSystemInstance(actorSystemInstance);
         List<PhysicalNode> nodeList = Arrays.asList(localNode);
         actorSystemInstance.updateNodes(nodeList);

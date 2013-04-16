@@ -30,8 +30,11 @@ import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ActorSystemConfiguration;
+import org.elasterix.elasticactors.DependsOn;
 import org.elasterix.elasticactors.PhysicalNode;
 import org.elasterix.elasticactors.cassandra.ClusterEventListener;
+import org.elasterix.elasticactors.dependencies.Graph;
+import org.elasterix.elasticactors.dependencies.NodeValueListener;
 import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.serialization.internal.SystemDeserializers;
@@ -46,10 +49,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ClassUtils;
 
 import java.lang.reflect.Constructor;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -198,7 +203,32 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
     }
 
     private void rebalance(List<PhysicalNode> clusterNodes) {
+        // need to resolve the dependencies here
+        final List<LocalActorSystemInstance> nodeValueList = new ArrayList<LocalActorSystemInstance>();
+        Graph<LocalActorSystemInstance> dependencyGraph = new Graph<LocalActorSystemInstance>(new NodeValueListener<LocalActorSystemInstance>() {
+            public void evaluating(LocalActorSystemInstance nodeValue) {
+                nodeValueList.add(nodeValue);
+            }
+        });
+
         for (LocalActorSystemInstance actorSystemInstance : managedActorSystems.values()) {
+            DependsOn dependsOn = AnnotationUtils.findAnnotation(actorSystemInstance.getClass(), DependsOn.class);
+            if(dependsOn != null) {
+                for (String dependency : dependsOn.dependencies()) {
+                    LocalActorSystemInstance instance = managedActorSystems.get(dependency);
+                    if(instance != null) {
+                        dependencyGraph.addDependency(instance,actorSystemInstance);
+                    }
+                }
+            } else {
+                // just add the node to the back of the list, order doesn't matter
+                nodeValueList.add(actorSystemInstance);
+            }
+        }
+
+        dependencyGraph.generateDependencies();
+
+        for (LocalActorSystemInstance actorSystemInstance : nodeValueList) {
             executor.execute(new RebalancingRunnable(actorSystemInstance,clusterNodes));
         }
     }
@@ -221,7 +251,7 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
         public void run() {
             logger.info(String.format("Updating %d nodes for ActorSystem[%s]",clusterNodes.size(),actorSystemInstance.getName()));
             try {
-                actorSystemInstance.distributeShards(clusterNodes);
+                actorSystemInstance.updateNodes(clusterNodes);
             } catch (Exception e) {
                 logger.error(String.format("ActorSystem[%s] failed to update nodes",actorSystemInstance.getName()),e);
             }

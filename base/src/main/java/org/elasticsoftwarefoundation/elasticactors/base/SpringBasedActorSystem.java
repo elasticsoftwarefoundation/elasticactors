@@ -39,7 +39,6 @@ public abstract class SpringBasedActorSystem implements ActorSystemConfiguration
     private ApplicationContext applicationContext;
 
     protected SpringBasedActorSystem(String... contextConfigLocations) {
-
         this.contextConfigLocations = new String[contextConfigLocations.length+1];
         this.contextConfigLocations[0] = "base-beans.xml";
         System.arraycopy(contextConfigLocations, 0, this.contextConfigLocations, 1, contextConfigLocations.length);
