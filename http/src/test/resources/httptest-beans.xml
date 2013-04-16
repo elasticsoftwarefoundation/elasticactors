@@ -39,4 +39,6 @@
             </bean>
         </entry>
     </util:map>
+
+    <bean id="userDispatcher" class="org.elasticsoftwarefoundation.elasticactors.http.actors.UserDispatcher"/>
 </beans>

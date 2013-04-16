@@ -21,7 +21,13 @@ import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.UntypedActor;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.RegisterRouteMessage;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.util.PathMatcher;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -31,6 +37,7 @@ import java.util.concurrent.ConcurrentMap;
 public final class HttpService extends UntypedActor {
     private static final Logger logger = Logger.getLogger(HttpService.class);
     private final ConcurrentMap<String,ActorRef> routes = new ConcurrentHashMap<String,ActorRef>();
+    private final PathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
     public void onReceive(Object message, ActorRef sender) throws Exception {
@@ -46,7 +53,7 @@ public final class HttpService extends UntypedActor {
     public boolean doDispatch(HttpRequest request,ActorRef replyAddress) {
         logger.info(String.format("Dispatching Request [%s]",request.getUrl()));
         // match for routes, for now no fancy matching
-        ActorRef handlerRef = routes.get(request.getUrl());
+        ActorRef handlerRef = getHandler(request.getUrl());
         if(handlerRef != null) {
             logger.info(String.format("Found actor [%s]",handlerRef.toString()));
             handlerRef.tell(request,replyAddress);
@@ -55,5 +62,33 @@ public final class HttpService extends UntypedActor {
             logger.info("No actor found to handle request");
             return false;
         }
+    }
+
+    private ActorRef getHandler(String urlPath) {
+        // direct match?
+        ActorRef handlerRef = routes.get(urlPath);
+        if(handlerRef != null) {
+            return handlerRef;
+        }
+        // Pattern match?
+        List<String> matchingPatterns = new ArrayList<String>();
+        for (String registeredPattern : this.routes.keySet()) {
+            if (pathMatcher.match(registeredPattern, urlPath)) {
+                matchingPatterns.add(registeredPattern);
+            }
+        }
+        String bestPatternMatch = null;
+        Comparator<String> patternComparator = pathMatcher.getPatternComparator(urlPath);
+        if (!matchingPatterns.isEmpty()) {
+            Collections.sort(matchingPatterns, patternComparator);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Matching patterns for request [" + urlPath + "] are " + matchingPatterns);
+            }
+            bestPatternMatch = matchingPatterns.get(0);
+        }
+        if (bestPatternMatch != null) {
+            return routes.get(bestPatternMatch);
+        }
+        return null;
     }
 }

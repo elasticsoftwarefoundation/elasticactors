@@ -18,6 +18,7 @@ package org.elasticsoftwarefoundation.elasticactors.http;
 
 import org.elasterix.elasticactors.ActorSystem;
 import org.elasticsoftwarefoundation.elasticactors.base.SpringBasedActorSystem;
+import org.elasticsoftwarefoundation.elasticactors.http.actors.UserDispatcher;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -31,7 +32,14 @@ public class HttpTestActorSystem extends SpringBasedActorSystem {
 
     @Override
     protected void doInitialize(ApplicationContext applicationContext, ActorSystem actorSystem) {
-        // nothing to do
+        // @todo: ensure we can annotation-config and spring-configured (problem now is that core is relying on it)
+        // first set the actor system
+        // applicationContext.getAutowireCapableBeanFactory().initializeBean(actorSystem,"actorSystem");
+        // now trigger lazy instantiation
+        // applicationContext.getBean(UserDispatcher.class);
+        UserDispatcher userDispatcher = applicationContext.getBean(UserDispatcher.class);
+        userDispatcher.setActorSystem(actorSystem);
+        userDispatcher.init();
     }
 
     @Override

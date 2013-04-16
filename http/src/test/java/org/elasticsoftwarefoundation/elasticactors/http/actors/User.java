@@ -39,8 +39,8 @@ public final class User extends TypedActor<HttpRequest> {
     @Override
     public void postActivate(String previousVersion) throws Exception {
         // register ourselves with the http server
-        ActorRef httpServer = getSystem().getParent().get("Http").serviceActorFor("httpServer");
-        httpServer.tell(new RegisterRouteMessage(String.format("/%s", getSelf().getActorId()),getSelf()),getSelf());
+        //ActorRef httpServer = getSystem().getParent().get("Http").serviceActorFor("httpServer");
+        //httpServer.tell(new RegisterRouteMessage(String.format("/%s", getSelf().getActorId()),getSelf()),getSelf());
     }
 
     @Override

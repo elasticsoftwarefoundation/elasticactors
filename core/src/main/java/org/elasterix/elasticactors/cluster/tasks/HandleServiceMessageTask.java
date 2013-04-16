@@ -82,7 +82,7 @@ public class HandleServiceMessageTask implements ThreadBoundRunnable<String>, Ac
             serviceActor.onReceive(message,internalMessage.getSender());
         } catch(Exception e) {
             // @todo: send an error message to the sender
-            logger.error(String.format("Exception while handling message for service [%s]",serviceRef.toString()));
+            logger.error(String.format("Exception while handling message for service [%s]",serviceRef.toString()),e);
             executionException = e;
         } finally {
             InternalActorContext.getAndClearContext();
