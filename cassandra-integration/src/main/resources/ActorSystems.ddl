@@ -25,3 +25,5 @@ create column family PersistentActors
 
 set ActorSystems['PiTest']['nrOfShards'] = int(8);
 set ActorSystems['PiTest']['configurationClass'] = 'org.elasterix.elasticactors.examples.pi.PiApproximator';
+set ActorSystems['Http']['nrOfShards'] = int(8);
+set ActorSystems['Http']['configurationClass'] = 'org.elasticsoftwarefoundation.elasticactors.http.HttpActorSystem';

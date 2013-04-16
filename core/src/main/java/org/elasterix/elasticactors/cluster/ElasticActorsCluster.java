@@ -104,6 +104,8 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
         List<RegisteredActorSystem> registeredActorSystems = actorSystemRepository.findAll();
         logger.info(String.format("Loading %d ActorSystems",registeredActorSystems.size()));
         for (RegisteredActorSystem registeredActorSystem : registeredActorSystems) {
+            logger.info(String.format("Loading ActorSystem [%s] with configuration class [%s]",
+                                      registeredActorSystem.getName(),registeredActorSystem.getConfigurationClass()));
             try {
                 Class<? extends ActorSystemConfiguration> configurationClass =
                         (Class<? extends ActorSystemConfiguration>) Class.forName(registeredActorSystem.getConfigurationClass());
@@ -123,7 +125,7 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
                 }
                 logger.info(String.format("Loaded ActorSystem [%s] with configuration class [%s]",
                                           registeredActorSystem.getName(),registeredActorSystem.getConfigurationClass()));
-            } catch(Exception e) {
+            } catch(Throwable e) {
                 logger.error(String.format("Exception while initializing ActorSystem [%s] with configuration class [%s]",
                                            registeredActorSystem.getName(),
                                            registeredActorSystem.getConfigurationClass()),e);
