@@ -17,12 +17,15 @@
 package org.elasterix.elasticactors.cluster.cassandra;
 
 import com.google.common.base.Charsets;
+import org.apache.cassandra.dht.LongToken;
+import org.apache.cassandra.dht.Murmur3Partitioner;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.PhysicalNode;
 import org.elasterix.elasticactors.cluster.NodeSelector;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -32,13 +35,11 @@ import java.util.*;
  */
 public final class CassandraNodeSelector implements NodeSelector {
     private static final Logger logger = Logger.getLogger(CassandraNodeSelector.class);
-    private final NodeProbe nodeProbe;
     private final List<PhysicalNode> clusterNodes;
-    private final NavigableMap<BigInteger, PhysicalNode> ketamaNodes = new TreeMap<BigInteger, PhysicalNode>();
-    private final MessageDigest md5;
+    private final NavigableMap<LongToken, PhysicalNode> ketamaNodes = new TreeMap<LongToken, PhysicalNode>();
+    private final Murmur3Partitioner partitioner = new Murmur3Partitioner();
 
     public CassandraNodeSelector(NodeProbe nodeProbe, List<PhysicalNode> clusterNodes) {
-        this.nodeProbe = nodeProbe;
         this.clusterNodes = clusterNodes;
         Map<String,PhysicalNode> nodeMap = new HashMap<String,PhysicalNode>();
         for (PhysicalNode clusterNode : clusterNodes) {
@@ -58,17 +59,13 @@ public final class CassandraNodeSelector implements NodeSelector {
             logger.info(String.format("%s -> %s",tokenEntry.getKey(),tokenEntry.getValue()));
         }
         */
-
+        logger.info(String.format("nodeMap.keys(): [%s]",nodeMap.keySet()));
         for (Map.Entry<String, String> tokenEntry : tokensToNodes.entrySet()) {
             if(nodeMap.containsKey(tokenEntry.getValue())) {
-                ketamaNodes.put(new BigInteger(tokenEntry.getKey()),nodeMap.get(tokenEntry.getValue()));
+                ketamaNodes.put(new LongToken(Long.parseLong(tokenEntry.getKey())),nodeMap.get(tokenEntry.getValue()));
             }
         }
-        try {
-            md5 = MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("MD5 not supported", e);
-        }
+        logger.info(String.format("ketamaNodes has %d entries",ketamaNodes.size()));
     }
 
     @Override
@@ -78,9 +75,8 @@ public final class CassandraNodeSelector implements NodeSelector {
 
     @Override
     public PhysicalNode getPrimary(String shardKey) {
-        // get the MD5 hash as a BigInteger
-        md5.reset();
-        BigInteger token = new BigInteger(md5.digest(shardKey.getBytes(Charsets.UTF_8)));
+        final LongToken originalToken = partitioner.getToken(ByteBuffer.wrap(shardKey.getBytes(Charsets.UTF_8)));
+        LongToken token = originalToken;
         if (!ketamaNodes.containsKey(token)) {
             token = ketamaNodes.ceilingKey(token);
             // if hash == null we need to wrap around
@@ -88,6 +84,8 @@ public final class CassandraNodeSelector implements NodeSelector {
                 token = ketamaNodes.firstKey();
             }
         }
-        return ketamaNodes.get(token);
+        PhysicalNode physicalNode = ketamaNodes.get(token);
+        logger.info(String.format("for key [%s], generated token [%s], mapping to token [%s] and node [%s]",shardKey,originalToken,token,physicalNode));
+        return physicalNode;
     }
 }

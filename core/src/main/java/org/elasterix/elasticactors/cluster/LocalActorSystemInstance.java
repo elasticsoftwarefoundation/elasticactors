@@ -97,13 +97,17 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     public void updateNodes(List<PhysicalNode> nodes) throws Exception {
         // map the nodes
         for (PhysicalNode node : nodes) {
-            if(node.isLocal() && !activeNodes.containsKey(node.getId())) {
-                LocalActorNode localActorNode = new LocalActorNode(node,
-                                                                   this,
-                                                                   localNodeAdapter.myRef,
-                                                                   localMessageQueueFactory);
-                activeNodes.put(node.getId(),localActorNode);
-                localActorNode.init();
+            if(!activeNodes.containsKey(node.getId())) {
+                if(node.isLocal()) {
+                    LocalActorNode localActorNode = new LocalActorNode(node,
+                                                                       this,
+                                                                       localNodeAdapter.myRef,
+                                                                       localMessageQueueFactory);
+                    activeNodes.put(node.getId(),localActorNode);
+                    localActorNode.init();
+                } else {
+
+                }
             }
         }
     }
