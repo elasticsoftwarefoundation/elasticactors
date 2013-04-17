@@ -70,7 +70,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class ElasticActorsCluster implements ActorRefFactory, ApplicationContextAware, ClusterEventListener, InternalActorSystems, ConsistencyLevelPolicy {
     private static final Logger logger = Logger.getLogger(ElasticActorsCluster.class);
     private static final AtomicReference<ElasticActorsCluster> INSTANCE = new AtomicReference<ElasticActorsCluster>(null);
-    private final ConcurrentMap<String,LocalActorSystemInstance> managedActorSystems = new ConcurrentHashMap<String,LocalActorSystemInstance>();
+    private final ConcurrentMap<String, LocalActorSystemInstance> managedActorSystems = new ConcurrentHashMap<String, LocalActorSystemInstance>();
     private final AtomicBoolean clusterStarted = new AtomicBoolean(false);
     private String clusterName;
     private PhysicalNode localNode;
@@ -97,8 +97,8 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
 
     @Override
     public void onJoined(String hostId, InetAddress hostAddress) throws Exception {
-        this.localNode = new PhysicalNodeImpl(hostId,hostAddress,true);
-        logger.info(String.format("%s running, starting ElasticActors Runtime",localNode.toString()));
+        this.localNode = new PhysicalNodeImpl(hostId, hostAddress, true);
+        logger.info(String.format("%s running, starting ElasticActors Runtime", localNode.toString()));
         // start NodeSelectorFactory
         nodeSelectorFactory.start();
 
@@ -108,97 +108,104 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
     private void loadActorSystems() {
         // load all actor systems (but not start them yet since we are not officially part of the cluster)
         List<RegisteredActorSystem> registeredActorSystems = actorSystemRepository.findAll();
-        logger.info(String.format("Loading %d ActorSystems",registeredActorSystems.size()));
+        logger.info(String.format("Loading %d ActorSystems", registeredActorSystems.size()));
         for (RegisteredActorSystem registeredActorSystem : registeredActorSystems) {
             logger.info(String.format("Loading ActorSystem [%s] with configuration class [%s]",
-                                      registeredActorSystem.getName(),registeredActorSystem.getConfigurationClass()));
+                    registeredActorSystem.getName(), registeredActorSystem.getConfigurationClass()));
             try {
                 Class<? extends ActorSystemConfiguration> configurationClass =
                         (Class<? extends ActorSystemConfiguration>) Class.forName(registeredActorSystem.getConfigurationClass());
                 Constructor<? extends ActorSystemConfiguration> constructor =
                         ClassUtils.getConstructorIfAvailable(configurationClass, String.class, Integer.TYPE);
-                if(constructor != null) {
+                if (constructor != null) {
                     ActorSystemConfiguration configuration = constructor.newInstance(registeredActorSystem.getName(),
-                                                                                     registeredActorSystem.getNrOfShards());
+                            registeredActorSystem.getNrOfShards());
                     managedActorSystems.put(registeredActorSystem.getName(),
-                                            new LocalActorSystemInstance(this.localNode,this,configuration,nodeSelectorFactory));
+                            new LocalActorSystemInstance(this.localNode, this, configuration, nodeSelectorFactory));
                 } else {
                     logger.warn(String.format("No matching constructor(String,int) found on configuration class [%s]",
-                                              registeredActorSystem.getConfigurationClass()));
+                            registeredActorSystem.getConfigurationClass()));
                     ActorSystemConfiguration configuration = configurationClass.newInstance();
                     managedActorSystems.put(configuration.getName(),
-                                            new LocalActorSystemInstance(this.localNode,this,configuration,nodeSelectorFactory));
+                            new LocalActorSystemInstance(this.localNode, this, configuration, nodeSelectorFactory));
                 }
                 logger.info(String.format("Loaded ActorSystem [%s] with configuration class [%s]",
-                                          registeredActorSystem.getName(),registeredActorSystem.getConfigurationClass()));
-            } catch(Throwable e) {
+                        registeredActorSystem.getName(), registeredActorSystem.getConfigurationClass()));
+            } catch (Throwable e) {
                 logger.error(String.format("Exception while initializing ActorSystem [%s] with configuration class [%s]",
-                                           registeredActorSystem.getName(),
-                                           registeredActorSystem.getConfigurationClass()),e);
+                        registeredActorSystem.getName(),
+                        registeredActorSystem.getConfigurationClass()), e);
             }
         }
     }
 
     @Override
-    public void onTopologyChanged(Map<InetAddress,String> topology) {
+    public void onTopologyChanged(final Map<InetAddress, String> topology) {
         logger.info("Cluster topology changed");
-        final List<PhysicalNode> clusterNodes = new LinkedList<PhysicalNode>();
-        for (Map.Entry<InetAddress, String> hostEntry : topology.entrySet()) {
-            if(localNode != null && localNode.getId().equals(hostEntry.getValue())) {
-                clusterNodes.add(localNode);
-            } else {
-                clusterNodes.add(new PhysicalNodeImpl(hostEntry.getValue(),hostEntry.getKey(),false));
-            }
-        }
-        // set correct consistency level
-        if(topology.size() >= 2) {
-            this.consistencyLevelPolicy.set(DEFAULT_CONSISTENCY_LEVEL_POLICY);
-        } else {
-            this.consistencyLevelPolicy.set(FALLBACK_CONSISTENCY_LEVEL_POLICY);
-        }
+        scheduledExecutorService.execute(new Runnable() {
 
-        logger.info("New Cluster view: "+clusterNodes.toString());
-        // see if it's the first time
-        if(localNode != null) {
-            if(clusterStarted.compareAndSet(false,true)) {
-                logger.info("Initial startup detected, scheduling ActorSystem loading sequence");
-                // we need a delay here because thrift will start listening after this event
-                scheduledExecutorService.schedule(new Runnable() {
-                    @Override
-                    public void run() {
-                        logger.info("Loading ActorSystems...");
-                        try {
-                            // some trickery to get hector to work
-                            cassandraCluster.addHost(new CassandraHost(String.format("%s:9160",localNode.getAddress().getHostAddress())),false);
-                            //ensureKeyspace();
-                            loadActorSystems();
-                            rebalance(clusterNodes);
-                        } catch(Exception e) {
-                            logger.error("Exception while loading ActorSystems",e);
-                        }
+            @Override
+            public void run() {
+                final List<PhysicalNode> clusterNodes = new LinkedList<PhysicalNode>();
+                for (Map.Entry<InetAddress, String> hostEntry : topology.entrySet()) {
+                    if (localNode != null && localNode.getId().equals(hostEntry.getValue())) {
+                        clusterNodes.add(localNode);
+                    } else {
+                        clusterNodes.add(new PhysicalNodeImpl(hostEntry.getValue(), hostEntry.getKey(), false));
                     }
-                },1000, TimeUnit.MILLISECONDS);
+                }
+                // set correct consistency level
+                if (topology.size() >= 2) {
+                    consistencyLevelPolicy.set(DEFAULT_CONSISTENCY_LEVEL_POLICY);
+                } else {
+                    consistencyLevelPolicy.set(FALLBACK_CONSISTENCY_LEVEL_POLICY);
+                }
 
-            } else {
-                rebalance(clusterNodes);
+                logger.info("New Cluster view: " + clusterNodes.toString());
+                // see if it's the first time
+                if (localNode != null) {
+                    if (clusterStarted.compareAndSet(false, true)) {
+                        logger.info("Initial startup detected, scheduling ActorSystem loading sequence");
+                        // we need a delay here because thrift will start listening after this event
+                        scheduledExecutorService.schedule(new Runnable() {
+                            @Override
+                            public void run() {
+                                logger.info("Loading ActorSystems...");
+                                try {
+                                    // some trickery to get hector to work
+                                    cassandraCluster.addHost(new CassandraHost(String.format("%s:9160", localNode.getAddress().getHostAddress())), false);
+                                    //ensureKeyspace();
+                                    loadActorSystems();
+                                    rebalance(clusterNodes);
+                                } catch (Exception e) {
+                                    logger.error("Exception while loading ActorSystems", e);
+                                }
+                            }
+                        }, 1000, TimeUnit.MILLISECONDS);
+
+                    } else {
+                        rebalance(clusterNodes);
+                    }
+                }
             }
-        }
+        });
+
     }
 
     private void ensureKeyspace() {
         List<KeyspaceDefinition> keyspaces = cassandraCluster.describeKeyspaces();
         boolean existing = false;
         for (KeyspaceDefinition keyspace : keyspaces) {
-            if(keyspace.getName().equals("ElasticActors")) {
+            if (keyspace.getName().equals("ElasticActors")) {
                 existing = true;
                 break;
             }
         }
-        if(!existing) {
+        if (!existing) {
             logger.info("ElasticActors Keyspace not found, creating");
             List<ColumnFamilyDefinition> cfDefs = new LinkedList<ColumnFamilyDefinition>();
-            ColumnFamilyDefinition actorSystems = new ThriftCfDef("ElasticActors","ActorSystems");
-            KeyspaceDefinition ksDef = new ThriftKsDef("ElasticActors",ThriftKsDef.NETWORK_TOPOLOGY_STRATEGY,1,cfDefs);
+            ColumnFamilyDefinition actorSystems = new ThriftCfDef("ElasticActors", "ActorSystems");
+            KeyspaceDefinition ksDef = new ThriftKsDef("ElasticActors", ThriftKsDef.NETWORK_TOPOLOGY_STRATEGY, 1, cfDefs);
             cassandraCluster.addKeyspace(ksDef, true);
         }
     }
@@ -217,30 +224,29 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
 
             for (String dependency : dependencies) {
                 LocalActorSystemInstance instance = managedActorSystems.get(dependency);
-                if(instance != null) {
-                    logger.info(String.format("Adding dependency from [%s] on [%s]",actorSystemInstance.getName(),instance.getName()));
-                    dependencyGraph.addDependency(instance,actorSystemInstance);
+                if (instance != null) {
+                    logger.info(String.format("Adding dependency from [%s] on [%s]", actorSystemInstance.getName(), instance.getName()));
+                    dependencyGraph.addDependency(instance, actorSystemInstance);
+                } else {
+                    // just add the node to the back of the list, order doesn't matter
+                    // @todo: this is not correct
+                    // nodeValueList.add(actorSystemInstance);
                 }
-             else {
-                // just add the node to the back of the list, order doesn't matter
-                // @todo: this is not correct
-                // nodeValueList.add(actorSystemInstance);
-            }
             }
         }
 
         dependencyGraph.generateDependencies();
         // see if we have all of the original members
         for (LocalActorSystemInstance actorSystemInstance : managedActorSystems.values()) {
-            if(!nodeValueList.contains(actorSystemInstance)) {
+            if (!nodeValueList.contains(actorSystemInstance)) {
                 nodeValueList.add(actorSystemInstance);
             }
         }
-        logger.info(String.format("Processing ActorSystems in the following order: [%s]",nodeValueList.toString()));
+        logger.info(String.format("Processing ActorSystems in the following order: [%s]", nodeValueList.toString()));
 
         for (LocalActorSystemInstance actorSystemInstance : nodeValueList) {
-            new RebalancingRunnable(actorSystemInstance,clusterNodes).run();
-            //executor.execute(new RebalancingRunnable(actorSystemInstance,clusterNodes));
+            //new RebalancingRunnable(actorSystemInstance, clusterNodes).run();
+            scheduledExecutorService.execute(new RebalancingRunnable(actorSystemInstance,clusterNodes));
         }
     }
 
@@ -260,17 +266,17 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
 
         @Override
         public void run() {
-            logger.info(String.format("Updating %d nodes for ActorSystem[%s]",clusterNodes.size(),actorSystemInstance.getName()));
+            logger.info(String.format("Updating %d nodes for ActorSystem[%s]", clusterNodes.size(), actorSystemInstance.getName()));
             try {
                 actorSystemInstance.updateNodes(clusterNodes);
             } catch (Exception e) {
-                logger.error(String.format("ActorSystem[%s] failed to update nodes",actorSystemInstance.getName()),e);
+                logger.error(String.format("ActorSystem[%s] failed to update nodes", actorSystemInstance.getName()), e);
             }
-            logger.info(String.format("Rebalancing %d shards for ActorSystem[%s]",actorSystemInstance.getNumberOfShards(),actorSystemInstance.getName()));
+            logger.info(String.format("Rebalancing %d shards for ActorSystem[%s]", actorSystemInstance.getNumberOfShards(), actorSystemInstance.getName()));
             try {
                 actorSystemInstance.distributeShards(clusterNodes);
             } catch (Exception e) {
-                logger.error(String.format("ActorSystem[%s] failed to (re-)distribute shards",actorSystemInstance.getName()),e);
+                logger.error(String.format("ActorSystem[%s] failed to (re-)distribute shards", actorSystemInstance.getName()), e);
             }
         }
     }
@@ -312,7 +318,7 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
 
     @Override
     public ActorRef create(String refSpec) throws IllegalArgumentException {
-        return ActorRefTools.parse(refSpec,this);
+        return ActorRefTools.parse(refSpec, this);
     }
 
     @Override
@@ -322,7 +328,7 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
 
     @Override
     public HConsistencyLevel get(OperationType op, String cfName) {
-        return consistencyLevelPolicy.get().get(op,cfName);
+        return consistencyLevelPolicy.get().get(op, cfName);
     }
 
     @Autowired

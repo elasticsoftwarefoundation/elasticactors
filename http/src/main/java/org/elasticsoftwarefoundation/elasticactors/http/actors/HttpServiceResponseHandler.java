@@ -45,7 +45,7 @@ public final class HttpServiceResponseHandler extends TypedActor<HttpResponse> {
     }
 
     @Override
-    public void onReceive(HttpResponse message, ActorRef sender) throws Exception {
+    public void onReceive(ActorRef sender, HttpResponse message) throws Exception {
         State state = getState(null).getAsObject(State.class);
         // convert back to netty http response
         org.jboss.netty.handler.codec.http.HttpResponse nettyResponse = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(message.getStatusCode()));

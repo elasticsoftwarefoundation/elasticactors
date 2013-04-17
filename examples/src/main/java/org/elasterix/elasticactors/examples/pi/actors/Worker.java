@@ -28,7 +28,7 @@ import org.elasterix.elasticactors.examples.pi.messages.Work;
 public final class Worker extends UntypedActor {
     private static final Logger logger = Logger.getLogger(Worker.class);
 
-    public void onReceive(Object message, ActorRef sender) {
+    public void onReceive(ActorRef sender, Object message) {
         if (message instanceof Work) {
             Work work = (Work) message;
             double result = calculatePiFor(work.getStart(), work.getNrOfElements());

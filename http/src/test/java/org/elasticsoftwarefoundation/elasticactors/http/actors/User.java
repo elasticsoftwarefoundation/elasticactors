@@ -22,7 +22,6 @@ import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.TypedActor;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpResponse;
-import org.elasticsoftwarefoundation.elasticactors.http.messages.RegisterRouteMessage;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 
 import java.util.Arrays;
@@ -44,7 +43,7 @@ public final class User extends TypedActor<HttpRequest> {
     }
 
     @Override
-    public void onReceive(HttpRequest message, ActorRef sender) throws Exception {
+    public void onReceive(ActorRef sender, HttpRequest message) throws Exception {
         logger.info("Got request");
         // send something back
         Map<String,List<String>> headers = new HashMap<String,List<String>>();

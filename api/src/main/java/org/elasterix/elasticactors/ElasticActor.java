@@ -24,7 +24,7 @@ public interface ElasticActor<T> {
 
     void postActivate(String previousVersion) throws Exception;
 
-    void onReceive(T message, ActorRef sender) throws Exception;
+    void onReceive(ActorRef sender, T message) throws Exception;
 
     void prePassivate() throws Exception;
 

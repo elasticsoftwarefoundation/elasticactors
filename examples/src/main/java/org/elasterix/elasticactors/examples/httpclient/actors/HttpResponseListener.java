@@ -26,7 +26,7 @@ import org.elasterix.elasticactors.examples.httpclient.messages.HttpResponse;
  */
 public class HttpResponseListener extends TypedActor<HttpResponse> {
     @Override
-    public void onReceive(HttpResponse message, ActorRef sender) throws Exception {
+    public void onReceive(ActorRef sender, HttpResponse message) throws Exception {
         System.out.println(String.format("Got response with status [%d] and content type [%s]",message.getStatusCode(),message.getContentType()));
         System.out.println(new String(message.getResponseBody(), Charsets.UTF_8));
     }

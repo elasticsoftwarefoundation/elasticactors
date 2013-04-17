@@ -23,14 +23,11 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.examples.pi.messages.Calculate;
 import org.elasterix.elasticactors.examples.pi.messages.PiApproximation;
-import org.elasticsoftwarefoundation.elasticactors.base.state.JacksonActorState;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpMessage;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpResponse;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.RegisterRouteMessage;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
 
 import java.util.*;
 
@@ -78,7 +75,7 @@ public final class Listener extends UntypedActor {
         }
     }
 
-    public void onReceive(Object message, ActorRef sender) throws Exception {
+    public void onReceive(ActorRef sender, Object message) throws Exception {
         final State state = getState(null).getAsObject(State.class);
         if(message instanceof HttpMessage) {
             // we have a new calculation request

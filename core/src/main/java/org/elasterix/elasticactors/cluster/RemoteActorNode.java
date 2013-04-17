@@ -16,43 +16,33 @@
 
 package org.elasterix.elasticactors.cluster;
 
-import org.elasterix.elasticactors.ActorRef;
-import org.elasterix.elasticactors.ActorShard;
-import org.elasterix.elasticactors.PhysicalNode;
-import org.elasterix.elasticactors.ShardKey;
+import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.messaging.InternalMessage;
 import org.elasterix.elasticactors.messaging.InternalMessageImpl;
 import org.elasterix.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasterix.elasticactors.messaging.MessageQueueFactory;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
-import org.springframework.beans.factory.annotation.Configurable;
 
 /**
  * @author Joost van de Wijgerd
  */
 
-public final class RemoteActorShard extends AbstractActorContainer implements ActorShard {
+public final class RemoteActorNode extends AbstractActorContainer implements ActorNode {
     private final InternalActorSystem actorSystem;
-    private final ShardKey shardKey;
+    private final NodeKey nodeKey;
 
-    public RemoteActorShard(PhysicalNode remoteNode,
-                            InternalActorSystem actorSystem,
-                            int vNodeKey,
-                            ActorRef myRef,
-                            MessageQueueFactory messageQueueFactory) {
+    public RemoteActorNode(PhysicalNode remoteNode,
+                           InternalActorSystem actorSystem,
+                           ActorRef myRef,
+                           MessageQueueFactory messageQueueFactory) {
         super(messageQueueFactory,myRef,remoteNode);
         this.actorSystem = actorSystem;
-        this.shardKey = new ShardKey(actorSystem.getName(), vNodeKey);
+        this.nodeKey = new NodeKey(actorSystem.getName(), remoteNode.getId());
     }
 
     @Override
-    public PhysicalNode getOwningNode() {
-        return getPhysicalNode();
-    }
-
-    @Override
-    public ShardKey getKey() {
-        return shardKey;
+    public NodeKey getKey() {
+        return nodeKey;
     }
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {

@@ -33,7 +33,7 @@ public final class UserDispatcher extends TypedActor<HttpRequest> {
     }
 
     @Override
-    public void onReceive(HttpRequest message, ActorRef sender) throws Exception {
+    public void onReceive(ActorRef sender, HttpRequest message) throws Exception {
         // inspect the message
         ActorRef userRef = actorSystem.actorFor(message.getUrl().substring(1));
         userRef.tell(message,sender);

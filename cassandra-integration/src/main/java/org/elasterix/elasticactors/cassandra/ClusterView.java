@@ -106,10 +106,12 @@ public class ClusterView implements IEndpointLifecycleSubscriber {
     @Override
     public void onDown(InetAddress endpoint) {
         log.info(String.format("%s is now DOWN", endpoint.getHostName()));
-        try {
-            eventListener.onTopologyChanged(getClusterMembers());
-        } catch (Exception e) {
-            log.error("Exception in onTopologyChanged",e);
+        if(!initialStartup.get()) {
+            try {
+                eventListener.onTopologyChanged(getClusterMembers());
+            } catch (Exception e) {
+                log.error("Exception in onTopologyChanged",e);
+            }
         }
     }
 

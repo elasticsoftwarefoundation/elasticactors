@@ -164,7 +164,7 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
         State state = getState(this).getAsObject(State.class);
     }
 
-    public void onReceive(Object message, ActorRef sender) {
+    public void onReceive(ActorRef sender, Object message) {
         State state = getState(this).getAsObject(State.class);
         if (message instanceof Calculate) {
             Calculate calculateRequest = (Calculate) message;

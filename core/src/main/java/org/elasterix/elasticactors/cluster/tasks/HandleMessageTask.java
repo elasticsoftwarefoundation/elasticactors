@@ -57,7 +57,7 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                     }*/
                     try {
 
-                        receiver.onReceive(message,internalMessage.getSender());
+                        receiver.onReceive(internalMessage.getSender(), message);
                     } catch (Exception e) {
                         // @todo: handle by sending back a message (if possible)
                         log.error(String.format("Exception while handling message for actor [%s]", receiverRef.toString()), e);

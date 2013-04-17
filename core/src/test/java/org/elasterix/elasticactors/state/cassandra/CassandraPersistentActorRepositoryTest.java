@@ -89,7 +89,7 @@ public class CassandraPersistentActorRepositoryTest extends AbstractTestNGSpring
     public static final class TestActor extends UntypedActor {
 
         @Override
-        public void onReceive(Object message, ActorRef sender) throws Exception {
+        public void onReceive(ActorRef sender, Object message) throws Exception {
             // do nothing
         }
     }

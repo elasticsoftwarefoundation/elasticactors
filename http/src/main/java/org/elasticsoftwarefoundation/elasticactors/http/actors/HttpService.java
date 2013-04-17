@@ -40,7 +40,7 @@ public final class HttpService extends UntypedActor {
     private final PathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
-    public void onReceive(Object message, ActorRef sender) throws Exception {
+    public void onReceive(ActorRef sender, Object message) throws Exception {
         if(message instanceof RegisterRouteMessage) {
             RegisterRouteMessage registerRouteMessage = (RegisterRouteMessage) message;
             routes.putIfAbsent(registerRouteMessage.getPattern(),registerRouteMessage.getHandlerRef());

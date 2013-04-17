@@ -37,10 +37,7 @@ import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -60,17 +57,17 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private final ReadWriteLock[] shardLocks;
     private final ActorShardAdapter[] shardAdapters;
     private final NodeSelectorFactory nodeSelectorFactory;
-    private final ConcurrentMap<Class,ElasticActor> actorInstances = new ConcurrentHashMap<Class,ElasticActor>();
+    private final ConcurrentMap<Class, ElasticActor> actorInstances = new ConcurrentHashMap<Class, ElasticActor>();
     private final KetamaHashAlgorithm hashAlgorithm = new KetamaHashAlgorithm();
     private final ActorSystems cluster;
     private MessageQueueFactory localMessageQueueFactory;
     private MessageQueueFactory remoteMessageQueueFactory;
     private Scheduler scheduler;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
-    private final ConcurrentMap<String,ActorNode> activeNodes = new ConcurrentHashMap<String,ActorNode>();
+    private final ConcurrentMap<String, ActorNode> activeNodes = new ConcurrentHashMap<String, ActorNode>();
     private final ActorNodeAdapter localNodeAdapter;
 
-    public LocalActorSystemInstance(PhysicalNode localNode,ActorSystems cluster,ActorSystemConfiguration actorSystem, NodeSelectorFactory nodeSelectorFactory) {
+    public LocalActorSystemInstance(PhysicalNode localNode, ActorSystems cluster, ActorSystemConfiguration actorSystem, NodeSelectorFactory nodeSelectorFactory) {
         this.configuration = actorSystem;
         this.nodeSelectorFactory = nodeSelectorFactory;
         this.cluster = cluster;
@@ -79,14 +76,14 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         this.shardAdapters = new ActorShardAdapter[shards.length];
         for (int i = 0; i < shards.length; i++) {
             shardLocks[i] = new ReentrantReadWriteLock();
-            shardAdapters[i] = new ActorShardAdapter(new ShardKey(actorSystem.getName(),i));
+            shardAdapters[i] = new ActorShardAdapter(new ShardKey(actorSystem.getName(), i));
         }
-        this.localNodeAdapter = new ActorNodeAdapter(new NodeKey(actorSystem.getName(),localNode.getId()));
+        this.localNodeAdapter = new ActorNodeAdapter(new NodeKey(actorSystem.getName(), localNode.getId()));
     }
 
     @Override
     public String toString() {
-        return String.format("%s[%s]",configuration.getClass(),getName());
+        return String.format("%s[%s]", configuration.getClass(), getName());
     }
 
     @Override
@@ -95,18 +92,38 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     public void updateNodes(List<PhysicalNode> nodes) throws Exception {
-        // map the nodes
+        // first see if we need to remove nodes
+        // make a map
+        HashMap<String, PhysicalNode> nodeMap = new HashMap<String, PhysicalNode>();
         for (PhysicalNode node : nodes) {
-            if(!activeNodes.containsKey(node.getId())) {
-                if(node.isLocal()) {
+            nodeMap.put(node.getId(), node);
+        }
+        // need to find the one that's not there anymore and destroy it
+        Iterator<Map.Entry<String, ActorNode>> entryIterator = activeNodes.entrySet().iterator();
+        while (entryIterator.hasNext()) {
+            Map.Entry<String, ActorNode> actorNodeEntry = entryIterator.next();
+            if (!nodeMap.containsKey(actorNodeEntry.getKey())) {
+                actorNodeEntry.getValue().destroy();
+                entryIterator.remove();
+            }
+        }
+        // now see if we need to add nodes
+        for (PhysicalNode node : nodes) {
+            if (!activeNodes.containsKey(node.getId())) {
+                if (node.isLocal()) {
                     LocalActorNode localActorNode = new LocalActorNode(node,
                                                                        this,
                                                                        localNodeAdapter.myRef,
                                                                        localMessageQueueFactory);
-                    activeNodes.put(node.getId(),localActorNode);
+                    activeNodes.put(node.getId(), localActorNode);
                     localActorNode.init();
                 } else {
-
+                    RemoteActorNode remoteActorNode = new RemoteActorNode(node,
+                                                                         this,
+                                                                         new ActorNodeAdapter(new NodeKey(getName(), node.getId())).myRef,
+                                                                         remoteMessageQueueFactory);
+                    activeNodes.put(node.getId(), remoteActorNode);
+                    remoteActorNode.init();
                 }
             }
         }
@@ -120,24 +137,24 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     public void distributeShards(List<PhysicalNode> nodes) throws Exception {
 
         NodeSelector nodeSelector = nodeSelectorFactory.create(nodes);
-        for(int i = 0; i < configuration.getNumberOfShards(); i++) {
-            ShardKey shardKey = new ShardKey(configuration.getName(),i);
+        for (int i = 0; i < configuration.getNumberOfShards(); i++) {
+            ShardKey shardKey = new ShardKey(configuration.getName(), i);
             PhysicalNode node = nodeSelector.getPrimary(shardKey.toString());
-            if(node.isLocal()) {
+            if (node.isLocal()) {
                 // this instance should start owning the shard now
                 final ActorShard currentShard = shards[i];
-                if(currentShard == null || !currentShard.getOwningNode().isLocal()) {
+                if (currentShard == null || !currentShard.getOwningNode().isLocal()) {
                     logger.info(String.format("I will own %s", shardKey.toString()));
                     // first we need to obtain the writeLock on the shard
                     final Lock writeLock = shardLocks[i].writeLock();
                     try {
                         writeLock.lock();
                         // destroy the current remote shard instance
-                        if(currentShard != null) {
+                        if (currentShard != null) {
                             currentShard.destroy();
                         }
                         // create a new local shard and swap it
-                        LocalActorShard newShard = new LocalActorShard(node,this,i, shardAdapters[i].myRef, localMessageQueueFactory);
+                        LocalActorShard newShard = new LocalActorShard(node, this, i, shardAdapters[i].myRef, localMessageQueueFactory);
 
                         shards[i] = newShard;
                         // initialize
@@ -152,18 +169,18 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
             } else {
                 // the shard will be managed by another node
                 final ActorShard currentShard = shards[i];
-                if(currentShard == null || currentShard.getOwningNode().isLocal()) {
+                if (currentShard == null || currentShard.getOwningNode().isLocal()) {
                     logger.info(String.format("%s will own %s", node, shardKey));
                     // first we need to obtain the writeLock on the shard
                     final Lock writeLock = shardLocks[i].writeLock();
                     try {
                         writeLock.lock();
                         // destroy the current remote shard instance
-                        if(currentShard != null) {
+                        if (currentShard != null) {
                             currentShard.destroy();
                         }
                         // create a new local shard and swap it
-                        RemoteActorShard newShard = new RemoteActorShard(node,this,i, shardAdapters[i].myRef, remoteMessageQueueFactory);
+                        RemoteActorShard newShard = new RemoteActorShard(node, this, i, shardAdapters[i].myRef, remoteMessageQueueFactory);
 
                         shards[i] = newShard;
                         // initialize
@@ -178,27 +195,27 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
             }
         }
         // see if this was the first time, if so we need to initialize the ActorSystem
-        if(initialized.compareAndSet(false,true)) {
-            logger.info(String.format("Initializing ActorSystem [%s]",getName()));
-            if(configuration instanceof ActorSystemBootstrapper) {
-                logger.info(String.format("Bootstrapping ActorSystem [%s]",getName()));
+        if (initialized.compareAndSet(false, true)) {
+            logger.info(String.format("Initializing ActorSystem [%s]", getName()));
+            if (configuration instanceof ActorSystemBootstrapper) {
+                logger.info(String.format("Bootstrapping ActorSystem [%s]", getName()));
                 ActorSystemBootstrapper bootstrapper = (ActorSystemBootstrapper) configuration;
                 try {
                     bootstrapper.initialize(this);
-                } catch(Exception e) {
+                } catch (Exception e) {
                     // @todo: we should probably abort here
                     logger.error(String.format("Exception while initializing ActorSystem [%s]", getName()), e);
                 }
                 // @todo: we should only do this on original creation of the ActorSystem, not when reloading
                 try {
                     bootstrapper.create(this);
-                } catch(Exception e) {
+                } catch (Exception e) {
                     // @todo: we should probably abort here
                     logger.error(String.format("Exception while creating ActorSystem [%s]", getName()), e);
                 }
                 try {
                     bootstrapper.activate(this);
-                } catch(Exception e) {
+                } catch (Exception e) {
                     // @todo: we should probably abort here
                     logger.error(String.format("Exception while activating ActorSystem [%s]", getName()), e);
                 }
@@ -215,10 +232,10 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         // for now we support only <ActorSystemName>/shards/<shardId>
         // @todo: do this with actorRef tools
         String[] pathElements = actorPath.split("/");
-        if(pathElements[1].equals("shards")) {
+        if (pathElements[1].equals("shards")) {
             return shardAdapters[Integer.parseInt(pathElements[2])];
         } else {
-            throw new IllegalArgumentException(String.format("No ActorShard found for actorPath [%s]",actorPath));
+            throw new IllegalArgumentException(String.format("No ActorShard found for actorPath [%s]", actorPath));
         }
     }
 
@@ -233,15 +250,15 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
-    public ElasticActor getActorInstance(ActorRef actorRef,Class<? extends ElasticActor> actorClass) {
+    public ElasticActor getActorInstance(ActorRef actorRef, Class<? extends ElasticActor> actorClass) {
         // ensure the actor instance is created
         ElasticActor actorInstance = actorInstances.get(actorClass);
-        if(actorInstance == null) {
+        if (actorInstance == null) {
             try {
                 actorInstance = actorClass.newInstance();
                 ElasticActor existingInstance = actorInstances.putIfAbsent(actorClass, actorInstance);
                 return existingInstance == null ? actorInstance : existingInstance;
-            } catch(Exception e) {
+            } catch (Exception e) {
                 logger.error("Exception creating actor instance", e);
                 return null;
             }
@@ -252,7 +269,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     @Override
     public ElasticActor getServiceInstance(ActorRef serviceRef) {
-        if(ActorRefTools.isService(serviceRef)) {
+        if (ActorRefTools.isService(serviceRef)) {
             return configuration.getService(serviceRef.getActorId());
         }
         return null;
@@ -275,7 +292,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass) throws Exception {
-        return actorOf(actorId,actorClass,null);
+        return actorOf(actorId, actorClass, null);
     }
 
     @Override
@@ -283,24 +300,24 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         // determine shard
         ActorShard shard = shardFor(actorId);
         // send CreateActorMessage to shard
-        CreateActorMessage createActorMessage = new CreateActorMessage(getName(), actorClass.getName(),actorId, initialState);
+        CreateActorMessage createActorMessage = new CreateActorMessage(getName(), actorClass.getName(), actorId, initialState);
         //@todo: see if we need to get the sender from the context
-        shard.sendMessage(null,shard.getActorRef(),createActorMessage);
+        shard.sendMessage(null, shard.getActorRef(), createActorMessage);
         // create actor ref
         // @todo: add cache to speed up performance
-        return new LocalClusterActorShardRef(cluster.getClusterName(),shard,actorId);
+        return new LocalClusterActorShardRef(cluster.getClusterName(), shard, actorId);
     }
 
     @Override
     public <T> ActorRef tempActorOf(Class<T> actorClass, ActorState initialState) throws Exception {
         String actorId = UUID.randomUUID().toString();
         CreateActorMessage createActorMessage = new CreateActorMessage(getName(),
-                                                                       actorClass.getName(),
-                                                                       actorId,
-                                                                       initialState,
-                                                                       ActorType.TEMP);
-        this.localNodeAdapter.sendMessage(null,localNodeAdapter.getActorRef(),createActorMessage);
-        return new LocalClusterActorNodeRef(cluster.getClusterName(),localNodeAdapter,actorId);
+                actorClass.getName(),
+                actorId,
+                initialState,
+                ActorType.TEMP);
+        this.localNodeAdapter.sendMessage(null, localNodeAdapter.getActorRef(), createActorMessage);
+        return new LocalClusterActorNodeRef(cluster.getClusterName(), localNodeAdapter, actorId);
     }
 
     private ActorShard shardFor(String actorId) {
@@ -314,17 +331,17 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         ActorShard shard = shardFor(actorId);
         // return actor ref
         // @todo: add cache to speed up performance
-        return new LocalClusterActorShardRef(cluster.getClusterName(),shard,actorId);
+        return new LocalClusterActorShardRef(cluster.getClusterName(), shard, actorId);
     }
 
     @Override
     public ActorRef tempActorFor(String actorId) {
-        return new LocalClusterActorNodeRef(cluster.getClusterName(),this.localNodeAdapter,actorId);
+        return new LocalClusterActorNodeRef(cluster.getClusterName(), this.localNodeAdapter, actorId);
     }
 
     @Override
     public ActorRef serviceActorFor(String actorId) {
-        return new ServiceActorRef(cluster.getClusterName(),this.localNodeAdapter,actorId);
+        return new ServiceActorRef(cluster.getClusterName(), this.localNodeAdapter, actorId);
     }
 
     @Override
@@ -379,8 +396,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     @Override
     public List<String> getDependencies() {
-        DependsOn dependsOn = AnnotationUtils.findAnnotation(configuration.getClass(),DependsOn.class);
-        if(dependsOn != null) {
+        DependsOn dependsOn = AnnotationUtils.findAnnotation(configuration.getClass(), DependsOn.class);
+        if (dependsOn != null) {
             return Arrays.<String>asList(dependsOn.dependencies());
         } else {
             return Collections.<String>emptyList();
@@ -393,7 +410,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
         private ActorShardAdapter(ShardKey key) {
             this.key = key;
-            this.myRef = new LocalClusterActorShardRef(cluster.getClusterName(),this);
+            this.myRef = new LocalClusterActorShardRef(cluster.getClusterName(), this);
         }
 
         @Override
@@ -422,7 +439,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
             final Lock readLock = shardLocks[key.getShardId()].readLock();
             try {
                 readLock.lock();
-                shards[key.getShardId()].sendMessage(sender,receiver,message);
+                shards[key.getShardId()].sendMessage(sender, receiver, message);
             } finally {
                 readLock.unlock();
             }
@@ -456,7 +473,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
         private ActorNodeAdapter(NodeKey key) {
             this.key = key;
-            this.myRef = new LocalClusterActorNodeRef(cluster.getClusterName(),this);
+            this.myRef = new LocalClusterActorNodeRef(cluster.getClusterName(), this);
         }
 
         @Override
@@ -472,7 +489,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         @Override
         public void sendMessage(ActorRef sender, ActorRef receiver, Object message) throws Exception {
             // @todo: check if we need to lock here like with ActorShards
-            activeNodes.get(key.getNodeId()).sendMessage(sender,receiver,message);
+            activeNodes.get(key.getNodeId()).sendMessage(sender, receiver, message);
         }
 
         @Override
@@ -493,49 +510,50 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     public static final class KetamaHashAlgorithm {
         private static final Charset UTF_8 = Charset.forName("UTF-8");
-    	private final ConcurrentLinkedQueue<MessageDigest> digestCache = new ConcurrentLinkedQueue<MessageDigest>();
+        private final ConcurrentLinkedQueue<MessageDigest> digestCache = new ConcurrentLinkedQueue<MessageDigest>();
 
         /**
-    	 * Compute the hash for the given key.
-    	 *
-    	 * @param k the key to hash
+         * Compute the hash for the given key.
+         *
+         * @param k the key to hash
          * @return a positive integer hash of 128 bits
-    	 */
+         */
         public BigInteger hash(final String k) {
             return new BigInteger(computeMd5(k)).abs();
         }
 
         /**
-    	 * Get the md5 of the given key.
+         * Get the md5 of the given key.
+         *
          * @param k the key to compute an MD5 on
          * @return an MD5 hash
          */
         public byte[] computeMd5(String k) {
-    		MessageDigest md5 = borrow();
-    		try {
-    			md5.reset();
-    			md5.update(k.getBytes(UTF_8));
-    			return md5.digest();
-    		} finally {
-    			release(md5);
-    		}
-    	}
+            MessageDigest md5 = borrow();
+            try {
+                md5.reset();
+                md5.update(k.getBytes(UTF_8));
+                return md5.digest();
+            } finally {
+                release(md5);
+            }
+        }
 
-    	private MessageDigest borrow() {
-    		MessageDigest md5 = digestCache.poll();
-    		if(md5 == null) {
-    			try {
-    				md5 = MessageDigest.getInstance("MD5");
-    			} catch (NoSuchAlgorithmException e) {
-    				throw new RuntimeException("MD5 not supported", e);
-    			}
-    		}
-    		return md5;
-    	}
+        private MessageDigest borrow() {
+            MessageDigest md5 = digestCache.poll();
+            if (md5 == null) {
+                try {
+                    md5 = MessageDigest.getInstance("MD5");
+                } catch (NoSuchAlgorithmException e) {
+                    throw new RuntimeException("MD5 not supported", e);
+                }
+            }
+            return md5;
+        }
 
-    	private void release(MessageDigest digest) {
-    		digestCache.offer(digest);
-    	}
+        private void release(MessageDigest digest) {
+            digestCache.offer(digest);
+        }
     }
 
 

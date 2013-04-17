@@ -37,7 +37,7 @@ public class HttpClientService extends TypedActor<HttpRequest> {
     }
 
     @Override
-    public void onReceive(HttpRequest message, ActorRef sender) throws Exception {
+    public void onReceive(ActorRef sender, HttpRequest message) throws Exception {
         // run the request via ning and return the response async
         httpClient.prepareGet(message.getUrl()).execute(new ResponseHandler(getSelf(),sender));
     }
