@@ -140,6 +140,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                     if(!actorExists(actorSystem.actorFor(createActorMessage.getActorId()))) {
                         createActor(createActorMessage,internalMessage,messageHandlerEventListener);
                     } else {
+                        // we need to activate the actor since we need to run the postActivate logic
+                        activateActor(actorSystem.actorFor(createActorMessage.getActorId()));
                         // ack message anyway
                         messageHandlerEventListener.onDone(internalMessage);
                     }
@@ -184,6 +186,28 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                                                   ref,
                                                   internalMessage,
                                                   messageHandlerEventListener));
+    }
+
+    private void activateActor(final ActorRef actorRef) throws Exception {
+        // load persistent actor from cache or persistent store
+        PersistentActor actor = actorCache.get(actorRef, new Callable<PersistentActor>() {
+            @Override
+            public PersistentActor call() throws Exception {
+                PersistentActor loadedActor = persistentActorRepository.get(shardKey,actorRef.getActorId());
+                if(loadedActor == null) {
+                    // @todo: using Spring DataAccesException here, might want to change this or use in Repository implementation
+                    throw new EmptyResultDataAccessException(String.format("Actor [%s] not found in Shard [%s]",actorRef.getActorId(),shardKey.toString()),1);
+                } else {
+                    ElasticActor actorInstance = actorSystem.getActorInstance(actorRef,loadedActor.getActorClass());
+                    actorExecutor.execute(new ActivateActorTask(persistentActorRepository,
+                                                                loadedActor,
+                                                                actorSystem,
+                                                                actorInstance,
+                                                                actorRef));
+                    return loadedActor;
+                }
+            }
+        });
     }
 
     private void destroyActor(DestroyActorMessage destroyMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {

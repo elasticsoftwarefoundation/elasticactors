@@ -130,7 +130,7 @@ public final class PiApproximator implements ActorSystemConfiguration, ActorSyst
 
     @Override
     public void create(ActorSystem actorSystem, String... arguments) throws Exception {
-
+        logger.info("PiApproximator.create");
         // @todo: make configurable by arguments
 
         // create listener

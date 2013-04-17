@@ -37,7 +37,6 @@ import java.util.*;
 /**
  * @author Joost van de Wijgerd
  */
-@Configurable
 public final class Listener extends UntypedActor {
     private static final Logger logger = Logger.getLogger(Listener.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -63,6 +62,12 @@ public final class Listener extends UntypedActor {
     @Override
     public void postCreate(ActorRef creator) throws Exception {
         logger.info("Listener.postCreate");
+
+    }
+
+    @Override
+    public void postActivate(String previousVersion) throws Exception {
+        logger.info("Listener.postActivate");
         // register ourselves with the http server
         ActorSystem httpSystem = getSystem().getParent().get("Http");
         if(httpSystem != null) {
