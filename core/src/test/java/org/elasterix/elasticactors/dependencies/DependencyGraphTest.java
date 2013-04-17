@@ -59,7 +59,7 @@ public class DependencyGraphTest {
                 nodeValueList.add(nodeValue);
             }
         });
-        graph.addDependency("PiTest", "Http");
+        graph.addDependency("Http", "PiTest");
         graph.generateDependencies();
         System.out.println(nodeValueList);
 

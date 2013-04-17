@@ -31,11 +31,14 @@ import org.elasterix.elasticactors.serialization.Serializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.annotation.AnnotationUtils;
 
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -79,6 +82,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
             shardAdapters[i] = new ActorShardAdapter(new ShardKey(actorSystem.getName(),i));
         }
         this.localNodeAdapter = new ActorNodeAdapter(new NodeKey(actorSystem.getName(),localNode.getId()));
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s[%s]",getClass(),getName());
     }
 
     @Override
@@ -362,6 +370,16 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     @Autowired
     public void setScheduler(Scheduler scheduler) {
         this.scheduler = scheduler;
+    }
+
+    @Override
+    public List<String> getDependencies() {
+        DependsOn dependsOn = AnnotationUtils.findAnnotation(configuration.getClass(),DependsOn.class);
+        if(dependsOn != null) {
+            return Arrays.<String>asList(dependsOn.dependencies());
+        } else {
+            return Collections.<String>emptyList();
+        }
     }
 
     private final class ActorShardAdapter implements ActorShard {

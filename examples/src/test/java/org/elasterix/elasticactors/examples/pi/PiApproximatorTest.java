@@ -20,10 +20,7 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.ListenableFuture;
 import com.ning.http.client.Response;
 import org.apache.log4j.BasicConfigurator;
-import org.elasterix.elasticactors.ActorRef;
-import org.elasterix.elasticactors.ActorState;
-import org.elasterix.elasticactors.ActorSystem;
-import org.elasterix.elasticactors.ActorSystems;
+import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.cluster.ActorRefFactory;
 import org.elasterix.elasticactors.examples.pi.actors.Listener;
 import org.elasterix.elasticactors.examples.pi.actors.Master;
@@ -38,6 +35,7 @@ import org.elasterix.elasticactors.serialization.Serializer;
 import org.elasterix.elasticactors.test.TestActorSystem;
 import org.elasticsoftwarefoundation.elasticactors.http.HttpActorSystem;
 import org.mockito.ArgumentCaptor;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -169,5 +167,10 @@ public class PiApproximatorTest {
         Response response = responseFuture.get();
         assertEquals(response.getContentType(),"application/json");
         System.out.println(response.getResponseBody("UTF-8"));
+    }
+
+    @Test
+    public void testDependency() {
+        assertNotNull(AnnotationUtils.findAnnotation(PiApproximator.class,DependsOn.class));
     }
 }

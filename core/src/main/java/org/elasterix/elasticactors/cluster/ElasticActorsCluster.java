@@ -16,6 +16,7 @@
 
 package org.elasterix.elasticactors.cluster;
 
+import com.google.common.collect.Collections2;
 import me.prettyprint.cassandra.model.AllOneConsistencyLevelPolicy;
 import me.prettyprint.cassandra.model.QuorumAllConsistencyLevelPolicy;
 import me.prettyprint.cassandra.service.CassandraHost;
@@ -212,22 +213,30 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
         });
 
         for (LocalActorSystemInstance actorSystemInstance : managedActorSystems.values()) {
-            DependsOn dependsOn = AnnotationUtils.findAnnotation(actorSystemInstance.getClass(), DependsOn.class);
-            if(dependsOn != null) {
-                for (String dependency : dependsOn.dependencies()) {
-                    LocalActorSystemInstance instance = managedActorSystems.get(dependency);
-                    if(instance != null) {
-                        dependencyGraph.addDependency(instance,actorSystemInstance);
-                    }
+            List<String> dependencies = actorSystemInstance.getDependencies();
+
+            for (String dependency : dependencies) {
+                LocalActorSystemInstance instance = managedActorSystems.get(dependency);
+                if(instance != null) {
+                    logger.info(String.format("Adding dependency from [%s] on [%s]",actorSystemInstance.getName(),instance.getName()));
+                    dependencyGraph.addDependency(instance,actorSystemInstance);
                 }
-            } else {
+             else {
                 // just add the node to the back of the list, order doesn't matter
                 // @todo: this is not correct
                 // nodeValueList.add(actorSystemInstance);
             }
+            }
         }
 
         dependencyGraph.generateDependencies();
+        // see if we have all of the original members
+        for (LocalActorSystemInstance actorSystemInstance : managedActorSystems.values()) {
+            if(!nodeValueList.contains(actorSystemInstance)) {
+                nodeValueList.add(actorSystemInstance);
+            }
+        }
+        logger.info(String.format("Processing ActorSystems in the following order: [%s]",nodeValueList.toString()));
 
         for (LocalActorSystemInstance actorSystemInstance : nodeValueList) {
             new RebalancingRunnable(actorSystemInstance,clusterNodes).run();

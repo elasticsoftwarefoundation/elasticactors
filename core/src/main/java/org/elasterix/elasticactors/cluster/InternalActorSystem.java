@@ -18,6 +18,8 @@ package org.elasterix.elasticactors.cluster;
 
 import org.elasterix.elasticactors.*;
 
+import java.util.List;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -63,4 +65,6 @@ public interface InternalActorSystem extends ActorSystem, ActorSystemConfigurati
     ActorNode getNode();
 
     ActorRef tempActorFor(String actorId);
+
+    List<String> getDependencies();
 }
