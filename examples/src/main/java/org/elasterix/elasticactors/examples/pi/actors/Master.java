@@ -152,6 +152,7 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
     @Override
     public void postCreate(ActorRef creator) throws Exception {
         State state = getState(this).getAsObject(State.class);
+        logger.info(String.format("Master.postCreate -> listener ref: %s",state.listener));
         List<ActorRef> workers = new ArrayList<ActorRef>(state.nrOfWorkers);
         for (int i = 1; i <= state.nrOfWorkers; i++) {
             workers.add(getSystem().actorOf("worker-"+i,Worker.class));
@@ -161,12 +162,15 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
 
     @Override
     public void postActivate(String previousVersion) throws Exception {
-        State state = getState(this).getAsObject(State.class);
+        ActorState state = getState(this);
+        // need to upgrade listener to be a service
+        state.getAsMap().put("listener",getSystem().serviceActorFor("pi/calculate").toString());
     }
 
     public void onReceive(ActorRef sender, Object message) {
         State state = getState(this).getAsObject(State.class);
         if (message instanceof Calculate) {
+            logger.info("Starting calculation");
             Calculate calculateRequest = (Calculate) message;
             State.Calculation calculation = new State.Calculation();
             for (int start = 0; start < state.getNrOfMessages(); start++) {
@@ -180,6 +184,7 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
             calculation.nrOfResults += 1;
 
             if (calculation.nrOfResults == state.nrOfMessages) {
+                logger.info(String.format("Calculation done, sending reply to actor [%s]",state.listener));
                 // Send the result to the listener
                 long duration = System.currentTimeMillis() - calculation.start;
                 state.listener.tell(new PiApproximation(result.getCalculationId(), calculation.pi, duration), getSelf());

@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.messaging.InternalMessage;
 import org.elasterix.elasticactors.messaging.MessageQueueFactory;
+import org.elasterix.elasticactors.messaging.internal.ActivateActorMessage;
 import org.elasterix.elasticactors.messaging.internal.ActorType;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasterix.elasticactors.messaging.internal.DestroyActorMessage;
@@ -112,16 +113,16 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
             if (!activeNodes.containsKey(node.getId())) {
                 if (node.isLocal()) {
                     LocalActorNode localActorNode = new LocalActorNode(node,
-                                                                       this,
-                                                                       localNodeAdapter.myRef,
-                                                                       localMessageQueueFactory);
+                            this,
+                            localNodeAdapter.myRef,
+                            localMessageQueueFactory);
                     activeNodes.put(node.getId(), localActorNode);
                     localActorNode.init();
                 } else {
                     RemoteActorNode remoteActorNode = new RemoteActorNode(node,
-                                                                         this,
-                                                                         new ActorNodeAdapter(new NodeKey(getName(), node.getId())).myRef,
-                                                                         remoteMessageQueueFactory);
+                            this,
+                            new ActorNodeAdapter(new NodeKey(getName(), node.getId())).myRef,
+                            remoteMessageQueueFactory);
                     activeNodes.put(node.getId(), remoteActorNode);
                     remoteActorNode.init();
                 }
@@ -137,18 +138,26 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     public void distributeShards(List<PhysicalNode> nodes) throws Exception {
 
         NodeSelector nodeSelector = nodeSelectorFactory.create(nodes);
-        for (int i = 0; i < configuration.getNumberOfShards(); i++) {
-            ShardKey shardKey = new ShardKey(configuration.getName(), i);
-            PhysicalNode node = nodeSelector.getPrimary(shardKey.toString());
-            if (node.isLocal()) {
-                // this instance should start owning the shard now
-                final ActorShard currentShard = shards[i];
-                if (currentShard == null || !currentShard.getOwningNode().isLocal()) {
-                    logger.info(String.format("I will own %s", shardKey.toString()));
-                    // first we need to obtain the writeLock on the shard
-                    final Lock writeLock = shardLocks[i].writeLock();
-                    try {
-                        writeLock.lock();
+        // lock all
+        final Lock[] writeLocks = new Lock[shardLocks.length];
+        for (int j = 0; j < shardLocks.length; j++) {
+            writeLocks[j] = shardLocks[j].writeLock();
+        }
+        try {
+            for (Lock writeLock : writeLocks) {
+                writeLock.lock();
+            }
+
+            for (int i = 0; i < configuration.getNumberOfShards(); i++) {
+                ShardKey shardKey = new ShardKey(configuration.getName(), i);
+                PhysicalNode node = nodeSelector.getPrimary(shardKey.toString());
+                if (node.isLocal()) {
+
+                    // this instance should start owning the shard now
+                    final ActorShard currentShard = shards[i];
+                    if (currentShard == null || !currentShard.getOwningNode().isLocal()) {
+                        logger.info(String.format("I will own %s", shardKey.toString()));
+
                         // destroy the current remote shard instance
                         if (currentShard != null) {
                             currentShard.destroy();
@@ -159,22 +168,17 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                         shards[i] = newShard;
                         // initialize
                         newShard.init();
-                    } finally {
-                        writeLock.unlock();
+
+                    } else {
+                        // we own the shard already, no change needed
+                        logger.info(String.format("I already own %s", shardKey.toString()));
                     }
                 } else {
-                    // we own the shard already, no change needed
-                    logger.info(String.format("I already own %s", shardKey.toString()));
-                }
-            } else {
-                // the shard will be managed by another node
-                final ActorShard currentShard = shards[i];
-                if (currentShard == null || currentShard.getOwningNode().isLocal()) {
-                    logger.info(String.format("%s will own %s", node, shardKey));
-                    // first we need to obtain the writeLock on the shard
-                    final Lock writeLock = shardLocks[i].writeLock();
-                    try {
-                        writeLock.lock();
+                    // the shard will be managed by another node
+                    final ActorShard currentShard = shards[i];
+                    if (currentShard == null || currentShard.getOwningNode().isLocal()) {
+                        logger.info(String.format("%s will own %s", node, shardKey));
+
                         // destroy the current remote shard instance
                         if (currentShard != null) {
                             currentShard.destroy();
@@ -185,27 +189,47 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                         shards[i] = newShard;
                         // initialize
                         newShard.init();
-                    } finally {
-                        writeLock.unlock();
+
+                    } else {
+                        // shard was already remote
+                        logger.info(String.format("%s will own %s", node, shardKey));
                     }
-                } else {
-                    // shard was already remote
-                    logger.info(String.format("%s will own %s", node, shardKey));
                 }
+            }
+        } finally {
+            // unlock all
+            for (Lock writeLock : writeLocks) {
+                writeLock.unlock();
             }
         }
         // see if this was the first time, if so we need to initialize the ActorSystem
         if (initialized.compareAndSet(false, true)) {
             logger.info(String.format("Initializing ActorSystem [%s]", getName()));
+            ActorSystemBootstrapper bootstrapper = null;
             if (configuration instanceof ActorSystemBootstrapper) {
                 logger.info(String.format("Bootstrapping ActorSystem [%s]", getName()));
-                ActorSystemBootstrapper bootstrapper = (ActorSystemBootstrapper) configuration;
+                bootstrapper = (ActorSystemBootstrapper) configuration;
+            }
+            if (bootstrapper != null) {
                 try {
                     bootstrapper.initialize(this);
                 } catch (Exception e) {
                     // @todo: we should probably abort here
                     logger.error(String.format("Exception while initializing ActorSystem [%s]", getName()), e);
                 }
+            }
+
+            // initialize the services
+            Set<String> serviceActors = configuration.getServices();
+            if (serviceActors != null && !serviceActors.isEmpty()) {
+                // initialize the service actors in the context
+                for (String elasticActorEntry : serviceActors) {
+                    localNodeAdapter.sendMessage(null,
+                            localNodeAdapter.myRef,
+                            new ActivateActorMessage(getName(), elasticActorEntry, ActorType.SERVICE));
+                }
+            }
+            if (bootstrapper != null) {
                 // @todo: we should only do this on original creation of the ActorSystem, not when reloading
                 try {
                     bootstrapper.create(this);
@@ -220,6 +244,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                     logger.error(String.format("Exception while activating ActorSystem [%s]", getName()), e);
                 }
             }
+
         }
     }
 
@@ -377,6 +402,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     @Override
     public ElasticActor getService(String serviceId) {
         return configuration.getService(serviceId);
+    }
+
+    @Override
+    public Set<String> getServices() {
+        return configuration.getServices();
     }
 
     @Autowired

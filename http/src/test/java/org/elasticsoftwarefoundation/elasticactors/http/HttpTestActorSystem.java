@@ -32,14 +32,7 @@ public class HttpTestActorSystem extends SpringBasedActorSystem {
 
     @Override
     protected void doInitialize(ApplicationContext applicationContext, ActorSystem actorSystem) {
-        // @todo: ensure we can annotation-config and spring-configured (problem now is that core is relying on it)
-        // first set the actor system
-        // applicationContext.getAutowireCapableBeanFactory().initializeBean(actorSystem,"actorSystem");
-        // now trigger lazy instantiation
-        // applicationContext.getBean(UserDispatcher.class);
-        UserDispatcher userDispatcher = applicationContext.getBean(UserDispatcher.class);
-        userDispatcher.setActorSystem(actorSystem);
-        userDispatcher.init();
+
     }
 
     @Override

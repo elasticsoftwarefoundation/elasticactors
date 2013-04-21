@@ -30,6 +30,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Joost van de Wijgerd
@@ -53,7 +54,8 @@ public abstract class SpringBasedActorSystem implements ActorSystemConfiguration
                 new SimpleModule("ElasticActorsModule",new Version(0,1,0,"SNAPSHOT"))
                 .addSerializer(ActorRef.class, new JacksonActorRefSerializer())
                 .addDeserializer(ActorRef.class, new JacksonActorRefDeserializer(actorSystem.getParent().getActorRefFactory())));
-        doInitialize(applicationContext,actorSystem);
+
+        doInitialize(applicationContext, actorSystem);
     }
 
     protected abstract void doInitialize(ApplicationContext applicationContext, ActorSystem actorSystem);
@@ -100,5 +102,8 @@ public abstract class SpringBasedActorSystem implements ActorSystemConfiguration
         return applicationContext.getBean(serviceId,ElasticActor.class);
     }
 
-
+    @Override
+    public final Set<String> getServices() {
+        return applicationContext.getBeansOfType(ElasticActor.class).keySet();
+    }
 }

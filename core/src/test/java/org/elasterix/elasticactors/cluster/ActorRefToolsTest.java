@@ -16,10 +16,10 @@
 
 package org.elasterix.elasticactors.cluster;
 
-import org.elasterix.elasticactors.ActorRef;
-import org.elasterix.elasticactors.ActorShard;
-import org.elasterix.elasticactors.ShardKey;
+import org.elasterix.elasticactors.*;
 import org.testng.annotations.Test;
+
+import java.util.UUID;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -47,23 +47,37 @@ public class ActorRefToolsTest {
     }
 
     @Test
-        public void testParseShardRef() {
-            InternalActorSystems internalActorSystems = mock(InternalActorSystems.class);
-            InternalActorSystem actorSystem = mock(InternalActorSystem.class);
-            ActorShard shard = mock(ActorShard.class);
-            ShardKey shardKey = new ShardKey("Pi",0);
-            when(internalActorSystems.getClusterName()).thenReturn("LocalNode");
-            when(internalActorSystems.get("Pi")).thenReturn(actorSystem);
-            when(actorSystem.getNumberOfShards()).thenReturn(1);
-            when(actorSystem.getShard("Pi/shards/0")).thenReturn(shard);
-            when(shard.getKey()).thenReturn(shardKey);
-            ActorRef actorRef = ActorRefTools.parse("actor://LocalNode/Pi/shards/0",internalActorSystems);
-            assertNotNull(actorRef);
-            assertNull(actorRef.getActorId());
-            assertEquals(actorRef.toString(), "actor://LocalNode/Pi/shards/0");
-        }
+    public void testParseShardRef() {
+        InternalActorSystems internalActorSystems = mock(InternalActorSystems.class);
+        InternalActorSystem actorSystem = mock(InternalActorSystem.class);
+        ActorShard shard = mock(ActorShard.class);
+        ShardKey shardKey = new ShardKey("Pi",0);
+        when(internalActorSystems.getClusterName()).thenReturn("LocalNode");
+        when(internalActorSystems.get("Pi")).thenReturn(actorSystem);
+        when(actorSystem.getNumberOfShards()).thenReturn(1);
+        when(actorSystem.getShard("Pi/shards/0")).thenReturn(shard);
+        when(shard.getKey()).thenReturn(shardKey);
+        ActorRef actorRef = ActorRefTools.parse("actor://LocalNode/Pi/shards/0",internalActorSystems);
+        assertNotNull(actorRef);
+        assertNull(actorRef.getActorId());
+        assertEquals(actorRef.toString(), "actor://LocalNode/Pi/shards/0");
+    }
 
-
-
-
+    @Test
+    public void testParseServiceActorRefWithSlashInActorId() {
+        String nodeId = UUID.randomUUID().toString();
+        InternalActorSystems internalActorSystems = mock(InternalActorSystems.class);
+        InternalActorSystem actorSystem = mock(InternalActorSystem.class);
+        ActorNode node = mock(ActorNode.class);
+        NodeKey nodeKey = new NodeKey("Pi",nodeId);
+        when(internalActorSystems.getClusterName()).thenReturn("LocalNode");
+        when(internalActorSystems.get("Pi")).thenReturn(actorSystem);
+        when(actorSystem.getNode()).thenReturn(node);
+        when(node.getKey()).thenReturn(nodeKey);
+        String serviceRefString = "actor://LocalNode/Pi/services/pi/calculate";
+        ActorRef serviceRef = ActorRefTools.parse(serviceRefString,internalActorSystems);
+        assertNotNull(serviceRef);
+        assertEquals(serviceRef.getActorId(),"pi/calculate");
+        assertEquals(serviceRef.toString(),serviceRefString);
+    }
 }

@@ -16,31 +16,35 @@
 
 package org.elasterix.elasticactors.serialization.internal;
 
-import me.prettyprint.cassandra.serializers.StringSerializer;
+import com.google.protobuf.ByteString;
+import org.elasterix.elasticactors.ActorState;
+import org.elasterix.elasticactors.cluster.InternalActorSystem;
 import org.elasterix.elasticactors.cluster.InternalActorSystems;
 import org.elasterix.elasticactors.messaging.internal.ActivateActorMessage;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
-import org.elasterix.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
+import org.elasterix.elasticactors.serialization.protobuf.Elasticactors;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class SystemSerializers {
-    private final Map<Class,MessageSerializer> systemSerializers = new HashMap<Class,MessageSerializer>();
+public final class ActivateActorMessageSerializer implements MessageSerializer<ActivateActorMessage> {
 
-    public SystemSerializers(InternalActorSystems cluster) {
-        systemSerializers.put(CreateActorMessage.class,new CreateActorMessageSerializer(cluster));
-        systemSerializers.put(DestroyActorMessage.class,new DestroyActorMessageSerializer());
-        systemSerializers.put(ActivateActorMessage.class,new ActivateActorMessageSerializer());
-        systemSerializers.put(String.class,new HectorMessageSerializer<String>(StringSerializer.get()));
-        //@todo: add more serializers here
+    public ActivateActorMessageSerializer() {
+
     }
 
-    public <T> MessageSerializer<T> get(Class<T> messageClass) {
-        return systemSerializers.get(messageClass);
+
+    @Override
+    public ByteBuffer serialize(ActivateActorMessage message) throws IOException {
+        Elasticactors.ActivateActorMessage.Builder builder = Elasticactors.ActivateActorMessage.newBuilder();
+        builder.setActorSystem(message.getActorSystem());
+        builder.setActorId(message.getActorId());
+        builder.setType(Elasticactors.ActorType.valueOf(message.getActorType().ordinal()));
+        return ByteBuffer.wrap(builder.build().toByteArray());
     }
+
 }

@@ -20,6 +20,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.elasterix.elasticactors.ActorState;
 import org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonActorStateDeserializer;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -38,7 +39,7 @@ public final class JacksonActorState implements ActorState {
     public JacksonActorState(ObjectMapper objectMapper, Object stateObject) {
         this.objectMapper = objectMapper;
         this.stateObject = stateObject;
-        this.stateMap = null;
+        this.stateMap = new LinkedHashMap<String,Object>();
     }
 
     // @todo: this setup is a bit dangerous and we might loose state updates when used the wrong way
@@ -46,7 +47,8 @@ public final class JacksonActorState implements ActorState {
     @Override
     public Map<String, Object> getAsMap() {
         if(stateObject != null) {
-            return objectMapper.convertValue(stateObject, JacksonActorStateDeserializer.MAP_TYPE);
+            stateMap.putAll(objectMapper.<Map<? extends String, ? extends Object>>convertValue(stateObject, JacksonActorStateDeserializer.MAP_TYPE));
+            stateObject = null;
         }
         return stateMap;
     }

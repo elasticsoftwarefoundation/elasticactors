@@ -26,23 +26,28 @@ message PersistentActor {
     optional string shardKey = 5;
 }
 
+enum ActorType {
+   PERSISTENT = 0;
+   TEMP = 1;
+   SERVICE = 2;
+}
+
 message CreateActorMessage {
     optional string actorId = 1;
     optional bytes initialState = 2;
     optional string actorClass = 3;
     optional string actorSystem = 4;
-
-    enum ActorType {
-       PERSISTENT = 0;
-       TEMP = 1;
-       SERVICE = 2;
-    }
-
     optional ActorType type = 5;
 }
 
 message DestroyActorMessage {
     optional string actorRef = 1;
+}
+
+message ActivateActorMessage {
+    optional string actorSystem = 1;
+    optional string actorId = 2;
+    optional ActorType type = 3;
 }
 
 message WireMessage {

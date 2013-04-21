@@ -124,7 +124,8 @@ public class PiApproximatorTest {
 
         when(actorSystem.getParent()).thenReturn(parent);
         when(parent.getActorRefFactory()).thenReturn(actorRefFactory);
-        when(actorSystem.actorOf(eq("pi/calculate"), eq(Listener.class), any(ActorState.class))).thenReturn(listenerRef);
+        //when(actorSystem.actorOf(eq("pi/calculate"), eq(Listener.class), any(ActorState.class))).thenReturn(listenerRef);
+        when(actorSystem.serviceActorFor("pi/calculate")).thenReturn(listenerRef);
         when(actorSystem.actorOf(eq("master"),eq(Master.class),stateArgumentCaptor.capture())).thenReturn(masterRef);
 
         when(listenerRef.toString()).thenReturn("listenerRef");

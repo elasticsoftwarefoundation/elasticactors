@@ -30,6 +30,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Joost van de Wijgerd
@@ -98,5 +99,10 @@ public class HttpClientActorSystem implements ActorSystemConfiguration, ActorSys
     @Override
     public ElasticActor getService(String serviceId) {
         return applicationContext.getBean(serviceId,ElasticActor.class);
+    }
+
+    @Override
+    public Set<String> getServices() {
+        return applicationContext.getBeansOfType(ElasticActor.class).keySet();
     }
 }

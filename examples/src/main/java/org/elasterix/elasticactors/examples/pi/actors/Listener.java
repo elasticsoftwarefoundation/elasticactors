@@ -36,7 +36,8 @@ import java.util.*;
  */
 public final class Listener extends UntypedActor {
     private static final Logger logger = Logger.getLogger(Listener.class);
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+    private final State state = new State();
 
     public static final class State {
         private final Map<String,ActorRef> calculations;
@@ -54,6 +55,10 @@ public final class Listener extends UntypedActor {
         public Map<String, ActorRef> getCalculations() {
             return calculations;
         }
+    }
+
+    public Listener(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -76,7 +81,7 @@ public final class Listener extends UntypedActor {
     }
 
     public void onReceive(ActorRef sender, Object message) throws Exception {
-        final State state = getState(null).getAsObject(State.class);
+        //final State state = getState(null).getAsObject(State.class);
         if(message instanceof HttpMessage) {
             // we have a new calculation request
             String id = UUID.randomUUID().toString();

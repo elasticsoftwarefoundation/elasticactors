@@ -21,6 +21,9 @@ import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.serialization.Serializer;
 
+import java.util.Map;
+import java.util.Set;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -56,4 +59,11 @@ public interface ActorSystemConfiguration {
     Deserializer<byte[], ActorState> getActorStateDeserializer();
 
     ElasticActor getService(String serviceId);
+
+    /**
+     * Returns all services that this configuration defines. Used to initialize them properly
+     *
+     * @return
+     */
+    Set<String> getServices();
 }

@@ -207,10 +207,17 @@ public final class NettyMessagingService extends SimpleChannelUpstreamHandler im
             Elasticactors.WireMessage wireMessage = (Elasticactors.WireMessage) messageObject;
             // @todo: do this nice with some utility
             String[] pathElements = wireMessage.getQueueName().split("/");
-
+            // @todo: this is pretty ugly, much better to let the actorSystem figure this out
             InternalActorSystem actorSystem = cluster.get(pathElements[0]);
-            actorSystem.getShard(wireMessage.getQueueName()).offerInternalMessage(
-                                 InternalMessageDeserializer.get().deserialize(wireMessage.getInternalMessage().toByteArray()));
+            if("shards".equals(pathElements[1])) {
+                actorSystem.getShard(wireMessage.getQueueName()).offerInternalMessage(
+                    InternalMessageDeserializer.get().deserialize(wireMessage.getInternalMessage().toByteArray()));
+            } else if("nodes".equals(pathElements[1])) {
+                actorSystem.getNode(pathElements[2]).offerInternalMessage(
+                    InternalMessageDeserializer.get().deserialize(wireMessage.getInternalMessage().toByteArray()));
+            } else {
+                logger.error(String.format("Received a message for an unknown queue [%s], Ignoring",wireMessage.getQueueName()));
+            }
             //logger.info(String.format("received message from %s for %s",ctx.getChannel().getRemoteAddress(),queueName));
         }
     }

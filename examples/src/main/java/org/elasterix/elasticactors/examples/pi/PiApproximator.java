@@ -36,8 +36,7 @@ import org.elasticsoftwarefoundation.elasticactors.base.state.JacksonActorState;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpResponse;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Joost van de Wijgerd
@@ -51,6 +50,9 @@ public final class PiApproximator implements ActorSystemConfiguration, ActorSyst
 
     private final Serializer<ActorState, byte[]> actorStateSerializer = new JacksonActorStateSerializer(objectMapper);
     private final Deserializer<byte[], ActorState> actorStateDeserializer = new JacksonActorStateDeserializer(objectMapper);
+
+    // the listener service to dispatch http requests
+    private final Listener listenerService = new Listener(objectMapper);
 
     private final Map<Class<?>, MessageSerializer<?>> messageSerializers = new HashMap<Class<?>, MessageSerializer<?>>() {{
         put(Calculate.class, new JacksonMessageSerializer<Calculate>(objectMapper));
@@ -113,7 +115,16 @@ public final class PiApproximator implements ActorSystemConfiguration, ActorSyst
 
     @Override
     public ElasticActor getService(String serviceId) {
-        return null;
+        if("pi/calculate".equals(serviceId)) {
+            return listenerService;
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public Set<String> getServices() {
+        return new HashSet<String>(Arrays.asList("pi/calculate"));
     }
 
     // bootstrapper
@@ -133,10 +144,10 @@ public final class PiApproximator implements ActorSystemConfiguration, ActorSyst
         logger.info("PiApproximator.create");
         // @todo: make configurable by arguments
 
-        // create listener
-        ActorRef listener = actorSystem.actorOf("pi/calculate",
-                                                Listener.class,
-                                                new JacksonActorState(objectMapper,new Listener.State()));
+        // get listener ref (this is now a service actor)
+        ActorRef listener = actorSystem.serviceActorFor("pi/calculate");
+        logger.info(String.format("listener ref: %s",listener));
+
         // create master
         Master.State masterState = new Master.State(listener,4,10000,10000);
         ActorRef master = actorSystem.actorOf("master",Master.class,new JacksonActorState(objectMapper,masterState));

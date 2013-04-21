@@ -20,13 +20,13 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.*;
-import org.elasterix.elasticactors.cluster.tasks.CreateActorTask;
-import org.elasterix.elasticactors.cluster.tasks.HandleMessageTask;
-import org.elasterix.elasticactors.cluster.tasks.HandleServiceMessageTask;
+import org.elasterix.elasticactors.cluster.tasks.*;
 import org.elasterix.elasticactors.messaging.InternalMessage;
 import org.elasterix.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasterix.elasticactors.messaging.MessageQueueFactory;
 import org.elasterix.elasticactors.messaging.TransientInternalMessage;
+import org.elasterix.elasticactors.messaging.internal.ActivateActorMessage;
+import org.elasterix.elasticactors.messaging.internal.ActorType;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasterix.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasterix.elasticactors.state.PersistentActor;
@@ -133,6 +133,16 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                     this.actorCache.invalidate(destroyActorMessage.getActorRef());
                     // ack message
                     messageHandlerEventListener.onDone(internalMessage);
+                } else if(message instanceof ActivateActorMessage) {
+                    ActivateActorMessage activateActorMessage = (ActivateActorMessage) message;
+                    if(activateActorMessage.getActorType() == ActorType.SERVICE) {
+                        activateService(activateActorMessage,internalMessage,messageHandlerEventListener);
+                    } else {
+                        // we don't support activating any other types
+                        logger.error(String.format("Received ActivateActorMessage for type [%s], ignoring",activateActorMessage.getActorType()));
+                        // ack the message anyway
+                        messageHandlerEventListener.onDone(internalMessage);
+                    }
                 }
             } catch(Exception e) {
                 // @todo: determine if this is a recoverable error case or just a programming error
@@ -166,6 +176,13 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                                                   ref,
                                                   internalMessage,
                                                   messageHandlerEventListener));
+    }
+
+    private void activateService(ActivateActorMessage activateActorMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) {
+        ElasticActor serviceActor = actorSystem.getService(activateActorMessage.getActorId());
+        ActorRef serviceRef = actorSystem.serviceActorFor(activateActorMessage.getActorId());
+
+        actorExecutor.execute(new ActivateServiceActorTask(actorSystem,serviceRef,serviceActor,internalMessage,messageHandlerEventListener));
     }
 
     @Autowired

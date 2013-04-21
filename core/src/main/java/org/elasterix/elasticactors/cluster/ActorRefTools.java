@@ -63,7 +63,7 @@ public final class ActorRefTools {
                 } else if("nodes".equals(components[2])) {
                     return new LocalClusterActorNodeRef(clusterName,actorSystem.getNode(components[3]),actorId);
                 } else if("services".equals(components[2])) {
-                    return new ServiceActorRef(clusterName,actorSystem.getNode(),components[3]);
+                    return new ServiceActorRef(clusterName,actorSystem.getNode(),(actorId == null) ? components[3] : String.format("%s/%s",components[3],actorId));
                 } else {
                     throw new IllegalArgumentException(String.format(EXCEPTION_FORMAT, refSpec));
                 }
