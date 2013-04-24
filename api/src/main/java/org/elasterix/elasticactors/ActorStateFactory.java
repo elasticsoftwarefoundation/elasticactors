@@ -16,9 +16,26 @@
 
 package org.elasterix.elasticactors;
 
+import java.util.Map;
+
 /**
  * @author Joost van de Wijgerd
  */
 public interface ActorStateFactory {
+    /**
+     * @return  a new empty ActorState instance
+     */
     ActorState create();
+
+    ActorState create(Map<String,Object> map);
+
+    /**
+     * Creates an ActorState based on a pojo. The pojo should be serializable with the configured
+     *  {@link org.elasterix.elasticactors.ActorSystemConfiguration#getActorStateDeserializer()} and
+     *  {@link org.elasterix.elasticactors.ActorSystemConfiguration#getActorStateSerializer()}
+     *
+     * @param backingObject
+     * @return
+     */
+    ActorState create(Object backingObject);
 }

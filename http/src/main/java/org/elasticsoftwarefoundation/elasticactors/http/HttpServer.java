@@ -101,8 +101,7 @@ public class HttpServer extends SimpleChannelUpstreamHandler implements ChannelP
         HttpRequest request = new HttpRequest(nettyRequest.getUri(),headers,content);
         // create a temp actor to handle the response
         ActorRef replyActor = actorSystem.tempActorOf(HttpServiceResponseHandler.class,
-                                                      new JacksonActorState(objectMapper,
-                                                                            new HttpServiceResponseHandler.State(ctx.getChannel())));
+                                                      new HttpServiceResponseHandler.State(ctx.getChannel()));
         // async handling
         if(!httpService.doDispatch(request,replyActor)) {
             // send 404

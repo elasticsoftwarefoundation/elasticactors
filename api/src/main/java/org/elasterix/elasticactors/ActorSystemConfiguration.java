@@ -58,6 +58,8 @@ public interface ActorSystemConfiguration {
      */
     Deserializer<byte[], ActorState> getActorStateDeserializer();
 
+    ActorStateFactory getActorStateFactory();
+
     ElasticActor getService(String serviceId);
 
     /**

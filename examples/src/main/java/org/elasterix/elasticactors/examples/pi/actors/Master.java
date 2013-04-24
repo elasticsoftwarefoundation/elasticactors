@@ -36,13 +36,8 @@ import java.util.Map;
 /**
  * @author Joost van de Wijgerd
  */
-public final class  Master extends UntypedActor implements ActorStateFactory {
+public final class  Master extends UntypedActor  {
     private static final Logger logger = Logger.getLogger(Master.class);
-
-    @Override
-    public ActorState create() {
-        throw new IllegalStateException("Please initialize Master with state");
-    }
 
     public static final class State {
         private final ActorRef listener;
@@ -151,7 +146,7 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
 
     @Override
     public void postCreate(ActorRef creator) throws Exception {
-        State state = getState(this).getAsObject(State.class);
+        State state = getState(null).getAsObject(State.class);
         logger.info(String.format("Master.postCreate -> listener ref: %s",state.listener));
         List<ActorRef> workers = new ArrayList<ActorRef>(state.nrOfWorkers);
         for (int i = 1; i <= state.nrOfWorkers; i++) {
@@ -162,13 +157,13 @@ public final class  Master extends UntypedActor implements ActorStateFactory {
 
     @Override
     public void postActivate(String previousVersion) throws Exception {
-        ActorState state = getState(this);
+        ActorState state = getState(null);
         // need to upgrade listener to be a service
         state.getAsMap().put("listener",getSystem().serviceActorFor("pi/calculate").toString());
     }
 
     public void onReceive(ActorRef sender, Object message) {
-        State state = getState(this).getAsObject(State.class);
+        State state = getState(null).getAsObject(State.class);
         if (message instanceof Calculate) {
             logger.info("Starting calculation");
             Calculate calculateRequest = (Calculate) message;

@@ -120,13 +120,14 @@ public class PiApproximatorTest {
         ActorRefFactory actorRefFactory = mock(ActorRefFactory.class);
         PiApproximator piApproximator = new PiApproximator("PiTest",1);
 
-        ArgumentCaptor<ActorState> stateArgumentCaptor = ArgumentCaptor.forClass(ActorState.class);
+        ArgumentCaptor<Master.State> stateArgumentCaptor = ArgumentCaptor.forClass(Master.State.class);
 
         when(actorSystem.getParent()).thenReturn(parent);
         when(parent.getActorRefFactory()).thenReturn(actorRefFactory);
         //when(actorSystem.actorOf(eq("pi/calculate"), eq(Listener.class), any(ActorState.class))).thenReturn(listenerRef);
         when(actorSystem.serviceActorFor("pi/calculate")).thenReturn(listenerRef);
         when(actorSystem.actorOf(eq("master"),eq(Master.class),stateArgumentCaptor.capture())).thenReturn(masterRef);
+
 
         when(listenerRef.toString()).thenReturn("listenerRef");
         when(masterRef.toString()).thenReturn("masterRef");
@@ -139,7 +140,7 @@ public class PiApproximatorTest {
         Serializer<ActorState,byte[]> actorStateSerializer = piApproximator.getActorStateSerializer();
         assertNotNull(actorStateSerializer);
 
-        byte[] serializedBytes = actorStateSerializer.serialize(stateArgumentCaptor.getValue());
+        byte[] serializedBytes = actorStateSerializer.serialize(piApproximator.getActorStateFactory().create(stateArgumentCaptor.getValue()));
         //System.out.println(new String(serializedBytes, Charsets.UTF_8));
         assertNotNull(serializedBytes);
 

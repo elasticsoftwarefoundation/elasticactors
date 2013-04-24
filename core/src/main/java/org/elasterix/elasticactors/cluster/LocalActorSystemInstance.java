@@ -321,11 +321,13 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
-    public <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception {
+    public <T> ActorRef actorOf(String actorId, Class<T> actorClass, Object initialState) throws Exception {
         // determine shard
         ActorShard shard = shardFor(actorId);
+        // if we have state we need to wrap it
+        ActorState actorState = initialState != null ? configuration.getActorStateFactory().create(initialState) : null;
         // send CreateActorMessage to shard
-        CreateActorMessage createActorMessage = new CreateActorMessage(getName(), actorClass.getName(), actorId, initialState);
+        CreateActorMessage createActorMessage = new CreateActorMessage(getName(), actorClass.getName(), actorId, actorState);
         //@todo: see if we need to get the sender from the context
         shard.sendMessage(null, shard.getActorRef(), createActorMessage);
         // create actor ref
@@ -334,13 +336,15 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
-    public <T> ActorRef tempActorOf(Class<T> actorClass, ActorState initialState) throws Exception {
+    public <T> ActorRef tempActorOf(Class<T> actorClass, Object initialState) throws Exception {
+        // if we have state we need to wrap it
+        ActorState actorState = initialState != null ? configuration.getActorStateFactory().create(initialState) : null;
         String actorId = UUID.randomUUID().toString();
         CreateActorMessage createActorMessage = new CreateActorMessage(getName(),
-                actorClass.getName(),
-                actorId,
-                initialState,
-                ActorType.TEMP);
+                                                                       actorClass.getName(),
+                                                                       actorId,
+                                                                       actorState,
+                                                                       ActorType.TEMP);
         this.localNodeAdapter.sendMessage(null, localNodeAdapter.getActorRef(), createActorMessage);
         return new LocalClusterActorNodeRef(cluster.getClusterName(), localNodeAdapter, actorId);
     }
@@ -397,6 +401,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     @Override
     public Deserializer<byte[], ActorState> getActorStateDeserializer() {
         return configuration.getActorStateDeserializer();
+    }
+
+    @Override
+    public ActorStateFactory getActorStateFactory() {
+        return configuration.getActorStateFactory();
     }
 
     @Override

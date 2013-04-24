@@ -30,6 +30,11 @@
 
     <bean id="actorStateDeserializer" class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonActorStateDeserializer">
         <constructor-arg ref="objectMapper"/>
+        <constructor-arg ref="actorStateFactory"/>
+    </bean>
+
+    <bean id="actorStateFactory" class="org.elasticsoftwarefoundation.elasticactors.base.state.JacksonActorStateFactory">
+        <constructor-arg ref="objectMapper"/>
     </bean>
 
     <util:map id="messageSerializers" key-type="java.lang.Class"

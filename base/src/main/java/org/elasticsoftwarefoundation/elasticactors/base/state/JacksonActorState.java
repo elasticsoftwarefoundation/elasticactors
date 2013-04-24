@@ -31,12 +31,12 @@ public final class JacksonActorState implements ActorState {
     private final Map<String, Object> stateMap;
     private volatile Object stateObject;
 
-    public JacksonActorState(ObjectMapper objectMapper, Map<String, Object> stateMap) {
+    protected JacksonActorState(ObjectMapper objectMapper, Map<String, Object> stateMap) {
         this.objectMapper = objectMapper;
         this.stateMap = stateMap;
     }
 
-    public JacksonActorState(ObjectMapper objectMapper, Object stateObject) {
+    protected JacksonActorState(ObjectMapper objectMapper, Object stateObject) {
         this.objectMapper = objectMapper;
         this.stateObject = stateObject;
         this.stateMap = new LinkedHashMap<String,Object>();

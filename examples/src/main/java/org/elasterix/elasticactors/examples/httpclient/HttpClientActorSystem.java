@@ -97,6 +97,11 @@ public class HttpClientActorSystem implements ActorSystemConfiguration, ActorSys
     }
 
     @Override
+    public ActorStateFactory getActorStateFactory() {
+        return applicationContext.getBean(ActorStateFactory.class);
+    }
+
+    @Override
     public ElasticActor getService(String serviceId) {
         return applicationContext.getBean(serviceId,ElasticActor.class);
     }

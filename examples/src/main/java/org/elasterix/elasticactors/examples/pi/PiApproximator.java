@@ -32,7 +32,7 @@ import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 import org.elasterix.elasticactors.serialization.Serializer;
 import org.elasticsoftwarefoundation.elasticactors.base.serialization.*;
-import org.elasticsoftwarefoundation.elasticactors.base.state.JacksonActorState;
+import org.elasticsoftwarefoundation.elasticactors.base.state.JacksonActorStateFactory;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpResponse;
 
@@ -48,8 +48,10 @@ public final class PiApproximator implements ActorSystemConfiguration, ActorSyst
     private final int numberOfShards;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private final ActorStateFactory actorStateFactory = new JacksonActorStateFactory(objectMapper);
     private final Serializer<ActorState, byte[]> actorStateSerializer = new JacksonActorStateSerializer(objectMapper);
-    private final Deserializer<byte[], ActorState> actorStateDeserializer = new JacksonActorStateDeserializer(objectMapper);
+    private final Deserializer<byte[], ActorState> actorStateDeserializer = new JacksonActorStateDeserializer(objectMapper, actorStateFactory);
+
 
     // the listener service to dispatch http requests
     private final Listener listenerService = new Listener(objectMapper);
@@ -114,6 +116,11 @@ public final class PiApproximator implements ActorSystemConfiguration, ActorSyst
     }
 
     @Override
+    public ActorStateFactory getActorStateFactory() {
+        return actorStateFactory;
+    }
+
+    @Override
     public ElasticActor getService(String serviceId) {
         if("pi/calculate".equals(serviceId)) {
             return listenerService;
@@ -150,7 +157,7 @@ public final class PiApproximator implements ActorSystemConfiguration, ActorSyst
 
         // create master
         Master.State masterState = new Master.State(listener,4,10000,10000);
-        ActorRef master = actorSystem.actorOf("master",Master.class,new JacksonActorState(objectMapper,masterState));
+        ActorRef master = actorSystem.actorOf("master",Master.class,masterState);
 
         // wait a little for the actors to be created
         Thread.sleep(50);

@@ -98,6 +98,11 @@ public abstract class SpringBasedActorSystem implements ActorSystemConfiguration
     }
 
     @Override
+    public ActorStateFactory getActorStateFactory() {
+        return applicationContext.getBean(ActorStateFactory.class);
+    }
+
+    @Override
     public final ElasticActor getService(String serviceId) {
         return applicationContext.getBean(serviceId,ElasticActor.class);
     }

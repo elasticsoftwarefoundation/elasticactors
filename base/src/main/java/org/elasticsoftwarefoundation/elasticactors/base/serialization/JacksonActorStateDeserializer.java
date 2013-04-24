@@ -20,6 +20,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.type.MapType;
 import org.codehaus.jackson.map.type.SimpleType;
 import org.elasterix.elasticactors.ActorState;
+import org.elasterix.elasticactors.ActorStateFactory;
 import org.elasterix.elasticactors.serialization.Deserializer;
 import org.elasticsoftwarefoundation.elasticactors.base.state.JacksonActorState;
 
@@ -32,15 +33,17 @@ import java.util.Map;
  */
 public final class JacksonActorStateDeserializer implements Deserializer<byte[], ActorState> {
     private final ObjectMapper objectMapper;
+    private final ActorStateFactory actorStateFactory;
     public static final MapType MAP_TYPE = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(Object.class));
 
-    public JacksonActorStateDeserializer(ObjectMapper objectMapper) {
+    public JacksonActorStateDeserializer(ObjectMapper objectMapper, ActorStateFactory actorStateFactory) {
         this.objectMapper = objectMapper;
+        this.actorStateFactory = actorStateFactory;
     }
 
     @Override
     public ActorState deserialize(byte[] serializedObject) throws IOException {
         Map<String,Object> jsonMap = objectMapper.readValue(serializedObject, MAP_TYPE);
-        return new JacksonActorState(objectMapper,jsonMap);
+        return actorStateFactory.create(jsonMap);
     }
 }
