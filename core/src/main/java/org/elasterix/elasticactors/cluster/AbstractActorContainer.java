@@ -16,18 +16,18 @@
 
 package org.elasterix.elasticactors.cluster;
 
+import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.ActorContainer;
+import org.elasterix.elasticactors.ActorContainerRef;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.PhysicalNode;
-import org.elasterix.elasticactors.messaging.InternalMessage;
-import org.elasterix.elasticactors.messaging.MessageHandler;
-import org.elasterix.elasticactors.messaging.MessageQueue;
-import org.elasterix.elasticactors.messaging.MessageQueueFactory;
+import org.elasterix.elasticactors.messaging.*;
 
 /**
  * @author Joost van de Wijgerd
  */
-public abstract class AbstractActorContainer implements ActorContainer,MessageHandler {
+public abstract class AbstractActorContainer implements ActorContainer, MessageHandler {
+    private final Logger logger = Logger.getLogger(getClass());
     private final ActorRef myRef;
     private final MessageQueueFactory messageQueueFactory;
     protected MessageQueue messageQueue;
@@ -63,5 +63,19 @@ public abstract class AbstractActorContainer implements ActorContainer,MessageHa
     @Override
     public final PhysicalNode getPhysicalNode() {
         return localNode;
+    }
+
+    protected void handleUndeliverable(InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
+        ActorRef senderRef = internalMessage.getSender();
+        try {
+            if (senderRef != null && senderRef instanceof ActorContainerRef) {
+                ((ActorContainerRef) senderRef).get().undeliverableMessage(internalMessage);
+            } else {
+                logger.warn("Could not send message undeliverable");
+            }
+        } finally {
+            // ack anyway
+            messageHandlerEventListener.onDone(internalMessage);
+        }
     }
 }

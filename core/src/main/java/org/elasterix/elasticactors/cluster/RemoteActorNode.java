@@ -17,10 +17,8 @@
 package org.elasterix.elasticactors.cluster;
 
 import org.elasterix.elasticactors.*;
-import org.elasterix.elasticactors.messaging.InternalMessage;
-import org.elasterix.elasticactors.messaging.InternalMessageImpl;
-import org.elasterix.elasticactors.messaging.MessageHandlerEventListener;
-import org.elasterix.elasticactors.messaging.MessageQueueFactory;
+import org.elasterix.elasticactors.messaging.*;
+import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.serialization.MessageSerializer;
 
 /**
@@ -49,6 +47,18 @@ public final class RemoteActorNode extends AbstractActorContainer implements Act
         MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
         messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message),
                                                    message.getClass().getName()));
+    }
+
+    @Override
+    public void undeliverableMessage(InternalMessage message) throws Exception {
+        // input is the message that cannot be delivered
+        InternalMessageImpl undeliverableMessage = new InternalMessageImpl(message.getReceiver(),
+                                                                           message.getSender(),
+                                                                           message.getPayload(),
+                                                                           message.getPayloadClass(),
+                                                                           true,
+                                                                           true);
+        messageQueue.offer(undeliverableMessage);
     }
 
     @Override

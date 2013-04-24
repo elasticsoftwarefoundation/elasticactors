@@ -65,7 +65,11 @@ public class HttpActorSystemTest {
         testSystem.stop(user2Ref);
         testSystem.stop(user3Ref);
 
-        //@todo: now we should receive undeliverable errors but this has not been imlemented yet
+        // do it again an see if we get 404
+        ListenableFuture<Response> responseFuture = testClient.prepareGet("http://localhost:8080/users/1").execute();
+        Response response = responseFuture.get();
+
+        assertEquals(response.getStatusCode(),404);
 
 
     }

@@ -485,6 +485,17 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         }
 
         @Override
+        public void undeliverableMessage(InternalMessage message) throws Exception {
+            final Lock readLock = shardLocks[key.getShardId()].readLock();
+            try {
+                readLock.lock();
+                shards[key.getShardId()].undeliverableMessage(message);
+            } finally {
+                readLock.unlock();
+            }
+        }
+
+        @Override
         public void offerInternalMessage(InternalMessage message) {
             final Lock readLock = shardLocks[key.getShardId()].readLock();
             try {
@@ -529,6 +540,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         public void sendMessage(ActorRef sender, ActorRef receiver, Object message) throws Exception {
             // @todo: check if we need to lock here like with ActorShards
             activeNodes.get(key.getNodeId()).sendMessage(sender, receiver, message);
+        }
+
+        @Override
+        public void undeliverableMessage(InternalMessage message) throws Exception {
+            activeNodes.get(key.getNodeId()).undeliverableMessage(message);
         }
 
         @Override

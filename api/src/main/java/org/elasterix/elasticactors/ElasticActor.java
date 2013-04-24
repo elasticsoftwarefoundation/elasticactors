@@ -26,6 +26,8 @@ public interface ElasticActor<T> {
 
     void onReceive(ActorRef sender, T message) throws Exception;
 
+    void onUndeliverable(ActorRef receiver, Object message) throws Exception;
+
     void prePassivate() throws Exception;
 
     void preDestroy(ActorRef destroyer) throws Exception;

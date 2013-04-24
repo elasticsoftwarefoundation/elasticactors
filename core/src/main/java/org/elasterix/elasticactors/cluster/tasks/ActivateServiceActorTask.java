@@ -28,7 +28,7 @@ import static org.elasterix.elasticactors.util.SerializationTools.deserializeMes
 /**
  * @author Joost van de Wijgerd
  */
-public class ActivateServiceActorTask implements ThreadBoundRunnable<String>, ActorContext {
+public final class ActivateServiceActorTask implements ThreadBoundRunnable<String>, ActorContext {
     private static final Logger logger = Logger.getLogger(ActivateServiceActorTask.class);
     private final ActorRef serviceRef;
     private final InternalActorSystem actorSystem;

@@ -38,10 +38,10 @@
             </bean>
         </entry>
         <entry key="org.elasticsoftwarefoundation.elasticactors.http.messages.RegisterRouteMessage">
-                    <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageSerializer">
-                        <constructor-arg ref="objectMapper"/>
-                    </bean>
-                </entry>
+            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageSerializer">
+                <constructor-arg ref="objectMapper"/>
+            </bean>
+        </entry>
     </util:map>
 
     <util:map id="messageDeserializers" key-type="java.lang.Class"
@@ -59,11 +59,11 @@
             </bean>
         </entry>
         <entry key="org.elasticsoftwarefoundation.elasticactors.http.messages.RegisterRouteMessage">
-                    <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
-                        <constructor-arg value="org.elasticsoftwarefoundation.elasticactors.http.messages.RegisterRouteMessage"/>
-                        <constructor-arg ref="objectMapper"/>
-                    </bean>
-                </entry>
+            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
+                <constructor-arg value="org.elasticsoftwarefoundation.elasticactors.http.messages.RegisterRouteMessage"/>
+                <constructor-arg ref="objectMapper"/>
+            </bean>
+        </entry>
     </util:map>
 
     <bean id="asyncHttpClientConfigBuilder" class="com.ning.http.client.AsyncHttpClientConfig$Builder">

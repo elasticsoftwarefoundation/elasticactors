@@ -45,6 +45,7 @@ public final class InternalMessageSerializer implements Serializer<InternalMessa
             builder.setSender(ActorRefSerializer.get().serialize(internalMessage.getSender()));
         }
         builder.setDurable(internalMessage.isDurable());
+        builder.setUndeliverable(internalMessage.isUndeliverable());
         return builder.build().toByteArray();
     }
 

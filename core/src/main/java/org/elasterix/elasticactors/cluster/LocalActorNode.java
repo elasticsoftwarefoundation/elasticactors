@@ -29,6 +29,7 @@ import org.elasterix.elasticactors.messaging.internal.ActivateActorMessage;
 import org.elasterix.elasticactors.messaging.internal.ActorType;
 import org.elasterix.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasterix.elasticactors.messaging.internal.DestroyActorMessage;
+import org.elasterix.elasticactors.serialization.MessageDeserializer;
 import org.elasterix.elasticactors.state.PersistentActor;
 import org.elasterix.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,6 +76,15 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     }
 
     @Override
+    public void undeliverableMessage(InternalMessage message) throws Exception {
+        MessageDeserializer messageDeserializer = actorSystem.getDeserializer(Class.forName(message.getPayloadClass()));
+        messageQueue.offer(new TransientInternalMessage(message.getReceiver(),
+                                                        message.getSender(),
+                                                        message.getPayload(messageDeserializer),
+                                                        true));
+    }
+
+    @Override
     public void handleMessage(final InternalMessage internalMessage,
                               final MessageHandlerEventListener messageHandlerEventListener) {
         final ActorRef receiverRef = internalMessage.getReceiver();
@@ -87,12 +97,22 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                     ElasticActor actorInstance = actorSystem.getActorInstance(internalMessage.getReceiver(),
                             actor.getActorClass());
                     // execute on it's own thread
-                    actorExecutor.execute(new HandleMessageTask(actorSystem,
-                                                                actorInstance,
-                                                                internalMessage,
-                                                                actor,
-                                                                null,
-                                                                messageHandlerEventListener));
+                    if(internalMessage.isUndeliverable()) {
+                        actorExecutor.execute(new HandleUndeliverableMessageTask(actorSystem,
+                                                                                 actorInstance,
+                                                                                 internalMessage,
+                                                                                 actor,
+                                                                                 null,
+                                                                                 messageHandlerEventListener));
+                    } else {
+                        actorExecutor.execute(new HandleMessageTask(actorSystem,
+                                                                    actorInstance,
+                                                                    internalMessage,
+                                                                    actor,
+                                                                    null,
+                                                                    messageHandlerEventListener));
+                    }
+
                 } else {
                     // see if it is a service
                     ElasticActor serviceInstance = actorSystem.getServiceInstance(internalMessage.getReceiver());
@@ -103,9 +123,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                                                                            internalMessage,
                                                                            messageHandlerEventListener));
                     } else {
-                        //@todo: send a message undeliverable message
-                        // for now just ack it
-                        messageHandlerEventListener.onDone(internalMessage);
+                        handleUndeliverable(internalMessage,messageHandlerEventListener);
                     }
                 }
             } catch(Exception e) {

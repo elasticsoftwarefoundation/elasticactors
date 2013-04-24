@@ -42,4 +42,6 @@ public interface InternalMessage {
     byte[] toByteArray();
 
     <T> T getPayload(MessageDeserializer<T> deserializer) throws IOException;
+
+    boolean isUndeliverable();
 }

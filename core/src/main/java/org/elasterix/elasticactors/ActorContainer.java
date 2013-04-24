@@ -26,6 +26,8 @@ public interface ActorContainer {
 
     void sendMessage(ActorRef sender, ActorRef receiver, Object message) throws Exception;
 
+    void undeliverableMessage(InternalMessage undeliverableMessage) throws Exception;
+
     void offerInternalMessage(InternalMessage message);
 
     void init() throws Exception;

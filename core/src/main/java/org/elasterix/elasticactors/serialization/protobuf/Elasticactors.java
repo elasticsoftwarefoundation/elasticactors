@@ -106,6 +106,10 @@ public final class Elasticactors {
     // optional bool durable = 6;
     boolean hasDurable();
     boolean getDurable();
+    
+    // optional bool undeliverable = 7;
+    boolean hasUndeliverable();
+    boolean getUndeliverable();
   }
   public static final class InternalMessage extends
       com.google.protobuf.GeneratedMessage
@@ -262,6 +266,16 @@ public final class Elasticactors {
       return durable_;
     }
     
+    // optional bool undeliverable = 7;
+    public static final int UNDELIVERABLE_FIELD_NUMBER = 7;
+    private boolean undeliverable_;
+    public boolean hasUndeliverable() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    public boolean getUndeliverable() {
+      return undeliverable_;
+    }
+    
     private void initFields() {
       receiver_ = "";
       sender_ = "";
@@ -269,6 +283,7 @@ public final class Elasticactors {
       payload_ = com.google.protobuf.ByteString.EMPTY;
       id_ = com.google.protobuf.ByteString.EMPTY;
       durable_ = false;
+      undeliverable_ = false;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -299,6 +314,9 @@ public final class Elasticactors {
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeBool(6, durable_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeBool(7, undeliverable_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -332,6 +350,10 @@ public final class Elasticactors {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(6, durable_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(7, undeliverable_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -469,6 +491,8 @@ public final class Elasticactors {
         bitField0_ = (bitField0_ & ~0x00000010);
         durable_ = false;
         bitField0_ = (bitField0_ & ~0x00000020);
+        undeliverable_ = false;
+        bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
       
@@ -531,6 +555,10 @@ public final class Elasticactors {
           to_bitField0_ |= 0x00000020;
         }
         result.durable_ = durable_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.undeliverable_ = undeliverable_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -564,6 +592,9 @@ public final class Elasticactors {
         }
         if (other.hasDurable()) {
           setDurable(other.getDurable());
+        }
+        if (other.hasUndeliverable()) {
+          setUndeliverable(other.getUndeliverable());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -624,6 +655,11 @@ public final class Elasticactors {
             case 48: {
               bitField0_ |= 0x00000020;
               durable_ = input.readBool();
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000040;
+              undeliverable_ = input.readBool();
               break;
             }
           }
@@ -805,6 +841,27 @@ public final class Elasticactors {
       public Builder clearDurable() {
         bitField0_ = (bitField0_ & ~0x00000020);
         durable_ = false;
+        onChanged();
+        return this;
+      }
+      
+      // optional bool undeliverable = 7;
+      private boolean undeliverable_ ;
+      public boolean hasUndeliverable() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      public boolean getUndeliverable() {
+        return undeliverable_;
+      }
+      public Builder setUndeliverable(boolean value) {
+        bitField0_ |= 0x00000040;
+        undeliverable_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearUndeliverable() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        undeliverable_ = false;
         onChanged();
         return this;
       }
@@ -3612,24 +3669,25 @@ public final class Elasticactors {
     java.lang.String[] descriptorData = {
       "\n\034protobuf/elasticactors.proto\0222org.elas" +
       "terix.elasticactors.serialization.protob" +
-      "uf\"w\n\017InternalMessage\022\020\n\010receiver\030\001 \001(\t\022" +
-      "\016\n\006sender\030\002 \001(\t\022\024\n\014payloadClass\030\003 \001(\t\022\017\n" +
-      "\007payload\030\004 \001(\014\022\n\n\002id\030\005 \001(\014\022\017\n\007durable\030\006 " +
-      "\001(\010\"t\n\017PersistentActor\022\020\n\010actorRef\030\001 \001(\t" +
-      "\022\022\n\nactorClass\030\002 \001(\t\022\032\n\022actorSystemVersi" +
-      "on\030\003 \001(\t\022\r\n\005state\030\004 \001(\014\022\020\n\010shardKey\030\005 \001(" +
-      "\t\"\261\001\n\022CreateActorMessage\022\017\n\007actorId\030\001 \001(" +
-      "\t\022\024\n\014initialState\030\002 \001(\014\022\022\n\nactorClass\030\003 ",
-      "\001(\t\022\023\n\013actorSystem\030\004 \001(\t\022K\n\004type\030\005 \001(\0162=" +
-      ".org.elasterix.elasticactors.serializati" +
-      "on.protobuf.ActorType\"\'\n\023DestroyActorMes" +
-      "sage\022\020\n\010actorRef\030\001 \001(\t\"\211\001\n\024ActivateActor" +
-      "Message\022\023\n\013actorSystem\030\001 \001(\t\022\017\n\007actorId\030" +
-      "\002 \001(\t\022K\n\004type\030\003 \001(\0162=.org.elasterix.elas" +
-      "ticactors.serialization.protobuf.ActorTy" +
-      "pe\"9\n\013WireMessage\022\021\n\tqueueName\030\001 \001(\t\022\027\n\017" +
-      "internalMessage\030\002 \001(\014*2\n\tActorType\022\016\n\nPE" +
-      "RSISTENT\020\000\022\010\n\004TEMP\020\001\022\013\n\007SERVICE\020\002B\002H\001"
+      "uf\"\216\001\n\017InternalMessage\022\020\n\010receiver\030\001 \001(\t" +
+      "\022\016\n\006sender\030\002 \001(\t\022\024\n\014payloadClass\030\003 \001(\t\022\017" +
+      "\n\007payload\030\004 \001(\014\022\n\n\002id\030\005 \001(\014\022\017\n\007durable\030\006" +
+      " \001(\010\022\025\n\rundeliverable\030\007 \001(\010\"t\n\017Persisten" +
+      "tActor\022\020\n\010actorRef\030\001 \001(\t\022\022\n\nactorClass\030\002" +
+      " \001(\t\022\032\n\022actorSystemVersion\030\003 \001(\t\022\r\n\005stat" +
+      "e\030\004 \001(\014\022\020\n\010shardKey\030\005 \001(\t\"\261\001\n\022CreateActo" +
+      "rMessage\022\017\n\007actorId\030\001 \001(\t\022\024\n\014initialStat",
+      "e\030\002 \001(\014\022\022\n\nactorClass\030\003 \001(\t\022\023\n\013actorSyst" +
+      "em\030\004 \001(\t\022K\n\004type\030\005 \001(\0162=.org.elasterix.e" +
+      "lasticactors.serialization.protobuf.Acto" +
+      "rType\"\'\n\023DestroyActorMessage\022\020\n\010actorRef" +
+      "\030\001 \001(\t\"\211\001\n\024ActivateActorMessage\022\023\n\013actor" +
+      "System\030\001 \001(\t\022\017\n\007actorId\030\002 \001(\t\022K\n\004type\030\003 " +
+      "\001(\0162=.org.elasterix.elasticactors.serial" +
+      "ization.protobuf.ActorType\"9\n\013WireMessag" +
+      "e\022\021\n\tqueueName\030\001 \001(\t\022\027\n\017internalMessage\030" +
+      "\002 \001(\014*2\n\tActorType\022\016\n\nPERSISTENT\020\000\022\010\n\004TE",
+      "MP\020\001\022\013\n\007SERVICE\020\002B\002H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -3641,7 +3699,7 @@ public final class Elasticactors {
           internal_static_org_elasterix_elasticactors_serialization_protobuf_InternalMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_org_elasterix_elasticactors_serialization_protobuf_InternalMessage_descriptor,
-              new java.lang.String[] { "Receiver", "Sender", "PayloadClass", "Payload", "Id", "Durable", },
+              new java.lang.String[] { "Receiver", "Sender", "PayloadClass", "Payload", "Id", "Durable", "Undeliverable", },
               org.elasterix.elasticactors.serialization.protobuf.Elasticactors.InternalMessage.class,
               org.elasterix.elasticactors.serialization.protobuf.Elasticactors.InternalMessage.Builder.class);
           internal_static_org_elasterix_elasticactors_serialization_protobuf_PersistentActor_descriptor =

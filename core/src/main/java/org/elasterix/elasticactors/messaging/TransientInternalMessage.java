@@ -32,12 +32,18 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
     private final ActorRef receiver;
     private final UUID id;
     private final Object payload;
+    private final boolean undeliverable;
 
     public TransientInternalMessage(ActorRef sender, ActorRef receiver, Object payload) {
+        this(sender,receiver,payload,false);
+    }
+
+    public TransientInternalMessage(ActorRef sender, ActorRef receiver, Object payload, boolean undeliverable) {
         this.sender = sender;
         this.receiver = receiver;
         this.id = UUIDTools.createTimeBasedUUID();
         this.payload = payload;
+        this.undeliverable = undeliverable;
     }
 
     public ActorRef getSender() {
@@ -69,6 +75,11 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
     @Override
     public boolean isDurable() {
         return false;
+    }
+
+    @Override
+    public boolean isUndeliverable() {
+        return undeliverable;
     }
 
     @Override

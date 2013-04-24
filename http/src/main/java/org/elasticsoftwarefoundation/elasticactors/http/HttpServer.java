@@ -106,7 +106,7 @@ public class HttpServer extends SimpleChannelUpstreamHandler implements ChannelP
         if(!httpService.doDispatch(request,replyActor)) {
             // send 404
             ctx.getChannel().write(new DefaultHttpResponse(HttpVersion.HTTP_1_1,HttpResponseStatus.NOT_FOUND)).addListener(ChannelFutureListener.CLOSE);
-            // @todo: remove temp actor
+            actorSystem.stop(replyActor);
         }
     }
 

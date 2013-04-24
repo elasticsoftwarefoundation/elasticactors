@@ -35,6 +35,7 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
     private final ByteBuffer payload;
     private final String payloadClass;
     private final boolean durable;
+    private final boolean undeliverable;
     private transient byte[] serializedForm;
 
     public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass) {
@@ -42,20 +43,25 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
     }
 
     public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass,boolean durable) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass,durable);
+        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass,durable,false);
     }
 
     public InternalMessageImpl(UUID id, ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass) {
-        this(id,sender,receiver,payload,payloadClass,true);
+        this(id,sender,receiver,payload,payloadClass,true,false);
     }
 
-    public InternalMessageImpl(UUID id,ActorRef sender, ActorRef receiver,ByteBuffer payload, String payloadClass, boolean durable) {
+    public InternalMessageImpl(ActorRef sender, ActorRef receiver,ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
+        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass,durable,undeliverable);
+    }
+
+    public InternalMessageImpl(UUID id,ActorRef sender, ActorRef receiver,ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
         this.sender = sender;
         this.receiver = receiver;
         this.id = id;
         this.payload = payload;
         this.payloadClass = payloadClass;
         this.durable = durable;
+        this.undeliverable = undeliverable;
     }
 
     public ActorRef getSender() {
@@ -87,6 +93,11 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
     @Override
     public boolean isDurable() {
         return durable;
+    }
+
+    @Override
+    public boolean isUndeliverable() {
+        return undeliverable;
     }
 
     @Override

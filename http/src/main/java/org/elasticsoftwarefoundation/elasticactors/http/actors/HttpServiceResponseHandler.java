@@ -25,6 +25,7 @@ import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
+import org.jboss.netty.handler.codec.http.HttpVersion;
 
 import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
@@ -49,11 +50,21 @@ public final class HttpServiceResponseHandler extends TypedActor<HttpResponse> {
         State state = getState(null).getAsObject(State.class);
         // convert back to netty http response
         org.jboss.netty.handler.codec.http.HttpResponse nettyResponse = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(message.getStatusCode()));
+
         HttpHeaders.setHeader(nettyResponse,HttpHeaders.Names.CONTENT_TYPE,message.getContentType());
         nettyResponse.setContent(ChannelBuffers.wrappedBuffer(message.getContent()));
         // we don't support keep alive as of yet
         state.getResponseChannel().write(nettyResponse).addListener(ChannelFutureListener.CLOSE);
         // need to remove myself
+        getSystem().stop(getSelf());
+    }
+
+    @Override
+    public void onUndeliverable(ActorRef receiver, Object message) throws Exception {
+        State state = getState(null).getAsObject(State.class);
+        // send a 404
+        state.getResponseChannel().write(new DefaultHttpResponse(HttpVersion.HTTP_1_1,HttpResponseStatus.NOT_FOUND)).addListener(ChannelFutureListener.CLOSE);
+        // remove self
         getSystem().stop(getSelf());
     }
 }

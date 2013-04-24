@@ -62,6 +62,18 @@ public final class RemoteActorShard extends AbstractActorContainer implements Ac
     }
 
     @Override
+    public void undeliverableMessage(InternalMessage message) throws Exception {
+        // input is the message that cannot be delivered
+        InternalMessageImpl undeliverableMessage = new InternalMessageImpl(message.getReceiver(),
+                                                                           message.getSender(),
+                                                                           message.getPayload(),
+                                                                           message.getPayloadClass(),
+                                                                           true,
+                                                                           true);
+        messageQueue.offer(undeliverableMessage);
+    }
+
+    @Override
     public void handleMessage(InternalMessage message, MessageHandlerEventListener messageHandlerEventListener) {
         // nothing to do
     }

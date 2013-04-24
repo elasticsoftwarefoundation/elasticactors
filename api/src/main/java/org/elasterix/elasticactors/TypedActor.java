@@ -17,10 +17,14 @@
 package org.elasterix.elasticactors;
 
 
+import org.apache.log4j.Logger;
+
 /**
  * @author Joost van de Wijgerd
  */
 public abstract class TypedActor<T> implements ElasticActor<T> {
+    private final Logger logger = Logger.getLogger(getClass());
+
     @Override
     public void postCreate(ActorRef creator) throws Exception {
         // do nothing by default
@@ -28,6 +32,11 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
 
     @Override
     public void postActivate(String previousVersion) throws Exception {
+        // do nothing by default
+    }
+
+    @Override
+    public void onUndeliverable(ActorRef receiver, Object message) throws Exception {
         // do nothing by default
     }
 

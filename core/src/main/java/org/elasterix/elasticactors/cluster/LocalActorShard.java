@@ -18,11 +18,13 @@ package org.elasterix.elasticactors.cluster;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.apache.log4j.Logger;
 import org.elasterix.elasticactors.*;
 import org.elasterix.elasticactors.cluster.tasks.ActivateActorTask;
 import org.elasterix.elasticactors.cluster.tasks.CreateActorTask;
 import org.elasterix.elasticactors.cluster.tasks.HandleMessageTask;
+import org.elasterix.elasticactors.cluster.tasks.HandleUndeliverableMessageTask;
 import org.elasterix.elasticactors.messaging.InternalMessage;
 import org.elasterix.elasticactors.messaging.InternalMessageImpl;
 import org.elasterix.elasticactors.messaging.MessageHandlerEventListener;
@@ -88,6 +90,18 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     }
 
     @Override
+    public void undeliverableMessage(InternalMessage message) {
+        // input is the message that cannot be delivered
+        InternalMessageImpl undeliverableMessage = new InternalMessageImpl(message.getReceiver(),
+                                                                           message.getSender(),
+                                                                           message.getPayload(),
+                                                                           message.getPayloadClass(),
+                                                                           true,
+                                                                           true);
+        messageQueue.offer(undeliverableMessage);
+    }
+
+    @Override
     public void handleMessage(final InternalMessage internalMessage,
                               final MessageHandlerEventListener messageHandlerEventListener) {
         final ActorRef receiverRef = internalMessage.getReceiver();
@@ -118,17 +132,37 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                 ElasticActor actorInstance = actorSystem.getActorInstance(internalMessage.getReceiver(),
                                                                           actor.getActorClass());
                 // execute on it's own thread
-                actorExecutor.execute(new HandleMessageTask(actorSystem,
-                                                            actorInstance,
-                                                            internalMessage,
-                                                            actor,
-                                                            persistentActorRepository,
-                                                            messageHandlerEventListener));
+                if(internalMessage.isUndeliverable()) {
+                    actorExecutor.execute(new HandleUndeliverableMessageTask(actorSystem,
+                                                                            actorInstance,
+                                                                            internalMessage,
+                                                                            actor,
+                                                                            persistentActorRepository,
+                                                                            messageHandlerEventListener));
+                } else {
+                    actorExecutor.execute(new HandleMessageTask(actorSystem,
+                                                                actorInstance,
+                                                                internalMessage,
+                                                                actor,
+                                                                persistentActorRepository,
+                                                                messageHandlerEventListener));
+                }
+            } catch(UncheckedExecutionException e) {
+                if(e.getCause() instanceof EmptyResultDataAccessException) {
+                    try {
+                        handleUndeliverable(internalMessage, messageHandlerEventListener);
+                    } catch (Exception ex) {
+                        logger.error("Exception while sending message undeliverable",ex);
+                    }
+                } else {
+                    messageHandlerEventListener.onError(internalMessage,e.getCause());
+                    logger.error(String.format("Exception while handling InternalMessage for Actor [%s]",receiverRef.getActorId()),e.getCause());
+                }
             } catch(Exception e) {
                 //@todo: let the sender know his message could not be delivered
                 // we ack the message anyway
                 messageHandlerEventListener.onError(internalMessage,e);
-                logger.error(String.format("Exception while handling InternalMessage or Actor [%s]",receiverRef.getActorId()),e);
+                logger.error(String.format("Exception while handling InternalMessage for Actor [%s]",receiverRef.getActorId()),e);
             }
         } else {
             // the internalMessage is intended for the shard, this means it's about creating or destroying an actor
