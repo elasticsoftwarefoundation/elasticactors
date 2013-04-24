@@ -16,31 +16,21 @@
 
 package org.elasticsoftwarefoundation.elasticactors.http.messages;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
-import org.jboss.netty.handler.codec.http.HttpHeaders;
 
 import java.util.List;
 import java.util.Map;
 
 /**
+ * This will start a Server Sent Events stream to the client. The headers and response code will be sent to the
+ * client but the {@link org.jboss.netty.channel.Channel} will not be closed. This needs to be followed up by a
+ * {@link SseEvent} messages sent to the same actor
+ *
  * @author Joost van de Wijgerd
  */
-public class HttpResponse extends HttpMessage {
-    private final int statusCode;
-
-    @JsonCreator
-    public HttpResponse(@JsonProperty("statusCode") int statusCode,
-                        @JsonProperty("headers") Map<String,List<String>> headers,
-                        @JsonProperty("content") byte[] content) {
-        super(headers, content);
-        this.statusCode = statusCode;
+public class SseResponse extends HttpResponse {
+    public SseResponse(@JsonProperty("statusCode") int statusCode,
+                       @JsonProperty("headers") Map<String, List<String>> headers) {
+        super(statusCode, headers, null);
     }
-
-    @JsonProperty("statusCode")
-    public final int getStatusCode() {
-        return statusCode;
-    }
-
 }

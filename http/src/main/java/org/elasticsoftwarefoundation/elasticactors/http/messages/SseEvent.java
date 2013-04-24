@@ -17,30 +17,39 @@
 package org.elasticsoftwarefoundation.elasticactors.http.messages;
 
 import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
-import org.jboss.netty.handler.codec.http.HttpHeaders;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Joost van de Wijgerd
  */
-public class HttpResponse extends HttpMessage {
-    private final int statusCode;
+public class SseEvent {
+    private final String event;
+    private final List<String> data;
+    private final String id;
 
     @JsonCreator
-    public HttpResponse(@JsonProperty("statusCode") int statusCode,
-                        @JsonProperty("headers") Map<String,List<String>> headers,
-                        @JsonProperty("content") byte[] content) {
-        super(headers, content);
-        this.statusCode = statusCode;
+    public SseEvent(@JsonProperty("event") String event,
+                    @JsonProperty("data") List<String> data,
+                    @JsonProperty("id") String id) {
+        this.event = event;
+        this.data = data;
+        this.id = id;
     }
 
-    @JsonProperty("statusCode")
-    public final int getStatusCode() {
-        return statusCode;
+    @JsonProperty("event")
+    public String getEvent() {
+        return event;
     }
 
+    @JsonProperty("data")
+    public List<String> getData() {
+        return data;
+    }
+
+    @JsonProperty("id")
+    public String getId() {
+        return id;
+    }
 }
