@@ -17,8 +17,10 @@
 package org.elasticsoftwarefoundation.elasticactors.http.actors;
 
 import org.elasterix.elasticactors.ActorRef;
-import org.elasterix.elasticactors.TypedActor;
+import org.elasterix.elasticactors.UntypedActor;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpResponse;
+import org.elasticsoftwarefoundation.elasticactors.http.messages.ServerSentEvent;
+import org.elasticsoftwarefoundation.elasticactors.http.messages.SseResponse;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFutureListener;
@@ -32,9 +34,10 @@ import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 /**
  * @author Joost van de Wijgerd
  */
-public final class HttpServiceResponseHandler extends TypedActor<HttpResponse> {
+public final class HttpServiceResponseHandler extends UntypedActor {
     public static final class State {
         private transient final Channel responseChannel;
+        private boolean serverSentEvents = false;
 
         public State(Channel responseChannel) {
             this.responseChannel = responseChannel;
@@ -43,20 +46,53 @@ public final class HttpServiceResponseHandler extends TypedActor<HttpResponse> {
         public Channel getResponseChannel() {
             return responseChannel;
         }
+
+        public boolean isServerSentEvents() {
+            return serverSentEvents;
+        }
+
+        public void setServerSentEvents(boolean serverSentEvents) {
+            this.serverSentEvents = serverSentEvents;
+        }
     }
 
     @Override
-    public void onReceive(ActorRef sender, HttpResponse message) throws Exception {
+    public void onReceive(ActorRef sender, Object message) throws Exception {
+        if(message instanceof SseResponse) {
+            handle((SseResponse) message);
+        } else if(message instanceof HttpResponse) {
+            handle((HttpResponse) message);
+        } else if(message instanceof ServerSentEvent) {
+            handle((ServerSentEvent) message);
+        }
+    }
+
+    private void handle(HttpResponse message) throws Exception {
         State state = getState(null).getAsObject(State.class);
         // convert back to netty http response
         org.jboss.netty.handler.codec.http.HttpResponse nettyResponse = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(message.getStatusCode()));
-
+        // @todo: copy the headers from the message
         HttpHeaders.setHeader(nettyResponse,HttpHeaders.Names.CONTENT_TYPE,message.getContentType());
         nettyResponse.setContent(ChannelBuffers.wrappedBuffer(message.getContent()));
         // we don't support keep alive as of yet
         state.getResponseChannel().write(nettyResponse).addListener(ChannelFutureListener.CLOSE);
         // need to remove myself
         getSystem().stop(getSelf());
+    }
+
+    private void handle(SseResponse message) {
+        // we want to setup an EventSource connection, don't close the socket
+        State state = getState(null).getAsObject(State.class);
+        // register the fact we are using SSE
+        state.setServerSentEvents(true);
+        // send the event to the netty stack
+        state.getResponseChannel().write(message);
+    }
+
+    private void handle(ServerSentEvent message) {
+        State state = getState(null).getAsObject(State.class);
+        // send the event to the netty stack
+        state.getResponseChannel().write(message);
     }
 
     @Override

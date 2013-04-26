@@ -42,6 +42,16 @@
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
+        <entry key="org.elasticsoftwarefoundation.elasticactors.http.messages.SseResponse">
+            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageSerializer">
+                <constructor-arg ref="objectMapper"/>
+            </bean>
+        </entry>
+        <entry key="org.elasticsoftwarefoundation.elasticactors.http.messages.ServerSentEvent">
+            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageSerializer">
+                <constructor-arg ref="objectMapper"/>
+            </bean>
+        </entry>
     </util:map>
 
     <util:map id="messageDeserializers" key-type="java.lang.Class"
@@ -61,6 +71,18 @@
         <entry key="org.elasticsoftwarefoundation.elasticactors.http.messages.RegisterRouteMessage">
             <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
                 <constructor-arg value="org.elasticsoftwarefoundation.elasticactors.http.messages.RegisterRouteMessage"/>
+                <constructor-arg ref="objectMapper"/>
+            </bean>
+        </entry>
+        <entry key="org.elasticsoftwarefoundation.elasticactors.http.messages.SseResponse">
+            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
+                <constructor-arg value="org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest"/>
+                <constructor-arg ref="objectMapper"/>
+            </bean>
+        </entry>
+        <entry key="org.elasticsoftwarefoundation.elasticactors.http.messages.ServerSentEvent">
+            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
+                <constructor-arg value="org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest"/>
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>

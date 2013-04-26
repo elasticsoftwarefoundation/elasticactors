@@ -23,6 +23,7 @@ import org.elasterix.elasticactors.ActorSystem;
 import org.elasticsoftwarefoundation.elasticactors.base.state.JacksonActorState;
 import org.elasticsoftwarefoundation.elasticactors.http.actors.HttpService;
 import org.elasticsoftwarefoundation.elasticactors.http.actors.HttpServiceResponseHandler;
+import org.elasticsoftwarefoundation.elasticactors.http.codec.SseEventEncoder;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -45,10 +46,12 @@ import static org.jboss.netty.channel.Channels.pipeline;
  */
 public class HttpServer extends SimpleChannelUpstreamHandler implements ChannelPipelineFactory {
     private static final Logger logger = Logger.getLogger(HttpServer.class);
+    private final SseEventEncoder sseEventEncoder = new SseEventEncoder();
     private ServerSocketChannelFactory channelFactory;
     private ActorSystem actorSystem;
     private HttpService httpService;
     private ObjectMapper objectMapper;
+
 
     @PostConstruct
     public void init() {
@@ -75,6 +78,7 @@ public class HttpServer extends SimpleChannelUpstreamHandler implements ChannelP
       pipeline.addLast("decoder", new HttpRequestDecoder());
       //pipeline.addLast("aggregator", new HttpChunkAggregator(65536));
       pipeline.addLast("encoder", new HttpResponseEncoder());
+       pipeline.addLast("sseEventEncoder", sseEventEncoder);
       //pipeline.addLast("chunkedWriter", new ChunkedWriteHandler());
 
       pipeline.addLast("handler", this);
@@ -102,6 +106,8 @@ public class HttpServer extends SimpleChannelUpstreamHandler implements ChannelP
         // create a temp actor to handle the response
         ActorRef replyActor = actorSystem.tempActorOf(HttpServiceResponseHandler.class,
                                                       new HttpServiceResponseHandler.State(ctx.getChannel()));
+        // put the actor in the attachment to propagate disconnects
+        ctx.setAttachment(replyActor);
         // async handling
         if(!httpService.doDispatch(request,replyActor)) {
             // send 404

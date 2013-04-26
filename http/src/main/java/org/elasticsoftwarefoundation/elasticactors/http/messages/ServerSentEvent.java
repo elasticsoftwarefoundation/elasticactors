@@ -24,18 +24,26 @@ import java.util.List;
 /**
  * @author Joost van de Wijgerd
  */
-public class SseEvent {
+public final class ServerSentEvent {
+    private final String comment;
     private final String event;
     private final List<String> data;
     private final String id;
 
     @JsonCreator
-    public SseEvent(@JsonProperty("event") String event,
-                    @JsonProperty("data") List<String> data,
-                    @JsonProperty("id") String id) {
+    public ServerSentEvent(@JsonProperty("comment")String comment,
+                           @JsonProperty("event") String event,
+                           @JsonProperty("data") List<String> data,
+                           @JsonProperty("id") String id) {
+        this.comment = comment;
         this.event = event;
         this.data = data;
         this.id = id;
+    }
+
+    @JsonProperty("comment")
+    public String getComment() {
+        return comment;
     }
 
     @JsonProperty("event")
