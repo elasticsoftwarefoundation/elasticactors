@@ -20,7 +20,7 @@ import static org.jboss.netty.handler.codec.http.HttpConstants.*;
 /**
  * @author Joost van de Wijgerd
  */
-public class SseEventEncoder extends OneToOneEncoder {
+public class ServerSentEventEncoder extends OneToOneEncoder {
     private static final Charset ASCII = Charset.forName("ASCII");
     private static final byte[] EVENT = "event".getBytes(Charsets.UTF_8);
     private static final byte[] DATA = "data".getBytes(Charsets.UTF_8);
@@ -45,6 +45,7 @@ public class SseEventEncoder extends OneToOneEncoder {
                 event.writeByte(SP);
                 event.writeBytes(m.getEvent().getBytes(Charsets.UTF_8));
                 event.writeByte(CR);
+                event.writeByte(LF);
             }
             if(m.getData() != null && !m.getData().isEmpty()) {
                 for (String data : m.getData()) {
@@ -53,6 +54,7 @@ public class SseEventEncoder extends OneToOneEncoder {
                     event.writeByte(SP);
                     event.writeBytes(data.getBytes(Charsets.UTF_8));
                     event.writeByte(CR);
+                    event.writeByte(LF);
                 }
             }
             if(m.getId() != null) {
@@ -61,9 +63,11 @@ public class SseEventEncoder extends OneToOneEncoder {
                 event.writeByte(SP);
                 event.writeBytes(m.getId().getBytes(Charsets.UTF_8));
                 event.writeByte(CR);
+                event.writeByte(LF);
             }
             // end with empty line
             event.writeByte(CR);
+            event.writeByte(LF);
             return event;
         } else {
             return msg;

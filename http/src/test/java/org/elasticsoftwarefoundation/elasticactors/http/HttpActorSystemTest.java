@@ -16,6 +16,7 @@
 
 package org.elasticsoftwarefoundation.elasticactors.http;
 
+
 import com.google.common.base.Charsets;
 import com.ning.http.client.*;
 import org.apache.log4j.BasicConfigurator;
@@ -28,10 +29,13 @@ import org.elasticsoftwarefoundation.elasticactors.http.actors.User;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.net.URI;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 
 /**
  * @author Joost van de Wijgerd
@@ -75,54 +79,102 @@ public class HttpActorSystemTest {
         assertEquals(response.getStatusCode(),404);
     }
 
-    @Test(enabled = false)
-    public void testEventStreaming() throws Exception {
+    @Test
+    public void testURIParsing() throws Exception {
+        URI asbsoluteUri = new URI("http://localhost:8080/events/testing");
+        assertNotNull(asbsoluteUri);
+        assertEquals(asbsoluteUri.getPath(),"/events/testing");
+        assertEquals(asbsoluteUri.getHost(),"localhost");
+        URI uri = new URI("/events/testing");
+        assertNotNull(uri);
+        assertEquals(uri.getPath(),"/events/testing");
+        assertNull(uri.getHost());
+    }
+
+    /*@Test(enabled = true)
+    public void testEventStreamingWithEventSourceClient() throws Exception {
         ActorSystem httpSystem = TestActorSystem.create(new HttpActorSystem());
         ActorSystem testSystem = TestActorSystem.create(new HttpTestActorSystem());
 
         // create a stream
         ActorRef steamer = testSystem.actorOf("events/testing",EventStreamer.class);
 
-        AsyncHttpClient testClient = new AsyncHttpClient();
+        final Logger logger = Logger.getLogger(EventSourceHandler.class);
         final CountDownLatch waitLatch = new CountDownLatch(1);
-        testClient.prepareGet("http://localhost:8080/events/testing").execute(new ServerSentEventsHandler(waitLatch));
+        EventSource eventSource = new EventSource("http://localhost:8080/events/testing",
+              new EventSourceHandler() {
+                  @Override
+                  public void onConnect() throws Exception {
+                    logger.info("CONNECTED");
+                  }
+
+                  @Override
+                  public void onMessage(String event, MessageEvent messageEvent) throws Exception {
+                    logger.info(String.format("origin[%s]:data[%s]",messageEvent.origin,messageEvent.data));
+                  }
+
+                  @Override
+                  public void onError(Throwable throwable) {
+                      logger.error(throwable);
+                      waitLatch.countDown();
+                  }
+              });
+        eventSource.connect();
         waitLatch.await(1, TimeUnit.MINUTES);
-    }
+    }*/
 
-    private static final class ServerSentEventsHandler implements AsyncHandler<Object> {
-        private static final Logger logger = Logger.getLogger(ServerSentEventsHandler.class);
-        private final CountDownLatch waitLatch;
+    @Test(enabled = false)
+        public void testEventStreamingWithAsyncHttpClient() throws Exception {
+            ActorSystem httpSystem = TestActorSystem.create(new HttpActorSystem());
+            ActorSystem testSystem = TestActorSystem.create(new HttpTestActorSystem());
 
-        private ServerSentEventsHandler(CountDownLatch waitLatch) {
-            this.waitLatch = waitLatch;
+            // create a stream
+            ActorRef steamer = testSystem.actorOf("events/testing",EventStreamer.class);
+
+            AsyncHttpClient testClient = new AsyncHttpClient();
+            final CountDownLatch waitLatch = new CountDownLatch(1);
+            testClient.prepareGet("http://localhost:8080/events/testing").execute(new ServerSentEventsHandler(waitLatch));
+            waitLatch.await(1, TimeUnit.MINUTES);
         }
 
-        @Override
-        public void onThrowable(Throwable t) {
-            logger.error(t);
+        private static final class ServerSentEventsHandler implements AsyncHandler<Object> {
+            private static final Logger logger = Logger.getLogger(ServerSentEventsHandler.class);
+            private final CountDownLatch waitLatch;
+
+            private ServerSentEventsHandler(CountDownLatch waitLatch) {
+                this.waitLatch = waitLatch;
+            }
+
+            @Override
+            public void onThrowable(Throwable t) {
+                logger.error(t);
+                waitLatch.countDown();
+            }
+
+            @Override
+            public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
+                logger.info(new String(bodyPart.getBodyPartBytes(),Charsets.UTF_8));
+                return STATE.CONTINUE;
+            }
+
+            @Override
+            public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
+                logger.info(responseStatus.getStatusCode());
+                return STATE.CONTINUE;
+            }
+
+            @Override
+            public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+                return STATE.CONTINUE;
+            }
+
+            @Override
+            public Object onCompleted() throws Exception {
+                logger.info("onCompleted");
+                waitLatch.countDown();
+                return null;  //To change body of implemented methods use File | Settings | File Templates.
+            }
         }
 
-        @Override
-        public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
-            logger.info(new String(bodyPart.getBodyPartBytes(),Charsets.UTF_8));
-            return STATE.CONTINUE;
-        }
 
-        @Override
-        public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
-            logger.info(responseStatus.getStatusCode());
-            return STATE.CONTINUE;
-        }
-
-        @Override
-        public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
-            return STATE.CONTINUE;
-        }
-
-        @Override
-        public Object onCompleted() throws Exception {
-            logger.info("onCompleted");
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
-        }
-    }
 }

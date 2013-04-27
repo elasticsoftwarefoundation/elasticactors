@@ -20,13 +20,11 @@ import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasterix.elasticactors.ActorSystem;
-import org.elasticsoftwarefoundation.elasticactors.base.state.JacksonActorState;
 import org.elasticsoftwarefoundation.elasticactors.http.actors.HttpService;
 import org.elasticsoftwarefoundation.elasticactors.http.actors.HttpServiceResponseHandler;
-import org.elasticsoftwarefoundation.elasticactors.http.codec.SseEventEncoder;
+import org.elasticsoftwarefoundation.elasticactors.http.codec.ServerSentEventEncoder;
 import org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest;
 import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.ServerSocketChannelFactory;
 import org.jboss.netty.handler.codec.http.*;
@@ -35,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,9 +43,9 @@ import static org.jboss.netty.channel.Channels.pipeline;
 /**
  * @author Joost van de Wijgerd
  */
-public class HttpServer extends SimpleChannelUpstreamHandler implements ChannelPipelineFactory {
+public final class HttpServer extends SimpleChannelUpstreamHandler implements ChannelPipelineFactory {
     private static final Logger logger = Logger.getLogger(HttpServer.class);
-    private final SseEventEncoder sseEventEncoder = new SseEventEncoder();
+    private final ServerSentEventEncoder sseEventEncoder = new ServerSentEventEncoder();
     private ServerSocketChannelFactory channelFactory;
     private ActorSystem actorSystem;
     private HttpService httpService;
@@ -102,7 +101,8 @@ public class HttpServer extends SimpleChannelUpstreamHandler implements ChannelP
             content = new byte[nettyRequest.getContent().readableBytes()];
             nettyRequest.getContent().readBytes(content);
         }
-        HttpRequest request = new HttpRequest(nettyRequest.getUri(),headers,content);
+
+        HttpRequest request = new HttpRequest(new URI(nettyRequest.getUri()).getPath(),headers,content);
         // create a temp actor to handle the response
         ActorRef replyActor = actorSystem.tempActorOf(HttpServiceResponseHandler.class,
                                                       new HttpServiceResponseHandler.State(ctx.getChannel()));

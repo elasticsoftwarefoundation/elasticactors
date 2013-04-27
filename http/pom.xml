@@ -63,6 +63,12 @@
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
+        <!--<dependency>
+            <groupId>com.github</groupId>
+            <artifactId>eventsource-client</artifactId>
+            <version>0.6-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>-->
 
 
     </dependencies>
