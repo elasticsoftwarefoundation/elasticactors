@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.geoevents.messages;
 
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.elasterix.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.geoevents.Coordinate;
 import org.elasticsoftware.elasticactors.geoevents.LengthUnit;
@@ -24,31 +23,12 @@ import org.elasticsoftware.elasticactors.geoevents.LengthUnit;
 /**
  * @author Joost van de Wijgerd
  */
-public final class RegisterInterest {
+public final class DeRegisterInterest {
     private final ActorRef actorRef;
     private final Coordinate location;
-    private final int radiusInMetres;
 
-    public RegisterInterest(@JsonProperty("actorRef") ActorRef actorRef,
-                            @JsonProperty("location") Coordinate location,
-                            @JsonProperty("radiusInMetres") int radiusInMetres) {
+    public DeRegisterInterest(ActorRef actorRef, Coordinate location) {
         this.actorRef = actorRef;
         this.location = location;
-        this.radiusInMetres = radiusInMetres;
-    }
-
-    @JsonProperty("actorRef")
-    public ActorRef getActorRef() {
-        return actorRef;
-    }
-
-    @JsonProperty("location")
-    public Coordinate getLocation() {
-        return location;
-    }
-
-    @JsonProperty("radiusInMetres")
-    public int getRadiusInMetres() {
-        return radiusInMetres;
     }
 }

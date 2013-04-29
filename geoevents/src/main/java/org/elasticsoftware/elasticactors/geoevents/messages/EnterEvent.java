@@ -16,8 +16,58 @@
 
 package org.elasticsoftware.elasticactors.geoevents.messages;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.elasterix.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.geoevents.Coordinate;
+
+import java.util.Map;
+
 /**
  * @author Joost van de Wijgerd
  */
-public class EnterEvent {
+public final class EnterEvent {
+    private final ActorRef actorRef;
+    private final Coordinate location;
+    private final int distanceInMetres;
+    private final long lastSeen;
+    private final Map<String,Object> customProperties;
+
+    @JsonCreator
+    public EnterEvent(@JsonProperty("actorRef") ActorRef actorRef,
+                      @JsonProperty("location") Coordinate location,
+                      @JsonProperty("distanceInMetres") int distanceInMetres,
+                      @JsonProperty("lastSeen") long lastSeen,
+                      @JsonProperty("customProperties") Map<String, Object> customProperties) {
+        this.actorRef = actorRef;
+        this.location = location;
+        this.distanceInMetres = distanceInMetres;
+        this.lastSeen = lastSeen;
+        this.customProperties = customProperties;
+    }
+
+    @JsonProperty("actorRef")
+    public ActorRef getActorRef() {
+        return actorRef;
+    }
+
+    @JsonProperty("location")
+    public Coordinate getLocation() {
+        return location;
+    }
+
+    @JsonProperty("distanceInMetres")
+    public int getDistanceInMetres() {
+        return distanceInMetres;
+    }
+
+    @JsonProperty("lastSeen")
+    public long getLastSeen() {
+        return lastSeen;
+    }
+
+    @JsonProperty("customProperties")
+    public Map<String, Object> getCustomProperties() {
+        return customProperties;
+    }
 }
