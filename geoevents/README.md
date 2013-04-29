@@ -14,3 +14,5 @@ http://geohash.2ch.to/
 using this library for geohashes (form clojars.org maven repo)
 
 https://github.com/ndimiduk/geohash-java
+
+nice tool for getting coordinates from a map: http://itouchmap.com/latlong.html

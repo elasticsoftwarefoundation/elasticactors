@@ -23,6 +23,7 @@ public final class GeoEventsActorSystem extends SpringBasedActorSystem {
     }
 
     public GeoEventsActorSystem(String name, int numberOfShards) {
+        super("geoevents-beans.xml");
         this.name = name;
         this.numberOfShards = numberOfShards;
     }

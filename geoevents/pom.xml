@@ -59,6 +59,12 @@
               <artifactId>geohash-java</artifactId>
               <version>1.0.6</version>
             </dependency>
+            <dependency>
+                <groupId>org.elasterix.elasticactors</groupId>
+                <artifactId>elasticactors-core</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
     </dependencies>
 
 
