@@ -145,6 +145,7 @@
         <module>runtime</module>
         <module>http</module>
         <module>base</module>
+        <module>geoevents</module>
     </modules>
 
     <build>
