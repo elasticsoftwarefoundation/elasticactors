@@ -66,6 +66,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private Scheduler scheduler;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private final ConcurrentMap<String, ActorNode> activeNodes = new ConcurrentHashMap<String, ActorNode>();
+    private final ConcurrentMap<String, ActorNodeAdapter> activeNodeAdapters = new ConcurrentHashMap<String, ActorNodeAdapter>();
     private final ActorNodeAdapter localNodeAdapter;
 
     public LocalActorSystemInstance(PhysicalNode localNode, ActorSystems cluster, ActorSystemConfiguration actorSystem, NodeSelectorFactory nodeSelectorFactory) {
@@ -106,6 +107,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
             if (!nodeMap.containsKey(actorNodeEntry.getKey())) {
                 actorNodeEntry.getValue().destroy();
                 entryIterator.remove();
+                activeNodeAdapters.remove(actorNodeEntry.getKey());
             }
         }
         // now see if we need to add nodes
@@ -117,6 +119,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                             localNodeAdapter.myRef,
                             localMessageQueueFactory);
                     activeNodes.put(node.getId(), localActorNode);
+                    activeNodeAdapters.put(node.getId(),localNodeAdapter);
                     localActorNode.init();
                 } else {
                     RemoteActorNode remoteActorNode = new RemoteActorNode(node,
@@ -124,6 +127,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                             new ActorNodeAdapter(new NodeKey(getName(), node.getId())).myRef,
                             remoteMessageQueueFactory);
                     activeNodes.put(node.getId(), remoteActorNode);
+                    activeNodeAdapters.put(node.getId(),new ActorNodeAdapter(remoteActorNode.getKey()));
                     remoteActorNode.init();
                 }
             }
@@ -266,7 +270,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     @Override
     public ActorNode getNode(String nodeId) {
-        return activeNodes.get(nodeId);
+        return activeNodeAdapters.get(nodeId);
     }
 
     @Override

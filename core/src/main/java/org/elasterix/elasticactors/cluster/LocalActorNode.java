@@ -117,11 +117,19 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                     // see if it is a service
                     ElasticActor serviceInstance = actorSystem.getServiceInstance(internalMessage.getReceiver());
                     if(serviceInstance != null) {
+                        if(!internalMessage.isUndeliverable()) {
                         actorExecutor.execute(new HandleServiceMessageTask(actorSystem,
                                                                            internalMessage.getReceiver(),
                                                                            serviceInstance,
                                                                            internalMessage,
                                                                            messageHandlerEventListener));
+                        } else {
+                            actorExecutor.execute(new HandleUndeliverableServiceMessageTask(actorSystem,
+                                                                                            internalMessage.getReceiver(),
+                                                                                            serviceInstance,
+                                                                                            internalMessage,
+                                                                                            messageHandlerEventListener));
+                        }
                     } else {
                         handleUndeliverable(internalMessage,messageHandlerEventListener);
                     }
