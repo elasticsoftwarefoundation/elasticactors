@@ -64,7 +64,29 @@
         <profile>
             <id>dist</id>
             <build>
+                <finalName>elasticactors-${project.version}</finalName>
                 <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>2.4</version>
+                        <configuration>
+                           <!-- <filters>
+                                <filter>src/assemble/filter.properties</filter>
+                            </filters>-->
+                            <descriptors>
+                                <descriptor>src/assemble/dist.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>make-assembly</id> <!-- this is used for inheritance merges -->
+                                <phase>package</phase> <!-- bind to the packaging phase -->
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <groupId>com.googlecode.maven-download-plugin</groupId>
                         <artifactId>maven-download-plugin</artifactId>
@@ -83,6 +105,7 @@
                                     <unpack>true</unpack>
                                     <outputDirectory>${project.build.directory}/cassandra-${cassandra.version}
                                     </outputDirectory>
+                                    <!-- this is for 1.2.4, so it will fail if the version is updated -->
                                     <md5>b5bdcdd15aeda8640552061fe3f24a93</md5>
                                 </configuration>
                             </execution>

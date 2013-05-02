@@ -42,4 +42,6 @@ done
 
 # add the ElasticActors classpath (shaded jar for now)
 
-CLASSPATH=$CLASSPATH:/Users/macbookpro/
+for jar in $CASSANDRA_HOME/ealib/*.jar; do
+    CLASSPATH=$CLASSPATH:$jar
+done

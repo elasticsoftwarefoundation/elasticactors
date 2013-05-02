@@ -54,6 +54,7 @@ set CLASSPATH="%CASSANDRA_HOME%\conf"
 
 REM For each jar in the CASSANDRA_HOME lib directory call append to build the CLASSPATH variable.
 for %%i in ("%CASSANDRA_HOME%\lib\*.jar") do call :append "%%i"
+for %%i in ("%CASSANDRA_HOME%\ealib\*.jar") do call :append "%%i"
 goto okClasspath
 
 :append
