@@ -37,9 +37,6 @@ public class GeoEventsActorSystemTest {
         ActorSystem geoEventsSystem = TestActorSystem.create(new GeoEventsActorSystem());
         ActorSystem testSystem = TestActorSystem.create(new GeoEventsTestActorSystem());
 
-        // pre-create region (workaround for possible bug with undeliverable messages)
-        //geoEventsSystem.actorOf("regions/u17",Region.class,new Region.State(GeoHash.fromGeohashString("u1f")));
-
         ActorRef dispatcher = geoEventsSystem.serviceActorFor("geoEventsService");
         final CountDownLatch waitLatch = new CountDownLatch(1);
         ActorRef listener = testSystem.tempActorOf(TestActor.class, new Receiver() {
