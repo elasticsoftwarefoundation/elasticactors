@@ -27,73 +27,73 @@
     <context:annotation-config/>-->
 
     <util:map id="messageSerializers" key-type="java.lang.Class"
-                                      value-type="org.elasterix.elasticactors.serialization.MessageSerializer">
+                                      value-type="org.elasticsoftware.elasticactors.serialization.MessageSerializer">
         <entry key="org.elasticsoftware.elasticactors.geoevents.messages.PublishLocation">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageSerializer">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageSerializer">
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
         <entry key="org.elasticsoftware.elasticactors.geoevents.messages.RegisterInterest">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageSerializer">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageSerializer">
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
         <entry key="org.elasticsoftware.elasticactors.geoevents.messages.DeRegisterInterest">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageSerializer">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageSerializer">
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
         <entry key="org.elasticsoftware.elasticactors.geoevents.messages.EnterEvent">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageSerializer">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageSerializer">
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
         <entry key="org.elasticsoftware.elasticactors.geoevents.messages.LeaveEvent">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageSerializer">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageSerializer">
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
         <entry key="org.elasticsoftware.elasticactors.geoevents.messages.UnpublishLocation">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageSerializer">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageSerializer">
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
     </util:map>
 
     <util:map id="messageDeserializers" key-type="java.lang.Class"
-                                          value-type="org.elasterix.elasticactors.serialization.MessageDeserializer">
+                                          value-type="org.elasticsoftware.elasticactors.serialization.MessageDeserializer">
         <entry key="org.elasticsoftware.elasticactors.geoevents.messages.PublishLocation">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageDeserializer">
                 <constructor-arg value="org.elasticsoftware.elasticactors.geoevents.messages.PublishLocation"/>
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
         <entry key="org.elasticsoftware.elasticactors.geoevents.messages.EnterEvent">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageDeserializer">
                 <constructor-arg value="org.elasticsoftware.elasticactors.geoevents.messages.EnterEvent"/>
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
         <entry key="org.elasticsoftware.elasticactors.geoevents.messages.UnpublishLocation">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageDeserializer">
                 <constructor-arg value="org.elasticsoftware.elasticactors.geoevents.messages.UnpublishLocation"/>
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
         <entry key="org.elasticsoftware.elasticactors.geoevents.messages.LeaveEvent">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageDeserializer">
                 <constructor-arg value="org.elasticsoftware.elasticactors.geoevents.messages.LeaveEvent"/>
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
         <entry key="org.elasticsoftware.elasticactors.geoevents.messages.RegisterInterest">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageDeserializer">
                 <constructor-arg value="org.elasticsoftware.elasticactors.geoevents.messages.RegisterInterest"/>
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
         <entry key="org.elasticsoftware.elasticactors.geoevents.messages.DeRegisterInterest">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageDeserializer">
                 <constructor-arg value="org.elasticsoftware.elasticactors.geoevents.messages.DeRegisterInterest"/>
                 <constructor-arg ref="objectMapper"/>
             </bean>

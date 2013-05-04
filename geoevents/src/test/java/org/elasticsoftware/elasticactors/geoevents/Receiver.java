@@ -16,7 +16,7 @@
 
 package org.elasticsoftware.elasticactors.geoevents;
 
-import org.elasterix.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorRef;
 
 /**
  * @author Joost van de Wijgerd

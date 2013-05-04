@@ -24,20 +24,20 @@
     <context:annotation-config/>
     <bean id="messageQueueWorkerExecutor" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool">
             <constructor-arg index="0">
-                <bean class="org.elasterix.elasticactors.util.concurrent.DaemonThreadFactory">
+                <bean class="org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory">
                     <constructor-arg index="0" value="MESSAGEQUEUE-WORKER"/>
                 </bean>
             </constructor-arg>
         </bean>
 
-        <bean id="messageQueueWorkers" class="org.elasterix.elasticactors.messaging.LocalMessageQueueWorkers">
+        <bean id="messageQueueWorkers" class="org.elasticsoftware.elasticactors.messaging.LocalMessageQueueWorkers">
             <constructor-arg index="0" ref="messageQueueWorkerExecutor"/>
             <constructor-arg index="1" value="1"/>
         </bean>
 
-    <bean id="actorExecutor" class="org.elasterix.elasticactors.util.concurrent.ThreadBoundExecutorImpl">
+    <bean id="actorExecutor" class="org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl">
             <constructor-arg index="0">
-                <bean class="org.elasterix.elasticactors.util.concurrent.DaemonThreadFactory">
+                <bean class="org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory">
                     <constructor-arg index="0" value="ACTOR-WORKER"/>
                 </bean>
             </constructor-arg>
@@ -46,14 +46,14 @@
 
     <alias name="messageQueueWorkers" alias="localMessageQueueFactory"/>
 
-    <bean name="remoteMessageQueueFactory" class="org.elasterix.elasticactors.test.UnsupportedMessageQueueFactory"/>
+    <bean name="remoteMessageQueueFactory" class="org.elasticsoftware.elasticactors.test.UnsupportedMessageQueueFactory"/>
 
-    <bean id="simpleScheduler" class="org.elasterix.elasticactors.cluster.scheduler.SimpleScheduler"/>
+    <bean id="simpleScheduler" class="org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler"/>
 
-    <bean id="testActorSystem" class="org.elasterix.elasticactors.test.TestActorSystem"/>
+    <bean id="testActorSystem" class="org.elasticsoftware.elasticactors.test.TestActorSystem"/>
 
-    <bean id="persistentActorRepository" class="org.elasterix.elasticactors.test.NoopPersistentActorRepository"/>
+    <bean id="persistentActorRepository" class="org.elasticsoftware.elasticactors.test.NoopPersistentActorRepository"/>
 
-    <bean id="commitLog" class="org.elasterix.elasticactors.test.NoopCommitLog"/>
+    <bean id="commitLog" class="org.elasticsoftware.elasticactors.test.NoopCommitLog"/>
 </beans>
 

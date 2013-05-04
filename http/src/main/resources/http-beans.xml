@@ -26,63 +26,63 @@
     <context:annotation-config/>-->
 
     <util:map id="messageSerializers" key-type="java.lang.Class"
-                                      value-type="org.elasterix.elasticactors.serialization.MessageSerializer">
-        <entry key="org.elasticsoftwarefoundation.elasticactors.http.messages.HttpResponse">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageSerializer">
+                                      value-type="org.elasticsoftware.elasticactors.serialization.MessageSerializer">
+        <entry key="org.elasticsoftware.elasticactors.http.messages.HttpResponse">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageSerializer">
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
-        <entry key="org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageSerializer">
+        <entry key="org.elasticsoftware.elasticactors.http.messages.HttpRequest">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageSerializer">
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
-        <entry key="org.elasticsoftwarefoundation.elasticactors.http.messages.RegisterRouteMessage">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageSerializer">
+        <entry key="org.elasticsoftware.elasticactors.http.messages.RegisterRouteMessage">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageSerializer">
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
-        <entry key="org.elasticsoftwarefoundation.elasticactors.http.messages.SseResponse">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageSerializer">
+        <entry key="org.elasticsoftware.elasticactors.http.messages.SseResponse">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageSerializer">
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
-        <entry key="org.elasticsoftwarefoundation.elasticactors.http.messages.ServerSentEvent">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageSerializer">
+        <entry key="org.elasticsoftware.elasticactors.http.messages.ServerSentEvent">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageSerializer">
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
     </util:map>
 
     <util:map id="messageDeserializers" key-type="java.lang.Class"
-                                          value-type="org.elasterix.elasticactors.serialization.MessageDeserializer">
-        <entry key="org.elasticsoftwarefoundation.elasticactors.http.messages.HttpResponse">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
-                <constructor-arg value="org.elasticsoftwarefoundation.elasticactors.http.messages.HttpResponse"/>
+                                          value-type="org.elasticsoftware.elasticactors.serialization.MessageDeserializer">
+        <entry key="org.elasticsoftware.elasticactors.http.messages.HttpResponse">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageDeserializer">
+                <constructor-arg value="org.elasticsoftware.elasticactors.http.messages.HttpResponse"/>
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
-        <entry key="org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
-                <constructor-arg value="org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest"/>
+        <entry key="org.elasticsoftware.elasticactors.http.messages.HttpRequest">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageDeserializer">
+                <constructor-arg value="org.elasticsoftware.elasticactors.http.messages.HttpRequest"/>
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
-        <entry key="org.elasticsoftwarefoundation.elasticactors.http.messages.RegisterRouteMessage">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
-                <constructor-arg value="org.elasticsoftwarefoundation.elasticactors.http.messages.RegisterRouteMessage"/>
+        <entry key="org.elasticsoftware.elasticactors.http.messages.RegisterRouteMessage">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageDeserializer">
+                <constructor-arg value="org.elasticsoftware.elasticactors.http.messages.RegisterRouteMessage"/>
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
-        <entry key="org.elasticsoftwarefoundation.elasticactors.http.messages.SseResponse">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
-                <constructor-arg value="org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest"/>
+        <entry key="org.elasticsoftware.elasticactors.http.messages.SseResponse">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageDeserializer">
+                <constructor-arg value="org.elasticsoftware.elasticactors.http.messages.HttpRequest"/>
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
-        <entry key="org.elasticsoftwarefoundation.elasticactors.http.messages.ServerSentEvent">
-            <bean class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonMessageDeserializer">
-                <constructor-arg value="org.elasticsoftwarefoundation.elasticactors.http.messages.HttpRequest"/>
+        <entry key="org.elasticsoftware.elasticactors.http.messages.ServerSentEvent">
+            <bean class="org.elasticsoftware.elasticactors.base.serialization.JacksonMessageDeserializer">
+                <constructor-arg value="org.elasticsoftware.elasticactors.http.messages.HttpRequest"/>
                 <constructor-arg ref="objectMapper"/>
             </bean>
         </entry>
@@ -99,7 +99,7 @@
         </constructor-arg>
     </bean>
 
-    <bean id="httpClient" class="org.elasticsoftwarefoundation.elasticactors.http.actors.HttpClientService">
+    <bean id="httpClient" class="org.elasticsoftware.elasticactors.http.actors.HttpClientService">
         <constructor-arg ref="asyncHttpClient"/>
     </bean>
 
@@ -132,9 +132,9 @@
             <constructor-arg index="2" type="int" ref="localMaxThread"/>
         </bean>
 
-    <bean id="httpServer" class="org.elasticsoftwarefoundation.elasticactors.http.actors.HttpService"/>
+    <bean id="httpServer" class="org.elasticsoftware.elasticactors.http.actors.HttpService"/>
 
-    <bean id="nettyHttpServer" class="org.elasticsoftwarefoundation.elasticactors.http.HttpServer" init-method="init" destroy-method="destroy">
+    <bean id="nettyHttpServer" class="org.elasticsoftware.elasticactors.http.HttpServer" init-method="init" destroy-method="destroy">
         <property name="channelFactory" ref="nioServerSocketChannelFactory"/>
         <property name="httpService" ref="httpServer"/>
         <property name="objectMapper" ref="objectMapper"/>

@@ -22,8 +22,8 @@ import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.DeserializationContext;
 import org.codehaus.jackson.map.deser.std.StdScalarDeserializer;
-import org.elasterix.elasticactors.ActorRef;
-import org.elasterix.elasticactors.cluster.ActorRefFactory;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 
 import java.io.IOException;
 

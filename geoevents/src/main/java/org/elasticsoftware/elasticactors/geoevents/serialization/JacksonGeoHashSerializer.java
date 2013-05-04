@@ -21,7 +21,6 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.map.JsonSerializer;
 import org.codehaus.jackson.map.SerializerProvider;
-import org.elasterix.elasticactors.ActorRef;
 
 import java.io.IOException;
 

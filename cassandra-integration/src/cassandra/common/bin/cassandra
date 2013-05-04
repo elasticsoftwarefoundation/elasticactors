@@ -150,7 +150,7 @@ args=`getopt vfhp:bD: "$@"`
 eval set -- "$args"
 
 # classname="org.apache.cassandra.service.CassandraDaemon"
-classname="org.elasterix.elasticactors.cassandra.CassandraDaemonWrapper"
+classname="org.elasticsoftware.elasticactors.cassandra.CassandraDaemonWrapper"
 
 while true; do
     case "$1" in

@@ -16,9 +16,9 @@
 
 package org.elasticsoftware.elasticactors.geoevents;
 
-import org.elasterix.elasticactors.ActorSystem;
-import org.elasterix.elasticactors.DependsOn;
-import org.elasticsoftwarefoundation.elasticactors.base.SpringBasedActorSystem;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.DependsOn;
+import org.elasticsoftware.elasticactors.base.SpringBasedActorSystem;
 import org.springframework.context.ApplicationContext;
 
 /**

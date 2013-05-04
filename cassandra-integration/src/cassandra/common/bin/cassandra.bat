@@ -25,7 +25,7 @@ pushd %~dp0..
 if NOT DEFINED CASSANDRA_HOME set CASSANDRA_HOME=%CD%
 popd
 
-if NOT DEFINED CASSANDRA_MAIN set CASSANDRA_MAIN=org.elasterix.elasticactors.cassandra.CassandraDaemonWrapper
+if NOT DEFINED CASSANDRA_MAIN set CASSANDRA_MAIN=org.elasticsoftware.elasticactors.cassandra.CassandraDaemonWrapper
 if NOT DEFINED JAVA_HOME goto :err
 
 REM ***** JAVA options *****

@@ -109,13 +109,13 @@
 
             <!-- Now, select which projects to include in this module-set. -->
             <includes>
-                <include>org.elasterix.elasticactors:elasticactors-api</include>
-                <include>org.elasterix.elasticactors:cassandra-integration</include>
-                <include>org.elasterix.elasticactors:elasticactors-core</include>
-                <include>org.elasterix.elasticactors:elasticactors-base</include>
-                <include>org.elasterix.elasticactors:elasticactors-http</include>
+                <include>org.elasticsoftware.elasticactors:elasticactors-api</include>
+                <include>org.elasticsoftware.elasticactors:cassandra-integration</include>
+                <include>org.elasticsoftware.elasticactors:elasticactors-core</include>
+                <include>org.elasticsoftware.elasticactors:elasticactors-base</include>
+                <include>org.elasticsoftware.elasticactors:elasticactors-http</include>
                 <!-- examples should not be here -->
-                <include>org.elasterix.elasticactors:examples</include>
+                <include>org.elasticsoftware.elasticactors:examples</include>
             </includes>
             <binaries>
                 <includeDependencies>true</includeDependencies>

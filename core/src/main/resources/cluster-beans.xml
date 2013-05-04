@@ -27,7 +27,7 @@
                                   location="classpath:cluster-default.properties"
                                   system-properties-mode="OVERRIDE"/>
 
-    <bean id="clusterView" class="org.elasterix.elasticactors.cassandra.ClusterView"/>
+    <bean id="clusterView" class="org.elasticsoftware.elasticactors.cassandra.ClusterView"/>
 
     <bean id="cassandraHostConfigurator" class="me.prettyprint.cassandra.service.CassandraHostConfigurator">
         <constructor-arg index="0" value="localhost:9160"/>
@@ -80,31 +80,31 @@
             </constructor-arg>
         </bean>
 
-    <bean id="actorRefSerializer" class="org.elasterix.elasticactors.serialization.internal.ActorRefSerializer" factory-method="get"/>
+    <bean id="actorRefSerializer" class="org.elasticsoftware.elasticactors.serialization.internal.ActorRefSerializer" factory-method="get"/>
 
-    <bean id="actorRefDeserializer" class="org.elasterix.elasticactors.serialization.internal.ActorRefDeserializer" factory-method="get" depends-on="elasticActorsCluster"/>
+    <bean id="actorRefDeserializer" class="org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer" factory-method="get" depends-on="elasticActorsCluster"/>
 
-    <bean id="persistentActorSerializer" class="org.elasterix.elasticactors.serialization.internal.PersistentActorSerializer"/>
+    <bean id="persistentActorSerializer" class="org.elasticsoftware.elasticactors.serialization.internal.PersistentActorSerializer"/>
 
-    <bean id="persistentActorDeserializer" class="org.elasterix.elasticactors.serialization.internal.PersistentActorDeserializer"/>
+    <bean id="persistentActorDeserializer" class="org.elasticsoftware.elasticactors.serialization.internal.PersistentActorDeserializer"/>
 
-    <bean id="persistentActorRepository" class="org.elasterix.elasticactors.state.cassandra.CassandraPersistentActorRepository"/>
+    <bean id="persistentActorRepository" class="org.elasticsoftware.elasticactors.state.cassandra.CassandraPersistentActorRepository"/>
 
-    <bean id="commitLog" class="org.elasterix.elasticactors.messaging.journal.CassandraCommitLog"/>
+    <bean id="commitLog" class="org.elasticsoftware.elasticactors.messaging.journal.CassandraCommitLog"/>
 
-    <bean id="actorSystemRepository" class="org.elasterix.elasticactors.cluster.cassandra.CassandraActorSystemRepository"/>
+    <bean id="actorSystemRepository" class="org.elasticsoftware.elasticactors.cluster.cassandra.CassandraActorSystemRepository"/>
 
-    <bean id="elasticActorsCluster" class="org.elasterix.elasticactors.cluster.ElasticActorsCluster"/>
+    <bean id="elasticActorsCluster" class="org.elasticsoftware.elasticactors.cluster.ElasticActorsCluster"/>
 
     <bean id="messageQueueWorkerExecutor" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool">
         <constructor-arg index="0">
-            <bean class="org.elasterix.elasticactors.util.concurrent.DaemonThreadFactory">
+            <bean class="org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory">
                 <constructor-arg index="0" value="MESSAGEQUEUE-WORKER"/>
             </bean>
         </constructor-arg>
     </bean>
 
-    <bean id="messageQueueWorkers" class="org.elasterix.elasticactors.messaging.LocalMessageQueueWorkers">
+    <bean id="messageQueueWorkers" class="org.elasticsoftware.elasticactors.messaging.LocalMessageQueueWorkers">
         <constructor-arg index="0" ref="messageQueueWorkerExecutor"/>
         <constructor-arg index="1" value="4"/>
     </bean>
@@ -113,22 +113,22 @@
 
     <alias name="messagingService" alias="remoteMessageQueueFactory"/>
 
-    <bean id="nodeSelectorFactory" class="org.elasterix.elasticactors.cluster.cassandra.CassandraNodeSelectorFactory"/>
+    <bean id="nodeSelectorFactory" class="org.elasticsoftware.elasticactors.cluster.cassandra.CassandraNodeSelectorFactory"/>
 
-    <bean id="simpleScheduler" class="org.elasterix.elasticactors.cluster.scheduler.SimpleScheduler"/>
+    <bean id="simpleScheduler" class="org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler"/>
 
-    <bean id="clusterExecutor" class="org.elasterix.elasticactors.util.concurrent.ThreadBoundExecutorImpl">
+    <bean id="clusterExecutor" class="org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl">
         <constructor-arg index="0">
-            <bean class="org.elasterix.elasticactors.util.concurrent.DaemonThreadFactory">
+            <bean class="org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory">
                 <constructor-arg index="0" value="CLUSTER-WORKER"/>
             </bean>
         </constructor-arg>
         <constructor-arg index="1" value="4"/>
     </bean>
 
-    <bean id="actorExecutor" class="org.elasterix.elasticactors.util.concurrent.ThreadBoundExecutorImpl">
+    <bean id="actorExecutor" class="org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl">
         <constructor-arg index="0">
-            <bean class="org.elasterix.elasticactors.util.concurrent.DaemonThreadFactory">
+            <bean class="org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory">
                 <constructor-arg index="0" value="ACTOR-WORKER"/>
             </bean>
         </constructor-arg>

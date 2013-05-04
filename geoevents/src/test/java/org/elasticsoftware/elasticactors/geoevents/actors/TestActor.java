@@ -16,8 +16,8 @@
 
 package org.elasticsoftware.elasticactors.geoevents.actors;
 
-import org.elasterix.elasticactors.ActorRef;
-import org.elasterix.elasticactors.UntypedActor;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.UntypedActor;
 import org.elasticsoftware.elasticactors.geoevents.Receiver;
 
 /**

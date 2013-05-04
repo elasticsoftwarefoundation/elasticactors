@@ -1,4 +1,4 @@
-package org.elasterix.elasticactors.serialization.protobuf;
+package org.elasticsoftware.elasticactors.serialization.protobuf;
 
 option optimize_for = SPEED;
 

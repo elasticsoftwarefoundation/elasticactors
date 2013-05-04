@@ -16,9 +16,8 @@
 
 package org.elasticsoftware.elasticactors.geoevents.messages;
 
-import org.elasterix.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.geoevents.Coordinate;
-import org.elasticsoftware.elasticactors.geoevents.LengthUnit;
 
 /**
  * @author Joost van de Wijgerd

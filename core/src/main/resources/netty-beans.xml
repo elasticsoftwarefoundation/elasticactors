@@ -58,7 +58,7 @@
         <constructor-arg index="2" type="int" ref="localMaxThread"/>
     </bean>
 
-    <bean id="messagingService" class="org.elasterix.elasticactors.messaging.netty.NettyMessagingService">
+    <bean id="messagingService" class="org.elasticsoftware.elasticactors.messaging.netty.NettyMessagingService">
         <constructor-arg index="0" ref="elasticActorsCluster"/>
         <constructor-arg index="1" ref="nioServerSocketChannelFactory"/>
         <constructor-arg index="2" ref="nioClientSocketChannelFactory"/>

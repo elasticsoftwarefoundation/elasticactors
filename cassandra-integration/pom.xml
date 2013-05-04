@@ -19,12 +19,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.elasterix.elasticactors</groupId>
+        <groupId>org.elasticsoftware.elasticactors</groupId>
         <artifactId>elasticactors-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>org.elasterix.elasticactors</groupId>
+    <groupId>org.elasticsoftware.elasticactors</groupId>
     <artifactId>cassandra-integration</artifactId>
     <packaging>jar</packaging>
 

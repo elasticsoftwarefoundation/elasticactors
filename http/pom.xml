@@ -20,7 +20,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>elasticactors-parent</artifactId>
-        <groupId>org.elasterix.elasticactors</groupId>
+        <groupId>org.elasticsoftware.elasticactors</groupId>
         <version>0.1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -36,13 +36,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.elasterix.elasticactors</groupId>
+            <groupId>org.elasticsoftware.elasticactors</groupId>
             <artifactId>elasticactors-api</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.elasterix.elasticactors</groupId>
+            <groupId>org.elasticsoftware.elasticactors</groupId>
             <artifactId>elasticactors-base</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -58,7 +58,7 @@
             <version>${async-http-client.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.elasterix.elasticactors</groupId>
+            <groupId>org.elasticsoftware.elasticactors</groupId>
             <artifactId>elasticactors-core</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
@@ -102,13 +102,13 @@
                                             </transformer>
                                             <transformer
                                                     implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                                <mainClass>org.elasterix.elasticactors.cassandra.CassandraDaemonWrapper
+                                                <mainClass>org.elasticsoftware.elasticactors.cassandra.CassandraDaemonWrapper
                                                 </mainClass>
                                             </transformer>
                                         </transformers>
                                         <artifactSet>
                                             <includes>
-                                                <include>org.elasterix.elasticactors:elasticactors-base</include>
+                                                <include>org.elasticsoftware.elasticactors:elasticactors-base</include>
                                                 <include>com.ning:async-http-client</include>
                                             </includes>
 

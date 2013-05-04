@@ -22,16 +22,16 @@
 
     <bean id="objectMapper" class="org.codehaus.jackson.map.ObjectMapper"/>
 
-    <bean id="actorStateSerializer" class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonActorStateSerializer">
+    <bean id="actorStateSerializer" class="org.elasticsoftware.elasticactors.base.serialization.JacksonActorStateSerializer">
         <constructor-arg ref="objectMapper"/>
     </bean>
 
-    <bean id="actorStateDeserializer" class="org.elasticsoftwarefoundation.elasticactors.base.serialization.JacksonActorStateDeserializer">
+    <bean id="actorStateDeserializer" class="org.elasticsoftware.elasticactors.base.serialization.JacksonActorStateDeserializer">
         <constructor-arg ref="objectMapper"/>
         <constructor-arg ref="actorStateFactory"/>
     </bean>
 
-    <bean id="actorStateFactory" class="org.elasticsoftwarefoundation.elasticactors.base.state.JacksonActorStateFactory">
+    <bean id="actorStateFactory" class="org.elasticsoftware.elasticactors.base.state.JacksonActorStateFactory">
         <constructor-arg ref="objectMapper"/>
     </bean>
 

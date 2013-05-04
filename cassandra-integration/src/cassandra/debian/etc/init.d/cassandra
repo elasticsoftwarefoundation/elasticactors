@@ -145,7 +145,7 @@ do_start()
         -XX:HeapDumpPath="$cassandra_home/java_`date +%s`.hprof" \
         -XX:ErrorFile="$cassandra_home/hs_err_`date +%s`.log" \
         $JVM_OPTS \
-        org.elasterix.elasticactors.cassandra.CassandraDaemonWrapper
+        org.elasticsoftware.elasticactors.cassandra.CassandraDaemonWrapper
 
     is_running && return 0
     for tries in `seq $WAIT_FOR_START`; do
@@ -167,7 +167,7 @@ do_stop()
 	#   other if a failure occurred
     is_running || return 1
     $JSVC -stop -home $JAVA_HOME -pidfile $PIDFILE \
-            org.elasterix.elasticactors.cassandra.CassandraDaemonWrapper
+            org.elasticsoftware.elasticactors.cassandra.CassandraDaemonWrapper
     is_running && return 2 || return 0
 }
 

@@ -1,12 +1,10 @@
 package org.elasticsoftware.elasticactors.geoevents;
 
-import ch.hsr.geohash.GeoHash;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
-import org.elasterix.elasticactors.ActorRef;
-import org.elasterix.elasticactors.ActorSystem;
-import org.elasterix.elasticactors.test.TestActorSystem;
-import org.elasticsoftware.elasticactors.geoevents.actors.Region;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.elasticsoftware.elasticactors.geoevents.actors.TestActor;
 import org.elasticsoftware.elasticactors.geoevents.messages.PublishLocation;
 import org.elasticsoftware.elasticactors.geoevents.messages.RegisterInterest;

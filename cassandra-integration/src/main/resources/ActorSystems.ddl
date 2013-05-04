@@ -24,6 +24,6 @@ create column family PersistentActors
   and default_validation_class = 'BytesType';
 
 set ActorSystems['PiTest']['nrOfShards'] = int(8);
-set ActorSystems['PiTest']['configurationClass'] = 'org.elasterix.elasticactors.examples.pi.PiApproximator';
+set ActorSystems['PiTest']['configurationClass'] = 'org.elasticsoftware.elasticactors.examples.pi.PiApproximator';
 set ActorSystems['Http']['nrOfShards'] = int(8);
-set ActorSystems['Http']['configurationClass'] = 'org.elasticsoftwarefoundation.elasticactors.http.HttpActorSystem';
+set ActorSystems['Http']['configurationClass'] = 'org.elasticsoftware.elasticactors.http.HttpActorSystem';
