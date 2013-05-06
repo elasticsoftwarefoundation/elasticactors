@@ -31,11 +31,9 @@ import java.io.IOException;
  *
  */
 public final class JacksonGeoHashDeserializer extends StdScalarDeserializer<GeoHash> {
-    private final ActorRefFactory actorRefFactory;
 
-    public JacksonGeoHashDeserializer(ActorRefFactory actorRefFactory) {
+    public JacksonGeoHashDeserializer() {
         super(ActorRef.class);
-        this.actorRefFactory = actorRefFactory;
     }
 
     @Override

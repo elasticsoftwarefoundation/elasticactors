@@ -142,10 +142,10 @@
         <module>core</module>
         <module>api</module>
         <module>examples</module>
-        <module>runtime</module>
         <module>http</module>
         <module>base</module>
         <module>geoevents</module>
+        <module>runtime</module>
     </modules>
 
     <build>

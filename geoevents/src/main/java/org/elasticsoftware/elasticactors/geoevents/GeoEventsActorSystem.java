@@ -52,7 +52,7 @@ public final class GeoEventsActorSystem extends SpringBasedActorSystem {
         objectMapper.registerModule(
                 new SimpleModule("GeoEventsModule",new Version(0,1,0,"SNAPSHOT"))
                         .addSerializer(GeoHash.class, new JacksonGeoHashSerializer())
-                        .addDeserializer(GeoHash.class, new JacksonGeoHashDeserializer(actorSystem.getParent().getActorRefFactory())));
+                        .addDeserializer(GeoHash.class, new JacksonGeoHashDeserializer()));
     }
 
     @Override

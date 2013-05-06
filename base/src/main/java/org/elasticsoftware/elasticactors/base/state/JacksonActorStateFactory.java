@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * @author Joost van de Wijgerd
  */
-public class JacksonActorStateFactory implements ActorStateFactory {
+public final class JacksonActorStateFactory implements ActorStateFactory {
     private final ObjectMapper objectMapper;
 
     public JacksonActorStateFactory(ObjectMapper objectMapper) {
