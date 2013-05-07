@@ -27,3 +27,5 @@ set ActorSystems['PiTest']['nrOfShards'] = int(8);
 set ActorSystems['PiTest']['configurationClass'] = 'org.elasticsoftware.elasticactors.examples.pi.PiApproximator';
 set ActorSystems['Http']['nrOfShards'] = int(8);
 set ActorSystems['Http']['configurationClass'] = 'org.elasticsoftware.elasticactors.http.HttpActorSystem';
+set ActorSystems['GeoEvents']['nrOfShards'] = int(8);
+set ActorSystems['GeoEvents']['configurationClass'] = 'org.elasticsoftware.elasticactors.geoevents.GeoEventsActorSystem';
