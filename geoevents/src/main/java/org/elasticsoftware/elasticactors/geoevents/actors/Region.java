@@ -71,6 +71,7 @@ public final class Region extends UntypedActor {
             // prune the head
             Iterator itr = publishedLocations.headMap(now).entrySet().iterator();
             while(itr.hasNext()) {
+                itr.next();
                 itr.remove();
             }
             return tailMap;
