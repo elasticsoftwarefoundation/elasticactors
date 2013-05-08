@@ -245,8 +245,14 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     }
 
     private void destroyActor(DestroyActorMessage destroyMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
-        ActorRef actorRef = destroyMessage.getActorRef();
-        PersistentActor persistentActor = actorCache.getIfPresent(actorRef);
+        final ActorRef actorRef = destroyMessage.getActorRef();
+        // need to load it here to know the ActorClass!
+        PersistentActor persistentActor = actorCache.get(actorRef, new Callable<PersistentActor>() {
+            @Override
+            public PersistentActor call() throws Exception {
+                return persistentActorRepository.get(shardKey,actorRef.getActorId());
+            }
+        });
         persistentActorRepository.delete(this.shardKey,actorRef.getActorId());
         actorCache.invalidate(actorRef);
         // find actor class behind receiver ActorRef
