@@ -20,6 +20,8 @@ import org.codehaus.jackson.Version;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.module.SimpleModule;
 import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonMessageDeserializer;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonMessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
@@ -32,13 +34,21 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author Joost van de Wijgerd
  */
 public abstract class SpringBasedActorSystem implements ActorSystemConfiguration, ActorSystemBootstrapper {
+    public static final String DESERIALIZERS = "messageDeserializers";
+    public static final String SERIALIZERS = "messageSerializers";
+    public static final String STATE_SERIALIZER = "actorStateSerializer";
+    public static final String STATE_DESERIALIZER = "actorStateDeserializer";
     private final String[] contextConfigLocations;
     private ConfigurableApplicationContext applicationContext;
+    private final ConcurrentMap<Class,JacksonMessageSerializer> cachedSerializers = new ConcurrentHashMap<Class,JacksonMessageSerializer>();
+    private final ConcurrentMap<Class,JacksonMessageDeserializer> cachedDeserializers = new ConcurrentHashMap<Class,JacksonMessageDeserializer>();
 
     protected SpringBasedActorSystem(String... contextConfigLocations) {
         this.contextConfigLocations = new String[contextConfigLocations.length+1];
@@ -85,24 +95,49 @@ public abstract class SpringBasedActorSystem implements ActorSystemConfiguration
 
     @Override
     public final <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
-        Map<Class,MessageSerializer> messageSerializers = (Map<Class, MessageSerializer>) applicationContext.getBean("messageSerializers");
-        return messageSerializers.get(messageClass);
+        MessageSerializer<T> messageSerializer = null;
+        // first see if we have one wire up
+        if(applicationContext.containsBean(SERIALIZERS)) {
+            Map<Class,MessageSerializer> messageSerializers = (Map<Class, MessageSerializer>) applicationContext.getBean(SERIALIZERS);
+            messageSerializer = messageSerializers.get(messageClass);
+        }
+        if(messageSerializer == null) {
+            // default to jackson
+            if(!cachedSerializers.containsKey(messageClass)) {
+                //@todo: somehow check if this messageClass can be serialized by jackson
+                cachedSerializers.putIfAbsent(messageClass,new JacksonMessageSerializer(applicationContext.getBean(ObjectMapper.class)));
+            }
+            messageSerializer = cachedSerializers.get(messageClass);
+        }
+        return messageSerializer;
     }
 
     @Override
     public final <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
-        Map<Class,MessageDeserializer> messageDeserializers = (Map<Class, MessageDeserializer>) applicationContext.getBean("messageDeserializers");
-        return messageDeserializers.get(messageClass);
+        MessageDeserializer<T> messageDeserializer = null;
+        if(applicationContext.containsBean(DESERIALIZERS)) {
+            Map<Class,MessageDeserializer> messageDeserializers = (Map<Class, MessageDeserializer>) applicationContext.getBean(DESERIALIZERS);
+            messageDeserializer = messageDeserializers.get(messageClass);
+        }
+        if(messageDeserializer == null) {
+            // default to jackson
+            if(!cachedDeserializers.containsKey(messageClass)) {
+                //@todo: somehow check if this messageClass can be deserialized by jackson
+                cachedDeserializers.putIfAbsent(messageClass,new JacksonMessageDeserializer(messageClass,applicationContext.getBean(ObjectMapper.class)));
+            }
+            messageDeserializer = cachedDeserializers.get(messageClass);
+        }
+        return messageDeserializer;
     }
 
     @Override
     public final Serializer<ActorState, byte[]> getActorStateSerializer() {
-        return applicationContext.getBean("actorStateSerializer",Serializer.class);
+        return applicationContext.getBean(STATE_SERIALIZER,Serializer.class);
     }
 
     @Override
     public final Deserializer<byte[], ActorState> getActorStateDeserializer() {
-        return applicationContext.getBean("actorStateDeserializer",Deserializer.class);
+        return applicationContext.getBean(STATE_DESERIALIZER,Deserializer.class);
     }
 
     @Override
