@@ -21,6 +21,7 @@ import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
+import org.elasticsoftware.elasticactors.TypedActor;
 
 /**
  * {@link org.elasticsoftware.elasticactors.ActorRef} that references an actor in the local cluster
@@ -57,8 +58,16 @@ public final class LocalClusterActorShardRef implements ActorRef, ActorContainer
         try {
             shard.sendMessage(sender,this,message);
         } catch (Exception e) {
-            // @todo: notify sender of the failure
-            logger.error(String.format("Failed to send message to %s",sender.toString()),e);
+            logger.error(String.format("Failed to send message to %s", 
+            		sender != null ? sender.toString() : "null"), e);
+            if(sender != null && sender instanceof TypedActor<?>) {
+            	try {
+            		((TypedActor<?>) sender).onUndeliverable(sender, message);
+            	} catch (Exception e1) {
+                    logger.error(String.format("Failed onUndeliverable(%s,%s)", 
+                    		sender != null ? sender.toString() : "null", message), e1);
+            	}
+            }
         }
     }
 
