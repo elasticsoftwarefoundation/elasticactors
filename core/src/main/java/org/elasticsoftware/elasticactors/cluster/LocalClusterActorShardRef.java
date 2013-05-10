@@ -58,9 +58,8 @@ public final class LocalClusterActorShardRef implements ActorRef, ActorContainer
         try {
             shard.sendMessage(sender,this,message);
         } catch (Exception e) {
-            // @todo: notify sender of the failure
             logger.error(String.format("Failed to send message to %s", 
-            		sender != null ? sender.toString() : "null", e));
+            		sender != null ? sender.toString() : "null"), e);
             if(sender != null && sender instanceof TypedActor<?>) {
             	try {
             		((TypedActor<?>) sender).onUndeliverable(sender, message);
