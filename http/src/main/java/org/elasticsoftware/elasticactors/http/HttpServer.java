@@ -103,7 +103,7 @@ public final class HttpServer extends SimpleChannelUpstreamHandler implements Ch
             nettyRequest.getContent().readBytes(content);
         }
 
-        HttpRequest request = new HttpRequest(new URI(nettyRequest.getUri()).getPath(),headers,content);
+        HttpRequest request = new HttpRequest(nettyRequest.getMethod().getName(),new URI(nettyRequest.getUri()).getPath(),headers,content);
         // create a temp actor to handle the response
         ActorRef replyActor = actorSystem.tempActorOf(HttpServiceResponseHandler.class,
                                                       new HttpServiceResponseHandler.State(ctx.getChannel()));

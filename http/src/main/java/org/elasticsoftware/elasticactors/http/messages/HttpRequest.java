@@ -28,25 +28,33 @@ import java.util.Map;
  */
 public final class HttpRequest extends HttpMessage {
     private final String url;
+    private final String method;
 
     public HttpRequest(String url) {
-        this(url, Collections.<String,List<String>>emptyMap(),null);
+        this("GET", url, Collections.<String,List<String>>emptyMap(),null);
     }
 
     public HttpRequest(String url,Map<String,List<String>> headers) {
-        this(url,headers,null);
+        this("GET",url,headers,null);
     }
 
     @JsonCreator
-    public HttpRequest(@JsonProperty("url") String url,
+    public HttpRequest(@JsonProperty("method") String method,
+                       @JsonProperty("url") String url,
                        @JsonProperty("headers") Map<String,List<String>> headers,
                        @JsonProperty("content") byte[] content) {
         super(headers,content);
         this.url = url;
+        this.method = method;
     }
 
     @JsonProperty("url")
     public String getUrl() {
         return url;
+    }
+
+    @JsonProperty("method")
+    public String getMethod() {
+        return method;
     }
 }

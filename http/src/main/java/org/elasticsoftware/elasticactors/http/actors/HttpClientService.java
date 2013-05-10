@@ -18,13 +18,16 @@ package org.elasticsoftware.elasticactors.http.actors;
 
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.FluentCaseInsensitiveStringsMap;
 import com.ning.http.client.Response;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.http.messages.HttpRequest;
 import org.elasticsoftware.elasticactors.http.messages.HttpResponse;
+import org.jboss.netty.handler.codec.http.HttpMethod;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +45,26 @@ public final class HttpClientService extends TypedActor<HttpRequest> {
     @Override
     public void onReceive(ActorRef sender, HttpRequest message) throws Exception {
         // run the request via ning and return the response async
-        httpClient.prepareGet(message.getUrl()).execute(new ResponseHandler(getSelf(),sender));
+        HttpMethod method = HttpMethod.valueOf(message.getMethod());
+        if(HttpMethod.GET.equals(method)) {
+            setHeaders(httpClient.prepareGet(message.getUrl()),message.getHeaders())
+                .execute(new ResponseHandler(getSelf(), sender));
+        } else if(HttpMethod.POST.equals(method)) {
+            setHeaders(httpClient.preparePost(message.getUrl()),message.getHeaders())
+                    .setBody(message.getContent())
+                    .execute(new ResponseHandler(getSelf(), sender));
+        } else {
+            logger.error("Unhandled request method: "+method);
+        }
+    }
+
+    private AsyncHttpClient.BoundRequestBuilder setHeaders(AsyncHttpClient.BoundRequestBuilder requestBuilder,Map<String,List<String>> headers) {
+        for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
+            for (String value : entry.getValue()) {
+                requestBuilder.setHeader(entry.getKey(),value);
+            }
+        }
+        return requestBuilder;
     }
 
     private static final class ResponseHandler extends AsyncCompletionHandler<Integer> {
