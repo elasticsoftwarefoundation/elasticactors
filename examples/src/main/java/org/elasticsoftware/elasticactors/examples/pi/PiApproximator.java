@@ -169,4 +169,9 @@ public final class PiApproximator implements ActorSystemConfiguration, ActorSyst
     public void activate(ActorSystem actorSystem) {
 
     }
+
+    @Override
+    public void destroy() throws Exception {
+
+    }
 }

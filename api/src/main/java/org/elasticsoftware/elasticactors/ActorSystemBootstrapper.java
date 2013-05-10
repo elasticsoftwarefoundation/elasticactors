@@ -46,4 +46,6 @@ public interface ActorSystemBootstrapper {
      * @throws Exception
      */
     void activate(ActorSystem actorSystem) throws Exception;
+
+    void destroy() throws Exception;
 }

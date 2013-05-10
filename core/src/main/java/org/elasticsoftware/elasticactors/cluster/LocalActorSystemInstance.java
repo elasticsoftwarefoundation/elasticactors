@@ -93,6 +93,17 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         return cluster;
     }
 
+    public void shutdown() {
+        // @todo: run shutdown sequences on nodes and shards
+        if(configuration instanceof ActorSystemBootstrapper) {
+            try {
+                ((ActorSystemBootstrapper)configuration).destroy();
+            } catch (Exception e) {
+                logger.error(String.format("Exception while destroying ActorSystem [%s]",getName()),e);
+            }
+        }
+    }
+
     public void updateNodes(List<PhysicalNode> nodes) throws Exception {
         // first see if we need to remove nodes
         // make a map

@@ -25,8 +25,11 @@ import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.internal.SystemDeserializers;
 import org.elasticsoftware.elasticactors.serialization.internal.SystemSerializers;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.net.InetAddress;
@@ -40,28 +43,40 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Joost van de Wijgerd
  */
 @Configurable
-public class TestActorSystem implements InternalActorSystems,ActorRefFactory {
+public class TestActorSystem implements InternalActorSystems,ActorRefFactory,ApplicationContextAware {
     private final SystemSerializers systemSerializers = new SystemSerializers(this);
     private final SystemDeserializers systemDeserializers = new SystemDeserializers(this);
     private final ConcurrentMap<String,LocalActorSystemInstance> actorSystemInstances = new ConcurrentHashMap<String,LocalActorSystemInstance>();
-    private static final AtomicReference<ApplicationContext> applicationContextHolder = new AtomicReference<ApplicationContext>(null);
+    private ConfigurableApplicationContext applicationContext;
 
     private TestActorSystem() {
 
+    }
+
+    public static TestActorSystem create() {
+        ConfigurableApplicationContext applicationContext = new ClassPathXmlApplicationContext("local-beans.xml");
+        return applicationContext.getBean(TestActorSystem.class);
+    }
+
+    public void destroy() {
+        // go though the actorsystem instances and destroy them
+        for (LocalActorSystemInstance actorSystemInstance : actorSystemInstances.values()) {
+            actorSystemInstance.shutdown();
+        }
+        // close the top level context
+        applicationContext.close();
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = (ConfigurableApplicationContext) applicationContext;
     }
 
     private void addActorSystemInstance(LocalActorSystemInstance instance) {
         actorSystemInstances.putIfAbsent(instance.getName(),instance);
     }
 
-    public static ActorSystem create(ActorSystemConfiguration configuration) throws Exception {
-        ApplicationContext applicationContext = applicationContextHolder.get();
-        if(applicationContext == null) {
-            applicationContext = new ClassPathXmlApplicationContext("local-beans.xml");
-            if(!applicationContextHolder.compareAndSet(null,applicationContext)) {
-                applicationContext = applicationContextHolder.get();
-            }
-        }
+    public ActorSystem create(ActorSystemConfiguration configuration) throws Exception {
         final PhysicalNode localNode = new PhysicalNodeImpl("localnode",InetAddress.getLocalHost(),true);
         NodeSelectorFactory factory = new NodeSelectorFactory() {
             @Override
@@ -93,7 +108,7 @@ public class TestActorSystem implements InternalActorSystems,ActorRefFactory {
         // see if we have the dependencies
 
 
-        testActorSystem.addActorSystemInstance(actorSystemInstance);
+        addActorSystemInstance(actorSystemInstance);
         List<PhysicalNode> nodeList = Arrays.asList(localNode);
         actorSystemInstance.updateNodes(nodeList);
         actorSystemInstance.distributeShards(nodeList);

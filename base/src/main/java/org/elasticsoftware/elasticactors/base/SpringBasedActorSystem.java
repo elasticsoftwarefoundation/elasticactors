@@ -27,6 +27,7 @@ import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonActorRefDeserializer;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonActorRefSerializer;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.Map;
@@ -37,7 +38,7 @@ import java.util.Set;
  */
 public abstract class SpringBasedActorSystem implements ActorSystemConfiguration, ActorSystemBootstrapper {
     private final String[] contextConfigLocations;
-    private ApplicationContext applicationContext;
+    private ConfigurableApplicationContext applicationContext;
 
     protected SpringBasedActorSystem(String... contextConfigLocations) {
         this.contextConfigLocations = new String[contextConfigLocations.length+1];
@@ -68,6 +69,11 @@ public abstract class SpringBasedActorSystem implements ActorSystemConfiguration
     @Override
     public void activate(ActorSystem actorSystem) throws Exception {
 
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        applicationContext.close();
     }
 
     @Override

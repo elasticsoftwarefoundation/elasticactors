@@ -8,6 +8,7 @@ import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.elasticsoftware.elasticactors.geoevents.actors.TestActor;
 import org.elasticsoftware.elasticactors.geoevents.messages.PublishLocation;
 import org.elasticsoftware.elasticactors.geoevents.messages.RegisterInterest;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -24,16 +25,28 @@ import static org.testng.Assert.assertTrue;
 public class GeoEventsActorSystemTest {
     private static final Logger logger = Logger.getLogger(GeoEventsActorSystemTest.class);
 
-    @BeforeMethod
-    public void setUp() {
-        BasicConfigurator.resetConfiguration();
-        BasicConfigurator.configure();
-    }
+    private TestActorSystem testActorSystem;
+
+        @BeforeMethod
+        public void setUp() {
+            BasicConfigurator.resetConfiguration();
+            BasicConfigurator.configure();
+            testActorSystem = TestActorSystem.create();
+        }
+
+        @AfterMethod
+        public void tearDown() {
+            if(testActorSystem != null) {
+                testActorSystem.destroy();
+                testActorSystem = null;
+            }
+            BasicConfigurator.resetConfiguration();
+        }
 
     @Test(enabled = true)
     public void testInContainer() throws Exception {
-        ActorSystem geoEventsSystem = TestActorSystem.create(new GeoEventsActorSystem());
-        ActorSystem testSystem = TestActorSystem.create(new GeoEventsTestActorSystem());
+        ActorSystem geoEventsSystem = testActorSystem.create(new GeoEventsActorSystem());
+        ActorSystem testSystem = testActorSystem.create(new GeoEventsTestActorSystem());
 
         ActorRef dispatcher = geoEventsSystem.serviceActorFor("geoEventsService");
         final CountDownLatch waitLatch = new CountDownLatch(1);

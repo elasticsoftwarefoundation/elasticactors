@@ -22,6 +22,7 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.examples.httpclient.actors.HttpResponseListener;
 import org.elasticsoftware.elasticactors.examples.httpclient.messages.HttpRequest;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -29,15 +30,27 @@ import org.testng.annotations.Test;
  * @author Joost van de Wijgerd
  */
 public class HttpClientActorSystemTest {
-    @BeforeMethod
-    public void setUp() {
-        BasicConfigurator.resetConfiguration();
-        BasicConfigurator.configure();
-    }
+    private TestActorSystem testActorSystem;
+
+        @BeforeMethod
+        public void setUp() {
+            BasicConfigurator.resetConfiguration();
+            BasicConfigurator.configure();
+            testActorSystem = TestActorSystem.create();
+        }
+
+        @AfterMethod
+        public void tearDown() {
+            if(testActorSystem != null) {
+                testActorSystem.destroy();
+                testActorSystem = null;
+            }
+            BasicConfigurator.resetConfiguration();
+        }
 
     @Test
     public void testInContainer() throws Exception {
-        ActorSystem httpClientSystem = TestActorSystem.create(new HttpClientActorSystem());
+        ActorSystem httpClientSystem = testActorSystem.create(new HttpClientActorSystem());
         ActorRef httpClientRef = httpClientSystem.serviceActorFor("httpClient");
         ActorRef listenerRef = httpClientSystem.tempActorOf(HttpResponseListener.class, null);
         httpClientRef.tell(new HttpRequest("http://www.google.com/"),listenerRef);

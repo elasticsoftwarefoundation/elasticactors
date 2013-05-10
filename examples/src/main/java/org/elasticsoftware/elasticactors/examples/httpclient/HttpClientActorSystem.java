@@ -27,6 +27,7 @@ import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonActorRefDeserializer;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonActorRefSerializer;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.Map;
@@ -36,7 +37,7 @@ import java.util.Set;
  * @author Joost van de Wijgerd
  */
 public class HttpClientActorSystem implements ActorSystemConfiguration, ActorSystemBootstrapper {
-    private ApplicationContext applicationContext;
+    private ConfigurableApplicationContext applicationContext;
 
     @Override
     public void initialize(ActorSystem actorSystem) throws Exception {
@@ -57,6 +58,11 @@ public class HttpClientActorSystem implements ActorSystemConfiguration, ActorSys
     @Override
     public void activate(ActorSystem actorSystem) throws Exception {
 
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        applicationContext.close();
     }
 
     @Override

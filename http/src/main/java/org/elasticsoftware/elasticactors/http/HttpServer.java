@@ -50,18 +50,19 @@ public final class HttpServer extends SimpleChannelUpstreamHandler implements Ch
     private ActorSystem actorSystem;
     private HttpService httpService;
     private ObjectMapper objectMapper;
+    private volatile Channel serverChannel;
 
 
     @PostConstruct
     public void init() {
         ServerBootstrap bootstrap = new ServerBootstrap(channelFactory);
         bootstrap.setPipelineFactory(this);
-        bootstrap.bind(new InetSocketAddress(8080));
+        this.serverChannel = bootstrap.bind(new InetSocketAddress(8080));
     }
 
     @PreDestroy
     public void destroy() {
-
+        serverChannel.close();
     }
 
     @Override

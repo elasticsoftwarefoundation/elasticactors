@@ -26,6 +26,7 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.elasticsoftware.elasticactors.http.actors.EventStreamer;
 import org.elasticsoftware.elasticactors.http.actors.User;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -41,16 +42,28 @@ import static org.testng.Assert.assertNull;
  * @author Joost van de Wijgerd
  */
 public class HttpActorSystemTest {
-    @BeforeMethod
-    public void setUp() {
-        BasicConfigurator.resetConfiguration();
-        BasicConfigurator.configure();
-    }
+    private TestActorSystem testActorSystem;
+
+        @BeforeMethod
+        public void setUp() {
+            BasicConfigurator.resetConfiguration();
+            BasicConfigurator.configure();
+            testActorSystem = TestActorSystem.create();
+        }
+
+        @AfterMethod
+        public void tearDown() {
+            if(testActorSystem != null) {
+                testActorSystem.destroy();
+                testActorSystem = null;
+            }
+            BasicConfigurator.resetConfiguration();
+        }
 
     @Test(enabled = true)
     public void testInContainer() throws Exception {
-        ActorSystem httpSystem = TestActorSystem.create(new HttpActorSystem());
-        ActorSystem testSystem = TestActorSystem.create(new HttpTestActorSystem());
+        ActorSystem httpSystem = testActorSystem.create(new HttpActorSystem());
+        ActorSystem testSystem = testActorSystem.create(new HttpTestActorSystem());
 
         // create a couple of users
         ActorRef user1Ref = testSystem.actorOf("users/1", User.class);
@@ -123,10 +136,10 @@ public class HttpActorSystemTest {
         waitLatch.await(1, TimeUnit.MINUTES);
     }*/
 
-    @Test(enabled = false)
+    @Test(enabled = true)
         public void testEventStreamingWithAsyncHttpClient() throws Exception {
-            ActorSystem httpSystem = TestActorSystem.create(new HttpActorSystem());
-            ActorSystem testSystem = TestActorSystem.create(new HttpTestActorSystem());
+            ActorSystem httpSystem = testActorSystem.create(new HttpActorSystem());
+            ActorSystem testSystem = testActorSystem.create(new HttpTestActorSystem());
 
             // create a stream
             ActorRef steamer = testSystem.actorOf("events/testing",EventStreamer.class);
