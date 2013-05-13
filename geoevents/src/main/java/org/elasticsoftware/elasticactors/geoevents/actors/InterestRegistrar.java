@@ -20,6 +20,7 @@ import ch.hsr.geohash.GeoHash;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.UntypedActor;
 import org.elasticsoftware.elasticactors.geoevents.Coordinate;
+import org.elasticsoftware.elasticactors.geoevents.messages.DeRegisterInterest;
 import org.elasticsoftware.elasticactors.geoevents.messages.PublishLocation;
 import org.elasticsoftware.elasticactors.geoevents.messages.RegisterInterest;
 
@@ -36,6 +37,8 @@ public final class InterestRegistrar extends UntypedActor {
             handle((RegisterInterest) message);
         } else if(message instanceof PublishLocation) {
             handle((PublishLocation) message);
+        } else if(message instanceof DeRegisterInterest) {
+            handle((DeRegisterInterest) message);
         } else {
             unhandled(message);
         }
@@ -57,6 +60,12 @@ public final class InterestRegistrar extends UntypedActor {
         for (GeoHash region : allRegions) {
             getSystem().actorFor(String.format("regions/%s",region.toBase32())).tell(message,getSelf());
         }
+    }
+
+    private void handle(DeRegisterInterest message) {
+        Coordinate location = message.getLocation();
+        GeoHash regionHash = getRegion(location);
+        getSystem().actorFor(String.format("regions/%s",regionHash.toBase32())).tell(message,getSelf());
     }
 
     private GeoHash getRegion(Coordinate location) {

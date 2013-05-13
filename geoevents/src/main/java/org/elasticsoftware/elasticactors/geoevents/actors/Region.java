@@ -22,6 +22,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.UntypedActor;
 import org.elasticsoftware.elasticactors.geoevents.LengthUnit;
+import org.elasticsoftware.elasticactors.geoevents.messages.DeRegisterInterest;
 import org.elasticsoftware.elasticactors.geoevents.messages.EnterEvent;
 import org.elasticsoftware.elasticactors.geoevents.messages.PublishLocation;
 import org.elasticsoftware.elasticactors.geoevents.messages.RegisterInterest;
@@ -81,9 +82,11 @@ public final class Region extends UntypedActor {
     @Override
     public void onReceive(ActorRef sender, Object message) throws Exception {
         if(message instanceof PublishLocation) {
-            handle((PublishLocation)message);
+            handle((PublishLocation) message);
         } else if(message instanceof RegisterInterest) {
-            handle((RegisterInterest)message);
+            handle((RegisterInterest) message);
+        } else if(message instanceof DeRegisterInterest) {
+            handle((DeRegisterInterest) message);
         }
     }
 
@@ -129,4 +132,23 @@ public final class Region extends UntypedActor {
             }
         }
     }
+    
+    private void handle(DeRegisterInterest message) {
+        State state = getState(null).getAsObject(State.class);
+        ListIterator<RegisterInterest> itr = state.getListeners().listIterator();
+        while (itr.hasNext()) {
+            RegisterInterest registeredInterest = itr.next();
+            if(registeredInterest.getActorRef().equals(message.getActorRef()) &&
+               registeredInterest.getLocation().equals(message.getLocation())) {
+                itr.remove();
+                removeFromOtherRegions(registeredInterest);
+            }
+        }
+    }
+
+    private void removeFromOtherRegions(RegisterInterest registeredInterest) {
+        //@todo: based on the radius, the location and the the current region find any other regions that
+        //@todo: have registered the interest
+    }
+
 }
