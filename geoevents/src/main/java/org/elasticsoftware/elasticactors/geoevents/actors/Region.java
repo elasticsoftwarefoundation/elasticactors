@@ -120,17 +120,7 @@ public final class Region extends UntypedActor {
         State state = getState(null).getAsObject(State.class);
         state.getListeners().add(message);
         // iterate over the (pruned) previous published locations
-        SortedMap<Long,PublishLocation> previouslyPublishedLocations = state.prunePublishedLocations(System.currentTimeMillis());
-        for (Map.Entry<Long, PublishLocation> entry : previouslyPublishedLocations.entrySet()) {
-            long lastSeen = entry.getKey();
-            PublishLocation publishedLocation = entry.getValue();
-            if(!message.getActorRef().equals(publishedLocation.getRef())) {
-                double distance = message.getLocation().distance(publishedLocation.getLocation(),LengthUnit.METRES);
-                if(distance <= message.getRadiusInMetres()) {
-                    fireEnterEvent(message.getActorRef(),publishedLocation,(int)distance,lastSeen);
-                }
-            }
-        }
+        state.prunePublishedLocations(System.currentTimeMillis());
     }
     
     private void handle(DeRegisterInterest message) {
