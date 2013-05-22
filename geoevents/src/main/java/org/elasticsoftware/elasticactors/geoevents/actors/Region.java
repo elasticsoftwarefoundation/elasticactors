@@ -26,6 +26,7 @@ import org.elasticsoftware.elasticactors.geoevents.messages.DeRegisterInterest;
 import org.elasticsoftware.elasticactors.geoevents.messages.EnterEvent;
 import org.elasticsoftware.elasticactors.geoevents.messages.PublishLocation;
 import org.elasticsoftware.elasticactors.geoevents.messages.RegisterInterest;
+import org.elasticsoftware.elasticactors.geoevents.util.GeoHashUtils;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -131,14 +132,24 @@ public final class Region extends UntypedActor {
             if(registeredInterest.getActorRef().equals(message.getActorRef()) &&
                registeredInterest.getLocation().equals(message.getLocation())) {
                 itr.remove();
-                removeFromOtherRegions(registeredInterest);
+                removeFromOtherRegions(state.getGeoHash(),registeredInterest,message);
             }
         }
     }
 
-    private void removeFromOtherRegions(RegisterInterest registeredInterest) {
+    private void removeFromOtherRegions(GeoHash currentHash,RegisterInterest registeredInterest,DeRegisterInterest message) {
         //@todo: based on the radius, the location and the the current region find any other regions that
         //@todo: have registered the interest
+        List<GeoHash> otherRegions = GeoHashUtils.getAllGeoHashesWithinRadius(registeredInterest.getLocation().getLatitude(),
+                                                                              registeredInterest.getLocation().getLongitude(),
+                                                                              registeredInterest.getRadiusInMetres(),LengthUnit.METRES,
+                                                                              currentHash.significantBits()/5);
+        // remove myself
+        otherRegions.remove(currentHash);
+        // deregister at the other locations
+        for (GeoHash region : otherRegions) {
+            getSystem().actorFor(String.format("regions/%s",region.toBase32())).tell(message,getSelf());
+        }
     }
 
 }
