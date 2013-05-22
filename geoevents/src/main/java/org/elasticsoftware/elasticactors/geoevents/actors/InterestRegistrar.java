@@ -20,9 +20,11 @@ import ch.hsr.geohash.GeoHash;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.UntypedActor;
 import org.elasticsoftware.elasticactors.geoevents.Coordinate;
+import org.elasticsoftware.elasticactors.geoevents.LengthUnit;
 import org.elasticsoftware.elasticactors.geoevents.messages.DeRegisterInterest;
 import org.elasticsoftware.elasticactors.geoevents.messages.PublishLocation;
 import org.elasticsoftware.elasticactors.geoevents.messages.RegisterInterest;
+import org.elasticsoftware.elasticactors.geoevents.util.GeoHashUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -75,10 +77,11 @@ public final class InterestRegistrar extends UntypedActor {
     }
 
     private List<GeoHash> findAllRegions(GeoHash regionHash, Coordinate location, int radiusInMetres) {
-        // for now return all adjecent neighbours
-        // @todo: need a function here that calculates the bounding box and only inlcudes the overlapping regions
-        // return Arrays.asList(regionHash.getAdjacent());
-        return Arrays.asList(regionHash);
+        return GeoHashUtils.getAllGeoHashesWithinRadius(location.getLatitude(),
+                                                        location.getLongitude(),
+                                                        (double) radiusInMetres,
+                                                        LengthUnit.METRES,
+                                                        3);
     }
 
     @Override

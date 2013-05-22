@@ -1,9 +1,10 @@
-package org.elasticsoftware.elasticactors.geoevents;
+package org.elasticsoftware.elasticactors.geoevents.util;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class GeoLocation {
+    public static final double EARTH_SPHERE_RADIUS_METRES = 6371010d;
 
     private double radLat;  // latitude in radians
     private double radLon;  // longitude in radians
