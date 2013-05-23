@@ -13,6 +13,9 @@
         <fileSet>
             <directory>target/cassandra-${cassandra.version}/apache-cassandra-${cassandra.version}/bin</directory>
             <outputDirectory>/bin</outputDirectory>
+            <excludes>
+                <exclude>cassandra.in.sh</exclude>
+            </excludes>
             <lineEnding>keep</lineEnding>
         </fileSet>
         <fileSet>
@@ -20,7 +23,6 @@
             <outputDirectory>/conf</outputDirectory>
             <excludes>
                 <exclude>cassandra.yaml</exclude>
-                <exclude>cassandra.in.sh</exclude>
                 <exclude>log4j-server.properties</exclude>
             </excludes>
         </fileSet>
