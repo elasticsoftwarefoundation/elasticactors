@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * @author Joost van de Wijgerd
  */
-public class GeoHashUtils {
+public final class GeoHashUtils {
     public static List<GeoHash> getAllGeoHashesWithinRadius(final double latitude,
                                                                   final double longitude,
                                                                   final double radius,
