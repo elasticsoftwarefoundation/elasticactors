@@ -68,11 +68,13 @@
             <!-- copy the elastic actors default startup scripts and configuration files -->
             <file>
                 <source>../cassandra-integration/src/cassandra/common/bin/cassandra</source>
+                <fileMode>0755</fileMode>
                 <outputDirectory>/bin</outputDirectory>
                 <destName>ea</destName>
             </file>
             <file>
                 <source>../cassandra-integration/src/cassandra/common/bin/cassandra.in.sh</source>
+                <fileMode>0755</fileMode>
                 <outputDirectory>/bin</outputDirectory>
             </file>
             <file>
