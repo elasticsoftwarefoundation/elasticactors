@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.io.ClassPathResource;
 
 import java.math.BigInteger;
 import java.nio.charset.Charset;
@@ -227,7 +228,18 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
             }
             if (bootstrapper != null) {
                 try {
-                    bootstrapper.initialize(this);
+                    Properties p = new Properties();
+                    // load any properties for this ActorSystem
+                    ClassPathResource runtimeProps = new ClassPathResource(String.format("%s.properties",configuration.getName()));
+                    if(runtimeProps.exists()) {
+                        p.load(runtimeProps.getInputStream());
+                    } else {
+                        ClassPathResource defaultProps = new ClassPathResource(String.format("%s-default.properties",configuration.getName()));
+                        if(defaultProps.exists()) {
+                            p.load(defaultProps.getInputStream());
+                        }
+                    }
+                    bootstrapper.initialize(this, p);
                 } catch (Exception e) {
                     // @todo: we should probably abort here
                     logger.error(String.format("Exception while initializing ActorSystem [%s]", getName()), e);

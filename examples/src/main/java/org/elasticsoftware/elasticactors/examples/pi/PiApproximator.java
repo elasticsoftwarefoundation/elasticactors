@@ -138,7 +138,7 @@ public final class PiApproximator implements ActorSystemConfiguration, ActorSyst
 
 
     @Override
-    public void initialize(ActorSystem actorSystem) throws Exception {
+    public void initialize(ActorSystem actorSystem, Properties properties) throws Exception {
         // register jackson module for Actor ref ser/de
         objectMapper.registerModule(
                 new SimpleModule("ElasticActorsModule",new Version(0,1,0,"SNAPSHOT"))

@@ -49,15 +49,15 @@ public final class HttpServer extends SimpleChannelUpstreamHandler implements Ch
     private ServerSocketChannelFactory channelFactory;
     private ActorSystem actorSystem;
     private HttpService httpService;
-    private ObjectMapper objectMapper;
     private volatile Channel serverChannel;
+    private int listenPort = 8080;
 
 
     @PostConstruct
     public void init() {
         ServerBootstrap bootstrap = new ServerBootstrap(channelFactory);
         bootstrap.setPipelineFactory(this);
-        this.serverChannel = bootstrap.bind(new InetSocketAddress(8080));
+        this.serverChannel = bootstrap.bind(new InetSocketAddress(listenPort));
     }
 
     @PreDestroy
@@ -137,8 +137,7 @@ public final class HttpServer extends SimpleChannelUpstreamHandler implements Ch
         this.httpService = httpService;
     }
 
-    @Autowired
-    public void setObjectMapper(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    public void setListenPort(int listenPort) {
+        this.listenPort = listenPort;
     }
 }

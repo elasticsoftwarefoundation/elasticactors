@@ -16,6 +16,8 @@
 
 package org.elasticsoftware.elasticactors;
 
+import java.util.Properties;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -25,10 +27,12 @@ public interface ActorSystemBootstrapper {
      * to hook into internal structures (like {@link org.elasticsoftware.elasticactors.cluster.ActorRefFactory}) needed to
      * implement serializers.
      *
+     *
      * @param actorSystem
+     * @param properties
      * @throws Exception
      */
-    void initialize(ActorSystem actorSystem) throws Exception;
+    void initialize(ActorSystem actorSystem, Properties properties) throws Exception;
 
     /**
      * Called when an {@link ActorSystem} instance is created, gives the ability to create default actors etc

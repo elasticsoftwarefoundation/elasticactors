@@ -28,11 +28,22 @@ import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonActorRefDeserializer;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonActorRefSerializer;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.MutablePropertyValues;
+import org.springframework.beans.PropertyValue;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.config.PropertyResourceConfigurer;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
+import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -57,8 +68,25 @@ public abstract class SpringBasedActorSystem implements ActorSystemConfiguration
     }
 
     @Override
-    public final void initialize(ActorSystem actorSystem) throws Exception {
-        applicationContext = new ClassPathXmlApplicationContext(contextConfigLocations);
+    public final void initialize(ActorSystem actorSystem, final Properties properties) throws Exception {
+        applicationContext = new ClassPathXmlApplicationContext(contextConfigLocations,false,null);
+        applicationContext.addBeanFactoryPostProcessor(new BeanDefinitionRegistryPostProcessor() {
+            @Override
+            public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
+                GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
+                beanDefinition.setBeanClass(PropertySourcesPlaceholderConfigurer.class);
+                beanDefinition.setPropertyValues(new MutablePropertyValues(Arrays.asList(new PropertyValue("properties",properties))));
+                registry.registerBeanDefinition("propertyPlaceholder",beanDefinition);
+            }
+
+            @Override
+            public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+        });
+        applicationContext.refresh();
+
+
         ObjectMapper objectMapper = applicationContext.getBean(ObjectMapper.class);
         // register jackson module for Actor ref ser/de
         objectMapper.registerModule(

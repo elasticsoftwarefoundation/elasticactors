@@ -145,7 +145,7 @@ public class PiApproximatorTest {
         when(actorRefFactory.create("listenerRef")).thenReturn(listenerRef);
         when(actorRefFactory.create("masterRef")).thenReturn(masterRef);
 
-        piApproximator.initialize(actorSystem);
+        piApproximator.initialize(actorSystem, null);
         piApproximator.create(actorSystem);
 
         Serializer<ActorState,byte[]> actorStateSerializer = piApproximator.getActorStateSerializer();

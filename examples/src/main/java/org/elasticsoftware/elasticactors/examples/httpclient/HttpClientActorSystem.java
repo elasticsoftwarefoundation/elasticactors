@@ -26,11 +26,11 @@ import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonActorRefDeserializer;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonActorRefSerializer;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -40,7 +40,7 @@ public class HttpClientActorSystem implements ActorSystemConfiguration, ActorSys
     private ConfigurableApplicationContext applicationContext;
 
     @Override
-    public void initialize(ActorSystem actorSystem) throws Exception {
+    public void initialize(ActorSystem actorSystem, Properties properties) throws Exception {
         applicationContext = new ClassPathXmlApplicationContext("httpclient-beans.xml");
         ObjectMapper objectMapper = applicationContext.getBean(ObjectMapper.class);
         // register jackson module for Actor ref ser/de
