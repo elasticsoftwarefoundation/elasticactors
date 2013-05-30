@@ -116,9 +116,8 @@ public abstract class SpringBasedActorSystem implements ActorSystemConfiguration
 
     @Override
     public String getVersion() {
-        //return getClass().getPackage().getImplementationVersion();
-        // @todo: fix this
-        return "0.1.0-SNAPSHOT";
+        String version = getClass().getPackage().getImplementationVersion();
+        return (version != null) ? version : "UNKNOWN";
     }
 
     @Override

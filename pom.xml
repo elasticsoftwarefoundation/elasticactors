@@ -39,6 +39,15 @@
         <testng-version>5.10</testng-version>
         <mockito.version>1.9.5</mockito.version>
     </properties>
+
+    <scm>
+        <connection>scm:git:ssh://git@github.com:elasticsoftwarefoundation/elasticactors.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:elasticsoftwarefoundation/elasticactors.git
+        </developerConnection>
+        <url>scm:git:ssh://git@github.com:elasticsoftwarefoundation/elasticactors.git</url>
+        <tag>master</tag>
+    </scm>
+
     <dependencies>
         <dependency>
             <groupId>org.hectorclient</groupId>
@@ -256,8 +265,56 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>1.2</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <doCheck>false</doCheck>
+                    <doUpdate>false</doUpdate>
+                    <shortRevisionLength>10</shortRevisionLength>
+                    <buildNumberPropertyName>buildNr</buildNumberPropertyName>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <id>parse-version</id>
+                        <goals>
+                            <goal>parse-version</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                        </manifest>
+                        <manifestEntries>
+                            <Implementation-Version>
+                                ${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}.r${buildNr}
+                            </Implementation-Version>
+                            <Implementation-Build>${buildNr}</Implementation-Build>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
-
-
 </project>
