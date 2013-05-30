@@ -135,4 +135,12 @@
         <constructor-arg index="1" value="4"/>
     </bean>
 
+    <bean id="nodeActorCacheManager" class="org.elasticsoftware.elasticactors.cache.NodeActorCacheManager">
+        <constructor-arg index="0" value="1024"/>
+    </bean>
+
+    <bean id="shard" class="org.elasticsoftware.elasticactors.cache.ShardActorCacheManager">
+        <constructor-arg index="0" value="256"/>
+    </bean>
+
 </beans>

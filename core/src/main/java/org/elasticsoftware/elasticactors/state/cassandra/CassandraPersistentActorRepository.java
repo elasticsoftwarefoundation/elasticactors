@@ -58,7 +58,7 @@ public final class CassandraPersistentActorRepository implements PersistentActor
     }
 
     @Override
-    public PersistentActor get(ShardKey shard, String actorId) throws IOException {
+    public PersistentActor<ShardKey> get(ShardKey shard, String actorId) throws IOException {
         HColumn<String,byte[]> column = columnFamilyTemplate.querySingleColumn(shard.toString(), actorId, BytesArraySerializer.get());
         if(column != null) {
             return deserializer.deserialize(column.getValue());

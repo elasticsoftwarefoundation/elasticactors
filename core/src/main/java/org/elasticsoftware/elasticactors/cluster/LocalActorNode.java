@@ -17,9 +17,9 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.tasks.*;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
@@ -47,23 +47,31 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     private final InternalActorSystem actorSystem;
     private final NodeKey nodeKey;
     private ThreadBoundExecutor<String> actorExecutor;
+    private final NodeActorCacheManager actorCacheManager;
     private Cache<ActorRef,PersistentActor<NodeKey>> actorCache;
 
     public LocalActorNode(PhysicalNode node,
                           InternalActorSystem actorSystem,
                           ActorRef myRef,
-                          MessageQueueFactory messageQueueFactory) {
+                          MessageQueueFactory messageQueueFactory,
+                          NodeActorCacheManager actorCacheManager) {
         super(messageQueueFactory, myRef, node);
         this.actorSystem = actorSystem;
+        this.actorCacheManager = actorCacheManager;
         this.nodeKey = new NodeKey(actorSystem.getName(), node.getId());
     }
 
     @Override
     public void init() throws Exception {
         super.init();
-        //@todo: this cache needs to be parameterized
-        this.actorCache = CacheBuilder.newBuilder().build();
+        this.actorCache = actorCacheManager.create(nodeKey);
 
+    }
+
+    @Override
+    public void destroy() {
+        actorCacheManager.destroy(actorCache);
+        super.destroy();
     }
 
     @Override

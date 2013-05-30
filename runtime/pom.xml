@@ -106,7 +106,7 @@
                                     <outputDirectory>${project.build.directory}/cassandra-${cassandra.version}
                                     </outputDirectory>
                                     <!-- this is for 1.2.4, so it will fail if the version is updated -->
-                                    <md5>b5bdcdd15aeda8640552061fe3f24a93</md5>
+                                    <md5>${cassandra.version.md5}</md5>
                                 </configuration>
                             </execution>
                         </executions>

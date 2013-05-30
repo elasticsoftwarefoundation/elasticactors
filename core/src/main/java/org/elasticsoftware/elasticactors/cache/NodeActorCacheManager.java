@@ -14,21 +14,17 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.state;
+package org.elasticsoftware.elasticactors.cache;
 
-import org.elasticsoftware.elasticactors.ShardKey;
-
-import java.io.IOException;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.NodeKey;
+import org.elasticsoftware.elasticactors.state.PersistentActor;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface PersistentActorRepository {
-    boolean contains(ShardKey shard,String actorId);
-
-    void update(ShardKey shard,PersistentActor persistentActor) throws IOException;
-
-    void delete(ShardKey shard,String actorId);
-
-    PersistentActor<ShardKey> get(ShardKey shard,String actorId) throws IOException;
+public final class NodeActorCacheManager extends CacheManager<ActorRef,PersistentActor<NodeKey>> {
+    public NodeActorCacheManager(int maximumSize) {
+        super(maximumSize);
+    }
 }

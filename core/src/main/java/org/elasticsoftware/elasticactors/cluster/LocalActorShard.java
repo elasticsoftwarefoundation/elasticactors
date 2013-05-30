@@ -17,10 +17,10 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActivateActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.CreateActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.HandleMessageTask;
@@ -53,25 +53,33 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     private final InternalActorSystem actorSystem;
     private final ShardKey shardKey;
     private ThreadBoundExecutor<String> actorExecutor;
-    private Cache<ActorRef,PersistentActor> actorCache;
+    private Cache<ActorRef,PersistentActor<ShardKey>> actorCache;
     private PersistentActorRepository persistentActorRepository;
+    private final ShardActorCacheManager actorCacheManager;
 
     public LocalActorShard(PhysicalNode node,
                            InternalActorSystem actorSystem,
                            int shard,
                            ActorRef myRef,
-                           MessageQueueFactory messageQueueFactory) {
+                           MessageQueueFactory messageQueueFactory,
+                           ShardActorCacheManager actorCacheManager) {
         super(messageQueueFactory, myRef, node);
         this.actorSystem = actorSystem;
+        this.actorCacheManager = actorCacheManager;
         this.shardKey = new ShardKey(actorSystem.getName(), shard);
     }
 
     @Override
     public void init() throws Exception {
         super.init();
-        //@todo: this cache needs to be parameterized
-        this.actorCache = CacheBuilder.newBuilder().build();
+        this.actorCache = actorCacheManager.create(shardKey);
 
+    }
+
+    @Override
+    public void destroy() {
+        actorCacheManager.destroy(actorCache);
+        super.destroy();
     }
 
     @Override
@@ -114,9 +122,9 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         if(receiverRef.getActorId() != null) {
             try {
                 // load persistent actor from cache or persistent store
-                PersistentActor actor = actorCache.get(internalMessage.getReceiver(), new Callable<PersistentActor>() {
+                PersistentActor<ShardKey> actor = actorCache.get(internalMessage.getReceiver(), new Callable<PersistentActor<ShardKey>>() {
                     @Override
-                    public PersistentActor call() throws Exception {
+                    public PersistentActor<ShardKey> call() throws Exception {
                         PersistentActor loadedActor = persistentActorRepository.get(shardKey,receiverRef.getActorId());
                         if(loadedActor == null) {
                             // @todo: using Spring DataAccesException here, might want to change this or use in Repository implementation
@@ -230,10 +238,10 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
 
     private void activateActor(final ActorRef actorRef) throws Exception {
         // load persistent actor from cache or persistent store
-        PersistentActor actor = actorCache.get(actorRef, new Callable<PersistentActor>() {
+        PersistentActor<ShardKey> actor = actorCache.get(actorRef, new Callable<PersistentActor<ShardKey>>() {
             @Override
-            public PersistentActor call() throws Exception {
-                PersistentActor loadedActor = persistentActorRepository.get(shardKey,actorRef.getActorId());
+            public PersistentActor<ShardKey> call() throws Exception {
+                PersistentActor<ShardKey> loadedActor = persistentActorRepository.get(shardKey,actorRef.getActorId());
                 if(loadedActor == null) {
                     // @todo: using Spring DataAccesException here, might want to change this or use in Repository implementation
                     throw new EmptyResultDataAccessException(String.format("Actor [%s] not found in Shard [%s]",actorRef.getActorId(),shardKey.toString()),1);
@@ -253,9 +261,9 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     private void destroyActor(DestroyActorMessage destroyMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         final ActorRef actorRef = destroyMessage.getActorRef();
         // need to load it here to know the ActorClass!
-        PersistentActor persistentActor = actorCache.get(actorRef, new Callable<PersistentActor>() {
+        PersistentActor<ShardKey> persistentActor = actorCache.get(actorRef, new Callable<PersistentActor<ShardKey>>() {
             @Override
-            public PersistentActor call() throws Exception {
+            public PersistentActor<ShardKey> call() throws Exception {
                 return persistentActorRepository.get(shardKey,actorRef.getActorId());
             }
         });

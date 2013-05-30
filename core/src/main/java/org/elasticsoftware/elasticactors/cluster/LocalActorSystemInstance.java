@@ -18,6 +18,8 @@ package org.elasticsoftware.elasticactors.cluster;
 
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
+import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
@@ -65,6 +67,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private MessageQueueFactory localMessageQueueFactory;
     private MessageQueueFactory remoteMessageQueueFactory;
     private Scheduler scheduler;
+    private NodeActorCacheManager nodeActorCacheManager;
+    private ShardActorCacheManager shardActorCacheManager;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private final ConcurrentMap<String, ActorNode> activeNodes = new ConcurrentHashMap<String, ActorNode>();
     private final ConcurrentMap<String, ActorNodeAdapter> activeNodeAdapters = new ConcurrentHashMap<String, ActorNodeAdapter>();
@@ -126,10 +130,12 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         for (PhysicalNode node : nodes) {
             if (!activeNodes.containsKey(node.getId())) {
                 if (node.isLocal()) {
-                    LocalActorNode localActorNode = new LocalActorNode(node,
-                            this,
-                            localNodeAdapter.myRef,
-                            localMessageQueueFactory);
+                    LocalActorNode localActorNode =
+                            new LocalActorNode(node,
+                                                this,
+                                                localNodeAdapter.myRef,
+                                                localMessageQueueFactory,
+                                                nodeActorCacheManager);
                     activeNodes.put(node.getId(), localActorNode);
                     activeNodeAdapters.put(node.getId(),localNodeAdapter);
                     localActorNode.init();
@@ -179,7 +185,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                             currentShard.destroy();
                         }
                         // create a new local shard and swap it
-                        LocalActorShard newShard = new LocalActorShard(node, this, i, shardAdapters[i].myRef, localMessageQueueFactory);
+                        LocalActorShard newShard = new LocalActorShard(node,
+                                this, i, shardAdapters[i].myRef, localMessageQueueFactory, shardActorCacheManager);
 
                         shards[i] = newShard;
                         // initialize
@@ -458,6 +465,16 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     @Autowired
     public void setScheduler(Scheduler scheduler) {
         this.scheduler = scheduler;
+    }
+
+    @Autowired
+    public void setNodeActorCacheManager(NodeActorCacheManager nodeActorCacheManager) {
+        this.nodeActorCacheManager = nodeActorCacheManager;
+    }
+
+    @Autowired
+    public void setShardActorCacheManager(ShardActorCacheManager shardActorCacheManager) {
+        this.shardActorCacheManager = shardActorCacheManager;
     }
 
     @Override

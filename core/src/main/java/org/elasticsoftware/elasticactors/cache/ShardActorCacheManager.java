@@ -14,35 +14,18 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.test;
+package org.elasticsoftware.elasticactors.cache;
 
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.NodeKey;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
-import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
-
-import java.io.IOException;
 
 /**
  * @author Joost van de Wijgerd
  */
-public class NoopPersistentActorRepository implements PersistentActorRepository {
-    @Override
-    public boolean contains(ShardKey shard, String actorId) {
-        return false;
-    }
-
-    @Override
-    public void update(ShardKey shard, PersistentActor persistentActor) throws IOException {
-        // do nothing
-    }
-
-    @Override
-    public void delete(ShardKey shard, String actorId) {
-       // do nothing
-    }
-
-    @Override
-    public PersistentActor<ShardKey> get(ShardKey shard, String actorId) throws IOException {
-        return null;
+public final class ShardActorCacheManager extends CacheManager<ActorRef,PersistentActor<ShardKey>> {
+    public ShardActorCacheManager(int maximumSize) {
+        super(maximumSize);
     }
 }
