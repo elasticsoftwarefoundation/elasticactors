@@ -20,5 +20,5 @@
 
     </util:map>
 
-    <bean id="geoEventsService" class="org.elasticsoftware.elasticactors.geoevents.actors.InterestRegistrar"/>
+    <bean id="geoEventsService" class="org.elasticsoftware.elasticactors.geoevents.actors.GeoEventsService"/>
 </beans>

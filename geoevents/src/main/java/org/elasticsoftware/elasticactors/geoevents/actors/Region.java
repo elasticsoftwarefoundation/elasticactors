@@ -22,10 +22,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.UntypedActor;
 import org.elasticsoftware.elasticactors.geoevents.LengthUnit;
-import org.elasticsoftware.elasticactors.geoevents.messages.DeRegisterInterest;
-import org.elasticsoftware.elasticactors.geoevents.messages.EnterEvent;
-import org.elasticsoftware.elasticactors.geoevents.messages.PublishLocation;
-import org.elasticsoftware.elasticactors.geoevents.messages.RegisterInterest;
+import org.elasticsoftware.elasticactors.geoevents.messages.*;
 import org.elasticsoftware.elasticactors.geoevents.util.GeoHashUtils;
 
 import java.util.*;
@@ -88,6 +85,49 @@ public final class Region extends UntypedActor {
             handle((RegisterInterest) message);
         } else if(message instanceof DeRegisterInterest) {
             handle((DeRegisterInterest) message);
+        } else if(message instanceof UnpublishLocation) {
+            handle((UnpublishLocation) message);
+        } else if(message instanceof ScanRequest) {
+            handle((ScanRequest) message,sender);
+        } else {
+            unhandled(message);
+        }
+    }
+
+    private void handle(ScanRequest message,ActorRef receiver) {
+        State state = getState(null).getAsObject(State.class);
+        long lastSeen = System.currentTimeMillis();
+        SortedMap<Long,PublishLocation> publishedLocations = state.prunePublishedLocations(lastSeen);
+        List<ScanResponse.ScanResult> scanResults = new LinkedList<ScanResponse.ScanResult>();
+        for (PublishLocation publishedLocation : publishedLocations.values()) {
+            double distance = publishedLocation.getLocation().distance(message.getLocation(), LengthUnit.METRES);
+            if(distance <= message.getRadiusInMetres()) {
+                scanResults.add(new ScanResponse.ScanResult(publishedLocation,(int)distance));
+            }
+        }
+        receiver.tell(new ScanResponse(message.getId(),scanResults),getSelf());
+    }
+
+    private void handle(UnpublishLocation message) {
+        State state = getState(null).getAsObject(State.class);
+        // generate lastSeen for new publish event
+        long lastSeen = System.currentTimeMillis();
+        SortedMap<Long,PublishLocation> publishedLocations = state.prunePublishedLocations(lastSeen);
+        Iterator<Map.Entry<Long,PublishLocation>> entryIterator = publishedLocations.entrySet().iterator();
+        while (entryIterator.hasNext()) {
+            Map.Entry<Long, PublishLocation> entry = entryIterator.next();
+            if(entry.getValue().getLocation().equals(message.getLocation()) &&
+               entry.getValue().getRef().equals(message.getRef())) {
+                entryIterator.remove();
+                for (RegisterInterest listener : state.getListeners()) {
+                    if(!listener.getActorRef().equals(message.getRef())) {
+                        double distance = listener.getLocation().distance(message.getLocation(), LengthUnit.METRES);
+                        if(distance <= listener.getRadiusInMetres()) {
+                            fireLeaveEvent(listener.getActorRef(),message);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -116,11 +156,15 @@ public final class Region extends UntypedActor {
                                      originalMessage.getCustomProperties()),getSelf());
     }
 
+    private void fireLeaveEvent(ActorRef receiver,UnpublishLocation originalMessage) {
+        receiver.tell(new LeaveEvent(originalMessage.getRef()),getSelf());
+    }
+
     private void handle(RegisterInterest message) {
         // add interest
         State state = getState(null).getAsObject(State.class);
         state.getListeners().add(message);
-        // iterate over the (pruned) previous published locations
+        // iterate over the (pruned) previously published locations
         state.prunePublishedLocations(System.currentTimeMillis());
     }
     
@@ -132,7 +176,10 @@ public final class Region extends UntypedActor {
             if(registeredInterest.getActorRef().equals(message.getActorRef()) &&
                registeredInterest.getLocation().equals(message.getLocation())) {
                 itr.remove();
-                removeFromOtherRegions(state.getGeoHash(),registeredInterest,message);
+                if(message.isPropagate()) {
+                    // remove without propagating
+                    removeFromOtherRegions(state.getGeoHash(),registeredInterest,new DeRegisterInterest(message.getActorRef(),message.getLocation(),false));
+                }
             }
         }
     }

@@ -27,12 +27,19 @@ import org.elasticsoftware.elasticactors.geoevents.Coordinate;
 public final class DeRegisterInterest {
     private final ActorRef actorRef;
     private final Coordinate location;
+    private final boolean propagate;
+
+    public DeRegisterInterest(ActorRef actorRef, Coordinate location) {
+        this(actorRef, location,true);
+    }
 
     @JsonCreator
     public DeRegisterInterest(@JsonProperty("actorRef") ActorRef actorRef,
-                              @JsonProperty("location") Coordinate location) {
+                              @JsonProperty("location") Coordinate location,
+                              @JsonProperty("propagate") boolean propagate) {
         this.actorRef = actorRef;
         this.location = location;
+        this.propagate = propagate;
     }
 
     @JsonProperty("actorRef")
@@ -43,5 +50,10 @@ public final class DeRegisterInterest {
     @JsonProperty("location")
     public Coordinate getLocation() {
         return location;
+    }
+
+    @JsonProperty("propagate")
+    public boolean isPropagate() {
+        return propagate;
     }
 }

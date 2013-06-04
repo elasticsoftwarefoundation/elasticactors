@@ -16,8 +16,23 @@
 
 package org.elasticsoftware.elasticactors.geoevents.messages;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.elasticsoftware.elasticactors.ActorRef;
+
 /**
  * @author Joost van de Wijgerd
  */
-public class LeaveEvent {
+public final class LeaveEvent {
+    private final ActorRef actorRef;
+
+    @JsonCreator
+    public LeaveEvent(@JsonProperty("actorRef") ActorRef actorRef) {
+        this.actorRef = actorRef;
+    }
+
+    @JsonProperty("actorRef")
+    public ActorRef getActorRef() {
+        return actorRef;
+    }
 }

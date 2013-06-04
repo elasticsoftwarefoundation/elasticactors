@@ -4,6 +4,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.geoevents.messages.ScanRequest;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.elasticsoftware.elasticactors.geoevents.actors.TestActor;
 import org.elasticsoftware.elasticactors.geoevents.messages.PublishLocation;
@@ -78,5 +79,47 @@ public class GeoEventsActorSystemTest {
         assertTrue(waitLatch.await(1, TimeUnit.MINUTES));
 
 
+
+    }
+
+    @Test
+    public void testScanQuery() throws Exception {
+        ActorSystem geoEventsSystem = testActorSystem.create(new GeoEventsActorSystem());
+        ActorSystem testSystem = testActorSystem.create(new GeoEventsTestActorSystem());
+
+        ActorRef dispatcher = geoEventsSystem.serviceActorFor("geoEventsService");
+        final CountDownLatch waitLatch = new CountDownLatch(1);
+
+        ActorRef scanListener = testSystem.tempActorOf(TestActor.class, new Receiver() {
+            @Override
+            public void onReceive(ActorRef sender, Object message) throws Exception {
+                //@todo: capture the messages
+                logger.info("Got message");
+                waitLatch.countDown();
+            }
+        });
+
+        ActorRef publisher = testSystem.tempActorOf(TestActor.class, new Receiver() {
+            @Override
+            public void onReceive(ActorRef sender, Object message) throws Exception {
+                //@todo: capture the messages
+            }
+        });
+
+        // publish event at the eBuddy office
+        Map<String,Object> customProperties = new LinkedHashMap<String,Object>();
+        customProperties.put("name","Joost van de Wijgerd");
+        dispatcher.tell(new PublishLocation(publisher,new Coordinate(52.364207d,4.891793d),3600,customProperties),publisher);
+
+        // wait a while
+        Thread.sleep(100);
+
+        // now let's do a scan
+
+
+        dispatcher.tell(new ScanRequest(new Coordinate(52.364207d,4.891793d),100),scanListener);
+
+        // listener should now receive an update
+        assertTrue(waitLatch.await(1, TimeUnit.MINUTES));
     }
 }
