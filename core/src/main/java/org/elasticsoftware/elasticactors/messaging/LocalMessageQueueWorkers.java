@@ -142,8 +142,8 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
                             try {
                                 messageQueue.getMessageHandler().handleMessage(message,
                                                                                messageQueue.getMessageHandlerEventListener());
-                            } catch (Exception e) {
-                                LOGGER.error("Exception while executing work!", e);
+                            } catch (Throwable e) {
+                                LOGGER.error("Throwable on handleMessage!", e);
                             }
                             if(messageQueue.peek() != null) {
                                 moreWaiting = true;
