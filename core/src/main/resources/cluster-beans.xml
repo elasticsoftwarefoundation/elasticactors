@@ -123,7 +123,7 @@
                 <constructor-arg index="0" value="CLUSTER-WORKER"/>
             </bean>
         </constructor-arg>
-        <constructor-arg index="1" value="4"/>
+        <constructor-arg index="1" value="1"/>
     </bean>
 
     <bean id="actorExecutor" class="org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl">
