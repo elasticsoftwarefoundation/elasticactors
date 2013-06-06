@@ -21,18 +21,21 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.UntypedActor;
 import org.elasticsoftware.elasticactors.geoevents.Coordinate;
 import org.elasticsoftware.elasticactors.geoevents.LengthUnit;
-import org.elasticsoftware.elasticactors.geoevents.messages.DeRegisterInterest;
-import org.elasticsoftware.elasticactors.geoevents.messages.PublishLocation;
-import org.elasticsoftware.elasticactors.geoevents.messages.RegisterInterest;
+import org.elasticsoftware.elasticactors.geoevents.messages.*;
 import org.elasticsoftware.elasticactors.geoevents.util.GeoHashUtils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class InterestRegistrar extends UntypedActor {
+public final class GeoEventsService extends UntypedActor {
+    public static final String REGIONS_FORMAT = "regions/%s";
+
     @Override
     public void onReceive(ActorRef sender, Object message) throws Exception {
         if(message instanceof RegisterInterest) {
@@ -41,33 +44,52 @@ public final class InterestRegistrar extends UntypedActor {
             handle((PublishLocation) message);
         } else if(message instanceof DeRegisterInterest) {
             handle((DeRegisterInterest) message);
+        } else if(message instanceof UnpublishLocation) {
+            handle((UnpublishLocation) message);
+        } else if(message instanceof ScanRequest) {
+            handle((ScanRequest) message,sender);
         } else {
             unhandled(message);
         }
+    }
+
+    private void handle(ScanRequest message,ActorRef replyAddress) throws Exception {
+        List<GeoHash> allRegions = findAllRegions(message.getLocation(),message.getRadiusInMetres());
+        // create a temp actor to handle the results
+        ActorRef scanner = getSystem().tempActorOf(Scanner.class,new Scanner.State(message,allRegions.size(),replyAddress));
+        for (GeoHash region : allRegions) {
+            getSystem().actorFor(String.format(REGIONS_FORMAT,region.toBase32())).tell(message,scanner);
+        }
+    }
+
+    private void handle(UnpublishLocation message) {
+        Coordinate location = message.getLocation();
+        GeoHash regionHash = getRegion(location);
+
+        getSystem().actorFor(String.format(REGIONS_FORMAT,regionHash.toBase32())).tell(message,getSelf());
     }
 
     private void handle(PublishLocation message) {
         Coordinate location = message.getLocation();
         GeoHash regionHash = getRegion(location);
 
-        getSystem().actorFor(String.format("regions/%s",regionHash.toBase32())).tell(message,getSelf());
+        getSystem().actorFor(String.format(REGIONS_FORMAT,regionHash.toBase32())).tell(message,getSelf());
     }
 
     private void handle(RegisterInterest message) {
         // determine what geohashes to aim for
         Coordinate location = message.getLocation();
-        GeoHash regionHash = getRegion(location);
         // find all regions that need to register this interest
-        List<GeoHash> allRegions =  findAllRegions(regionHash,message.getLocation(),message.getRadiusInMetres());
+        List<GeoHash> allRegions =  findAllRegions(message.getLocation(),message.getRadiusInMetres());
         for (GeoHash region : allRegions) {
-            getSystem().actorFor(String.format("regions/%s",region.toBase32())).tell(message,getSelf());
+            getSystem().actorFor(String.format(REGIONS_FORMAT,region.toBase32())).tell(message,getSelf());
         }
     }
 
     private void handle(DeRegisterInterest message) {
         Coordinate location = message.getLocation();
         GeoHash regionHash = getRegion(location);
-        getSystem().actorFor(String.format("regions/%s",regionHash.toBase32())).tell(message,getSelf());
+        getSystem().actorFor(String.format(REGIONS_FORMAT,regionHash.toBase32())).tell(message,getSelf());
     }
 
     private GeoHash getRegion(Coordinate location) {
@@ -76,7 +98,7 @@ public final class InterestRegistrar extends UntypedActor {
         return GeoHash.fromGeohashString(locationHash.toBase32().substring(0,3));
     }
 
-    private List<GeoHash> findAllRegions(GeoHash regionHash, Coordinate location, int radiusInMetres) {
+    private List<GeoHash> findAllRegions(Coordinate location, int radiusInMetres) {
         return GeoHashUtils.getAllGeoHashesWithinRadius(location.getLatitude(),
                                                         location.getLongitude(),
                                                         (double) radiusInMetres,

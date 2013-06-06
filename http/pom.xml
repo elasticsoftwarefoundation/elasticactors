@@ -31,7 +31,7 @@
     <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
     <properties>
-        <async-http-client.version>1.7.12</async-http-client.version>
+        <async-http-client.version>1.7.16</async-http-client.version>
     </properties>
 
     <dependencies>

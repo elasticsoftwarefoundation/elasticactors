@@ -50,13 +50,16 @@ public final class Coordinate implements Serializable {
         return longitude;
     }
 
-
     public double distance(Coordinate to, LengthUnit unit) {
+        return distance(to.latitude,to.longitude,unit);
+    }
+
+    public double distance(final double latitude,final double longitude, LengthUnit unit) {
         double a = 6378137, b = 6356752.3142;
         // ellipsiod
-        double L = (to.longitude - this.longitude) * degToRad;
+        double L = (longitude - this.longitude) * degToRad;
         double U1 = Math.atan((1 - f) * Math.tan(this.latitude * degToRad));
-        double U2 = Math.atan((1 - f) * Math.tan(to.latitude * degToRad));
+        double U2 = Math.atan((1 - f) * Math.tan(latitude * degToRad));
         double sinU1 = Math.sin(U1), cosU1 = Math.cos(U1);
         double sinU2 = Math.sin(U2), cosU2 = Math.cos(U2);
 

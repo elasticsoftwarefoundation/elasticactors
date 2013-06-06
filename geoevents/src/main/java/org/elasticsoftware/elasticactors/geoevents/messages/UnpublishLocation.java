@@ -16,6 +16,8 @@
 
 package org.elasticsoftware.elasticactors.geoevents.messages;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.geoevents.Coordinate;
 
@@ -26,8 +28,19 @@ public final class UnpublishLocation {
     private final ActorRef ref;
     private final Coordinate location;
 
-    public UnpublishLocation(ActorRef ref, Coordinate location) {
+    @JsonCreator
+    public UnpublishLocation(@JsonProperty("actorRef") ActorRef ref,@JsonProperty("location") Coordinate location) {
         this.ref = ref;
         this.location = location;
+    }
+
+    @JsonProperty("actorRef")
+    public ActorRef getRef() {
+        return ref;
+    }
+
+    @JsonProperty("location")
+    public Coordinate getLocation() {
+        return location;
     }
 }

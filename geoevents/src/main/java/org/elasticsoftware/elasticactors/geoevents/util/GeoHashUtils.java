@@ -16,9 +16,12 @@
 
 package org.elasticsoftware.elasticactors.geoevents.util;
 
+import ch.hsr.geohash.BoundingBox;
 import ch.hsr.geohash.GeoHash;
 import org.elasticsoftware.elasticactors.geoevents.LengthUnit;
 
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -27,10 +30,10 @@ import java.util.List;
  */
 public final class GeoHashUtils {
     public static List<GeoHash> getAllGeoHashesWithinRadius(final double latitude,
-                                                                  final double longitude,
-                                                                  final double radius,
-                                                                  final LengthUnit unit,
-                                                                  final int characterPrecision) {
+                                                            final double longitude,
+                                                            final double radius,
+                                                            final LengthUnit unit,
+                                                            final int characterPrecision) {
         GeoLocation loc = GeoLocation.fromDegrees(latitude, longitude);
         GeoLocation[] bbox = loc.boundingCoordinates(LengthUnit.METRES.convert(radius, unit), GeoLocation.EARTH_SPHERE_RADIUS_METRES);
         GeoHash leftBottom = GeoHash.withCharacterPrecision(bbox[0].getLatitudeInDegrees(), bbox[0].getLongitudeInDegrees(), characterPrecision);
