@@ -21,6 +21,8 @@ import com.google.common.collect.*;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -30,6 +32,7 @@ public class CacheManager<K,V> {
     private final Cache<CacheKey,V> backingCache;
     private final Multimap<Object,CacheKey> segmentIndex;
     private final GlobalRemovalListener globalRemovalListener = new GlobalRemovalListener();
+    private final ConcurrentMap<Object,EvictionListener<V>> evictionListeners = new ConcurrentHashMap<Object,EvictionListener<V>>();
 
     public CacheManager(int maximumSize) {
         backingCache = CacheBuilder.newBuilder().maximumSize(maximumSize)
@@ -37,7 +40,10 @@ public class CacheManager<K,V> {
         segmentIndex = Multimaps.synchronizedSetMultimap(HashMultimap.<Object,CacheKey>create());
     }
 
-    public final Cache<K,V> create(Object cacheKey) {
+    public final Cache<K,V> create(Object cacheKey,EvictionListener<V> evictionListener) {
+        if(evictionListener != null) {
+            evictionListeners.put(cacheKey,evictionListener);
+        }
         return new SegmentedCache(cacheKey);
     }
 
@@ -45,6 +51,7 @@ public class CacheManager<K,V> {
         if(SegmentedCache.class.isInstance(cache)) {
             Object segmentKey = ((SegmentedCache)cache).segmentKey;
             backingCache.invalidateAll(segmentIndex.removeAll(segmentKey));
+            evictionListeners.remove(segmentKey);
         }
     }
 
@@ -165,7 +172,10 @@ public class CacheManager<K,V> {
             if(notification.getKey() != null && notification.wasEvicted()) {
                 segmentIndex.remove(notification.getKey().segmentKey,notification.getKey());
             }
-            // @todo: probably this is where we need to run Passivate Task (i.e. delegate to a removal handler from the ActorContainer)
+            EvictionListener<V> evictionListener = evictionListeners.get(notification.getKey().segmentKey);
+            if(evictionListener != null) {
+                evictionListener.onEvicted(notification.getValue());
+            }
         }
     }
 }

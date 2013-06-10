@@ -57,13 +57,13 @@ public final class DestroyActorTask extends ActorLifecycleTask {
                                     ActorRef receiverRef,
                                     InternalMessage internalMessage) {
         if(logger.isDebugEnabled()) {
-            logger.debug(String.format("Creating Actor for ref [%s] of type [%s]",receiverRef.toString(),receiver.getClass().getName()));
+            logger.debug(String.format("Destroying Actor for ref [%s] of type [%s]",receiverRef.toString(),receiver.getClass().getName()));
         }
         try {
             // @todo: figure out the destroyer
             receiver.preDestroy(null);
         } catch (Exception e) {
-            logger.error("Exception calling postCreate",e);
+            logger.error("Exception calling preDestroy",e);
         }
     }
 }

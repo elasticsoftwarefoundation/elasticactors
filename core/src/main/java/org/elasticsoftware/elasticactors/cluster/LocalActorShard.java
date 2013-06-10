@@ -20,11 +20,9 @@ import com.google.common.cache.Cache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
-import org.elasticsoftware.elasticactors.cluster.tasks.ActivateActorTask;
-import org.elasticsoftware.elasticactors.cluster.tasks.CreateActorTask;
-import org.elasticsoftware.elasticactors.cluster.tasks.HandleMessageTask;
-import org.elasticsoftware.elasticactors.cluster.tasks.HandleUndeliverableMessageTask;
+import org.elasticsoftware.elasticactors.cluster.tasks.*;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
@@ -48,7 +46,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  * @author Joost van de Wijgerd
  */
 @Configurable
-public final class LocalActorShard extends AbstractActorContainer implements ActorShard {
+public final class LocalActorShard extends AbstractActorContainer implements ActorShard, EvictionListener<PersistentActor<ShardKey>> {
     private static final Logger logger = Logger.getLogger(LocalActorShard.class);
     private final InternalActorSystem actorSystem;
     private final ShardKey shardKey;
@@ -72,7 +70,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     @Override
     public void init() throws Exception {
         super.init();
-        this.actorCache = actorCacheManager.create(shardKey);
+        this.actorCache = actorCacheManager.create(shardKey,this);
 
     }
 
@@ -90,6 +88,12 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     @Override
     public ShardKey getKey() {
         return shardKey;
+    }
+
+    @Override
+    public void onEvicted(PersistentActor<ShardKey> value) {
+        ElasticActor actorInstance = actorSystem.getActorInstance(value.getSelf(),value.getActorClass());
+        actorExecutor.execute(new PassivateActorTask(persistentActorRepository,value,actorSystem,actorInstance,value.getSelf()));
     }
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {

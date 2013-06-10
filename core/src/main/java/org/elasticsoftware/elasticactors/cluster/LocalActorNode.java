@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.cluster;
 import com.google.common.cache.Cache;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.tasks.*;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
@@ -42,7 +43,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  * @author Joost van de Wijgerd
  */
 @Configurable
-public final class LocalActorNode extends AbstractActorContainer implements ActorNode {
+public final class LocalActorNode extends AbstractActorContainer implements ActorNode, EvictionListener<PersistentActor<NodeKey>> {
     private static final Logger logger = Logger.getLogger(LocalActorNode.class);
     private final InternalActorSystem actorSystem;
     private final NodeKey nodeKey;
@@ -64,7 +65,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     @Override
     public void init() throws Exception {
         super.init();
-        this.actorCache = actorCacheManager.create(nodeKey);
+        this.actorCache = actorCacheManager.create(nodeKey,this);
 
     }
 
@@ -72,6 +73,11 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     public void destroy() {
         actorCacheManager.destroy(actorCache);
         super.destroy();
+    }
+
+    @Override
+    public void onEvicted(PersistentActor<NodeKey> value) {
+        // @todo: a temporary actor that gets evicted is actually being destroyed
     }
 
     @Override
