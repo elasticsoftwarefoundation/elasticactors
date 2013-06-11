@@ -70,17 +70,20 @@
                 <source>../cassandra-integration/src/cassandra/common/bin/cassandra</source>
                 <fileMode>0755</fileMode>
                 <outputDirectory>/bin</outputDirectory>
+                <lineEnding>unix</lineEnding>
                 <destName>ea</destName>
             </file>
             <file>
                 <source>../cassandra-integration/src/cassandra/common/bin/cassandra.in.sh</source>
                 <fileMode>0755</fileMode>
                 <outputDirectory>/bin</outputDirectory>
+                <lineEnding>unix</lineEnding>
             </file>
             <file>
                 <source>../cassandra-integration/src/cassandra/common/bin/cassandra.bat</source>
                 <outputDirectory>/bin</outputDirectory>
                 <destName>ea.bat</destName>
+                <lineEnding>windows</lineEnding>
             </file>
             <file>
                 <source>../cassandra-integration/src/cassandra/localhost/conf/cassandra.yaml</source>

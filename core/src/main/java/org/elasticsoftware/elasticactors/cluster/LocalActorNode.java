@@ -64,9 +64,8 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
 
     @Override
     public void init() throws Exception {
-        super.init();
         this.actorCache = actorCacheManager.create(nodeKey,this);
-
+        super.init();
     }
 
     @Override

@@ -69,9 +69,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
 
     @Override
     public void init() throws Exception {
-        super.init();
         this.actorCache = actorCacheManager.create(shardKey,this);
-
+        super.init();
     }
 
     @Override

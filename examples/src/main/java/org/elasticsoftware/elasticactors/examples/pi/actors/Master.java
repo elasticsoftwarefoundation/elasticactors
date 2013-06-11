@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.examples.pi.actors;
 
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
@@ -53,12 +54,18 @@ public final class  Master extends UntypedActor  {
             private int roundRobinCounter;
 
             private Calculation() {
-                this(System.currentTimeMillis());
+                this(System.currentTimeMillis(),0.0d,0,0);
             }
 
             @JsonCreator
-            private Calculation(@JsonProperty("start") long start) {
+            public Calculation(@JsonProperty("start") long start,
+                               @JsonProperty("pi") double pi,
+                               @JsonProperty("nrOfResults") int nrOfResults,
+                               @JsonProperty("roundRobinCounter") int roundRobinCounter) {
                 this.start = start;
+                this.pi = pi;
+                this.nrOfResults = nrOfResults;
+                this.roundRobinCounter = roundRobinCounter;
             }
 
             @JsonProperty("start")
@@ -66,6 +73,7 @@ public final class  Master extends UntypedActor  {
                 return start;
             }
 
+            @JsonProperty("pi")
             public double getPi() {
                 return pi;
             }
@@ -74,6 +82,11 @@ public final class  Master extends UntypedActor  {
                 this.pi = pi;
             }
 
+            public void incrementPi(double pi) {
+                this.pi += pi;
+            }
+
+            @JsonProperty("nrOfResults")
             public int getNrOfResults() {
                 return nrOfResults;
             }
@@ -82,8 +95,20 @@ public final class  Master extends UntypedActor  {
                 this.nrOfResults = nrOfResults;
             }
 
+            public void incrementNumberOfResults() {
+                this.nrOfResults += 1;
+            }
+
+            @JsonProperty("roundRobinCounter")
             public int getRoundRobinCounter() {
                 return roundRobinCounter;
+            }
+
+            @JsonIgnore
+            public int getAndIncrementRoundRobinCounter() {
+                final int currentValue = roundRobinCounter;
+                roundRobinCounter+=1;
+                return currentValue;
             }
 
             public void setRoundRobinCounter(int roundRobinCounter) {
@@ -146,9 +171,9 @@ public final class  Master extends UntypedActor  {
     @Override
     public void postCreate(ActorRef creator) throws Exception {
         State state = getState(null).getAsObject(State.class);
-        logger.info(String.format("Master.postCreate -> listener ref: %s",state.listener));
-        List<ActorRef> workers = new ArrayList<ActorRef>(state.nrOfWorkers);
-        for (int i = 1; i <= state.nrOfWorkers; i++) {
+        logger.info(String.format("Master.postCreate -> listener ref: %s",state.getListener()));
+        List<ActorRef> workers = new ArrayList<ActorRef>(state.getNrOfWorkers());
+        for (int i = 1; i <= state.getNrOfWorkers(); i++) {
             workers.add(getSystem().actorOf("worker-"+i,Worker.class));
         }
         state.setWorkers(workers);
@@ -168,20 +193,20 @@ public final class  Master extends UntypedActor  {
             Calculate calculateRequest = (Calculate) message;
             State.Calculation calculation = new State.Calculation();
             for (int start = 0; start < state.getNrOfMessages(); start++) {
-                state.workers.get(calculation.roundRobinCounter++ % state.nrOfWorkers).tell(new Work(start, state.getNrOfElements(), calculateRequest.getId()), getSelf());
+                state.getWorkers().get(calculation.roundRobinCounter++ % state.nrOfWorkers).tell(new Work(start, state.getNrOfElements(), calculateRequest.getId()), getSelf());
             }
             state.getCalculations().put(calculateRequest.getId(), calculation);
         } else if (message instanceof Result) {
             Result result = (Result) message;
             State.Calculation calculation = state.getCalculations().get(result.getCalculationId());
-            calculation.pi += result.getValue();
-            calculation.nrOfResults += 1;
+            calculation.incrementPi(result.getValue());
+            calculation.incrementNumberOfResults();
 
-            if (calculation.nrOfResults == state.nrOfMessages) {
-                logger.info(String.format("Calculation done, sending reply to actor [%s]",state.listener));
+            if (calculation.getNrOfResults() == state.getNrOfMessages()) {
+                logger.info(String.format("Calculation done, sending reply to actor [%s]",state.getListener()));
                 // Send the result to the listener
-                long duration = System.currentTimeMillis() - calculation.start;
-                state.listener.tell(new PiApproximation(result.getCalculationId(), calculation.pi, duration), getSelf());
+                long duration = System.currentTimeMillis() - calculation.getStart();
+                state.getListener().tell(new PiApproximation(result.getCalculationId(), calculation.getPi(), duration), getSelf());
                 // remove calculation
                 state.getCalculations().remove(result.getCalculationId());
                 // Stops this actor and all its supervised children

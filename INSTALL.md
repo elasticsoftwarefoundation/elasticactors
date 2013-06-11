@@ -1,11 +1,11 @@
 Install on Debian Squeeze (minimal required steps)
 =============
 sudo apt-get install ntp
-# download jdk from oracle http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html
-sudo mkdir /usr/lib64/jvm
-sudo tar zxvf jdk-7u17-linux-x64.tar.gz -C /usr/lib64/jvm/
-sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk1.7.0_17/bin/java 1066
-sudo update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/jdk1.7.0_17/bin/javac 1066
+echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
+echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu precise main" | tee -a /etc/apt/sources.list
+apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886
+apt-get update
+apt-get install oracle-java7-installer
 # cassandra install
 sudo apt-get install libjna-java
 # add the following 2 lines to /etc/apt/sources.list.d/cassandra.sources.list
