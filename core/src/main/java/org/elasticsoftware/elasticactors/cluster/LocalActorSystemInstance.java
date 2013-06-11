@@ -158,6 +158,38 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
      * @param nodes
      */
     public void distributeShards(List<PhysicalNode> nodes) throws Exception {
+        ActorSystemBootstrapper bootstrapper = null;
+        if (configuration instanceof ActorSystemBootstrapper) {
+            bootstrapper = (ActorSystemBootstrapper) configuration;
+        }
+        final boolean initializing = initialized.compareAndSet(false, true);
+        // see if this was the first time, if so we need to initialize the ActorSystem
+        if (initializing) {
+            logger.info(String.format("Initializing ActorSystem [%s]", getName()));
+            if (bootstrapper != null) {
+                logger.info(String.format("Bootstrapping ActorSystem [%s]", getName()));
+                try {
+                    Properties p = new Properties();
+                    // load any properties for this ActorSystem
+                    ClassPathResource runtimeProps = new ClassPathResource(String.format("%s.properties",configuration.getName()));
+                    if(runtimeProps.exists()) {
+                        p.load(runtimeProps.getInputStream());
+                    } else {
+                        ClassPathResource defaultProps = new ClassPathResource(String.format("%s-default.properties",configuration.getName()));
+                        if(defaultProps.exists()) {
+                            p.load(defaultProps.getInputStream());
+                        }
+                    }
+                    bootstrapper.initialize(this, p);
+                } catch (Exception e) {
+                    // @todo: we should probably abort here
+                    logger.error(String.format("Exception while initializing ActorSystem [%s]", getName()), e);
+                }
+            }
+
+
+
+        }
 
         NodeSelector nodeSelector = nodeSelectorFactory.create(nodes);
         // lock all
@@ -225,34 +257,9 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                 writeLock.unlock();
             }
         }
-        // see if this was the first time, if so we need to initialize the ActorSystem
-        if (initialized.compareAndSet(false, true)) {
-            logger.info(String.format("Initializing ActorSystem [%s]", getName()));
-            ActorSystemBootstrapper bootstrapper = null;
-            if (configuration instanceof ActorSystemBootstrapper) {
-                logger.info(String.format("Bootstrapping ActorSystem [%s]", getName()));
-                bootstrapper = (ActorSystemBootstrapper) configuration;
-            }
-            if (bootstrapper != null) {
-                try {
-                    Properties p = new Properties();
-                    // load any properties for this ActorSystem
-                    ClassPathResource runtimeProps = new ClassPathResource(String.format("%s.properties",configuration.getName()));
-                    if(runtimeProps.exists()) {
-                        p.load(runtimeProps.getInputStream());
-                    } else {
-                        ClassPathResource defaultProps = new ClassPathResource(String.format("%s-default.properties",configuration.getName()));
-                        if(defaultProps.exists()) {
-                            p.load(defaultProps.getInputStream());
-                        }
-                    }
-                    bootstrapper.initialize(this, p);
-                } catch (Exception e) {
-                    // @todo: we should probably abort here
-                    logger.error(String.format("Exception while initializing ActorSystem [%s]", getName()), e);
-                }
-            }
-
+        // This needs to happen after we initialize the shards as services expect the system to be initialized and
+        // should be allowed to send messages to shards
+        if(initializing) {
             // initialize the services
             Set<String> serviceActors = configuration.getServices();
             if (serviceActors != null && !serviceActors.isEmpty()) {
@@ -278,8 +285,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                     logger.error(String.format("Exception while activating ActorSystem [%s]", getName()), e);
                 }
             }
-
         }
+
     }
 
     public int getNumberOfShards() {
