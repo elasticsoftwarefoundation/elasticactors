@@ -22,9 +22,8 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.InetAddress;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -35,6 +34,10 @@ public class ClusterView implements IEndpointLifecycleSubscriber {
     private AtomicBoolean initialStartup = new AtomicBoolean(true);
     private volatile NodeProbe nodeProbe;
     private ClusterEventListener eventListener;
+    private Set<InetAddress> liveNodes = new HashSet<InetAddress>();
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    private volatile ScheduledFuture onTopologyChangedFuture = null;
+    public static final int DEFAULT_WAIT_SECONDS = 10;
 
     @Override
     public void onJoinCluster(InetAddress endpoint) {
@@ -60,9 +63,9 @@ public class ClusterView implements IEndpointLifecycleSubscriber {
                     eventListener.onJoined(localHostId, endpoint);
                 }
             }
-            //log.info(String.format("Current Live Nodes: %s", nodeProbe.getLiveNodes().toString()));
-            // notify listener
-            eventListener.onTopologyChanged(clusterMembers);
+            if(onTopologyChangedFuture == null) {
+                onTopologyChangedFuture = scheduledExecutorService.schedule(new OnTopologyChanged(),DEFAULT_WAIT_SECONDS, TimeUnit.SECONDS);
+            }
         } catch (Exception e) {
             // @todo: we probably want to shut down the whole system now
             log.error("Exception initializing ElasticActors Cluster", e);
@@ -106,12 +109,8 @@ public class ClusterView implements IEndpointLifecycleSubscriber {
     @Override
     public void onDown(InetAddress endpoint) {
         log.info(String.format("%s is now DOWN", endpoint.getHostName()));
-        if(!initialStartup.get()) {
-            try {
-                eventListener.onTopologyChanged(getClusterMembers());
-            } catch (Exception e) {
-                log.error("Exception in onTopologyChanged",e);
-            }
+        if(onTopologyChangedFuture == null) {
+            onTopologyChangedFuture = scheduledExecutorService.schedule(new OnTopologyChanged(),DEFAULT_WAIT_SECONDS, TimeUnit.SECONDS);
         }
     }
 
@@ -124,4 +123,18 @@ public class ClusterView implements IEndpointLifecycleSubscriber {
     public void setEventListener(ClusterEventListener eventListener) {
         this.eventListener = eventListener;
     }
+
+    private final class OnTopologyChanged implements Callable<Void> {
+
+        private OnTopologyChanged() {
+        }
+
+        @Override
+        public Void call() throws Exception {
+            eventListener.onTopologyChanged(getClusterMembers());
+            onTopologyChangedFuture = null;
+            return null;
+        }
+    }
+
 }
