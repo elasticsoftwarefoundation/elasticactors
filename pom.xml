@@ -29,13 +29,14 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <cassandra.version>1.2.6</cassandra.version>
+        <cassandra.version>1.2.12</cassandra.version>
         <cassandra.version.md5>40f49dc7dbcd49e2e18e2dead7dd074a</cassandra.version.md5>
         <hectorclient.version>1.1-4</hectorclient.version>
-        <spring.version>3.2.3.RELEASE</spring.version>
-        <aspectj.version>1.7.2</aspectj.version>
-        <netty.version>3.6.6.Final</netty.version>
+        <spring.version>3.2.6.RELEASE</spring.version>
+        <aspectj.version>1.7.4</aspectj.version>
+        <netty.version>3.8.0.Final</netty.version>
         <protobuf.version>2.5.0</protobuf.version>
+        <grizzly.version>2.3.7</grizzly.version>
         <!-- testing -->
         <testng-version>5.10</testng-version>
         <mockito.version>1.9.5</mockito.version>
@@ -148,7 +149,7 @@
     </dependencies>
 
     <modules>
-        <module>cassandra-integration</module>
+        <module>cluster-cassandra</module>
         <module>core</module>
         <module>api</module>
         <module>examples</module>
@@ -156,6 +157,7 @@
         <module>base</module>
         <module>geoevents</module>
         <module>runtime</module>
+        <module>spi</module>
     </modules>
 
     <build>
@@ -209,7 +211,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>aspectj-maven-plugin</artifactId>
-                <version>1.4</version>
+                <version>1.5</version>
                 <dependencies>
                     <dependency>
                         <groupId>org.aspectj</groupId>

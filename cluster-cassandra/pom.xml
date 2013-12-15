@@ -25,15 +25,19 @@
     </parent>
 
     <groupId>org.elasticsoftware.elasticactors</groupId>
-    <artifactId>cassandra-integration</artifactId>
+    <artifactId>cluster-cassandra</artifactId>
     <packaging>jar</packaging>
 
-    <name>Elastic Software Foundation :: ElasticActors :: Cassandra Integration</name>
+    <name>Elastic Software Foundation :: ElasticActors :: Cluster Cassandra</name>
     <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
 
     <dependencies>
-
+        <dependency>
+            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <artifactId>elasticactors-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
     <build>
 

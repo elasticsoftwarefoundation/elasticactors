@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.cassandra;
+package org.elasticsoftware.elasticactors.cluster;
 
 import java.net.InetAddress;
 import java.util.Map;

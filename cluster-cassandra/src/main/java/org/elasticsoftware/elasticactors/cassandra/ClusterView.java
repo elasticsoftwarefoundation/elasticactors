@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.cassandra;
 import org.apache.cassandra.service.IEndpointLifecycleSubscriber;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.log4j.Logger;
+import org.elasticsoftware.elasticactors.cluster.ClusterEventListener;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.InetAddress;

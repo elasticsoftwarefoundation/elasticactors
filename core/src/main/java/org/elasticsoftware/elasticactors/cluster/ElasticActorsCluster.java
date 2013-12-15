@@ -31,7 +31,6 @@ import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.PhysicalNode;
-import org.elasticsoftware.elasticactors.cassandra.ClusterEventListener;
 import org.elasticsoftware.elasticactors.dependencies.Graph;
 import org.elasticsoftware.elasticactors.dependencies.NodeValueListener;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
