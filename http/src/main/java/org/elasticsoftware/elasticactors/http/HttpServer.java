@@ -31,6 +31,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.HashMap;
@@ -42,6 +44,7 @@ import static org.jboss.netty.channel.Channels.pipeline;
 /**
  * @author Joost van de Wijgerd
  */
+@Named
 public final class HttpServer extends SimpleChannelUpstreamHandler implements ChannelPipelineFactory {
     private static final Logger logger = Logger.getLogger(HttpServer.class);
     private final ServerSentEventEncoder sseEventEncoder = new ServerSentEventEncoder();
@@ -122,7 +125,7 @@ public final class HttpServer extends SimpleChannelUpstreamHandler implements Ch
         ctx.getChannel().write(new DefaultHttpResponse(HttpVersion.HTTP_1_1,HttpResponseStatus.INTERNAL_SERVER_ERROR)).addListener(ChannelFutureListener.CLOSE);
     }
 
-    @Autowired
+    @Inject
     public void setChannelFactory(ServerSocketChannelFactory channelFactory) {
         this.channelFactory = channelFactory;
     }
@@ -131,7 +134,7 @@ public final class HttpServer extends SimpleChannelUpstreamHandler implements Ch
         this.actorSystem = actorSystem;
     }
 
-    @Autowired
+    @Inject
     public void setHttpService(HttpService httpService) {
         this.httpService = httpService;
     }

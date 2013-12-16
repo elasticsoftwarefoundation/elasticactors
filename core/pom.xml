@@ -116,19 +116,7 @@
             <version>${protobuf.version}</version>
         </dependency>
 
-            <dependency>
-            	<groupId>org.shoal</groupId>
-            	<artifactId>shoal-gms-impl</artifactId>
-            	<version>1.6.50</version>
-            </dependency>
 
-
-                <dependency>
-                    <groupId>org.glassfish.grizzly</groupId>
-                    <artifactId>grizzly-framework</artifactId>
-                    <scope>runtime</scope>
-                    <version>${grizzly.version}</version>
-                </dependency>
 
 
     </dependencies>

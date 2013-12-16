@@ -40,6 +40,7 @@
         <log4j.version>1.2.17</log4j.version>
         <guava.version>15.0</guava.version>
         <jackson.version>2.3.0</jackson.version>
+        <shoal.version>1.6.50</shoal.version>
         <!-- testing -->
         <testng-version>5.10</testng-version>
         <mockito.version>1.9.5</mockito.version>
@@ -94,6 +95,7 @@
         <module>geoevents</module>
         <module>runtime</module>
         <module>spi</module>
+        <module>cluster-shoal</module>
     </modules>
 
     <build>

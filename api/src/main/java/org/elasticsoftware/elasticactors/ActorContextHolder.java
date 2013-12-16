@@ -20,7 +20,7 @@ package org.elasticsoftware.elasticactors;
  * @author Joost van de Wijgerd
  */
 public class ActorContextHolder {
-    protected static final ThreadLocal<ActorContext> threadContext = new ThreadLocal<ActorContext>();
+    protected static final ThreadLocal<ActorContext> threadContext = new ThreadLocal<>();
 
     protected ActorContextHolder() {
 
