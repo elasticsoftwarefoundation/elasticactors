@@ -16,8 +16,6 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  * @author Joost van de Wijgerd
@@ -27,24 +25,21 @@ public final class RegisteredActorSystem {
     private final int nrOfShards;
     private final String configurationClass;
 
-    @JsonCreator
-    public RegisteredActorSystem(@JsonProperty("name") String name,@JsonProperty("nrOfShards") int nrOfShards, @JsonProperty("configurationClass") String configurationClass) {
+
+    public RegisteredActorSystem(String name,int nrOfShards, String configurationClass) {
         this.name = name;
         this.nrOfShards = nrOfShards;
         this.configurationClass = configurationClass;
     }
 
-    @JsonProperty("name")
     public String getName() {
         return name;
     }
 
-    @JsonProperty("nrOfShards")
     public int getNrOfShards() {
         return nrOfShards;
     }
 
-    @JsonProperty("configurationClass")
     public String getConfigurationClass() {
         return configurationClass;
     }

@@ -16,9 +16,9 @@
 
 package org.elasticsoftware.elasticactors.base.serialization;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.type.MapType;
-import org.codehaus.jackson.map.type.SimpleType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.MapType;
+import com.fasterxml.jackson.databind.type.SimpleType;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ActorStateFactory;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;

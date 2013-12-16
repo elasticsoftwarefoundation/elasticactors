@@ -22,7 +22,7 @@
 
 	                       http://www.springframework.org/schema/util
 	                       http://www.springframework.org/schema/util/spring-util-3.2.xsd">
-    <bean id="objectMapper" class="org.codehaus.jackson.map.ObjectMapper"/>
+    <bean id="objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper"/>
 
     <bean id="actorStateSerializer" class="org.elasticsoftware.elasticactors.base.serialization.JacksonActorStateSerializer">
         <constructor-arg ref="objectMapper"/>

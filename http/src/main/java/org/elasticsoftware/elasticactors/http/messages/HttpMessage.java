@@ -16,8 +16,8 @@
 
 package org.elasticsoftware.elasticactors.http.messages;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 
 import java.util.Collections;

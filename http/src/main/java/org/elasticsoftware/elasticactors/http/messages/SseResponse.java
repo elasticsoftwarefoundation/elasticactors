@@ -16,7 +16,8 @@
 
 package org.elasticsoftware.elasticactors.http.messages;
 
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 
 import java.util.*;
@@ -40,6 +41,7 @@ public final class SseResponse extends HttpResponse {
         this(200,new LinkedHashMap<String, List<String>>(DEFAULT_HEADERS));
     }
 
+    @JsonCreator
     public SseResponse(@JsonProperty("statusCode") int statusCode,
                        @JsonProperty("headers") Map<String, List<String>> headers) {
         super(statusCode, headers, null);

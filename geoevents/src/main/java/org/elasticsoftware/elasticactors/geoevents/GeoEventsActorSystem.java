@@ -17,9 +17,9 @@
 package org.elasticsoftware.elasticactors.geoevents;
 
 import ch.hsr.geohash.GeoHash;
-import org.codehaus.jackson.Version;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.module.SimpleModule;
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.geoevents.serialization.JacksonGeoHashDeserializer;
 import org.elasticsoftware.elasticactors.geoevents.serialization.JacksonGeoHashSerializer;

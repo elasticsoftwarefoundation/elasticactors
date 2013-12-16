@@ -16,9 +16,9 @@
 
 package org.elasticsoftware.elasticactors.base;
 
-import org.codehaus.jackson.Version;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.module.SimpleModule;
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonMessageDeserializer;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonMessageSerializer;

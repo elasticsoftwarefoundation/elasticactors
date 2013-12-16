@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.cluster.cassandra;
+package org.elasticsoftware.elasticactors.cassandra;
 
 import org.apache.cassandra.tools.NodeProbe;
 import org.elasticsoftware.elasticactors.PhysicalNode;

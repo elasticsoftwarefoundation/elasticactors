@@ -16,10 +16,9 @@
 
 package org.elasticsoftware.elasticactors.base.serialization;
 
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.JsonProcessingException;
-import org.codehaus.jackson.map.JsonSerializer;
-import org.codehaus.jackson.map.SerializerProvider;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import org.elasticsoftware.elasticactors.ActorRef;
 
 import java.io.IOException;
@@ -29,7 +28,7 @@ import java.io.IOException;
  */
 public final class JacksonActorRefSerializer extends JsonSerializer<ActorRef> {
     @Override
-    public void serialize(ActorRef value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+    public void serialize(ActorRef value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         jgen.writeString(value.toString());
     }
 }

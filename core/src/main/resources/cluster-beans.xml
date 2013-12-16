@@ -113,7 +113,7 @@
 
     <alias name="messagingService" alias="remoteMessageQueueFactory"/>
 
-    <bean id="nodeSelectorFactory" class="org.elasticsoftware.elasticactors.cluster.cassandra.CassandraNodeSelectorFactory"/>
+    <bean id="nodeSelectorFactory" class="org.elasticsoftware.elasticactors.cassandra.CassandraNodeSelectorFactory"/>
 
     <bean id="simpleScheduler" class="org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler"/>
 

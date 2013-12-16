@@ -16,7 +16,7 @@
 
 package org.elasticsoftware.elasticactors.http.codec;
 
-import com.google.common.base.Charsets;
+import org.elasticsoftware.elasticactors.base.util.Charsets;
 import org.elasticsoftware.elasticactors.http.messages.ServerSentEvent;
 import org.elasticsoftware.elasticactors.http.messages.SseResponse;
 import org.jboss.netty.buffer.ChannelBuffer;

@@ -16,7 +16,7 @@
 
 package org.elasticsoftware.elasticactors.base.serialization;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 
 import java.io.IOException;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.cluster.cassandra;
+package org.elasticsoftware.elasticactors.cassandra;
 
 import com.google.common.base.Charsets;
 import org.apache.cassandra.dht.LongToken;

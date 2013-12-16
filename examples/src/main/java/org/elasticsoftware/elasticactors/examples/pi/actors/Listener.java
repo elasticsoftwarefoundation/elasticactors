@@ -16,10 +16,11 @@
 
 package org.elasticsoftware.elasticactors.examples.pi.actors;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.ObjectMapper;
+
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.examples.pi.messages.Calculate;
 import org.elasticsoftware.elasticactors.examples.pi.messages.PiApproximation;
