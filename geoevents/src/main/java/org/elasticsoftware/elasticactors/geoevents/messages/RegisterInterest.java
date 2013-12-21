@@ -18,11 +18,14 @@ package org.elasticsoftware.elasticactors.geoevents.messages;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.geoevents.Coordinate;
+import org.elasticsoftware.elasticactors.serialization.Message;
 
 /**
  * @author Joost van de Wijgerd
  */
+@Message(serializationFramework = JacksonSerializationFramework.class,durable = true)
 public final class RegisterInterest {
     private final ActorRef actorRef;
     private final Coordinate location;

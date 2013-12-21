@@ -19,10 +19,13 @@ package org.elasticsoftware.elasticactors.geoevents.messages;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.Message;
 
 /**
  * @author Joost van de Wijgerd
  */
+@Message(serializationFramework = JacksonSerializationFramework.class,durable = true)
 public final class LeaveEvent {
     private final ActorRef actorRef;
 

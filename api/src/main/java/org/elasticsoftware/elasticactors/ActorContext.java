@@ -22,7 +22,7 @@ package org.elasticsoftware.elasticactors;
 public interface ActorContext {
     ActorRef getSelf();
 
-    ActorState getState();
+    <T extends ActorState> T getState(Class<T> stateClass);
 
     void setState(ActorState state);
 

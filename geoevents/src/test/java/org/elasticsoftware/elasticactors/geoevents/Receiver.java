@@ -17,10 +17,21 @@
 package org.elasticsoftware.elasticactors.geoevents;
 
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorState;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface Receiver {
-    void onReceive(ActorRef sender, Object message) throws Exception;
+public abstract class Receiver implements ActorState<String,Receiver> {
+    public abstract void onReceive(ActorRef sender, Object message) throws Exception;
+
+    @Override
+    public String getId() {
+        return null;
+    }
+
+    @Override
+    public Receiver getBody() {
+        return this;
+    }
 }

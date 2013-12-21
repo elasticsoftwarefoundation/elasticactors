@@ -18,6 +18,10 @@ package org.elasticsoftware.elasticactors.http.messages;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonMessageDeserializer;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonMessageSerializer;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.Message;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,6 +30,8 @@ import java.util.Map;
 /**
  * @author Joost van de Wijgerd
  */
+@Message(serializationFramework = JacksonSerializationFramework.class,
+         durable = false)
 public final class HttpRequest extends HttpMessage {
     private final String url;
     private final String method;

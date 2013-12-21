@@ -17,7 +17,10 @@
 package org.elasticsoftware.elasticactors.http.actors;
 
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.TempActor;
 import org.elasticsoftware.elasticactors.UntypedActor;
+import org.elasticsoftware.elasticactors.base.state.JacksonActorState;
 import org.elasticsoftware.elasticactors.http.messages.HttpResponse;
 import org.elasticsoftware.elasticactors.http.messages.ServerSentEvent;
 import org.elasticsoftware.elasticactors.http.messages.SseResponse;
@@ -34,13 +37,24 @@ import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 /**
  * @author Joost van de Wijgerd
  */
+@TempActor(stateClass = HttpServiceResponseHandler.State.class)
 public final class HttpServiceResponseHandler extends UntypedActor {
-    public static final class State {
+    public static final class State implements ActorState<String,State> {
         private transient final Channel responseChannel;
         private boolean serverSentEvents = false;
 
         public State(Channel responseChannel) {
             this.responseChannel = responseChannel;
+        }
+
+        @Override
+        public String getId() {
+            return null;
+        }
+
+        @Override
+        public State getBody() {
+            return this;
         }
 
         public Channel getResponseChannel() {
@@ -68,7 +82,7 @@ public final class HttpServiceResponseHandler extends UntypedActor {
     }
 
     private void handle(HttpResponse message) throws Exception {
-        State state = getState(null).getAsObject(State.class);
+        State state = getState(State.class);
         // convert back to netty http response
         org.jboss.netty.handler.codec.http.HttpResponse nettyResponse = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(message.getStatusCode()));
         // @todo: copy the headers from the message
@@ -82,7 +96,7 @@ public final class HttpServiceResponseHandler extends UntypedActor {
 
     private void handle(SseResponse message) {
         // we want to setup an EventSource connection, don't close the socket
-        State state = getState(null).getAsObject(State.class);
+        State state = getState(State.class);
         // register the fact we are using SSE
         state.setServerSentEvents(true);
         // send the event to the netty stack
@@ -90,14 +104,14 @@ public final class HttpServiceResponseHandler extends UntypedActor {
     }
 
     private void handle(ServerSentEvent message) {
-        State state = getState(null).getAsObject(State.class);
+        State state = getState(State.class);
         // send the event to the netty stack
         state.getResponseChannel().write(message);
     }
 
     @Override
     public void onUndeliverable(ActorRef receiver, Object message) throws Exception {
-        State state = getState(null).getAsObject(State.class);
+        State state = getState(State.class);
         // send a 404
         state.getResponseChannel().write(new DefaultHttpResponse(HttpVersion.HTTP_1_1,HttpResponseStatus.NOT_FOUND)).addListener(ChannelFutureListener.CLOSE);
         // remove self

@@ -16,13 +16,12 @@
 
 package org.elasticsoftware.elasticactors;
 
-import java.util.Map;
-
 /**
  * @author Joost van de Wijgerd
  */
-public interface ActorState {
-    Map<String,Object> getAsMap();
+public interface ActorState<Id,Body> {
+    Id getId();
 
-    <T> T getAsObject(Class<T> objectClass);
+    Body getBody();
 }
+

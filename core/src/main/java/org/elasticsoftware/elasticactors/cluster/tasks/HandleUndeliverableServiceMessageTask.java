@@ -54,7 +54,7 @@ public final class HandleUndeliverableServiceMessageTask implements ThreadBoundR
     }
 
     @Override
-    public ActorState getState() {
+    public <T extends ActorState> T getState(Class<T> stateClass) {
         return null;
     }
 

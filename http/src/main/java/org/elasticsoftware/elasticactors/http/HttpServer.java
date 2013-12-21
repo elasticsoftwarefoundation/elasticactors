@@ -27,7 +27,6 @@ import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.ServerSocketChannelFactory;
 import org.jboss.netty.handler.codec.http.*;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -44,15 +43,24 @@ import static org.jboss.netty.channel.Channels.pipeline;
 /**
  * @author Joost van de Wijgerd
  */
-@Named
 public final class HttpServer extends SimpleChannelUpstreamHandler implements ChannelPipelineFactory {
     private static final Logger logger = Logger.getLogger(HttpServer.class);
     private final ServerSentEventEncoder sseEventEncoder = new ServerSentEventEncoder();
-    private ServerSocketChannelFactory channelFactory;
-    private ActorSystem actorSystem;
-    private HttpService httpService;
+    private final ServerSocketChannelFactory channelFactory;
+    private final ActorSystem actorSystem;
+    private final HttpService httpService;
     private volatile Channel serverChannel;
-    private int listenPort = 8080;
+    private final int listenPort;
+
+    public HttpServer(ServerSocketChannelFactory channelFactory,
+                      HttpService httpService,
+                      ActorSystem actorSystem,
+                      int listenPort) {
+        this.channelFactory = channelFactory;
+        this.actorSystem = actorSystem;
+        this.httpService = httpService;
+        this.listenPort = listenPort;
+    }
 
 
     @PostConstruct
@@ -125,21 +133,4 @@ public final class HttpServer extends SimpleChannelUpstreamHandler implements Ch
         ctx.getChannel().write(new DefaultHttpResponse(HttpVersion.HTTP_1_1,HttpResponseStatus.INTERNAL_SERVER_ERROR)).addListener(ChannelFutureListener.CLOSE);
     }
 
-    @Inject
-    public void setChannelFactory(ServerSocketChannelFactory channelFactory) {
-        this.channelFactory = channelFactory;
-    }
-
-    public void setActorSystem(ActorSystem actorSystem) {
-        this.actorSystem = actorSystem;
-    }
-
-    @Inject
-    public void setHttpService(HttpService httpService) {
-        this.httpService = httpService;
-    }
-
-    public void setListenPort(int listenPort) {
-        this.listenPort = listenPort;
-    }
 }

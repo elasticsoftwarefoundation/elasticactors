@@ -88,13 +88,13 @@
 
     <bean id="persistentActorDeserializer" class="org.elasticsoftware.elasticactors.serialization.internal.PersistentActorDeserializer"/>
 
-    <bean id="persistentActorRepository" class="org.elasticsoftware.elasticactors.state.cassandra.CassandraPersistentActorRepository"/>
+    <bean id="persistentActorRepository" class="org.elasticsoftware.elasticactors.cassandra.state.CassandraPersistentActorRepository"/>
 
-    <bean id="commitLog" class="org.elasticsoftware.elasticactors.messaging.journal.CassandraCommitLog"/>
+    <bean id="commitLog" class="org.elasticsoftware.elasticactors.cassandra.messaging.journal.CassandraCommitLog"/>
 
-    <bean id="actorSystemRepository" class="org.elasticsoftware.elasticactors.cluster.cassandra.CassandraActorSystemRepository"/>
+    <bean id="actorSystemRepository" class="org.elasticsoftware.elasticactors.cassandra.cluster.CassandraActorSystemRepository"/>
 
-    <bean id="elasticActorsCluster" class="org.elasticsoftware.elasticactors.cluster.ElasticActorsCluster"/>
+    <bean id="elasticActorsCluster" class="org.elasticsoftware.elasticactors.cassandra.cluster.ElasticActorsCluster"/>
 
     <bean id="messageQueueWorkerExecutor" class="java.util.concurrent.Executors" factory-method="newCachedThreadPool">
         <constructor-arg index="0">
@@ -104,7 +104,7 @@
         </constructor-arg>
     </bean>
 
-    <bean id="messageQueueWorkers" class="org.elasticsoftware.elasticactors.messaging.LocalMessageQueueWorkers">
+    <bean id="messageQueueWorkers" class="org.elasticsoftware.elasticactors.netty.messaging.LocalMessageQueueWorkers">
         <constructor-arg index="0" ref="messageQueueWorkerExecutor"/>
         <constructor-arg index="1" value="4"/>
     </bean>

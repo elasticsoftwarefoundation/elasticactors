@@ -23,6 +23,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.elasticsoftware.elasticactors.http.actors.EventStreamer;
 import org.elasticsoftware.elasticactors.http.actors.User;
@@ -34,6 +35,7 @@ import java.net.URI;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockito.Mockito.mock;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
@@ -62,8 +64,8 @@ public class HttpActorSystemTest {
 
     @Test(enabled = true)
     public void testInContainer() throws Exception {
-        ActorSystem httpSystem = testActorSystem.create(new HttpActorSystem());
-        ActorSystem testSystem = testActorSystem.create(new HttpTestActorSystem());
+        ActorSystemConfiguration configuration = mock(ActorSystemConfiguration.class);
+        ActorSystem testSystem = testActorSystem.create(configuration);
 
         // create a couple of users
         ActorRef user1Ref = testSystem.actorOf("users/1", User.class);
@@ -138,8 +140,8 @@ public class HttpActorSystemTest {
 
     @Test(enabled = true)
         public void testEventStreamingWithAsyncHttpClient() throws Exception {
-            ActorSystem httpSystem = testActorSystem.create(new HttpActorSystem());
-            ActorSystem testSystem = testActorSystem.create(new HttpTestActorSystem());
+        ActorSystemConfiguration configuration = mock(ActorSystemConfiguration.class);
+                ActorSystem testSystem = testActorSystem.create(configuration);
 
             // create a stream
             ActorRef steamer = testSystem.actorOf("events/testing",EventStreamer.class);

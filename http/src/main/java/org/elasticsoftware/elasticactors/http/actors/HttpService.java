@@ -17,27 +17,58 @@
 package org.elasticsoftware.elasticactors.http.actors;
 
 import org.apache.log4j.Logger;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.UntypedActor;
+import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.http.HttpServer;
 import org.elasticsoftware.elasticactors.http.messages.HttpRequest;
 import org.elasticsoftware.elasticactors.http.messages.RegisterRouteMessage;
+import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.PathMatcher;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author Joost van de Wijgerd
  */
+@ServiceActor("httpServer")
 public final class HttpService extends UntypedActor {
     private static final Logger logger = Logger.getLogger(HttpService.class);
     private final ConcurrentMap<String,ActorRef> routes = new ConcurrentHashMap<String,ActorRef>();
     private final PathMatcher pathMatcher = new AntPathMatcher();
+    private final ActorSystem actorSystem;
+    private final Configuration configuration;
+    private HttpServer httpServer;
+
+    @Inject
+    public HttpService(ActorSystem actorSystem, Configuration configuration) {
+        this.actorSystem = actorSystem;
+        this.configuration = configuration;
+    }
+
+    @PostConstruct
+    public void init() {
+        ExecutorService bossExecutor = Executors.newCachedThreadPool(Executors.defaultThreadFactory());
+        ExecutorService workerExecutor = Executors.newCachedThreadPool(Executors.defaultThreadFactory());
+        int workers = Runtime.getRuntime().availableProcessors();
+        NioServerSocketChannelFactory channelFactory = new NioServerSocketChannelFactory(bossExecutor,workerExecutor,workers);
+        httpServer = new HttpServer(channelFactory, this, actorSystem , 8080);
+        httpServer.init();
+    }
+
+    @PreDestroy
+    public void destroy() {
+        httpServer.destroy();
+    }
 
     @Override
     public void onReceive(ActorRef sender, Object message) throws Exception {

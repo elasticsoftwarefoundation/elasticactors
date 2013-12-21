@@ -41,6 +41,9 @@
         <guava.version>15.0</guava.version>
         <jackson.version>2.3.0</jackson.version>
         <shoal.version>1.6.50</shoal.version>
+        <slf4j.version>1.7.5</slf4j.version>
+        <reflections.version>0.9.9-RC1</reflections.version>
+        <typetools.version>0.3.0</typetools.version>
         <!-- testing -->
         <testng-version>5.10</testng-version>
         <mockito.version>1.9.5</mockito.version>
@@ -96,6 +99,9 @@
         <module>runtime</module>
         <module>spi</module>
         <module>cluster-shoal</module>
+        <module>backplane-redis</module>
+        <module>backplane-cassandra</module>
+        <module>messaging-netty</module>
     </modules>
 
     <build>
@@ -106,6 +112,7 @@
                 <includes>
                     <include>*.xml</include>
                     <include>*.properties</include>
+                    <include>META-INF/*</include>
                 </includes>
             </resource>
         </resources>
@@ -116,6 +123,7 @@
                 <includes>
                     <include>*.xml</include>
                     <include>*.properties</include>
+                    <include>META-INF/*</include>
                 </includes>
             </testResource>
         </testResources>

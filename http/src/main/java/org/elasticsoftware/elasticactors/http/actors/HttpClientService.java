@@ -16,17 +16,18 @@
 
 package org.elasticsoftware.elasticactors.http.actors;
 
-import com.ning.http.client.AsyncCompletionHandler;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.FluentCaseInsensitiveStringsMap;
-import com.ning.http.client.Response;
+import com.ning.http.client.*;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ServiceActor;
 import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.http.messages.HttpRequest;
 import org.elasticsoftware.elasticactors.http.messages.HttpResponse;
 import org.jboss.netty.handler.codec.http.HttpMethod;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.inject.Inject;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -34,12 +35,24 @@ import java.util.Map;
 /**
  * @author Joost van de Wijgerd
  */
+@ServiceActor("httpClient")
 public final class HttpClientService extends TypedActor<HttpRequest> {
     private static final Logger logger = Logger.getLogger(HttpClientService.class);
-    private final AsyncHttpClient httpClient;
+    private AsyncHttpClient httpClient;
 
-    public HttpClientService(AsyncHttpClient httpClient) {
-        this.httpClient = httpClient;
+    public HttpClientService() {
+    }
+
+    @PostConstruct
+    public void init() {
+        AsyncHttpClientConfig config =
+                new AsyncHttpClientConfig.Builder().setCompressionEnabled(true).setFollowRedirects(true).build();
+        httpClient = new AsyncHttpClient(config);
+    }
+
+    @PreDestroy
+    public void destroy() {
+        httpClient.close();;
     }
 
     @Override

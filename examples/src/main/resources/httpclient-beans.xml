@@ -33,10 +33,6 @@
         <constructor-arg ref="actorStateFactory"/>
     </bean>
 
-    <bean id="actorStateFactory" class="org.elasticsoftware.elasticactors.base.state.JacksonActorStateFactory">
-        <constructor-arg ref="objectMapper"/>
-    </bean>
-
     <util:map id="messageSerializers" key-type="java.lang.Class"
                                       value-type="org.elasticsoftware.elasticactors.serialization.MessageSerializer">
         <entry key="org.elasticsoftware.elasticactors.examples.httpclient.messages.HttpResponse">

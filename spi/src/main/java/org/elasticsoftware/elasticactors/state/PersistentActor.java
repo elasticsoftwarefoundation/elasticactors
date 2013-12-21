@@ -61,6 +61,10 @@ public final class PersistentActor<K> implements ActorContext {
     }
 
     @Override
+    public <T extends ActorState> T getState(Class<T> stateClass) {
+        return stateClass.cast(actorState);
+    }
+
     public ActorState getState() {
         return actorState;
     }

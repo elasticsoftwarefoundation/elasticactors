@@ -33,7 +33,6 @@ import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.base.serialization.*;
-import org.elasticsoftware.elasticactors.base.state.JacksonActorStateFactory;
 import org.elasticsoftware.elasticactors.http.messages.HttpRequest;
 import org.elasticsoftware.elasticactors.http.messages.HttpResponse;
 
@@ -49,9 +48,8 @@ public final class PiApproximator implements ActorSystemConfiguration, ActorSyst
     private final int numberOfShards;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final ActorStateFactory actorStateFactory = new JacksonActorStateFactory(objectMapper);
     private final Serializer<ActorState, byte[]> actorStateSerializer = new JacksonActorStateSerializer(objectMapper);
-    private final Deserializer<byte[], ActorState> actorStateDeserializer = new JacksonActorStateDeserializer(objectMapper, actorStateFactory);
+    private final Deserializer<byte[], ActorState> actorStateDeserializer = new JacksonActorStateDeserializer(objectMapper, null);
 
 
     // the listener service to dispatch http requests
@@ -118,7 +116,7 @@ public final class PiApproximator implements ActorSystemConfiguration, ActorSyst
 
     @Override
     public ActorStateFactory getActorStateFactory() {
-        return actorStateFactory;
+        return null;
     }
 
     @Override

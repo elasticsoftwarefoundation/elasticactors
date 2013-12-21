@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * @author Joost van de Wijgerd
  */
-public class ActorStateMap implements ActorState {
+public final class ActorStateMap implements ActorState<String,Map<String,Object>> {
     private final Map<String,Object> state;
 
     public ActorStateMap(Map<String, Object> state) {
@@ -31,12 +31,12 @@ public class ActorStateMap implements ActorState {
     }
 
     @Override
-    public Map<String, Object> getAsMap() {
-        return state;
+    public String getId() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    public <T> T getAsObject(Class<T> objectClass) {
-        return null;
+    public Map<String, Object> getBody() {
+        return state;
     }
 }

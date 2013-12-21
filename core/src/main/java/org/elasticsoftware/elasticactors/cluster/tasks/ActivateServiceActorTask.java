@@ -52,7 +52,7 @@ public final class ActivateServiceActorTask implements ThreadBoundRunnable<Strin
     }
 
     @Override
-    public ActorState getState() {
+    public <T extends ActorState> T getState(Class<T> stateClass) {
         return null;
     }
 

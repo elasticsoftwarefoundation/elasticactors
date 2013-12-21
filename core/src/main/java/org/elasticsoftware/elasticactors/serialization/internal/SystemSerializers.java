@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.serialization.internal;
 
-import me.prettyprint.cassandra.serializers.StringSerializer;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
@@ -36,7 +35,7 @@ public final class SystemSerializers {
         systemSerializers.put(CreateActorMessage.class,new CreateActorMessageSerializer(cluster));
         systemSerializers.put(DestroyActorMessage.class,new DestroyActorMessageSerializer());
         systemSerializers.put(ActivateActorMessage.class,new ActivateActorMessageSerializer());
-        systemSerializers.put(String.class,new HectorMessageSerializer<String>(StringSerializer.get()));
+
         //@todo: add more serializers here
     }
 

@@ -30,7 +30,7 @@
             </constructor-arg>
         </bean>
 
-        <bean id="messageQueueWorkers" class="org.elasticsoftware.elasticactors.messaging.LocalMessageQueueWorkers">
+        <bean id="messageQueueWorkers" class="org.elasticsoftware.elasticactors.netty.messaging.LocalMessageQueueWorkers">
             <constructor-arg index="0" ref="messageQueueWorkerExecutor"/>
             <constructor-arg index="1" value="4"/>
         </bean>

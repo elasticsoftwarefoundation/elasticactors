@@ -36,7 +36,7 @@ import static org.jboss.netty.handler.codec.http.HttpConstants.*;
 /**
  * @author Joost van de Wijgerd
  */
-public class ServerSentEventEncoder extends OneToOneEncoder {
+public final class ServerSentEventEncoder extends OneToOneEncoder {
     private static final Charset ASCII = Charset.forName("ASCII");
     private static final byte[] EVENT = "event".getBytes(Charsets.UTF_8);
     private static final byte[] DATA = "data".getBytes(Charsets.UTF_8);

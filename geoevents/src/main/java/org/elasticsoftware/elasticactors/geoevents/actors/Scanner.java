@@ -18,7 +18,9 @@ package org.elasticsoftware.elasticactors.geoevents.actors;
 
 import ch.hsr.geohash.GeoHash;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.TempActor;
 import org.elasticsoftware.elasticactors.TypedActor;
+import org.elasticsoftware.elasticactors.base.state.JacksonActorState;
 import org.elasticsoftware.elasticactors.geoevents.messages.ScanRequest;
 import org.elasticsoftware.elasticactors.geoevents.messages.ScanResponse;
 
@@ -29,8 +31,9 @@ import java.util.LinkedList;
  *
  * @author Joost van de Wijgerd
  */
+@TempActor(stateClass = Scanner.State.class)
 public final class Scanner extends TypedActor<ScanResponse> {
-    public static final class State {
+    public static final class State extends JacksonActorState<String,State> {
         private final ActorRef replyAddress;
         private final ScanRequest request;
         private final ScanResponse response;
@@ -42,11 +45,21 @@ public final class Scanner extends TypedActor<ScanResponse> {
             this.runningRequests = runningRequests;
             this.response = new ScanResponse(request.getId(),new LinkedList<ScanResponse.ScanResult>());
         }
+
+        @Override
+        public String getId() {
+            return null;
+        }
+
+        @Override
+        public State getBody() {
+            return this;
+        }
     }
 
     @Override
     public void onReceive(ActorRef sender, ScanResponse message) throws Exception {
-        State state = getState(null).getAsObject(State.class);
+        State state = getState(State.class);
         // merge results
         state.response.merge(message);
         // check for stop condition

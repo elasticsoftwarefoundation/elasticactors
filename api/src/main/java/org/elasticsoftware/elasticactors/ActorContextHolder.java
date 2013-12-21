@@ -25,16 +25,10 @@ public class ActorContextHolder {
     protected ActorContextHolder() {
 
     }
-
-    public static ActorState getState(ActorStateFactory stateFactory) {
+    //
+    public static <T extends ActorState> T getState(Class<T> stateClass) {
         ActorContext actorContext = threadContext.get();
-        ActorState state = actorContext.getState();
-        if(state == null && stateFactory != null) {
-            actorContext.setState(stateFactory.create());
-            return actorContext.getState();
-        } else {
-            return state;
-        }
+        return actorContext.getState(stateClass);
     }
 
     public static ActorRef getSelf() {

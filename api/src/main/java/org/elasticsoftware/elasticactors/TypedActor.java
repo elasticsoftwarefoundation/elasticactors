@@ -55,8 +55,8 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
         return ActorContextHolder.getSelf();
     }
 
-    protected final ActorState getState(ActorStateFactory actorStateFactory) {
-        return ActorContextHolder.getState(actorStateFactory);
+    protected <T extends ActorState> T getState(Class<T> stateClass) {
+        return ActorContextHolder.getState(stateClass);
     }
 
     protected final ActorSystem getSystem() {

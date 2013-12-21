@@ -34,6 +34,6 @@ public final class JacksonActorStateSerializer implements Serializer<ActorState,
 
     @Override
     public byte[] serialize(ActorState object) throws IOException {
-        return objectMapper.writeValueAsBytes(object.getAsMap());
+        return objectMapper.writeValueAsBytes(object);
     }
 }

@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.geoevents.actors;
 
 import ch.hsr.geohash.GeoHash;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ServiceActor;
 import org.elasticsoftware.elasticactors.UntypedActor;
 import org.elasticsoftware.elasticactors.geoevents.Coordinate;
 import org.elasticsoftware.elasticactors.geoevents.LengthUnit;
@@ -33,6 +34,7 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * @author Joost van de Wijgerd
  */
+@ServiceActor("geoEventsService")
 public final class GeoEventsService extends UntypedActor {
     public static final String REGIONS_FORMAT = "regions/%s";
 

@@ -64,6 +64,12 @@ public interface InternalActorSystem extends ActorSystem, ActorSystemConfigurati
      */
     ActorNode getNode();
 
+    /**
+     * Return a reference to a temporary actor
+     *
+     * @param actorId
+     * @return
+     */
     ActorRef tempActorFor(String actorId);
 
     List<String> getDependencies();

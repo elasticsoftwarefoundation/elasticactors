@@ -18,13 +18,16 @@ package org.elasticsoftware.elasticactors.geoevents.messages;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.geoevents.Coordinate;
+import org.elasticsoftware.elasticactors.serialization.Message;
 
 import java.util.UUID;
 
 /**
  * @author Joost van de Wijgerd
  */
+@Message(serializationFramework = JacksonSerializationFramework.class,durable = false)
 public final class ScanRequest {
     private final UUID id;
     private final Coordinate location;

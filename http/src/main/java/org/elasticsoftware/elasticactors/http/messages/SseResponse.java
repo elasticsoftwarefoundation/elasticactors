@@ -18,6 +18,8 @@ package org.elasticsoftware.elasticactors.http.messages;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.Message;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 
 import java.util.*;
@@ -29,6 +31,8 @@ import java.util.*;
  *
  * @author Joost van de Wijgerd
  */
+@Message(serializationFramework = JacksonSerializationFramework.class,
+         durable = false)
 public final class SseResponse extends HttpResponse {
     private static final Map<String,List<String>> DEFAULT_HEADERS =
             Collections.unmodifiableMap(new LinkedHashMap<String,List<String>>() {{

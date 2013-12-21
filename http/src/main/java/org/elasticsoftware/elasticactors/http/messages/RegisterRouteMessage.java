@@ -19,10 +19,14 @@ package org.elasticsoftware.elasticactors.http.messages;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.Message;
 
 /**
  * @author Joost van de Wijgerd
  */
+@Message(serializationFramework = JacksonSerializationFramework.class,
+         durable = false)
 public final class RegisterRouteMessage {
     private final String pattern;
     private final ActorRef handlerRef;

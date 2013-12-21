@@ -17,16 +17,18 @@
 package org.elasticsoftware.elasticactors.geoevents.actors;
 
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.TempActor;
 import org.elasticsoftware.elasticactors.UntypedActor;
 import org.elasticsoftware.elasticactors.geoevents.Receiver;
 
 /**
  * @author Joost van de Wijgerd
  */
+@TempActor(stateClass = Receiver.class)
 public final class TestActor extends UntypedActor {
     @Override
     public void onReceive(ActorRef sender, Object message) throws Exception {
-        Receiver receiver = getState(null).getAsObject(Receiver.class);
+        Receiver receiver = getState(Receiver.class);
         receiver.onReceive(sender,message);
     }
 }
