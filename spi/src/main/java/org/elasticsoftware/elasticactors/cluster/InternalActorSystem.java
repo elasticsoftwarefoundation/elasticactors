@@ -17,6 +17,8 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 
 import java.util.List;
 
@@ -72,5 +74,7 @@ public interface InternalActorSystem extends ActorSystem, ActorSystemConfigurati
      */
     ActorRef tempActorFor(String actorId);
 
-    List<String> getDependencies();
+    <T> MessageSerializer<T> getSerializer(Class<T> messageClass);
+
+    <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass);
 }

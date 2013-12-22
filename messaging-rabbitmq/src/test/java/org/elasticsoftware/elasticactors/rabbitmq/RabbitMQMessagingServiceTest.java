@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
  */
 public class RabbitMQMessagingServiceTest {
     public final int NUM_PARTITIONS = 64;
-    public final int NUM_MESSAGES = 100000;
+    public final int NUM_MESSAGES = 1000;
     public final String CLUSTER_NAME = "test.vdwbv.com";
     public static final String QUEUENAME_FORMAT = "%s_%d";
     public static final String PAYLOAD_FORMAT = "This is message numero %d";
@@ -91,11 +91,15 @@ public class RabbitMQMessagingServiceTest {
             // ignore
         }
 
+        for (MessageQueue messageQueue : messageQueues) {
+            messageQueue.destroy();
+        }
+
         messagingService.stop();
     }
 
     private InternalMessage createInternalMessage(int count) {
-        ByteBuffer payload = ByteBuffer.wrap(String.format(PAYLOAD_FORMAT,count).getBytes(Charsets.UTF_8));
+        ByteBuffer payload = ByteBuffer.wrap(String.format(PAYLOAD_FORMAT, count).getBytes(Charsets.UTF_8));
         return new InternalMessageImpl(senderRef,receiverRef,payload,String.class.getName());
     }
 }

@@ -20,9 +20,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.log4j.Logger;
+import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.UntypedActor;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.base.state.JacksonActorState;
 import org.elasticsoftware.elasticactors.examples.pi.messages.Calculate;
 import org.elasticsoftware.elasticactors.examples.pi.messages.PiApproximation;
@@ -37,6 +39,7 @@ import java.util.Map;
 /**
  * @author Joost van de Wijgerd
  */
+@Actor(stateClass = Master.State.class,serializationFramework = JacksonSerializationFramework.class)
 public final class  Master extends UntypedActor  {
     private static final Logger logger = Logger.getLogger(Master.class);
 

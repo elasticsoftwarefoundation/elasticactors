@@ -46,11 +46,11 @@ public final class HttpService extends UntypedActor {
     private final ConcurrentMap<String,ActorRef> routes = new ConcurrentHashMap<String,ActorRef>();
     private final PathMatcher pathMatcher = new AntPathMatcher();
     private final ActorSystem actorSystem;
-    private final Configuration configuration;
+    private final ActorSystemConfiguration configuration;
     private HttpServer httpServer;
 
     @Inject
-    public HttpService(ActorSystem actorSystem, Configuration configuration) {
+    public HttpService(ActorSystem actorSystem, ActorSystemConfiguration configuration) {
         this.actorSystem = actorSystem;
         this.configuration = configuration;
     }
@@ -61,7 +61,7 @@ public final class HttpService extends UntypedActor {
         ExecutorService workerExecutor = Executors.newCachedThreadPool(Executors.defaultThreadFactory());
         int workers = Runtime.getRuntime().availableProcessors();
         NioServerSocketChannelFactory channelFactory = new NioServerSocketChannelFactory(bossExecutor,workerExecutor,workers);
-        httpServer = new HttpServer(channelFactory, this, actorSystem , 8080);
+        httpServer = new HttpServer(channelFactory, this, actorSystem , configuration.getIntegerProperty(this.getClass(),"listenPort",8080));
         httpServer.init();
     }
 

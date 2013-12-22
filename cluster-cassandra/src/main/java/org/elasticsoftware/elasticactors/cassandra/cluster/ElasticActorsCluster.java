@@ -36,6 +36,7 @@ import org.elasticsoftware.elasticactors.dependencies.Graph;
 import org.elasticsoftware.elasticactors.dependencies.NodeValueListener;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.internal.SystemDeserializers;
 import org.elasticsoftware.elasticactors.serialization.internal.SystemSerializers;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
@@ -81,6 +82,7 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
     private static final ConsistencyLevelPolicy DEFAULT_CONSISTENCY_LEVEL_POLICY = new QuorumAllConsistencyLevelPolicy();
     private static final ConsistencyLevelPolicy FALLBACK_CONSISTENCY_LEVEL_POLICY = new AllOneConsistencyLevelPolicy();
     private final AtomicReference<ConsistencyLevelPolicy> consistencyLevelPolicy = new AtomicReference<ConsistencyLevelPolicy>(FALLBACK_CONSISTENCY_LEVEL_POLICY);
+    private ApplicationContext applicationContext;
 
 
     public static ElasticActorsCluster getInstance() {
@@ -90,6 +92,7 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         INSTANCE.set(applicationContext.getBean(ElasticActorsCluster.class));
+        this.applicationContext = applicationContext;
     }
 
     @Override
@@ -208,40 +211,10 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
     }
 
     private void rebalance(List<PhysicalNode> clusterNodes) {
-        // need to resolve the dependencies here
-        final List<LocalActorSystemInstance> nodeValueList = new ArrayList<LocalActorSystemInstance>();
-        Graph<LocalActorSystemInstance> dependencyGraph = new Graph<LocalActorSystemInstance>(new NodeValueListener<LocalActorSystemInstance>() {
-            public void evaluating(LocalActorSystemInstance nodeValue) {
-                nodeValueList.add(nodeValue);
-            }
-        });
+
+        logger.info(String.format("Processing ActorSystems in the following order: [%s]", managedActorSystems.values().toString()));
 
         for (LocalActorSystemInstance actorSystemInstance : managedActorSystems.values()) {
-            List<String> dependencies = actorSystemInstance.getDependencies();
-
-            for (String dependency : dependencies) {
-                LocalActorSystemInstance instance = managedActorSystems.get(dependency);
-                if (instance != null) {
-                    logger.info(String.format("Adding dependency from [%s] on [%s]", actorSystemInstance.getName(), instance.getName()));
-                    dependencyGraph.addDependency(instance, actorSystemInstance);
-                } else {
-                    // just add the node to the back of the list, order doesn't matter
-                    // @todo: this is not correct
-                    // nodeValueList.add(actorSystemInstance);
-                }
-            }
-        }
-
-        dependencyGraph.generateDependencies();
-        // see if we have all of the original members
-        for (LocalActorSystemInstance actorSystemInstance : managedActorSystems.values()) {
-            if (!nodeValueList.contains(actorSystemInstance)) {
-                nodeValueList.add(actorSystemInstance);
-            }
-        }
-        logger.info(String.format("Processing ActorSystems in the following order: [%s]", nodeValueList.toString()));
-
-        for (LocalActorSystemInstance actorSystemInstance : nodeValueList) {
             //new RebalancingRunnable(actorSystemInstance, clusterNodes).run();
             scheduledExecutorService.execute(new RebalancingRunnable(actorSystemInstance,clusterNodes));
         }
@@ -288,10 +261,6 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
         return clusterName;
     }
 
-    @Override
-    public ActorRefFactory getActorRefFactory() {
-        return this;
-    }
 
     @Override
     public InternalActorSystem get(String actorSystemName) {
@@ -306,6 +275,11 @@ public final class ElasticActorsCluster implements ActorRefFactory, ApplicationC
     @Override
     public <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass) {
         return systemDeserializers.get(messageClass);
+    }
+
+    @Override
+    public SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass) {
+        return applicationContext.getBean(frameworkClass);
     }
 
     @Value("${elasticactors.cluster.name}")

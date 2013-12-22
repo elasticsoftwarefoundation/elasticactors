@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 
 /**
  * @author Joost van de Wijgerd
@@ -32,5 +33,5 @@ public interface ActorSystems {
 
     <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass);
 
-    ActorRefFactory getActorRefFactory();
+    SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass);
 }

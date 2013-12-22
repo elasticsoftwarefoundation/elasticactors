@@ -22,6 +22,7 @@ import org.elasticsoftware.elasticactors.ActorSystems;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 
 /**
  * @author Joost van de Wijgerd
@@ -53,7 +54,7 @@ public class TestActorSystemsInstance implements ActorSystems,ActorRefFactory {
     }
 
     @Override
-    public ActorRefFactory getActorRefFactory() {
-        return this;
+    public SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }

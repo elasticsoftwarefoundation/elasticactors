@@ -18,11 +18,13 @@ package org.elasticsoftware.elasticactors.serialization.internal;
 
 import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
+import org.elasticsoftware.elasticactors.util.SerializationTools;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -52,8 +54,13 @@ public final class CreateActorMessageSerializer implements MessageSerializer<Cre
         return ByteBuffer.wrap(builder.build().toByteArray());
     }
 
-    private byte[] serializeState(String actorSystemName,ActorState state) throws IOException {
-        InternalActorSystem actorSystem = actorSystems.get(actorSystemName);
-        return actorSystem.getActorStateSerializer().serialize(state);
+    private byte[] serializeState(String actorClass,ActorState state) throws IOException {
+        try {
+            return SerializationTools.serializeActorState(actorSystems,
+                                                          (Class<? extends ElasticActor>) Class.forName(actorClass),
+                                                          state);
+        } catch (ClassNotFoundException e) {
+            throw new IOException(e);
+        }
     }
 }

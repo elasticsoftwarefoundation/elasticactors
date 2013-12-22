@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.databind.type.SimpleType;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ActorStateFactory;
+import org.elasticsoftware.elasticactors.base.state.JacksonActorState;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 
 import java.io.IOException;
@@ -32,17 +33,13 @@ import java.util.Map;
  */
 public final class JacksonActorStateDeserializer implements Deserializer<byte[], ActorState> {
     private final ObjectMapper objectMapper;
-    private final ActorStateFactory actorStateFactory;
-    public static final MapType MAP_TYPE = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(Object.class));
 
-    public JacksonActorStateDeserializer(ObjectMapper objectMapper, ActorStateFactory actorStateFactory) {
+    public JacksonActorStateDeserializer(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-        this.actorStateFactory = actorStateFactory;
     }
 
     @Override
     public ActorState deserialize(byte[] serializedObject) throws IOException {
-        Map<String,Object> jsonMap = objectMapper.readValue(serializedObject, MAP_TYPE);
-        return actorStateFactory.create(jsonMap);
+        return objectMapper.readValue(serializedObject, JacksonActorState.class);
     }
 }

@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.UntypedActor;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.base.state.JacksonActorState;
 import org.elasticsoftware.elasticactors.geoevents.LengthUnit;
 import org.elasticsoftware.elasticactors.geoevents.messages.*;
@@ -34,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author Joost van de Wijgerd
  */
-@Actor(stateClass = Region.State.class)
+@Actor(stateClass = Region.State.class, serializationFramework = JacksonSerializationFramework.class)
 public final class Region extends UntypedActor {
     @JsonTypeName()
     public static final class State extends JacksonActorState<GeoHash,Region.State> {

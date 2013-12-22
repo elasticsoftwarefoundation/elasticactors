@@ -17,12 +17,15 @@
 package org.elasticsoftware.elasticactors.serialization.internal;
 
 import com.google.protobuf.ByteString;
+import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
+import org.elasticsoftware.elasticactors.util.SerializationTools;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
@@ -53,8 +56,7 @@ public final class PersistentActorSerializer implements Serializer<PersistentAct
     }
 
     private byte[] getSerializedState(PersistentActor<ShardKey> persistentActor) throws IOException {
-        InternalActorSystem actorSystem = actorSystems.get(persistentActor.getKey().getActorSystemName());
-        return actorSystem.getActorStateSerializer().serialize(persistentActor.getState());
+        return SerializationTools.serializeActorState(actorSystems,persistentActor.getActorClass(),persistentActor.getState());
     }
 
     @Autowired

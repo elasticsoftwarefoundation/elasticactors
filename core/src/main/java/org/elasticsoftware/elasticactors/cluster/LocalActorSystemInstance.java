@@ -27,15 +27,13 @@ import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
-import org.elasticsoftware.elasticactors.serialization.Deserializer;
+import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.Serializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.core.io.ClassPathResource;
 
 import java.math.BigInteger;
 import java.nio.charset.Charset;
@@ -100,13 +98,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     public void shutdown() {
         // @todo: run shutdown sequences on nodes and shards
-        if(configuration instanceof ActorSystemBootstrapper) {
-            try {
-                ((ActorSystemBootstrapper)configuration).destroy();
-            } catch (Exception e) {
-                logger.error(String.format("Exception while destroying ActorSystem [%s]",getName()),e);
-            }
-        }
+
     }
 
     public void updateNodes(List<PhysicalNode> nodes) throws Exception {
@@ -158,37 +150,10 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
      * @param nodes
      */
     public void distributeShards(List<PhysicalNode> nodes) throws Exception {
-        ActorSystemBootstrapper bootstrapper = null;
-        if (configuration instanceof ActorSystemBootstrapper) {
-            bootstrapper = (ActorSystemBootstrapper) configuration;
-        }
         final boolean initializing = initialized.compareAndSet(false, true);
         // see if this was the first time, if so we need to initialize the ActorSystem
         if (initializing) {
             logger.info(String.format("Initializing ActorSystem [%s]", getName()));
-            if (bootstrapper != null) {
-                logger.info(String.format("Bootstrapping ActorSystem [%s]", getName()));
-                try {
-                    Properties p = new Properties();
-                    // load any properties for this ActorSystem
-                    ClassPathResource runtimeProps = new ClassPathResource(String.format("%s.properties",configuration.getName()));
-                    if(runtimeProps.exists()) {
-                        p.load(runtimeProps.getInputStream());
-                    } else {
-                        ClassPathResource defaultProps = new ClassPathResource(String.format("%s-default.properties",configuration.getName()));
-                        if(defaultProps.exists()) {
-                            p.load(defaultProps.getInputStream());
-                        }
-                    }
-                    bootstrapper.initialize(this, p);
-                } catch (Exception e) {
-                    // @todo: we should probably abort here
-                    logger.error(String.format("Exception while initializing ActorSystem [%s]", getName()), e);
-                }
-            }
-
-
-
         }
 
         NodeSelector nodeSelector = nodeSelectorFactory.create(nodes);
@@ -270,21 +235,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                             new ActivateActorMessage(getName(), elasticActorEntry, ActorType.SERVICE));
                 }
             }
-            if (bootstrapper != null) {
-                // @todo: we should only do this on original creation of the ActorSystem, not when reloading
-                try {
-                    bootstrapper.create(this);
-                } catch (Exception e) {
-                    // @todo: we should probably abort here
-                    logger.error(String.format("Exception while creating ActorSystem [%s]", getName()), e);
-                }
-                try {
-                    bootstrapper.activate(this);
-                } catch (Exception e) {
-                    // @todo: we should probably abort here
-                    logger.error(String.format("Exception while activating ActorSystem [%s]", getName()), e);
-                }
-            }
         }
 
     }
@@ -342,6 +292,32 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
+    public <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
+        MessageSerializer<T> messageSerializer = cluster.getSystemMessageSerializer(messageClass);
+        if(messageSerializer == null) {
+            Message messageAnnotation = messageClass.getAnnotation(Message.class);
+            if(messageAnnotation != null) {
+                SerializationFramework framework = cluster.getSerializationFramework(messageAnnotation.serializationFramework());
+                messageSerializer = framework.getSerializer(messageClass);
+            }
+        }
+        return messageSerializer;
+    }
+
+    @Override
+    public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
+        MessageDeserializer<T> messageDeserializer = cluster.getSystemMessageDeserializer(messageClass);
+        if(messageDeserializer == null) {
+            Message messageAnnotation = messageClass.getAnnotation(Message.class);
+            if(messageAnnotation != null) {
+                SerializationFramework framework = cluster.getSerializationFramework(messageAnnotation.serializationFramework());
+                messageDeserializer = framework.getDeserializer(messageClass);
+            }
+        }
+        return messageDeserializer;
+    }
+
+    @Override
     public String getName() {
         return configuration.getName();
     }
@@ -362,13 +338,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
-    public <T> ActorRef actorOf(String actorId, Class<T> actorClass, Object initialState) throws Exception {
+    public <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception {
         // determine shard
         ActorShard shard = shardFor(actorId);
-        // if we have state we need to wrap it
-        ActorState actorState = initialState != null ? configuration.getActorStateFactory().create(initialState) : null;
         // send CreateActorMessage to shard
-        CreateActorMessage createActorMessage = new CreateActorMessage(getName(), actorClass.getName(), actorId, actorState);
+        CreateActorMessage createActorMessage = new CreateActorMessage(getName(), actorClass.getName(), actorId, initialState);
         //@todo: see if we need to get the sender from the context
         shard.sendMessage(null, shard.getActorRef(), createActorMessage);
         // create actor ref
@@ -377,14 +351,14 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
-    public <T> ActorRef tempActorOf(Class<T> actorClass, Object initialState) throws Exception {
+    public <T> ActorRef tempActorOf(Class<T> actorClass, ActorState initialState) throws Exception {
         // if we have state we need to wrap it
-        ActorState actorState = initialState != null ? configuration.getActorStateFactory().create(initialState) : null;
+
         String actorId = UUID.randomUUID().toString();
         CreateActorMessage createActorMessage = new CreateActorMessage(getName(),
                                                                        actorClass.getName(),
                                                                        actorId,
-                                                                       actorState,
+                                                                       initialState,
                                                                        ActorType.TEMP);
         this.localNodeAdapter.sendMessage(null, localNodeAdapter.getActorRef(), createActorMessage);
         return new LocalClusterActorNodeRef(cluster.getClusterName(), localNodeAdapter, actorId);
@@ -423,33 +397,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
-    public <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
-        MessageSerializer<T> messageSerializer = cluster.getSystemMessageSerializer(messageClass);
-        return messageSerializer == null ? configuration.getSerializer(messageClass) : messageSerializer;
-    }
-
-    @Override
-    public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
-        MessageDeserializer<T> messageDeserializer = cluster.getSystemMessageDeserializer(messageClass);
-        return messageDeserializer == null ? configuration.getDeserializer(messageClass) : messageDeserializer;
-    }
-
-    @Override
-    public Serializer<ActorState, byte[]> getActorStateSerializer() {
-        return configuration.getActorStateSerializer();
-    }
-
-    @Override
-    public Deserializer<byte[], ActorState> getActorStateDeserializer() {
-        return configuration.getActorStateDeserializer();
-    }
-
-    @Override
-    public ActorStateFactory getActorStateFactory() {
-        return configuration.getActorStateFactory();
-    }
-
-    @Override
     public ElasticActor getService(String serviceId) {
         return configuration.getService(serviceId);
     }
@@ -457,6 +404,16 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     @Override
     public Set<String> getServices() {
         return configuration.getServices();
+    }
+
+    @Override
+    public String getStringProperty(Class component, String propertyName, String defaultValue) {
+        return configuration.getStringProperty(component,propertyName,defaultValue);
+    }
+
+    @Override
+    public Integer getIntegerProperty(Class component, String propertyName, int defaultValue) {
+        return configuration.getIntegerProperty(component,propertyName,defaultValue);
     }
 
     @Autowired
@@ -482,16 +439,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     @Autowired
     public void setShardActorCacheManager(ShardActorCacheManager shardActorCacheManager) {
         this.shardActorCacheManager = shardActorCacheManager;
-    }
-
-    @Override
-    public List<String> getDependencies() {
-        DependsOn dependsOn = AnnotationUtils.findAnnotation(configuration.getClass(), DependsOn.class);
-        if (dependsOn != null) {
-            return Arrays.<String>asList(dependsOn.dependencies());
-        } else {
-            return Collections.<String>emptyList();
-        }
     }
 
     private final class ActorShardAdapter implements ActorShard {

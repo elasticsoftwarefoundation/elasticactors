@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.*;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.internal.SystemDeserializers;
 import org.elasticsoftware.elasticactors.serialization.internal.SystemSerializers;
 import org.springframework.beans.BeansException;
@@ -145,7 +146,7 @@ public class TestActorSystem implements InternalActorSystems,ActorRefFactory,App
     }
 
     @Override
-    public ActorRefFactory getActorRefFactory() {
-        return this;
+    public SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass) {
+        return applicationContext.getBean(frameworkClass);
     }
 }

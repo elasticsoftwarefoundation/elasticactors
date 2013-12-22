@@ -16,8 +16,51 @@
 
 package org.elasticsoftware.elasticactors.serialization;
 
+import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.ElasticActor;
+
 /**
  * @author Joost van de Wijgerd
  */
 public interface SerializationFramework {
+    /**
+     * Register a message class with the framework
+     *
+     * @param messageClass
+     */
+    void register(Class<?> messageClass);
+
+    /**
+     * Return the correct serializer for the passed in message class
+     *
+     * @param messageClass
+     * @param <T>
+     * @return
+     */
+    <T> MessageSerializer<T> getSerializer(Class<T> messageClass);
+
+    /**
+     * Return the correct deserializer for the specified message class
+     *
+     * @param messageClass
+     * @param <T>
+     * @return
+     */
+    <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass);
+
+    /**
+     * Return the serializer for the actor state
+     *
+     * @param actorClass
+     * @return
+     */
+    Serializer<ActorState, byte[]> getActorStateSerializer(Class<? extends ElasticActor> actorClass);
+
+    /**
+     * Return the deserializer for the specified actor class
+     *
+     * @param actorClass
+     * @return
+     */
+    Deserializer<byte[], ActorState> getActorStateDeserializer(Class<? extends ElasticActor> actorClass);
 }

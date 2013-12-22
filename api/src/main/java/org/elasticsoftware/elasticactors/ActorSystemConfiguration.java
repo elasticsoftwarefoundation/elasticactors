@@ -16,11 +16,6 @@
 
 package org.elasticsoftware.elasticactors;
 
-import org.elasticsoftware.elasticactors.serialization.Deserializer;
-import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.Serializer;
-
 import java.util.Set;
 
 /**
@@ -42,29 +37,39 @@ public interface ActorSystemConfiguration {
      */
     int getNumberOfShards();
 
+    /**
+     * The version of the ActorSystem
+     *
+     * @return
+     */
     String getVersion();
 
-    <T> MessageSerializer<T> getSerializer(Class<T> messageClass);
-
-    <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass);
-
-    Serializer<ActorState, byte[]> getActorStateSerializer();
-
     /**
-     * Pluggable {@link org.elasticsoftware.elasticactors.serialization.Deserializer} for the internal state of the actor
+     * Return the singleton service instance
      *
-     * @return the {@link org.elasticsoftware.elasticactors.serialization.Deserializer} used to deserialize from a byte array to an {@link ActorState} instance
+     * @param serviceId
+     * @return
      */
-    Deserializer<byte[], ActorState> getActorStateDeserializer();
-
-    ActorStateFactory getActorStateFactory();
-
-    ElasticActor getService(String serviceId);
+    ElasticActor<?> getService(String serviceId);
 
     /**
-     * Returns all services that this configuration defines. Used to initialize them properly
+     * return a list of service actor id's
      *
      * @return
      */
     Set<String> getServices();
+
+    /**
+     * Return the String value of the given property, namespaced on the component class
+     *
+     * @param component
+     * @param propertyName
+     * @param defaultValue
+     * @return
+     */
+    String getStringProperty(Class component,String propertyName,String defaultValue);
+
+    Integer getIntegerProperty(Class component, String propertyName, int defaultValue);
 }
+
+

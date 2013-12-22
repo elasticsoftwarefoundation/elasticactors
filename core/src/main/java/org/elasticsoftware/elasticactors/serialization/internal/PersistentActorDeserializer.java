@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors.serialization.internal;
 
+import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.ShardKey;
@@ -23,8 +24,10 @@ import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
+import org.elasticsoftware.elasticactors.util.SerializationTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 
@@ -52,22 +55,25 @@ public final class PersistentActorDeserializer implements Deserializer<byte[],Pe
     public PersistentActor<ShardKey> deserialize(byte[] serializedObject) throws IOException {
         Elasticactors.PersistentActor protobufMessage = Elasticactors.PersistentActor.parseFrom(serializedObject);
         final ShardKey shardKey = ShardKey.fromString(protobufMessage.getShardKey());
-        ActorState actorState =
-                protobufMessage.hasState() ? deserializeState(shardKey,protobufMessage.getState().toByteArray()): null;
         try {
+            Class<? extends ElasticActor> actorClass = (Class<? extends ElasticActor>) Class.forName(protobufMessage.getActorClass());
+            ActorState actorState =
+                    protobufMessage.hasState() ? deserializeState(actorClass,protobufMessage.getState().toByteArray()): null;
+
             return new PersistentActor<ShardKey>(shardKey,
                                                  actorSystems.get(shardKey.getActorSystemName()),
                                                  protobufMessage.getActorSystemVersion(),
                                                  actorRefFactory.create(protobufMessage.getActorRef()),
-                                                 (Class<? extends ElasticActor>) Class.forName(protobufMessage.getActorClass()),
+                                                 actorClass,
                                                  actorState);
-        } catch(Exception e) {
+        } catch(ClassNotFoundException e) {
             throw new IOException("Exception deserializing PersistentActor",e);
         }
     }
 
-    private ActorState deserializeState(ShardKey shardKey,byte[] serializedState) throws IOException {
-        InternalActorSystem actorSystem = actorSystems.get(shardKey.getActorSystemName());
-        return actorSystem.getActorStateDeserializer().deserialize(serializedState);
+    private ActorState deserializeState(Class<? extends ElasticActor> actorClass, byte[] serializedState) throws IOException {
+        return SerializationTools.deserializeActorState(actorSystems, actorClass, serializedState);
     }
+
+
 }

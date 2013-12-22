@@ -17,8 +17,9 @@
 package org.elasticsoftware.elasticactors.base.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.elasticsoftware.elasticactors.serialization.Message;
-import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.serialization.*;
 
 import javax.inject.Named;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,17 +33,42 @@ public class JacksonSerializationFramework implements SerializationFramework {
     private final ConcurrentMap<Class,JacksonMessageDeserializer> deserializers = new ConcurrentHashMap<>();
     private final JacksonMessageSerializer serializer;
     private final ObjectMapper objectMapper;
+    private final JacksonActorStateSerializer actorStateSerializer;
+    private final JacksonActorStateDeserializer actorStateDeserializer;
 
     public JacksonSerializationFramework(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
         this.serializer = new JacksonMessageSerializer(objectMapper);
+        this.actorStateSerializer = new JacksonActorStateSerializer(objectMapper);
+        this.actorStateDeserializer = new JacksonActorStateDeserializer(objectMapper);
     }
 
+    @Override
     public void register(Class<?> messageClass) {
         Message messageAnnotation;
         if((messageAnnotation = messageClass.getAnnotation(Message.class)) != null
            && this.getClass().equals(messageAnnotation.serializationFramework()))  {
             deserializers.putIfAbsent(messageClass,new JacksonMessageDeserializer(messageClass,objectMapper));
         }
+    }
+
+    @Override
+    public <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
+        return serializer;
+    }
+
+    @Override
+    public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
+        return deserializers.get(messageClass);
+    }
+
+    @Override
+    public Serializer<ActorState, byte[]> getActorStateSerializer(Class<? extends ElasticActor> actorClass) {
+        return actorStateSerializer;
+    }
+
+    @Override
+    public Deserializer<byte[], ActorState> getActorStateDeserializer(Class<? extends ElasticActor> actorClass) {
+        return actorStateDeserializer;
     }
 }

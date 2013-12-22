@@ -23,7 +23,7 @@ import org.elasticsoftware.elasticactors.serialization.Deserializer;
  * An {@link ActorSystem} is a collection of {@link ElasticActor} instances. {@link ElasticActor}s are persistent and
  * have an {@link ActorState}. An application implementing and {@link ActorSystem} should create classes that implement
  * the {@link ElasticActor#onReceive(ActorRef, Object)} method. Within this method the associated {@link ActorState} can
- * be obtained by calling the {@link ActorContextHolder#getState(ActorStateFactory)} method.
+ * be obtained by calling the {@link ActorContextHolder#getState(Class)} method.
  * The ElasticActors framework will take care of persisting the state. The application can control the serialization and
  * deserialization by providing appropriate {@link Deserializer} in the {@link org.elasticsoftware.elasticactors.ActorSystemConfiguration#getActorStateDeserializer()}
  *
@@ -39,9 +39,9 @@ public interface ActorSystem {
 
     <T> ActorRef actorOf(String actorId, Class<T> actorClass) throws Exception;
 
-    <T> ActorRef actorOf(String actorId, Class<T> actorClass, Object initialState) throws Exception;
+    <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception;
 
-    <T> ActorRef tempActorOf(Class<T> actorClass, Object initialState) throws Exception;
+    <T> ActorRef tempActorOf(Class<T> actorClass, ActorState initialState) throws Exception;
 
     ActorRef actorFor(String actorId);
 

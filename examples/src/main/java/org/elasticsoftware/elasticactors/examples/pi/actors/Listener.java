@@ -22,6 +22,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 
 import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
+import org.elasticsoftware.elasticactors.base.state.JacksonActorState;
 import org.elasticsoftware.elasticactors.examples.pi.messages.Calculate;
 import org.elasticsoftware.elasticactors.examples.pi.messages.PiApproximation;
 import org.elasticsoftware.elasticactors.http.messages.HttpMessage;
@@ -35,12 +37,13 @@ import java.util.*;
 /**
  * @author Joost van de Wijgerd
  */
+@Actor(stateClass = Listener.State.class,serializationFramework = JacksonSerializationFramework.class)
 public final class Listener extends UntypedActor {
     private static final Logger logger = Logger.getLogger(Listener.class);
     private final ObjectMapper objectMapper;
     private final State state = new State();
 
-    public static final class State {
+    public static final class State extends JacksonActorState<String,Listener.State> {
         private final Map<String,ActorRef> calculations;
 
         public State() {
@@ -50,6 +53,16 @@ public final class Listener extends UntypedActor {
         @JsonCreator
         public State(@JsonProperty("calculations") Map<String, ActorRef> calculations) {
             this.calculations = calculations;
+        }
+
+        @Override
+        public String getId() {
+            return null;
+        }
+
+        @Override
+        public State getBody() {
+            return this;
         }
 
         @JsonProperty("calculations")

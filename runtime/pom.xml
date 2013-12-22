@@ -31,7 +31,6 @@
     <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <pluginRepositories>
@@ -48,35 +47,54 @@
     </pluginRepositories>
 
     <dependencies>
-
+        <dependency>
+            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <artifactId>elasticactors-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <artifactId>messaging-rabbitmq</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <artifactId>backplane-cassandra</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <artifactId>cluster-shoal</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
 
     <profiles>
         <profile>
-                    <id>sign</id>
-                    <build>
-                        <plugins>
-                            <plugin>
-                                <groupId>org.apache.maven.plugins</groupId>
-                                <artifactId>maven-gpg-plugin</artifactId>
-                                <version>1.1</version>
-                                <configuration>
-                                    <useAgent>true</useAgent>
-                                </configuration>
-                                <executions>
-                                    <execution>
-                                        <id>sign-artifacts</id>
-                                        <phase>verify</phase>
-                                        <goals>
-                                            <goal>sign</goal>
-                                        </goals>
-                                    </execution>
-                                </executions>
-                            </plugin>
-                        </plugins>
-                    </build>
-                </profile>
+            <id>sign</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.1</version>
+                        <configuration>
+                            <useAgent>true</useAgent>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>dist</id>
             <build>
@@ -86,17 +104,19 @@
                         <artifactId>maven-assembly-plugin</artifactId>
                         <version>2.4</version>
                         <configuration>
-                           <!-- <filters>
-                                <filter>src/assemble/filter.properties</filter>
-                            </filters>-->
+                            <!-- <filters>
+                                 <filter>src/assemble/filter.properties</filter>
+                             </filters>-->
                             <descriptors>
                                 <descriptor>src/assemble/dist.xml</descriptor>
                             </descriptors>
                         </configuration>
                         <executions>
                             <execution>
-                                <id>make-assembly</id> <!-- this is used for inheritance merges -->
-                                <phase>package</phase> <!-- bind to the packaging phase -->
+                                <id>make-assembly</id>
+                                <!-- this is used for inheritance merges -->
+                                <phase>package</phase>
+                                <!-- bind to the packaging phase -->
                                 <goals>
                                     <goal>single</goal>
                                 </goals>
