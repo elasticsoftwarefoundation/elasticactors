@@ -32,7 +32,6 @@ import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
-import org.elasticsoftware.elasticactors.http.HttpActorSystem;
 import org.mockito.ArgumentCaptor;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.testng.annotations.AfterMethod;
@@ -49,6 +48,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 /**
  * @author Joost van de Wijgerd
@@ -160,7 +160,8 @@ public class PiApproximatorTest {
 
         ActorState actorState = actorStateDeserializer.deserialize(serializedBytes);
         assertNotNull(actorState);
-        Master.State masterState = actorState.getAsObject(Master.State.class);
+        assertTrue(Master.State.class.isInstance(actorState));
+        Master.State masterState = (Master.State) actorState;
         assertNotNull(masterState);
         assertEquals(masterState.getListener(),listenerRef);
         assertEquals(masterState.getNrOfWorkers(),4);
@@ -172,7 +173,6 @@ public class PiApproximatorTest {
     @Test
     public void testInContainer() throws Exception {
         // make sure http system is loaded
-        testActorSystem.create(new HttpActorSystem());
         ActorSystem piSystem = testActorSystem.create(new PiApproximator("Pi",8));
 
         AsyncHttpClient httpClient = new AsyncHttpClient();

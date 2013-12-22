@@ -57,6 +57,11 @@
             <version>3.2.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>${reflections.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework</groupId>
@@ -101,55 +106,52 @@
           <version>${jackson.version}</version>
         </dependency>
 
-
-
-
     </dependencies>
     <build>
         <plugins>
             <plugin>
-                            <groupId>org.codehaus.mojo</groupId>
-                            <artifactId>aspectj-maven-plugin</artifactId>
-                            <version>1.5</version>
-                            <dependencies>
-                                <dependency>
-                                    <groupId>org.aspectj</groupId>
-                                    <artifactId>aspectjtools</artifactId>
-                                    <version>${aspectj.version}</version>
-                                </dependency>
-                                <dependency>
-                                    <groupId>org.aspectj</groupId>
-                                    <artifactId>aspectjweaver</artifactId>
-                                    <version>${aspectj.version}</version>
-                                </dependency>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>aspectj-maven-plugin</artifactId>
+                <version>1.5</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjtools</artifactId>
+                        <version>${aspectj.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjweaver</artifactId>
+                        <version>${aspectj.version}</version>
+                    </dependency>
 
-                            </dependencies>
-                            <configuration>
-                                <aspectLibraries combine.children="append">
-                                    <aspectLibrary>
-                                        <groupId>org.springframework</groupId>
-                                        <artifactId>spring-aspects</artifactId>
-                                    </aspectLibrary>
-                                </aspectLibraries>
-                                <complianceLevel>1.6</complianceLevel>
-                            </configuration>
-                            <executions>
-                                <execution>
-                                    <id>compile</id>
-                                    <phase>compile</phase>
-                                    <goals>
-                                        <goal>compile</goal>
-                                    </goals>
-                                </execution>
-                                <execution>
-                                    <id>test-compile</id>
-                                    <phase>test-compile</phase>
-                                    <goals>
-                                        <goal>test-compile</goal>
-                                    </goals>
-                                </execution>
-                            </executions>
-                        </plugin>
+                </dependencies>
+                <configuration>
+                    <aspectLibraries combine.children="append">
+                        <aspectLibrary>
+                            <groupId>org.springframework</groupId>
+                            <artifactId>spring-aspects</artifactId>
+                        </aspectLibrary>
+                    </aspectLibraries>
+                    <complianceLevel>1.7</complianceLevel>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!--
             <plugin>
                 <groupId>com.github.igor-petruk.protobuf</groupId>

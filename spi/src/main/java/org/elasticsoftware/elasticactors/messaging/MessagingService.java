@@ -18,9 +18,11 @@ package org.elasticsoftware.elasticactors.messaging;
 
 import org.elasticsoftware.elasticactors.PhysicalNode;
 
+import java.io.IOException;
+
 /**
  * @author Joost van de Wijgerd
  */
 public interface MessagingService {
-    void sendWireMessage(String queueName, byte[] serializedMessage, PhysicalNode receiver);
+    void sendWireMessage(String queueName, byte[] serializedMessage, PhysicalNode receiver) throws IOException;
 }

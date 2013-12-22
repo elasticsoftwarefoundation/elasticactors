@@ -20,6 +20,8 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessagingService;
 
+import java.io.IOException;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -45,7 +47,11 @@ public final class RemoteMessageQueue extends PersistentMessageQueue {
 
     @Override
     protected void doOffer(InternalMessage message) {
-        messagingService.sendWireMessage(getName(),message.toByteArray(),messageHandler.getPhysicalNode());
+        try {
+            messagingService.sendWireMessage(getName(),message.toByteArray(),messageHandler.getPhysicalNode());
+        } catch (IOException e) {
+            logger.error("IOException trying to send wire message",e);
+        }
     }
 
     @Override

@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.UntypedActor;
+import org.elasticsoftware.elasticactors.base.state.JacksonActorState;
 import org.elasticsoftware.elasticactors.examples.pi.messages.Calculate;
 import org.elasticsoftware.elasticactors.examples.pi.messages.PiApproximation;
 import org.elasticsoftware.elasticactors.examples.pi.messages.Result;
@@ -39,7 +40,7 @@ import java.util.Map;
 public final class  Master extends UntypedActor  {
     private static final Logger logger = Logger.getLogger(Master.class);
 
-    public static final class State {
+    public static final class State extends JacksonActorState<String,State> {
         private final ActorRef listener;
         private final int nrOfWorkers;
         private final int nrOfMessages;
@@ -133,6 +134,16 @@ public final class  Master extends UntypedActor  {
             this.calculations = calculations;
         }
 
+        @Override
+        public String getId() {
+            return null;
+        }
+
+        @Override
+        public State getBody() {
+            return this;
+        }
+
         @JsonProperty("listener")
         public ActorRef getListener() {
             return listener;
@@ -170,7 +181,7 @@ public final class  Master extends UntypedActor  {
 
     @Override
     public void postCreate(ActorRef creator) throws Exception {
-        State state = getState(null).getAsObject(State.class);
+        State state = getState(State.class);
         logger.info(String.format("Master.postCreate -> listener ref: %s",state.getListener()));
         List<ActorRef> workers = new ArrayList<ActorRef>(state.getNrOfWorkers());
         for (int i = 1; i <= state.getNrOfWorkers(); i++) {
@@ -181,13 +192,10 @@ public final class  Master extends UntypedActor  {
 
     @Override
     public void postActivate(String previousVersion) throws Exception {
-        ActorState state = getState(null);
-        // need to upgrade listener to be a service
-        state.getAsMap().put("listener",getSystem().serviceActorFor("pi/calculate").toString());
     }
 
     public void onReceive(ActorRef sender, Object message) {
-        State state = getState(null).getAsObject(State.class);
+        State state = getState(State.class);
         if (message instanceof Calculate) {
             logger.info("Starting calculation");
             Calculate calculateRequest = (Calculate) message;
