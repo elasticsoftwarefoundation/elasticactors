@@ -46,14 +46,14 @@ import static org.testng.Assert.assertNull;
 public class HttpActorSystemTest {
     private TestActorSystem testActorSystem;
 
-        @BeforeMethod
+        @BeforeMethod(enabled = false)
         public void setUp() {
             BasicConfigurator.resetConfiguration();
             BasicConfigurator.configure();
             testActorSystem = TestActorSystem.create();
         }
 
-        @AfterMethod
+        @AfterMethod(enabled =false)
         public void tearDown() {
             if(testActorSystem != null) {
                 testActorSystem.destroy();
@@ -62,7 +62,7 @@ public class HttpActorSystemTest {
             BasicConfigurator.resetConfiguration();
         }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     public void testInContainer() throws Exception {
         ActorSystemConfiguration configuration = mock(ActorSystemConfiguration.class);
         ActorSystem testSystem = testActorSystem.create(configuration);
@@ -94,7 +94,7 @@ public class HttpActorSystemTest {
         assertEquals(response.getStatusCode(),404);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testURIParsing() throws Exception {
         URI asbsoluteUri = new URI("http://localhost:8080/events/testing");
         assertNotNull(asbsoluteUri);
@@ -138,7 +138,7 @@ public class HttpActorSystemTest {
         waitLatch.await(1, TimeUnit.MINUTES);
     }*/
 
-    @Test(enabled = true)
+    @Test(enabled = false)
         public void testEventStreamingWithAsyncHttpClient() throws Exception {
         ActorSystemConfiguration configuration = mock(ActorSystemConfiguration.class);
                 ActorSystem testSystem = testActorSystem.create(configuration);

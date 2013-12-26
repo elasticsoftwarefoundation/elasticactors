@@ -44,14 +44,14 @@ public class GeoEventsActorSystemTest {
 
     private TestActorSystem testActorSystem;
 
-        @BeforeMethod
+        @BeforeMethod(enabled = false)
         public void setUp() {
             BasicConfigurator.resetConfiguration();
             BasicConfigurator.configure();
             testActorSystem = TestActorSystem.create();
         }
 
-        @AfterMethod
+        @AfterMethod(enabled = false)
         public void tearDown() {
             if(testActorSystem != null) {
                 testActorSystem.destroy();
@@ -60,7 +60,7 @@ public class GeoEventsActorSystemTest {
             BasicConfigurator.resetConfiguration();
         }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     public void testInContainer() throws Exception {
 
         /*ActorRef dispatcher = geoEventsSystem.serviceActorFor("geoEventsService");
@@ -96,7 +96,7 @@ public class GeoEventsActorSystemTest {
 
     }
 
-    @Test
+    @Test(enabled = false)
     public void testScanQuery() throws Exception {
         /*ActorSystem geoEventsSystem = testActorSystem.create(new GeoEventsActorSystem());
         ActorSystem testSystem = testActorSystem.create(new GeoEventsTestActorSystem());

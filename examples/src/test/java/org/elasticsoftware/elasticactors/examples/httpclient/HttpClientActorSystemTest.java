@@ -32,14 +32,14 @@ import org.testng.annotations.Test;
 public class HttpClientActorSystemTest {
     private TestActorSystem testActorSystem;
 
-        @BeforeMethod
+        @BeforeMethod(enabled = false)
         public void setUp() {
             BasicConfigurator.resetConfiguration();
             BasicConfigurator.configure();
             testActorSystem = TestActorSystem.create();
         }
 
-        @AfterMethod
+        @AfterMethod(enabled = false)
         public void tearDown() {
             if(testActorSystem != null) {
                 testActorSystem.destroy();
@@ -48,7 +48,7 @@ public class HttpClientActorSystemTest {
             BasicConfigurator.resetConfiguration();
         }
 
-    @Test
+    @Test(enabled = false)
     public void testInContainer() throws Exception {
         /*ActorSystem httpClientSystem = testActorSystem.create(new HttpClientActorSystem());
         ActorRef httpClientRef = httpClientSystem.serviceActorFor("httpClient");

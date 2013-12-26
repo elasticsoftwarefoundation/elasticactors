@@ -33,11 +33,13 @@ public class ActorRefToolsTest {
     public void testParseActorRef() {
         InternalActorSystems internalActorSystems = mock(InternalActorSystems.class);
         InternalActorSystem actorSystem = mock(InternalActorSystem.class);
+        ActorSystemConfiguration configuration = mock(ActorSystemConfiguration.class);
         ActorShard shard = mock(ActorShard.class);
         ShardKey shardKey = new ShardKey("Pi",0);
         when(internalActorSystems.getClusterName()).thenReturn("LocalNode");
         when(internalActorSystems.get("Pi")).thenReturn(actorSystem);
-        when(actorSystem.getConfiguration().getNumberOfShards()).thenReturn(1);
+        when(actorSystem.getConfiguration()).thenReturn(configuration);
+        when(configuration.getNumberOfShards()).thenReturn(1);
         when(actorSystem.getShard("Pi/shards/0")).thenReturn(shard);
         when(shard.getKey()).thenReturn(shardKey);
         ActorRef actorRef = ActorRefTools.parse("actor://LocalNode/Pi/shards/0/master",internalActorSystems);
@@ -50,11 +52,13 @@ public class ActorRefToolsTest {
     public void testParseShardRef() {
         InternalActorSystems internalActorSystems = mock(InternalActorSystems.class);
         InternalActorSystem actorSystem = mock(InternalActorSystem.class);
+        ActorSystemConfiguration configuration = mock(ActorSystemConfiguration.class);
         ActorShard shard = mock(ActorShard.class);
         ShardKey shardKey = new ShardKey("Pi",0);
         when(internalActorSystems.getClusterName()).thenReturn("LocalNode");
         when(internalActorSystems.get("Pi")).thenReturn(actorSystem);
-        when(actorSystem.getConfiguration().getNumberOfShards()).thenReturn(1);
+        when(actorSystem.getConfiguration()).thenReturn(configuration);
+        when(configuration.getNumberOfShards()).thenReturn(1);
         when(actorSystem.getShard("Pi/shards/0")).thenReturn(shard);
         when(shard.getKey()).thenReturn(shardKey);
         ActorRef actorRef = ActorRefTools.parse("actor://LocalNode/Pi/shards/0",internalActorSystems);

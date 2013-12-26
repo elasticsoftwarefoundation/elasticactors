@@ -56,14 +56,14 @@ import static org.testng.Assert.assertTrue;
 public class PiApproximatorTest {
     private TestActorSystem testActorSystem;
 
-    @BeforeMethod
+    @BeforeMethod(enabled = false)
     public void setUp() {
         BasicConfigurator.resetConfiguration();
         BasicConfigurator.configure();
         testActorSystem = TestActorSystem.create();
     }
 
-    @AfterMethod
+    @AfterMethod(enabled = false)
     public void tearDown() {
         if(testActorSystem != null) {
             testActorSystem.destroy();
@@ -72,7 +72,7 @@ public class PiApproximatorTest {
         BasicConfigurator.resetConfiguration();
     }
 
-    @Test
+    @Test(enabled = false)
     public void testMessageSerializers() throws IOException {
 
 /*
@@ -170,7 +170,7 @@ public class PiApproximatorTest {
 
     }
 
-    @Test
+    @Test(enabled = false)
     public void testInContainer() throws Exception {
         // make sure http system is loaded
 
