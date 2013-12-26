@@ -66,8 +66,8 @@
     <distributionManagement>
         <repository>
             <id>bintray</id>
-            <name>jwijgerd-maven-org.elasticsoftware.elasticactors</name>
-            <url>https://api.bintray.com/maven/jwijgerd/maven/org.elasticsoftware.elasticactors</url>
+            <name>elasticsoftwarefoundation-maven-org.elasticsoftware.elasticactors</name>
+            <url>https://api.bintray.com/maven/elasticsoftwarefoundation/maven/org.elasticsoftware.elasticactors</url>
         </repository>
     </distributionManagement>
 
@@ -241,19 +241,19 @@
                 </configuration>
             </plugin>
             <plugin>
-                  <artifactId>maven-release-plugin</artifactId>
-                  <version>2.4.2</version>
-                  <configuration>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.4.2</version>
+                <configuration>
                     <useReleaseProfile>false</useReleaseProfile>
                     <releaseProfiles>release</releaseProfiles>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
-                      <tagNameFormat>v@{project.version}</tagNameFormat>
-                      <!-- When running a release build from bamboo, maven forks the actual release build.
-                       To ensure the build number property is available, we need to pass it via the arguments.
-                       -->
-                      <arguments>-Dbuild.number=${build.number}</arguments>
-                  </configuration>
-                </plugin>
+                    <tagNameFormat>v@{project.version}</tagNameFormat>
+                    <!-- When running a release build from bamboo, maven forks the actual release build.
+                     To ensure the build number property is available, we need to pass it via the arguments.
+                     -->
+                    <arguments>-Dbuild.number=${build.number}</arguments>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
