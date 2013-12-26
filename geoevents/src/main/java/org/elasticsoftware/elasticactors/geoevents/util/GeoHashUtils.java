@@ -16,12 +16,9 @@
 
 package org.elasticsoftware.elasticactors.geoevents.util;
 
-import ch.hsr.geohash.BoundingBox;
 import ch.hsr.geohash.GeoHash;
 import org.elasticsoftware.elasticactors.geoevents.LengthUnit;
 
-import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 

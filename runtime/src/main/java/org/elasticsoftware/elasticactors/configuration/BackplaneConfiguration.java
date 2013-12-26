@@ -9,7 +9,6 @@ import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.factory.HFactory;
 import org.elasticsoftware.elasticactors.cassandra.state.CassandraPersistentActorRepository;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
-import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorSerializer;

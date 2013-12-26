@@ -17,16 +17,11 @@
 package org.elasticsoftware.elasticactors.base.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.MapType;
-import com.fasterxml.jackson.databind.type.SimpleType;
 import org.elasticsoftware.elasticactors.ActorState;
-import org.elasticsoftware.elasticactors.ActorStateFactory;
 import org.elasticsoftware.elasticactors.base.state.JacksonActorState;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Joost van de Wijgerd

@@ -22,8 +22,6 @@ import org.elasticsoftware.elasticactors.UntypedActor;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
-//import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorDeserializer;
-//import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorSerializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
@@ -35,6 +33,9 @@ import java.io.IOException;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.*;
+
+//import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorDeserializer;
+//import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorSerializer;
 
 /**
  * @author Joost van de Wijgerd

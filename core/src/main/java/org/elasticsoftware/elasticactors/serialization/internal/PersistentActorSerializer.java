@@ -17,16 +17,12 @@
 package org.elasticsoftware.elasticactors.serialization.internal;
 
 import com.google.protobuf.ByteString;
-import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ShardKey;
-import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
-import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 

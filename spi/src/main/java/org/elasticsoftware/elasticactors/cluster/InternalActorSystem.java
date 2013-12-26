@@ -20,8 +20,6 @@ import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 
-import java.util.List;
-
 /**
  * @author Joost van de Wijgerd
  */

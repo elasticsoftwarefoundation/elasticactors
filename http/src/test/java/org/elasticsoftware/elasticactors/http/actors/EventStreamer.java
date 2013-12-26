@@ -19,7 +19,10 @@ package org.elasticsoftware.elasticactors.http.actors;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.UntypedActor;
-import org.elasticsoftware.elasticactors.http.messages.*;
+import org.elasticsoftware.elasticactors.http.messages.HttpRequest;
+import org.elasticsoftware.elasticactors.http.messages.RegisterRouteMessage;
+import org.elasticsoftware.elasticactors.http.messages.ServerSentEvent;
+import org.elasticsoftware.elasticactors.http.messages.SseResponse;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;

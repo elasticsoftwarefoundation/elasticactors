@@ -20,7 +20,6 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.TempActor;
 import org.elasticsoftware.elasticactors.UntypedActor;
-import org.elasticsoftware.elasticactors.base.state.JacksonActorState;
 import org.elasticsoftware.elasticactors.http.messages.HttpResponse;
 import org.elasticsoftware.elasticactors.http.messages.ServerSentEvent;
 import org.elasticsoftware.elasticactors.http.messages.SseResponse;

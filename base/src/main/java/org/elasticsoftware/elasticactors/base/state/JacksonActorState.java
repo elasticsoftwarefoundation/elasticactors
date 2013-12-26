@@ -18,12 +18,7 @@ package org.elasticsoftware.elasticactors.base.state;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsoftware.elasticactors.ActorState;
-import org.elasticsoftware.elasticactors.base.serialization.JacksonActorStateDeserializer;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * @author Joost van de Wijgerd

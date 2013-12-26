@@ -17,7 +17,6 @@
 package org.elasticsoftware.elasticactors.cache;
 
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.NodeKey;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 

@@ -18,23 +18,10 @@ package org.elasticsoftware.elasticactors.geoevents;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ActorSystem;
-import org.elasticsoftware.elasticactors.geoevents.messages.ScanRequest;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
-import org.elasticsoftware.elasticactors.geoevents.actors.TestActor;
-import org.elasticsoftware.elasticactors.geoevents.messages.PublishLocation;
-import org.elasticsoftware.elasticactors.geoevents.messages.RegisterInterest;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
-import static org.testng.Assert.assertTrue;
 
 /**
  * @author Joost van de Wijgerd

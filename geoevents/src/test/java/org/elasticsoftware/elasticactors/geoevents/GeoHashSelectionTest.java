@@ -20,7 +20,7 @@ import ch.hsr.geohash.GeoHash;
 import org.elasticsoftware.elasticactors.geoevents.util.GeoHashUtils;
 import org.testng.annotations.Test;
 
-import java.util.*;
+import java.util.List;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;

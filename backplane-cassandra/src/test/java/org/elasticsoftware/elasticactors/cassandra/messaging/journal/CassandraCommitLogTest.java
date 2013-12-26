@@ -16,18 +16,11 @@
 
 package org.elasticsoftware.elasticactors.cassandra.messaging.journal;
 
-import org.elasticsoftware.elasticactors.messaging.CommitLog;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 
 /**
  * @author Joost van de Wijgerd

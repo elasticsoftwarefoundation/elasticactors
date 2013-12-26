@@ -17,10 +17,6 @@
 package org.elasticsoftware.elasticactors.examples.httpclient;
 
 import org.apache.log4j.BasicConfigurator;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ActorSystem;
-import org.elasticsoftware.elasticactors.examples.httpclient.actors.HttpResponseListener;
-import org.elasticsoftware.elasticactors.examples.httpclient.messages.HttpRequest;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;

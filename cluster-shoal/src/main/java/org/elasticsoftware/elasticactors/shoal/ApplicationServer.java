@@ -40,36 +40,19 @@
 
 package org.elasticsoftware.elasticactors.shoal;
 
-import com.sun.enterprise.ee.cms.core.CallBack;
-import com.sun.enterprise.ee.cms.core.GMSConstants;
-import com.sun.enterprise.ee.cms.core.GMSException;
-import com.sun.enterprise.ee.cms.core.GMSFactory;
-import com.sun.enterprise.ee.cms.core.GroupHandle;
-import com.sun.enterprise.ee.cms.core.GroupManagementService;
-import com.sun.enterprise.ee.cms.core.JoinedAndReadyNotificationSignal;
-import com.sun.enterprise.ee.cms.core.JoinNotificationSignal;
-import com.sun.enterprise.ee.cms.core.FailureNotificationSignal;
-import com.sun.enterprise.ee.cms.core.PlannedShutdownSignal;
-import com.sun.enterprise.ee.cms.core.AliveAndReadyView;
-import com.sun.enterprise.ee.cms.core.RejoinSubevent;
-import java.util.Date;
-import com.sun.enterprise.ee.cms.core.ServiceProviderConfigurationKeys;
-import com.sun.enterprise.ee.cms.core.Signal;
+import com.sun.enterprise.ee.cms.core.*;
+import com.sun.enterprise.ee.cms.impl.base.Utility;
+import com.sun.enterprise.ee.cms.impl.client.FailureNotificationActionFactoryImpl;
 import com.sun.enterprise.ee.cms.impl.client.JoinNotificationActionFactoryImpl;
 import com.sun.enterprise.ee.cms.impl.client.JoinedAndReadyNotificationActionFactoryImpl;
-import com.sun.enterprise.ee.cms.impl.client.FailureNotificationActionFactoryImpl;
 import com.sun.enterprise.ee.cms.impl.client.PlannedShutdownActionFactoryImpl;
 import com.sun.enterprise.ee.cms.impl.common.GroupManagementServiceImpl;
-import com.sun.enterprise.ee.cms.impl.base.Utility;
 import com.sun.enterprise.ee.cms.logging.GMSLogDomain;
 import com.sun.enterprise.ee.cms.spi.MemberStates;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

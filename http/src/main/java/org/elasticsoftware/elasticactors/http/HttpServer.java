@@ -30,8 +30,6 @@ import org.jboss.netty.handler.codec.http.*;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.HashMap;

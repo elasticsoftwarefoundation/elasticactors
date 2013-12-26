@@ -17,11 +17,7 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.apache.log4j.Logger;
-import org.elasticsoftware.elasticactors.ActorContainer;
-import org.elasticsoftware.elasticactors.ActorContainerRef;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ActorShard;
-import org.elasticsoftware.elasticactors.TypedActor;
+import org.elasticsoftware.elasticactors.*;
 
 /**
  * {@link org.elasticsoftware.elasticactors.ActorRef} that references an actor in the local cluster

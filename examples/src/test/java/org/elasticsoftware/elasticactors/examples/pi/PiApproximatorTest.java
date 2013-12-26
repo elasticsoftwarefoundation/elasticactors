@@ -16,39 +16,13 @@
 
 package org.elasticsoftware.elasticactors.examples.pi;
 
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.ListenableFuture;
-import com.ning.http.client.Response;
 import org.apache.log4j.BasicConfigurator;
-import org.elasticsoftware.elasticactors.*;
-import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
-import org.elasticsoftware.elasticactors.examples.pi.actors.Master;
-import org.elasticsoftware.elasticactors.examples.pi.messages.Calculate;
-import org.elasticsoftware.elasticactors.examples.pi.messages.PiApproximation;
-import org.elasticsoftware.elasticactors.examples.pi.messages.Result;
-import org.elasticsoftware.elasticactors.examples.pi.messages.Work;
-import org.elasticsoftware.elasticactors.serialization.Deserializer;
-import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
-import org.mockito.ArgumentCaptor;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.UUID;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 /**
  * @author Joost van de Wijgerd

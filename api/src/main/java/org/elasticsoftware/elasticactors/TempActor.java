@@ -2,7 +2,6 @@ package org.elasticsoftware.elasticactors;
 
 import org.elasticsoftware.elasticactors.state.NullActorState;
 
-import javax.inject.Named;
 import java.lang.annotation.*;
 
 /**

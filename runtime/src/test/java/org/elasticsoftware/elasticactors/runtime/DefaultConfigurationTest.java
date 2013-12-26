@@ -3,8 +3,6 @@ package org.elasticsoftware.elasticactors.runtime;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.elasticsoftware.elasticactors.http.actors.HttpService;
-import org.elasticsoftware.elasticactors.spring.AnnotationConfigApplicationContext;
-import org.springframework.context.ApplicationContext;
 import org.springframework.util.ResourceUtils;
 import org.testng.annotations.Test;
 

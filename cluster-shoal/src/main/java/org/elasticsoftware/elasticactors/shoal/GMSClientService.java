@@ -41,15 +41,14 @@
 package org.elasticsoftware.elasticactors.shoal;
 
 import com.sun.enterprise.ee.cms.core.*;
-import com.sun.enterprise.ee.cms.impl.client.*;
 import com.sun.enterprise.ee.cms.impl.base.DistributedStateCacheImpl;
+import com.sun.enterprise.ee.cms.impl.client.*;
 import com.sun.enterprise.ee.cms.logging.GMSLogDomain;
 
-import static java.lang.Thread.sleep;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.io.Serializable;
 
  /**
  * This is a mock object that exists to demonstrate a GMS client.

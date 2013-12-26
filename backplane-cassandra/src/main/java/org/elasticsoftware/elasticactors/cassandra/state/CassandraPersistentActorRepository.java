@@ -27,8 +27,6 @@ import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 
 

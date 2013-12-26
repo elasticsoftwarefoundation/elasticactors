@@ -32,8 +32,6 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.*;
-import org.elasticsoftware.elasticactors.dependencies.Graph;
-import org.elasticsoftware.elasticactors.dependencies.NodeValueListener;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
@@ -53,7 +51,6 @@ import org.springframework.util.ClassUtils;
 
 import java.lang.reflect.Constructor;
 import java.net.InetAddress;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
