@@ -12,6 +12,7 @@ import org.elasticsoftware.elasticactors.serialization.internal.SystemSerializer
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
+import javax.annotation.PreDestroy;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.List;
@@ -36,6 +37,11 @@ public class ElasticActorsNode implements PhysicalNode, InternalActorSystems, Ac
         this.clusterName = clusterName;
         this.nodeId = nodeId;
         this.nodeAddress = nodeAddress;
+    }
+
+    @PreDestroy
+    public void destroy() {
+        waitLatch.countDown();
     }
 
     public void join() {

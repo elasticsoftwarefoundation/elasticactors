@@ -35,6 +35,14 @@ public class ElasticActorsBootstrapper {
         applicationContext.scan(ScannerHelper.findBasePackages(CONFIGURATION_BASEPACKAGE));
         // load em up
         applicationContext.refresh();
+        // add shutdown hook
+        Runtime.getRuntime().addShutdownHook(new Thread("SHUTDOWN-HOOK") {
+            @Override
+            public void run() {
+                applicationContext.destroy();
+            }
+        }
+        );
     }
 
     public ElasticActorsNode getNode() {

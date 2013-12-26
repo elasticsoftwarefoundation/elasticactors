@@ -235,7 +235,7 @@
                     <!-- When running a release build from bamboo, maven forks the actual release build.
                      To ensure the build number property is available, we need to pass it via the arguments.
                      -->
-                    <arguments>-DskipTests</arguments>
+                    <arguments>--batch-mode -DskipTests</arguments>
                 </configuration>
             </plugin>
         </plugins>
