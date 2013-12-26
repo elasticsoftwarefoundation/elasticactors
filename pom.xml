@@ -52,10 +52,10 @@
     </properties>
 
     <scm>
-        <connection>scm:git:git@github.com:elasticsoftwarefoundation/elasticactors.git</connection>
-        <developerConnection>scm:git:git@github.com:elasticsoftwarefoundation/elasticactors.git
+        <connection>scm:git:ssh://git@github.com:elasticsoftwarefoundation/elasticactors.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:elasticsoftwarefoundation/elasticactors.git
         </developerConnection>
-        <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
+        <url>scm:git:ssh://git@github.com:elasticsoftwarefoundation/elasticactors.git</url>
         <tag>master</tag>
     </scm>
 
