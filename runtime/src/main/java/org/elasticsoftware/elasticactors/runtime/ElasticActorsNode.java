@@ -1,5 +1,8 @@
 package org.elasticsoftware.elasticactors.runtime;
 
+import com.sun.enterprise.ee.cms.core.*;
+import com.sun.enterprise.ee.cms.impl.client.*;
+import com.sun.enterprise.mgmt.transport.grizzly.GrizzlyConfigConstants;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.PhysicalNode;
@@ -12,10 +15,14 @@ import org.elasticsoftware.elasticactors.serialization.internal.SystemSerializer
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -31,6 +38,7 @@ public class ElasticActorsNode implements PhysicalNode, InternalActorSystems, Ac
     private final CountDownLatch waitLatch = new CountDownLatch(1);
     @Autowired
     private ApplicationContext applicationContext;
+    private GroupManagementService gms;
 
 
     public ElasticActorsNode(String clusterName, String nodeId, InetAddress nodeAddress) {
@@ -39,12 +47,62 @@ public class ElasticActorsNode implements PhysicalNode, InternalActorSystems, Ac
         this.nodeAddress = nodeAddress;
     }
 
+    @PostConstruct
+    public void init() throws GMSException {
+        gms = initializeGMS(nodeId, clusterName, nodeAddress.getHostAddress());
+        gms.join();
+        gms.updateMemberDetails(nodeId,"address",nodeAddress.getHostAddress());
+    }
+
     @PreDestroy
     public void destroy() {
+        gms.shutdown(GMSConstants.shutdownType.INSTANCE_SHUTDOWN);
         waitLatch.countDown();
     }
 
+    private Map<Serializable, Serializable> getMemberDetails(String memberToken) {
+        return gms.getMemberDetails(memberToken);
+    }
+
+    private GroupManagementService initializeGMS(String serverName,String groupName, String interfaceName) throws GMSException {
+        Properties props = new Properties();
+
+        props.setProperty(ServiceProviderConfigurationKeys.MULTICASTADDRESS.toString(),"229.9.1.1");
+        props.setProperty(GrizzlyConfigConstants.BIND_INTERFACE_NAME.toString(),interfaceName);
+
+        GroupManagementService gms =
+                (GroupManagementService) GMSFactory.startGMSModule(serverName,groupName,GroupManagementService.MemberType.CORE,props);
+
+
+        final CallBack gmsCallback = new CallBack() {
+            @Override
+            public void processNotification(Signal notification) {
+                logger.info(String.format("got signal [%s] from member [%s]",notification.getClass().getSimpleName(),notification.getMemberToken()));
+                if(notification instanceof JoinedAndReadyNotificationSignal) {
+                    logger.info("members: "+((JoinedAndReadyNotificationSignal)notification).getAllCurrentMembers().toString());
+                    for (String member : ((JoinedAndReadyNotificationSignal) notification).getAllCurrentMembers()) {
+                        logger.info(getMemberDetails(member).toString());
+                    }
+
+                }
+            }
+        };
+
+        //gms.addActionFactory(new FailureRecoveryActionFactoryImpl(gmsCallback));
+        gms.addActionFactory(new JoinNotificationActionFactoryImpl(gmsCallback));
+        gms.addActionFactory(new JoinedAndReadyNotificationActionFactoryImpl(gmsCallback));
+        gms.addActionFactory(new GroupLeadershipNotificationActionFactoryImpl(gmsCallback));
+        gms.addActionFactory(new FailureSuspectedActionFactoryImpl(gmsCallback));
+        gms.addActionFactory(new FailureNotificationActionFactoryImpl(gmsCallback));
+        gms.addActionFactory(new PlannedShutdownActionFactoryImpl(gmsCallback));
+
+        return gms;
+    }
+
     public void join() {
+        // send the cluster we're ready
+
+        gms.reportJoinedAndReadyState();
         //@todo: remove this once clustering is supported!
         List<PhysicalNode> clusterNodes = Arrays.asList((PhysicalNode)this);
         LocalActorSystemInstance instance = applicationContext.getBean(LocalActorSystemInstance.class);

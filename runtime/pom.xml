@@ -53,9 +53,14 @@
         </dependency>
         <dependency>
             <groupId>org.elasticsoftware.elasticactors</groupId>
-            <artifactId>elasticactors-http</artifactId>
+            <artifactId>elasticactors-base</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!--<dependency>
+            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <artifactId>elasticactors-http</artifactId>
+            <version>${project.version}</version>
+        </dependency>-->
         <dependency>
             <groupId>org.elasticsoftware.elasticactors</groupId>
             <artifactId>messaging-rabbitmq</artifactId>

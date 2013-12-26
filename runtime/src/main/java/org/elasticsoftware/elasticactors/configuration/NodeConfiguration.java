@@ -58,8 +58,8 @@ public class NodeConfiguration {
         configuration = objectMapper.readValue(configResource.getInputStream(), DefaultConfiguration.class);
         String nodeId = env.getRequiredProperty("ea.node.id");
         //@todo: fix node address
-        //InetAddress nodeAddress = InetAddress.getByName(env.getRequiredProperty("ea.node.address"));
-        InetAddress nodeAddress = null;
+        InetAddress nodeAddress = InetAddress.getByName(env.getRequiredProperty("ea.node.address"));
+        //InetAddress nodeAddress = null;
         String clusterName = env.getProperty("ea.cluster.name", "testcluster.elasticsoftware.org");
         node = new ElasticActorsNode(clusterName, nodeId,nodeAddress);
     }
