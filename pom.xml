@@ -244,14 +244,16 @@
                 <artifactId>maven-release-plugin</artifactId>
                 <version>2.4.2</version>
                 <configuration>
+                    <!--
                     <useReleaseProfile>false</useReleaseProfile>
                     <releaseProfiles>release</releaseProfiles>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
+                    -->
                     <tagNameFormat>v@{project.version}</tagNameFormat>
                     <!-- When running a release build from bamboo, maven forks the actual release build.
                      To ensure the build number property is available, we need to pass it via the arguments.
                      -->
-                    <arguments>-Dbuild.number=${build.number}</arguments>
+                    <!--<arguments>-Dbuild.number=${build.number}</arguments>-->
                 </configuration>
             </plugin>
         </plugins>
