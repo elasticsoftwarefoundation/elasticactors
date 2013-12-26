@@ -16,6 +16,9 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
+import com.google.common.base.Charsets;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
@@ -51,7 +54,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * @author Joost van de Wijgerd
  */
-@Configurable
 public final class LocalActorSystemInstance implements InternalActorSystem {
     private static final Logger logger = Logger.getLogger(LocalActorSystemInstance.class);
     private final ActorSystemConfiguration configuration;
@@ -60,7 +62,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private final ActorShardAdapter[] shardAdapters;
     private final NodeSelectorFactory nodeSelectorFactory;
     private final ConcurrentMap<Class, ElasticActor> actorInstances = new ConcurrentHashMap<Class, ElasticActor>();
-    private final KetamaHashAlgorithm hashAlgorithm = new KetamaHashAlgorithm();
     private final ActorSystems cluster;
     private MessageQueueFactory localMessageQueueFactory;
     private MessageQueueFactory remoteMessageQueueFactory;
@@ -71,6 +72,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private final ConcurrentMap<String, ActorNode> activeNodes = new ConcurrentHashMap<String, ActorNode>();
     private final ConcurrentMap<String, ActorNodeAdapter> activeNodeAdapters = new ConcurrentHashMap<String, ActorNodeAdapter>();
     private final ActorNodeAdapter localNodeAdapter;
+    private static final int SEED = 39384641;
+    private final HashFunction hasFunction = Hashing.murmur3_32(SEED);
 
     public LocalActorSystemInstance(PhysicalNode localNode, ActorSystems cluster, ActorSystemConfiguration actorSystem, NodeSelectorFactory nodeSelectorFactory) {
         this.configuration = actorSystem;
@@ -94,6 +97,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     @Override
     public ActorSystems getParent() {
         return cluster;
+    }
+
+    @Override
+    public ActorSystemConfiguration getConfiguration() {
+        return configuration;
     }
 
     public void shutdown() {
@@ -322,7 +330,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         return configuration.getName();
     }
 
-    @Override
+    //@Override
     public String getVersion() {
         return configuration.getVersion();
     }
@@ -365,7 +373,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     private ActorShard shardFor(String actorId) {
-        return shardAdapters[hashAlgorithm.hash(actorId).mod(BigInteger.valueOf(shards.length)).intValue()];
+        return shardAdapters[hasFunction.hashString(actorId, Charsets.UTF_8).asInt() % shards.length];
     }
 
 
@@ -394,26 +402,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         ActorRef sender = ActorContextHolder.getSelf();
         ActorContainer handlingContainer = ((ActorContainerRef) actorRef).get();
         handlingContainer.sendMessage(sender, handlingContainer.getActorRef(), new DestroyActorMessage(actorRef));
-    }
-
-    @Override
-    public ElasticActor getService(String serviceId) {
-        return configuration.getService(serviceId);
-    }
-
-    @Override
-    public Set<String> getServices() {
-        return configuration.getServices();
-    }
-
-    @Override
-    public String getStringProperty(Class component, String propertyName, String defaultValue) {
-        return configuration.getStringProperty(component,propertyName,defaultValue);
-    }
-
-    @Override
-    public Integer getIntegerProperty(Class component, String propertyName, int defaultValue) {
-        return configuration.getIntegerProperty(component,propertyName,defaultValue);
     }
 
     @Autowired
@@ -560,54 +548,5 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
             // should not be called on the adapter, just do nothing
         }
     }
-
-    public static final class KetamaHashAlgorithm {
-        private static final Charset UTF_8 = Charset.forName("UTF-8");
-        private final ConcurrentLinkedQueue<MessageDigest> digestCache = new ConcurrentLinkedQueue<MessageDigest>();
-
-        /**
-         * Compute the hash for the given key.
-         *
-         * @param k the key to hash
-         * @return a positive integer hash of 128 bits
-         */
-        public BigInteger hash(final String k) {
-            return new BigInteger(computeMd5(k)).abs();
-        }
-
-        /**
-         * Get the md5 of the given key.
-         *
-         * @param k the key to compute an MD5 on
-         * @return an MD5 hash
-         */
-        public byte[] computeMd5(String k) {
-            MessageDigest md5 = borrow();
-            try {
-                md5.reset();
-                md5.update(k.getBytes(UTF_8));
-                return md5.digest();
-            } finally {
-                release(md5);
-            }
-        }
-
-        private MessageDigest borrow() {
-            MessageDigest md5 = digestCache.poll();
-            if (md5 == null) {
-                try {
-                    md5 = MessageDigest.getInstance("MD5");
-                } catch (NoSuchAlgorithmException e) {
-                    throw new RuntimeException("MD5 not supported", e);
-                }
-            }
-            return md5;
-        }
-
-        private void release(MessageDigest digest) {
-            digestCache.offer(digest);
-        }
-    }
-
 
 }

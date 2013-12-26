@@ -1,57 +1,60 @@
 package org.elasticsoftware.elasticactors.runtime;
 
 import org.apache.log4j.Logger;
+import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.PhysicalNode;
-import org.reflections.util.ClasspathHelper;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.elasticsoftware.elasticactors.cluster.*;
+import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.internal.SystemDeserializers;
+import org.elasticsoftware.elasticactors.serialization.internal.SystemSerializers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.net.InetAddress;
-import java.net.URI;
-import java.net.URL;
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Set;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 /**
  * @author Joost van de Wijgerd
  */
-public class ElasticActorsNode implements PhysicalNode {
+public class ElasticActorsNode implements PhysicalNode, InternalActorSystems, ActorRefFactory {
     private static final Logger logger = Logger.getLogger(ElasticActorsNode.class);
-    public static final String RESOURCE_NAME = "META-INF/elasticactors.properties";
-    public static final String CONFIGURATION_BASEPACKAGE = "org.elasticsoftware.elasticactors.configuration";
-    private final String name;
-    private final InetAddress address;
+    private final String clusterName;
+    private final String nodeId;
+    private final InetAddress nodeAddress;
+    private final SystemSerializers systemSerializers = new SystemSerializers(this);
+    private final SystemDeserializers systemDeserializers = new SystemDeserializers(this);
     private final CountDownLatch waitLatch = new CountDownLatch(1);
-    private AnnotationConfigApplicationContext applicationContext;
+    @Autowired
+    private ApplicationContext applicationContext;
 
-    public static void main(String... args) {
-        // @todo: generate name once in the config directory
-        String name = args[0];
-        ElasticActorsNode node = new ElasticActorsNode(name,null);
-        node.init();
-        node.join();
-    }
 
-    public ElasticActorsNode(String name, InetAddress address) {
-        this.name = name;
-        this.address = address;
-    }
-
-    public void init() {
-        // annotation configuration context
-        applicationContext = new AnnotationConfigApplicationContext();
-        // set the correct configurations
-        //applicationContext.register();
-        // find all the paths to scan
-        applicationContext.scan(findBasePackages());
-        // load em up
-        applicationContext.refresh();
+    public ElasticActorsNode(String clusterName, String nodeId, InetAddress nodeAddress) {
+        this.clusterName = clusterName;
+        this.nodeId = nodeId;
+        this.nodeAddress = nodeAddress;
     }
 
     public void join() {
+        //@todo: remove this once clustering is supported!
+        List<PhysicalNode> clusterNodes = Arrays.asList((PhysicalNode)this);
+        LocalActorSystemInstance instance = applicationContext.getBean(LocalActorSystemInstance.class);
+        logger.info(String.format("Updating %d nodes for ActorSystem[%s]", clusterNodes.size(), instance.getName()));
+        try {
+            instance.updateNodes(clusterNodes);
+        } catch (Exception e) {
+            logger.error(String.format("ActorSystem[%s] failed to update nodes", instance.getName()), e);
+        }
+        logger.info(String.format("Rebalancing %d shards for ActorSystem[%s]", instance.getNumberOfShards(), instance.getName()));
+        try {
+            instance.distributeShards(clusterNodes);
+        } catch (Exception e) {
+            logger.error(String.format("ActorSystem[%s] failed to (re-)distribute shards", instance.getName()), e);
+        }
+
         try {
             waitLatch.await();
         } catch (InterruptedException e) {
@@ -59,22 +62,34 @@ public class ElasticActorsNode implements PhysicalNode {
         }
     }
 
-    private String[] findBasePackages() {
-        // scan everything for META-INF/elasticactors.properties
-        Set<String> basePackages = new HashSet<>();
-        // add the core configuration package
-        basePackages.add(CONFIGURATION_BASEPACKAGE);
-        Set<URL> resources = ClasspathHelper.forResource(RESOURCE_NAME);
-        for (URL resource : resources) {
-            try {
-                Properties props = new Properties();
-                props.load(new FileInputStream(new File(new URI(resource.toString()+RESOURCE_NAME))));
-                basePackages.add(props.getProperty("basePackage"));
-            } catch(Exception e) {
-                logger.warn(String.format("Failed to load elasticactors.properties from URL: %s",resource.toString()),e);
-            }
-        }
-        return basePackages.toArray(new String[basePackages.size()]);
+    @Override
+    public ActorRef create(String refSpec) {
+        return ActorRefTools.parse(refSpec, this);
+    }
+
+    @Override
+    public String getClusterName() {
+        return clusterName;
+    }
+
+    @Override
+    public InternalActorSystem get(String name) {
+        return applicationContext.getBean(InternalActorSystem.class);
+    }
+
+    @Override
+    public <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass) {
+        return systemSerializers.get(messageClass);
+    }
+
+    @Override
+    public <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass) {
+        return systemDeserializers.get(messageClass);
+    }
+
+    @Override
+    public SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass) {
+        return applicationContext.getBean(frameworkClass);
     }
 
     @Override
@@ -84,11 +99,13 @@ public class ElasticActorsNode implements PhysicalNode {
 
     @Override
     public String getId() {
-        return name;
+        return nodeId;
     }
 
     @Override
     public InetAddress getAddress() {
-        return address;
+        return nodeAddress;
     }
+
+
 }

@@ -2,10 +2,7 @@ package org.elasticsoftware.elasticactors.rabbitmq;
 
 import com.rabbitmq.client.*;
 import org.apache.log4j.Logger;
-import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.MessageHandler;
-import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
-import org.elasticsoftware.elasticactors.messaging.MessageQueue;
+import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 
 import java.io.IOException;
@@ -20,6 +17,7 @@ public class LocalMessageQueue extends DefaultConsumer implements MessageQueue {
     private final String exchangeName;
     private final String queueName;
     private final MessageHandler messageHandler;
+    private final TransientAck transientAck = new TransientAck();
 
     public LocalMessageQueue(Channel consumerChannel, Channel producerChannel, String exchangeName, String queueName, MessageHandler messageHandler) {
         super(consumerChannel);
@@ -33,14 +31,19 @@ public class LocalMessageQueue extends DefaultConsumer implements MessageQueue {
 
     @Override
     public boolean offer(InternalMessage message) {
-        // @todo: use the message properties to set the BasicProperties if necessary
-        try {
-            producerChannel.basicPublish(exchangeName, queueName,true,false,null,message.toByteArray());
+        if(TransientInternalMessage.class.isInstance(message)) {
+            this.messageHandler.handleMessage(message,transientAck);
             return true;
-        } catch (IOException e) {
-            // @todo: what to do with the message?
-            logger.error("IOException on publish",e);
-            return false;
+        } else {
+            // @todo: use the message properties to set the BasicProperties if necessary
+            try {
+                producerChannel.basicPublish(exchangeName, queueName,true,false,null,message.toByteArray());
+                return true;
+            } catch (IOException e) {
+                // @todo: what to do with the message?
+                logger.error("IOException on publish",e);
+                return false;
+            }
         }
     }
 
@@ -99,14 +102,14 @@ public class LocalMessageQueue extends DefaultConsumer implements MessageQueue {
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
         // get the body data
         InternalMessage message = InternalMessageDeserializer.get().deserialize(body);
-        messageHandler.handleMessage(message,new Ack(envelope,message));
+        messageHandler.handleMessage(message,new RabbitMQAck(envelope,message));
     }
 
-    private final class Ack implements MessageHandlerEventListener {
+    private final class RabbitMQAck implements MessageHandlerEventListener {
         private final Envelope envelope;
         private final InternalMessage message;
 
-        private Ack(Envelope envelope, InternalMessage message) {
+        private RabbitMQAck(Envelope envelope, InternalMessage message) {
             this.envelope = envelope;
             this.message = message;
         }
@@ -128,6 +131,19 @@ public class LocalMessageQueue extends DefaultConsumer implements MessageQueue {
             } catch (IOException e) {
                 logger.error("Exception while acking message",e);
             }
+        }
+    }
+
+    private final class TransientAck implements MessageHandlerEventListener {
+
+        @Override
+        public void onError(InternalMessage message, Throwable exception) {
+            logger.error(String.format("Error handling transient message, payloadClass [%s]",message.getPayloadClass()),exception);
+        }
+
+        @Override
+        public void onDone(InternalMessage message) {
+            // do nothing
         }
     }
 }

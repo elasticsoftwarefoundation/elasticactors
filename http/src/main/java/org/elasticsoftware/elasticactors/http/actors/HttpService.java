@@ -40,7 +40,7 @@ import java.util.concurrent.Executors;
 /**
  * @author Joost van de Wijgerd
  */
-@ServiceActor("httpServer")
+@ServiceActor(name = "httpServer")
 public final class HttpService extends UntypedActor {
     private static final Logger logger = Logger.getLogger(HttpService.class);
     private final ConcurrentMap<String,ActorRef> routes = new ConcurrentHashMap<String,ActorRef>();
@@ -61,7 +61,7 @@ public final class HttpService extends UntypedActor {
         ExecutorService workerExecutor = Executors.newCachedThreadPool(Executors.defaultThreadFactory());
         int workers = Runtime.getRuntime().availableProcessors();
         NioServerSocketChannelFactory channelFactory = new NioServerSocketChannelFactory(bossExecutor,workerExecutor,workers);
-        httpServer = new HttpServer(channelFactory, this, actorSystem , configuration.getIntegerProperty(this.getClass(),"listenPort",8080));
+        httpServer = new HttpServer(channelFactory, this, actorSystem , configuration.getProperty(this.getClass(),"listenPort",Integer.class,8080));
         httpServer.init();
     }
 

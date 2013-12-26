@@ -221,7 +221,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     private void createActor(CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         ActorRef ref = actorSystem.actorFor(createMessage.getActorId());
         PersistentActor persistentActor =
-                new PersistentActor(shardKey, actorSystem,actorSystem.getVersion(),
+                new PersistentActor(shardKey, actorSystem,actorSystem.getConfiguration().getVersion(),
                                     ref,
                                     (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass()),
                                     createMessage.getInitialState());

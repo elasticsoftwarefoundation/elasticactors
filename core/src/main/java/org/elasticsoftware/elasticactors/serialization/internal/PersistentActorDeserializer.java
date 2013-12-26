@@ -38,16 +38,11 @@ import java.io.IOException;
  */
 @Configurable
 public final class PersistentActorDeserializer implements Deserializer<byte[],PersistentActor<ShardKey>> {
-    private ActorRefFactory actorRefFactory;
-    private InternalActorSystems actorSystems;
+    private final ActorRefFactory actorRefFactory;
+    private final InternalActorSystems actorSystems;
 
-    @Autowired
-    public void setActorRefFactory(ActorRefFactory actorRefFactory) {
+    public PersistentActorDeserializer(ActorRefFactory actorRefFactory, InternalActorSystems actorSystems) {
         this.actorRefFactory = actorRefFactory;
-    }
-
-    @Autowired
-    public void setActorSystems(InternalActorSystems actorSystems) {
         this.actorSystems = actorSystems;
     }
 

@@ -56,8 +56,8 @@ public final class ActorRefTools {
                 }
                 if("shards".equals(components[2])) {
                     int shardId = Integer.parseInt(components[3]);
-                    if (shardId >= actorSystem.getNumberOfShards()) {
-                        throw new IllegalArgumentException(String.format("Unknown shard %d for ActorSystem %s. Available shards: %d", shardId, actorSystemName, actorSystem.getNumberOfShards()));
+                    if (shardId >= actorSystem.getConfiguration().getNumberOfShards()) {
+                        throw new IllegalArgumentException(String.format("Unknown shard %d for ActorSystem %s. Available shards: %d", shardId, actorSystemName, actorSystem.getConfiguration().getNumberOfShards()));
                     }
                     return new LocalClusterActorShardRef(clusterName, actorSystem.getShard(String.format("%s/shards/%d",actorSystemName,shardId)), actorId);
                 } else if("nodes".equals(components[2])) {

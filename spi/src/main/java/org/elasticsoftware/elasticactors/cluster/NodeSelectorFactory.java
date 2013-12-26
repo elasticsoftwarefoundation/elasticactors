@@ -24,6 +24,7 @@ import java.util.List;
  * @author Joost van de Wijgerd
  */
 public interface NodeSelectorFactory {
+
     NodeSelector create(List<PhysicalNode> nodes);
 
     void start() throws Exception;

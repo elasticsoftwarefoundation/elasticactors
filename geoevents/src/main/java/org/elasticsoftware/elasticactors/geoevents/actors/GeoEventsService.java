@@ -25,16 +25,12 @@ import org.elasticsoftware.elasticactors.geoevents.LengthUnit;
 import org.elasticsoftware.elasticactors.geoevents.messages.*;
 import org.elasticsoftware.elasticactors.geoevents.util.GeoHashUtils;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author Joost van de Wijgerd
  */
-@ServiceActor("geoEventsService")
+@ServiceActor(name = "geoEventsService")
 public final class GeoEventsService extends UntypedActor {
     public static final String REGIONS_FORMAT = "regions/%s";
 

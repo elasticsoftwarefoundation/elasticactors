@@ -13,5 +13,5 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Named
 public @interface ServiceActor {
-    String value() default "";
+    String name() default "";
 }

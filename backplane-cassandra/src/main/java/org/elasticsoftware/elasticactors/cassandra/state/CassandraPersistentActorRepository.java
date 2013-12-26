@@ -67,18 +67,15 @@ public final class CassandraPersistentActorRepository implements PersistentActor
         }
     }
 
-    @Inject
-    public void setColumnFamilyTemplate(@Named("persistentActorsColumnFamilyTemplate") ColumnFamilyTemplate<String, String> columnFamilyTemplate) {
+    public void setColumnFamilyTemplate(ColumnFamilyTemplate<String, String> columnFamilyTemplate) {
         this.columnFamilyTemplate = columnFamilyTemplate;
     }
 
-    @Inject
-    public void setDeserializer(@Named("persistentActorDeserializer") Deserializer<byte[], PersistentActor> deserializer) {
+    public void setDeserializer(Deserializer deserializer) {
         this.deserializer = deserializer;
     }
 
-    @Inject
-    public void setSerializer(@Named("persistentActorSerializer") Serializer<PersistentActor, byte[]> serializer) {
+    public void setSerializer(Serializer serializer) {
         this.serializer = serializer;
     }
 }

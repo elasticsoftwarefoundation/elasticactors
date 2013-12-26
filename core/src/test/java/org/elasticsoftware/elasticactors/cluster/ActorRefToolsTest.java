@@ -37,7 +37,7 @@ public class ActorRefToolsTest {
         ShardKey shardKey = new ShardKey("Pi",0);
         when(internalActorSystems.getClusterName()).thenReturn("LocalNode");
         when(internalActorSystems.get("Pi")).thenReturn(actorSystem);
-        when(actorSystem.getNumberOfShards()).thenReturn(1);
+        when(actorSystem.getConfiguration().getNumberOfShards()).thenReturn(1);
         when(actorSystem.getShard("Pi/shards/0")).thenReturn(shard);
         when(shard.getKey()).thenReturn(shardKey);
         ActorRef actorRef = ActorRefTools.parse("actor://LocalNode/Pi/shards/0/master",internalActorSystems);
@@ -54,7 +54,7 @@ public class ActorRefToolsTest {
         ShardKey shardKey = new ShardKey("Pi",0);
         when(internalActorSystems.getClusterName()).thenReturn("LocalNode");
         when(internalActorSystems.get("Pi")).thenReturn(actorSystem);
-        when(actorSystem.getNumberOfShards()).thenReturn(1);
+        when(actorSystem.getConfiguration().getNumberOfShards()).thenReturn(1);
         when(actorSystem.getShard("Pi/shards/0")).thenReturn(shard);
         when(shard.getKey()).thenReturn(shardKey);
         ActorRef actorRef = ActorRefTools.parse("actor://LocalNode/Pi/shards/0",internalActorSystems);

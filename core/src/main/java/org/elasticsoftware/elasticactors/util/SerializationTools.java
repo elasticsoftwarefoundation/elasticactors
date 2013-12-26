@@ -32,21 +32,16 @@ import java.io.IOException;
 public final class SerializationTools {
     public static Object deserializeMessage(InternalActorSystem actorSystem,InternalMessage internalMessage) throws Exception {
         Class<?> messageClass = Class.forName(internalMessage.getPayloadClass());
-        Message messageAnnotation = messageClass.getAnnotation(Message.class);
-        if(messageAnnotation != null) {
-            MessageDeserializer<?> deserializer = actorSystem.getParent().getSerializationFramework(messageAnnotation.serializationFramework()).getDeserializer(messageClass);
-            if(deserializer != null) {
-                return internalMessage.getPayload(deserializer);
-            } else {
-                //@todo: throw a more targeted exception
-                throw new Exception(String.format("No Deserializer found for Message class %s in ActorSystem [%s]",
-                                                        internalMessage.getPayloadClass(),actorSystem.getName()));
-            }
+        MessageDeserializer<?> deserializer = actorSystem.getDeserializer(messageClass);
+
+        if(deserializer != null) {
+            return internalMessage.getPayload(deserializer);
         } else {
             //@todo: throw a more targeted exception
-            throw new Exception(String.format("@Message annotation not found on class %s in ActorSystem [%s]",
-                                               internalMessage.getPayloadClass(),actorSystem.getName()));
+            throw new Exception(String.format("No Deserializer found for Message class %s in ActorSystem [%s]",
+                                              internalMessage.getPayloadClass(),actorSystem.getName()));
         }
+
     }
 
     public static ActorState deserializeActorState(ActorSystems actorSystems,Class<? extends ElasticActor> actorClass, byte[] serializedState) throws IOException {

@@ -21,6 +21,7 @@ import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.serialization.*;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -36,6 +37,7 @@ public class JacksonSerializationFramework implements SerializationFramework {
     private final JacksonActorStateSerializer actorStateSerializer;
     private final JacksonActorStateDeserializer actorStateDeserializer;
 
+    @Inject
     public JacksonSerializationFramework(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
         this.serializer = new JacksonMessageSerializer(objectMapper);

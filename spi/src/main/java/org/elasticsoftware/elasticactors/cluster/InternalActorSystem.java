@@ -25,7 +25,10 @@ import java.util.List;
 /**
  * @author Joost van de Wijgerd
  */
-public interface InternalActorSystem extends ActorSystem, ActorSystemConfiguration {
+public interface InternalActorSystem extends ActorSystem {
+
+    ActorSystemConfiguration getConfiguration();
+
     /**
      * Return the singleton instance of an {@link ElasticActor}
      *

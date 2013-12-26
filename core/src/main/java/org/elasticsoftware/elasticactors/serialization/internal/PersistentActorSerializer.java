@@ -34,11 +34,10 @@ import java.io.IOException;
  * @author Joost van de Wijgerd
  */
 public final class PersistentActorSerializer implements Serializer<PersistentActor<ShardKey>,byte[]> {
-    private static final PersistentActorSerializer INSTANCE = new PersistentActorSerializer();
-    private InternalActorSystems actorSystems;
+    private final InternalActorSystems actorSystems;
 
-    public static PersistentActorSerializer get() {
-        return INSTANCE;
+    public PersistentActorSerializer(InternalActorSystems actorSystems) {
+        this.actorSystems = actorSystems;
     }
 
     @Override
@@ -57,10 +56,5 @@ public final class PersistentActorSerializer implements Serializer<PersistentAct
 
     private byte[] getSerializedState(PersistentActor<ShardKey> persistentActor) throws IOException {
         return SerializationTools.serializeActorState(actorSystems,persistentActor.getActorClass(),persistentActor.getState());
-    }
-
-    @Autowired
-    public void setActorSystems(InternalActorSystems actorSystems) {
-        this.actorSystems = actorSystems;
     }
 }

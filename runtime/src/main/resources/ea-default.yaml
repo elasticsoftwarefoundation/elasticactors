@@ -1,0 +1,6 @@
+---
+name: default
+shards: 8
+elasticactors.http.actors.HttpService:
+  listenPort: 8080
+

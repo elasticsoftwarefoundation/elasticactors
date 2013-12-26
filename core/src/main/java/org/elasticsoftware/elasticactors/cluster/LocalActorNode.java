@@ -201,7 +201,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
         PersistentActor<NodeKey> persistentActor =
                 new PersistentActor<NodeKey>(nodeKey,
                                        actorSystem,
-                                       actorSystem.getVersion(),
+                                       actorSystem.getConfiguration().getVersion(),
                                        ref,
                                        (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass()),
                                        createMessage.getInitialState());
@@ -218,7 +218,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     }
 
     private void activateService(ActivateActorMessage activateActorMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) {
-        ElasticActor serviceActor = actorSystem.getService(activateActorMessage.getActorId());
+        ElasticActor serviceActor = actorSystem.getConfiguration().getService(activateActorMessage.getActorId());
         ActorRef serviceRef = actorSystem.serviceActorFor(activateActorMessage.getActorId());
 
         actorExecutor.execute(new ActivateServiceActorTask(actorSystem,serviceRef,serviceActor,internalMessage,messageHandlerEventListener));

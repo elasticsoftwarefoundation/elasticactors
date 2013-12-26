@@ -60,16 +60,31 @@ public interface ActorSystemConfiguration {
     Set<String> getServices();
 
     /**
-     * Return the String value of the given property, namespaced on the component class
-     *
-     * @param component
-     * @param propertyName
-     * @param defaultValue
-     * @return
+     * Return the property value associated with the given key, or {@code null}
+     * if the key cannot be resolved.
+     * @param key the property name to resolve
+     * @param targetType the expected type of the property value
+     * @see #getRequiredProperty(Class, String, Class)
      */
-    String getStringProperty(Class component,String propertyName,String defaultValue);
+    <T> T getProperty(Class component,String key, Class<T> targetType);
 
-    Integer getIntegerProperty(Class component, String propertyName, int defaultValue);
+    /**
+     * Return the property value associated with the given key, or
+     * {@code defaultValue} if the key cannot be resolved.
+     * @param key the property name to resolve
+     * @param targetType the expected type of the property value
+     * @param defaultValue the default value to return if no value is found
+     * @see #getRequiredProperty(Class,String, Class)
+     */
+    <T> T getProperty(Class component,String key, Class<T> targetType, T defaultValue);
+
+   	/**
+   	 * Return the property value associated with the given key, converted to the given
+   	 * targetType (never {@code null}).
+   	 * @throws IllegalStateException if the given key cannot be resolved
+   	 */
+   	<T> T getRequiredProperty(Class component,String key, Class<T> targetType) throws IllegalStateException;
+
 }
 
 

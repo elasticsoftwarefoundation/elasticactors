@@ -27,15 +27,13 @@ import org.jboss.netty.handler.codec.http.HttpMethod;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.inject.Inject;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 /**
  * @author Joost van de Wijgerd
  */
-@ServiceActor("httpClient")
+@ServiceActor(name = "httpClient")
 public final class HttpClientService extends TypedActor<HttpRequest> {
     private static final Logger logger = Logger.getLogger(HttpClientService.class);
     private AsyncHttpClient httpClient;
