@@ -10,14 +10,13 @@ import java.util.List;
  * @author Joost van de Wijgerd
  */
 public final class HashingNodeSelector implements NodeSelector {
-    private static final int SEED = 156788472;
-    private static final int REPLICAS = 256;
+    private static final int REPLICAS = 128;
     private final ConsistentHash<PhysicalNode> consistentHash;
     private final List<PhysicalNode> allNodes;
 
     public HashingNodeSelector(List<PhysicalNode> nodes) {
-        final HashFunction hashFunction = Hashing.murmur3_128(SEED);
-        consistentHash = new ConsistentHash<PhysicalNode>(hashFunction,REPLICAS,nodes);
+        final HashFunction hashFunction = Hashing.murmur3_128();
+        consistentHash = new ConsistentHash<>(hashFunction,REPLICAS,nodes);
         allNodes = nodes;
     }
 

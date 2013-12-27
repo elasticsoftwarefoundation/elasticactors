@@ -66,8 +66,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private final ConcurrentMap<String, ActorNode> activeNodes = new ConcurrentHashMap<String, ActorNode>();
     private final ConcurrentMap<String, ActorNodeAdapter> activeNodeAdapters = new ConcurrentHashMap<String, ActorNodeAdapter>();
     private final ActorNodeAdapter localNodeAdapter;
-    private static final int SEED = 39384641;
-    private final HashFunction hasFunction = Hashing.murmur3_32(SEED);
+    private final HashFunction hashFunction = Hashing.murmur3_32();
 
     public LocalActorSystemInstance(PhysicalNode localNode, ActorSystems cluster, ActorSystemConfiguration actorSystem, NodeSelectorFactory nodeSelectorFactory) {
         this.configuration = actorSystem;
@@ -367,7 +366,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     private ActorShard shardFor(String actorId) {
-        return shardAdapters[hasFunction.hashString(actorId, Charsets.UTF_8).asInt() % shards.length];
+        return shardAdapters[hashFunction.hashString(actorId, Charsets.UTF_8).asInt() % shards.length];
     }
 
 

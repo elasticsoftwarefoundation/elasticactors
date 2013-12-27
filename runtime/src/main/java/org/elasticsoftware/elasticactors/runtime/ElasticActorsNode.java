@@ -12,18 +12,20 @@ import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.internal.SystemDeserializers;
 import org.elasticsoftware.elasticactors.serialization.internal.SystemSerializers;
+import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetAddress;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Joost van de Wijgerd
@@ -39,6 +41,8 @@ public class ElasticActorsNode implements PhysicalNode, InternalActorSystems, Ac
     @Autowired
     private ApplicationContext applicationContext;
     private GroupManagementService gms;
+
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("CLUSTER_SCHEDULER"));
 
 
     public ElasticActorsNode(String clusterName, String nodeId, InetAddress nodeAddress) {
@@ -79,11 +83,11 @@ public class ElasticActorsNode implements PhysicalNode, InternalActorSystems, Ac
             public void processNotification(Signal notification) {
                 logger.info(String.format("got signal [%s] from member [%s]",notification.getClass().getSimpleName(),notification.getMemberToken()));
                 if(notification instanceof JoinedAndReadyNotificationSignal) {
-                    logger.info("members: "+((JoinedAndReadyNotificationSignal)notification).getAllCurrentMembers().toString());
-                    for (String member : ((JoinedAndReadyNotificationSignal) notification).getAllCurrentMembers()) {
-                        logger.info(getMemberDetails(member).toString());
-                    }
-
+                    fireTopologyChanged(((JoinedAndReadyNotificationSignal)notification).getCurrentView());
+                } else if(notification instanceof PlannedShutdownSignal) {
+                    fireTopologyChanged(((PlannedShutdownSignal)notification).getCurrentView());
+                } else if(notification instanceof FailureNotificationSignal) {
+                    fireTopologyChanged(((FailureNotificationSignal) notification).getCurrentView());
                 }
             }
         };
@@ -99,25 +103,40 @@ public class ElasticActorsNode implements PhysicalNode, InternalActorSystems, Ac
         return gms;
     }
 
+    private void fireTopologyChanged(AliveAndReadyView currentView) {
+        List<String> coreMembers = gms.getGroupHandle().getCurrentCoreMembers();
+        //AliveAndReadyView coreView = gms.getGroupHandle().getCurrentAliveAndReadyCoreView();
+        logger.info("fireTopologyChanged members in view: "+coreMembers.toString());
+        try {
+            // @todo: keep track of the previous schedule and cancel it if possible
+            //scheduledExecutorService.schedule(new RebalancingRunnable(convert(coreMembers)),5, TimeUnit.SECONDS);
+            scheduledExecutorService.submit(new RebalancingRunnable(convert(coreMembers)));
+        } catch (IOException e) {
+            //@todo: do a clean shutdown here
+            logger.error("Exception on fireTopologyChanged -> Aborting",e);
+        }
+    }
+
+    private List<PhysicalNode> convert(List<String> coreMembers) throws IOException {
+        List<PhysicalNode> clusterNodes = new LinkedList<>();
+        for (String member : coreMembers) {
+            if(nodeId.equals(member)) {
+                clusterNodes.add(new PhysicalNodeImpl(nodeId,nodeAddress,true));
+            } else {
+                InetAddress address = InetAddress.getByName((String) gms.getMemberDetails(member).get("address"));
+                clusterNodes.add(new PhysicalNodeImpl(member,address,false));
+            }
+        }
+        return clusterNodes;
+    }
+
     public void join() {
         // send the cluster we're ready
 
         gms.reportJoinedAndReadyState();
         //@todo: remove this once clustering is supported!
         List<PhysicalNode> clusterNodes = Arrays.asList((PhysicalNode)this);
-        LocalActorSystemInstance instance = applicationContext.getBean(LocalActorSystemInstance.class);
-        logger.info(String.format("Updating %d nodes for ActorSystem[%s]", clusterNodes.size(), instance.getName()));
-        try {
-            instance.updateNodes(clusterNodes);
-        } catch (Exception e) {
-            logger.error(String.format("ActorSystem[%s] failed to update nodes", instance.getName()), e);
-        }
-        logger.info(String.format("Rebalancing %d shards for ActorSystem[%s]", instance.getNumberOfShards(), instance.getName()));
-        try {
-            instance.distributeShards(clusterNodes);
-        } catch (Exception e) {
-            logger.error(String.format("ActorSystem[%s] failed to (re-)distribute shards", instance.getName()), e);
-        }
+
 
         try {
             waitLatch.await();
@@ -169,6 +188,31 @@ public class ElasticActorsNode implements PhysicalNode, InternalActorSystems, Ac
     @Override
     public InetAddress getAddress() {
         return nodeAddress;
+    }
+
+    private final class RebalancingRunnable implements Runnable {
+        private final List<PhysicalNode> clusterNodes;
+
+        private RebalancingRunnable(List<PhysicalNode> clusterNodes) {
+            this.clusterNodes = clusterNodes;
+        }
+
+        @Override
+        public void run() {
+            LocalActorSystemInstance instance = applicationContext.getBean(LocalActorSystemInstance.class);
+            logger.info(String.format("Updating %d nodes for ActorSystem[%s]", clusterNodes.size(), instance.getName()));
+            try {
+                instance.updateNodes(clusterNodes);
+            } catch (Exception e) {
+                logger.error(String.format("ActorSystem[%s] failed to update nodes", instance.getName()), e);
+            }
+            logger.info(String.format("Rebalancing %d shards for ActorSystem[%s]", instance.getNumberOfShards(), instance.getName()));
+            try {
+                instance.distributeShards(clusterNodes);
+            } catch (Exception e) {
+                logger.error(String.format("ActorSystem[%s] failed to (re-)distribute shards", instance.getName()), e);
+            }
+        }
     }
 
 
