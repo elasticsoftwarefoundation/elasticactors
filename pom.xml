@@ -19,7 +19,7 @@
 
     <groupId>org.elasticsoftware.elasticactors</groupId>
     <artifactId>elasticactors-parent</artifactId>
-    <version>0.1.4-SNAPSHOT</version>
+    <version>0.1.4</version>
 
     <packaging>pom</packaging>
 
@@ -55,7 +55,7 @@
         <developerConnection>scm:git:git@github.com:elasticsoftwarefoundation/elasticactors.git
         </developerConnection>
         <url>shttp://git@github.com/elasticsoftwarefoundation/elasticactors</url>
-        <tag>HEAD</tag>
+        <tag>v0.1.4</tag>
     </scm>
 
     <!--
@@ -235,7 +235,7 @@
                     <!-- When running a release build from bamboo, maven forks the actual release build.
                      To ensure the build number property is available, we need to pass it via the arguments.
                      -->
-                    <arguments>--batch-mode -DskipTests</arguments>
+                    <arguments>-DskipTests</arguments>
                 </configuration>
             </plugin>
         </plugins>
