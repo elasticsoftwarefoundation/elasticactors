@@ -172,7 +172,23 @@
                     <jvm>/usr/bin/java</jvm>
                 </configuration>
             </plugin>
-
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-source-plugin</artifactId>
+              <version>2.2.1</version>
+              <executions>
+                  <execution>
+                      <id>attach-source</id>
+                      <phase>package</phase>
+                      <goals>
+                          <goal>jar</goal>
+                      </goals>
+                      <configuration>
+                          <attach>true</attach>
+                      </configuration>
+                  </execution>
+              </executions>
+          </plugin>
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
