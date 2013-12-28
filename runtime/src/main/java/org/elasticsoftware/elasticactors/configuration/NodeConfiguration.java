@@ -35,10 +35,7 @@ import java.net.InetAddress;
 /**
  * @author Joost van de Wijgerd
  */
-@Configuration
-@EnableSpringConfigured
-@PropertySource(value = "file:/etc/elasticactors/system.properties")
-@Import(value = {MessagingConfiguration.class,BackplaneConfiguration.class})
+
 public class NodeConfiguration {
     @Autowired
     private Environment env;
