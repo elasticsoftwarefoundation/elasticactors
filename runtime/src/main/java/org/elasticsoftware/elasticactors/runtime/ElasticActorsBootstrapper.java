@@ -8,7 +8,7 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 /**
  * @author Joost van de Wijgerd
  */
-public class ElasticActorsBootstrapper {
+public final class ElasticActorsBootstrapper {
 
 
     public static final String CONFIGURATION_BASEPACKAGE = "org.elasticsoftware.elasticactors.configuration";
@@ -32,7 +32,7 @@ public class ElasticActorsBootstrapper {
         // ensure the EA annotations are scanned
         applicationContext.addIncludeFilters(new AnnotationTypeFilter(ServiceActor.class));
         // find all the paths to scan
-        applicationContext.scan(ScannerHelper.findBasePackages(CONFIGURATION_BASEPACKAGE));
+        applicationContext.scan(ScannerHelper.findBasePackagesOnClasspath(CONFIGURATION_BASEPACKAGE));
         // load em up
         applicationContext.refresh();
         // add shutdown hook

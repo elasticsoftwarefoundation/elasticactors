@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author Joost van de Wijgerd
  */
-public class ElasticActorsNode implements PhysicalNode, InternalActorSystems, ActorRefFactory {
+public final class ElasticActorsNode implements PhysicalNode, InternalActorSystems, ActorRefFactory {
     private static final Logger logger = Logger.getLogger(ElasticActorsNode.class);
     private final String clusterName;
     private final String nodeId;
@@ -60,7 +60,7 @@ public class ElasticActorsNode implements PhysicalNode, InternalActorSystems, Ac
 
     @PreDestroy
     public void destroy() {
-        gms.shutdown(GMSConstants.shutdownType.INSTANCE_SHUTDOWN);
+        reportPlannedShutdown();
         waitLatch.countDown();
     }
 
@@ -132,17 +132,21 @@ public class ElasticActorsNode implements PhysicalNode, InternalActorSystems, Ac
 
     public void join() {
         // send the cluster we're ready
-
-        gms.reportJoinedAndReadyState();
-        //@todo: remove this once clustering is supported!
-        List<PhysicalNode> clusterNodes = Arrays.asList((PhysicalNode)this);
-
+        reportReady();
 
         try {
             waitLatch.await();
         } catch (InterruptedException e) {
             //
         }
+    }
+
+    public void reportReady() {
+        gms.reportJoinedAndReadyState();
+    }
+
+    public void reportPlannedShutdown() {
+        gms.shutdown(GMSConstants.shutdownType.INSTANCE_SHUTDOWN);
     }
 
     @Override

@@ -20,14 +20,14 @@ import java.util.Set;
  * @author Joost van de Wijgerd
  */
 @Named
-public class MessagesScanner {
+public final class MessagesScanner {
     private static final Logger logger = Logger.getLogger(MessagesScanner.class);
     @Inject
     private ApplicationContext applicationContext;
 
     @PostConstruct
     public void init() {
-        String[] basePackages = ScannerHelper.findBasePackages();
+        String[] basePackages = ScannerHelper.findBasePackagesOnClasspath(applicationContext.getClassLoader());
         ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
 
         for (String basePackage : basePackages) {
