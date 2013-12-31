@@ -4,6 +4,8 @@ import com.rabbitmq.client.*;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import java.io.IOException;
 
@@ -18,9 +20,11 @@ public class LocalMessageQueue extends DefaultConsumer implements MessageQueue {
     private final String queueName;
     private final MessageHandler messageHandler;
     private final TransientAck transientAck = new TransientAck();
+    private final ThreadBoundExecutor<String> queueExecutor;
 
-    public LocalMessageQueue(Channel consumerChannel, Channel producerChannel, String exchangeName, String queueName, MessageHandler messageHandler) {
+    public LocalMessageQueue(ThreadBoundExecutor<String> queueExecutor, Channel consumerChannel, Channel producerChannel, String exchangeName, String queueName, MessageHandler messageHandler) {
         super(consumerChannel);
+        this.queueExecutor = queueExecutor;
         this.consumerChannel = consumerChannel;
         this.producerChannel = producerChannel;
         this.exchangeName = exchangeName;
@@ -30,9 +34,10 @@ public class LocalMessageQueue extends DefaultConsumer implements MessageQueue {
     }
 
     @Override
-    public boolean offer(InternalMessage message) {
+    public boolean offer(final InternalMessage message) {
         if(TransientInternalMessage.class.isInstance(message)) {
-            this.messageHandler.handleMessage(message,transientAck);
+            // execute on a seperate (thread bound) executor
+            queueExecutor.execute(new InternalMessageHandler(queueName,message,messageHandler,transientAck,logger));
             return true;
         } else {
             // @todo: use the message properties to set the BasicProperties if necessary
@@ -101,8 +106,39 @@ public class LocalMessageQueue extends DefaultConsumer implements MessageQueue {
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
         // get the body data
-        InternalMessage message = InternalMessageDeserializer.get().deserialize(body);
-        messageHandler.handleMessage(message,new RabbitMQAck(envelope,message));
+        final InternalMessage message = InternalMessageDeserializer.get().deserialize(body);
+        // execute on seperate (thread bound) executor
+        queueExecutor.execute(new InternalMessageHandler(queueName,message,messageHandler,new RabbitMQAck(envelope,message),logger));
+    }
+
+    private static final class InternalMessageHandler implements ThreadBoundRunnable<String> {
+        private final String queueName;
+        private final InternalMessage message;
+        private final MessageHandler messageHandler;
+        private final MessageHandlerEventListener listener;
+        private final Logger logger;
+
+        private InternalMessageHandler(String queueName, InternalMessage message, MessageHandler messageHandler, MessageHandlerEventListener listener, Logger logger) {
+            this.queueName = queueName;
+            this.message = message;
+            this.messageHandler = messageHandler;
+            this.listener = listener;
+            this.logger = logger;
+        }
+
+        @Override
+        public String getKey() {
+            return queueName;
+        }
+
+        @Override
+        public void run() {
+            try {
+                messageHandler.handleMessage(message,listener);
+            } catch(Exception e) {
+                logger.error("Unexpected exception on #handleMessage",e);
+            }
+        }
     }
 
     private final class RabbitMQAck implements MessageHandlerEventListener {

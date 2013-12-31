@@ -6,6 +6,9 @@ import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
+import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -18,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertTrue;
 
 /**
  * @author Joost van de Wijgerd
@@ -51,7 +55,9 @@ public class RabbitMQMessagingServiceTest {
 
     @Test
     public void testAllLocal() throws Exception {
-        RabbitMQMessagingService messagingService = new RabbitMQMessagingService(CLUSTER_NAME,"mq001,mq002");
+        int workers = Runtime.getRuntime().availableProcessors() * 3;
+        ThreadBoundExecutor<String> queueExecutor = new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
+        RabbitMQMessagingService messagingService = new RabbitMQMessagingService(CLUSTER_NAME,"mq001,mq002", queueExecutor);
         messagingService.start();
 
         final CountDownLatch waitLatch = new CountDownLatch(NUM_MESSAGES);
@@ -86,7 +92,7 @@ public class RabbitMQMessagingServiceTest {
         }
 
         try {
-            waitLatch.await(20, TimeUnit.SECONDS);
+            assertTrue(waitLatch.await(20, TimeUnit.SECONDS));
         } catch (InterruptedException e) {
             // ignore
         }

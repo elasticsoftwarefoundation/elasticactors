@@ -106,6 +106,12 @@ public class NodeConfiguration {
         return new ThreadBoundExecutorImpl(new DaemonThreadFactory("ACTOR-WORKER"),workers);
     }
 
+    @Bean(name = {"queueExecutor"}, destroyMethod = "shutdown")
+    public ThreadBoundExecutor<String> createQueueExecutor() {
+        int workers = Runtime.getRuntime().availableProcessors() * 3;
+        return new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
+    }
+
     @Bean(name = {"internalActorSystem"})
     public InternalActorSystem createLocalActorSystemInstance() {
         return new LocalActorSystemInstance(node,node,configuration,nodeSelectorFactory);

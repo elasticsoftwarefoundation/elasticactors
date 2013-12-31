@@ -7,6 +7,7 @@ import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MessagingService;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -27,10 +28,12 @@ public class RabbitMQMessagingService implements MessagingService {
     private Channel producerChannel;
     private final LocalMessageQueueFactory localMessageQueueFactory;
     private final RemoteMessageQueueFactory remoteMessageQueueFactory;
+    private final ThreadBoundExecutor<String> queueExecutor;
 
-    public RabbitMQMessagingService(String elasticActorsCluster,String rabbitmqHosts) {
+    public RabbitMQMessagingService(String elasticActorsCluster, String rabbitmqHosts, ThreadBoundExecutor<String> queueExecutor) {
         this.rabbitmqHosts = rabbitmqHosts;
         this.elasticActorsCluster = elasticActorsCluster;
+        this.queueExecutor = queueExecutor;
         this.exchangeName = String.format(EA_EXCHANGE_FORMAT,elasticActorsCluster);
         this.localMessageQueueFactory = new LocalMessageQueueFactory();
         this.remoteMessageQueueFactory = new RemoteMessageQueueFactory();
@@ -88,7 +91,7 @@ public class RabbitMQMessagingService implements MessagingService {
         @Override
         public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
             ensureQueueExists(consumerChannel,name);
-            LocalMessageQueue messageQueue = new LocalMessageQueue(consumerChannel,producerChannel,exchangeName,name,messageHandler);
+            LocalMessageQueue messageQueue = new LocalMessageQueue(queueExecutor, consumerChannel,producerChannel,exchangeName,name,messageHandler);
             messageQueue.initialize();
             return messageQueue;
         }
