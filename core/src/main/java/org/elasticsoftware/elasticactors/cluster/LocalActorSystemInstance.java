@@ -366,7 +366,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     private ActorShard shardFor(String actorId) {
-        return shardAdapters[hashFunction.hashString(actorId, Charsets.UTF_8).asInt() % shards.length];
+        return shardAdapters[Math.abs(hashFunction.hashString(actorId, Charsets.UTF_8).asInt()) % shards.length];
     }
 
 
