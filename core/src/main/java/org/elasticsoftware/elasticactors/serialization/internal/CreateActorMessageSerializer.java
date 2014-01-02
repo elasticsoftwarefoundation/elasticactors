@@ -46,7 +46,7 @@ public final class CreateActorMessageSerializer implements MessageSerializer<Cre
         builder.setActorClass(message.getActorClass());
         builder.setActorId(message.getActorId());
         if(message.getInitialState() != null) {
-            builder.setInitialState(ByteString.copyFrom(serializeState(message.getActorSystem(),
+            builder.setInitialState(ByteString.copyFrom(serializeState(message.getActorClass(),
                                                                        message.getInitialState())));
         }
         builder.setType(Elasticactors.ActorType.valueOf(message.getType().ordinal()));

@@ -46,7 +46,7 @@ public final class CreateActorMessageDeserializer implements MessageDeserializer
                                       protobufMessage.getActorClass(),
                                       protobufMessage.getActorId(),
                                       protobufMessage.hasInitialState()
-                                              ? deserializeState(protobufMessage.getActorSystem(),
+                                              ? deserializeState(protobufMessage.getActorClass(),
                                                                  protobufMessage.getInitialState().toByteArray())
                                               : null,
                                       protobufMessage.hasType()
