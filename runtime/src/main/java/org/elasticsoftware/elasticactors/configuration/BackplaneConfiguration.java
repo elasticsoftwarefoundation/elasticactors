@@ -44,7 +44,7 @@ public class BackplaneConfiguration {
         String cassandraKeyspaceName = env.getProperty("ea.cassandra.keyspace","ElasticActors");
         Keyspace keyspace = HFactory.createKeyspace(cassandraKeyspaceName,cluster);
         persistentActorsColumnFamilyTemplate =
-            new ThriftColumnFamilyTemplate<>(keyspace,"PeristentActors", StringSerializer.get(),StringSerializer.get());
+            new ThriftColumnFamilyTemplate<>(keyspace,"PersistentActors", StringSerializer.get(),StringSerializer.get());
     }
 
     @Bean(name = {"persistentActorRepository"})
