@@ -153,7 +153,6 @@
                     <source>1.7</source>
                     <target>1.7</target>
                     <encoding>UTF-8</encoding>
-                    <executable>/usr/bin/javac</executable>
                     <!--
                         <meminitial>128m</meminitial> <maxmem>512m</maxmem>
                         <verbose>false</verbose>
@@ -169,7 +168,6 @@
                     <parallel>both</parallel>
                     <threadCount>10</threadCount>
                     <reportFormat>plain</reportFormat>
-                    <jvm>/usr/bin/java</jvm>
                 </configuration>
             </plugin>
             <plugin>
@@ -257,6 +255,28 @@
         </plugins>
     </build>
     <profiles>
+        <profile>
+           <id>jwijgerd-mac</id>
+           <build>
+               <plugins>
+                   <plugin>
+                       <groupId>org.apache.maven.plugins</groupId>
+                       <artifactId>maven-compiler-plugin</artifactId>
+                       <version>3.1</version>
+                       <configuration>
+                           <executable>/usr/bin/javac</executable>
+                       </configuration>
+                   </plugin>
+                   <plugin>
+                       <artifactId>maven-surefire-plugin</artifactId>
+                       <version>2.16</version>
+                       <configuration>
+                           <jvm>/usr/bin/java</jvm>
+                       </configuration>
+                   </plugin>
+               </plugins>
+           </build>
+       </profile>
         <profile>
             <id>release</id>
             <build>
