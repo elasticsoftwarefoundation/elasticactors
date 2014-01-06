@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.cluster.scheduler;
 
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 
@@ -32,7 +33,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Joost van de Wijgerd
  */
-public final class SimpleScheduler implements Scheduler {
+public final class SimpleScheduler implements SchedulerService {
     private static final Logger logger = Logger.getLogger(SimpleScheduler.class);
     private ScheduledExecutorService scheduledExecutorService;
 
@@ -44,6 +45,16 @@ public final class SimpleScheduler implements Scheduler {
     @PreDestroy
     public void destroy() {
         scheduledExecutorService.shutdown();
+    }
+
+    @Override
+    public void registerShard(ShardKey shardKey) {
+        // do nothing as this implementation can only be used in a single (test) instance
+    }
+
+    @Override
+    public void unregisterShard(ShardKey shardKey) {
+        // do nothing as this implementation can only be used in a single (test) instance
     }
 
     @Override

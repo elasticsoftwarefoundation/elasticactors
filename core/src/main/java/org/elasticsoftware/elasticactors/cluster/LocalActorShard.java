@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
+import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
 import org.elasticsoftware.elasticactors.cluster.tasks.*;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
@@ -69,7 +70,9 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
 
     @Override
     public void init() throws Exception {
+        // create cache
         this.actorCache = actorCacheManager.create(shardKey,this);
+        // initialize queue
         super.init();
     }
 

@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
+import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
@@ -59,7 +60,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private final ActorSystems cluster;
     private MessageQueueFactory localMessageQueueFactory;
     private MessageQueueFactory remoteMessageQueueFactory;
-    private Scheduler scheduler;
+    private SchedulerService scheduler;
     private NodeActorCacheManager nodeActorCacheManager;
     private ShardActorCacheManager shardActorCacheManager;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
@@ -189,7 +190,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                         shards[i] = newShard;
                         // initialize
                         newShard.init();
-
+                        // start owning the scheduler shard (this will start sending messages, but everything is blocked so it should be no problem)
+                        scheduler.registerShard(newShard.getKey());
                     } else {
                         // we own the shard already, no change needed
                         logger.info(String.format("I already own %s", shardKey.toString()));
@@ -200,11 +202,13 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                     if (currentShard == null || currentShard.getOwningNode().isLocal()) {
                         logger.info(String.format("%s will own %s", node, shardKey));
 
-                        // destroy the current remote shard instance
+                        // destroy the current local shard instance
                         if (currentShard != null) {
+                            // stop owning the scheduler shard
+                            scheduler.unregisterShard(currentShard.getKey());
                             currentShard.destroy();
                         }
-                        // create a new local shard and swap it
+                        // create a new remote shard and swap it
                         RemoteActorShard newShard = new RemoteActorShard(node, this, i, shardAdapters[i].myRef, remoteMessageQueueFactory);
 
                         shards[i] = newShard;
@@ -408,7 +412,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Autowired
-    public void setScheduler(Scheduler scheduler) {
+    public void setScheduler(SchedulerService scheduler) {
         this.scheduler = scheduler;
     }
 

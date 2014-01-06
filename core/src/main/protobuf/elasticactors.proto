@@ -19,6 +19,15 @@ message InternalMessage {
     optional bool undeliverable = 7;
 }
 
+message ScheduledMessage {
+    optional bytes id = 1;
+    optional uint64 fireTime = 2;
+    optional string receiver = 3;
+    optional string sender = 4;
+    optional string messageClass = 5;
+    optional bytes message = 6;
+}
+
 message PersistentActor {
     optional string actorRef = 1;
     optional string actorClass = 2;

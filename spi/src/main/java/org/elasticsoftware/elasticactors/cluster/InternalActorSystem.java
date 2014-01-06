@@ -75,7 +75,21 @@ public interface InternalActorSystem extends ActorSystem {
      */
     ActorRef tempActorFor(String actorId);
 
+    /**
+     * Return the serializer for the given message type
+     *
+     * @param messageClass
+     * @param <T>
+     * @return
+     */
     <T> MessageSerializer<T> getSerializer(Class<T> messageClass);
 
+    /**
+     * Return the deserializer for the give message type
+     *
+     * @param messageClass
+     * @param <T>
+     * @return
+     */
     <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass);
 }
