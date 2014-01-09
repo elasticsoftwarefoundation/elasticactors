@@ -28,10 +28,12 @@ import java.util.concurrent.TimeUnit;
  */
 public final class CassandraScheduledMessageRepository implements ScheduledMessageRepository {
     private static final Logger logger = Logger.getLogger(CassandraScheduledMessageRepository.class);
-    private ColumnFamilyTemplate<String,Composite> columnFamilyTemplate;
-    private Deserializer<byte[],ScheduledMessage> deserializer;
-    private Serializer<ScheduledMessage,byte[]> serializer;
+    private final ColumnFamilyTemplate<String,Composite> columnFamilyTemplate;
     private final ListResultMapper resultMapper = new ListResultMapper();
+
+    public CassandraScheduledMessageRepository(ColumnFamilyTemplate<String, Composite> columnFamilyTemplate) {
+        this.columnFamilyTemplate = columnFamilyTemplate;
+    }
 
     @Override
     public void create(ShardKey shardKey, ScheduledMessage scheduledMessage) {

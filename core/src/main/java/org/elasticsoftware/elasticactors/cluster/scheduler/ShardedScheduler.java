@@ -3,13 +3,17 @@ package org.elasticsoftware.elasticactors.cluster.scheduler;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ShardedScheduledWorkManager;
 import org.elasticsoftware.elasticactors.util.concurrent.WorkExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.WorkExecutorFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.inject.Inject;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -23,14 +27,27 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
     private ScheduledMessageRepository scheduledMessageRepository;
     private InternalActorSystem actorSystem;
 
+
     @PostConstruct
     public void init() {
-
+        ExecutorService executorService = Executors.newCachedThreadPool(new DaemonThreadFactory("SCHEDULER"));
+        workManager = new ShardedScheduledWorkManager<ShardKey, ScheduledMessage>(executorService,this,Runtime.getRuntime().availableProcessors());
+        workManager.init();
     }
 
     @PreDestroy
     public void destroy() {
+        workManager.destroy();
+    }
 
+    @Inject
+    public void setScheduledMessageRepository(ScheduledMessageRepository scheduledMessageRepository) {
+        this.scheduledMessageRepository = scheduledMessageRepository;
+    }
+
+    @Inject
+    public void setActorSystem(InternalActorSystem actorSystem) {
+        this.actorSystem = actorSystem;
     }
 
     @Override

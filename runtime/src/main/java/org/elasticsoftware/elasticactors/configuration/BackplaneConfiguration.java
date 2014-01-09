@@ -1,15 +1,19 @@
 package org.elasticsoftware.elasticactors.configuration;
 
+import me.prettyprint.cassandra.serializers.CompositeSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.service.CassandraHostConfigurator;
 import me.prettyprint.cassandra.service.template.ColumnFamilyTemplate;
 import me.prettyprint.cassandra.service.template.ThriftColumnFamilyTemplate;
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.Composite;
 import me.prettyprint.hector.api.factory.HFactory;
+import org.elasticsoftware.elasticactors.cassandra.cluster.scheduler.CassandraScheduledMessageRepository;
 import org.elasticsoftware.elasticactors.cassandra.state.CassandraPersistentActorRepository;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRepository;
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorSerializer;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
@@ -30,6 +34,7 @@ public class BackplaneConfiguration {
     @Autowired
     private ActorRefFactory actorRefFactory;
     private ColumnFamilyTemplate<String,String> persistentActorsColumnFamilyTemplate;
+    private ColumnFamilyTemplate<String,Composite> scheduledMessagesColumnFamilyTemplate;
 
     @PostConstruct
     public void initialize() {
@@ -45,6 +50,8 @@ public class BackplaneConfiguration {
         Keyspace keyspace = HFactory.createKeyspace(cassandraKeyspaceName,cluster);
         persistentActorsColumnFamilyTemplate =
             new ThriftColumnFamilyTemplate<>(keyspace,"PersistentActors", StringSerializer.get(),StringSerializer.get());
+        scheduledMessagesColumnFamilyTemplate =
+            new ThriftColumnFamilyTemplate<>(keyspace,"ScheduledMessages",StringSerializer.get(), CompositeSerializer.get());
     }
 
     @Bean(name = {"persistentActorRepository"})
@@ -54,6 +61,12 @@ public class BackplaneConfiguration {
         persistentActorRepository.setSerializer(new PersistentActorSerializer(cluster));
         persistentActorRepository.setDeserializer(new PersistentActorDeserializer(actorRefFactory,cluster));
         return persistentActorRepository;
+    }
+
+    @Bean(name = {"scheduledMessageRepository"})
+    public ScheduledMessageRepository getScheduledMessageRepository() {
+        CassandraScheduledMessageRepository scheduledMessageRepository = new CassandraScheduledMessageRepository(scheduledMessagesColumnFamilyTemplate);
+        return scheduledMessageRepository;
     }
 }
 

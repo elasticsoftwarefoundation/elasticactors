@@ -3,6 +3,7 @@ package org.elasticsoftware.elasticactors.configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
@@ -10,13 +11,16 @@ import org.elasticsoftware.elasticactors.cluster.HashingNodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.LocalActorSystemInstance;
 import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ShardedScheduler;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
+import org.elasticsoftware.elasticactors.util.concurrent.ShardedScheduledWorkManager;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,8 +122,9 @@ public class NodeConfiguration {
         return new LocalActorSystemInstance(node,node,configuration,nodeSelectorFactory);
     }
 
-    @Bean
+    @Bean(name = {"scheduler"})
     public SchedulerService createScheduler() {
-        return new SimpleScheduler();
+        //@todo: maybe configure scheduler here with number of workers
+        return new ShardedScheduler();
     }
 }
