@@ -9,7 +9,6 @@ import org.elasticsoftware.elasticactors.util.concurrent.WorkExecutorFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +39,7 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
         workManager.registerShard(shardKey);
         // fetch block from repository
         // @todo: for now we'll fetch all, this obviously has memory issues
-        List<ScheduledMessage> scheduledMessages = scheduledMessageRepository.getAll();
+        List<ScheduledMessage> scheduledMessages = scheduledMessageRepository.getAll(shardKey);
         workManager.schedule(shardKey,scheduledMessages.toArray(new ScheduledMessage[scheduledMessages.size()]));
     }
 
@@ -62,7 +61,7 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
                         long fireTime = System.currentTimeMillis() + TimeUnit.MILLISECONDS.convert(delay,timeUnit);
                         MessageSerializer serializer = actorSystem.getSerializer(message.getClass());
                         ScheduledMessage scheduledMessage = new ScheduledMessageImpl(fireTime,sender,receiver,message.getClass(),serializer.serialize(message));
-                        scheduledMessageRepository.create(scheduledMessage);
+                        scheduledMessageRepository.create(actorShard.getKey(), scheduledMessage);
                         workManager.schedule(actorShard.getKey(),scheduledMessage);
                         return;
                     } catch(Exception e) {
@@ -80,15 +79,15 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
         return new ScheduledMessageExecutor();
     }
 
-    private final class ScheduledMessageExecutor implements WorkExecutor<ScheduledMessage> {
+    private final class ScheduledMessageExecutor implements WorkExecutor<ShardKey,ScheduledMessage> {
 
         @Override
-        public void execute(final ScheduledMessage message) {
+        public void execute(final ShardKey shardKey,final ScheduledMessage message) {
             // send the message
             final ActorRef receiverRef = message.getReceiver();
             receiverRef.tell(message.getMessageBytes(),message.getSender());
             // remove from the backing store
-            scheduledMessageRepository.delete(message);
+            scheduledMessageRepository.delete(shardKey, message);
         }
     }
 }

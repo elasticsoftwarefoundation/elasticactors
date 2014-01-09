@@ -6,6 +6,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -16,14 +17,14 @@ import static java.lang.String.format;
  * A WorkManager impl
  *
  * @param <K>   Key for a shard
- * @param <T>   The Scheduled Object that will be passed to {@link WorkExecutor#execute(Object)} after the delay has expired
+ * @param <T>   The Scheduled Object that will be passed to {@link WorkExecutor#execute(Object, Object)} after the delay has expired
  */
 public final class ShardedScheduledWorkManager<K,T extends Delayed> {
     private static final Logger LOGGER = Logger.getLogger(ShardedScheduledWorkManager.class);
     public static final long MAX_AWAIT_MILLIS = 60000L;
 
     private final ExecutorService executor;
-    private final WorkExecutorFactory<WorkExecutor<T>> workerFactory;
+    private final WorkExecutorFactory<WorkExecutor<K,T>> workerFactory;
     private final int numberOfWorkers;
 
     private final ConcurrentMap<K,DelayQueue<T>> delayQueues;
@@ -33,7 +34,7 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
     private final ReentrantLock waitLock = new ReentrantLock();
     private final Condition waitCondition =  waitLock.newCondition();
 
-    public ShardedScheduledWorkManager(ExecutorService executor, WorkExecutorFactory<WorkExecutor<T>> workerFactory, int numberOfWorkers){
+    public ShardedScheduledWorkManager(ExecutorService executor, WorkExecutorFactory<WorkExecutor<K,T>> workerFactory, int numberOfWorkers){
         this.executor = executor;
         this.numberOfWorkers = Math.max(1,numberOfWorkers);
         this.workerFactory = workerFactory;
@@ -108,9 +109,9 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
     }
 
     private final class RunnableWorker implements Runnable {
-        private final WorkExecutor<T> workExecutor;
+        private final WorkExecutor<K,T> workExecutor;
 
-        public RunnableWorker(WorkExecutor<T> workExecutor){
+        public RunnableWorker(WorkExecutor<K,T> workExecutor){
             this.workExecutor = workExecutor;
         }
 
@@ -121,11 +122,12 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
                     T work = null;
                     long waitTimeMillis = MAX_AWAIT_MILLIS;
 
-                    for (DelayQueue<T> delayQueue : delayQueues.values()) {
+                    for (Map.Entry<K, DelayQueue<T>> delayQueueEntry : delayQueues.entrySet()) {
+                        final DelayQueue<T> delayQueue = delayQueueEntry.getValue();
                         work = delayQueue.poll();
                         if(work != null) {
                             try {
-                                workExecutor.execute(work);
+                                workExecutor.execute(delayQueueEntry.getKey(),work);
                             } catch(Exception e) {
                                 LOGGER.error("Exception while executing work!", e);
                             }
