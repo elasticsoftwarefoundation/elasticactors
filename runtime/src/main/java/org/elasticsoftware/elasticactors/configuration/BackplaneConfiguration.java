@@ -49,8 +49,8 @@ public class BackplaneConfiguration {
     private InternalActorSystems cluster;
     @Autowired
     private ActorRefFactory actorRefFactory;
-    private ColumnFamilyTemplate<String,String> persistentActorsColumnFamilyTemplate;
-    private ColumnFamilyTemplate<String,Composite> scheduledMessagesColumnFamilyTemplate;
+    private ColumnFamilyTemplate<Composite,String> persistentActorsColumnFamilyTemplate;
+    private ColumnFamilyTemplate<Composite,Composite> scheduledMessagesColumnFamilyTemplate;
 
     @PostConstruct
     public void initialize() {
@@ -65,14 +65,14 @@ public class BackplaneConfiguration {
         String cassandraKeyspaceName = env.getProperty("ea.cassandra.keyspace","ElasticActors");
         Keyspace keyspace = HFactory.createKeyspace(cassandraKeyspaceName,cluster);
         persistentActorsColumnFamilyTemplate =
-            new ThriftColumnFamilyTemplate<>(keyspace,"PersistentActors", StringSerializer.get(),StringSerializer.get());
+            new ThriftColumnFamilyTemplate<>(keyspace,"PersistentActors", CompositeSerializer.get(),StringSerializer.get());
         scheduledMessagesColumnFamilyTemplate =
-            new ThriftColumnFamilyTemplate<>(keyspace,"ScheduledMessages",StringSerializer.get(), CompositeSerializer.get());
+            new ThriftColumnFamilyTemplate<>(keyspace,"ScheduledMessages",CompositeSerializer.get(), CompositeSerializer.get());
     }
 
     @Bean(name = {"persistentActorRepository"})
     public PersistentActorRepository getPersistentActorRepository() {
-        CassandraPersistentActorRepository persistentActorRepository = new CassandraPersistentActorRepository();
+        CassandraPersistentActorRepository persistentActorRepository = new CassandraPersistentActorRepository(cluster.getClusterName());
         persistentActorRepository.setColumnFamilyTemplate(persistentActorsColumnFamilyTemplate);
         persistentActorRepository.setSerializer(new PersistentActorSerializer(cluster));
         persistentActorRepository.setDeserializer(new PersistentActorDeserializer(actorRefFactory,cluster));
@@ -81,7 +81,7 @@ public class BackplaneConfiguration {
 
     @Bean(name = {"scheduledMessageRepository"})
     public ScheduledMessageRepository getScheduledMessageRepository() {
-        CassandraScheduledMessageRepository scheduledMessageRepository = new CassandraScheduledMessageRepository(scheduledMessagesColumnFamilyTemplate);
+        CassandraScheduledMessageRepository scheduledMessageRepository = new CassandraScheduledMessageRepository(cluster.getClusterName(), scheduledMessagesColumnFamilyTemplate);
         return scheduledMessageRepository;
     }
 }

@@ -42,16 +42,18 @@ import java.util.concurrent.TimeUnit;
  */
 public final class CassandraScheduledMessageRepository implements ScheduledMessageRepository {
     private static final Logger logger = Logger.getLogger(CassandraScheduledMessageRepository.class);
-    private final ColumnFamilyTemplate<String,Composite> columnFamilyTemplate;
+    private final String clusterName;
+    private final ColumnFamilyTemplate<Composite,Composite> columnFamilyTemplate;
     private final ListResultMapper resultMapper = new ListResultMapper();
 
-    public CassandraScheduledMessageRepository(ColumnFamilyTemplate<String, Composite> columnFamilyTemplate) {
+    public CassandraScheduledMessageRepository(String clusterName, ColumnFamilyTemplate<Composite, Composite> columnFamilyTemplate) {
+        this.clusterName = clusterName;
         this.columnFamilyTemplate = columnFamilyTemplate;
     }
 
     @Override
     public void create(ShardKey shardKey, ScheduledMessage scheduledMessage) {
-        final ColumnFamilyUpdater<String,Composite> updater = columnFamilyTemplate.createUpdater(shardKey.toString());
+        final ColumnFamilyUpdater<Composite,Composite> updater = columnFamilyTemplate.createUpdater(createKey(shardKey));
         final Composite columnName = createColumnName(scheduledMessage);
         updater.setByteArray(columnName, ScheduledMessageSerializer.get().serialize(scheduledMessage));
         columnFamilyTemplate.update(updater);
@@ -59,12 +61,19 @@ public final class CassandraScheduledMessageRepository implements ScheduledMessa
 
     @Override
     public void delete(ShardKey shardKey, ScheduledMessage scheduledMessage) {
-        columnFamilyTemplate.deleteColumn(shardKey.toString(),createColumnName(scheduledMessage));
+        columnFamilyTemplate.deleteColumn(createKey(shardKey),createColumnName(scheduledMessage));
     }
 
     @Override
     public List<ScheduledMessage> getAll(ShardKey shardKey) {
-        return columnFamilyTemplate.queryColumns(shardKey.toString(),resultMapper);
+        return columnFamilyTemplate.queryColumns(createKey(shardKey),resultMapper);
+    }
+
+    private Composite createKey(ShardKey shardKey) {
+        Composite composite = new Composite();
+        composite.add(clusterName);
+        composite.add(shardKey.toString());
+        return composite;
     }
 
     private Composite createColumnName(ScheduledMessage scheduledMessage) {
@@ -76,10 +85,10 @@ public final class CassandraScheduledMessageRepository implements ScheduledMessa
         return columnName;
     }
 
-    private final class ListResultMapper implements ColumnFamilyRowMapper<String,Composite,List<ScheduledMessage>> {
+    private final class ListResultMapper implements ColumnFamilyRowMapper<Composite,Composite,List<ScheduledMessage>> {
 
         @Override
-        public List<ScheduledMessage> mapRow(final ColumnFamilyResult<String, Composite> results) {
+        public List<ScheduledMessage> mapRow(final ColumnFamilyResult<Composite, Composite> results) {
             List<ScheduledMessage> resultList = new LinkedList<>();
 
             if(results.hasResults()) {

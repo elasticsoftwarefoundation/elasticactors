@@ -20,6 +20,7 @@ import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.cassandra.service.template.ColumnFamilyTemplate;
 import me.prettyprint.cassandra.service.template.ColumnFamilyUpdater;
+import me.prettyprint.hector.api.beans.Composite;
 import me.prettyprint.hector.api.beans.HColumn;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
@@ -34,30 +35,35 @@ import java.io.IOException;
  * @author Joost van de Wijgerd
  */
 public final class CassandraPersistentActorRepository implements PersistentActorRepository {
-    private ColumnFamilyTemplate<String,String> columnFamilyTemplate;
+    private final String clusterName;
+    private ColumnFamilyTemplate<Composite,String> columnFamilyTemplate;
     private Deserializer<byte[],PersistentActor> deserializer;
     private Serializer<PersistentActor,byte[]> serializer;
 
+    public CassandraPersistentActorRepository(String clusterName) {
+        this.clusterName = clusterName;
+    }
+
     @Override
     public boolean contains(ShardKey shard, String actorId) {
-        return columnFamilyTemplate.querySingleColumn(shard.toString(),actorId, ByteBufferSerializer.get()) != null;
+        return columnFamilyTemplate.querySingleColumn(createKey(shard),actorId, ByteBufferSerializer.get()) != null;
     }
 
     @Override
     public void update(ShardKey shard, PersistentActor persistentActor) throws IOException {
-        ColumnFamilyUpdater<String,String> updater = columnFamilyTemplate.createUpdater(shard.toString());
+        ColumnFamilyUpdater<Composite,String> updater = columnFamilyTemplate.createUpdater(createKey(shard));
         updater.setByteArray(persistentActor.getSelf().getActorId(), serializer.serialize(persistentActor));
         columnFamilyTemplate.update(updater);
     }
 
     @Override
     public void delete(ShardKey shard, String actorId) {
-        columnFamilyTemplate.deleteColumn(shard.toString(),actorId);
+        columnFamilyTemplate.deleteColumn(createKey(shard),actorId);
     }
 
     @Override
     public PersistentActor<ShardKey> get(ShardKey shard, String actorId) throws IOException {
-        HColumn<String,byte[]> column = columnFamilyTemplate.querySingleColumn(shard.toString(), actorId, BytesArraySerializer.get());
+        HColumn<String,byte[]> column = columnFamilyTemplate.querySingleColumn(createKey(shard), actorId, BytesArraySerializer.get());
         if(column != null) {
             return deserializer.deserialize(column.getValue());
         } else {
@@ -65,7 +71,14 @@ public final class CassandraPersistentActorRepository implements PersistentActor
         }
     }
 
-    public void setColumnFamilyTemplate(ColumnFamilyTemplate<String, String> columnFamilyTemplate) {
+    private Composite createKey(ShardKey shardKey) {
+        Composite composite = new Composite();
+        composite.add(clusterName);
+        composite.add(shardKey.toString());
+        return composite;
+    }
+
+    public void setColumnFamilyTemplate(ColumnFamilyTemplate<Composite, String> columnFamilyTemplate) {
         this.columnFamilyTemplate = columnFamilyTemplate;
     }
 
