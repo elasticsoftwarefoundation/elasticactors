@@ -65,7 +65,7 @@ public class HttpActorSystemTest {
 
         AsyncHttpClient testClient = new AsyncHttpClient();
         for (int i = 1; i < 4; i++) {
-            ListenableFuture<Response> responseFuture = testClient.prepareGet(String.format("http://localhost:8080/users/%d", i)).execute();
+            ListenableFuture<Response> responseFuture = testClient.prepareGet(String.format("http://localhost:9080/users/%d", i)).execute();
             Response response = responseFuture.get();
 
             assertEquals(response.getContentType(), "text/plain");
@@ -79,7 +79,7 @@ public class HttpActorSystemTest {
         testSystem.stop(user3Ref);
 
         // do it again an see if we get 404
-        ListenableFuture<Response> responseFuture = testClient.prepareGet("http://localhost:8080/users/1").execute();
+        ListenableFuture<Response> responseFuture = testClient.prepareGet("http://localhost:9080/users/1").execute();
         Response response = responseFuture.get();
 
         assertEquals(response.getStatusCode(), 404);
@@ -87,7 +87,7 @@ public class HttpActorSystemTest {
 
     @Test(enabled = false)
     public void testURIParsing() throws Exception {
-        URI asbsoluteUri = new URI("http://localhost:8080/events/testing");
+        URI asbsoluteUri = new URI("http://localhost:9080/events/testing");
         assertNotNull(asbsoluteUri);
         assertEquals(asbsoluteUri.getPath(), "/events/testing");
         assertEquals(asbsoluteUri.getHost(), "localhost");
@@ -138,7 +138,7 @@ public class HttpActorSystemTest {
 
         AsyncHttpClient testClient = new AsyncHttpClient();
         final CountDownLatch waitLatch = new CountDownLatch(1);
-        testClient.prepareGet("http://localhost:8080/events/testing").execute(new ServerSentEventsHandler(waitLatch));
+        testClient.prepareGet("http://localhost:9080/events/testing").execute(new ServerSentEventsHandler(waitLatch));
         waitLatch.await(1, TimeUnit.MINUTES);
     }
 

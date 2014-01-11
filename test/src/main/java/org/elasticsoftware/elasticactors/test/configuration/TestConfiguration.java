@@ -36,6 +36,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.aspectj.EnableSpringConfigured;
 import org.springframework.core.env.Environment;
@@ -71,12 +72,17 @@ public class TestConfiguration {
         configuration = objectMapper.readValue(configResource.getInputStream(), DefaultConfiguration.class);
     }
 
-    @Bean(name = {"actorSystems,actorRefFactory"})
+    @DependsOn("configuration") @Bean(name = {"internalActorSystem"})
+    public InternalActorSystem createLocalActorSystemInstance() {
+        return new LocalActorSystemInstance(localNode,internalActorSystems,configuration,nodeSelectorFactory);
+    }
+
+    @DependsOn("internalActorSystem") @Bean(name = {"actorSystems,actorRefFactory"})
     public InternalActorSystemsImpl getActorSystemsImpl() {
         return internalActorSystems;
     }
 
-    @Bean
+    @Bean(name = {"configuration"})
     public ActorSystemConfiguration getConfiguration() {
         return configuration;
     }
@@ -121,10 +127,7 @@ public class TestConfiguration {
         return new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
     }
 
-    @Bean(name = {"internalActorSystem"})
-    public InternalActorSystem createLocalActorSystemInstance() {
-        return new LocalActorSystemInstance(localNode,internalActorSystems,configuration,nodeSelectorFactory);
-    }
+
 
     @Bean(name = {"scheduler"})
     public SchedulerService createScheduler() {

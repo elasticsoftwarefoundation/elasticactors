@@ -19,10 +19,13 @@ package org.elasticsoftware.elasticactors.examples.pi.messages;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.Message;
 
 /**
  * @author Joost van de Wijgerd
  */
+@Message(serializationFramework = JacksonSerializationFramework.class)
 public final class PiApproximation {
     private final double pi;
     private final long duration;

@@ -60,7 +60,7 @@ public class GeoEventsActorSystemTest {
             BasicConfigurator.resetConfiguration();
         }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void testInContainer() throws Exception {
         ActorSystem geoEventsSystem = testActorSystem.getActorSystem("geo-events");
         ActorRef dispatcher = geoEventsSystem.serviceActorFor("geoEventsService");

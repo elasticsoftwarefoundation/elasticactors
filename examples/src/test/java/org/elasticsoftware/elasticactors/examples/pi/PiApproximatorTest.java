@@ -20,6 +20,10 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.ListenableFuture;
 import com.ning.http.client.Response;
 import org.apache.log4j.BasicConfigurator;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.examples.pi.actors.Listener;
+import org.elasticsoftware.elasticactors.examples.pi.actors.Master;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -35,14 +39,15 @@ import static org.testng.Assert.assertEquals;
 public class PiApproximatorTest {
     private TestActorSystem testActorSystem;
 
-    @BeforeMethod(enabled = false)
+    @BeforeMethod(enabled = true)
     public void setUp() {
         BasicConfigurator.resetConfiguration();
         BasicConfigurator.configure();
         testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
     }
 
-    @AfterMethod(enabled = false)
+    @AfterMethod(enabled = true)
     public void tearDown() {
         if(testActorSystem != null) {
             testActorSystem.destroy();
@@ -149,12 +154,15 @@ public class PiApproximatorTest {
 
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void testInContainer() throws Exception {
         // make sure http system is loaded
+        ActorSystem testSystem = testActorSystem.getActorSystem("examples");
+        ActorRef listener = testSystem.actorOf("pi/calculate",Listener.class,new Listener.State());
+        testSystem.actorOf("master",Master.class,new Master.State(listener,16,10000,10));
 
         AsyncHttpClient httpClient = new AsyncHttpClient();
-        ListenableFuture<Response> responseFuture = httpClient.prepareGet("http://localhost:8080/pi/calculate").execute();
+        ListenableFuture<Response> responseFuture = httpClient.prepareGet("http://localhost:9080/pi/calculate").execute();
         Response response = responseFuture.get();
         assertEquals(response.getContentType(),"application/json");
         System.out.println(response.getResponseBody("UTF-8"));

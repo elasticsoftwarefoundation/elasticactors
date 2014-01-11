@@ -1,5 +1,5 @@
 ---
-name: http
+name: examples
 shards: 8
 elasticactors.http.actors.HttpService:
   listenPort: 9080

@@ -34,8 +34,10 @@ import org.reflections.util.ConfigurationBuilder;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -63,15 +65,16 @@ public class ObjectMapperBuilder {
 
         // scan everything for META-INF/elasticactors.properties
         Set<String> basePackages = new HashSet<>();
-        Set<URL> resources = ClasspathHelper.forResource(RESOURCE_NAME);
-        for (URL resource : resources) {
-            try {
+        try {
+            Enumeration<URL> resources = Thread.currentThread().getContextClassLoader().getResources(RESOURCE_NAME);
+            while (resources.hasMoreElements()) {
+                URL url = resources.nextElement();
                 Properties props = new Properties();
-                props.load(new FileInputStream(new File(new URI(resource.toString()+RESOURCE_NAME))));
+                props.load(url.openStream());
                 basePackages.add(props.getProperty("basePackage"));
-            } catch(Exception e) {
-                logger.warn(String.format("Failed to load elasticactors.properties from URL: %s",resource.toString()),e);
             }
+        } catch(IOException e) {
+            logger.warn(String.format("Failed to load elasticactors.properties"),e);
         }
 
 
@@ -116,12 +119,15 @@ public class ObjectMapperBuilder {
     private void registerCustomDeserializers(Reflections reflections, SimpleModule jacksonModule) {
         // @todo: looks like the SubTypeScanner only goes one level deep, need to fix this
         Set<Class<? extends StdScalarDeserializer>> customDeserializers = reflections.getSubTypesOf(StdScalarDeserializer.class);
-        for (Class<? extends JsonDeserializer> customDeserializer : customDeserializers) {
+        for (Class<? extends StdScalarDeserializer> customDeserializer : customDeserializers) {
             // need to exclude the JacksonActorRefDeserializer
             if(!JacksonActorRefDeserializer.class.equals(customDeserializer)) {
-                Class<?> objectClass = TypeResolver.resolveRawArgument(JsonSerializer.class, customDeserializer);
+                // @todo: figure out which method is faster
+                //Class<?> objectClass = TypeResolver.resolveRawArgument(StdScalarDeserializer.class, customDeserializer);
                 try {
-                    jacksonModule.addDeserializer(objectClass, customDeserializer.newInstance());
+                    StdScalarDeserializer deserializer = customDeserializer.newInstance();
+                    Class<?> objectClass = deserializer.handledType();
+                    jacksonModule.addDeserializer(objectClass, deserializer);
                 } catch(Exception e) {
                     logger.warn(String.format("Failed to create Custom Jackson Deserializer: %s", customDeserializer.getName()),e);
                 }

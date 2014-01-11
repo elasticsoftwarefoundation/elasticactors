@@ -19,12 +19,15 @@ package org.elasticsoftware.elasticactors.examples.pi.messages;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.Message;
 
 import java.util.UUID;
 
 /**
  * @author Joost van de Wijgerd
  */
+@Message(serializationFramework = JacksonSerializationFramework.class)
 public final class Calculate {
     private final String id;
 

@@ -257,36 +257,6 @@
     </build>
     <profiles>
         <profile>
-           <id>jwijgerd-mac</id>
-           <build>
-               <plugins>
-                   <plugin>
-                       <groupId>org.apache.maven.plugins</groupId>
-                       <artifactId>maven-compiler-plugin</artifactId>
-                       <version>3.1</version>
-                       <configuration>
-                           <executable>/usr/bin/javac</executable>
-                       </configuration>
-                   </plugin>
-                   <plugin>
-                       <artifactId>maven-surefire-plugin</artifactId>
-                       <version>2.16</version>
-                       <configuration>
-                           <jvm>/usr/bin/java</jvm>
-                       </configuration>
-                   </plugin>
-                   <plugin>
-                   <artifactId>maven-release-plugin</artifactId>
-                   <version>2.4.2</version>
-                   <configuration>
-                       <javaHome>/usr/libexec/java_home</javaHome>
-                       <arguments>-DskipTests -Pjwijgerd-mac</arguments>
-                   </configuration>
-                   </plugin>
-               </plugins>
-           </build>
-       </profile>
-        <profile>
             <id>release</id>
             <build>
               <plugins>
