@@ -18,7 +18,6 @@ package org.elasticsoftware.elasticactors.serialization.internal;
 
 import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
-import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;

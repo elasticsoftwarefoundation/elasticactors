@@ -1,13 +1,8 @@
 package org.elasticsoftware.elasticactors.runtime;
 
 import org.apache.log4j.Logger;
-import org.reflections.util.ClasspathHelper;
-import org.springframework.util.ResourceUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URL;
 import java.util.*;
 

@@ -2,8 +2,8 @@ package org.elasticsoftware.elasticactors.test.configuration;
 
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MessagingService;
-import org.elasticsoftware.elasticactors.test.messaging.UnsupportedMessageQueueFactory;
 import org.elasticsoftware.elasticactors.test.messaging.TestMessagingService;
+import org.elasticsoftware.elasticactors.test.messaging.UnsupportedMessageQueueFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

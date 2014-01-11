@@ -1,7 +1,10 @@
 package org.elasticsoftware.elasticactors.test.messaging;
 
 import org.apache.log4j.Logger;
-import org.elasticsoftware.elasticactors.messaging.*;
+import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.messaging.MessageHandler;
+import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 

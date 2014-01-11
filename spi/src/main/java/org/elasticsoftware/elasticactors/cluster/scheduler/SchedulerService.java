@@ -1,6 +1,5 @@
 package org.elasticsoftware.elasticactors.cluster.scheduler;
 
-import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
 

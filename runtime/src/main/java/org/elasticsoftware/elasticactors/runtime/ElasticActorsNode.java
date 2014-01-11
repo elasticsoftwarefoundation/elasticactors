@@ -21,11 +21,13 @@ import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetAddress;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Joost van de Wijgerd

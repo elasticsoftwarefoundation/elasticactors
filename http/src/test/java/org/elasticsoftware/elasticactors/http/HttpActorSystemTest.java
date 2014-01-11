@@ -23,7 +23,6 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
-import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.http.actors.EventStreamer;
 import org.elasticsoftware.elasticactors.http.actors.User;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
@@ -35,7 +34,6 @@ import java.net.URI;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static org.mockito.Mockito.mock;
 import static org.testng.Assert.*;
 
 /**

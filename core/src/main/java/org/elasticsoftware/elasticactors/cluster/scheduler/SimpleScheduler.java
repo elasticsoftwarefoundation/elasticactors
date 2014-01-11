@@ -19,7 +19,6 @@ package org.elasticsoftware.elasticactors.cluster.scheduler;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ShardKey;
-import org.elasticsoftware.elasticactors.scheduler.Scheduler;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 
 import javax.annotation.PostConstruct;
