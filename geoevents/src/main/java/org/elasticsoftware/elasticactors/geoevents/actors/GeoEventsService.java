@@ -30,7 +30,7 @@ import java.util.List;
 /**
  * @author Joost van de Wijgerd
  */
-@ServiceActor(name = "geoEventsService")
+@ServiceActor("geoEventsService")
 public final class GeoEventsService extends UntypedActor {
     public static final String REGIONS_FORMAT = "regions/%s";
 

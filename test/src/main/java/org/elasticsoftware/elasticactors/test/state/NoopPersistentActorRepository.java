@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.test;
+package org.elasticsoftware.elasticactors.test.state;
 
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
@@ -25,7 +25,7 @@ import java.io.IOException;
 /**
  * @author Joost van de Wijgerd
  */
-public class NoopPersistentActorRepository implements PersistentActorRepository {
+public final class NoopPersistentActorRepository implements PersistentActorRepository {
     @Override
     public boolean contains(ShardKey shard, String actorId) {
         return false;

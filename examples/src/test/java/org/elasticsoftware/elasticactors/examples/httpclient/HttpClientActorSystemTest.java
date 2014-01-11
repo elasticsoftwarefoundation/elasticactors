@@ -32,7 +32,7 @@ public class HttpClientActorSystemTest {
         public void setUp() {
             BasicConfigurator.resetConfiguration();
             BasicConfigurator.configure();
-            testActorSystem = TestActorSystem.create();
+            testActorSystem = new TestActorSystem();
         }
 
         @AfterMethod(enabled = false)

@@ -42,9 +42,14 @@
         <dependencies>
             <dependency>
                 <groupId>org.elasticsoftware.elasticactors</groupId>
+                <artifactId>elasticactors-test</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.elasticsoftware.elasticactors</groupId>
                 <artifactId>elasticactors-api</artifactId>
                 <version>${project.version}</version>
-                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.elasticsoftware.elasticactors</groupId>
@@ -56,12 +61,6 @@
               <groupId>org.clojars.ndimiduk</groupId>
               <artifactId>geohash-java</artifactId>
               <version>1.0.6</version>
-            </dependency>
-            <dependency>
-                <groupId>org.elasticsoftware.elasticactors</groupId>
-                <artifactId>elasticactors-core</artifactId>
-                <version>${project.version}</version>
-                <scope>test</scope>
             </dependency>
     </dependencies>
 

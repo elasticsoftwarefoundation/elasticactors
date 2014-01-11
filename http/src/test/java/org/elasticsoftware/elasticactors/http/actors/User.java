@@ -18,8 +18,10 @@ package org.elasticsoftware.elasticactors.http.actors;
 
 import com.google.common.base.Charsets;
 import org.apache.log4j.Logger;
+import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.TypedActor;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.http.messages.HttpRequest;
 import org.elasticsoftware.elasticactors.http.messages.HttpResponse;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
@@ -32,6 +34,7 @@ import java.util.Map;
 /**
  * @author Joost van de Wijgerd
  */
+@Actor(serializationFramework = JacksonSerializationFramework.class)
 public final class User extends TypedActor<HttpRequest> {
     private static final Logger logger = Logger.getLogger(User.class);
 

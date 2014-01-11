@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.http.actors;
 
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ServiceActor;
 import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.http.messages.HttpRequest;
 import org.elasticsoftware.elasticactors.http.messages.RegisterRouteMessage;
@@ -25,6 +26,7 @@ import org.elasticsoftware.elasticactors.http.messages.RegisterRouteMessage;
 /**
  * @author Joost van de Wijgerd
  */
+@ServiceActor("userDispatcher")
 public final class UserDispatcher extends TypedActor<HttpRequest> {
     private static final Logger logger = Logger.getLogger(UserDispatcher.class);
 

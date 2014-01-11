@@ -17,8 +17,10 @@
 package org.elasticsoftware.elasticactors.http.actors;
 
 import org.apache.log4j.Logger;
+import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.UntypedActor;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.http.messages.HttpRequest;
 import org.elasticsoftware.elasticactors.http.messages.RegisterRouteMessage;
 import org.elasticsoftware.elasticactors.http.messages.ServerSentEvent;
@@ -30,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author Joost van de Wijgerd
  */
+@Actor(serializationFramework = JacksonSerializationFramework.class)
 public final class EventStreamer extends UntypedActor {
     private static final Logger logger = Logger.getLogger(EventStreamer.class);
 

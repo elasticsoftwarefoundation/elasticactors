@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.test;
+package org.elasticsoftware.elasticactors.test.messaging;
 
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
@@ -23,7 +23,7 @@ import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 /**
  * @author Joost van de Wijgerd
  */
-public class UnsupportedMessageQueueFactory implements MessageQueueFactory {
+public final class UnsupportedMessageQueueFactory implements MessageQueueFactory {
     @Override
     public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
         throw new UnsupportedOperationException("Remote Queues not supported in test mode");

@@ -16,6 +16,9 @@
 
 package org.elasticsoftware.elasticactors.examples.pi;
 
+import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.ListenableFuture;
+import com.ning.http.client.Response;
 import org.apache.log4j.BasicConfigurator;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.testng.annotations.AfterMethod;
@@ -23,6 +26,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
+
+import static org.testng.Assert.assertEquals;
 
 /**
  * @author Joost van de Wijgerd
@@ -34,7 +39,7 @@ public class PiApproximatorTest {
     public void setUp() {
         BasicConfigurator.resetConfiguration();
         BasicConfigurator.configure();
-        testActorSystem = TestActorSystem.create();
+        testActorSystem = new TestActorSystem();
     }
 
     @AfterMethod(enabled = false)
@@ -148,11 +153,11 @@ public class PiApproximatorTest {
     public void testInContainer() throws Exception {
         // make sure http system is loaded
 
-        /*AsyncHttpClient httpClient = new AsyncHttpClient();
+        AsyncHttpClient httpClient = new AsyncHttpClient();
         ListenableFuture<Response> responseFuture = httpClient.prepareGet("http://localhost:8080/pi/calculate").execute();
         Response response = responseFuture.get();
         assertEquals(response.getContentType(),"application/json");
-        System.out.println(response.getResponseBody("UTF-8"));*/
+        System.out.println(response.getResponseBody("UTF-8"));
     }
 
     /*@Test

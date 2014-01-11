@@ -36,7 +36,7 @@ import java.util.Map;
 /**
  * @author Joost van de Wijgerd
  */
-@ServiceActor(name = "httpClient")
+@ServiceActor("httpClient")
 public final class HttpClientService extends TypedActor<HttpRequest> {
     private static final Logger logger = Logger.getLogger(HttpClientService.class);
     private AsyncHttpClient httpClient;

@@ -28,6 +28,7 @@ import org.springframework.util.PathMatcher;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -40,7 +41,8 @@ import java.util.concurrent.Executors;
 /**
  * @author Joost van de Wijgerd
  */
-@ServiceActor(name = "httpServer")
+// @todo: need to make sure spring can take the name from ServiceActor annotation
+@ServiceActor("httpServer")
 public final class HttpService extends UntypedActor {
     private static final Logger logger = Logger.getLogger(HttpService.class);
     private final ConcurrentMap<String,ActorRef> routes = new ConcurrentHashMap<String,ActorRef>();

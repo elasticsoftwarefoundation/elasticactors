@@ -44,39 +44,34 @@ import static org.testng.Assert.*;
 public class HttpActorSystemTest {
     private TestActorSystem testActorSystem;
 
-        @BeforeMethod(enabled = false)
-        public void setUp() {
-            BasicConfigurator.resetConfiguration();
-            BasicConfigurator.configure();
-            testActorSystem = TestActorSystem.create();
-        }
+    @BeforeMethod(enabled = true)
+    public void setUp() {
+        BasicConfigurator.configure();
+        testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+    }
 
-        @AfterMethod(enabled =false)
-        public void tearDown() {
-            if(testActorSystem != null) {
-                testActorSystem.destroy();
-                testActorSystem = null;
-            }
-            BasicConfigurator.resetConfiguration();
-        }
+    @AfterMethod(enabled = true)
+    public void tearDown() {
+        testActorSystem.destroy();
+    }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void testInContainer() throws Exception {
-        ActorSystemConfiguration configuration = mock(ActorSystemConfiguration.class);
-        ActorSystem testSystem = testActorSystem.create(configuration);
+        ActorSystem testSystem = testActorSystem.getActorSystem("http");
 
         // create a couple of users
         ActorRef user1Ref = testSystem.actorOf("users/1", User.class);
-        ActorRef user2Ref = testSystem.actorOf("users/2",User.class);
-        ActorRef user3Ref = testSystem.actorOf("users/3",User.class);
+        ActorRef user2Ref = testSystem.actorOf("users/2", User.class);
+        ActorRef user3Ref = testSystem.actorOf("users/3", User.class);
 
         AsyncHttpClient testClient = new AsyncHttpClient();
         for (int i = 1; i < 4; i++) {
-            ListenableFuture<Response> responseFuture = testClient.prepareGet(String.format("http://localhost:8080/users/%d",i)).execute();
+            ListenableFuture<Response> responseFuture = testClient.prepareGet(String.format("http://localhost:8080/users/%d", i)).execute();
             Response response = responseFuture.get();
 
-            assertEquals(response.getContentType(),"text/plain");
-            assertEquals(response.getResponseBody("UTF-8"),"HelloWorld");
+            assertEquals(response.getContentType(), "text/plain");
+            assertEquals(response.getResponseBody("UTF-8"), "HelloWorld");
 
         }
 
@@ -89,18 +84,18 @@ public class HttpActorSystemTest {
         ListenableFuture<Response> responseFuture = testClient.prepareGet("http://localhost:8080/users/1").execute();
         Response response = responseFuture.get();
 
-        assertEquals(response.getStatusCode(),404);
+        assertEquals(response.getStatusCode(), 404);
     }
 
     @Test(enabled = false)
     public void testURIParsing() throws Exception {
         URI asbsoluteUri = new URI("http://localhost:8080/events/testing");
         assertNotNull(asbsoluteUri);
-        assertEquals(asbsoluteUri.getPath(),"/events/testing");
-        assertEquals(asbsoluteUri.getHost(),"localhost");
+        assertEquals(asbsoluteUri.getPath(), "/events/testing");
+        assertEquals(asbsoluteUri.getHost(), "localhost");
         URI uri = new URI("/events/testing");
         assertNotNull(uri);
-        assertEquals(uri.getPath(),"/events/testing");
+        assertEquals(uri.getPath(), "/events/testing");
         assertNull(uri.getHost());
     }
 
@@ -137,57 +132,56 @@ public class HttpActorSystemTest {
     }*/
 
     @Test(enabled = false)
-        public void testEventStreamingWithAsyncHttpClient() throws Exception {
-        ActorSystemConfiguration configuration = mock(ActorSystemConfiguration.class);
-                ActorSystem testSystem = testActorSystem.create(configuration);
+    public void testEventStreamingWithAsyncHttpClient() throws Exception {
+        ActorSystem testSystem = testActorSystem.getActorSystem("http");
 
-            // create a stream
-            ActorRef steamer = testSystem.actorOf("events/testing",EventStreamer.class);
+        // create a stream
+        ActorRef steamer = testSystem.actorOf("events/testing", EventStreamer.class);
 
-            AsyncHttpClient testClient = new AsyncHttpClient();
-            final CountDownLatch waitLatch = new CountDownLatch(1);
-            testClient.prepareGet("http://localhost:8080/events/testing").execute(new ServerSentEventsHandler(waitLatch));
-            waitLatch.await(1, TimeUnit.MINUTES);
+        AsyncHttpClient testClient = new AsyncHttpClient();
+        final CountDownLatch waitLatch = new CountDownLatch(1);
+        testClient.prepareGet("http://localhost:8080/events/testing").execute(new ServerSentEventsHandler(waitLatch));
+        waitLatch.await(1, TimeUnit.MINUTES);
+    }
+
+    private static final class ServerSentEventsHandler implements AsyncHandler<Object> {
+        private static final Logger logger = Logger.getLogger(ServerSentEventsHandler.class);
+        private final CountDownLatch waitLatch;
+
+        private ServerSentEventsHandler(CountDownLatch waitLatch) {
+            this.waitLatch = waitLatch;
         }
 
-        private static final class ServerSentEventsHandler implements AsyncHandler<Object> {
-            private static final Logger logger = Logger.getLogger(ServerSentEventsHandler.class);
-            private final CountDownLatch waitLatch;
-
-            private ServerSentEventsHandler(CountDownLatch waitLatch) {
-                this.waitLatch = waitLatch;
-            }
-
-            @Override
-            public void onThrowable(Throwable t) {
-                logger.error(t);
-                waitLatch.countDown();
-            }
-
-            @Override
-            public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
-                logger.info(new String(bodyPart.getBodyPartBytes(),Charsets.UTF_8));
-                return STATE.CONTINUE;
-            }
-
-            @Override
-            public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
-                logger.info(responseStatus.getStatusCode());
-                return STATE.CONTINUE;
-            }
-
-            @Override
-            public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
-                return STATE.CONTINUE;
-            }
-
-            @Override
-            public Object onCompleted() throws Exception {
-                logger.info("onCompleted");
-                waitLatch.countDown();
-                return null;  //To change body of implemented methods use File | Settings | File Templates.
-            }
+        @Override
+        public void onThrowable(Throwable t) {
+            logger.error(t);
+            waitLatch.countDown();
         }
+
+        @Override
+        public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
+            logger.info(new String(bodyPart.getBodyPartBytes(), Charsets.UTF_8));
+            return STATE.CONTINUE;
+        }
+
+        @Override
+        public STATE onStatusReceived(HttpResponseStatus responseStatus) throws Exception {
+            logger.info(responseStatus.getStatusCode());
+            return STATE.CONTINUE;
+        }
+
+        @Override
+        public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+            return STATE.CONTINUE;
+        }
+
+        @Override
+        public Object onCompleted() throws Exception {
+            logger.info("onCompleted");
+            waitLatch.countDown();
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+    }
 
 
 }

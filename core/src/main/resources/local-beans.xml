@@ -54,13 +54,13 @@
 
     <alias name="messageQueueWorkers" alias="localMessageQueueFactory"/>
 
-    <bean name="remoteMessageQueueFactory" class="org.elasticsoftware.elasticactors.test.UnsupportedMessageQueueFactory"/>
+    <bean name="remoteMessageQueueFactory" class="org.elasticsoftware.elasticactors.test.messaging.UnsupportedMessageQueueFactory"/>
 
     <bean id="simpleScheduler" class="org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler"/>
 
     <bean id="testActorSystem" class="org.elasticsoftware.elasticactors.test.TestActorSystem"/>
 
-    <bean id="persistentActorRepository" class="org.elasticsoftware.elasticactors.test.NoopPersistentActorRepository"/>
+    <bean id="persistentActorRepository" class="org.elasticsoftware.elasticactors.test.state.NoopPersistentActorRepository"/>
 
     <bean id="commitLog" class="org.elasticsoftware.elasticactors.test.NoopCommitLog"/>
 </beans>

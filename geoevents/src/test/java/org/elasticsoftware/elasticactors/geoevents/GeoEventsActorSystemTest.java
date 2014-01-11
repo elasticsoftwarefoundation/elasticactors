@@ -18,10 +18,22 @@ package org.elasticsoftware.elasticactors.geoevents;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.geoevents.actors.TestActor;
+import org.elasticsoftware.elasticactors.geoevents.messages.PublishLocation;
+import org.elasticsoftware.elasticactors.geoevents.messages.RegisterInterest;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import static org.testng.Assert.assertTrue;
 
 /**
  * @author Joost van de Wijgerd
@@ -31,14 +43,15 @@ public class GeoEventsActorSystemTest {
 
     private TestActorSystem testActorSystem;
 
-        @BeforeMethod(enabled = false)
+        @BeforeMethod(enabled = true)
         public void setUp() {
             BasicConfigurator.resetConfiguration();
             BasicConfigurator.configure();
-            testActorSystem = TestActorSystem.create();
+            testActorSystem = new TestActorSystem();
+            testActorSystem.initialize();
         }
 
-        @AfterMethod(enabled = false)
+        @AfterMethod(enabled = true)
         public void tearDown() {
             if(testActorSystem != null) {
                 testActorSystem.destroy();
@@ -49,10 +62,10 @@ public class GeoEventsActorSystemTest {
 
     @Test(enabled = false)
     public void testInContainer() throws Exception {
-
-        /*ActorRef dispatcher = geoEventsSystem.serviceActorFor("geoEventsService");
+        ActorSystem geoEventsSystem = testActorSystem.getActorSystem("geo-events");
+        ActorRef dispatcher = geoEventsSystem.serviceActorFor("geoEventsService");
         final CountDownLatch waitLatch = new CountDownLatch(1);
-        ActorRef listener = testSystem.tempActorOf(TestActor.class, new Receiver() {
+        ActorRef listener = geoEventsSystem.tempActorOf(TestActor.class, new Receiver() {
             @Override
             public void onReceive(ActorRef sender, Object message) throws Exception {
                 //@todo: capture the messages
@@ -64,7 +77,7 @@ public class GeoEventsActorSystemTest {
         // register interest in the center of amsterdam (with a radius of 2500 metres)
         dispatcher.tell(new RegisterInterest(listener,new Coordinate(52.370216d,4.895168d),2500),listener);
 
-        ActorRef publisher = testSystem.tempActorOf(TestActor.class, new Receiver() {
+        ActorRef publisher = geoEventsSystem.tempActorOf(TestActor.class, new Receiver() {
             @Override
             public void onReceive(ActorRef sender, Object message) throws Exception {
                 //@todo: capture the messages
@@ -77,7 +90,7 @@ public class GeoEventsActorSystemTest {
         dispatcher.tell(new PublishLocation(publisher,new Coordinate(52.364207d,4.891793d),3600,customProperties),publisher);
 
         // listener should now receive an update
-        assertTrue(waitLatch.await(1, TimeUnit.MINUTES));*/
+        assertTrue(waitLatch.await(1, TimeUnit.MINUTES));
 
 
 

@@ -16,8 +16,12 @@
 
 package org.elasticsoftware.elasticactors.http.messages;
 
+import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.Message;
+
 /**
  * @author Joost van de Wijgerd
  */
+@Message(serializationFramework = JacksonSerializationFramework.class)
 public class Pong {
 }
