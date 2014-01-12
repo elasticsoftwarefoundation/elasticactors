@@ -5,7 +5,7 @@ Persistent Stateful Actor System
 
 ### Current released version
 
-0.2.0
+0.2.1
 
 ### Add Elastic Actors to your Project
 
