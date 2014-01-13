@@ -69,13 +69,13 @@ public class GMSAdminAgent implements CallBack {
     private boolean isAdmin = false;
     private static AtomicInteger NotifiedOfStateChange = new AtomicInteger(GMSAdminConstants.RUN);
     private boolean SHUTDOWNINITIATED = false;
-    List<String> activeMembers = new LinkedList<String>();
+    List<String> activeMembers = new LinkedList<>();
     private GMSConstants.shutdownType shutdownType = GMSConstants.shutdownType.INSTANCE_SHUTDOWN;
     private static AtomicLong timeReceivedLastJoinJoinedAndReady = new AtomicLong(System.currentTimeMillis());
     private static AtomicLong diffTime = new AtomicLong(0);
     private static AtomicBoolean startupComplete = new AtomicBoolean(false);
     private static AtomicBoolean startupInitiated = new AtomicBoolean(false);
-    private static ArrayList<Thread> replyThreads = new ArrayList<Thread>();
+    private static ArrayList<Thread> replyThreads = new ArrayList<>();
 
     public GMSAdminAgent(final GroupManagementService gms,
             final String groupName,
