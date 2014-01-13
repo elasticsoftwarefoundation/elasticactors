@@ -86,7 +86,7 @@ public class GMSAdminAgent implements CallBack {
         this.memberName = memberName.toLowerCase();
         this.lifeTime = lifeTime;
 
-        // if the member name is server then it is assumed that that member is
+        // if the member nasme is server then it is assumed that that member is
         // the admin
         if (this.memberName.equals(GMSAdminConstants.ADMINNAME)) {
             this.isAdmin = true;
