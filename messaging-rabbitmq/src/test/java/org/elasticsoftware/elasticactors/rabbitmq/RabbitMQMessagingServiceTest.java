@@ -44,9 +44,9 @@ import static org.testng.Assert.assertTrue;
  */
 public class RabbitMQMessagingServiceTest {
     public final int NUM_PARTITIONS = 64;
-    public final int NUM_MESSAGES = 1000;
+    public final int NUM_MESSAGES = 10000;
     public final String CLUSTER_NAME = "test.vdwbv.com";
-    public static final String QUEUENAME_FORMAT = "%s_%d";
+    public static final String QUEUENAME_FORMAT = "default/shards/%d";
     public static final String PAYLOAD_FORMAT = "This is message numero %d";
     public final Random random = new Random();
     private ActorRef senderRef;
@@ -70,7 +70,7 @@ public class RabbitMQMessagingServiceTest {
     }
 
     @Test
-    public void testAllLocal() throws Exception {
+    public void testAllxxLocal() throws Exception {
         int workers = Runtime.getRuntime().availableProcessors() * 3;
         ThreadBoundExecutor<String> queueExecutor = new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
         RabbitMQMessagingService messagingService = new RabbitMQMessagingService(CLUSTER_NAME,"bux_mq", queueExecutor);
@@ -98,7 +98,7 @@ public class RabbitMQMessagingServiceTest {
         // simulate 8 partitions
         MessageQueueFactory localMessageQueueFactory = messagingService.getLocalMessageQueueFactory();
         for (int i = 0; i < NUM_PARTITIONS; i++) {
-            messageQueues.add(localMessageQueueFactory.create(String.format(QUEUENAME_FORMAT,CLUSTER_NAME,i),testHandler));
+            messageQueues.add(localMessageQueueFactory.create(String.format(QUEUENAME_FORMAT,i),testHandler));
         }
 
         // send the messages
