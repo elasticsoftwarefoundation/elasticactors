@@ -29,6 +29,8 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 
+import static java.lang.String.format;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -36,6 +38,7 @@ public class RabbitMQMessagingService implements MessagingService {
     private static final Logger logger = Logger.getLogger(RabbitMQMessagingService.class);
     private final ConnectionFactory connectionFactory = new ConnectionFactory();
     private final String rabbitmqHosts;
+    private static final String QUEUE_NAME_FORMAT = "%s/%s";
     private final String elasticActorsCluster;
     private static final String EA_EXCHANGE_FORMAT = "ea.%s";
     private final String exchangeName;
@@ -50,7 +53,7 @@ public class RabbitMQMessagingService implements MessagingService {
         this.rabbitmqHosts = rabbitmqHosts;
         this.elasticActorsCluster = elasticActorsCluster;
         this.queueExecutor = queueExecutor;
-        this.exchangeName = String.format(EA_EXCHANGE_FORMAT,elasticActorsCluster);
+        this.exchangeName = format(EA_EXCHANGE_FORMAT, elasticActorsCluster);
         this.localMessageQueueFactory = new LocalMessageQueueFactory();
         this.remoteMessageQueueFactory = new RemoteMessageQueueFactory();
     }
@@ -106,8 +109,9 @@ public class RabbitMQMessagingService implements MessagingService {
     private final class LocalMessageQueueFactory implements MessageQueueFactory {
         @Override
         public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
-            ensureQueueExists(consumerChannel,name);
-            LocalMessageQueue messageQueue = new LocalMessageQueue(queueExecutor, consumerChannel,producerChannel,exchangeName,name,messageHandler);
+            final String queueName = format(QUEUE_NAME_FORMAT,elasticActorsCluster,name);
+            ensureQueueExists(consumerChannel,queueName);
+            LocalMessageQueue messageQueue = new LocalMessageQueue(queueExecutor, consumerChannel,producerChannel,exchangeName,queueName,messageHandler);
             messageQueue.initialize();
             return messageQueue;
         }
@@ -116,8 +120,9 @@ public class RabbitMQMessagingService implements MessagingService {
     private final class RemoteMessageQueueFactory implements MessageQueueFactory {
         @Override
         public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
-            ensureQueueExists(producerChannel,name);
-            return new RemoteMessageQueue(producerChannel,exchangeName,name);
+            final String queueName = format(QUEUE_NAME_FORMAT,elasticActorsCluster,name);
+            ensureQueueExists(producerChannel,queueName);
+            return new RemoteMessageQueue(producerChannel,exchangeName,queueName);
         }
     }
 }
