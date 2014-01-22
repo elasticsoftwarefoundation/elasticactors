@@ -16,17 +16,34 @@
 
 package org.elasticsoftware.elasticactors.configuration;
 
+import org.elasticsoftware.elasticactors.Asynchronous;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.aspectj.EnableSpringConfigured;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import java.util.concurrent.Executor;
 
 /**
  * @author Joost van de Wijgerd
  */
 @Configuration
 @EnableSpringConfigured
+@EnableAsync(annotation = Asynchronous.class)
 @PropertySource(value = "file:/etc/elasticactors/system.properties")
 @Import(value = {NodeConfiguration.class,MessagingConfiguration.class,BackplaneConfiguration.class})
 public class AppConfiguration {
+    @Bean(name = "asyncExecutor")
+    public Executor getAsyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(Runtime.getRuntime().availableProcessors());
+        executor.setMaxPoolSize(Runtime.getRuntime().availableProcessors() * 3);
+        executor.setQueueCapacity(1024);
+        executor.setThreadNamePrefix("ASYNCHRONOUS-ANNOTATION-EXECUTOR-");
+        executor.initialize();
+        return executor;
+    }
 }
