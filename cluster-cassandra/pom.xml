@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.elasticsoftware.elasticactors</groupId>
         <artifactId>elasticactors-parent</artifactId>
-        <version>0.2.3-SNAPSHOT</version>
+        <version>0.3.0-SNAPSHOT</version>
     </parent>
 
     <groupId>org.elasticsoftware.elasticactors</groupId>
