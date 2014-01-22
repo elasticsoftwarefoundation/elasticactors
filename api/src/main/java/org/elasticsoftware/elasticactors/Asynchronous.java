@@ -13,4 +13,10 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Asynchronous {
+    /**
+     * Can be used to qualify the executor used, by default set to asyncExecutor
+     *
+     * @return
+     */
+    String value() default "asyncExecutor";
 }
