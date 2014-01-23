@@ -39,8 +39,12 @@ public final class TestActorSystem {
 
     }
 
-    public ActorSystem getActorSystem(String name) {
+    public ActorSystem getActorSystem() {
         return applicationContext.getBean(ActorSystem.class);
+    }
+
+    public ActorSystem getActorSystem(String name) {
+        return getActorSystem();
     }
 
     @PostConstruct

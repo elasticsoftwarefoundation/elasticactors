@@ -39,6 +39,43 @@ convenient base classes inclusing a Jackson 2 based serialization framework:
 </dependency>
 ```
 
+### Example code
+
+Some example code (in java)
+
+```java
+@Message(serializationFramework = JacksonSerializationFramework.class,durable = true)
+public class Greeting {
+    private final String who;
+
+    @JsonCreator
+    public Greeting(@JsonProperty("who") String who) {
+        this.who = who;
+    }
+
+    public String getWho() {
+        return who;
+    }
+}
+
+@Actor(stateClass = StringState.class,serializationFramework = JacksonSerializationFramework.class)
+public class GreetingActor extends TypedActor<Greeting> {
+    @Override
+    public void onReceive(ActorRef sender, Greeting message) throws Exception {
+        System.out.println("Hello " + message.getWho());
+    }
+}
+
+TestActorSystem testActorSystem = new TestActorSystem();
+testActorSystem.initialize();
+
+ActorSystem actorSystem = testActorSystem.getActorSystem();
+ActorRef greeter = actorSystem.actorOf("greeter",GreetingActor.class);
+greeter.tell(new Greeting("Joost van de Wijgerd"),null);
+
+testActorSystem.destroy();
+```
+
 
 
 
