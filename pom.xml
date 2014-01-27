@@ -102,7 +102,6 @@
     </dependencies>
 
     <modules>
-        <module>cluster-cassandra</module>
         <module>core</module>
         <module>api</module>
         <module>examples</module>
