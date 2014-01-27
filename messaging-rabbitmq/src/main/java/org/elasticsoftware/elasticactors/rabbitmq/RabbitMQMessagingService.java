@@ -17,6 +17,12 @@
 package org.elasticsoftware.elasticactors.rabbitmq;
 
 import com.rabbitmq.client.*;
+import net.jodah.lyra.ConnectionOptions;
+import net.jodah.lyra.Connections;
+import net.jodah.lyra.config.Config;
+import net.jodah.lyra.config.RecoveryPolicy;
+import net.jodah.lyra.config.RetryPolicy;
+import net.jodah.lyra.util.Duration;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
@@ -64,8 +70,20 @@ public class RabbitMQMessagingService implements MessagingService {
         connectionFactory.setConnectionTimeout(1000);
         // seconds
         connectionFactory.setRequestedHeartbeat(4);
+        // lyra reconnect logic
+        Config config = new Config()
+                .withRecoveryPolicy(new RecoveryPolicy()
+                        .withMaxAttempts(-1)
+                        .withBackoff(Duration.seconds(1),Duration.seconds(30))
+                ).withRetryPolicy(new RetryPolicy()
+                        .withMaxAttempts(-1)
+                        .withBackoff(Duration.seconds(1),Duration.seconds(30)));
+
+        ConnectionOptions connectionOptions = new ConnectionOptions(connectionFactory).withAddresses(rabbitmqHosts);
+
         // create single connection
-        clientConnection = connectionFactory.newConnection(Address.parseAddresses(rabbitmqHosts));
+        //clientConnection = connectionFactory.newConnection(Address.parseAddresses(rabbitmqHosts));
+        clientConnection = Connections.create(connectionOptions,config);
         // create a seperate producer and a seperate consumer channel
         consumerChannel = clientConnection.createChannel();
         producerChannel = clientConnection.createChannel();

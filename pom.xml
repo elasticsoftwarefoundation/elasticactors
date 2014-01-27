@@ -44,6 +44,7 @@
         <reflections.version>0.9.9-RC1</reflections.version>
         <typetools.version>0.3.0</typetools.version>
         <rabbitmq.version>3.2.2</rabbitmq.version>
+        <lyra.version>0.3.2</lyra.version>
         <spring.amqp.version>1.2.0.RELEASE</spring.amqp.version>
         <!-- testing -->
         <testng-version>5.10</testng-version>
