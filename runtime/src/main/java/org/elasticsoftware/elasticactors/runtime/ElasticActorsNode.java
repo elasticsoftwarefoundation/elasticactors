@@ -16,6 +16,8 @@
 
 package org.elasticsoftware.elasticactors.runtime;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.sun.enterprise.ee.cms.core.*;
 import com.sun.enterprise.ee.cms.impl.client.*;
 import com.sun.enterprise.mgmt.transport.grizzly.GrizzlyConfigConstants;
@@ -56,6 +58,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     private final SystemSerializers systemSerializers = new SystemSerializers(this);
     private final SystemDeserializers systemDeserializers = new SystemDeserializers(this);
     private final CountDownLatch waitLatch = new CountDownLatch(1);
+    private Cache<String,ActorRef> actorRefCache;
     @Autowired
     private ApplicationContext applicationContext;
     private GroupManagementService gms;
@@ -71,6 +74,8 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
 
     @PostConstruct
     public void init() throws GMSException {
+        //@todo: take this value from the configuration file
+        actorRefCache = CacheBuilder.newBuilder().maximumSize(1024).build();
         gms = initializeGMS(nodeId, clusterName, nodeAddress.getHostAddress());
         gms.join();
         gms.updateMemberDetails(nodeId,"address",nodeAddress.getHostAddress());
@@ -168,8 +173,13 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     }
 
     @Override
-    public ActorRef create(String refSpec) {
-        return ActorRefTools.parse(refSpec, this);
+    public ActorRef create(final String refSpec) {
+        ActorRef actorRef = actorRefCache.getIfPresent(refSpec);
+        if(actorRef == null) {
+            actorRef = ActorRefTools.parse(refSpec, this);
+            actorRefCache.put(refSpec,actorRef);
+        }
+        return actorRef;
     }
 
     @Override
