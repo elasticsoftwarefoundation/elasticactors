@@ -52,10 +52,10 @@ public final class CreateActorTask extends ActorLifecycleTask {
     }
 
     @Override
-    protected void doInActorContext(InternalActorSystem actorSystem,
-                                    ElasticActor receiver,
-                                    ActorRef receiverRef,
-                                    InternalMessage internalMessage) {
+    protected boolean doInActorContext(InternalActorSystem actorSystem,
+                                       ElasticActor receiver,
+                                       ActorRef receiverRef,
+                                       InternalMessage internalMessage) {
         if(logger.isDebugEnabled()) {
             logger.debug(String.format("Creating Actor for ref [%s] of type [%s]",receiverRef.toString(),receiver.getClass().getName()));
         }
@@ -63,8 +63,11 @@ public final class CreateActorTask extends ActorLifecycleTask {
             // @todo: somehow figure out the creator
             receiver.postCreate(null);
             receiver.postActivate(null);
+
         } catch (Exception e) {
             logger.error("Exception calling postCreate",e);
         }
+        // always store the initial state
+        return true;
     }
 }

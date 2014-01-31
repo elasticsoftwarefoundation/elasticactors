@@ -66,8 +66,9 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         // setup the context
         Exception executionException = null;
         InternalActorContext.setContext(persistentActor);
+        boolean shouldUpdateState = false;
         try {
-            doInActorContext(actorSystem, receiver, receiverRef, internalMessage);
+            shouldUpdateState = doInActorContext(actorSystem, receiver, receiverRef, internalMessage);
         } catch (Exception e) {
             log.error("Exception in doInActorContext",e);
             executionException = e;
@@ -75,7 +76,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             // clear the state from the thread
             InternalActorContext.getAndClearContext();
             // check if we have state now that needs to be put in the cache
-            if (persistentActorRepository != null && persistentActor.getState() != null) {
+            if (persistentActorRepository != null && persistentActor.getState() != null && shouldUpdateState) {
                 try {
                     persistentActorRepository.update((ShardKey) persistentActor.getKey(), persistentActor);
                 } catch (Exception e) {
@@ -92,9 +93,9 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         }
     }
 
-    protected abstract void doInActorContext(InternalActorSystem actorSystem,
-                                             ElasticActor receiver,
-                                             ActorRef receiverRef,
-                                             InternalMessage internalMessage);
+    protected abstract boolean doInActorContext(InternalActorSystem actorSystem,
+                                                ElasticActor receiver,
+                                                ActorRef receiverRef,
+                                                InternalMessage internalMessage);
 
 }

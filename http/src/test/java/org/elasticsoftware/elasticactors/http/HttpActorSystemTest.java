@@ -65,7 +65,7 @@ public class HttpActorSystemTest {
 
         AsyncHttpClient testClient = new AsyncHttpClient();
         for (int i = 1; i < 4; i++) {
-            ListenableFuture<Response> responseFuture = testClient.prepareGet(String.format("http://localhost:9080/users/%d", i)).execute();
+            ListenableFuture<Response> responseFuture = testClient.prepareGet(String.format("http://localhost:9081/users/%d", i)).execute();
             Response response = responseFuture.get();
 
             assertEquals(response.getContentType(), "text/plain");

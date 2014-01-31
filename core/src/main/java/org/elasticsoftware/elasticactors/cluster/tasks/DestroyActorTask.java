@@ -52,18 +52,22 @@ public final class DestroyActorTask extends ActorLifecycleTask {
     }
 
     @Override
-    protected void doInActorContext(InternalActorSystem actorSystem,
-                                    ElasticActor receiver,
-                                    ActorRef receiverRef,
-                                    InternalMessage internalMessage) {
+    protected boolean doInActorContext(InternalActorSystem actorSystem,
+                                       ElasticActor receiver,
+                                       ActorRef receiverRef,
+                                       InternalMessage internalMessage) {
         if(logger.isDebugEnabled()) {
             logger.debug(String.format("Destroying Actor for ref [%s] of type [%s]",receiverRef.toString(),receiver.getClass().getName()));
         }
         try {
             // @todo: figure out the destroyer
             receiver.preDestroy(null);
+            // don't update.. but somehow delete
+            // @todo: find out how to delete entry
         } catch (Exception e) {
             logger.error("Exception calling preDestroy",e);
         }
+        // never update record (delete entry)
+        return false;
     }
 }

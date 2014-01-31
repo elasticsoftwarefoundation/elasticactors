@@ -22,8 +22,11 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+
+import java.util.Arrays;
 
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
@@ -45,22 +48,30 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
     }
 
 
-    protected void doInActorContext(InternalActorSystem actorSystem,
-                                    ElasticActor receiver,
-                                    ActorRef receiverRef,
-                                    InternalMessage internalMessage) {
+    protected boolean doInActorContext(InternalActorSystem actorSystem,
+                                       ElasticActor receiver,
+                                       ActorRef receiverRef,
+                                       InternalMessage internalMessage) {
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
             try {
-
                 receiver.onUndeliverable(internalMessage.getSender(), message);
+                return shouldUpdateState(receiver.getClass(),message);
             } catch (Exception e) {
                 // @todo: handle by sending back a message (if possible)
                 log.error(String.format("Exception while handling undeliverable message for actor [%s]", receiverRef.toString()), e);
+                return false;
             }
         } catch (Exception e) {
             log.error(String.format("Exception while Deserializing Message class %s in ActorSystem [%s]",
                     internalMessage.getPayloadClass(), actorSystem.getName()), e);
+            return false;
         }
+    }
+
+    private boolean shouldUpdateState(Class<? extends  ElasticActor> actorClass, Object message) {
+        // look at the annotation on the actor class
+        PersistenceConfig persistenceConfig = actorClass.getAnnotation(PersistenceConfig.class);
+        return persistenceConfig == null || persistenceConfig.persistAll() && !Arrays.asList(persistenceConfig.excluded()).contains(message.getClass());
     }
 }

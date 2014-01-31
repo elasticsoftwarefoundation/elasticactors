@@ -162,7 +162,7 @@ public class PiApproximatorTest {
         testSystem.actorOf("master",Master.class,new Master.State(listener,16,10000,10));
 
         AsyncHttpClient httpClient = new AsyncHttpClient();
-        ListenableFuture<Response> responseFuture = httpClient.prepareGet("http://localhost:9080/pi/calculate").execute();
+        ListenableFuture<Response> responseFuture = httpClient.prepareGet("http://localhost:9081/pi/calculate").execute();
         Response response = responseFuture.get();
         assertEquals(response.getContentType(),"application/json");
         System.out.println(response.getResponseBody("UTF-8"));

@@ -41,15 +41,17 @@ public final class ActivateActorTask extends ActorLifecycleTask {
     }
 
     @Override
-    protected void doInActorContext(InternalActorSystem actorSystem,
-                                    ElasticActor receiver,
-                                    ActorRef receiverRef,
-                                    InternalMessage internalMessage) {
+    protected boolean doInActorContext(InternalActorSystem actorSystem,
+                                       ElasticActor receiver,
+                                       ActorRef receiverRef,
+                                       InternalMessage internalMessage) {
         try {
             // @todo: somehow figure out the creator
             receiver.postActivate(previousActorSystemVersion);
         } catch (Exception e) {
             logger.error("Exception calling postActivate",e);
         }
+        // no need to update the state on active
+        return false;
     }
 }

@@ -39,14 +39,15 @@ public final class PassivateActorTask extends ActorLifecycleTask {
     }
 
     @Override
-    protected void doInActorContext(InternalActorSystem actorSystem,
-                                    ElasticActor receiver,
-                                    ActorRef receiverRef,
-                                    InternalMessage internalMessage) {
+    protected boolean doInActorContext(InternalActorSystem actorSystem,
+                                       ElasticActor receiver,
+                                       ActorRef receiverRef,
+                                       InternalMessage internalMessage) {
         try {
             receiver.prePassivate();
         } catch (Exception e) {
             logger.error("Exception calling prePassivate",e);
         }
+        return false;
     }
 }
