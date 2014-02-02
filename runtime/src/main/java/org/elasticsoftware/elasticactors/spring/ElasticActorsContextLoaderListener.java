@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors.spring;
 
+import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.springframework.web.context.ContextLoaderListener;
 
@@ -27,11 +28,11 @@ import javax.servlet.ServletContextEvent;
 public final class ElasticActorsContextLoaderListener extends ContextLoaderListener {
     @Override
     public void contextInitialized(ServletContextEvent event) {
-        // make sure everything is unitialied
+        // make sure everything is initialized
         super.contextInitialized(event);
         // and signal ready state to the cluster
-        ElasticActorsNode node = getCurrentWebApplicationContext().getBean(ElasticActorsNode.class);
-        node.reportReady();
+        ClusterService clusterService = getCurrentWebApplicationContext().getBean(ClusterService.class);
+        clusterService.reportReady();
     }
 
     @Override

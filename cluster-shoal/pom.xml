@@ -34,6 +34,16 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <artifactId>elasticactors-spi</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <artifactId>elasticactors-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.shoal</groupId>
             <artifactId>shoal-gms-impl</artifactId>
             <version>${shoal.version}</version>

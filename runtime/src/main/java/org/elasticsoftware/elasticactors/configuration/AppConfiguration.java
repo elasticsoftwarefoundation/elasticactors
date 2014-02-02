@@ -34,7 +34,7 @@ import java.util.concurrent.Executor;
 @EnableSpringConfigured
 @EnableAsync(annotation = Asynchronous.class)
 @PropertySource(value = "file:/etc/elasticactors/system.properties")
-@Import(value = {NodeConfiguration.class,MessagingConfiguration.class,BackplaneConfiguration.class})
+@Import(value = {ClusteringConfiguration.class,NodeConfiguration.class,MessagingConfiguration.class,BackplaneConfiguration.class})
 public class AppConfiguration {
     @Bean(name = "asyncExecutor")
     public Executor getAsyncExecutor() {

@@ -16,15 +16,13 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import org.elasticsoftware.elasticactors.PhysicalNode;
-
-import java.net.InetAddress;
-import java.util.List;
-import java.util.Map;
-
 /**
  * @author Joost van de Wijgerd
  */
-public interface ClusterEventListener {
-    void onTopologyChanged(List<PhysicalNode> topology) throws Exception;
+public interface ClusterService {
+    void reportReady();
+
+    void reportPlannedShutdown();
+
+    void setEventListener(ClusterEventListener eventListener);
 }

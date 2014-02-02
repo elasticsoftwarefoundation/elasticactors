@@ -68,9 +68,8 @@ public class NodeConfiguration {
         String nodeId = env.getRequiredProperty("ea.node.id");
         //@todo: fix node address
         InetAddress nodeAddress = InetAddress.getByName(env.getRequiredProperty("ea.node.address"));
-        //InetAddress nodeAddress = null;
         String clusterName = env.getRequiredProperty("ea.cluster");
-        node = new ElasticActorsNode(clusterName, nodeId,nodeAddress);
+        node = new ElasticActorsNode(clusterName, nodeId, nodeAddress);
     }
 
 

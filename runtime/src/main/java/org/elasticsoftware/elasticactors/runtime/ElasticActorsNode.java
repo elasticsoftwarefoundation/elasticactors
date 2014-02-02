@@ -50,7 +50,7 @@ import java.util.concurrent.ScheduledExecutorService;
 /**
  * @author Joost van de Wijgerd
  */
-public final class ElasticActorsNode implements PhysicalNode, InternalActorSystems, ActorRefFactory {
+public final class ElasticActorsNode implements PhysicalNode, InternalActorSystems, ActorRefFactory, ClusterEventListener {
     private static final Logger logger = Logger.getLogger(ElasticActorsNode.class);
     private final String clusterName;
     private final String nodeId;
@@ -61,10 +61,9 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     private Cache<String,ActorRef> actorRefCache;
     @Autowired
     private ApplicationContext applicationContext;
-    private GroupManagementService gms;
+    private ClusterService clusterService;
 
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("CLUSTER_SCHEDULER"));
-
 
     public ElasticActorsNode(String clusterName, String nodeId, InetAddress nodeAddress) {
         this.clusterName = clusterName;
@@ -72,104 +71,39 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
         this.nodeAddress = nodeAddress;
     }
 
+    @Autowired
+    public void setClusterService(ClusterService clusterService) {
+        this.clusterService = clusterService;
+        clusterService.setEventListener(this);
+    }
+
     @PostConstruct
     public void init() throws GMSException {
         //@todo: take this value from the configuration file
         actorRefCache = CacheBuilder.newBuilder().maximumSize(1024).build();
-        gms = initializeGMS(nodeId, clusterName, nodeAddress.getHostAddress());
-        gms.join();
-        gms.updateMemberDetails(nodeId,"address",nodeAddress.getHostAddress());
     }
 
     @PreDestroy
     public void destroy() {
-        reportPlannedShutdown();
+        clusterService.reportPlannedShutdown();
         waitLatch.countDown();
     }
 
-    private Map<Serializable, Serializable> getMemberDetails(String memberToken) {
-        return gms.getMemberDetails(memberToken);
-    }
-
-    private GroupManagementService initializeGMS(String serverName,String groupName, String interfaceName) throws GMSException {
-        Properties props = new Properties();
-
-        props.setProperty(ServiceProviderConfigurationKeys.MULTICASTADDRESS.toString(),"229.9.1.1");
-        props.setProperty(GrizzlyConfigConstants.BIND_INTERFACE_NAME.toString(),interfaceName);
-
-        GroupManagementService gms =
-                (GroupManagementService) GMSFactory.startGMSModule(serverName,groupName,GroupManagementService.MemberType.CORE,props);
-
-
-        final CallBack gmsCallback = new CallBack() {
-            @Override
-            public void processNotification(Signal notification) {
-                logger.info(String.format("got signal [%s] from member [%s]",notification.getClass().getSimpleName(),notification.getMemberToken()));
-                if(notification instanceof JoinedAndReadyNotificationSignal) {
-                    fireTopologyChanged(((JoinedAndReadyNotificationSignal)notification).getCurrentView());
-                } else if(notification instanceof PlannedShutdownSignal) {
-                    fireTopologyChanged(((PlannedShutdownSignal)notification).getCurrentView());
-                } else if(notification instanceof FailureNotificationSignal) {
-                    fireTopologyChanged(((FailureNotificationSignal) notification).getCurrentView());
-                }
-            }
-        };
-
-        //gms.addActionFactory(new FailureRecoveryActionFactoryImpl(gmsCallback));
-        gms.addActionFactory(new JoinNotificationActionFactoryImpl(gmsCallback));
-        gms.addActionFactory(new JoinedAndReadyNotificationActionFactoryImpl(gmsCallback));
-        gms.addActionFactory(new GroupLeadershipNotificationActionFactoryImpl(gmsCallback));
-        gms.addActionFactory(new FailureSuspectedActionFactoryImpl(gmsCallback));
-        gms.addActionFactory(new FailureNotificationActionFactoryImpl(gmsCallback));
-        gms.addActionFactory(new PlannedShutdownActionFactoryImpl(gmsCallback));
-
-        return gms;
-    }
-
-    private void fireTopologyChanged(AliveAndReadyView currentView) {
-        List<String> coreMembers = gms.getGroupHandle().getCurrentCoreMembers();
-        //AliveAndReadyView coreView = gms.getGroupHandle().getCurrentAliveAndReadyCoreView();
-        logger.info("fireTopologyChanged members in view: "+coreMembers.toString());
-        try {
-            // @todo: keep track of the previous schedule and cancel it if possible
-            //scheduledExecutorService.schedule(new RebalancingRunnable(convert(coreMembers)),5, TimeUnit.SECONDS);
-            scheduledExecutorService.submit(new RebalancingRunnable(convert(coreMembers)));
-        } catch (IOException e) {
-            //@todo: do a clean shutdown here
-            logger.error("Exception on fireTopologyChanged -> Aborting",e);
-        }
-    }
-
-    private List<PhysicalNode> convert(List<String> coreMembers) throws IOException {
-        List<PhysicalNode> clusterNodes = new LinkedList<>();
-        for (String member : coreMembers) {
-            if(nodeId.equals(member)) {
-                clusterNodes.add(new PhysicalNodeImpl(nodeId,nodeAddress,true));
-            } else {
-                InetAddress address = InetAddress.getByName((String) gms.getMemberDetails(member).get("address"));
-                clusterNodes.add(new PhysicalNodeImpl(member,address,false));
-            }
-        }
-        return clusterNodes;
+    @Override
+    public void onTopologyChanged(List<PhysicalNode> topology) throws Exception {
+        // @todo: keep track of the previous schedule and cancel it if possible
+        scheduledExecutorService.submit(new RebalancingRunnable(topology));
     }
 
     public void join() {
         // send the cluster we're ready
-        reportReady();
+        clusterService.reportReady();
 
         try {
             waitLatch.await();
         } catch (InterruptedException e) {
             //
         }
-    }
-
-    public void reportReady() {
-        gms.reportJoinedAndReadyState();
-    }
-
-    public void reportPlannedShutdown() {
-        gms.shutdown(GMSConstants.shutdownType.INSTANCE_SHUTDOWN);
     }
 
     @Override
