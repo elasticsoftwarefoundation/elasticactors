@@ -167,9 +167,4 @@ public class PiApproximatorTest {
         assertEquals(response.getContentType(),"application/json");
         System.out.println(response.getResponseBody("UTF-8"));
     }
-
-    /*@Test
-    public void testDependency() {
-        assertNotNull(AnnotationUtils.findAnnotation(PiApproximator.class,DependsOn.class));
-    }*/
 }

@@ -21,8 +21,12 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
+import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+
+import java.util.Arrays;
 
 /**
  * @author Joost van de Wijgerd
@@ -50,8 +54,10 @@ public final class ActivateActorTask extends ActorLifecycleTask {
             receiver.postActivate(previousActorSystemVersion);
         } catch (Exception e) {
             logger.error("Exception calling postActivate",e);
+            return false;
         }
-        // no need to update the state on active
-        return false;
+        // check persistence config (if any)
+        PersistenceConfig persistenceConfig = receiver.getClass().getAnnotation(PersistenceConfig.class);
+        return persistenceConfig == null || Arrays.asList(persistenceConfig.persistOn()).contains(ActorLifecycleStep.CREATE);
     }
 }

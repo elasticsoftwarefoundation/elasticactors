@@ -67,7 +67,7 @@ public final class DestroyActorTask extends ActorLifecycleTask {
         } catch (Exception e) {
             logger.error("Exception calling preDestroy",e);
         }
-        // never update record (delete entry)
+        // never update record (entry has been deleted)
         return false;
     }
 }

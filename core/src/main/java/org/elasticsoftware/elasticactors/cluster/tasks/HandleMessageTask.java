@@ -72,6 +72,16 @@ public final class HandleMessageTask extends ActorLifecycleTask {
     private boolean shouldUpdateState(Class<? extends  ElasticActor> actorClass, Object message) {
         // look at the annotation on the actor class
         PersistenceConfig persistenceConfig = actorClass.getAnnotation(PersistenceConfig.class);
-        return persistenceConfig == null || persistenceConfig.persistAll() && !Arrays.asList(persistenceConfig.excluded()).contains(message.getClass());
+        if (persistenceConfig != null) {
+            // look for not excluded when persist all is on
+            if(persistenceConfig.persistOnMessages()) {
+                return !Arrays.asList(persistenceConfig.excluded()).contains(message.getClass());
+            } else {
+                // look for included otherwise
+                return Arrays.asList(persistenceConfig.included()).contains(message.getClass());
+            }
+        } else {
+            return true;
+        }
     }
 }

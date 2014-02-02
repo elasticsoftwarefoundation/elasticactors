@@ -22,8 +22,12 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
+import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+
+import java.util.Arrays;
 
 /**
  * @author Joost van de Wijgerd
@@ -67,7 +71,8 @@ public final class CreateActorTask extends ActorLifecycleTask {
         } catch (Exception e) {
             logger.error("Exception calling postCreate",e);
         }
-        // always store the initial state
-        return true;
+        // check persistence config (if any) -> by default return true
+        PersistenceConfig persistenceConfig = receiver.getClass().getAnnotation(PersistenceConfig.class);
+        return persistenceConfig == null || Arrays.asList(persistenceConfig.persistOn()).contains(ActorLifecycleStep.CREATE);
     }
 }
