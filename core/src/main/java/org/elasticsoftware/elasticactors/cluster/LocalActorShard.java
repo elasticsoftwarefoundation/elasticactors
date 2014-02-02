@@ -98,7 +98,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     }
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
-        MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
+        MessageSerializer<Object> messageSerializer = (MessageSerializer<Object>) actorSystem.getSerializer(message.getClass());
         if(messageSerializer == null) {
         	logger.error(String.format("No message serializer found for class: %s. NOT sending message", 
         			message.getClass().getSimpleName()));
@@ -130,7 +130,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                 PersistentActor<ShardKey> actor = actorCache.get(internalMessage.getReceiver(), new Callable<PersistentActor<ShardKey>>() {
                     @Override
                     public PersistentActor<ShardKey> call() throws Exception {
-                        PersistentActor loadedActor = persistentActorRepository.get(shardKey,receiverRef.getActorId());
+                        PersistentActor<ShardKey> loadedActor = persistentActorRepository.get(shardKey, receiverRef.getActorId());
                         if(loadedActor == null) {
                             // @todo: using Spring DataAccesException here, might want to change this or use in Repository implementation
                             throw new EmptyResultDataAccessException(String.format("Actor [%s] not found in Shard [%s]",receiverRef.getActorId(),shardKey.toString()),1);
@@ -222,8 +222,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
 
     private void createActor(CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         ActorRef ref = actorSystem.actorFor(createMessage.getActorId());
-        PersistentActor persistentActor =
-                new PersistentActor(shardKey, actorSystem,actorSystem.getConfiguration().getVersion(),
+        PersistentActor<ShardKey> persistentActor =
+                new PersistentActor<>(shardKey, actorSystem,actorSystem.getConfiguration().getVersion(),
                                     ref,
                                     (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass()),
                                     createMessage.getInitialState());
@@ -277,12 +277,12 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         // find actor class behind receiver ActorRef
         ElasticActor actorInstance = actorSystem.getActorInstance(actorRef,persistentActor.getActorClass());
         // call preDestroy
-        actorExecutor.execute(new CreateActorTask(persistentActor,
-                                                  actorSystem,
-                                                  actorInstance,
-                                                  actorRef,
-                                                  internalMessage,
-                                                  messageHandlerEventListener));
+        actorExecutor.execute(new DestroyActorTask(persistentActor,
+                                                   actorSystem,
+                                                   actorInstance,
+                                                   actorRef,
+                                                   internalMessage,
+                                                   messageHandlerEventListener));
         }
 
     @Autowired
