@@ -16,13 +16,18 @@
 
 package org.elasticsoftware.elasticactors;
 
+import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.state.NullActorState;
 
 import java.lang.annotation.*;
 
 /**
+ * ActorState defaults to NullActorState
+ * SerializationFramework default to NoopSerializationFramework
+ *
  * @author Joost van de Wijgerd
+ * @author Leonard Wolters
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
@@ -30,5 +35,5 @@ import java.lang.annotation.*;
 public @interface Actor {
     Class<? extends ActorState> stateClass() default NullActorState.class;
 
-    Class<? extends SerializationFramework> serializationFramework();
+    Class<? extends SerializationFramework> serializationFramework() default NoopSerializationFramework.class;
 }
