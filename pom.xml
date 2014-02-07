@@ -104,10 +104,10 @@
     <modules>
         <module>core</module>
         <module>api</module>
-        <module>examples</module>
-        <module>http</module>
+        <!--<module>examples</module>-->
+        <!--<module>http</module>-->
         <module>base</module>
-        <module>geoevents</module>
+        <!--<module>geoevents</module>-->
         <module>runtime</module>
         <module>spi</module>
         <module>cluster-shoal</module>

@@ -23,16 +23,11 @@ import java.util.Map;
 /**
  * @author Joost van de Wijgerd
  */
-public final class ActorStateMap implements ActorState<String,Map<String,Object>> {
+public final class ActorStateMap implements ActorState<Map<String,Object>> {
     private final Map<String,Object> state;
 
     public ActorStateMap(Map<String, Object> state) {
         this.state = state;
-    }
-
-    @Override
-    public String getId() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override

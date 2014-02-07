@@ -19,9 +19,7 @@ package org.elasticsoftware.elasticactors;
 /**
  * @author Joost van de Wijgerd
  */
-public interface ActorState<Id,Body> {
-    Id getId();
-
+public interface ActorState<Body> {
     Body getBody();
 }
 

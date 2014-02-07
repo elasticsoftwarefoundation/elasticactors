@@ -19,7 +19,7 @@ package org.elasticsoftware.elasticactors;
 /**
  * @author Joost van de Wijgerd
  */
-public class TestActorState implements ActorState<String,TestActorState> {
+public class TestActorState implements ActorState<TestActorState> {
     private boolean callSucceeded = false;
     private transient ActorSystem actorSystem = null;
     private ActorRef sender;
@@ -57,11 +57,6 @@ public class TestActorState implements ActorState<String,TestActorState> {
 
     public void setCallSucceeded(boolean callSucceeded) {
         this.callSucceeded = callSucceeded;
-    }
-
-    @Override
-    public String getId() {
-        return null;
     }
 
     @Override

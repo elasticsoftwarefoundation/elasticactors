@@ -38,17 +38,12 @@ import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
  */
 @TempActor(stateClass = HttpServiceResponseHandler.State.class)
 public final class HttpServiceResponseHandler extends UntypedActor {
-    public static final class State implements ActorState<String,State> {
+    public static final class State implements ActorState<State> {
         private transient final Channel responseChannel;
         private boolean serverSentEvents = false;
 
         public State(Channel responseChannel) {
             this.responseChannel = responseChannel;
-        }
-
-        @Override
-        public String getId() {
-            return null;
         }
 
         @Override

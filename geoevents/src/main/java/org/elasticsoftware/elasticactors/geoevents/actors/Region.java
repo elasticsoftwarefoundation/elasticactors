@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 @Actor(stateClass = Region.State.class, serializationFramework = JacksonSerializationFramework.class)
 public final class Region extends UntypedActor {
     @JsonTypeName()
-    public static final class State extends JacksonActorState<GeoHash,Region.State> {
+    public static final class State extends JacksonActorState<Region.State> {
         private final GeoHash geoHash;
         private final List<RegisterInterest> listeners;
         private final SortedMap<Long,PublishLocation> publishedLocations;

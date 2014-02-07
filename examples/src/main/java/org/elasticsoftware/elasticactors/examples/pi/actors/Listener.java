@@ -44,7 +44,7 @@ public final class Listener extends UntypedActor {
     private static final Logger logger = Logger.getLogger(Listener.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static final class State extends JacksonActorState<String,Listener.State> {
+    public static final class State extends JacksonActorState<Listener.State> {
         private final Map<String,ActorRef> calculations;
 
         public State() {
@@ -54,11 +54,6 @@ public final class Listener extends UntypedActor {
         @JsonCreator
         public State(@JsonProperty("calculations") Map<String, ActorRef> calculations) {
             this.calculations = calculations;
-        }
-
-        @Override
-        public String getId() {
-            return null;
         }
 
         @Override

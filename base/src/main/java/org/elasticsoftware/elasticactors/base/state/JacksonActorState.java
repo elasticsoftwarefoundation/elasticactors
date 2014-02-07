@@ -24,8 +24,7 @@ import org.elasticsoftware.elasticactors.ActorState;
  * @author Joost van de Wijgerd
  */
 @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY)
-public abstract class JacksonActorState<Id,Body> implements ActorState<Id,Body> {
-    public abstract Id getId();
+public abstract class JacksonActorState<Body> implements ActorState<Body> {
 
     @JsonIgnore
     public abstract Body getBody();

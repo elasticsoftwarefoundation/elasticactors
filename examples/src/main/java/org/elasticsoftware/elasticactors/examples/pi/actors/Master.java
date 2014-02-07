@@ -42,7 +42,7 @@ import java.util.Map;
 public final class  Master extends UntypedActor  {
     private static final Logger logger = Logger.getLogger(Master.class);
 
-    public static final class State extends JacksonActorState<String,State> {
+    public static final class State extends JacksonActorState<State> {
         private final ActorRef listener;
         private final int nrOfWorkers;
         private final int nrOfMessages;
@@ -134,11 +134,6 @@ public final class  Master extends UntypedActor  {
             this.nrOfMessages = nrOfMessages;
             this.nrOfElements = nrOfElements;
             this.calculations = calculations;
-        }
-
-        @Override
-        public String getId() {
-            return null;
         }
 
         @Override
