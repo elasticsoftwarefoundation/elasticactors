@@ -73,7 +73,7 @@ public class RabbitMQMessagingServiceTest {
     public void testAllLocal() throws Exception {
         int workers = Runtime.getRuntime().availableProcessors() * 3;
         ThreadBoundExecutor<String> queueExecutor = new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
-        RabbitMQMessagingService messagingService = new RabbitMQMessagingService(CLUSTER_NAME,"localhost", queueExecutor);
+        RabbitMQMessagingService messagingService = new RabbitMQMessagingService(CLUSTER_NAME,System.getProperty("host","localhost"), queueExecutor);
         messagingService.start();
 
         final CountDownLatch waitLatch = new CountDownLatch(NUM_MESSAGES);
