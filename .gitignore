@@ -16,5 +16,4 @@
 
 # Other stuff
 *.bat
-base\target/
-examples\target/
+target/
