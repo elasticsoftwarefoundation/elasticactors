@@ -74,8 +74,12 @@ public abstract class MethodActor extends TypedActor<Object> {
                 }
             }
         } else {
-            unhandled(message);
+            onUnhandled(sender,message);
         }
+    }
+
+    protected void onUnhandled(ActorRef sender,Object message) {
+
     }
 
     private static enum ParameterType {
