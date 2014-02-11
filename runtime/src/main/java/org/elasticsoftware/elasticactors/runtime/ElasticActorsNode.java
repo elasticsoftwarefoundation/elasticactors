@@ -80,7 +80,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     @PostConstruct
     public void init() throws GMSException {
         //@todo: take this value from the configuration file
-        actorRefCache = CacheBuilder.newBuilder().maximumSize(1024).build();
+        actorRefCache = CacheBuilder.newBuilder().maximumSize(10240).build();
     }
 
     @PreDestroy
