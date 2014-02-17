@@ -32,6 +32,7 @@ import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Joost van de Wijgerd
@@ -134,7 +135,7 @@ public class ShoalClusterService implements ClusterService {
             logger.info("fireLeadershipChanged member: "+signal.getMemberToken());
             for (ClusterEventListener eventListener : eventListeners) {
                 try {
-                    eventListener.onTopologyChanged(convert(Arrays.asList(signal.getMemberToken())));
+                    eventListener.onMasterElected(convert(Arrays.asList(signal.getMemberToken())).get(0));
                 } catch (Exception e) {
                     logger.error("Exception on fireLeadershipChanged",e);
                 }
