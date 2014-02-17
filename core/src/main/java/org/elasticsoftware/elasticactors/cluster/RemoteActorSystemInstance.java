@@ -91,6 +91,11 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
     }
 
     @Override
+    public ActorRef serviceActorFor(String nodeId, String actorId) {
+        throw new UnsupportedOperationException("Service Actors are not supported for Remote ActorSystem instances");
+    }
+
+    @Override
     public Scheduler getScheduler() {
         throw new UnsupportedOperationException("Scheduler is not supported for Remote ActorSystem instances");
     }

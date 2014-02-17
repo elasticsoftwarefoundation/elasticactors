@@ -47,10 +47,13 @@ public interface ActorSystem {
 
     ActorRef serviceActorFor(String actorId);
 
+    ActorRef serviceActorFor(String nodeId, String actorId);
+
     Scheduler getScheduler();
 
     ActorSystems getParent();
 
     void stop(ActorRef actorRef) throws Exception;
+
 
 }

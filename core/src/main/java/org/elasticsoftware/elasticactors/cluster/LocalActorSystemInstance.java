@@ -46,6 +46,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static java.lang.String.format;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -85,7 +87,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     @Override
     public String toString() {
-        return String.format("%s[%s]", configuration.getClass(), getName());
+        return format("%s[%s]", configuration.getClass(), getName());
     }
 
     @Override
@@ -155,7 +157,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         final boolean initializing = initialized.compareAndSet(false, true);
         // see if this was the first time, if so we need to initialize the ActorSystem
         if (initializing) {
-            logger.info(String.format("Initializing ActorSystem [%s]", getName()));
+            logger.info(format("Initializing ActorSystem [%s]", getName()));
         }
 
         NodeSelector nodeSelector = nodeSelectorFactory.create(nodes);
@@ -177,7 +179,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                     // this instance should start owning the shard now
                     final ActorShard currentShard = shards[i];
                     if (currentShard == null || !currentShard.getOwningNode().isLocal()) {
-                        logger.info(String.format("I will own %s", shardKey.toString()));
+                        logger.info(format("I will own %s", shardKey.toString()));
 
                         // destroy the current remote shard instance
                         if (currentShard != null) {
@@ -194,13 +196,13 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                         scheduler.registerShard(newShard.getKey());
                     } else {
                         // we own the shard already, no change needed
-                        logger.info(String.format("I already own %s", shardKey.toString()));
+                        logger.info(format("I already own %s", shardKey.toString()));
                     }
                 } else {
                     // the shard will be managed by another node
                     final ActorShard currentShard = shards[i];
                     if (currentShard == null || currentShard.getOwningNode().isLocal()) {
-                        logger.info(String.format("%s will own %s", node, shardKey));
+                        logger.info(format("%s will own %s", node, shardKey));
 
                         // destroy the current local shard instance
                         if (currentShard != null) {
@@ -217,7 +219,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
                     } else {
                         // shard was already remote
-                        logger.info(String.format("%s will own %s", node, shardKey));
+                        logger.info(format("%s will own %s", node, shardKey));
                     }
                 }
             }
@@ -256,7 +258,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         if (pathElements[1].equals("shards")) {
             return shardAdapters[Integer.parseInt(pathElements[2])];
         } else {
-            throw new IllegalArgumentException(String.format("No ActorShard found for actorPath [%s]", actorPath));
+            throw new IllegalArgumentException(format("No ActorShard found for actorPath [%s]", actorPath));
         }
     }
 
@@ -391,6 +393,16 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     @Override
     public ActorRef serviceActorFor(String actorId) {
         return new ServiceActorRef(cluster.getClusterName(), this.localNodeAdapter, actorId);
+    }
+
+    @Override
+    public ActorRef serviceActorFor(String nodeId, String actorId) {
+        final ActorNodeAdapter nodeAdapter = this.activeNodeAdapters.get(nodeId);
+        if(nodeAdapter != null) {
+            return new ServiceActorRef(cluster.getClusterName(), nodeAdapter, actorId);
+        } else {
+            throw new IllegalArgumentException(format("Unknown node [%s]",nodeId));
+        }
     }
 
     @Override
