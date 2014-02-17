@@ -43,7 +43,7 @@ public class ShoalClusterService implements ClusterService {
     private final String nodeId;
     private final InetAddress nodeAddress;
     private final AtomicBoolean startupLeadershipSignal = new AtomicBoolean(true);
-    private Queue<ClusterEventListener> eventListeners = new ConcurrentLinkedQueue<>();
+    private final Queue<ClusterEventListener> eventListeners = new ConcurrentLinkedQueue<>();
     private GroupManagementService gms;
 
     public ShoalClusterService(String clusterName, String nodeId, InetAddress nodeAddress) {
