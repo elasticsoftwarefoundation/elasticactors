@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.test;
 
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.*;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
@@ -73,6 +74,11 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
     @Override
     public InternalActorSystem get(String name) {
         return applicationContext.getBean(InternalActorSystem.class);
+    }
+
+    @Override
+    public ActorSystem getRemote(String clusterName, String actorSystemName) {
+        return null; // not supported yet
     }
 
     @Override

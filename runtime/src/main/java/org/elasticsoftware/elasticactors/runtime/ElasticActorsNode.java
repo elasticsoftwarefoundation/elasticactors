@@ -18,11 +18,9 @@ package org.elasticsoftware.elasticactors.runtime;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.sun.enterprise.ee.cms.core.*;
-import com.sun.enterprise.ee.cms.impl.client.*;
-import com.sun.enterprise.mgmt.transport.grizzly.GrizzlyConfigConstants;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.*;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
@@ -36,13 +34,9 @@ import org.springframework.context.ApplicationContext;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.io.IOException;
-import java.io.Serializable;
 import java.net.InetAddress;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -74,11 +68,11 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     @Autowired
     public void setClusterService(ClusterService clusterService) {
         this.clusterService = clusterService;
-        clusterService.setEventListener(this);
+        clusterService.addEventListener(this);
     }
 
     @PostConstruct
-    public void init() throws GMSException {
+    public void init() {
         //@todo: take this value from the configuration file
         actorRefCache = CacheBuilder.newBuilder().maximumSize(10240).build();
     }
@@ -93,6 +87,11 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     public void onTopologyChanged(List<PhysicalNode> topology) throws Exception {
         // @todo: keep track of the previous schedule and cancel it if possible
         scheduledExecutorService.submit(new RebalancingRunnable(topology));
+    }
+
+    @Override
+    public void onMasterElected(PhysicalNode masterNode) throws Exception {
+        // ignore
     }
 
     public void join() {
@@ -124,6 +123,15 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     @Override
     public InternalActorSystem get(String name) {
         return applicationContext.getBean(InternalActorSystem.class);
+    }
+
+    @Override
+    public ActorSystem getRemote(String clusterName, String actorSystemName) {
+        Map<String,RemoteActorSystemInstance> remoteActorSystems = applicationContext.getBeansOfType(RemoteActorSystemInstance.class);
+        if(remoteActorSystems != null) {
+            return remoteActorSystems.get(clusterName);
+        }
+        return null;
     }
 
     @Override

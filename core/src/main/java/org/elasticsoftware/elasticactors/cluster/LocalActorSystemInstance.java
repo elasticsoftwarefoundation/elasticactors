@@ -348,11 +348,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         ActorShard shard = shardFor(actorId);
         // send CreateActorMessage to shard
         CreateActorMessage createActorMessage = new CreateActorMessage(getName(), actorClass.getName(), actorId, initialState);
-        //@todo: see if we need to get the sender from the context
-        shard.sendMessage(null, shard.getActorRef(), createActorMessage);
+        ActorRef creator = ActorContextHolder.getSelf();
+        shard.sendMessage(creator, shard.getActorRef(), createActorMessage);
         // create actor ref
         // @todo: add cache to speed up performance
-        return new LocalClusterActorShardRef(cluster.getClusterName(), shard, actorId);
+        return new ActorShardRef(cluster.getClusterName(), shard, actorId);
     }
 
     @Override
@@ -380,7 +380,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         ActorShard shard = shardFor(actorId);
         // return actor ref
         // @todo: add cache to speed up performance
-        return new LocalClusterActorShardRef(cluster.getClusterName(), shard, actorId);
+        return new ActorShardRef(cluster.getClusterName(), shard, actorId);
     }
 
     @Override
@@ -432,7 +432,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
         private ActorShardAdapter(ShardKey key) {
             this.key = key;
-            this.myRef = new LocalClusterActorShardRef(cluster.getClusterName(), this);
+            this.myRef = new ActorShardRef(cluster.getClusterName(), this);
         }
 
         @Override

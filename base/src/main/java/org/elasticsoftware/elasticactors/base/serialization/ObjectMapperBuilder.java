@@ -37,10 +37,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 /**
  * {@link com.fasterxml.jackson.annotation.JsonTypeName}. The classes are registered as subtypes
@@ -53,10 +50,16 @@ public class ObjectMapperBuilder {
     public static final String RESOURCE_NAME = "META-INF/elasticactors.properties";
     private final String version;
     private final ActorRefFactory actorRefFactory;
+    private final String basePackages;
 
     public ObjectMapperBuilder(ActorRefFactory actorRefFactory, String version) {
-        this.actorRefFactory = actorRefFactory;
+        this(actorRefFactory, version, "");
+    }
+
+    public ObjectMapperBuilder(ActorRefFactory actorRefFactory, String basePackages, String version) {
         this.version = version;
+        this.actorRefFactory = actorRefFactory;
+        this.basePackages = basePackages;
     }
 
     public final ObjectMapper build() {
@@ -77,9 +80,13 @@ public class ObjectMapperBuilder {
             logger.warn(String.format("Failed to load elasticactors.properties"),e);
         }
 
+        // add other base packages
+        if(this.basePackages != null && !"".equals(this.basePackages)) {
+            String[] otherPackages = this.basePackages.split(",");
+            basePackages.addAll(Arrays.asList(otherPackages));
+        }
 
         ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-
 
         for (String basePackage : basePackages) {
             configurationBuilder.addUrls(ClasspathHelper.forPackage(basePackage));
@@ -92,7 +99,6 @@ public class ObjectMapperBuilder {
 
         registerCustomSerializers(reflections,jacksonModule);
         registerCustomDeserializers(reflections,jacksonModule);
-
 
         objectMapper.registerModule(jacksonModule);
 

@@ -23,7 +23,7 @@ import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 /**
  * @author Joost van de Wijgerd
  */
-public interface InternalActorSystem extends ActorSystem {
+public interface InternalActorSystem extends ActorSystem, ShardAccessor {
 
     ActorSystemConfiguration getConfiguration();
 
@@ -43,14 +43,6 @@ public interface InternalActorSystem extends ActorSystem {
      * @return
      */
     ElasticActor getServiceInstance(ActorRef serviceRef);
-
-    /**
-     * Return the {@link ActorShard} that belongs to the give path.
-     *
-     * @param actorPath
-     * @return
-     */
-    ActorShard getShard(String actorPath);
 
     /**
      * Returns a {@link ActorNode} that can be either remote or local

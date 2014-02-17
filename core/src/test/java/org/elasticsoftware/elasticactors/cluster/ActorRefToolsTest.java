@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 import static org.testng.Assert.*;
 
 /**
@@ -83,5 +84,21 @@ public class ActorRefToolsTest {
         assertNotNull(serviceRef);
         assertEquals(serviceRef.getActorId(),"pi/calculate");
         assertEquals(serviceRef.toString(),serviceRefString);
+    }
+
+    @Test
+    public void testParseRemoteShardRef() {
+        InternalActorSystems internalActorSystems = mock(InternalActorSystems.class);
+        ActorSystem actorSystem = mock(ActorSystem.class, withSettings().extraInterfaces(ShardAccessor.class));
+        ActorShard shard = mock(ActorShard.class);
+        ShardKey shardKey = new ShardKey("Pi",0);
+        when(internalActorSystems.getClusterName()).thenReturn("LocalNode");
+        when(internalActorSystems.getRemote("RemoteCluster","Pi")).thenReturn(actorSystem);
+        when(((ShardAccessor) actorSystem).getShard("Pi/shards/0")).thenReturn(shard);
+        when(shard.getKey()).thenReturn(shardKey);
+        ActorRef actorRef = ActorRefTools.parse("actor://RemoteCluster/Pi/shards/0",internalActorSystems);
+        assertNotNull(actorRef);
+        assertNull(actorRef.getActorId());
+        assertEquals(actorRef.toString(), "actor://RemoteCluster/Pi/shards/0");
     }
 }

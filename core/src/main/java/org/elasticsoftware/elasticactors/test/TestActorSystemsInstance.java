@@ -34,6 +34,11 @@ public class TestActorSystemsInstance implements ActorSystems,ActorRefFactory {
     }
 
     @Override
+    public ActorSystem getRemote(String clusterName, String actorSystemName) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
     public String getClusterName() {
         return "local";
     }

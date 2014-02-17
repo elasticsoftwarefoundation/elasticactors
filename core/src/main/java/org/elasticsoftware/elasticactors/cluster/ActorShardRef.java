@@ -24,19 +24,19 @@ import org.elasticsoftware.elasticactors.*;
  *
  * @author  Joost van de Wijgerd
  */
-public final class LocalClusterActorShardRef implements ActorRef, ActorContainerRef {
-    private static final Logger logger = Logger.getLogger(LocalClusterActorShardRef.class);
+public final class ActorShardRef implements ActorRef, ActorContainerRef {
+    private static final Logger logger = Logger.getLogger(ActorShardRef.class);
     private final String clusterName;
     private final ActorShard shard;
     private final String actorId;
 
-    public LocalClusterActorShardRef(String clusterName, ActorShard shard, String actorId) {
+    public ActorShardRef(String clusterName, ActorShard shard, String actorId) {
         this.clusterName = clusterName;
         this.shard = shard;
         this.actorId = actorId;
     }
 
-    public LocalClusterActorShardRef(String clusterName, ActorShard shard) {
+    public ActorShardRef(String clusterName, ActorShard shard) {
         this(clusterName, shard, null);
     }
 
@@ -60,8 +60,7 @@ public final class LocalClusterActorShardRef implements ActorRef, ActorContainer
             	try {
             		((TypedActor<?>) sender).onUndeliverable(sender, message);
             	} catch (Exception e1) {
-                    logger.error(String.format("Failed onUndeliverable(%s,%s)", 
-                    		sender != null ? sender.toString() : "null", message), e1);
+                    logger.error(String.format("Failed onUndeliverable(%s,%s)", sender.toString(), message), e1);
             	}
             }
         }
@@ -77,7 +76,7 @@ public final class LocalClusterActorShardRef implements ActorRef, ActorContainer
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        LocalClusterActorShardRef that = (LocalClusterActorShardRef) o;
+        ActorShardRef that = (ActorShardRef) o;
 
         if (actorId != null ? !actorId.equals(that.actorId) : that.actorId != null) return false;
         if (!clusterName.equals(that.clusterName)) return false;

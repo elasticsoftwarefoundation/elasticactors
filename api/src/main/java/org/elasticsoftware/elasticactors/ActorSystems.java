@@ -28,6 +28,8 @@ public interface ActorSystems {
 
     ActorSystem get(String actorSystemName);
 
+    ActorSystem getRemote(String clusterName,String actorSystemName);
+
     <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass);
 
     <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass);

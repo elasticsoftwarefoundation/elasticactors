@@ -29,9 +29,9 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Joost van de Wijgerd
@@ -41,7 +41,8 @@ public class ShoalClusterService implements ClusterService {
     private final String clusterName;
     private final String nodeId;
     private final InetAddress nodeAddress;
-    private ClusterEventListener eventListener;
+    private final AtomicBoolean startupLeadershipSignal = new AtomicBoolean(true);
+    private Queue<ClusterEventListener> eventListeners = new ConcurrentLinkedQueue<>();
     private GroupManagementService gms;
 
     public ShoalClusterService(String clusterName, String nodeId, InetAddress nodeAddress) {
@@ -74,8 +75,8 @@ public class ShoalClusterService implements ClusterService {
     }
 
     @Override
-    public void setEventListener(ClusterEventListener eventListener) {
-        this.eventListener = eventListener;
+    public void addEventListener(ClusterEventListener eventListener) {
+        this.eventListeners.add(eventListener);
     }
 
     private GroupManagementService initializeGMS(String serverName,String groupName, String interfaceName) throws GMSException {
@@ -98,6 +99,8 @@ public class ShoalClusterService implements ClusterService {
                     fireTopologyChanged(((PlannedShutdownSignal)notification).getCurrentView());
                 } else if(notification instanceof FailureNotificationSignal) {
                     fireTopologyChanged(((FailureNotificationSignal) notification).getCurrentView());
+                } else if(notification instanceof GroupLeadershipNotificationSignal) {
+                    fireLeadershipChanged((GroupLeadershipNotificationSignal)notification);
                 }
             }
         };
@@ -116,11 +119,26 @@ public class ShoalClusterService implements ClusterService {
     private void fireTopologyChanged(AliveAndReadyView currentView) {
         List<String> coreMembers = gms.getGroupHandle().getCurrentCoreMembers();
         logger.info("fireTopologyChanged members in view: "+coreMembers.toString());
-        try {
-            eventListener.onTopologyChanged(convert(coreMembers));
-        } catch (Exception e) {
-            //@todo: do a clean shutdown here
-            logger.error("Exception on fireTopologyChanged -> Aborting",e);
+        for (ClusterEventListener eventListener : eventListeners) {
+            try {
+                eventListener.onTopologyChanged(convert(coreMembers));
+            } catch (Exception e) {
+                //@todo: do a clean shutdown here
+                logger.error("Exception on fireTopologyChanged -> Aborting",e);
+            }
+        }
+    }
+
+    private void fireLeadershipChanged(GroupLeadershipNotificationSignal signal) {
+        if(!startupLeadershipSignal.compareAndSet(true,false)) {
+            logger.info("fireLeadershipChanged member: "+signal.getMemberToken());
+            for (ClusterEventListener eventListener : eventListeners) {
+                try {
+                    eventListener.onTopologyChanged(convert(Arrays.asList(signal.getMemberToken())));
+                } catch (Exception e) {
+                    logger.error("Exception on fireLeadershipChanged",e);
+                }
+            }
         }
     }
 

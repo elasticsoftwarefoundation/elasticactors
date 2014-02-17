@@ -27,4 +27,6 @@ import java.util.Map;
  */
 public interface ClusterEventListener {
     void onTopologyChanged(List<PhysicalNode> topology) throws Exception;
+
+    void onMasterElected(PhysicalNode masterNode) throws Exception;
 }

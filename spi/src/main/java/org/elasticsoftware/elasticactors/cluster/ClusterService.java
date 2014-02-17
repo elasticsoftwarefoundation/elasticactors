@@ -24,5 +24,5 @@ public interface ClusterService {
 
     void reportPlannedShutdown();
 
-    void setEventListener(ClusterEventListener eventListener);
+    void addEventListener(ClusterEventListener eventListener);
 }

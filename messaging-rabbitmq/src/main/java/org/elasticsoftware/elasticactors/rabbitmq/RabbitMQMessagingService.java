@@ -143,4 +143,19 @@ public class RabbitMQMessagingService implements MessagingService {
             return new RemoteMessageQueue(producerChannel,exchangeName,queueName);
         }
     }
+
+    private final class RemoteActorSystemMessageQueueFactory implements MessageQueueFactory {
+        private final String clusterName;
+
+        private RemoteActorSystemMessageQueueFactory(String clusterName) {
+            this.clusterName = clusterName;
+        }
+
+        @Override
+        public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
+            final String queueName = format(QUEUE_NAME_FORMAT,this.clusterName,name);
+            ensureQueueExists(producerChannel,queueName);
+            return new RemoteMessageQueue(producerChannel,exchangeName,queueName);
+        }
+    }
 }

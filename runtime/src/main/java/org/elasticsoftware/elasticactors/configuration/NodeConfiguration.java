@@ -66,7 +66,6 @@ public class NodeConfiguration {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         configuration = objectMapper.readValue(configResource.getInputStream(), DefaultConfiguration.class);
         String nodeId = env.getRequiredProperty("ea.node.id");
-        //@todo: fix node address
         InetAddress nodeAddress = InetAddress.getByName(env.getRequiredProperty("ea.node.address"));
         String clusterName = env.getRequiredProperty("ea.cluster");
         node = new ElasticActorsNode(clusterName, nodeId, nodeAddress);
@@ -85,8 +84,9 @@ public class NodeConfiguration {
 
     @Bean(name = {"objectMapper"})
     public ObjectMapper createObjectMapper() {
+        String basePackages = env.getProperty("ea.scan.packages",String.class,"");
         // @todo: fix version
-        return new ObjectMapperBuilder(node,"1.0.0").build();
+        return new ObjectMapperBuilder(node,"1.0.0",basePackages).build();
     }
 
     @Bean(name = {"messagesScanner"})
