@@ -138,7 +138,6 @@
                 <include>org.elasticsoftware.elasticactors:elasticactors-core</include>
                 <include>org.elasticsoftware.elasticactors:elasticactors-base</include>
                 <include>org.elasticsoftware.elasticactors:elasticactors-http</include>
-                <include>org.elasticsoftware.elasticactors:elasticactors-geoevents</include>
                 <!-- examples should not be here -->
                 <include>org.elasticsoftware.elasticactors:examples</include>
             </includes>
