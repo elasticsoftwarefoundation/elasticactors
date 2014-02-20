@@ -102,7 +102,7 @@ public abstract class MethodActor extends TypedActor<Object> {
             if(parameterTypes.length == 0) {
                 throw new IllegalArgumentException(format("Handler Method %s should have at least one parameter (message)",handlerMethod.toString()));
             }
-            Class<?> messageParamaterClass = null;
+            Class<?> messageParameterClass = null;
             this.parameterTypeOrdering = new ParameterType[parameterTypes.length];
             for (int i = 0; i < parameterTypes.length; i++) {
                 if(parameterTypes[i].equals(ActorRef.class)) {
@@ -113,15 +113,15 @@ public abstract class MethodActor extends TypedActor<Object> {
                     parameterTypeOrdering[i] = ParameterType.STATE;
                 } else if(parameterTypes[i].isAnnotationPresent(Message.class)) {
                     parameterTypeOrdering[i] = ParameterType.MESSAGE;
-                    messageParamaterClass = parameterTypes[i];
+                    messageParameterClass = parameterTypes[i];
                 } else {
                     throw new IllegalStateException(format("Unexpected Parameter Type %s",parameterTypes[i].getName()));
                 }
             }
-            if(messageParamaterClass == null) {
+            if(messageParameterClass == null) {
                 throw new IllegalArgumentException(format("Handler Method %s should have at least one parameter annotated with @Message",handlerMethod.toString()));
             }
-            this.messageClass = messageParamaterClass;
+            this.messageClass = messageParameterClass;
         }
 
         private Object[] prepareParameters(ActorRef sender,Object message) {
