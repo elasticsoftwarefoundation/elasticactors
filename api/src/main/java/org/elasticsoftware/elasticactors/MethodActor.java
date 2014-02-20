@@ -59,7 +59,7 @@ public abstract class MethodActor extends TypedActor<Object> {
     }
 
     @Override
-    public final void onReceive(ActorRef sender, Object message) throws Exception {
+    public void onReceive(ActorRef sender, Object message) throws Exception {
         HandlerMethodDefinition definition = handlerCache.get(message.getClass());
         if(definition != null) {
             try {
