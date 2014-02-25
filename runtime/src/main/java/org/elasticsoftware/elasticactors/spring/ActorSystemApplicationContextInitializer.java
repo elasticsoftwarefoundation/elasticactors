@@ -16,9 +16,10 @@
 
 package org.elasticsoftware.elasticactors.spring;
 
+import org.elasticsoftware.elasticactors.ServiceActor;
 import org.elasticsoftware.elasticactors.runtime.ScannerHelper;
 import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
 
 /**
  * @author Joost van de Wijgerd
@@ -26,6 +27,10 @@ import org.springframework.web.context.support.AnnotationConfigWebApplicationCon
 public final class ActorSystemApplicationContextInitializer implements ApplicationContextInitializer<AnnotationConfigWebApplicationContext> {
     @Override
     public void initialize(AnnotationConfigWebApplicationContext applicationContext) {
+        // ensure the EA annotations are scanned
+        applicationContext.addIncludeFilters(new AnnotationTypeFilter(ServiceActor.class));
+        // generate correct names for ServiceActor annotated actors
+        applicationContext.setBeanNameGenerator(new ActorAnnotationBeanNameGenerator());
         // add all the elastic actors base packages to the scan configuration
         applicationContext.scan(ScannerHelper.findBasePackagesOnClasspath(applicationContext.getClassLoader()));
     }
