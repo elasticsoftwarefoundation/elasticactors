@@ -25,13 +25,17 @@ import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.Composite;
 import me.prettyprint.hector.api.factory.HFactory;
+import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cassandra.cluster.scheduler.CassandraScheduledMessageRepository;
+import org.elasticsoftware.elasticactors.cassandra.serialization.CompressingSerializer;
+import org.elasticsoftware.elasticactors.cassandra.serialization.DecompressingDeserializer;
 import org.elasticsoftware.elasticactors.cassandra.state.CassandraPersistentActorRepository;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRepository;
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorSerializer;
+import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -74,8 +78,8 @@ public class BackplaneConfiguration {
     public PersistentActorRepository getPersistentActorRepository() {
         CassandraPersistentActorRepository persistentActorRepository = new CassandraPersistentActorRepository(cluster.getClusterName());
         persistentActorRepository.setColumnFamilyTemplate(persistentActorsColumnFamilyTemplate);
-        persistentActorRepository.setSerializer(new PersistentActorSerializer(cluster));
-        persistentActorRepository.setDeserializer(new PersistentActorDeserializer(actorRefFactory,cluster));
+        persistentActorRepository.setSerializer(new CompressingSerializer<>(new PersistentActorSerializer(cluster),512));
+        persistentActorRepository.setDeserializer(new DecompressingDeserializer<>(new PersistentActorDeserializer(actorRefFactory,cluster)));
         return persistentActorRepository;
     }
 
