@@ -52,13 +52,13 @@ public class LocalMessageQueue extends DefaultConsumer implements MessageQueue {
     @Override
     public boolean offer(final InternalMessage message) {
         if(TransientInternalMessage.class.isInstance(message)) {
-            // execute on a seperate (thread bound) executor
+            // execute on a separate (thread bound) executor
             queueExecutor.execute(new InternalMessageHandler(queueName,message,messageHandler,transientAck,logger));
             return true;
         } else {
-            // @todo: use the message properties to set the BasicProperties if necessary
             try {
-                producerChannel.basicPublish(exchangeName, queueName,true,false,null,message.toByteArray());
+                final AMQP.BasicProperties props = message.isDurable() ? MessageProperties.PERSISTENT_BASIC : MessageProperties.BASIC;
+                producerChannel.basicPublish(exchangeName, queueName,false,false,props,message.toByteArray());
                 return true;
             } catch (IOException e) {
                 // @todo: what to do with the message?
@@ -86,6 +86,7 @@ public class LocalMessageQueue extends DefaultConsumer implements MessageQueue {
     @Override
     public void initialize() throws Exception {
         // @todo: possibly loop until we are the only consumer on the queue
+        consumerChannel.basicQos(0);
         consumerChannel.basicConsume(queueName,false,this);
     }
 

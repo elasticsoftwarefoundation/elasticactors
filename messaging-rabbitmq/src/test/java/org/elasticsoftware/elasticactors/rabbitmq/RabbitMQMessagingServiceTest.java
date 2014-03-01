@@ -25,6 +25,7 @@ import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserial
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -35,6 +36,7 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.String.format;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertTrue;
@@ -47,7 +49,7 @@ public class RabbitMQMessagingServiceTest {
     public final int NUM_MESSAGES = 10000;
     public final String CLUSTER_NAME = "test.vdwbv.com";
     public static final String QUEUENAME_FORMAT = "default/shards/%d";
-    public static final String PAYLOAD_FORMAT = "This is message numero %d";
+    public static final String PAYLOAD_FORMAT = "This is message numero %d from %s";
     public final Random random = new Random();
     private ActorRef senderRef;
     private ActorRef receiverRef;
@@ -73,6 +75,7 @@ public class RabbitMQMessagingServiceTest {
     public void testAllLocal() throws Exception {
         int workers = Runtime.getRuntime().availableProcessors() * 3;
         ThreadBoundExecutor<String> queueExecutor = new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
+
         RabbitMQMessagingService messagingService = new RabbitMQMessagingService(CLUSTER_NAME,System.getProperty("host","localhost"), queueExecutor);
         messagingService.start();
 
@@ -98,17 +101,19 @@ public class RabbitMQMessagingServiceTest {
         // simulate 8 partitions
         MessageQueueFactory localMessageQueueFactory = messagingService.getLocalMessageQueueFactory();
         for (int i = 0; i < NUM_PARTITIONS; i++) {
-            messageQueues.add(localMessageQueueFactory.create(String.format(QUEUENAME_FORMAT,i),testHandler));
+            messageQueues.add(localMessageQueueFactory.create(format(QUEUENAME_FORMAT, i),testHandler));
         }
 
-        // send the messages
-        for (int i = 0; i < NUM_MESSAGES; i++) {
-            // select a random queue
-            messageQueues.get(random.nextInt(NUM_PARTITIONS)).offer(createInternalMessage(i+1));
+        int NUMBER_OF_THREADS = 4;
+
+        for (int i = 0; i < NUMBER_OF_THREADS; i++) {
+            Thread t = new Thread(new MessageSender(NUM_MESSAGES/NUMBER_OF_THREADS,messageQueues),format("PRODUCER #%s",i));
+            t.setDaemon(true);
+            t.start();
         }
 
         try {
-            assertTrue(waitLatch.await(20, TimeUnit.SECONDS));
+            assertTrue(waitLatch.await(60, TimeUnit.SECONDS));
         } catch (InterruptedException e) {
             // ignore
         }
@@ -120,8 +125,39 @@ public class RabbitMQMessagingServiceTest {
         messagingService.stop();
     }
 
-    private InternalMessage createInternalMessage(int count) {
-        ByteBuffer payload = ByteBuffer.wrap(String.format(PAYLOAD_FORMAT, count).getBytes(Charsets.UTF_8));
-        return new InternalMessageImpl(senderRef,receiverRef,payload,String.class.getName());
+    private final class MessageSender implements ThreadBoundRunnable<String> {
+        private final Integer messagesToSend;
+        private final List<MessageQueue> messageQueues;
+
+        private MessageSender(Integer messagesToSend, List<MessageQueue> messageQueues) {
+            this.messagesToSend = messagesToSend;
+            this.messageQueues = messageQueues;
+        }
+
+        @Override
+        public String getKey() {
+            return messagesToSend.toString();
+        }
+
+        @Override
+        public void run() {
+            final String name = Thread.currentThread().getName();
+            // send the messages
+            for (int i = 0; i < messagesToSend ; i++) {
+                // select a random queue
+                messageQueues.get(random.nextInt(NUM_PARTITIONS)).offer(createInternalMessage(name,i+1));
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+            }
+
+        }
+    }
+
+    private InternalMessage createInternalMessage(String name,int count) {
+        ByteBuffer payload = ByteBuffer.wrap(format(PAYLOAD_FORMAT, count, name).getBytes(Charsets.UTF_8));
+        return new InternalMessageImpl(senderRef,receiverRef,payload,String.class.getName(),true);
     }
 }

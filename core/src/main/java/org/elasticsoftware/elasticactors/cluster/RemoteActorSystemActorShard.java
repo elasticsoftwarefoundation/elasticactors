@@ -21,6 +21,7 @@ import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.messaging.*;
+import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 
 /**
@@ -63,7 +64,10 @@ public final class RemoteActorSystemActorShard implements ActorShard, MessageHan
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
         MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-        messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message),message.getClass().getName()));
+        // get the durable flag
+        Message messageAnnotation = message.getClass().getAnnotation(Message.class);
+        final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
+        messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message),message.getClass().getName(),durable));
     }
 
     @Override

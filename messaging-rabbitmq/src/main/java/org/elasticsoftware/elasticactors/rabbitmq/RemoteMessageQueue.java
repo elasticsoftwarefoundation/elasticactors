@@ -16,7 +16,9 @@
 
 package org.elasticsoftware.elasticactors.rabbitmq;
 
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.MessageProperties;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
@@ -41,9 +43,9 @@ public class RemoteMessageQueue implements MessageQueue {
 
     @Override
     public boolean offer(InternalMessage message) {
-        // @todo: use the message properties to set the BasicProperties if necessary
         try {
-            producerChannel.basicPublish(exchangeName, queueName,true,false,null,message.toByteArray());
+            final AMQP.BasicProperties props = message.isDurable() ? MessageProperties.PERSISTENT_BASIC : MessageProperties.BASIC;
+            producerChannel.basicPublish(exchangeName, queueName,false,false,props,message.toByteArray());
             return true;
         } catch (IOException e) {
             // @todo: what to do with the message?
@@ -69,7 +71,7 @@ public class RemoteMessageQueue implements MessageQueue {
 
     @Override
     public void initialize() throws Exception {
-        //To change body of implemented methods use File | Settings | File Templates.
+        // nothing to do
     }
 
     @Override

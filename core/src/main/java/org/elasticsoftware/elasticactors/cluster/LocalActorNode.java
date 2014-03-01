@@ -22,15 +22,14 @@ import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.tasks.*;
-import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
-import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
-import org.elasticsoftware.elasticactors.messaging.TransientInternalMessage;
+import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
+import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,16 +84,38 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     }
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
-        messageQueue.offer(new TransientInternalMessage(from,to,message));
+        // get the durable flag
+        Message messageAnnotation = message.getClass().getAnnotation(Message.class);
+        final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
+        if(!durable) {
+            messageQueue.offer(new TransientInternalMessage(from,to,message));
+        } else {
+            MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
+            messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message),message.getClass().getName(),durable));
+        }
     }
 
     @Override
     public void undeliverableMessage(InternalMessage message) throws Exception {
-        MessageDeserializer messageDeserializer = actorSystem.getDeserializer(Class.forName(message.getPayloadClass()));
-        messageQueue.offer(new TransientInternalMessage(message.getReceiver(),
-                                                        message.getSender(),
-                                                        message.getPayload(messageDeserializer),
-                                                        true));
+        // get the durable flag
+        Message messageAnnotation = Class.forName(message.getPayloadClass()).getAnnotation(Message.class);
+        final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
+        if(!durable) {
+            final MessageDeserializer messageDeserializer = actorSystem.getDeserializer(Class.forName(message.getPayloadClass()));
+            messageQueue.offer(new TransientInternalMessage(message.getReceiver(),
+                                                            message.getSender(),
+                                                            message.getPayload(messageDeserializer),
+                                                            true));
+        } else {
+            // input is the message that cannot be delivered
+            InternalMessageImpl undeliverableMessage = new InternalMessageImpl(message.getReceiver(),
+                                                                               message.getSender(),
+                                                                               message.getPayload(),
+                                                                               message.getPayloadClass(),
+                                                                               durable,
+                                                                               true);
+            messageQueue.offer(undeliverableMessage);
+        }
     }
 
     @Override

@@ -24,6 +24,7 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 
 /**
@@ -56,18 +57,23 @@ public final class RemoteActorShard extends AbstractActorContainer implements Ac
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
         MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-        messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message),
-                                                   message.getClass().getName()));
+        // get the durable flag
+        Message messageAnnotation = message.getClass().getAnnotation(Message.class);
+        final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
+        messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message),message.getClass().getName(),durable));
     }
 
     @Override
     public void undeliverableMessage(InternalMessage message) throws Exception {
+        // get the durable flag
+        Message messageAnnotation = Class.forName(message.getPayloadClass()).getAnnotation(Message.class);
+        final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
         // input is the message that cannot be delivered
         InternalMessageImpl undeliverableMessage = new InternalMessageImpl(message.getReceiver(),
                                                                            message.getSender(),
                                                                            message.getPayload(),
                                                                            message.getPayloadClass(),
-                                                                           true,
+                                                                           durable,
                                                                            true);
         messageQueue.offer(undeliverableMessage);
     }
