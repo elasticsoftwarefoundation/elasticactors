@@ -23,4 +23,17 @@ import org.elasticsoftware.elasticactors.TypedActor;
  * @author Joost van de Wijgerd
  */
 public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorState<ActorDelegate<T>> {
+    private final boolean deleteAfterReceive;
+
+    protected ActorDelegate() {
+        this(true);
+    }
+
+    protected ActorDelegate(boolean deleteAfterReceive) {
+        this.deleteAfterReceive = deleteAfterReceive;
+    }
+
+    public boolean isDeleteAfterReceive() {
+        return deleteAfterReceive;
+    }
 }

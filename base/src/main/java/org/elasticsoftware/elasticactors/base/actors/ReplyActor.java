@@ -27,13 +27,19 @@ import org.elasticsoftware.elasticactors.TypedActor;
 public final class ReplyActor<T> extends TypedActor<T> {
     @Override
     public void onUndeliverable(ActorRef receiver, Object message) throws Exception {
-        getState(ActorDelegate.class).onUndeliverable(receiver,message);
-        getSystem().stop(getSelf());
+        final ActorDelegate delegate = getState(ActorDelegate.class);
+        delegate.onUndeliverable(receiver,message);
+        if(delegate.isDeleteAfterReceive()) {
+            getSystem().stop(getSelf());
+        }
     }
 
     @Override
     public void onReceive(ActorRef sender, T message) throws Exception {
-        getState(ActorDelegate.class).onReceive(sender, message);
-        getSystem().stop(getSelf());
+        final ActorDelegate delegate = getState(ActorDelegate.class);
+        delegate.onReceive(sender, message);
+        if(delegate.isDeleteAfterReceive()) {
+            getSystem().stop(getSelf());
+        }
     }
 }
