@@ -17,6 +17,9 @@
 package org.elasticsoftware.elasticactors;
 
 /**
+ * Encapsulates a {@link ThreadLocal} that holds the {@link ActorContext} for the {@link ElasticActor} that
+ * is currently being executed.
+ *
  * @author Joost van de Wijgerd
  */
 public class ActorContextHolder {
@@ -25,17 +28,31 @@ public class ActorContextHolder {
     protected ActorContextHolder() {
 
     }
-    //
+
+    /**
+     *
+     * @param stateClass        the class that implements {@link ActorState} interface
+     * @param <T>               generic type info
+     * @return                  the current {@link ActorState} for the current executing {@link ElasticActor}
+     */
     public static <T extends ActorState> T getState(Class<T> stateClass) {
         ActorContext actorContext = threadContext.get();
         return actorContext.getState(stateClass);
     }
 
+    /**
+     *
+     * @return      the {@link ActorRef} to the current executing {@link ElasticActor}
+     */
     public static ActorRef getSelf() {
         ActorContext actorContext =  threadContext.get();
         return actorContext != null ? actorContext.getSelf() : null;
     }
 
+    /**
+     *
+     * @return  the {@link ActorSystem} that the current executing {@link ElasticActor} belongs to
+     */
     public static ActorSystem getSystem() {
         return threadContext.get().getActorSystem();
     }

@@ -67,6 +67,16 @@ public final class ActorShardRef implements ActorRef, ActorContainerRef {
     }
 
     @Override
+    public void tell(Object message) {
+        final ActorRef self = ActorContextHolder.getSelf();
+        if(self != null) {
+            tell(message,self);
+        } else {
+            throw new IllegalStateException("Cannot determine ActorRef(self) Only use this method while inside an ElasticActor Lifecycle or on(Message) method!");
+        }
+    }
+
+    @Override
     public ActorContainer get() {
         return shard;
     }

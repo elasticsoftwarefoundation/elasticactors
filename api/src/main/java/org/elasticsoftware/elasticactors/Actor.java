@@ -23,6 +23,11 @@ import org.elasticsoftware.elasticactors.state.NullActorState;
 import java.lang.annotation.*;
 
 /**
+ * Use this annotation to mark a class as an Actor. The runtime uses this to determine the
+ * {@link SerializationFramework} and the {@link ActorState} class. An Actor class that is
+ * not annotated with this annotation (or {@link TempActor} or {@link ServiceActor}) is not
+ * considered to be valid by the runtime even though it implements {@link ElasticActor}
+ *
  * ActorState defaults to NullActorState
  * SerializationFramework default to NoopSerializationFramework
  *
@@ -33,7 +38,17 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface Actor {
+    /**
+     * The class that implements the {@link ActorState} for this Actor
+     *
+     * @return
+     */
     Class<? extends ActorState> stateClass() default NullActorState.class;
 
+    /**
+     * The {@link SerializationFramework} used to serialize and deserialize the {@link ActorState}
+     *
+     * @return
+     */
     Class<? extends SerializationFramework> serializationFramework() default NoopSerializationFramework.class;
 }

@@ -16,14 +16,37 @@
 
 package org.elasticsoftware.elasticactors;
 
+import javax.annotation.Nullable;
+
 /**
+ * Parent class for the local {@link ActorSystem} instance. Can be used to obtain references to remote
+ * {@link ActorSystem}s
+ *
  * @author Joost van de Wijgerd
  */
 public interface ActorSystems {
+    /**
+     * Retrieve the name of the local ElasticActors cluster
+     *
+     * @return
+     */
     String getClusterName();
 
-    ActorSystem get(String actorSystemName);
+    /**
+     * Get an {@link ActorSystem} by name. Normally there will only be one ActorSystem per cluster
+     *
+     * @param actorSystemName   the name of the {@link ActorSystem} or null to get the default
+     * @return                  the local {@link ActorSystem} instance
+     */
+    ActorSystem get(@Nullable String actorSystemName);
 
-    ActorSystem getRemote(String clusterName,String actorSystemName);
-
+    /**
+     * Obtain a reference to a remote {@link ActorSystem} instance. Currently only remote ActorSystems that
+     * use the same Message Bus as the local ElasticActors cluster instance can be addressed.
+     *
+     * @param clusterName       the name of the remote cluster
+     * @param actorSystemName   the {@link ActorSystem} name in the remote cluster or null to get the default
+     * @return                  the remote {@link ActorSystem} instance
+     */
+    ActorSystem getRemote(String clusterName,@Nullable String actorSystemName);
 }

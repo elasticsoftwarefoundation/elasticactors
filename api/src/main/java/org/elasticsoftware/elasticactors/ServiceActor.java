@@ -29,5 +29,9 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Named
 public @interface ServiceActor {
+    /**
+     *
+     * @return  the actorId of the Service Actor
+     */
     String value() default "";
 }

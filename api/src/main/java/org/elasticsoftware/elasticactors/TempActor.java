@@ -29,5 +29,9 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface TempActor {
+    /**
+     *
+     * @return  the class that implements the {@link ActorState} for this Temporary Actor
+     */
     Class<? extends ActorState> stateClass() default NullActorState.class;
 }

@@ -21,41 +21,4 @@ package org.elasticsoftware.elasticactors;
  * @author Joost van de Wijgerd
  */
 public abstract class UntypedActor extends TypedActor<Object> {
-    /*@Override
-    public void postCreate(ActorRef creator) throws Exception {
-        // do nothing by default
-    }
-
-    @Override
-    public void postActivate(String previousVersion) throws Exception {
-        // do nothing by default
-    }
-
-    @Override
-    public void prePassivate() throws Exception {
-        // do nothing by default
-    }
-
-    @Override
-    public void preDestroy(ActorRef destroyer) throws Exception {
-        // do nothing by default
-    }
-
-    // Provide internal access to state etc
-    protected final ActorRef getSelf() {
-        return ActorContextHolder.getSelf();
-    }
-
-    protected final ActorState getState(ActorStateFactory actorStateFactory) {
-        return ActorContextHolder.getState(actorStateFactory);
-    }
-
-    protected final ActorSystem getSystem() {
-        return ActorContextHolder.getSystem();
-    }
-
-    protected final void unhandled(Object message) {
-        //@todo: implement logic for unhandled messages
-    }*/
-
 }

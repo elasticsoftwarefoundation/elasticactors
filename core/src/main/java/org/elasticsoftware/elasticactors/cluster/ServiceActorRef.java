@@ -17,10 +17,7 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.apache.log4j.Logger;
-import org.elasticsoftware.elasticactors.ActorContainer;
-import org.elasticsoftware.elasticactors.ActorContainerRef;
-import org.elasticsoftware.elasticactors.ActorNode;
-import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.*;
 
 /**
  * {@link org.elasticsoftware.elasticactors.ActorRef} that references an actor in the local cluster
@@ -55,6 +52,16 @@ public final class ServiceActorRef implements ActorRef, ActorContainerRef {
         } catch (Exception e) {
             // @todo: notify sender of the failure
             logger.error(String.format("Failed to send message to %s",sender.toString()),e);
+        }
+    }
+
+    @Override
+    public void tell(Object message) {
+        final ActorRef self = ActorContextHolder.getSelf();
+        if(self != null) {
+            tell(message,self);
+        } else {
+            throw new IllegalStateException("Cannot determine ActorRef(self) Only use this method while inside an ElasticActor Lifecycle or on(Message) method!");
         }
     }
 
