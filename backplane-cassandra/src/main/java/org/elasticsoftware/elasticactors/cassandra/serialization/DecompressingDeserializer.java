@@ -1,7 +1,6 @@
 package org.elasticsoftware.elasticactors.cassandra.serialization;
 
 import com.google.common.io.ByteStreams;
-import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4FastDecompressor;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
@@ -28,7 +27,7 @@ public final class DecompressingDeserializer<O> implements Deserializer<byte[],O
             // skip the header
             dataInput.skipBytes(4);
             int uncompressedLength = dataInput.readInt();
-            return delegate.deserialize(lz4Decompressor.decompress(serializedObject,8,uncompressedLength));
+            return delegate.deserialize(lz4Decompressor.decompress(serializedObject, 8, uncompressedLength));
         } else {
             return delegate.deserialize(serializedObject);
         }

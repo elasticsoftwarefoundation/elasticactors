@@ -17,7 +17,6 @@ package org.elasticsoftware.elasticactors.serialization;
 
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
-import org.elasticsoftware.elasticactors.serialization.*;
 
 /**
  * Default Serialization Framework. Does nothing (no-operation)

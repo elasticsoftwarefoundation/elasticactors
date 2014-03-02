@@ -18,7 +18,6 @@ package org.elasticsoftware.elasticactors.util;
 
 import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorState;
-import org.elasticsoftware.elasticactors.ActorSystems;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;

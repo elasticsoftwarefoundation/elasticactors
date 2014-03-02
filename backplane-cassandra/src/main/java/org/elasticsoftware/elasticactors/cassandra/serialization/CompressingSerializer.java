@@ -4,10 +4,8 @@ import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
-import org.elasticsoftware.elasticactors.cassandra.serialization.Varint;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
 /**

@@ -18,7 +18,8 @@ package org.elasticsoftware.elasticactors.state;
 
 import java.lang.annotation.*;
 
-import static org.elasticsoftware.elasticactors.state.ActorLifecycleStep.*;
+import static org.elasticsoftware.elasticactors.state.ActorLifecycleStep.ACTIVATE;
+import static org.elasticsoftware.elasticactors.state.ActorLifecycleStep.CREATE;
 
 /**
  * By adding this annotation to an {@link org.elasticsoftware.elasticactors.ElasticActor} class hints can be

@@ -21,9 +21,7 @@ import org.testng.annotations.Test;
 
 import java.util.UUID;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.withSettings;
+import static org.mockito.Mockito.*;
 import static org.testng.Assert.*;
 
 /**

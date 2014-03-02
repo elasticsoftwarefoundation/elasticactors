@@ -17,7 +17,6 @@
 package org.elasticsoftware.elasticactors.spring;
 
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
-import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.springframework.web.context.ContextLoaderListener;
 
 import javax.servlet.ServletContextEvent;

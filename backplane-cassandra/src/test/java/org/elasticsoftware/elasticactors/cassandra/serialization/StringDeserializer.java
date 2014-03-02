@@ -1,6 +1,5 @@
 package org.elasticsoftware.elasticactors.cassandra.serialization;
 
-import com.google.common.base.Charsets;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 
 import java.io.IOException;
