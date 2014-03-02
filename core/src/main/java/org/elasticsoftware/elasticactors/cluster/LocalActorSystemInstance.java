@@ -59,7 +59,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private final ActorShardAdapter[] shardAdapters;
     private final NodeSelectorFactory nodeSelectorFactory;
     private final ConcurrentMap<Class, ElasticActor> actorInstances = new ConcurrentHashMap<Class, ElasticActor>();
-    private final ActorSystems cluster;
+    private final InternalActorSystems cluster;
     private MessageQueueFactory localMessageQueueFactory;
     private MessageQueueFactory remoteMessageQueueFactory;
     private SchedulerService scheduler;
@@ -71,7 +71,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private final ActorNodeAdapter localNodeAdapter;
     private final HashFunction hashFunction = Hashing.murmur3_32();
 
-    public LocalActorSystemInstance(PhysicalNode localNode, ActorSystems cluster, ActorSystemConfiguration actorSystem, NodeSelectorFactory nodeSelectorFactory) {
+    public LocalActorSystemInstance(PhysicalNode localNode, InternalActorSystems cluster, ActorSystemConfiguration actorSystem, NodeSelectorFactory nodeSelectorFactory) {
         this.configuration = actorSystem;
         this.nodeSelectorFactory = nodeSelectorFactory;
         this.cluster = cluster;

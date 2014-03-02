@@ -17,10 +17,19 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.ActorSystems;
+import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 
 /**
  * @author Joost van de Wijgerd
  */
 public interface InternalActorSystems extends ActorSystems {
     InternalActorSystem get(String name);
+
+    <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass);
+
+    <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass);
+
+    SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass);
 }

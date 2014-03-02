@@ -48,17 +48,14 @@ public class TestActorSystemsInstance implements ActorSystems,ActorRefFactory {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
-    @Override
     public <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
-    @Override
     public <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
-    @Override
     public SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
