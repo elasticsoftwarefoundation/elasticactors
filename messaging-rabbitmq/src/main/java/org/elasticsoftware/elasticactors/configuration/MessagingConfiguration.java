@@ -41,7 +41,9 @@ public class MessagingConfiguration {
     public void initialize() {
         String clusterName = env.getRequiredProperty("ea.cluster");
         String rabbitMQHosts = env.getRequiredProperty("ea.rabbitmq.hosts");
-        messagingService = new RabbitMQMessagingService(clusterName,rabbitMQHosts, queueExecutor);
+        String rabbitMQUsername= env.getProperty("ea.rabbitmq.username","guest");
+        String rabbitMQPassword = env.getProperty("ea.rabbitmq.password","guest");
+        messagingService = new RabbitMQMessagingService(clusterName,rabbitMQHosts, rabbitMQUsername, rabbitMQPassword,queueExecutor);
     }
 
     @Bean(name = {"messagingService"})

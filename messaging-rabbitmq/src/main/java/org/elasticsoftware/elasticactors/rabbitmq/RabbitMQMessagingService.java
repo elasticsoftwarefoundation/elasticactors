@@ -57,11 +57,15 @@ public class RabbitMQMessagingService implements MessagingService {
     private final LocalMessageQueueFactory localMessageQueueFactory;
     private final RemoteMessageQueueFactory remoteMessageQueueFactory;
     private final ThreadBoundExecutor<String> queueExecutor;
+    private final String username;
+    private final String password;
 
-    public RabbitMQMessagingService(String elasticActorsCluster, String rabbitmqHosts, ThreadBoundExecutor<String> queueExecutor) {
+    public RabbitMQMessagingService(String elasticActorsCluster, String rabbitmqHosts, String username, String password, ThreadBoundExecutor<String> queueExecutor) {
         this.rabbitmqHosts = rabbitmqHosts;
         this.elasticActorsCluster = elasticActorsCluster;
         this.queueExecutor = queueExecutor;
+        this.username = username;
+        this.password = password;
         this.exchangeName = format(EA_EXCHANGE_FORMAT, elasticActorsCluster);
         this.localMessageQueueFactory = new LocalMessageQueueFactory();
         this.remoteMessageQueueFactory = new RemoteMessageQueueFactory();
@@ -83,7 +87,8 @@ public class RabbitMQMessagingService implements MessagingService {
                         .withBackoff(Duration.seconds(1),Duration.seconds(30)));
 
         ConnectionOptions connectionOptions = new ConnectionOptions(connectionFactory).withAddresses(rabbitmqHosts);
-
+        connectionOptions.withUsername(username);
+        connectionOptions.withPassword(password);
         // create single connection
         //clientConnection = connectionFactory.newConnection(Address.parseAddresses(rabbitmqHosts));
         clientConnection = Connections.create(connectionOptions,config);
