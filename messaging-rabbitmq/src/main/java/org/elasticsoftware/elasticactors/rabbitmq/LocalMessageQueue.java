@@ -51,7 +51,7 @@ public class LocalMessageQueue extends DefaultConsumer implements MessageQueue {
 
     @Override
     public boolean offer(final InternalMessage message) {
-        if(TransientInternalMessage.class.isInstance(message)) {
+        if(!message.isDurable()) {
             // execute on a separate (thread bound) executor
             queueExecutor.execute(new InternalMessageHandler(queueName,message,messageHandler,transientAck,logger));
             return true;

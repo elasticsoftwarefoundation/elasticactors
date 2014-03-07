@@ -84,12 +84,13 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     }
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
-        // get the durable flag
-        Message messageAnnotation = message.getClass().getAnnotation(Message.class);
-        final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
-        if(!durable) {
+        // we need some special handling for the CreateActorMessage in case of Temp Actor
+        if(CreateActorMessage.class.equals(message.getClass()) && ActorType.TEMP.equals(CreateActorMessage.class.cast(message).getType())) {
             messageQueue.offer(new TransientInternalMessage(from,to,message));
         } else {
+            // get the durable flag
+            Message messageAnnotation = message.getClass().getAnnotation(Message.class);
+            final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
             MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
             messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message),message.getClass().getName(),durable));
         }
@@ -100,22 +101,14 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
         // get the durable flag
         Message messageAnnotation = Class.forName(message.getPayloadClass()).getAnnotation(Message.class);
         final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
-        if(!durable) {
-            final MessageDeserializer messageDeserializer = actorSystem.getDeserializer(Class.forName(message.getPayloadClass()));
-            messageQueue.offer(new TransientInternalMessage(message.getReceiver(),
-                                                            message.getSender(),
-                                                            message.getPayload(messageDeserializer),
-                                                            true));
-        } else {
-            // input is the message that cannot be delivered
-            InternalMessageImpl undeliverableMessage = new InternalMessageImpl(message.getReceiver(),
-                                                                               message.getSender(),
-                                                                               message.getPayload(),
-                                                                               message.getPayloadClass(),
-                                                                               durable,
-                                                                               true);
-            messageQueue.offer(undeliverableMessage);
-        }
+        // input is the message that cannot be delivered
+        InternalMessageImpl undeliverableMessage = new InternalMessageImpl(message.getReceiver(),
+                                                                           message.getSender(),
+                                                                           message.getPayload(),
+                                                                           message.getPayloadClass(),
+                                                                           durable,
+                                                                           true);
+        messageQueue.offer(undeliverableMessage);
     }
 
     @Override

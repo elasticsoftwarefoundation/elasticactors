@@ -76,7 +76,11 @@ public class RabbitMQMessagingServiceTest {
         int workers = Runtime.getRuntime().availableProcessors() * 3;
         ThreadBoundExecutor<String> queueExecutor = new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
 
-        RabbitMQMessagingService messagingService = new RabbitMQMessagingService(CLUSTER_NAME,System.getProperty("host","localhost"), "guest", "guest", queueExecutor);
+        RabbitMQMessagingService messagingService = new RabbitMQMessagingService(CLUSTER_NAME,
+                                                                                 System.getProperty("host","localhost"),
+                                                                                 System.getProperty("username","guest"),
+                                                                                 System.getProperty("password","guest"),
+                                                                                 queueExecutor);
         messagingService.start();
 
         final CountDownLatch waitLatch = new CountDownLatch(NUM_MESSAGES);
