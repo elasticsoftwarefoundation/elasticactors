@@ -19,6 +19,8 @@ package org.elasticsoftware.elasticactors;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 
+import javax.annotation.Nullable;
+
 /**
  * An {@link ActorSystem} is a collection of {@link ElasticActor} instances. {@link ElasticActor}s are persistent and
  * have an {@link ActorState}. An application implementing and {@link ActorSystem} should create classes that implement
@@ -85,7 +87,7 @@ public interface ActorSystem {
      * @throws Exception    when something unexpected happens
      * @return              the {@link ActorRef} pointing to the newly created actor
      */
-    <T> ActorRef tempActorOf(Class<T> actorClass, ActorState initialState) throws Exception;
+    <T> ActorRef tempActorOf(Class<T> actorClass,@Nullable ActorState initialState) throws Exception;
 
     /**
      * Return an {@link ActorRef} to a (Standard) Actor. There is no guarantee that the Actor actually exists. If you need

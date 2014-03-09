@@ -16,9 +16,7 @@
 
 package org.elasticsoftware.elasticactors.test;
 
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ActorSystem;
-import org.elasticsoftware.elasticactors.PhysicalNode;
+import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.*;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
@@ -64,6 +62,21 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
     @Override
     public ActorRef create(String refSpec) {
         return ActorRefTools.parse(refSpec, this);
+    }
+
+    @Override
+    public ActorRef createPersistentActorRef(ActorShard shard, String actorId) {
+        return new ActorShardRef(getClusterName(),shard,actorId);
+    }
+
+    @Override
+    public ActorRef createTempActorRef(ActorNode node, String actorId) {
+        return new LocalClusterActorNodeRef(getClusterName(),node,actorId);
+    }
+
+    @Override
+    public ActorRef createServiceActorRef(ActorNode node, String actorId) {
+        return new ServiceActorRef(getClusterName(),node,actorId);
     }
 
     @Override

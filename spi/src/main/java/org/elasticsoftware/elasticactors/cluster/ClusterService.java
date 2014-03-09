@@ -25,4 +25,8 @@ public interface ClusterService {
     void reportPlannedShutdown();
 
     void addEventListener(ClusterEventListener eventListener);
+
+    void sendMessage(String memberToken, byte[] message) throws Exception;
+
+    void setClusterMessageHandler(ClusterMessageHandler clusterMessageHandler);
 }

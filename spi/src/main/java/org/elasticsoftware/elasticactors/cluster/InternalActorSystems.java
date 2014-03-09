@@ -16,6 +16,9 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
+import org.elasticsoftware.elasticactors.ActorNode;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.ActorSystems;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
@@ -32,4 +35,10 @@ public interface InternalActorSystems extends ActorSystems {
     <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass);
 
     SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass);
+
+    ActorRef createPersistentActorRef(ActorShard shard, String actorId);
+
+    ActorRef createTempActorRef(ActorNode node, String actorId);
+
+    ActorRef createServiceActorRef(ActorNode node, String actorId);
 }

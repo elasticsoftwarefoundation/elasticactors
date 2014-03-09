@@ -19,6 +19,8 @@ package org.elasticsoftware.elasticactors.cluster;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 
+import static java.lang.String.format;
+
 /**
  * {@link org.elasticsoftware.elasticactors.ActorRef} that references an actor in the local cluster
  *
@@ -36,9 +38,13 @@ public final class ServiceActorRef implements ActorRef, ActorContainerRef {
         this.serviceId = serviceId;
     }
 
+    public static String generateRefSpec(String clusterName,ActorNode node,String serviceId) {
+        return format("actor://%s/%s/services/%s", clusterName, node.getKey().getActorSystemName(), serviceId);
+    }
+
     @Override
     public String getActorPath() {
-        return String.format("%s/services",node.getKey().getActorSystemName());
+        return format("%s/services", node.getKey().getActorSystemName());
     }
 
     public String getActorId() {
@@ -51,7 +57,7 @@ public final class ServiceActorRef implements ActorRef, ActorContainerRef {
             node.sendMessage(sender,this,message);
         } catch (Exception e) {
             // @todo: notify sender of the failure
-            logger.error(String.format("Failed to send message to %s",sender.toString()),e);
+            logger.error(format("Failed to send message to %s", sender.toString()),e);
         }
     }
 
@@ -94,10 +100,6 @@ public final class ServiceActorRef implements ActorRef, ActorContainerRef {
 
     @Override
     public String toString() {
-        return String.format("actor://%s/%s/services/%s",
-                             clusterName,
-                             node.getKey().getActorSystemName(),
-                             serviceId);
-
+        return generateRefSpec(this.clusterName,this.node,this.serviceId);
     }
 }

@@ -19,6 +19,8 @@ package org.elasticsoftware.elasticactors.cluster;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 
+import javax.annotation.Nullable;
+
 /**
  * {@link org.elasticsoftware.elasticactors.ActorRef} that references an actor in the local cluster
  *
@@ -38,6 +40,18 @@ public final class ActorShardRef implements ActorRef, ActorContainerRef {
 
     public ActorShardRef(String clusterName, ActorShard shard) {
         this(clusterName, shard, null);
+    }
+
+    public static String generateRefSpec(String clusterName,ActorShard shard,@Nullable String actorId) {
+        if(actorId != null) {
+            return String.format("actor://%s/%s/shards/%d/%s",
+                    clusterName,shard.getKey().getActorSystemName(),
+                    shard.getKey().getShardId(),actorId);
+        } else {
+            return String.format("actor://%s/%s/shards/%d",
+                    clusterName,shard.getKey().getActorSystemName(),
+                    shard.getKey().getShardId());
+        }
     }
 
     @Override
@@ -105,14 +119,6 @@ public final class ActorShardRef implements ActorRef, ActorContainerRef {
 
     @Override
     public String toString() {
-        if(actorId != null) {
-            return String.format("actor://%s/%s/shards/%d/%s",
-                                 clusterName,shard.getKey().getActorSystemName(),
-                                 shard.getKey().getShardId(),actorId);
-        } else {
-            return String.format("actor://%s/%s/shards/%d",
-                                 clusterName,shard.getKey().getActorSystemName(),
-                                 shard.getKey().getShardId());
-        }
+        return generateRefSpec(this.clusterName,this.shard,this.actorId);
     }
 }

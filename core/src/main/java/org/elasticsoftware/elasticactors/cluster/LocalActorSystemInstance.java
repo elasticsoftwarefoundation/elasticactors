@@ -38,6 +38,7 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -282,7 +283,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                 ElasticActor existingInstance = actorInstances.putIfAbsent(actorClass, actorInstance);
                 return existingInstance == null ? actorInstance : existingInstance;
             } catch (Exception e) {
-                logger.error("Exception creating actor instance", e);
+                logger.error(format("Exception creating actor instance for actorClass [%s]",actorClass.getName()), e);
                 return null;
             }
         } else {
@@ -345,7 +346,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
-    public <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception {
+    public <T> ActorRef actorOf(String actorId, Class<T> actorClass,@Nullable ActorState initialState) throws Exception {
         // determine shard
         ActorShard shard = shardFor(actorId);
         // send CreateActorMessage to shard
@@ -353,8 +354,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         ActorRef creator = ActorContextHolder.getSelf();
         shard.sendMessage(creator, shard.getActorRef(), createActorMessage);
         // create actor ref
-        // @todo: add cache to speed up performance
-        return new ActorShardRef(cluster.getClusterName(), shard, actorId);
+        return cluster.createPersistentActorRef(shard, actorId);
     }
 
     @Override
@@ -368,7 +368,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                                                                        initialState,
                                                                        ActorType.TEMP);
         this.localNodeAdapter.sendMessage(null, localNodeAdapter.getActorRef(), createActorMessage);
-        return new LocalClusterActorNodeRef(cluster.getClusterName(), localNodeAdapter, actorId);
+        return cluster.createTempActorRef(localNodeAdapter, actorId);
     }
 
     private ActorShard shardFor(String actorId) {
@@ -377,29 +377,28 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
 
     @Override
-    public ActorRef actorFor(String actorId) {
+    public ActorRef actorFor(final String actorId) {
         // determine shard
-        ActorShard shard = shardFor(actorId);
+        final ActorShard shard = shardFor(actorId);
         // return actor ref
-        // @todo: add cache to speed up performance
-        return new ActorShardRef(cluster.getClusterName(), shard, actorId);
+        return cluster.createPersistentActorRef(shard, actorId);
     }
 
     @Override
     public ActorRef tempActorFor(String actorId) {
-        return new LocalClusterActorNodeRef(cluster.getClusterName(), this.localNodeAdapter, actorId);
+        return cluster.createTempActorRef(this.localNodeAdapter, actorId);
     }
 
     @Override
     public ActorRef serviceActorFor(String actorId) {
-        return new ServiceActorRef(cluster.getClusterName(), this.localNodeAdapter, actorId);
+        return cluster.createServiceActorRef(this.localNodeAdapter, actorId);
     }
 
     @Override
     public ActorRef serviceActorFor(String nodeId, String actorId) {
         final ActorNodeAdapter nodeAdapter = this.activeNodeAdapters.get(nodeId);
         if(nodeAdapter != null) {
-            return new ServiceActorRef(cluster.getClusterName(), nodeAdapter, actorId);
+            return cluster.createServiceActorRef(nodeAdapter, actorId);
         } else {
             throw new IllegalArgumentException(format("Unknown node [%s]",nodeId));
         }

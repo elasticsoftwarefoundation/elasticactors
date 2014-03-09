@@ -36,6 +36,18 @@ public final class LocalClusterActorNodeRef implements ActorRef, ActorContainerR
         this.actorId = actorId;
     }
 
+    public static String generateRefSpec(String clusterName, ActorNode node,String actorId) {
+        if(actorId != null) {
+            return String.format("actor://%s/%s/nodes/%s/%s",
+                    clusterName,node.getKey().getActorSystemName(),
+                    node.getKey().getNodeId(),actorId);
+        } else {
+            return String.format("actor://%s/%s/nodes/%s",
+                    clusterName,node.getKey().getActorSystemName(),
+                    node.getKey().getNodeId());
+        }
+    }
+
     public LocalClusterActorNodeRef(String clusterName, ActorNode node) {
         this(clusterName, node, null);
     }
@@ -98,14 +110,6 @@ public final class LocalClusterActorNodeRef implements ActorRef, ActorContainerR
 
     @Override
     public String toString() {
-        if(actorId != null) {
-            return String.format("actor://%s/%s/nodes/%s/%s",
-                                 clusterName,node.getKey().getActorSystemName(),
-                                 node.getKey().getNodeId(),actorId);
-        } else {
-            return String.format("actor://%s/%s/nodes/%s",
-                                 clusterName,node.getKey().getActorSystemName(),
-                                 node.getKey().getNodeId());
-        }
+        return generateRefSpec(this.clusterName,this.node,this.actorId);
     }
 }

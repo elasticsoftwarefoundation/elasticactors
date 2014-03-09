@@ -20,6 +20,8 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ActorSystems;
 
+import static java.lang.String.format;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -29,7 +31,7 @@ public final class ActorRefTools {
     private ActorRefTools() {
     }
 
-    public static ActorRef parse(String refSpec, ActorSystems actorSystems) {
+    public static ActorRef parse(String refSpec, InternalActorSystems actorSystems) {
         // refSpec should look like: actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId>
         if (refSpec.startsWith("actor://")) {
             int actorSeparatorIndex = 8;
@@ -37,7 +39,7 @@ public final class ActorRefTools {
                 int nextIndex = refSpec.indexOf('/', actorSeparatorIndex + 1);
                 if (nextIndex == -1) {
                     throw new IllegalArgumentException(
-                            String.format(EXCEPTION_FORMAT, refSpec));
+                            format(EXCEPTION_FORMAT, refSpec));
                 } else {
                     actorSeparatorIndex = nextIndex;
                 }
@@ -56,30 +58,33 @@ public final class ActorRefTools {
 
 
         } else {
-            throw new IllegalArgumentException(String.format(EXCEPTION_FORMAT, refSpec));
+            throw new IllegalArgumentException(format(EXCEPTION_FORMAT, refSpec));
         }
 
     }
 
-    private static ActorRef handleLocalActorSystemReference(String refSpec, String[] components, String actorId, ActorSystems actorSystems) {
+    private static ActorRef handleLocalActorSystemReference(String refSpec, String[] components, String actorId, InternalActorSystems actorSystems) {
         String clusterName = components[0];
         String actorSystemName = components[1];
-        InternalActorSystem actorSystem = (InternalActorSystem) actorSystems.get(actorSystemName);
+        InternalActorSystem actorSystem = actorSystems.get(actorSystemName);
         if (actorSystem == null) {
-            throw new IllegalArgumentException(String.format("Unknown ActorSystem: %s", actorSystemName));
+            throw new IllegalArgumentException(format("Unknown ActorSystem: %s", actorSystemName));
         }
         if ("shards".equals(components[2])) {
             int shardId = Integer.parseInt(components[3]);
             if (shardId >= actorSystem.getConfiguration().getNumberOfShards()) {
-                throw new IllegalArgumentException(String.format("Unknown shard %d for ActorSystem %s. Available shards: %d", shardId, actorSystemName, actorSystem.getConfiguration().getNumberOfShards()));
+                throw new IllegalArgumentException(format("Unknown shard %d for ActorSystem %s. Available shards: %d", shardId, actorSystemName, actorSystem.getConfiguration().getNumberOfShards()));
             }
-            return new ActorShardRef(clusterName, actorSystem.getShard(String.format("%s/shards/%d", actorSystemName, shardId)), actorId);
+            //return new ActorShardRef(clusterName, actorSystem.getShard(String.format("%s/shards/%d", actorSystemName, shardId)), actorId);
+            return actorSystems.createPersistentActorRef(actorSystem.getShard(format("%s/shards/%d", actorSystemName, shardId)),actorId);
         } else if ("nodes".equals(components[2])) {
-            return new LocalClusterActorNodeRef(clusterName, actorSystem.getNode(components[3]), actorId);
+            //return new LocalClusterActorNodeRef(clusterName, actorSystem.getNode(components[3]), actorId);
+            return actorSystems.createTempActorRef(actorSystem.getNode(components[3]),actorId);
         } else if ("services".equals(components[2])) {
-            return new ServiceActorRef(clusterName, actorSystem.getNode(), (actorId == null) ? components[3] : String.format("%s/%s", components[3], actorId));
+            //return new ServiceActorRef(clusterName, actorSystem.getNode(), (actorId == null) ? components[3] : format("%s/%s", components[3], actorId));
+            return actorSystems.createServiceActorRef(actorSystem.getNode(), (actorId == null) ? components[3] : format("%s/%s", components[3], actorId));
         } else {
-            throw new IllegalArgumentException(String.format(EXCEPTION_FORMAT, refSpec));
+            throw new IllegalArgumentException(format(EXCEPTION_FORMAT, refSpec));
         }
     }
 
@@ -88,17 +93,18 @@ public final class ActorRefTools {
         String actorSystemName = components[1];
         ActorSystem remoteActorSystem = actorSystems.getRemote(clusterName, actorSystemName);
         if (remoteActorSystem == null) {
-            throw new IllegalArgumentException(String.format("Unknown Remote ActorSystem: %s/%s", clusterName, actorSystemName));
+            throw new IllegalArgumentException(format("Unknown Remote ActorSystem: %s/%s", clusterName, actorSystemName));
         }
         if ("shards".equals(components[2])) {
             int shardId = Integer.parseInt(components[3]);
-            return new ActorShardRef(clusterName, ((ShardAccessor) remoteActorSystem).getShard(String.format("%s/shards/%d", actorSystemName, shardId)), actorId);
+            // @todo: ensure we can cache this
+            return new ActorShardRef(clusterName, ((ShardAccessor) remoteActorSystem).getShard(format("%s/shards/%d", actorSystemName, shardId)), actorId);
         } else if ("nodes".equals(components[2])) {
             throw new IllegalArgumentException("Temporary Actors are not (yet) supported for Remote Actor System instances");
         } else if ("services".equals(components[2])) {
             throw new IllegalArgumentException("Service Actors are not (yet) supported for Remote Actor System instances");
         } else {
-            throw new IllegalArgumentException(String.format(EXCEPTION_FORMAT, refSpec));
+            throw new IllegalArgumentException(format(EXCEPTION_FORMAT, refSpec));
         }
     }
 

@@ -16,12 +16,14 @@
 
 package org.elasticsoftware.elasticactors.shoal.cluster;
 
+import com.eaio.util.lang.Hex;
 import com.sun.enterprise.ee.cms.core.*;
 import com.sun.enterprise.ee.cms.impl.client.*;
 import com.sun.enterprise.mgmt.transport.grizzly.GrizzlyConfigConstants;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ClusterEventListener;
+import org.elasticsoftware.elasticactors.cluster.ClusterMessageHandler;
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.elasticsoftware.elasticactors.cluster.PhysicalNodeImpl;
 
@@ -33,17 +35,21 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static java.lang.String.format;
+
 /**
  * @author Joost van de Wijgerd
  */
-public class ShoalClusterService implements ClusterService {
+public final class ShoalClusterService implements ClusterService {
     private static final Logger logger = Logger.getLogger(ShoalClusterService.class);
+    private static final String COMPONENT_NAME = "ElasticActors";
     private final String clusterName;
     private final String nodeId;
     private final InetAddress nodeAddress;
     private final AtomicBoolean startupLeadershipSignal = new AtomicBoolean(true);
     private final Queue<ClusterEventListener> eventListeners = new ConcurrentLinkedQueue<>();
     private GroupManagementService gms;
+    private ClusterMessageHandler clusterMessageHandler;
 
     public ShoalClusterService(String clusterName, String nodeId, InetAddress nodeAddress) {
         this.clusterName = clusterName;
@@ -79,6 +85,16 @@ public class ShoalClusterService implements ClusterService {
         this.eventListeners.add(eventListener);
     }
 
+    @Override
+    public void sendMessage(final String memberToken, final byte[] message) throws Exception {
+        gms.getGroupHandle().sendMessage(memberToken,COMPONENT_NAME,message);
+    }
+
+    @Override
+    public void setClusterMessageHandler(ClusterMessageHandler clusterMessageHandler) {
+        this.clusterMessageHandler = clusterMessageHandler;
+    }
+
     private GroupManagementService initializeGMS(String serverName,String groupName, String interfaceName) throws GMSException {
         Properties props = new Properties();
 
@@ -92,7 +108,7 @@ public class ShoalClusterService implements ClusterService {
         final CallBack gmsCallback = new CallBack() {
             @Override
             public void processNotification(Signal notification) {
-                logger.info(String.format("got signal [%s] from member [%s]",notification.getClass().getSimpleName(),notification.getMemberToken()));
+                logger.info(format("got signal [%s] from member [%s]", notification.getClass().getSimpleName(), notification.getMemberToken()));
                 if(notification instanceof JoinedAndReadyNotificationSignal) {
                     fireTopologyChanged(((JoinedAndReadyNotificationSignal)notification).getCurrentView());
                 } else if(notification instanceof PlannedShutdownSignal) {
@@ -105,6 +121,23 @@ public class ShoalClusterService implements ClusterService {
             }
         };
 
+        final CallBack messagingCallback = new CallBack() {
+
+            @Override
+            public void processNotification(Signal notification) {
+                if(notification instanceof MessageSignal) {
+                    if(clusterMessageHandler != null) {
+                        MessageSignal messageSignal = (MessageSignal) notification;
+                        try {
+                            clusterMessageHandler.handleMessage(messageSignal.getMessage(),messageSignal.getMemberToken());
+                        } catch (Exception e) {
+                            logger.error(format("Exception while handling MessageSignal from member %s, signal bytes (HEX): -", messageSignal.getMemberToken()),e);
+                        }
+                    }
+                }
+            }
+        };
+
         //gms.addActionFactory(new FailureRecoveryActionFactoryImpl(gmsCallback));
         gms.addActionFactory(new JoinNotificationActionFactoryImpl(gmsCallback));
         gms.addActionFactory(new JoinedAndReadyNotificationActionFactoryImpl(gmsCallback));
@@ -112,6 +145,8 @@ public class ShoalClusterService implements ClusterService {
         gms.addActionFactory(new FailureSuspectedActionFactoryImpl(gmsCallback));
         gms.addActionFactory(new FailureNotificationActionFactoryImpl(gmsCallback));
         gms.addActionFactory(new PlannedShutdownActionFactoryImpl(gmsCallback));
+        gms.addActionFactory(new MessageActionFactoryImpl(messagingCallback),COMPONENT_NAME);
+
 
         return gms;
     }

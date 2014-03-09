@@ -19,9 +19,7 @@ package org.elasticsoftware.elasticactors.runtime;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.apache.log4j.Logger;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ActorSystem;
-import org.elasticsoftware.elasticactors.PhysicalNode;
+import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.*;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
@@ -44,7 +42,7 @@ import java.util.concurrent.ScheduledExecutorService;
 /**
  * @author Joost van de Wijgerd
  */
-public final class ElasticActorsNode implements PhysicalNode, InternalActorSystems, ActorRefFactory, ClusterEventListener {
+public final class ElasticActorsNode implements PhysicalNode, InternalActorSystems, ActorRefFactory, ClusterEventListener, ClusterMessageHandler {
     private static final Logger logger = Logger.getLogger(ElasticActorsNode.class);
     private final String clusterName;
     private final String nodeId;
@@ -69,6 +67,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     public void setClusterService(ClusterService clusterService) {
         this.clusterService = clusterService;
         clusterService.addEventListener(this);
+        clusterService.setClusterMessageHandler(this);
     }
 
     @PostConstruct
@@ -92,6 +91,11 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     @Override
     public void onMasterElected(PhysicalNode masterNode) throws Exception {
         // ignore
+    }
+
+    @Override
+    public void handleMessage(byte[] message, String senderToken) {
+        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     public void join() {
@@ -147,6 +151,39 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     @Override
     public SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass) {
         return applicationContext.getBean(frameworkClass);
+    }
+
+    @Override
+    public ActorRef createPersistentActorRef(ActorShard shard, String actorId) {
+        final String refSpec = ActorShardRef.generateRefSpec(clusterName,shard,actorId);
+        ActorRef ref = actorRefCache.getIfPresent(refSpec);
+        if(ref == null) {
+            ref = new ActorShardRef(clusterName,shard,actorId);
+            actorRefCache.put(refSpec,ref);
+        }
+        return ref;
+    }
+
+    @Override
+    public ActorRef createTempActorRef(ActorNode node, String actorId) {
+        final String refSpec = LocalClusterActorNodeRef.generateRefSpec(this.clusterName,node,actorId);
+        ActorRef ref = actorRefCache.getIfPresent(refSpec);
+        if(ref == null) {
+            ref = new LocalClusterActorNodeRef(clusterName,node,actorId);
+            actorRefCache.put(refSpec,ref);
+        }
+        return ref;
+    }
+
+    @Override
+    public ActorRef createServiceActorRef(ActorNode node, String actorId) {
+        final String refSpec = ServiceActorRef.generateRefSpec(this.clusterName,node,actorId);
+        ActorRef ref = actorRefCache.getIfPresent(refSpec);
+        if(ref == null) {
+            ref = new LocalClusterActorNodeRef(clusterName,node,actorId);
+            actorRefCache.put(refSpec,ref);
+        }
+        return ref;
     }
 
     @Override
