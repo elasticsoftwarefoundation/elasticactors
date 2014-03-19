@@ -67,8 +67,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private NodeActorCacheManager nodeActorCacheManager;
     private ShardActorCacheManager shardActorCacheManager;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
-    private final ConcurrentMap<String, ActorNode> activeNodes = new ConcurrentHashMap<String, ActorNode>();
-    private final ConcurrentMap<String, ActorNodeAdapter> activeNodeAdapters = new ConcurrentHashMap<String, ActorNodeAdapter>();
+    private final ConcurrentMap<String, ActorNode> activeNodes = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, ActorNodeAdapter> activeNodeAdapters = new ConcurrentHashMap<>();
     private final ActorNodeAdapter localNodeAdapter;
     private final HashFunction hashFunction = Hashing.murmur3_32();
 
@@ -103,7 +103,12 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     public void shutdown() {
         // @todo: run shutdown sequences on nodes and shards
-
+        for (ActorNodeAdapter nodeAdapter : activeNodeAdapters.values()) {
+            nodeAdapter.destroy();
+        }
+        for (ActorShardAdapter shardAdapter : shardAdapters) {
+            shardAdapter.destroy();
+        }
     }
 
     public void updateNodes(List<PhysicalNode> nodes) throws Exception {

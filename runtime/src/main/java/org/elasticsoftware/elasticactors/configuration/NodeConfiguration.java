@@ -123,7 +123,7 @@ public class NodeConfiguration {
         return new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
     }
 
-    @Bean(name = {"internalActorSystem"})
+    @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
     public InternalActorSystem createLocalActorSystemInstance() {
         return new LocalActorSystemInstance(node,node,configuration,nodeSelectorFactory);
     }

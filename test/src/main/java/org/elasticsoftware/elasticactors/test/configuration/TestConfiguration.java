@@ -30,6 +30,7 @@ import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.test.InternalActorSystemsImpl;
+import org.elasticsoftware.elasticactors.test.cluster.SingleNodeClusterService;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
@@ -127,10 +128,13 @@ public class TestConfiguration {
         return new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
     }
 
-
-
     @Bean(name = {"scheduler"})
     public SchedulerService createScheduler() {
         return new SimpleScheduler();
+    }
+
+    @Bean(name= "clusterService")
+    public ClusterService createClusterService() {
+        return new SingleNodeClusterService(this.localNode);
     }
 }

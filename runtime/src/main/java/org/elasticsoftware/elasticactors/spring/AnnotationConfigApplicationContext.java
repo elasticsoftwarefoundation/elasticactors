@@ -164,6 +164,12 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
         }
     }
 
+    public void addExcludeFilters(TypeFilter... typeFilters) {
+        for (TypeFilter typeFilter : typeFilters) {
+            this.scanner.addExcludeFilter(typeFilter);
+        }
+    }
+
 	@Override
 	protected void prepareRefresh() {
 		this.scanner.clearCache();

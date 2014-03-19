@@ -28,7 +28,7 @@ import java.io.IOException;
 /**
  * @author Joost van de Wijgerd
  */
-public class RemoteMessageQueue implements MessageQueue {
+public final class RemoteMessageQueue implements MessageQueue {
     private final Logger logger;
     private final Channel producerChannel;
     private final String exchangeName;

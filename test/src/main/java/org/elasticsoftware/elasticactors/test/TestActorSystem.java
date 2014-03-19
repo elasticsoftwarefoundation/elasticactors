@@ -22,10 +22,13 @@ import org.elasticsoftware.elasticactors.runtime.ScannerHelper;
 import org.elasticsoftware.elasticactors.spring.ActorAnnotationBeanNameGenerator;
 import org.elasticsoftware.elasticactors.spring.AnnotationConfigApplicationContext;
 import org.elasticsoftware.elasticactors.test.configuration.TestConfiguration;
+import org.springframework.core.env.Environment;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.Properties;
 
 /**
  * @author Joost van de Wijgerd
@@ -36,6 +39,10 @@ public final class TestActorSystem {
     private AnnotationConfigApplicationContext applicationContext;
 
     public TestActorSystem() {
+
+    }
+
+    public TestActorSystem(Properties properties) {
 
     }
 
@@ -51,10 +58,14 @@ public final class TestActorSystem {
     public void initialize() {
         // annotation configuration context
         applicationContext = new AnnotationConfigApplicationContext();
+        applicationContext.getBean(Environment.class);
         // set the correct configurations
         applicationContext.register(TestConfiguration.class);
+        //applicationContext.
         // ensure the EA annotations are scanned
         applicationContext.addIncludeFilters(new AnnotationTypeFilter(ServiceActor.class));
+        // and exclude the spring ones
+        applicationContext.addExcludeFilters(new AnnotationTypeFilter(Component.class));
         // generate correct names for ServiceActor annotated actors
         applicationContext.setBeanNameGenerator(new ActorAnnotationBeanNameGenerator());
         // find all the paths to scan

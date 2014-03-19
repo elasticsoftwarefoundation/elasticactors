@@ -180,7 +180,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
         final String refSpec = ServiceActorRef.generateRefSpec(this.clusterName,node,actorId);
         ActorRef ref = actorRefCache.getIfPresent(refSpec);
         if(ref == null) {
-            ref = new LocalClusterActorNodeRef(clusterName,node,actorId);
+            ref = new ServiceActorRef(clusterName,node,actorId);
             actorRefCache.put(refSpec,ref);
         }
         return ref;

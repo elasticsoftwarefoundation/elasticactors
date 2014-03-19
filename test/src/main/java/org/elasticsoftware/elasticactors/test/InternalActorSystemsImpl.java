@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.internal.SystemDeserializers;
 import org.elasticsoftware.elasticactors.serialization.internal.SystemSerializers;
+import org.elasticsoftware.elasticactors.test.cluster.SingleNodeClusterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
@@ -41,6 +42,8 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
     private ApplicationContext applicationContext;
     @Autowired
     private LocalActorSystemInstance localActorSystemInstance;
+    @Autowired
+    private ClusterService clusterService;
     private final PhysicalNode localNode;
 
     public InternalActorSystemsImpl(PhysicalNode localNode) {
@@ -52,6 +55,8 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
         final List<PhysicalNode> localNodes = Arrays.<PhysicalNode>asList(localNode);
         localActorSystemInstance.updateNodes(localNodes);
         localActorSystemInstance.distributeShards(localNodes);
+        // signal master elected
+        clusterService.reportReady();
     }
 
     @PreDestroy

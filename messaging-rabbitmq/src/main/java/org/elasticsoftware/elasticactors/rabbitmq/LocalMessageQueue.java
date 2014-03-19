@@ -24,11 +24,13 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Joost van de Wijgerd
  */
-public class LocalMessageQueue extends DefaultConsumer implements MessageQueue {
+public final class LocalMessageQueue extends DefaultConsumer implements MessageQueue {
     private final Logger logger;
     private final Channel consumerChannel;
     private final Channel producerChannel;
@@ -37,6 +39,7 @@ public class LocalMessageQueue extends DefaultConsumer implements MessageQueue {
     private final MessageHandler messageHandler;
     private final TransientAck transientAck = new TransientAck();
     private final ThreadBoundExecutor<String> queueExecutor;
+    private final CountDownLatch destroyLatch = new CountDownLatch(1);
 
     public LocalMessageQueue(ThreadBoundExecutor<String> queueExecutor, Channel consumerChannel, Channel producerChannel, String exchangeName, String queueName, MessageHandler messageHandler) {
         super(consumerChannel);
@@ -94,19 +97,22 @@ public class LocalMessageQueue extends DefaultConsumer implements MessageQueue {
     public void destroy() {
         try {
             consumerChannel.basicCancel(getConsumerTag());
+            destroyLatch.await(4, TimeUnit.SECONDS);
         } catch (IOException e) {
             logger.error("IOException while cancelling consumer",e);
+        } catch (InterruptedException e) {
+            // ignore
         }
     }
 
     @Override
     public void handleCancelOk(String consumerTag) {
-        // @todo: use this to block on destroy()
+        destroyLatch.countDown();
     }
 
     @Override
     public void handleCancel(String consumerTag) throws IOException {
-        // we we're cancelled by an outside force, should not happen. treat as an error
+        // we were cancelled by an outside force, should not happen. treat as an error
         logger.error(String.format("Unexpectedly cancelled: consumerTag = %s",consumerTag));
     }
 
