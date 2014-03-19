@@ -42,10 +42,6 @@ public final class TestActorSystem {
 
     }
 
-    public TestActorSystem(Properties properties) {
-
-    }
-
     public ActorSystem getActorSystem() {
         return applicationContext.getBean(ActorSystem.class);
     }
@@ -58,7 +54,6 @@ public final class TestActorSystem {
     public void initialize() {
         // annotation configuration context
         applicationContext = new AnnotationConfigApplicationContext();
-        applicationContext.getBean(Environment.class);
         // set the correct configurations
         applicationContext.register(TestConfiguration.class);
         //applicationContext.
