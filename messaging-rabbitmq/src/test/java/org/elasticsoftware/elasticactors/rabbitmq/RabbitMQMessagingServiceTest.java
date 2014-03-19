@@ -22,6 +22,7 @@ import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
+import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
@@ -53,13 +54,14 @@ public class RabbitMQMessagingServiceTest {
     public final Random random = new Random();
     private ActorRef senderRef;
     private ActorRef receiverRef;
+    private ActorRefFactory actorRefFactory;
 
     @BeforeTest(alwaysRun = true)
     public void setUp() {
         senderRef = mock(ActorRef.class);
         receiverRef = mock(ActorRef.class);
 
-        ActorRefFactory actorRefFactory = mock(ActorRefFactory.class);
+        actorRefFactory = mock(ActorRefFactory.class);
 
         when(receiverRef.toString()).thenReturn("actor://test.vdwbv.com/test/shards/1/testReceiver");
         when(senderRef.toString()).thenReturn("actor://test.vdwbv.com/test/shards/1/testSender");
@@ -68,7 +70,7 @@ public class RabbitMQMessagingServiceTest {
         when(actorRefFactory.create("actor://test.vdwbv.com/test/shards/1/testSender")).thenReturn(senderRef);
 
         // not a very nice construction, but alas
-        ActorRefDeserializer.get().setActorRefFactory(actorRefFactory);
+        // ActorRefDeserializer.get().setActorRefFactory(actorRefFactory);
     }
 
     @Test
@@ -80,7 +82,7 @@ public class RabbitMQMessagingServiceTest {
                                                                                  System.getProperty("host","localhost"),
                                                                                  System.getProperty("username","guest"),
                                                                                  System.getProperty("password","guest"),
-                                                                                 queueExecutor);
+                                                                                 queueExecutor, new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory)));
         messagingService.start();
 
         final CountDownLatch waitLatch = new CountDownLatch(NUM_MESSAGES);

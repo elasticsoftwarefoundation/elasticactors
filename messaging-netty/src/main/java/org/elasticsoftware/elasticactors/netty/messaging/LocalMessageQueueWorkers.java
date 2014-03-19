@@ -71,14 +71,15 @@ public final class LocalMessageQueueWorkers implements MessageQueueFactory {
     }
 
     public MessageQueue create(String name,MessageHandler messageHandler) throws Exception {
-        // pick the next worker (round-robin)
+/*        // pick the next worker (round-robin)
         MessageQueueWorker worker = nextWorker();
         LocalMessageQueue messageQueue = new LocalMessageQueue(name,worker,messageHandler);
         // add the queue to the worker
         worker.add(messageQueue);
         // initialize the queue (will read commit log and start emitting pending messages
         messageQueue.initialize();
-        return messageQueue;
+        return messageQueue;*/
+        return null;
     }
 
     private final class MessageQueueWorker implements Runnable, MessageQueueEventListener {

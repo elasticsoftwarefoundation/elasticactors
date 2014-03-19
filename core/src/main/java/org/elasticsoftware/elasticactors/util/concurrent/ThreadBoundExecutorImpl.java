@@ -70,7 +70,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor<String
     public void shutdown() {
         LOG.info("shutting down the ThreadBoundExecutor");
         if (shuttingDown.compareAndSet(false, true)) {
-            CountDownLatch shuttingDownLatch = new CountDownLatch(queues.size());
+            final CountDownLatch shuttingDownLatch = new CountDownLatch(queues.size());
             for (BlockingQueue<Runnable> queue : queues) {
                 queue.add(new ShutdownTask(shuttingDownLatch));
             }
@@ -105,7 +105,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor<String
                 } catch (InterruptedException e) {
                     LOG.warn(String.format("Consumer on queue %s interrupted.", Thread.currentThread().getName()));
                     //ignore
-                } catch (Exception exception) {
+                } catch (Throwable exception) {
                     LOG.error(String.format("exception on queue %s while executing runnable: %s", Thread.currentThread().getName(), r), exception);
                 } finally {
                     if (r != null && r.getClass().equals(ShutdownTask.class)) {

@@ -212,7 +212,7 @@ public final class NettyMessagingService extends SimpleChannelUpstreamHandler im
             String[] pathElements = wireMessage.getQueueName().split("/");
             // @todo: this is pretty ugly, much better to let the actorSystem figure this out
             InternalActorSystem actorSystem = cluster.get(pathElements[0]);
-            if("shards".equals(pathElements[1])) {
+            /*if("shards".equals(pathElements[1])) {
                 actorSystem.getShard(wireMessage.getQueueName()).offerInternalMessage(
                     InternalMessageDeserializer.get().deserialize(wireMessage.getInternalMessage().toByteArray()));
             } else if("nodes".equals(pathElements[1])) {
@@ -220,7 +220,7 @@ public final class NettyMessagingService extends SimpleChannelUpstreamHandler im
                     InternalMessageDeserializer.get().deserialize(wireMessage.getInternalMessage().toByteArray()));
             } else {
                 logger.error(String.format("Received a message for an unknown queue [%s], Ignoring",wireMessage.getQueueName()));
-            }
+            }*/
             //logger.info(String.format("received message from %s for %s",ctx.getChannel().getRemoteAddress(),queueName));
         }
     }

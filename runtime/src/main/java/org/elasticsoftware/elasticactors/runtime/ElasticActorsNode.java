@@ -48,7 +48,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     private final String nodeId;
     private final InetAddress nodeAddress;
     private final SystemSerializers systemSerializers = new SystemSerializers(this);
-    private final SystemDeserializers systemDeserializers = new SystemDeserializers(this);
+    private final SystemDeserializers systemDeserializers = new SystemDeserializers(this,this);
     private final CountDownLatch waitLatch = new CountDownLatch(1);
     private Cache<String,ActorRef> actorRefCache;
     @Autowired

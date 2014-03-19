@@ -37,7 +37,7 @@ import java.util.List;
  */
 public final class InternalActorSystemsImpl implements InternalActorSystems, ActorRefFactory {
     private final SystemSerializers systemSerializers = new SystemSerializers(this);
-    private final SystemDeserializers systemDeserializers = new SystemDeserializers(this);
+    private final SystemDeserializers systemDeserializers = new SystemDeserializers(this,this);
     @Autowired
     private ApplicationContext applicationContext;
     @Autowired

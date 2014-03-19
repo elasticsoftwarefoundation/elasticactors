@@ -32,8 +32,10 @@ import org.elasticsoftware.elasticactors.cassandra.state.CassandraPersistentActo
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRepository;
+import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorSerializer;
+import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageDeserializer;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -83,7 +85,7 @@ public class BackplaneConfiguration {
 
     @Bean(name = {"scheduledMessageRepository"})
     public ScheduledMessageRepository getScheduledMessageRepository() {
-        CassandraScheduledMessageRepository scheduledMessageRepository = new CassandraScheduledMessageRepository(cluster.getClusterName(), scheduledMessagesColumnFamilyTemplate);
+        CassandraScheduledMessageRepository scheduledMessageRepository = new CassandraScheduledMessageRepository(cluster.getClusterName(), scheduledMessagesColumnFamilyTemplate, new ScheduledMessageDeserializer(new ActorRefDeserializer(actorRefFactory)));
         return scheduledMessageRepository;
     }
 }

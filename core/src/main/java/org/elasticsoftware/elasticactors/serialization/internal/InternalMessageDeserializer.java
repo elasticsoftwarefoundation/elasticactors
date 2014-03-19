@@ -30,17 +30,17 @@ import java.util.UUID;
  * @author Joost van de Wijgerd
  */
 public final class InternalMessageDeserializer implements Deserializer<byte[],InternalMessage> {
-    private static final InternalMessageDeserializer INSTANCE = new InternalMessageDeserializer();
+    private final ActorRefDeserializer actorRefDeserializer;
 
-    public static InternalMessageDeserializer get() {
-        return INSTANCE;
+    public InternalMessageDeserializer(ActorRefDeserializer actorRefDeserializer) {
+        this.actorRefDeserializer = actorRefDeserializer;
     }
 
     @Override
     public InternalMessage deserialize(byte[] serializedObject) throws IOException {
         Elasticactors.InternalMessage protobufMessage = Elasticactors.InternalMessage.parseFrom(serializedObject);
-        ActorRef sender = (protobufMessage.hasSender()) ? ActorRefDeserializer.get().deserialize(protobufMessage.getSender()) : null;
-        ActorRef receiver = ActorRefDeserializer.get().deserialize(protobufMessage.getReceiver());
+        ActorRef sender = (protobufMessage.hasSender()) ? actorRefDeserializer.deserialize(protobufMessage.getSender()) : null;
+        ActorRef receiver = actorRefDeserializer.deserialize(protobufMessage.getReceiver());
         String messageClass = protobufMessage.getPayloadClass();
         UUID id = UUIDTools.toUUID(protobufMessage.getId().toByteArray());
         boolean durable = (protobufMessage.hasDurable()) ? protobufMessage.getDurable() : true;

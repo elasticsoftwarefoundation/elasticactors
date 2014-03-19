@@ -27,22 +27,15 @@ import java.io.IOException;
 /**
  * @author Joost van de Wijgerd
  */
-@Configurable
 public final class ActorRefDeserializer implements Deserializer<String,ActorRef> {
-    private static final ActorRefDeserializer INSTANCE = new ActorRefDeserializer();
-    private ActorRefFactory actorRefFactory;
+    private final ActorRefFactory actorRefFactory;
 
-    public static ActorRefDeserializer get() {
-        return INSTANCE;
+    public ActorRefDeserializer(ActorRefFactory actorRefFactory) {
+        this.actorRefFactory = actorRefFactory;
     }
 
     @Override
     public ActorRef deserialize(String serializedObject) throws IOException {
         return actorRefFactory.create(serializedObject);
-    }
-
-    @Autowired
-    public void setActorRefFactory(ActorRefFactory actorRefFactory) {
-        this.actorRefFactory = actorRefFactory;
     }
 }

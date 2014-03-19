@@ -31,18 +31,18 @@ import java.util.UUID;
  * @author Joost van de Wijgerd
  */
 public final class ScheduledMessageDeserializer implements Deserializer<byte[],ScheduledMessage> {
-    private static final ScheduledMessageDeserializer INSTANCE = new ScheduledMessageDeserializer();
+    private final ActorRefDeserializer actorRefDeserializer;
 
-    public static ScheduledMessageDeserializer get() {
-        return INSTANCE;
+    public ScheduledMessageDeserializer(ActorRefDeserializer actorRefDeserializer) {
+        this.actorRefDeserializer = actorRefDeserializer;
     }
 
     @Override
     public ScheduledMessage deserialize(byte[] serializedObject) throws IOException {
         try {
             Elasticactors.ScheduledMessage protobufMessage = Elasticactors.ScheduledMessage.parseFrom(serializedObject);
-            ActorRef sender = (protobufMessage.hasSender()) ? ActorRefDeserializer.get().deserialize(protobufMessage.getSender()) : null;
-            ActorRef receiver = ActorRefDeserializer.get().deserialize(protobufMessage.getReceiver());
+            ActorRef sender = (protobufMessage.hasSender()) ? actorRefDeserializer.deserialize(protobufMessage.getSender()) : null;
+            ActorRef receiver = actorRefDeserializer.deserialize(protobufMessage.getReceiver());
             Class messageClass = Class.forName(protobufMessage.getMessageClass());
             ByteBuffer messageBytes = protobufMessage.getMessageClassBytes().asReadOnlyByteBuffer();
             UUID id = UUIDTools.toUUID(protobufMessage.getId().toByteArray());

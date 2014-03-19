@@ -16,9 +16,12 @@
 
 package org.elasticsoftware.elasticactors.configuration;
 
+import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MessagingService;
 import org.elasticsoftware.elasticactors.rabbitmq.RabbitMQMessagingService;
+import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
+import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -35,6 +38,8 @@ public class MessagingConfiguration {
     private Environment env;
     @Autowired @Qualifier("queueExecutor")
     private ThreadBoundExecutor<String> queueExecutor;
+    @Autowired
+    private ActorRefFactory actorRefFactory;
     private RabbitMQMessagingService messagingService;
 
     @PostConstruct
@@ -43,7 +48,7 @@ public class MessagingConfiguration {
         String rabbitMQHosts = env.getRequiredProperty("ea.rabbitmq.hosts");
         String rabbitMQUsername= env.getProperty("ea.rabbitmq.username","guest");
         String rabbitMQPassword = env.getProperty("ea.rabbitmq.password","guest");
-        messagingService = new RabbitMQMessagingService(clusterName,rabbitMQHosts, rabbitMQUsername, rabbitMQPassword,queueExecutor);
+        messagingService = new RabbitMQMessagingService(clusterName,rabbitMQHosts, rabbitMQUsername, rabbitMQPassword,queueExecutor, new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory)));
     }
 
     @Bean(name = {"messagingService"})

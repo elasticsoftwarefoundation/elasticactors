@@ -40,8 +40,9 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
     private final TransientAck transientAck = new TransientAck();
     private final ThreadBoundExecutor<String> queueExecutor;
     private final CountDownLatch destroyLatch = new CountDownLatch(1);
+    private final InternalMessageDeserializer internalMessageDeserializer;
 
-    public LocalMessageQueue(ThreadBoundExecutor<String> queueExecutor, Channel consumerChannel, Channel producerChannel, String exchangeName, String queueName, MessageHandler messageHandler) {
+    public LocalMessageQueue(ThreadBoundExecutor<String> queueExecutor, Channel consumerChannel, Channel producerChannel, String exchangeName, String queueName, MessageHandler messageHandler, InternalMessageDeserializer internalMessageDeserializer) {
         super(consumerChannel);
         this.queueExecutor = queueExecutor;
         this.consumerChannel = consumerChannel;
@@ -49,6 +50,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
         this.exchangeName = exchangeName;
         this.queueName = queueName;
         this.messageHandler = messageHandler;
+        this.internalMessageDeserializer = internalMessageDeserializer;
         this.logger = Logger.getLogger(String.format("Producer[%s->%s]",exchangeName,queueName));
     }
 
@@ -129,7 +131,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
         // get the body data
-        final InternalMessage message = InternalMessageDeserializer.get().deserialize(body);
+        final InternalMessage message = internalMessageDeserializer.deserialize(body);
         // execute on seperate (thread bound) executor
         queueExecutor.execute(new InternalMessageHandler(queueName,message,messageHandler,new RabbitMQAck(envelope,message),logger));
     }

@@ -32,6 +32,7 @@ import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MessagingService;
+import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 
 import javax.annotation.PostConstruct;
@@ -59,13 +60,15 @@ public class RabbitMQMessagingService implements MessagingService {
     private final ThreadBoundExecutor<String> queueExecutor;
     private final String username;
     private final String password;
+    private final InternalMessageDeserializer internalMessageDeserializer;
 
-    public RabbitMQMessagingService(String elasticActorsCluster, String rabbitmqHosts, String username, String password, ThreadBoundExecutor<String> queueExecutor) {
+    public RabbitMQMessagingService(String elasticActorsCluster, String rabbitmqHosts, String username, String password, ThreadBoundExecutor<String> queueExecutor, InternalMessageDeserializer internalMessageDeserializer) {
         this.rabbitmqHosts = rabbitmqHosts;
         this.elasticActorsCluster = elasticActorsCluster;
         this.queueExecutor = queueExecutor;
         this.username = username;
         this.password = password;
+        this.internalMessageDeserializer = internalMessageDeserializer;
         this.exchangeName = format(EA_EXCHANGE_FORMAT, elasticActorsCluster);
         this.localMessageQueueFactory = new LocalMessageQueueFactory();
         this.remoteMessageQueueFactory = new RemoteMessageQueueFactory();
@@ -137,7 +140,7 @@ public class RabbitMQMessagingService implements MessagingService {
         public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
             final String queueName = format(QUEUE_NAME_FORMAT,elasticActorsCluster,name);
             ensureQueueExists(consumerChannel,queueName);
-            LocalMessageQueue messageQueue = new LocalMessageQueue(queueExecutor, consumerChannel,producerChannel,exchangeName,queueName,messageHandler);
+            LocalMessageQueue messageQueue = new LocalMessageQueue(queueExecutor, consumerChannel,producerChannel,exchangeName,queueName,messageHandler, internalMessageDeserializer);
             messageQueue.initialize();
             return messageQueue;
         }

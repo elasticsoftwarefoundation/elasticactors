@@ -22,6 +22,8 @@ import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageD
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static java.lang.String.format;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -29,23 +31,25 @@ public final class LocalMessageQueue extends PersistentMessageQueue implements M
     private final LinkedBlockingQueue<InternalMessage> queue;
     private final MessageQueueEventListener eventListener;
     private final MessageHandler messageHandler;
+    private final InternalMessageDeserializer internalMessageDeserializer;
 
-    protected LocalMessageQueue(String name, MessageQueueEventListener eventListener, MessageHandler messageHandler) {
-        this(name, Integer.MAX_VALUE, eventListener, messageHandler);
+    protected LocalMessageQueue(String name, MessageQueueEventListener eventListener, MessageHandler messageHandler, InternalMessageDeserializer internalMessageDeserializer) {
+        this(name, Integer.MAX_VALUE, eventListener, messageHandler,internalMessageDeserializer);
     }
 
-    protected LocalMessageQueue(String name, int capacity, MessageQueueEventListener eventListener, MessageHandler messageHandler) {
+    protected LocalMessageQueue(String name, int capacity, MessageQueueEventListener eventListener, MessageHandler messageHandler, InternalMessageDeserializer internalMessageDeserializer) {
         super(name);
         this.eventListener = eventListener;
         this.messageHandler = messageHandler;
-        queue = new LinkedBlockingQueue<InternalMessage>(capacity);
+        queue = new LinkedBlockingQueue<>(capacity);
+        this.internalMessageDeserializer = internalMessageDeserializer;
     }
 
     @Override
     public void initialize() throws Exception {
         List<CommitLog.CommitLogEntry> pendingEntries = commitLog.replay(getName());
         for (CommitLog.CommitLogEntry pendingEntry : pendingEntries) {
-            queue.offer(InternalMessageDeserializer.get().deserialize(pendingEntry.getData()));
+            queue.offer(internalMessageDeserializer.deserialize(pendingEntry.getData()));
         }
         // wake up the listener
         eventListener.wakeUp();
@@ -91,8 +95,8 @@ public final class LocalMessageQueue extends PersistentMessageQueue implements M
 
     @Override
     public void onError(InternalMessage message, Throwable exception) {
-        logger.error(String.format("Exception when handling message of type [%s] for Actor [%s]", message.getPayloadClass(),
-                                                                                                  message.getReceiver().toString()));
+        logger.error(format("Exception when handling message of type [%s] for Actor [%s]", message.getPayloadClass(),
+                                                                                           message.getReceiver().toString()));
         //@todo: determine what to do, for now just ack anyway
         ack(message);
     }

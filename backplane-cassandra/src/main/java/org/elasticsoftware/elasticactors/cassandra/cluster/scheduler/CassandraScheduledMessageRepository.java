@@ -45,10 +45,12 @@ public final class CassandraScheduledMessageRepository implements ScheduledMessa
     private final String clusterName;
     private final ColumnFamilyTemplate<Composite,Composite> columnFamilyTemplate;
     private final ListResultMapper resultMapper = new ListResultMapper();
+    private final ScheduledMessageDeserializer scheduledMessageDeserializer;
 
-    public CassandraScheduledMessageRepository(String clusterName, ColumnFamilyTemplate<Composite, Composite> columnFamilyTemplate) {
+    public CassandraScheduledMessageRepository(String clusterName, ColumnFamilyTemplate<Composite, Composite> columnFamilyTemplate, ScheduledMessageDeserializer scheduledMessageDeserializer) {
         this.clusterName = clusterName;
         this.columnFamilyTemplate = columnFamilyTemplate;
+        this.scheduledMessageDeserializer = scheduledMessageDeserializer;
     }
 
     @Override
@@ -95,7 +97,7 @@ public final class CassandraScheduledMessageRepository implements ScheduledMessa
                 Collection<Composite> scheduledMessages = results.getColumnNames();
                 for (Composite columnName : scheduledMessages) {
                     try {
-                        resultList.add(ScheduledMessageDeserializer.get().deserialize(results.getByteArray(columnName)));
+                        resultList.add(scheduledMessageDeserializer.deserialize(results.getByteArray(columnName)));
                     } catch(IOException e)  {
                         logger.error(e);
                     }
