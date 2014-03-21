@@ -1,5 +1,7 @@
 package org.elasticsoftware.elasticactors.cluster;
 
+import org.elasticsoftware.elasticactors.ActorContainer;
+import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
 
 import static java.lang.String.format;
@@ -7,7 +9,7 @@ import static java.lang.String.format;
 /**
  * @author Joost van de Wijgerd
  */
-public final class DisconnectedRemoteActorShardRef implements ActorRef {
+public final class DisconnectedRemoteActorShardRef implements ActorRef,ActorContainerRef {
     private final String clusterName;
     private final String actorSystemName;
     private final String actorId;
@@ -38,6 +40,11 @@ public final class DisconnectedRemoteActorShardRef implements ActorRef {
 
     @Override
     public void tell(Object message) throws IllegalStateException {
+        throw new IllegalStateException(format("Remote Actor Cluster %s is not configured, ensure a correct remote configuration in the config.yaml",clusterName));
+    }
+
+    @Override
+    public ActorContainer get() {
         throw new IllegalStateException(format("Remote Actor Cluster %s is not configured, ensure a correct remote configuration in the config.yaml",clusterName));
     }
 

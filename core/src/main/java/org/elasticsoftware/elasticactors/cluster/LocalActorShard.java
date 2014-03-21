@@ -276,6 +276,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                 return persistentActorRepository.get(shardKey,actorRef.getActorId());
             }
         });
+        // delete actor state here to avoid race condition
         persistentActorRepository.delete(this.shardKey,actorRef.getActorId());
         actorCache.invalidate(actorRef);
         // find actor class behind receiver ActorRef

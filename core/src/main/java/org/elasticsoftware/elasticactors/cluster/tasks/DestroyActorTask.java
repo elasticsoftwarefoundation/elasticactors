@@ -62,8 +62,7 @@ public final class DestroyActorTask extends ActorLifecycleTask {
         try {
             // @todo: figure out the destroyer
             receiver.preDestroy(null);
-            // don't update.. but somehow delete
-            // @todo: find out how to delete entry
+            // entry is deleted in LocalActorShard to avoid race condition
         } catch (Exception e) {
             logger.error("Exception calling preDestroy",e);
         }
