@@ -28,10 +28,7 @@ import net.jodah.lyra.config.RetryPolicy;
 import net.jodah.lyra.util.Duration;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.PhysicalNode;
-import org.elasticsoftware.elasticactors.messaging.MessageHandler;
-import org.elasticsoftware.elasticactors.messaging.MessageQueue;
-import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
-import org.elasticsoftware.elasticactors.messaging.MessagingService;
+import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 
@@ -57,6 +54,7 @@ public class RabbitMQMessagingService implements MessagingService {
     private Channel producerChannel;
     private final LocalMessageQueueFactory localMessageQueueFactory;
     private final RemoteMessageQueueFactory remoteMessageQueueFactory;
+    private final RemoteActorSystemMessageQueueFactoryFactory remoteActorSystemMessageQueueFactoryFactory;
     private final ThreadBoundExecutor<String> queueExecutor;
     private final String username;
     private final String password;
@@ -72,6 +70,7 @@ public class RabbitMQMessagingService implements MessagingService {
         this.exchangeName = format(EA_EXCHANGE_FORMAT, elasticActorsCluster);
         this.localMessageQueueFactory = new LocalMessageQueueFactory();
         this.remoteMessageQueueFactory = new RemoteMessageQueueFactory();
+        this.remoteActorSystemMessageQueueFactoryFactory = new RemoteActorSystemMessageQueueFactoryFactory();
     }
 
     @PostConstruct
@@ -128,6 +127,10 @@ public class RabbitMQMessagingService implements MessagingService {
         return remoteMessageQueueFactory;
     }
 
+    public MessageQueueFactoryFactory getRemoteActorSystemMessageQueueFactoryFactory() {
+        return remoteActorSystemMessageQueueFactoryFactory;
+    }
+
     private void ensureQueueExists(final Channel channel,final String queueName) throws IOException {
         // ensure we have the queue created on the broker
         AMQP.Queue.DeclareOk result = channel.queueDeclare(queueName, true, false, false, null);
@@ -167,6 +170,13 @@ public class RabbitMQMessagingService implements MessagingService {
             final String queueName = format(QUEUE_NAME_FORMAT,this.clusterName,name);
             ensureQueueExists(producerChannel,queueName);
             return new RemoteMessageQueue(producerChannel,exchangeName,queueName);
+        }
+    }
+
+    private final class RemoteActorSystemMessageQueueFactoryFactory implements MessageQueueFactoryFactory {
+        @Override
+        public MessageQueueFactory create(String clusterName) {
+            return new RemoteActorSystemMessageQueueFactory(clusterName);
         }
     }
 }

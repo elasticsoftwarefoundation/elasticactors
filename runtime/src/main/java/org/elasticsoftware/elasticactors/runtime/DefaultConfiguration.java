@@ -19,33 +19,33 @@ package org.elasticsoftware.elasticactors.runtime;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
-import org.elasticsoftware.elasticactors.ElasticActor;
-import org.elasticsoftware.elasticactors.ServiceActor;
+import org.elasticsoftware.elasticactors.*;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class DefaultConfiguration implements ActorSystemConfiguration, ApplicationContextAware {
+public final class DefaultConfiguration implements InternalActorSystemConfiguration, ApplicationContextAware {
     private ApplicationContext applicationContext;
     private final String name;
     private final int numberOfShards;
+    private final List<DefaultRemoteConfiguration> remoteConfigurations;
     private final Map<String,Object> properties = new LinkedHashMap<>();
     private final ConversionService conversionService = new DefaultConversionService();
 
     @JsonCreator
-    public DefaultConfiguration(@JsonProperty("name") String name, @JsonProperty("shards") int numberOfShards) {
+    public DefaultConfiguration(@JsonProperty("name") String name,
+                                @JsonProperty("shards") int numberOfShards,
+                                @JsonProperty("remoteActorSystems") List<DefaultRemoteConfiguration> remoteConfigurations) {
         this.name = name;
         this.numberOfShards = numberOfShards;
+        this.remoteConfigurations = (remoteConfigurations != null) ? remoteConfigurations : Collections.<DefaultRemoteConfiguration>emptyList();
     }
 
     @JsonProperty("name")
@@ -130,5 +130,11 @@ public final class DefaultConfiguration implements ActorSystemConfiguration, App
             componentName = componentName.substring(idx+1);
         }
         return componentName;
+    }
+
+    @JsonProperty("remoteActorSystems")
+    @Override
+    public List<DefaultRemoteConfiguration> getRemoteConfigurations() {
+        return remoteConfigurations;
     }
 }

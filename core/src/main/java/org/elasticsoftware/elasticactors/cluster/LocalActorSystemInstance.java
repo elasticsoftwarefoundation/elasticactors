@@ -54,7 +54,7 @@ import static java.lang.String.format;
  */
 public final class LocalActorSystemInstance implements InternalActorSystem {
     private static final Logger logger = Logger.getLogger(LocalActorSystemInstance.class);
-    private final ActorSystemConfiguration configuration;
+    private final InternalActorSystemConfiguration configuration;
     private final ActorShard[] shards;
     private final ReadWriteLock[] shardLocks;
     private final ActorShardAdapter[] shardAdapters;
@@ -72,8 +72,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private final ActorNodeAdapter localNodeAdapter;
     private final HashFunction hashFunction = Hashing.murmur3_32();
 
-    public LocalActorSystemInstance(PhysicalNode localNode, InternalActorSystems cluster, ActorSystemConfiguration actorSystem, NodeSelectorFactory nodeSelectorFactory) {
-        this.configuration = actorSystem;
+    public LocalActorSystemInstance(PhysicalNode localNode, InternalActorSystems cluster, InternalActorSystemConfiguration configuration, NodeSelectorFactory nodeSelectorFactory) {
+        this.configuration = configuration;
         this.nodeSelectorFactory = nodeSelectorFactory;
         this.cluster = cluster;
         this.shards = new ActorShard[configuration.getNumberOfShards()];
@@ -81,9 +81,9 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         this.shardAdapters = new ActorShardAdapter[shards.length];
         for (int i = 0; i < shards.length; i++) {
             shardLocks[i] = new ReentrantReadWriteLock();
-            shardAdapters[i] = new ActorShardAdapter(new ShardKey(actorSystem.getName(), i));
+            shardAdapters[i] = new ActorShardAdapter(new ShardKey(configuration.getName(), i));
         }
-        this.localNodeAdapter = new ActorNodeAdapter(new NodeKey(actorSystem.getName(), localNode.getId()));
+        this.localNodeAdapter = new ActorNodeAdapter(new NodeKey(configuration.getName(), localNode.getId()));
     }
 
     @Override
@@ -97,7 +97,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
-    public ActorSystemConfiguration getConfiguration() {
+    public InternalActorSystemConfiguration getConfiguration() {
         return configuration;
     }
 

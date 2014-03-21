@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.test.configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
@@ -59,7 +60,7 @@ public class TestConfiguration {
     private Environment env;
     @Autowired
     private ResourceLoader resourceLoader;
-    private ActorSystemConfiguration configuration;
+    private InternalActorSystemConfiguration configuration;
     private final NodeSelectorFactory nodeSelectorFactory = new HashingNodeSelectorFactory();
     private final PhysicalNode localNode = new PhysicalNodeImpl(UUIDTools.createRandomUUID().toString(), InetAddress.getLoopbackAddress(), true);
     private final InternalActorSystemsImpl internalActorSystems = new InternalActorSystemsImpl(localNode);

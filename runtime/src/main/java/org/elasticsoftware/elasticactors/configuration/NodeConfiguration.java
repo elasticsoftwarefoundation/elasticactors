@@ -18,7 +18,8 @@ package org.elasticsoftware.elasticactors.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.cluster.RemoteActorSystems;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
@@ -36,6 +37,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -56,7 +58,7 @@ public class NodeConfiguration {
 
     private final NodeSelectorFactory nodeSelectorFactory = new HashingNodeSelectorFactory();
     private ElasticActorsNode node;
-    private ActorSystemConfiguration configuration;
+    private InternalActorSystemConfiguration configuration;
 
     @PostConstruct
     public void init() throws IOException {
@@ -68,7 +70,7 @@ public class NodeConfiguration {
         String nodeId = env.getRequiredProperty("ea.node.id");
         InetAddress nodeAddress = InetAddress.getByName(env.getRequiredProperty("ea.node.address"));
         String clusterName = env.getRequiredProperty("ea.cluster");
-        node = new ElasticActorsNode(clusterName, nodeId, nodeAddress);
+        node = new ElasticActorsNode(clusterName, nodeId, nodeAddress, configuration);
     }
 
 
@@ -78,7 +80,7 @@ public class NodeConfiguration {
     }
 
     @Bean
-    public ActorSystemConfiguration getConfiguration() {
+    public InternalActorSystemConfiguration getConfiguration() {
         return configuration;
     }
 
@@ -126,6 +128,11 @@ public class NodeConfiguration {
     @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
     public InternalActorSystem createLocalActorSystemInstance() {
         return new LocalActorSystemInstance(node,node,configuration,nodeSelectorFactory);
+    }
+
+    @Bean(name = {"remoteActorSystems"})
+    public RemoteActorSystems createRemoteActorSystems() {
+        return new RemoteActorSystems(configuration,node);
     }
 
     @Bean(name = {"scheduler"})

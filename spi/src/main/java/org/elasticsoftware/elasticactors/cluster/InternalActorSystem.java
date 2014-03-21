@@ -25,7 +25,7 @@ import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
  */
 public interface InternalActorSystem extends ActorSystem, ShardAccessor {
 
-    ActorSystemConfiguration getConfiguration();
+    InternalActorSystemConfiguration getConfiguration();
 
     /**
      * Return the singleton instance of an {@link ElasticActor}

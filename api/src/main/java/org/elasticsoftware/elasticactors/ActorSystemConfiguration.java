@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -43,21 +44,6 @@ public interface ActorSystemConfiguration {
      * @return
      */
     String getVersion();
-
-    /**
-     * Return the singleton service instance
-     *
-     * @param serviceId
-     * @return
-     */
-    ElasticActor<?> getService(String serviceId);
-
-    /**
-     * return a list of service actor id's
-     *
-     * @return
-     */
-    Set<String> getServices();
 
     /**
      * Return the property value associated with the given key, or {@code null}

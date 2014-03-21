@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 
 /**
  * @author Joost van de Wijgerd
@@ -30,18 +31,18 @@ import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 
 public final class RemoteActorSystemActorShard implements ActorShard, MessageHandler {
     private static final PhysicalNode UNKNOWN_REMOTE_NODE = new PhysicalNodeImpl("UNKNOWN",null,false);
-    private final InternalActorSystem actorSystem;
+    private final InternalActorSystems actorSystems;
     private final ShardKey shardKey;
     private final MessageQueueFactory messageQueueFactory;
     private final ActorRef myRef;
     private MessageQueue messageQueue;
 
-    public RemoteActorSystemActorShard(InternalActorSystem actorSystem,
+    public RemoteActorSystemActorShard(InternalActorSystems actorSystems,
                                        String remoteClusterName,
                                        String remoteActorSystemName,
                                        int vNodeKey,
                                        MessageQueueFactory messageQueueFactory) {
-        this.actorSystem = actorSystem;
+        this.actorSystems = actorSystems;
         this.shardKey = new ShardKey(remoteActorSystemName, vNodeKey);
         this.myRef = new ActorShardRef(remoteClusterName,this);
         this.messageQueueFactory = messageQueueFactory;
@@ -63,7 +64,7 @@ public final class RemoteActorSystemActorShard implements ActorShard, MessageHan
     }
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
-        MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
+        MessageSerializer messageSerializer = getSerializer(message.getClass());
         // get the durable flag
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
@@ -105,5 +106,17 @@ public final class RemoteActorSystemActorShard implements ActorShard, MessageHan
     @Override
     public void handleMessage(InternalMessage message, MessageHandlerEventListener messageHandlerEventListener) {
         // nothing to do
+    }
+
+    private <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
+        MessageSerializer<T> messageSerializer = actorSystems.getSystemMessageSerializer(messageClass);
+        if(messageSerializer == null) {
+            Message messageAnnotation = messageClass.getAnnotation(Message.class);
+            if(messageAnnotation != null) {
+                SerializationFramework framework = actorSystems.getSerializationFramework(messageAnnotation.serializationFramework());
+                messageSerializer = framework.getSerializer(messageClass);
+            }
+        }
+        return messageSerializer;
     }
 }

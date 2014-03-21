@@ -18,23 +18,23 @@ import javax.annotation.PreDestroy;
 public final class  RemoteActorSystemInstance implements ActorSystem, ShardAccessor {
     private final HashFunction hashFunction = Hashing.murmur3_32();
     private final RemoteActorSystemConfiguration configuration;
-    private final InternalActorSystem localActorSystem;
+    private final InternalActorSystems localActorSystems;
     private final ActorShard[] shards;
     private final MessageQueueFactory messageQueueFactory;
 
     public RemoteActorSystemInstance(RemoteActorSystemConfiguration configuration,
-                                     InternalActorSystem localActorSystem,
+                                     InternalActorSystems localActorSystems,
                                      MessageQueueFactory messageQueueFactory) {
         this.configuration = configuration;
-        this.localActorSystem = localActorSystem;
+        this.localActorSystems = localActorSystems;
         this.messageQueueFactory = messageQueueFactory;
-        this.shards = new RemoteActorShard[configuration.getNumberOfShards()];
+        this.shards = new ActorShard[configuration.getNumberOfShards()];
     }
 
     @PostConstruct
     public void init() throws Exception {
         for (int i = 0; i < shards.length; i++) {
-            shards[i] = new RemoteActorSystemActorShard(localActorSystem,configuration.getClusterName(),configuration.getName(),i,messageQueueFactory);
+            shards[i] = new RemoteActorSystemActorShard(localActorSystems,configuration.getClusterName(),configuration.getName(),i,messageQueueFactory);
         }
         for (ActorShard shard : shards) {
             shard.init();
@@ -102,7 +102,7 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
 
     @Override
     public ActorSystems getParent() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return localActorSystems;
     }
 
     @Override

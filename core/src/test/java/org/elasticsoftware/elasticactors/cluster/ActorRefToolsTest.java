@@ -32,7 +32,7 @@ public class ActorRefToolsTest {
     public void testParseActorRef() {
         InternalActorSystems internalActorSystems = mock(InternalActorSystems.class);
         InternalActorSystem actorSystem = mock(InternalActorSystem.class);
-        ActorSystemConfiguration configuration = mock(ActorSystemConfiguration.class);
+        InternalActorSystemConfiguration configuration = mock(InternalActorSystemConfiguration.class);
         ActorShard shard = mock(ActorShard.class);
         ShardKey shardKey = new ShardKey("Pi",0);
         when(internalActorSystems.getClusterName()).thenReturn("LocalNode");
@@ -52,7 +52,7 @@ public class ActorRefToolsTest {
     public void testParseShardRef() {
         InternalActorSystems internalActorSystems = mock(InternalActorSystems.class);
         InternalActorSystem actorSystem = mock(InternalActorSystem.class);
-        ActorSystemConfiguration configuration = mock(ActorSystemConfiguration.class);
+        InternalActorSystemConfiguration configuration = mock(InternalActorSystemConfiguration.class);
         ActorShard shard = mock(ActorShard.class);
         ShardKey shardKey = new ShardKey("Pi",0);
         when(internalActorSystems.getClusterName()).thenReturn("LocalNode");

@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 
 //import org.elasticsoftware.elasticactors.http.actors.HttpService;
@@ -46,6 +47,11 @@ public class DefaultConfigurationTest {
 
         assertEquals(configuration.getName(),"default");
         assertEquals(configuration.getNumberOfShards(),8);
+        assertNotNull(configuration.getRemoteConfigurations());
+        assertFalse(configuration.getRemoteConfigurations().isEmpty());
+        assertEquals(configuration.getRemoteConfigurations().size(),2);
+        assertEquals(configuration.getRemoteConfigurations().get(0).getClusterName(),"test2.elasticsoftware.org");
+        assertEquals(configuration.getRemoteConfigurations().get(1).getClusterName(),"test3.elasticsoftware.org");
         //assertEquals(configuration.getProperty(HttpService.class, "listenPort", Integer.class, 9090),new Integer(8080));
     }
 

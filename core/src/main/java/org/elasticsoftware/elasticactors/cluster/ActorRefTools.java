@@ -91,13 +91,14 @@ public final class ActorRefTools {
     private static ActorRef handleRemoteActorSystemReference(String refSpec, String[] components, String actorId, ActorSystems actorSystems) {
         String clusterName = components[0];
         String actorSystemName = components[1];
-        ActorSystem remoteActorSystem = actorSystems.getRemote(clusterName, actorSystemName);
-        if (remoteActorSystem == null) {
-            throw new IllegalArgumentException(format("Unknown Remote ActorSystem: %s/%s", clusterName, actorSystemName));
-        }
         if ("shards".equals(components[2])) {
+            ActorSystem remoteActorSystem = actorSystems.getRemote(clusterName, actorSystemName);
             int shardId = Integer.parseInt(components[3]);
-            // @todo: ensure we can cache this
+            if (remoteActorSystem == null) {
+                // return a disconnected actor ref that throws exception on tell() so that the deserialization never fails
+                // even when the remote actor cannot be reached
+                return new DisconnectedRemoteActorShardRef(clusterName,actorSystemName,actorId,shardId);
+            }
             return new ActorShardRef(clusterName, ((ShardAccessor) remoteActorSystem).getShard(format("%s/shards/%d", actorSystemName, shardId)), actorId);
         } else if ("nodes".equals(components[2])) {
             throw new IllegalArgumentException("Temporary Actors are not (yet) supported for Remote Actor System instances");

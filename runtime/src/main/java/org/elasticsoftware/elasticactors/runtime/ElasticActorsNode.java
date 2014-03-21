@@ -34,10 +34,12 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.net.InetAddress;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static java.lang.String.format;
 
 /**
  * @author Joost van de Wijgerd
@@ -49,7 +51,10 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     private final InetAddress nodeAddress;
     private final SystemSerializers systemSerializers = new SystemSerializers(this);
     private final SystemDeserializers systemDeserializers = new SystemDeserializers(this,this);
+    private final InternalActorSystemConfiguration configuration;
     private final CountDownLatch waitLatch = new CountDownLatch(1);
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
+
     private Cache<String,ActorRef> actorRefCache;
     @Autowired
     private ApplicationContext applicationContext;
@@ -57,10 +62,11 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
 
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("CLUSTER_SCHEDULER"));
 
-    public ElasticActorsNode(String clusterName, String nodeId, InetAddress nodeAddress) {
+    public ElasticActorsNode(String clusterName, String nodeId, InetAddress nodeAddress, InternalActorSystemConfiguration configuration) {
         this.clusterName = clusterName;
         this.nodeId = nodeId;
         this.nodeAddress = nodeAddress;
+        this.configuration = configuration;
     }
 
     @Autowired
@@ -71,9 +77,10 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     }
 
     @PostConstruct
-    public void init() {
+    public void init() throws Exception {
         //@todo: take this value from the configuration file
         actorRefCache = CacheBuilder.newBuilder().maximumSize(10240).build();
+
     }
 
     @PreDestroy
@@ -131,11 +138,8 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
 
     @Override
     public ActorSystem getRemote(String clusterName, String actorSystemName) {
-        Map<String,RemoteActorSystemInstance> remoteActorSystems = applicationContext.getBeansOfType(RemoteActorSystemInstance.class);
-        if(remoteActorSystems != null) {
-            return remoteActorSystems.get(clusterName);
-        }
-        return null;
+        RemoteActorSystems remoteActorSystems = applicationContext.getBean(RemoteActorSystems.class);
+        return remoteActorSystems != null ? remoteActorSystems.get(clusterName,actorSystemName) : null;
     }
 
     @Override
@@ -210,18 +214,27 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
 
         @Override
         public void run() {
+            if(initialized.compareAndSet(false,true)) {
+                // load the remote actorsystems (if any)
+                RemoteActorSystems remoteActorSystems = applicationContext.getBean(RemoteActorSystems.class);
+                try {
+                    remoteActorSystems.init();
+                } catch (Exception e) {
+                    logger.error("Initializing Remote ActorSystems failed",e);
+                }
+            }
             LocalActorSystemInstance instance = applicationContext.getBean(LocalActorSystemInstance.class);
-            logger.info(String.format("Updating %d nodes for ActorSystem[%s]", clusterNodes.size(), instance.getName()));
+            logger.info(format("Updating %d nodes for ActorSystem[%s]", clusterNodes.size(), instance.getName()));
             try {
                 instance.updateNodes(clusterNodes);
             } catch (Exception e) {
-                logger.error(String.format("ActorSystem[%s] failed to update nodes", instance.getName()), e);
+                logger.error(format("ActorSystem[%s] failed to update nodes", instance.getName()), e);
             }
-            logger.info(String.format("Rebalancing %d shards for ActorSystem[%s]", instance.getNumberOfShards(), instance.getName()));
+            logger.info(format("Rebalancing %d shards for ActorSystem[%s]", instance.getNumberOfShards(), instance.getName()));
             try {
                 instance.distributeShards(clusterNodes);
             } catch (Exception e) {
-                logger.error(String.format("ActorSystem[%s] failed to (re-)distribute shards", instance.getName()), e);
+                logger.error(format("ActorSystem[%s] failed to (re-)distribute shards", instance.getName()), e);
             }
         }
     }

@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.configuration;
 
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
 import org.elasticsoftware.elasticactors.messaging.MessagingService;
 import org.elasticsoftware.elasticactors.rabbitmq.RabbitMQMessagingService;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
@@ -51,7 +52,7 @@ public class MessagingConfiguration {
         messagingService = new RabbitMQMessagingService(clusterName,rabbitMQHosts, rabbitMQUsername, rabbitMQPassword,queueExecutor, new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory)));
     }
 
-    @Bean(name = {"messagingService"})
+    @Bean(name = {"messagingService,remoteActorSystemMessageQueueFactoryFactory"})
     public MessagingService getMessagingService() {
         return messagingService;
     }
@@ -64,5 +65,10 @@ public class MessagingConfiguration {
     @Bean(name = {"remoteMessageQueueFactory"})
     public MessageQueueFactory getRemoteMessageQueueFactory() {
         return messagingService.getRemoteMessageQueueFactory();
+    }
+
+    @Bean(name = "remoteActorSystemMessageQueueFactoryFactory")
+    public MessageQueueFactoryFactory getRemoteActorSystemMessageQueueFactoryFactory() {
+        return messagingService.getRemoteActorSystemMessageQueueFactoryFactory();
     }
 }
