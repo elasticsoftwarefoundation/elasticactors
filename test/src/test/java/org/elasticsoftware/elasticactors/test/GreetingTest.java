@@ -8,8 +8,10 @@ import org.elasticsoftware.elasticactors.base.actors.ReplyActor;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
+import static org.testng.Assert.assertTrue;
 
 /**
  * @author Joost van de Wijgerd
@@ -42,7 +44,7 @@ public class GreetingTest {
 
         greeter.tell(new Greeting("Joost van de Wijgerd"),replyActor);
 
-        countDownLatch.await();
+        assertTrue(countDownLatch.await(5, TimeUnit.SECONDS));
 
         testActorSystem.destroy();
     }
