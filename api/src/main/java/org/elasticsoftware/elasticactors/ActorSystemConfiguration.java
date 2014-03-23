@@ -16,9 +16,6 @@
 
 package org.elasticsoftware.elasticactors;
 
-import java.util.List;
-import java.util.Set;
-
 /**
  * @author Joost van de Wijgerd
  */

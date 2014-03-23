@@ -26,9 +26,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Map;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.*;
 
 //import org.elasticsoftware.elasticactors.http.actors.HttpService;
 

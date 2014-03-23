@@ -17,7 +17,6 @@
 package org.elasticsoftware.elasticactors;
 
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
-import org.elasticsoftware.elasticactors.serialization.Deserializer;
 
 import javax.annotation.Nullable;
 

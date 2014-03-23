@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.shoal.cluster;
 
-import com.eaio.util.lang.Hex;
 import com.sun.enterprise.ee.cms.core.*;
 import com.sun.enterprise.ee.cms.impl.client.*;
 import com.sun.enterprise.mgmt.transport.grizzly.GrizzlyConfigConstants;

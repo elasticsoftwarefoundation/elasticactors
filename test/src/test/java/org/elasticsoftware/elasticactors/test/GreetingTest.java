@@ -5,11 +5,9 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.base.actors.ActorDelegate;
 import org.elasticsoftware.elasticactors.base.actors.ReplyActor;
-import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 

@@ -19,7 +19,6 @@ package org.elasticsoftware.elasticactors.base.serialization;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 
 import java.io.IOException;
