@@ -16,10 +16,13 @@
 
 package org.elasticsoftware.elasticactors.cluster.scheduler;
 
+import com.google.common.base.Charsets;
+import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
+import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ShardedScheduledWorkManager;
@@ -29,6 +32,8 @@ import org.elasticsoftware.elasticactors.util.concurrent.WorkExecutorFactory;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,6 +46,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public final class ShardedScheduler implements SchedulerService,WorkExecutorFactory,ScheduledMessageRefFactory {
+    private static final Logger logger = Logger.getLogger(ShardedScheduler.class);
     private ShardedScheduledWorkManager<ShardKey,ScheduledMessage> workManager;
     private ScheduledMessageRepository scheduledMessageRepository;
     private InternalActorSystem actorSystem;
@@ -95,10 +101,13 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
                     try {
                         long fireTime = System.currentTimeMillis() + TimeUnit.MILLISECONDS.convert(delay,timeUnit);
                         MessageSerializer serializer = actorSystem.getSerializer(message.getClass());
-                        ScheduledMessage scheduledMessage = new ScheduledMessageImpl(fireTime,sender,receiver,message.getClass(),serializer.serialize(message));
+                        ByteBuffer serializedMessage = serializer.serialize(message);
+                        byte[] serializedBytes = new byte[serializedMessage.remaining()];
+                        serializedMessage.get(serializedBytes);
+                        ScheduledMessage scheduledMessage = new ScheduledMessageImpl(fireTime,sender,receiver,message.getClass(),serializedBytes);
                         scheduledMessageRepository.create(actorShard.getKey(), scheduledMessage);
                         workManager.schedule(actorShard.getKey(),scheduledMessage);
-                        return null;
+                        return new ScheduledMessageShardRef(actorSystem.getParent().getClusterName(),actorShard,new ScheduledMessageKey(scheduledMessage.getId(),fireTime));
                     } catch(Exception e) {
                         throw new RejectedExecutionException(e);
                     }
@@ -133,11 +142,24 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
 
         @Override
         public void execute(final ShardKey shardKey,final ScheduledMessage message) {
-            // send the message
-            final ActorRef receiverRef = message.getReceiver();
-            receiverRef.tell(message.getMessageBytes(),message.getSender());
-            // remove from the backing store
-            scheduledMessageRepository.delete(shardKey, message.getKey());
+            try {
+                final MessageDeserializer messageDeserializer = actorSystem.getDeserializer(message.getMessageClass());
+                if(messageDeserializer != null) {
+                    Object deserializedMessage = messageDeserializer.deserialize(ByteBuffer.wrap(message.getMessageBytes()));
+                    // send the message
+                    final ActorRef receiverRef = message.getReceiver();
+                    receiverRef.tell(deserializedMessage,message.getSender());
+                } else {
+                    logger.error(format("Could not find Deserializer for ScheduledMessage of type [%s]",message.getMessageClass().getName()));
+                }
+            } catch(IOException e) {
+                // try to figure out what is wrong with the bytes
+                String jsonMessage = new String(message.getMessageBytes(), Charsets.UTF_8);
+                logger.error(format("IOException while deserializing ScheduledMessage contents [%s] of message class [%s]",jsonMessage,message.getMessageClass().getName()),e);
+            } finally {
+                // always remove from the backing store
+                scheduledMessageRepository.delete(shardKey, message.getKey());
+            }
         }
     }
 }

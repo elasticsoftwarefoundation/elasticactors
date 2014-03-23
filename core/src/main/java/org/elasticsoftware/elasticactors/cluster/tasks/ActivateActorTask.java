@@ -58,6 +58,6 @@ public final class ActivateActorTask extends ActorLifecycleTask {
         }
         // check persistence config (if any)
         PersistenceConfig persistenceConfig = receiver.getClass().getAnnotation(PersistenceConfig.class);
-        return persistenceConfig == null || Arrays.asList(persistenceConfig.persistOn()).contains(ActorLifecycleStep.CREATE);
+        return persistenceConfig == null || Arrays.asList(persistenceConfig.persistOn()).contains(ActorLifecycleStep.ACTIVATE);
     }
 }

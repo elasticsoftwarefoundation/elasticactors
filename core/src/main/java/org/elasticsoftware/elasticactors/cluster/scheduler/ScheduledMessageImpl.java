@@ -35,13 +35,13 @@ public final class ScheduledMessageImpl implements ScheduledMessage {
     private final ActorRef sender;
     private final ActorRef receiver;
     private final Class messageClass;
-    private final ByteBuffer messageBytes;
+    private final byte[] messageBytes;
 
-    public ScheduledMessageImpl(long fireTime, ActorRef sender, ActorRef receiver, Class messageClass,ByteBuffer messageBytes) {
+    public ScheduledMessageImpl(long fireTime, ActorRef sender, ActorRef receiver, Class messageClass,byte[] messageBytes) {
         this(UUIDTools.createTimeBasedUUID(),fireTime,sender,receiver, messageClass, messageBytes);
     }
 
-    public ScheduledMessageImpl(UUID id, long fireTime, ActorRef sender, ActorRef receiver, Class messageClass, ByteBuffer messageBytes) {
+    public ScheduledMessageImpl(UUID id, long fireTime, ActorRef sender, ActorRef receiver, Class messageClass, byte[] messageBytes) {
         this.id = id;
         this.fireTime = fireTime;
         this.sender = sender;
@@ -81,12 +81,12 @@ public final class ScheduledMessageImpl implements ScheduledMessage {
     }
 
     @Override
-    public ByteBuffer getMessageBytes() {
+    public byte[] getMessageBytes() {
         return messageBytes;
     }
 
     public <T> T getPayload(MessageDeserializer<T> deserializer) throws IOException {
-        return deserializer.deserialize(messageBytes);
+        return deserializer.deserialize(ByteBuffer.wrap(messageBytes));
     }
 
     @Override

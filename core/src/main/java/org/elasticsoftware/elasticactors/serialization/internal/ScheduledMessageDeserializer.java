@@ -44,7 +44,7 @@ public final class ScheduledMessageDeserializer implements Deserializer<byte[],S
             ActorRef sender = (protobufMessage.hasSender()) ? actorRefDeserializer.deserialize(protobufMessage.getSender()) : null;
             ActorRef receiver = actorRefDeserializer.deserialize(protobufMessage.getReceiver());
             Class messageClass = Class.forName(protobufMessage.getMessageClass());
-            ByteBuffer messageBytes = protobufMessage.getMessageClassBytes().asReadOnlyByteBuffer();
+            byte[] messageBytes = protobufMessage.getMessage().toByteArray();
             UUID id = UUIDTools.toUUID(protobufMessage.getId().toByteArray());
             long fireTime = protobufMessage.getFireTime();
             return new ScheduledMessageImpl(id,fireTime,sender,receiver,messageClass,messageBytes);

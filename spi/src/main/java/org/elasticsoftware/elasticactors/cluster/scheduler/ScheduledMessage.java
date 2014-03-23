@@ -49,7 +49,7 @@ public interface ScheduledMessage extends Delayed {
      *
      * @return
      */
-    ByteBuffer getMessageBytes();
+    byte[] getMessageBytes();
 
     /**
      * The sender

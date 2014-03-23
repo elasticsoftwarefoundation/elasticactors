@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
 import org.elasticsoftware.elasticactors.cluster.tasks.*;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
@@ -216,7 +217,9 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                     }
                 } else if(message instanceof CancelScheduledMessageMessage) {
                     CancelScheduledMessageMessage cancelMessage = (CancelScheduledMessageMessage) message;
-                    //actorSystem.getS
+                    actorSystem.getInternalScheduler().cancel(this.shardKey,new ScheduledMessageKey(cancelMessage.getMessageId(),cancelMessage.getFireTime()));
+                    // ack the message
+                    messageHandlerEventListener.onDone(internalMessage);
                 }
             } catch(Exception e) {
                 // @todo: determine if this is a recoverable error case or just a programming error
