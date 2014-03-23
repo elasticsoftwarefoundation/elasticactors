@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
+import org.elasticsoftware.elasticactors.cluster.scheduler.InternalScheduler;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
@@ -262,10 +263,15 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         // @todo: do this with actorRef tools
         String[] pathElements = actorPath.split("/");
         if (pathElements[1].equals("shards")) {
-            return shardAdapters[Integer.parseInt(pathElements[2])];
+            return getShard(Integer.parseInt(pathElements[2]));
         } else {
             throw new IllegalArgumentException(format("No ActorShard found for actorPath [%s]", actorPath));
         }
+    }
+
+    @Override
+    public ActorShard getShard(int shardId) {
+        return shardAdapters[shardId];
     }
 
     @Override
@@ -346,6 +352,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
+    public InternalScheduler getInternalScheduler() {
+        return scheduler;
+    }
+
+    @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass) throws Exception {
         return actorOf(actorId, actorClass, null);
     }
@@ -353,7 +364,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass,@Nullable ActorState initialState) throws Exception {
         // determine shard
-        ActorShard shard = shardFor(actorId);
+        final ActorShard shard = shardFor(actorId);
         // send CreateActorMessage to shard
         CreateActorMessage createActorMessage = new CreateActorMessage(getName(), actorClass.getName(), actorId, initialState);
         ActorRef creator = ActorContextHolder.getSelf();

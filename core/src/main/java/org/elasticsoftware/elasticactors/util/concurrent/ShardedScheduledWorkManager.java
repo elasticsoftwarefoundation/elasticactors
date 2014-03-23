@@ -95,7 +95,7 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
     public void schedule(K shard, T... unitsOfWork) {
         final DelayQueue<T> delayQueue = this.delayQueues.get(shard);
         if(delayQueue == null) {
-            throw new RejectedExecutionException("Shard: "+ shard.toString() + " is not registered, please call registerShard first");
+            throw new RejectedExecutionException(format("Shard: %s is not registered, please call registerShard first",shard.toString()));
         }
         // add all
         for (T unitOfWork : unitsOfWork) {
@@ -113,7 +113,15 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
         } catch(InterruptedException e) {
             // ignore
         }
+    }
 
+    public void unschedule(K shard,T unitOfWork) {
+        final DelayQueue<T> delayQueue = this.delayQueues.get(shard);
+        if(delayQueue == null) {
+            throw new IllegalArgumentException(format("Shard: %s is not registered, please call registerShard first",shard.toString()));
+        }
+        delayQueue.remove(unitOfWork);
+        // no need to wake up a thread as there is nothing to do..
     }
 
     public int getSize() {
@@ -144,7 +152,7 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
                         if(work != null) {
                             try {
                                 workExecutor.execute(delayQueueEntry.getKey(),work);
-                            } catch(Exception e) {
+                            } catch(Throwable e) {
                                 LOGGER.error("Exception while executing work!", e);
                             }
                         } else {

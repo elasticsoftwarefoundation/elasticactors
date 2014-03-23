@@ -36,4 +36,9 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
     public boolean isDeleteAfterReceive() {
         return deleteAfterReceive;
     }
+
+    @Override
+    public ActorDelegate<T> getBody() {
+        return this;
+    }
 }

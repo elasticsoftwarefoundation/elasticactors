@@ -27,6 +27,9 @@ import java.util.concurrent.TimeUnit;
  * @author Joost van de Wijgerd
  */
 public interface ScheduledMessage extends Delayed {
+
+    ScheduledMessageKey getKey();
+
     /**
      * The UUID (time based) for this message
      *

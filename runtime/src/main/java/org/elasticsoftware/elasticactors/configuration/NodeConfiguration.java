@@ -85,10 +85,10 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"objectMapper"})
-    public ObjectMapper createObjectMapper() {
+    public ObjectMapper createObjectMapper(ShardedScheduler schedulerService) {
         String basePackages = env.getProperty("ea.scan.packages",String.class,"");
         // @todo: fix version
-        return new ObjectMapperBuilder(node,"1.0.0",basePackages).build();
+        return new ObjectMapperBuilder(node,schedulerService,"1.0.0",basePackages).build();
     }
 
     @Bean(name = {"messagesScanner"})
@@ -136,7 +136,7 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"scheduler"})
-    public SchedulerService createScheduler() {
+    public ShardedScheduler createScheduler() {
         //@todo: maybe configure scheduler here with number of workers
         return new ShardedScheduler();
     }

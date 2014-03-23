@@ -90,9 +90,9 @@ public class TestConfiguration {
     }
 
     @Bean(name = {"objectMapper"})
-    public ObjectMapper createObjectMapper() {
+    public ObjectMapper createObjectMapper(SimpleScheduler simpleScheduler) {
         // @todo: fix version
-        return new ObjectMapperBuilder(internalActorSystems,"1.0.0").build();
+        return new ObjectMapperBuilder(internalActorSystems,simpleScheduler,"1.0.0").build();
     }
 
     @Bean(name = {"messagesScanner"})
@@ -130,7 +130,7 @@ public class TestConfiguration {
     }
 
     @Bean(name = {"scheduler"})
-    public SchedulerService createScheduler() {
+    public SimpleScheduler createScheduler() {
         return new SimpleScheduler();
     }
 

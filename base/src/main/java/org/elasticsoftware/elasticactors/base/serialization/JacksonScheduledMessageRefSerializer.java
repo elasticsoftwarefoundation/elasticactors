@@ -14,15 +14,22 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.scheduler;
+package org.elasticsoftware.elasticactors.base.serialization;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 
-import java.util.concurrent.TimeUnit;
+import java.io.IOException;
 
 /**
- * @author Joost van de Wijgerd
+ *
  */
-public interface Scheduler {
-    ScheduledMessageRef scheduleOnce(ActorRef sender,Object message,ActorRef receiver,long delay, TimeUnit timeUnit);
+public final class JacksonScheduledMessageRefSerializer extends JsonSerializer<ScheduledMessageRef> {
+    @Override
+    public void serialize(ScheduledMessageRef value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+        jgen.writeString(value.toString());
+    }
 }

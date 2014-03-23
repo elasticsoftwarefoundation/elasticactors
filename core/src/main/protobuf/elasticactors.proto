@@ -64,3 +64,8 @@ message WireMessage {
     optional string queueName = 1;
     optional bytes internalMessage = 2;
 }
+
+message CancelScheduledMessageMessage {
+    optional bytes messageId = 1;
+    optional uint64 fireTime = 2;
+}

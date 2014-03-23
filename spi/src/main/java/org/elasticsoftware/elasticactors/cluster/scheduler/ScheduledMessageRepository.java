@@ -26,7 +26,7 @@ import java.util.List;
 public interface ScheduledMessageRepository {
     void create(ShardKey shardKey, ScheduledMessage scheduledMessage);
 
-    void delete(ShardKey shardKey, ScheduledMessage scheduledMessage);
+    void delete(ShardKey shardKey, ScheduledMessageKey scheduledMessage);
 
     List<ScheduledMessage> getAll(ShardKey shardKey);
 }

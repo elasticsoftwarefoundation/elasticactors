@@ -1,0 +1,54 @@
+package org.elasticsoftware.elasticactors.cluster.scheduler;
+
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorShard;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.ShardAccessor;
+import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
+
+import java.util.UUID;
+
+import static java.lang.String.format;
+
+/**
+ * @author Joost van de Wijgerd
+ */
+public final class ScheduledMessageRefTools {
+    private static final String EXCEPTION_FORMAT = "Invalid ScheduledMessageRef, required spec: [message://<cluster>/<actorSystem>/shards/<fireTime (long)>/<messageId (uuid)>, actual spec: [%s]";
+
+    private ScheduledMessageRefTools() {}
+
+    public static ScheduledMessageRef parse(String refSpec, InternalActorSystems cluster) {
+        if(refSpec.startsWith("message://")) {
+            final String[] components = refSpec.substring(10).split("/");
+            // should have 6 components
+            if(components.length == 6) {
+                final ScheduledMessageKey key = new ScheduledMessageKey(UUID.fromString(components[5]),Long.parseLong(components[4]));
+                final int shardId = Integer.parseInt(components[3]);
+                if(components[0].equals(cluster.getClusterName())) {
+                    // local ref
+                    ActorShard localShard = cluster.get(components[1]).getShard(shardId);
+                    return new ScheduledMessageShardRef(components[0],localShard,key);
+                } else {
+                    // remote ref
+                    ActorSystem remoteActorSystem = cluster.getRemote(components[0],components[1]);
+                    if(remoteActorSystem != null) {
+                        // @todo: dirty but we know a remote actor system is also a ShardAccessor
+                        ActorShard remoteShard = ((ShardAccessor)remoteActorSystem).getShard(shardId);
+                        return new ScheduledMessageShardRef(components[0],remoteShard,key);
+                    } else {
+                        // unknown remote actorsystem, to ensure deserialization works we'll return an object here
+                        // that will give IllegalStateExceptions on the API methods later
+                        return new DisconnectedRemoteScheduledMessageRef(components[0],components[1],shardId,key);
+                    }
+
+                }
+            } else {
+                throw new IllegalArgumentException(format(EXCEPTION_FORMAT,refSpec));
+            }
+        } else {
+            throw new IllegalArgumentException(format(EXCEPTION_FORMAT,refSpec));
+        }
+    }
+}

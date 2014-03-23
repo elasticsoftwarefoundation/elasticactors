@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.test.cluster.scheduler;
 
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRepository;
 
 import java.util.Collections;
@@ -33,7 +34,7 @@ public final class NoopScheduledMessageRepository implements ScheduledMessageRep
     }
 
     @Override
-    public void delete(ShardKey shardKey, ScheduledMessage scheduledMessage) {
+    public void delete(ShardKey shardKey, ScheduledMessageKey scheduledMessage) {
         // do nothing
     }
 

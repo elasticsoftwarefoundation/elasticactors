@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.cluster.scheduler.InternalScheduler;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 
@@ -84,4 +85,6 @@ public interface InternalActorSystem extends ActorSystem, ShardAccessor {
      * @return
      */
     <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass);
+
+    InternalScheduler getInternalScheduler();
 }

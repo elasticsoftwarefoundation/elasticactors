@@ -119,10 +119,15 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
         // @todo: do this with actorRef tools
         String[] pathElements = actorPath.split("/");
         if (pathElements[1].equals("shards")) {
-            return shards[Integer.parseInt(pathElements[2])];
+            return getShard(Integer.parseInt(pathElements[2]));
         } else {
             throw new IllegalArgumentException(String.format("No ActorShard found for actorPath [%s]", actorPath));
         }
+    }
+
+    @Override
+    public ActorShard getShard(int shardId) {
+        return shards[shardId];
     }
 
     private ActorShard shardFor(String actorId) {

@@ -50,6 +50,20 @@ public final class ScheduledMessageImpl implements ScheduledMessage {
         this.messageBytes = messageBytes;
     }
 
+    /**
+     * Constructor that is used to remove the ScheduledMessage. The id and fireTime fields make up the unique key
+     *
+     * @param id
+     * @param fireTime
+     */
+    public ScheduledMessageImpl(UUID id,long fireTime) {
+        this(id,fireTime,null,null,null,null);
+    }
+
+    @Override
+    public ScheduledMessageKey getKey() {
+        return new ScheduledMessageKey(this.id,this.fireTime);
+    }
 
     @Override
     public UUID getId() {

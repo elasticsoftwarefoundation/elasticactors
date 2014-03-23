@@ -32,7 +32,7 @@ public final class ActorShardRef implements ActorRef, ActorContainerRef {
     private final ActorShard shard;
     private final String actorId;
 
-    public ActorShardRef(String clusterName, ActorShard shard, String actorId) {
+    public ActorShardRef(String clusterName, ActorShard shard,@Nullable String actorId) {
         this.clusterName = clusterName;
         this.shard = shard;
         this.actorId = actorId;

@@ -26,12 +26,14 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRefFactory;
 import org.jodah.typetools.TypeResolver;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.*;
 
@@ -46,15 +48,17 @@ public class ObjectMapperBuilder {
     public static final String RESOURCE_NAME = "META-INF/elasticactors.properties";
     private final String version;
     private final ActorRefFactory actorRefFactory;
+    private final ScheduledMessageRefFactory scheduledMessageRefFactory;
     private final String basePackages;
 
-    public ObjectMapperBuilder(ActorRefFactory actorRefFactory, String version) {
-        this(actorRefFactory, version, "");
+    public ObjectMapperBuilder(ActorRefFactory actorRefFactory,ScheduledMessageRefFactory scheduledMessageRefFactory, String version) {
+        this(actorRefFactory,scheduledMessageRefFactory, "",version);
     }
 
-    public ObjectMapperBuilder(ActorRefFactory actorRefFactory, String basePackages, String version) {
+    public ObjectMapperBuilder(ActorRefFactory actorRefFactory,ScheduledMessageRefFactory scheduledMessageRefFactory, String basePackages, String version) {
         this.version = version;
         this.actorRefFactory = actorRefFactory;
+        this.scheduledMessageRefFactory = scheduledMessageRefFactory;
         this.basePackages = basePackages;
     }
 
@@ -123,20 +127,56 @@ public class ObjectMapperBuilder {
         Set<Class<? extends StdScalarDeserializer>> customDeserializers = reflections.getSubTypesOf(StdScalarDeserializer.class);
         for (Class<? extends StdScalarDeserializer> customDeserializer : customDeserializers) {
             // need to exclude the JacksonActorRefDeserializer
-            if(!JacksonActorRefDeserializer.class.equals(customDeserializer)) {
-                // @todo: figure out which method is faster
-                //Class<?> objectClass = TypeResolver.resolveRawArgument(StdScalarDeserializer.class, customDeserializer);
+            if(hasNoArgConstructor(customDeserializer)) {
                 try {
                     StdScalarDeserializer deserializer = customDeserializer.newInstance();
                     Class<?> objectClass = deserializer.handledType();
                     jacksonModule.addDeserializer(objectClass, deserializer);
                 } catch(Exception e) {
-                    logger.warn(String.format("Failed to create Custom Jackson Deserializer: %s", customDeserializer.getName()),e);
+                    logger.error(String.format("Failed to create Custom Jackson Deserializer: %s", customDeserializer.getName()), e);
                 }
             } else {
-                // this one can currently not be created by the scanner due to the special constructor
-                jacksonModule.addDeserializer(ActorRef.class, new JacksonActorRefDeserializer(actorRefFactory));
+                // this ones can currently not be created by the scanner due to the special constructor
+                for (Constructor<?> constructor : customDeserializer.getConstructors()) {
+                    if(hasSingleConstrutorParameterMatching(constructor,ActorRefFactory.class)) {
+                        try {
+                            StdScalarDeserializer deserializer = (StdScalarDeserializer) constructor.newInstance(actorRefFactory);
+                            Class<?> objectClass = deserializer.handledType();
+                            jacksonModule.addDeserializer(objectClass, deserializer);
+                            break;
+                        } catch(Exception e) {
+                            logger.error(String.format("Failed to create Custom Jackson Deserializer: %s", customDeserializer.getName()),e);
+                        }
+                    } else if(hasSingleConstrutorParameterMatching(constructor,ScheduledMessageRefFactory.class)) {
+                        try {
+                            StdScalarDeserializer deserializer = (StdScalarDeserializer) constructor.newInstance(scheduledMessageRefFactory);
+                            Class<?> objectClass = deserializer.handledType();
+                            jacksonModule.addDeserializer(objectClass, deserializer);
+                            break;
+                        } catch(Exception e) {
+                            logger.error(String.format("Failed to create Custom Jackson Deserializer: %s", customDeserializer.getName()),e);
+                        }
+                    }
+                }
+
             }
+        }
+    }
+
+    private boolean hasNoArgConstructor(Class<? extends StdScalarDeserializer> customDeserializer) {
+        try {
+            customDeserializer.getConstructor();
+        } catch(NoSuchMethodException e) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean hasSingleConstrutorParameterMatching(Constructor constructor,Class parameterClass) {
+        if(constructor.getParameterTypes().length == 1) {
+            return constructor.getParameterTypes()[0].equals(parameterClass);
+        } else {
+            return false;
         }
     }
 }

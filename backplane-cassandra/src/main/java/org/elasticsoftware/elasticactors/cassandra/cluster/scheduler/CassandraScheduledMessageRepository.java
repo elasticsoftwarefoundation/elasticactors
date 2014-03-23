@@ -26,6 +26,7 @@ import me.prettyprint.hector.api.beans.Composite;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRepository;
 import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageSerializer;
@@ -62,8 +63,8 @@ public final class CassandraScheduledMessageRepository implements ScheduledMessa
     }
 
     @Override
-    public void delete(ShardKey shardKey, ScheduledMessage scheduledMessage) {
-        columnFamilyTemplate.deleteColumn(createKey(shardKey),createColumnName(scheduledMessage));
+    public void delete(ShardKey shardKey, ScheduledMessageKey scheduledMessageKey) {
+        columnFamilyTemplate.deleteColumn(createKey(shardKey),createColumnName(scheduledMessageKey));
     }
 
     @Override
@@ -82,6 +83,15 @@ public final class CassandraScheduledMessageRepository implements ScheduledMessa
         final Composite columnName = new Composite();
         columnName.addComponent(scheduledMessage.getFireTime(TimeUnit.MILLISECONDS), LongSerializer.get());
         UUID id = scheduledMessage.getId();
+        final com.eaio.uuid.UUID timeUuid = new com.eaio.uuid.UUID(id.getMostSignificantBits(),id.getLeastSignificantBits());
+        columnName.addComponent(timeUuid, TimeUUIDSerializer.get());
+        return columnName;
+    }
+
+    private Composite createColumnName(ScheduledMessageKey scheduledMessageKey) {
+        final Composite columnName = new Composite();
+        columnName.addComponent(scheduledMessageKey.getFireTime(), LongSerializer.get());
+        UUID id = scheduledMessageKey.getId();
         final com.eaio.uuid.UUID timeUuid = new com.eaio.uuid.UUID(id.getMostSignificantBits(),id.getLeastSignificantBits());
         columnName.addComponent(timeUuid, TimeUUIDSerializer.get());
         return columnName;

@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.base.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRefFactory;
 import org.testng.annotations.Test;
 
 import static org.mockito.Mockito.mock;
@@ -30,7 +31,8 @@ public class ObjectMapperBuilderTest {
     @Test
     public void testBuildObjectMapper() {
         ActorRefFactory actorRefFactory = mock(ActorRefFactory.class);
-        ObjectMapper objectMapper = new ObjectMapperBuilder(actorRefFactory,"1.0.0").build();
+        ScheduledMessageRefFactory scheduledMessageRefFactory = mock(ScheduledMessageRefFactory.class);
+        ObjectMapper objectMapper = new ObjectMapperBuilder(actorRefFactory,scheduledMessageRefFactory,"1.0.0").build();
         // check if everything was scanned correctly
         assertNotNull(objectMapper);
     }

@@ -24,6 +24,7 @@ import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.tasks.*;
 import org.elasticsoftware.elasticactors.messaging.*;
+import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.serialization.Message;
@@ -189,6 +190,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
             }
         } else {
             // the internalMessage is intended for the shard, this means it's about creating or destroying an actor
+            // or cancelling a scheduled message which will piggyback on the ActorShard messaging layer
             try {
                 Object message = deserializeMessage(actorSystem, internalMessage);
                 // check if the actor exists
@@ -210,6 +212,9 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                         // ack message anyway
                         messageHandlerEventListener.onDone(internalMessage);
                     }
+                } else if(message instanceof CancelScheduledMessageMessage) {
+                    CancelScheduledMessageMessage cancelMessage = (CancelScheduledMessageMessage) message;
+                    //actorSystem.getS
                 }
             } catch(Exception e) {
                 // @todo: determine if this is a recoverable error case or just a programming error

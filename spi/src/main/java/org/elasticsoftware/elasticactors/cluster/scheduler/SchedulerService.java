@@ -22,7 +22,7 @@ import org.elasticsoftware.elasticactors.scheduler.Scheduler;
 /**
  * @author Joost van de Wijgerd
  */
-public interface SchedulerService extends Scheduler {
+public interface SchedulerService extends Scheduler,InternalScheduler {
     /**
      * Register a local shard with the SchedulerService. The implementation of the service should
      * load the proper resources for the shard

@@ -20,6 +20,7 @@ import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
@@ -38,6 +39,7 @@ public final class SystemDeserializers {
         systemDeserializers.put(CreateActorMessage.class,new CreateActorMessageDeserializer(cluster));
         systemDeserializers.put(DestroyActorMessage.class,new DestroyActorMessageDeserializer(actorRefDeserializer));
         systemDeserializers.put(ActivateActorMessage.class,new ActivateActorMessageDeserializer());
+        systemDeserializers.put(CancelScheduledMessageMessage.class,new CancelScheduledMessageMessageDeserializer());
         //@todo: add more deserializers here
     }
 

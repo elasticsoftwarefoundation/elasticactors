@@ -13,4 +13,6 @@ public interface ShardAccessor {
      * @return
      */
     ActorShard getShard(String actorPath);
+
+    ActorShard getShard(int shardId);
 }

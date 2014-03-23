@@ -19,22 +19,23 @@ package org.elasticsoftware.elasticactors.cluster.scheduler;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
+import java.util.concurrent.*;
 
 /**
  * Simple in-memory scheduler that is backed by a {@link java.util.concurrent.ScheduledExecutorService}
  *
  * @author Joost van de Wijgerd
  */
-public final class SimpleScheduler implements SchedulerService {
+public final class SimpleScheduler implements SchedulerService,ScheduledMessageRefFactory {
     private static final Logger logger = Logger.getLogger(SimpleScheduler.class);
     private ScheduledExecutorService scheduledExecutorService;
+    private final ConcurrentMap<String,ScheduledFuture> scheduledFutures = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init() {
@@ -57,16 +58,33 @@ public final class SimpleScheduler implements SchedulerService {
     }
 
     @Override
-    public void scheduleOnce(ActorRef sender,Object message, ActorRef receiver, long delay, TimeUnit timeUnit) {
-        scheduledExecutorService.schedule(new TellActorTask(sender,receiver,message),delay,timeUnit);
+    public ScheduledMessageRef scheduleOnce(ActorRef sender,Object message, ActorRef receiver, long delay, TimeUnit timeUnit) {
+        String id = UUID.randomUUID().toString();
+        ScheduledFuture scheduledFuture = scheduledExecutorService.schedule(new TellActorTask(id, sender,receiver,message),delay,timeUnit);
+        scheduledFutures.put(id,scheduledFuture);
+        return new SimpleScheduledMessageRef(id,scheduledFuture);
     }
 
-    private static final class TellActorTask implements Runnable {
+    @Override
+    public void cancel(ShardKey shardKey, ScheduledMessageKey messageKey) {
+        // do nothing as the SimpleScheduledMessageRef will cancel the message directly on the scheduler
+    }
+
+    @Override
+    public ScheduledMessageRef create(String refSpec) {
+        // refSpec == id
+        ScheduledFuture scheduledFuture = scheduledFutures.get(refSpec);
+        return new SimpleScheduledMessageRef(refSpec,scheduledFuture);
+    }
+
+    private final class TellActorTask implements Runnable {
+        private final String id;
         private final ActorRef sender;
         private final ActorRef reciever;
         private final Object message;
 
-        private TellActorTask(ActorRef sender, ActorRef reciever, Object message) {
+        private TellActorTask(String id, ActorRef sender, ActorRef reciever, Object message) {
+            this.id = id;
             this.sender = sender;
             this.reciever = reciever;
             this.message = message;
@@ -76,6 +94,7 @@ public final class SimpleScheduler implements SchedulerService {
         public void run() {
             try {
                 reciever.tell(message,sender);
+                scheduledFutures.remove(id);
             } catch (Exception e) {
                 logger.error("Exception sending scheduled messsage",e);
             }
