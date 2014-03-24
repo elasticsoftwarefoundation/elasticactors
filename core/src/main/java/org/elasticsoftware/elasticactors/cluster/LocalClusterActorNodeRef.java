@@ -88,24 +88,12 @@ public final class LocalClusterActorNodeRef implements ActorRef, ActorContainerR
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        LocalClusterActorNodeRef that = (LocalClusterActorNodeRef) o;
-
-        if (actorId != null ? !actorId.equals(that.actorId) : that.actorId != null) return false;
-        if (!clusterName.equals(that.clusterName)) return false;
-        if (!node.equals(that.node)) return false;
-
-        return true;
+        return this == o || o instanceof ActorRef && this.toString().equals(o.toString());
     }
 
     @Override
     public int hashCode() {
-        int result = clusterName.hashCode();
-        result = 31 * result + node.hashCode();
-        result = 31 * result + (actorId != null ? actorId.hashCode() : 0);
-        return result;
+        return toString().hashCode();
     }
 
     @Override

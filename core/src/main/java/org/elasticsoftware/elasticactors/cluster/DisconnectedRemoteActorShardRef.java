@@ -10,6 +10,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public final class DisconnectedRemoteActorShardRef implements ActorRef,ActorContainerRef {
+    public static final String REFSPEC_FORMAT = "actor://%s/%s/shards/%d/%s";
     private final String clusterName;
     private final String actorSystemName;
     private final String actorId;
@@ -49,22 +50,17 @@ public final class DisconnectedRemoteActorShardRef implements ActorRef,ActorCont
     }
 
     @Override
+    public String toString() {
+        return format(REFSPEC_FORMAT,clusterName,actorSystemName,shardId,actorId);
+    }
+
+    @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        DisconnectedRemoteActorShardRef that = (DisconnectedRemoteActorShardRef) o;
-
-        return actorId.equals(that.actorId) && actorSystemName.equals(that.actorSystemName) && shardId == that.shardId && clusterName.equals(that.clusterName);
-
+        return this == o || o instanceof ActorRef && this.toString().equals(o.toString());
     }
 
     @Override
     public int hashCode() {
-        int result = clusterName.hashCode();
-        result = 31 * result + actorSystemName.hashCode();
-        result = 31 * result + actorId.hashCode();
-        result = 31 * result + shardId;
-        return result;
+        return toString().hashCode();
     }
 }

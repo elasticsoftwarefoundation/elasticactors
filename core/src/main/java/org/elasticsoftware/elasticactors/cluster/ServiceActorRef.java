@@ -78,24 +78,12 @@ public final class ServiceActorRef implements ActorRef, ActorContainerRef {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ServiceActorRef that = (ServiceActorRef) o;
-
-        if (serviceId != null ? !serviceId.equals(that.serviceId) : that.serviceId != null) return false;
-        if (!clusterName.equals(that.clusterName)) return false;
-        if (!node.equals(that.node)) return false;
-
-        return true;
+        return this == o || o instanceof ActorRef && this.toString().equals(o.toString());
     }
 
     @Override
     public int hashCode() {
-        int result = clusterName.hashCode();
-        result = 31 * result + node.hashCode();
-        result = 31 * result + (serviceId != null ? serviceId.hashCode() : 0);
-        return result;
+        return toString().hashCode();
     }
 
     @Override

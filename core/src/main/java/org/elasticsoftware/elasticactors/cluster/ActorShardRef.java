@@ -97,24 +97,12 @@ public final class ActorShardRef implements ActorRef, ActorContainerRef {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ActorShardRef that = (ActorShardRef) o;
-
-        if (actorId != null ? !actorId.equals(that.actorId) : that.actorId != null) return false;
-        if (!clusterName.equals(that.clusterName)) return false;
-        if (!shard.equals(that.shard)) return false;
-
-        return true;
+        return this == o || o instanceof ActorRef && this.toString().equals(o.toString());
     }
 
     @Override
     public int hashCode() {
-        int result = clusterName.hashCode();
-        result = 31 * result + shard.hashCode();
-        result = 31 * result + (actorId != null ? actorId.hashCode() : 0);
-        return result;
+        return toString().hashCode();
     }
 
     @Override
