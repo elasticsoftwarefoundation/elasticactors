@@ -133,10 +133,19 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
 
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-        // get the body data
-        final InternalMessage message = internalMessageDeserializer.deserialize(body);
-        // execute on seperate (thread bound) executor
-        queueExecutor.execute(new InternalMessageHandler(queueName,message,messageHandler,new RabbitMQAck(envelope,message),logger));
+        try {
+            // get the body data
+            final InternalMessage message = internalMessageDeserializer.deserialize(body);
+            // execute on seperate (thread bound) executor
+            queueExecutor.execute(new InternalMessageHandler(queueName,message,messageHandler,new RabbitMQAck(envelope,message),logger));
+        } catch(Exception e) {
+            logger.error("Unexpected Exception on handleDelivery.. Acking the message so it will not clog up the system",e);
+            try {
+                consumerChannel.basicAck(envelope.getDeliveryTag(),false);
+            } catch (IOException ioe) {
+                logger.error("Exception while acking failed message",ioe);
+            }
+        }
     }
 
     private static final class InternalMessageHandler implements ThreadBoundRunnable<String> {
