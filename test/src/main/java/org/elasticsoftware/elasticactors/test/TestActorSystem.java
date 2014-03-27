@@ -22,6 +22,7 @@ import org.elasticsoftware.elasticactors.runtime.ScannerHelper;
 import org.elasticsoftware.elasticactors.spring.ActorAnnotationBeanNameGenerator;
 import org.elasticsoftware.elasticactors.spring.AnnotationConfigApplicationContext;
 import org.elasticsoftware.elasticactors.test.configuration.TestConfiguration;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Component;
 
@@ -36,8 +37,14 @@ public final class TestActorSystem {
 
     private AnnotationConfigApplicationContext applicationContext;
 
-    public TestActorSystem() {
+    private final Class customConfigurationClass;
 
+    public TestActorSystem() {
+        this(null);
+    }
+
+    public TestActorSystem(Class customConfigurationClass) {
+        this.customConfigurationClass = customConfigurationClass;
     }
 
     public ActorSystem getActorSystem() {
@@ -54,6 +61,10 @@ public final class TestActorSystem {
         applicationContext = new AnnotationConfigApplicationContext();
         // set the correct configurations
         applicationContext.register(TestConfiguration.class);
+        // add custom configuration class
+        if(customConfigurationClass != null && customConfigurationClass.getAnnotation(Configuration.class) != null) {
+            applicationContext.register(customConfigurationClass);
+        }
         //applicationContext.
         // ensure the EA annotations are scanned
         applicationContext.addIncludeFilters(new AnnotationTypeFilter(ServiceActor.class));
