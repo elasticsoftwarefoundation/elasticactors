@@ -62,7 +62,7 @@ public final class TestActorSystem {
         // set the correct configurations
         applicationContext.register(TestConfiguration.class);
         // add custom configuration class
-        if(customConfigurationClass != null && customConfigurationClass.getAnnotation(Configuration.class) != null) {
+        if(customConfigurationClass != null) {
             applicationContext.register(customConfigurationClass);
         }
         //applicationContext.

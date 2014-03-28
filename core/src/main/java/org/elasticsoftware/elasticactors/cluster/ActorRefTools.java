@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
+import org.elasticsoftware.elasticactors.ActorNode;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ActorSystems;
@@ -82,7 +83,19 @@ public final class ActorRefTools {
             return actorSystems.createTempActorRef(actorSystem.getNode(components[3]),actorId);
         } else if ("services".equals(components[2])) {
             //return new ServiceActorRef(clusterName, actorSystem.getNode(), (actorId == null) ? components[3] : format("%s/%s", components[3], actorId));
-            return actorSystems.createServiceActorRef(actorSystem.getNode(), (actorId == null) ? components[3] : format("%s/%s", components[3], actorId));
+            // backwards compatibility check
+            ActorNode node = actorSystem.getNode(components[3]);
+            if(node == null) {
+                // set to the local node
+                node = actorSystem.getNode();
+                // also patch the actorId (if there happened to be a slash in there)
+                if(actorId == null) {
+                    actorId = components[3];
+                } else {
+                    actorId = format("%s/%s",components[3],actorId);
+                }
+            }
+            return actorSystems.createServiceActorRef(node, actorId);
         } else {
             throw new IllegalArgumentException(format(EXCEPTION_FORMAT, refSpec));
         }
