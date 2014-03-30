@@ -59,8 +59,9 @@ public final class ShoalClusterService implements ClusterService {
     @PostConstruct
     public void init() throws GMSException {
         gms = initializeGMS(nodeId, clusterName, nodeAddress.getHostAddress());
-        gms.join();
-        gms.updateMemberDetails(nodeId,"address",nodeAddress.getHostAddress());
+        // @todo: when we do this here the system might initialize to soon, now doing it on the reportReady
+        // gms.join();
+        // gms.updateMemberDetails(nodeId,"address",nodeAddress.getHostAddress());
     }
 
     @PreDestroy
@@ -70,7 +71,10 @@ public final class ShoalClusterService implements ClusterService {
     }
 
     @Override
-    public void reportReady() {
+    public void reportReady() throws Exception {
+        // @todo: the first two lines used to happen in the init
+        gms.join();
+        gms.updateMemberDetails(nodeId,"address",nodeAddress.getHostAddress());
         gms.reportJoinedAndReadyState();
     }
 

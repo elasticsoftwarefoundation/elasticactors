@@ -31,7 +31,11 @@ public final class ElasticActorsContextLoaderListener extends ContextLoaderListe
         super.contextInitialized(event);
         // and signal ready state to the cluster
         ClusterService clusterService = getCurrentWebApplicationContext().getBean(ClusterService.class);
-        clusterService.reportReady();
+        try {
+            clusterService.reportReady();
+        } catch (Exception e) {
+            throw new RuntimeException("Exception in ClusterService.reportReady()",e);
+        }
     }
 
     @Override

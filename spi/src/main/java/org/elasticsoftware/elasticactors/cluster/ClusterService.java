@@ -20,7 +20,7 @@ package org.elasticsoftware.elasticactors.cluster;
  * @author Joost van de Wijgerd
  */
 public interface ClusterService {
-    void reportReady();
+    void reportReady() throws Exception;
 
     void reportPlannedShutdown();
 

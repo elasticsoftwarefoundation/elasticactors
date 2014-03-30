@@ -32,7 +32,7 @@ public final class ElasticActorsBootstrapper {
 
     private AnnotationConfigApplicationContext applicationContext;
 
-    public static void main(String... args) {
+    public static void main(String... args) throws Exception {
         BasicConfigurator.configure();
         ElasticActorsBootstrapper bootstrapper = new ElasticActorsBootstrapper();
         bootstrapper.init();
