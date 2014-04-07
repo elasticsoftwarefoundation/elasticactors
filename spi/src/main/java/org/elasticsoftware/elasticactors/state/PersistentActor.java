@@ -25,21 +25,53 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 public final class PersistentActor<K> implements ActorContext {
     private final K key;
     private final InternalActorSystem actorSystem;
+    private transient final String currentActorStateVersion;
     private final String previousActorSystemVersion;
     private final Class<? extends ElasticActor> actorClass;
     private final ActorRef ref;
+    private transient volatile byte[] serializedState;
     private volatile ActorState actorState;
 
-    public PersistentActor(K key,InternalActorSystem actorSystem,String previousActorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass) {
-        this(key,actorSystem,previousActorSystemVersion,ref,actorClass,null);
+    /**
+     * This Constructor should be used when creating a new PersistentActor in memory
+     *
+     * @param key
+     * @param actorSystem
+     * @param previousActorStateVersion
+     * @param ref
+     * @param actorClass
+     * @param actorState
+     */
+    public PersistentActor(K key, InternalActorSystem actorSystem, String previousActorStateVersion, ActorRef ref, Class<? extends ElasticActor> actorClass,  ActorState actorState) {
+        this.key = key;
+        this.actorSystem = actorSystem;
+        this.currentActorStateVersion = previousActorStateVersion;
+        this.previousActorSystemVersion = previousActorStateVersion;
+        this.actorClass = actorClass;
+        this.ref = ref;
+        this.actorState = actorState;
+        this.serializedState = null;
     }
 
-    public PersistentActor(K key, InternalActorSystem actorSystem,String previousActorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass, ActorState state) {
+    /**
+     * This Constructor should be used when the PersistentActor is deserialized
+     *
+     * @param key
+     * @param actorSystem
+     * @param currentActorStateVersion
+     * @param previousActorSystemVersion
+     * @param ref
+     * @param actorClass
+     * @param serializedState
+     */
+    public PersistentActor(K key, InternalActorSystem actorSystem,String currentActorStateVersion, String previousActorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass, byte[] serializedState) {
         this.key = key;
         this.actorSystem = actorSystem;
         this.ref = ref;
         this.actorClass = actorClass;
-        this.actorState = state;
+        this.serializedState = serializedState;
+        this.actorState = null;
+        this.currentActorStateVersion = currentActorStateVersion;
         this.previousActorSystemVersion = previousActorSystemVersion;
     }
 
@@ -47,7 +79,11 @@ public final class PersistentActor<K> implements ActorContext {
         return key;
     }
 
-    public String getPreviousActorSystemVersion() {
+    public String getCurrentActorStateVersion() {
+        return currentActorStateVersion;
+    }
+
+    public String getPreviousActorStateVersion() {
         return previousActorSystemVersion;
     }
 
@@ -67,6 +103,14 @@ public final class PersistentActor<K> implements ActorContext {
 
     public ActorState getState() {
         return actorState;
+    }
+
+    public byte[] getSerializedState() {
+        return serializedState;
+    }
+
+    public void setSerializedState(byte[] serializedState) {
+        this.serializedState = serializedState;
     }
 
     @Override

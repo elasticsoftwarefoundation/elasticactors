@@ -18,13 +18,16 @@ package org.elasticsoftware.elasticactors.cluster.tasks;
 
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.util.SerializationTools;
 
 import java.util.Arrays;
 
@@ -33,7 +36,7 @@ import java.util.Arrays;
  */
 public final class ActivateActorTask extends ActorLifecycleTask {
     private static final Logger logger = Logger.getLogger(ActivateActorTask.class);
-    private final String previousActorSystemVersion;
+    private final PersistentActor persistentActor;
 
     public ActivateActorTask(PersistentActorRepository persistentActorRepository,
                              PersistentActor persistentActor,
@@ -41,7 +44,7 @@ public final class ActivateActorTask extends ActorLifecycleTask {
                              ElasticActor receiver,
                              ActorRef receiverRef) {
         super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, null, null);
-        this.previousActorSystemVersion = persistentActor.getPreviousActorSystemVersion();
+        this.persistentActor = persistentActor;
     }
 
     @Override
@@ -49,15 +52,41 @@ public final class ActivateActorTask extends ActorLifecycleTask {
                                        ElasticActor receiver,
                                        ActorRef receiverRef,
                                        InternalMessage internalMessage) {
+        boolean overridePersistenceConfig = false;
+        // need to deserialize the state here (unless there is none)
+        if(persistentActor.getSerializedState() != null) {
+            final SerializationFramework framework = SerializationTools.getSerializationFramework(actorSystem.getParent(), receiver.getClass());
+            try {
+                ActorState actorState = receiver.preActivate(persistentActor.getPreviousActorStateVersion(),
+                                                             persistentActor.getCurrentActorStateVersion(),
+                                                             persistentActor.getSerializedState(),
+                                                             framework);
+                if(actorState == null) {
+                    actorState = SerializationTools.deserializeActorState(actorSystem.getParent(),receiver.getClass(),persistentActor.getSerializedState());
+                } else {
+                    overridePersistenceConfig = true;
+                }
+                // set state and remove bytes
+                this.persistentActor.setState(actorState);
+                this.persistentActor.setSerializedState(null);
+            } catch(Exception e) {
+                logger.error("Exception calling preActivate",e);
+            }
+        }
+
         try {
-            // @todo: somehow figure out the creator
-            receiver.postActivate(previousActorSystemVersion);
+            receiver.postActivate(persistentActor.getPreviousActorStateVersion());
         } catch (Exception e) {
             logger.error("Exception calling postActivate",e);
             return false;
         }
-        // check persistence config (if any)
-        PersistenceConfig persistenceConfig = receiver.getClass().getAnnotation(PersistenceConfig.class);
-        return persistenceConfig == null || Arrays.asList(persistenceConfig.persistOn()).contains(ActorLifecycleStep.ACTIVATE);
+        // when the preActivate has a result we should always store the state
+        if(!overridePersistenceConfig) {
+            // check persistence config (if any)
+            PersistenceConfig persistenceConfig = receiver.getClass().getAnnotation(PersistenceConfig.class);
+            return persistenceConfig == null || Arrays.asList(persistenceConfig.persistOn()).contains(ActorLifecycleStep.ACTIVATE);
+        } else {
+            return overridePersistenceConfig;
+        }
     }
 }

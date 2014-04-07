@@ -93,7 +93,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
-    public ActorSystems getParent() {
+    public InternalActorSystems getParent() {
         return cluster;
     }
 

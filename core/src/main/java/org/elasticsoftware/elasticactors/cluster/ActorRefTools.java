@@ -76,11 +76,16 @@ public final class ActorRefTools {
             if (shardId >= actorSystem.getConfiguration().getNumberOfShards()) {
                 throw new IllegalArgumentException(format("Unknown shard %d for ActorSystem %s. Available shards: %d", shardId, actorSystemName, actorSystem.getConfiguration().getNumberOfShards()));
             }
-            //return new ActorShardRef(clusterName, actorSystem.getShard(String.format("%s/shards/%d", actorSystemName, shardId)), actorId);
             return actorSystems.createPersistentActorRef(actorSystem.getShard(format("%s/shards/%d", actorSystemName, shardId)),actorId);
         } else if ("nodes".equals(components[2])) {
             //return new LocalClusterActorNodeRef(clusterName, actorSystem.getNode(components[3]), actorId);
-            return actorSystems.createTempActorRef(actorSystem.getNode(components[3]),actorId);
+            final ActorNode node = actorSystem.getNode(components[3]);
+            if(node != null) {
+                return actorSystems.createTempActorRef(node,actorId);
+            } else {
+                // this node is currently down, send a disconnected ref
+                return new DisconnectedActorNodeRef(clusterName,actorSystemName,components[3],actorId);
+            }
         } else if ("services".equals(components[2])) {
             //return new ServiceActorRef(clusterName, actorSystem.getNode(), (actorId == null) ? components[3] : format("%s/%s", components[3], actorId));
             // backwards compatibility check

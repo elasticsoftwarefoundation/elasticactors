@@ -61,14 +61,6 @@ public interface InternalActorSystem extends ActorSystem, ShardAccessor {
     ActorNode getNode();
 
     /**
-     * Return a reference to a temporary actor
-     *
-     * @param actorId
-     * @return
-     */
-    ActorRef tempActorFor(String actorId);
-
-    /**
      * Return the serializer for the given message type
      *
      * @param messageClass
@@ -87,4 +79,6 @@ public interface InternalActorSystem extends ActorSystem, ShardAccessor {
     <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass);
 
     InternalScheduler getInternalScheduler();
+
+    InternalActorSystems getParent();
 }

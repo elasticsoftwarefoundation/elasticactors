@@ -66,14 +66,14 @@ public class CassandraPersistentActorRepositoryTest extends AbstractTestNGSpring
         when(actorRef.getActorId()).thenReturn("testActor");
         when(actorRef.toString()).thenReturn("actor://TestCluster/IntegrationTest/shards/0/testActor");
         when(actorRefFactory.create("actor://TestCluster/IntegrationTest/shards/0/testActor")).thenReturn(actorRef);
-        repository.update(shardKey,new PersistentActor(shardKey,actorSystem, "1.0", actorRef, TestActor.class));
+        repository.update(shardKey,new PersistentActor(shardKey,actorSystem,"1.0", actorRef, TestActor.class, null));
 
         assertTrue(repository.contains(shardKey,"testActor"));
 
         PersistentActor persistentActor = repository.get(shardKey,"testActor");
         assertNotNull(persistentActor);
         assertEquals(persistentActor.getState(),null);
-        assertEquals(persistentActor.getPreviousActorSystemVersion(),"1.0");
+        assertEquals(persistentActor.getPreviousActorStateVersion(),"1.0");
         assertEquals(persistentActor.getKey(),shardKey);
         assertEquals(persistentActor.getActorClass(),TestActor.class);
         assertEquals(persistentActor.getActorSystem(),actorSystem);

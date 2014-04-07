@@ -66,4 +66,13 @@ public final class SerializationTools {
             return null;
         }
     }
+
+    public static SerializationFramework getSerializationFramework(InternalActorSystems actorSystems,Class<? extends ElasticActor> actorClass) {
+        Actor actorAnnotation = actorClass.getAnnotation(Actor.class);
+        if(actorAnnotation != null) {
+            return actorSystems.getSerializationFramework(actorAnnotation.serializationFramework());
+        } else {
+            return null;
+        }
+    }
 }

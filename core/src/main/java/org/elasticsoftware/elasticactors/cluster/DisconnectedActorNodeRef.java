@@ -1,0 +1,89 @@
+/*
+ * Copyright 2013 eBuddy BV
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.elasticsoftware.elasticactors.cluster;
+
+import org.apache.log4j.Logger;
+import org.elasticsoftware.elasticactors.*;
+
+import javax.annotation.Nullable;
+
+import static java.lang.String.format;
+
+/**
+ *
+ * @author  Joost van de Wijgerd
+ */
+public final class DisconnectedActorNodeRef implements ActorRef, ActorContainerRef {
+    private final String clusterName;
+    private final String actorSystemName;
+    private final String nodeId;
+    private final String actorId;
+
+    public DisconnectedActorNodeRef(String clusterName, String actorSystemName, String nodeId,@Nullable String actorId) {
+        this.clusterName = clusterName;
+        this.actorSystemName = actorSystemName;
+        this.nodeId = nodeId;
+        this.actorId = actorId;
+    }
+
+    public static String generateRefSpec(String clusterName, String actorSystemName, String nodeId,String actorId) {
+        if(actorId != null) {
+            return String.format("actor://%s/%s/nodes/%s/%s",clusterName,actorSystemName,nodeId,actorId);
+        } else {
+            return String.format("actor://%s/%s/nodes/%s",clusterName,actorSystemName,nodeId);
+        }
+    }
+
+    @Override
+    public String getActorPath() {
+        return String.format("%s/nodes/%s",actorSystemName,nodeId);
+    }
+
+    public String getActorId() {
+        return actorId;
+    }
+
+    @Override
+    public void tell(Object message, ActorRef sender) {
+        tell(message);
+    }
+
+    @Override
+    public void tell(Object message) {
+        throw new IllegalStateException(format("Actor Node %s is not active, referenced actorId cannot be reached and probably doesn't exist anymore. It is a Bad Idea to serialize Temp Actor Refs",nodeId));
+    }
+
+    @Override
+    public ActorContainer get() {
+        throw new IllegalStateException(format("Actor Node %s is not active, referenced actorId cannot be reached and probably doesn't exist anymore. It is a Bad Idea to serialize Temp Actor Refs",nodeId));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return this == o || o instanceof ActorRef && this.toString().equals(o.toString());
+    }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return generateRefSpec(this.clusterName,this.actorSystemName,this.nodeId,this.actorId);
+    }
+}

@@ -77,6 +77,11 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
     }
 
     @Override
+    public ActorRef tempActorFor(String actorId) {
+        throw new UnsupportedOperationException("Temporary Actors are not supported for Remote ActorSystem instances");
+    }
+
+    @Override
     public ActorRef actorFor(String actorId) {
         // determine shard
         ActorShard shard = shardFor(actorId);

@@ -16,6 +16,8 @@
 
 package org.elasticsoftware.elasticactors;
 
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+
 import javax.annotation.Nullable;
 
 /**
@@ -41,6 +43,8 @@ public interface ElasticActor<T> {
      */
     void postCreate(@Nullable ActorRef creator) throws Exception;
 
+    ActorState preActivate(String previousVersion,String currentVersion,byte[] serializedForm,SerializationFramework serializationFramework) throws Exception;
+
     /**
      * Called after an instance of the {@link ElasticActor} was loaded into memory. Will be called every time the
      * actor was deserialized from the Persistent Store. Depending on the memory pressure this can happen multiple times
@@ -53,7 +57,7 @@ public interface ElasticActor<T> {
      * @see                 {@link ActorContextHolder#getState(Class)}
      * @see                 {@link org.elasticsoftware.elasticactors.ActorContextHolder#getSystem()}
      */
-    void postActivate(String previousVersion) throws Exception;
+    void postActivate(@Deprecated String previousVersion) throws Exception;
 
     /**
      * Receive a Message. The message object will be annotated with {@link org.elasticsoftware.elasticactors.serialization.Message}.

@@ -24,6 +24,7 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
+import org.elasticsoftware.elasticactors.util.ManifestTools;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 import org.springframework.beans.factory.annotation.Configurable;
 
@@ -48,15 +49,16 @@ public final class PersistentActorDeserializer implements Deserializer<byte[],Pe
         final ShardKey shardKey = ShardKey.fromString(protobufMessage.getShardKey());
         try {
             Class<? extends ElasticActor> actorClass = (Class<? extends ElasticActor>) Class.forName(protobufMessage.getActorClass());
-            ActorState actorState =
-                    protobufMessage.hasState() ? deserializeState(actorClass,protobufMessage.getState().toByteArray()): null;
+            // @todo: this needs to be cached somewhere
+            final String currentActorStateVersion = ManifestTools.extractActorStateVersion(actorClass);
 
             return new PersistentActor<>(shardKey,
-                                                 actorSystems.get(shardKey.getActorSystemName()),
-                                                 protobufMessage.getActorSystemVersion(),
-                                                 actorRefFactory.create(protobufMessage.getActorRef()),
-                                                 actorClass,
-                                                 actorState);
+                                         actorSystems.get(shardKey.getActorSystemName()),
+                                         currentActorStateVersion,
+                                         protobufMessage.getActorSystemVersion(),
+                                         actorRefFactory.create(protobufMessage.getActorRef()),
+                                         actorClass,
+                                         protobufMessage.hasState() ? protobufMessage.getState().toByteArray() : null);
         } catch(ClassNotFoundException e) {
             throw new IOException("Exception deserializing PersistentActor",e);
         }

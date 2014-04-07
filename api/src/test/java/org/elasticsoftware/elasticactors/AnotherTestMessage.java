@@ -16,22 +16,20 @@
 
 package org.elasticsoftware.elasticactors;
 
+import org.elasticsoftware.elasticactors.serialization.Message;
+
 /**
  * @author Joost van de Wijgerd
  */
-@Actor(stateClass = TestActorState.class,serializationFramework = TestSerializationFramework.class)
-@MessageHandlers({TestMessageHandlers.class})
-public class TestPersistentMethodActor extends MethodActor {
+@Message(serializationFramework = TestSerializationFramework.class)
+public class AnotherTestMessage {
+    private final String content;
 
-    public TestPersistentMethodActor() {
-        super();
+    public AnotherTestMessage(String content) {
+        this.content = content;
     }
 
-    @MessageHandler
-    public void handle(TestMessage message,ActorRef sender,TestActorState state,ActorSystem actorSystem) {
-        state.setCallSucceeded(true);
-        state.setActorSystem(actorSystem);
-        state.setMessage(message);
-        state.setSender(sender);
+    public String getContent() {
+        return content;
     }
 }

@@ -23,13 +23,13 @@ public class TestActorState implements ActorState<TestActorState> {
     private boolean callSucceeded = false;
     private transient ActorSystem actorSystem = null;
     private ActorRef sender;
-    private TestMessage message;
+    private Object message;
 
-    public TestMessage getMessage() {
+    public Object getMessage() {
         return message;
     }
 
-    public void setMessage(TestMessage message) {
+    public void setMessage(Object message) {
         this.message = message;
     }
 

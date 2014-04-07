@@ -21,7 +21,10 @@ import org.elasticsoftware.elasticactors.serialization.Message;
 import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import static java.lang.String.format;
@@ -30,17 +33,50 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public abstract class MethodActor extends TypedActor<Object> {
-    private final Map<Class<?>,HandlerMethodDefinition> handlerCache = new HashMap<>();
+    private final Map<Class<?>,List<HandlerMethodDefinition>> handlerCache = new HashMap<>();
     @Nullable private final Class<? extends ActorState> stateClass;
 
     protected MethodActor() {
         this.stateClass = resolveActorStateClass();
         // initialize the handler cache
-        Method[] methods = getClass().getMethods();
+        updateHandlerCache(getClass(),this);
+        // also see if there are any other classes that have MessageHandler definitions
+        MessageHandlers otherHandlers = getClass().getAnnotation(MessageHandlers.class);
+        if(otherHandlers != null) {
+            for (Class<?> aClass : otherHandlers.value()) {
+                // avoid adding self again
+                if(getClass() != aClass) {
+                    updateHandlerCache(aClass,null);
+                }
+            }
+        }
+    }
+
+    private void updateHandlerCache(Class<?> clazz,@Nullable Object instance) {
+        final Method[] methods = clazz.getMethods();
         for (Method method : methods) {
             if(method.isAnnotationPresent(MessageHandler.class)) {
-                HandlerMethodDefinition definition = new HandlerMethodDefinition(method);
-                handlerCache.put(definition.messageClass,definition);
+                HandlerMethodDefinition definition;
+                if(Modifier.isStatic(method.getModifiers())) {
+                    definition = new HandlerMethodDefinition(null, method);
+                } else {
+                    if(instance == null) {
+                        // try to create instance with no-args constructor
+                        try {
+                            instance = clazz.newInstance();
+                        } catch(Exception e) {
+                            throw new IllegalArgumentException(format("Cannot create instance of type %s",clazz.getName()),e);
+                        }
+                    }
+                    definition = new HandlerMethodDefinition(instance, method);
+
+                }
+                List<HandlerMethodDefinition> definitions = handlerCache.get(definition.messageClass);
+                if(definitions == null) {
+                    definitions = new LinkedList<>();
+                    handlerCache.put(definition.messageClass,definitions);
+                }
+                definitions.add(definition);
             }
         }
     }
@@ -60,17 +96,19 @@ public abstract class MethodActor extends TypedActor<Object> {
 
     @Override
     public void onReceive(ActorRef sender, Object message) throws Exception {
-        HandlerMethodDefinition definition = handlerCache.get(message.getClass());
-        if(definition != null) {
-            try {
-                definition.handlerMethod.invoke(this,definition.prepareParameters(sender,message));
-            } catch (InvocationTargetException e) {
-                final Throwable cause = e.getCause();
-                if(Exception.class.isAssignableFrom(cause.getClass())) {
-                    throw (Exception) cause;
-                } else {
-                    // this is some system error, don't swallow it but just rethrow the Invocation Target Exception
-                    throw e;
+        List<HandlerMethodDefinition> definitions = handlerCache.get(message.getClass());
+        if(definitions != null) {
+            for (HandlerMethodDefinition definition : definitions) {
+                try {
+                    definition.handlerMethod.invoke(definition.targetInstance,definition.prepareParameters(sender,message));
+                } catch (InvocationTargetException e) {
+                    final Throwable cause = e.getCause();
+                    if(Exception.class.isAssignableFrom(cause.getClass())) {
+                        throw (Exception) cause;
+                    } else {
+                        // this is some system error, don't swallow it but just rethrow the Invocation Target Exception
+                        throw e;
+                    }
                 }
             }
         } else {
@@ -90,12 +128,14 @@ public abstract class MethodActor extends TypedActor<Object> {
     }
 
     private final class HandlerMethodDefinition {
+        private final Object targetInstance;
         private final Method handlerMethod;
         private final ParameterType[] parameterTypeOrdering;
         private final Class<?> messageClass;
 
 
-        private HandlerMethodDefinition(Method handlerMethod) throws IllegalArgumentException, IllegalStateException {
+        private HandlerMethodDefinition(Object targetInstance, Method handlerMethod) throws IllegalArgumentException, IllegalStateException {
+            this.targetInstance = targetInstance;
             this.handlerMethod = handlerMethod;
             Class<?>[] parameterTypes = handlerMethod.getParameterTypes();
             // do some sanity checking

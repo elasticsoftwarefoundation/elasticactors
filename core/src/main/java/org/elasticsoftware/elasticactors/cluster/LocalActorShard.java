@@ -35,6 +35,7 @@ import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.util.ManifestTools;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
@@ -236,11 +237,10 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
 
     private void createActor(CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         ActorRef ref = actorSystem.actorFor(createMessage.getActorId());
+        final Class<? extends ElasticActor> actorClass = (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass());
+        final String actorStateVersion = ManifestTools.extractActorStateVersion(actorClass);
         PersistentActor<ShardKey> persistentActor =
-                new PersistentActor<>(shardKey, actorSystem,actorSystem.getConfiguration().getVersion(),
-                                    ref,
-                                    (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass()),
-                                    createMessage.getInitialState());
+                new PersistentActor<>(shardKey, actorSystem, actorStateVersion, ref, actorClass, createMessage.getInitialState());
         persistentActorRepository.update(this.shardKey,persistentActor);
         actorCache.put(ref,persistentActor);
         // find actor class behind receiver ActorRef

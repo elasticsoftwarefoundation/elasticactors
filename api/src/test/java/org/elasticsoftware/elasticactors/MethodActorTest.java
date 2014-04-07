@@ -28,7 +28,7 @@ import static org.testng.Assert.assertNotNull;
  */
 public class MethodActorTest {
     @Test
-    public void testMethodCall() throws Exception {
+    public void testMethodCallOnImpl() throws Exception {
         ActorContext context = mock(ActorContext.class);
         ActorRef sender = mock(ActorRef.class);
         ActorRef self = mock(ActorRef.class);
@@ -40,6 +40,26 @@ public class MethodActorTest {
 
         TestPersistentMethodActor actor = new TestPersistentMethodActor();
         actor.onReceive(sender,new TestMessage("hello world!"));
+
+        assertNotNull(state.getActorSystem());
+        assertEquals(state.getActorSystem(),actorSystem);
+
+        assertNotNull(state.getSender());
+    }
+
+    @Test
+    public void testMethodCallOnExternalClass() throws Exception {
+        ActorContext context = mock(ActorContext.class);
+        ActorRef sender = mock(ActorRef.class);
+        ActorRef self = mock(ActorRef.class);
+        ActorSystem actorSystem = mock(ActorSystem.class);
+        TestActorContextHolder.setContext(context);
+        TestActorState state = new TestActorState();
+        when(context.getState(TestActorState.class)).thenReturn(state);
+        when(context.getActorSystem()).thenReturn(actorSystem);
+
+        TestPersistentMethodActor actor = new TestPersistentMethodActor();
+        actor.onReceive(sender,new AnotherTestMessage("hello world!"));
 
         assertNotNull(state.getActorSystem());
         assertEquals(state.getActorSystem(),actorSystem);
