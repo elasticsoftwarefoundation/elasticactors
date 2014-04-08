@@ -49,8 +49,7 @@ public final class PersistentActorDeserializer implements Deserializer<byte[],Pe
         final ShardKey shardKey = ShardKey.fromString(protobufMessage.getShardKey());
         try {
             Class<? extends ElasticActor> actorClass = (Class<? extends ElasticActor>) Class.forName(protobufMessage.getActorClass());
-            // @todo: this needs to be cached somewhere
-            final String currentActorStateVersion = ManifestTools.extractActorStateVersion(actorClass);
+            final String currentActorStateVersion = actorSystems.getActorStateVersion(actorClass);
 
             return new PersistentActor<>(shardKey,
                                          actorSystems.get(shardKey.getActorSystemName()),
@@ -63,10 +62,4 @@ public final class PersistentActorDeserializer implements Deserializer<byte[],Pe
             throw new IOException("Exception deserializing PersistentActor",e);
         }
     }
-
-    private ActorState deserializeState(Class<? extends ElasticActor> actorClass, byte[] serializedState) throws IOException {
-        return SerializationTools.deserializeActorState(actorSystems, actorClass, serializedState);
-    }
-
-
 }

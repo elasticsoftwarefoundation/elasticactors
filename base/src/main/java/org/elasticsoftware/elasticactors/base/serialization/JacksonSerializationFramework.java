@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentMap;
  * @author Joost van de Wijgerd
  */
 @Named
-public class JacksonSerializationFramework implements SerializationFramework {
+public final class JacksonSerializationFramework implements SerializationFramework {
     private final ConcurrentMap<Class,JacksonMessageDeserializer> deserializers = new ConcurrentHashMap<>();
     private final JacksonMessageSerializer serializer;
     private final ObjectMapper objectMapper;
@@ -72,5 +72,9 @@ public class JacksonSerializationFramework implements SerializationFramework {
     @Override
     public Deserializer<byte[], ActorState> getActorStateDeserializer(Class<? extends ElasticActor> actorClass) {
         return actorStateDeserializer;
+    }
+
+    public ObjectMapper getObjectMapper() {
+        return objectMapper;
     }
 }

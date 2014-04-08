@@ -16,10 +16,7 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import org.elasticsoftware.elasticactors.ActorNode;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ActorShard;
-import org.elasticsoftware.elasticactors.ActorSystems;
+import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
@@ -41,4 +38,6 @@ public interface InternalActorSystems extends ActorSystems {
     ActorRef createTempActorRef(ActorNode node, String actorId);
 
     ActorRef createServiceActorRef(ActorNode node, String actorId);
+
+    String getActorStateVersion(Class<? extends ElasticActor> actorClass);
 }

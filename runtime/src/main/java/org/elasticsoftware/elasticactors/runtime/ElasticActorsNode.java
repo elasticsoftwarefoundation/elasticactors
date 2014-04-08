@@ -26,6 +26,7 @@ import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.internal.SystemDeserializers;
 import org.elasticsoftware.elasticactors.serialization.internal.SystemSerializers;
+import org.elasticsoftware.elasticactors.util.ManifestTools;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -38,6 +39,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.jar.Manifest;
 
 import static java.lang.String.format;
 
@@ -54,7 +56,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     private final InternalActorSystemConfiguration configuration;
     private final CountDownLatch waitLatch = new CountDownLatch(1);
     private final AtomicBoolean initialized = new AtomicBoolean(false);
-
+    private final Cache<Class<? extends ElasticActor>,String> actorStateVersionCache = CacheBuilder.newBuilder().maximumSize(1024).build();
     private Cache<String,ActorRef> actorRefCache;
     @Autowired
     private ApplicationContext applicationContext;
@@ -188,6 +190,16 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
             actorRefCache.put(refSpec,ref);
         }
         return ref;
+    }
+
+    @Override
+    public String getActorStateVersion(Class<? extends ElasticActor> actorClass) {
+        String version = actorStateVersionCache.getIfPresent(actorClass);
+        if(version == null) {
+            version = ManifestTools.extractActorStateVersion(actorClass);
+            actorStateVersionCache.put(actorClass,version);
+        }
+        return version;
     }
 
     @Override

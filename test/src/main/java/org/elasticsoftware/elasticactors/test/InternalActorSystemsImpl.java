@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.internal.SystemDeserializers;
 import org.elasticsoftware.elasticactors.serialization.internal.SystemSerializers;
+import org.elasticsoftware.elasticactors.util.ManifestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
@@ -81,6 +82,11 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
     @Override
     public ActorRef createServiceActorRef(ActorNode node, String actorId) {
         return new ServiceActorRef(getClusterName(),node,actorId);
+    }
+
+    @Override
+    public String getActorStateVersion(Class<? extends ElasticActor> actorClass) {
+        return ManifestTools.extractActorStateVersion(actorClass);
     }
 
     @Override
