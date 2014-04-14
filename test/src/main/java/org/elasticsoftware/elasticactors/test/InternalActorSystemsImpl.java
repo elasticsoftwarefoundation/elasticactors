@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.test;
 
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.*;
+import org.elasticsoftware.elasticactors.cluster.strategies.SingleNodeScaleUpStrategy;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
@@ -54,7 +55,7 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
     public void initialize() throws Exception {
         final List<PhysicalNode> localNodes = Arrays.<PhysicalNode>asList(localNode);
         localActorSystemInstance.updateNodes(localNodes);
-        localActorSystemInstance.distributeShards(localNodes);
+        localActorSystemInstance.distributeShards(localNodes,new SingleNodeScaleUpStrategy());
         // signal master elected
         clusterService.reportReady();
     }

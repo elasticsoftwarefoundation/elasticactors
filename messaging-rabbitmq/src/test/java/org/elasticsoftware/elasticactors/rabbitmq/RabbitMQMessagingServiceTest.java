@@ -73,7 +73,7 @@ public class RabbitMQMessagingServiceTest {
         // ActorRefDeserializer.get().setActorRefFactory(actorRefFactory);
     }
 
-    @Test
+    @Test(enabled = false)
     public void testAllLocal() throws Exception {
         int workers = Runtime.getRuntime().availableProcessors() * 3;
         ThreadBoundExecutor<String> queueExecutor = new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);

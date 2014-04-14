@@ -18,9 +18,16 @@ package org.elasticsoftware.elasticactors.runtime;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.*;
+import org.elasticsoftware.elasticactors.cluster.messaging.ShardReleasedMessage;
+import org.elasticsoftware.elasticactors.cluster.protobuf.Clustering;
+import org.elasticsoftware.elasticactors.cluster.strategies.RunningNodeScaleDownStrategy;
+import org.elasticsoftware.elasticactors.cluster.strategies.RunningNodeScaleUpStrategy;
+import org.elasticsoftware.elasticactors.cluster.strategies.SingleNodeScaleUpStrategy;
+import org.elasticsoftware.elasticactors.cluster.strategies.StartingNodeScaleUpStrategy;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
@@ -37,9 +44,10 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.jar.Manifest;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.String.format;
 
@@ -61,7 +69,8 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     @Autowired
     private ApplicationContext applicationContext;
     private ClusterService clusterService;
-
+    private final LinkedBlockingQueue<ShardReleasedMessage> shardReleasedMessages = new LinkedBlockingQueue<>();
+    private final AtomicReference<List<PhysicalNode>> currentTopology = new AtomicReference<>(null);
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("CLUSTER_SCHEDULER"));
 
     public ElasticActorsNode(String clusterName, String nodeId, InetAddress nodeAddress, InternalActorSystemConfiguration configuration) {
@@ -92,9 +101,41 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     }
 
     @Override
-    public void onTopologyChanged(List<PhysicalNode> topology) throws Exception {
-        // @todo: keep track of the previous schedule and cancel it if possible
-        scheduledExecutorService.submit(new RebalancingRunnable(topology));
+    public void onTopologyChanged(final List<PhysicalNode> topology) throws Exception {
+        // see if we have a scale up or a scale down event
+        List<PhysicalNode> previousTopology = currentTopology.get();
+        ShardDistributionStrategy shardDistributionStrategy;
+        if(previousTopology == null) {
+            // scale out, I'm the one that's starting up.. will receive Local Shards..
+            if(topology.size() == 1) {
+                // if there is only one node in the list, then I'm the only server
+                shardDistributionStrategy = new SingleNodeScaleUpStrategy();
+            } else {
+                // there are multiple nodes, I will receive shard releases messages
+                shardDistributionStrategy = new StartingNodeScaleUpStrategy(shardReleasedMessages);
+            }
+        } else {
+            // we are already running, see if this is a scale up or a scale down
+            if(previousTopology.size() < topology.size()) {
+                // scale up
+                shardDistributionStrategy = new RunningNodeScaleUpStrategy(shardReleasedMessages,clusterService);
+            } else if(previousTopology.size() > topology.size()) {
+                // scale down
+                shardDistributionStrategy = new RunningNodeScaleDownStrategy();
+            } else {
+                // topology changed, but same size.. node added at the same time node was removed
+                // new node will use StartingNodeScaleUpStrategy and wait for ShardReleasedMessages
+                // which may never arrive since the node that was removed won't be sending them
+                // what to do?
+                // let MasterNode take over the role of sending ShardReleased messages?
+                // let MasterNode decide on the strategy?
+                // for now treat it as scale down and let the starting node time out
+                shardDistributionStrategy = new RunningNodeScaleDownStrategy();
+            }
+        }
+        // store the new topology as the current one
+        this.currentTopology.set(topology);
+        scheduledExecutorService.submit(new RebalancingRunnable(shardDistributionStrategy, topology));
     }
 
     @Override
@@ -104,7 +145,18 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
 
     @Override
     public void handleMessage(byte[] message, String senderToken) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        // @todo: abstract this more
+        try {
+            Clustering.ClusterMessage clusterMessage = Clustering.ClusterMessage.parseFrom(message);
+            if(clusterMessage.hasShardReleased()) {
+                // @todo: need to take into account the Shoal viewId here
+                ShardReleasedMessage shardReleasedMessage = new ShardReleasedMessage(clusterMessage.getShardReleased().getActorSystem(),clusterMessage.getShardReleased().getShardId());
+                //
+                shardReleasedMessages.add(shardReleasedMessage);
+            }
+        } catch(InvalidProtocolBufferException e) {
+            logger.error("Exception while deserializing ClusterMessage",e);
+        }
     }
 
     public void join() throws Exception {
@@ -218,9 +270,11 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     }
 
     private final class RebalancingRunnable implements Runnable {
+        private final ShardDistributionStrategy shardDistributionStrategy;
         private final List<PhysicalNode> clusterNodes;
 
-        private RebalancingRunnable(List<PhysicalNode> clusterNodes) {
+        private RebalancingRunnable(ShardDistributionStrategy shardDistributionStrategy, List<PhysicalNode> clusterNodes) {
+            this.shardDistributionStrategy = shardDistributionStrategy;
             this.clusterNodes = clusterNodes;
         }
 
@@ -234,6 +288,9 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
                 } catch (Exception e) {
                     logger.error("Initializing Remote ActorSystems failed",e);
                 }
+                // apparently new nodes seem to catch on to the changed ClusterView faster than existing nodes
+                // need to solve this in a more elegant way but for now we just pause for a bit to let the others
+                // catch up
             }
             LocalActorSystemInstance instance = applicationContext.getBean(LocalActorSystemInstance.class);
             logger.info(format("Updating %d nodes for ActorSystem[%s]", clusterNodes.size(), instance.getName()));
@@ -242,9 +299,9 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
             } catch (Exception e) {
                 logger.error(format("ActorSystem[%s] failed to update nodes", instance.getName()), e);
             }
-            logger.info(format("Rebalancing %d shards for ActorSystem[%s]", instance.getNumberOfShards(), instance.getName()));
+            logger.info(format("Rebalancing %d shards for ActorSystem[%s] using %s", instance.getNumberOfShards(), instance.getName(), shardDistributionStrategy.getClass().getSimpleName()));
             try {
-                instance.distributeShards(clusterNodes);
+                instance.distributeShards(clusterNodes,shardDistributionStrategy);
             } catch (Exception e) {
                 logger.error(format("ActorSystem[%s] failed to (re-)distribute shards", instance.getName()), e);
             }

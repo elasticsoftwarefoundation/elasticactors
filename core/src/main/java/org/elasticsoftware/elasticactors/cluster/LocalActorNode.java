@@ -35,6 +35,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
@@ -48,6 +51,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     private ThreadBoundExecutor<String> actorExecutor;
     private final NodeActorCacheManager actorCacheManager;
     private Cache<ActorRef,PersistentActor<NodeKey>> actorCache;
+    private final Set<ElasticActor> initializedActors = new HashSet<>();
 
     public LocalActorNode(PhysicalNode node,
                           InternalActorSystem actorSystem,
@@ -143,6 +147,14 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                     // see if it is a service
                     ElasticActor serviceInstance = actorSystem.getServiceInstance(internalMessage.getReceiver());
                     if(serviceInstance != null) {
+                        // due to the fact that Shards get initialized before ServiceActors it can happen that a
+                        // message is sent to the ServiceActor instance before it is initialized. If that happens
+                        // we'll initialize this Just In Time (and make sure it's only initialized once)
+                        if(!initializedActors.contains(serviceInstance)) {
+                            actorExecutor.execute(new ActivateServiceActorTask(actorSystem,internalMessage.getReceiver(),serviceInstance,null,null));
+                            initializedActors.add(serviceInstance);
+                        }
+                        // ok, now it can handle the message
                         if(!internalMessage.isUndeliverable()) {
                         actorExecutor.execute(new HandleServiceMessageTask(actorSystem,
                                                                            internalMessage.getReceiver(),
@@ -231,10 +243,15 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     }
 
     private void activateService(ActivateActorMessage activateActorMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) {
-        ElasticActor serviceActor = actorSystem.getConfiguration().getService(activateActorMessage.getActorId());
-        ActorRef serviceRef = actorSystem.serviceActorFor(activateActorMessage.getActorId());
-
-        actorExecutor.execute(new ActivateServiceActorTask(actorSystem,serviceRef,serviceActor,internalMessage,messageHandlerEventListener));
+        final ElasticActor serviceActor = actorSystem.getConfiguration().getService(activateActorMessage.getActorId());
+        // ServiceActor instances can get messages from standard Actor instances before they've been Activated
+        // when this happens the ServiceActor is initialized Just in Time. We need to ensure that the Activate logic
+        // only runs once
+        if(!initializedActors.contains(serviceActor)) {
+            ActorRef serviceRef = actorSystem.serviceActorFor(activateActorMessage.getActorId());
+            actorExecutor.execute(new ActivateServiceActorTask(actorSystem,serviceRef,serviceActor,internalMessage,messageHandlerEventListener));
+            initializedActors.add(serviceActor);
+        }
     }
 
     @Autowired

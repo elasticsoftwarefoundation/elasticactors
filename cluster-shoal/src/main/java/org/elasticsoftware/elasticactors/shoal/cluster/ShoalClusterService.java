@@ -96,6 +96,7 @@ public final class ShoalClusterService implements ClusterService {
     @Override
     public void setClusterMessageHandler(ClusterMessageHandler clusterMessageHandler) {
         this.clusterMessageHandler = clusterMessageHandler;
+        // @todo: need to fire current master event to new message handler
     }
 
     private GroupManagementService initializeGMS(String serverName,String groupName, String interfaceName) throws GMSException {

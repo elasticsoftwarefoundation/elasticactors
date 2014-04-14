@@ -88,6 +88,31 @@ public class ActorRefToolsTest {
     }
 
     @Test
+    public void testParseServiceActorRefOnAnotherNodeThatsNotYetJoinedMyClusterView() {
+        // /trading.service.GGM
+        String nodeId = "trading001.dev.getbux.com";
+        InternalActorSystems internalActorSystems = mock(InternalActorSystems.class);
+        InternalActorSystem actorSystem = mock(InternalActorSystem.class);
+        ActorNode localNode = mock(ActorNode.class);
+        ActorNode remoteNode = mock(ActorNode.class);
+        NodeKey nodeKey = new NodeKey("trading",nodeId);
+        NodeKey remoteNodeKey = new NodeKey("trading","trading002.dev.getbux.com");
+        when(internalActorSystems.getClusterName()).thenReturn("trading.dev.getbux.com");
+        when(internalActorSystems.get("trading")).thenReturn(actorSystem);
+        when(actorSystem.getNode("trading002.dev.getbux.com")).thenReturn(remoteNode);
+        when(actorSystem.getNode()).thenReturn(localNode);
+        when(localNode.getKey()).thenReturn(nodeKey);
+        when(remoteNode.getKey()).thenReturn(remoteNodeKey);
+        String serviceRefString = String.format("actor://trading.dev.getbux.com/trading/services/%s/trading.service.GGM","trading002.dev.getbux.com");
+        when(internalActorSystems.createServiceActorRef(localNode,"trading.service.GGM")).thenReturn(new ServiceActorRef("trading.dev.getbux.com",localNode,"trading.service.GGM"));
+        when(internalActorSystems.createServiceActorRef(remoteNode,"trading.service.GGM")).thenReturn(new ServiceActorRef("trading.dev.getbux.com",remoteNode,"trading.service.GGM"));
+        ActorRef serviceRef = ActorRefTools.parse(serviceRefString,internalActorSystems);
+        assertNotNull(serviceRef);
+        assertEquals(serviceRef.getActorId(),"trading.service.GGM");
+        assertEquals(serviceRef.toString(),serviceRefString);
+    }
+
+    @Test
     public void testParseServiceActorRefWithMultipleSlashesInActorId() {
         String nodeId = UUID.randomUUID().toString();
         InternalActorSystems internalActorSystems = mock(InternalActorSystems.class);

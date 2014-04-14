@@ -43,6 +43,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -103,13 +104,18 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     public void shutdown() {
-        // @todo: run shutdown sequences on nodes and shards
-        for (ActorNodeAdapter nodeAdapter : activeNodeAdapters.values()) {
-            nodeAdapter.destroy();
+        // The Messaging subsystem is closed before this instance
+        // Need to sort out the order
+        /*
+        logger.info(format("Shutting down %d ActorNode instances",activeNodes.size()));
+        for (ActorNode node : activeNodes.values()) {
+            node.destroy();
         }
-        for (ActorShardAdapter shardAdapter : shardAdapters) {
-            shardAdapter.destroy();
+        logger.info(format("Shutting down %d ActorShards",shards.length));
+        for (ActorShard shard : shards) {
+            shard.destroy();
         }
+        */
     }
 
     public void updateNodes(List<PhysicalNode> nodes) throws Exception {
@@ -160,7 +166,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
      *
      * @param nodes
      */
-    public void distributeShards(List<PhysicalNode> nodes) throws Exception {
+    public void distributeShards(List<PhysicalNode> nodes,ShardDistributionStrategy strategy) throws Exception {
         final boolean initializing = initialized.compareAndSet(false, true);
         // see if this was the first time, if so we need to initialize the ActorSystem
         if (initializing) {
@@ -197,8 +203,10 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                                 this, i, shardAdapters[i].myRef, localMessageQueueFactory, shardActorCacheManager);
 
                         shards[i] = newShard;
+                        // register with the strategy to wait for shard to be released
+                        strategy.registerWaitForRelease(newShard,node);
                         // initialize
-                        newShard.init();
+                        // newShard.init();
                         // start owning the scheduler shard (this will start sending messages, but everything is blocked so it should be no problem)
                         scheduler.registerShard(newShard.getKey());
                     } else {
@@ -216,6 +224,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                             // stop owning the scheduler shard
                             scheduler.unregisterShard(currentShard.getKey());
                             currentShard.destroy();
+                            strategy.signalRelease(currentShard,node);
                         }
                         // create a new remote shard and swap it
                         RemoteActorShard newShard = new RemoteActorShard(node, this, i, shardAdapters[i].myRef, remoteMessageQueueFactory);
@@ -230,6 +239,12 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                     }
                 }
             }
+            // now we have released all local shards, wait for the new local shards to become available
+            if(!strategy.waitForReleasedShards(10, TimeUnit.SECONDS)) {
+                // timeout while waiting for the shards
+                // @todo: what to do now?
+            }
+
         } finally {
             // unlock all
             for (Lock writeLock : writeLocks) {

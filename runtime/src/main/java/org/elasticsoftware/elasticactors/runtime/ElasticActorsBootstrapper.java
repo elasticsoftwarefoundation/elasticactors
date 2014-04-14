@@ -21,6 +21,7 @@ import org.elasticsoftware.elasticactors.ServiceActor;
 import org.elasticsoftware.elasticactors.spring.ActorAnnotationBeanNameGenerator;
 import org.elasticsoftware.elasticactors.spring.AnnotationConfigApplicationContext;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.util.Log4jConfigurer;
 
 /**
  * @author Joost van de Wijgerd
@@ -33,7 +34,8 @@ public final class ElasticActorsBootstrapper {
     private AnnotationConfigApplicationContext applicationContext;
 
     public static void main(String... args) throws Exception {
-        BasicConfigurator.configure();
+        //BasicConfigurator.configure();
+        Log4jConfigurer.initLogging("classpath:log4j.properties");
         ElasticActorsBootstrapper bootstrapper = new ElasticActorsBootstrapper();
         bootstrapper.init();
         bootstrapper.getNode().join();

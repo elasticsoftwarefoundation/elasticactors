@@ -11,6 +11,7 @@ option optimize_for = SPEED;
 
 message ClusterMessage {
     optional ShardReleased shardReleased = 1;
+    optional int64 viewId = 2;
 }
 
 message ShardReleased {
