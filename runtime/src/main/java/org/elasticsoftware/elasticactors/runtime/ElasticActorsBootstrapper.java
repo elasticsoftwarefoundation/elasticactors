@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.runtime;
 
-import org.apache.log4j.BasicConfigurator;
 import org.elasticsoftware.elasticactors.ServiceActor;
 import org.elasticsoftware.elasticactors.spring.ActorAnnotationBeanNameGenerator;
 import org.elasticsoftware.elasticactors.spring.AnnotationConfigApplicationContext;

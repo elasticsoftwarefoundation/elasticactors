@@ -1,10 +1,8 @@
 package org.elasticsoftware.elasticactors.cluster;
 
-import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 
-import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 
 /**

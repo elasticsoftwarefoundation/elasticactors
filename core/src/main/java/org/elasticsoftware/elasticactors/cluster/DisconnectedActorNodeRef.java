@@ -16,8 +16,9 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import org.apache.log4j.Logger;
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorContainer;
+import org.elasticsoftware.elasticactors.ActorContainerRef;
+import org.elasticsoftware.elasticactors.ActorRef;
 
 import javax.annotation.Nullable;
 

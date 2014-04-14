@@ -111,7 +111,6 @@
         <module>cluster-shoal</module>
         <module>backplane-redis</module>
         <module>backplane-cassandra</module>
-        <module>messaging-netty</module>
         <module>messaging-rabbitmq</module>
         <module>test</module>
     </modules>

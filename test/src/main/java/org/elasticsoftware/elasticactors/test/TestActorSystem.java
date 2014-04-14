@@ -22,7 +22,6 @@ import org.elasticsoftware.elasticactors.runtime.ScannerHelper;
 import org.elasticsoftware.elasticactors.spring.ActorAnnotationBeanNameGenerator;
 import org.elasticsoftware.elasticactors.spring.AnnotationConfigApplicationContext;
 import org.elasticsoftware.elasticactors.test.configuration.TestConfiguration;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Component;
 
