@@ -91,16 +91,10 @@ public final class ActorRefTools {
             // backwards compatibility check
             ActorNode node = actorSystem.getNode(components[3]);
             if(node == null) {
-                // set to the local node
-                node = actorSystem.getNode();
-                // also patch the actorId (if there happened to be a slash in there)
-                if(actorId == null) {
-                    actorId = components[3];
-                } else {
-                    actorId = format("%s/%s",components[3],actorId);
-                }
+                return new DisconnectedServiceActorRef(clusterName,actorSystemName,components[3],actorId);
+            } else {
+                return actorSystems.createServiceActorRef(node, actorId);
             }
-            return actorSystems.createServiceActorRef(node, actorId);
         } else {
             throw new IllegalArgumentException(format(EXCEPTION_FORMAT, refSpec));
         }
@@ -119,9 +113,11 @@ public final class ActorRefTools {
             }
             return new ActorShardRef(clusterName, ((ShardAccessor) remoteActorSystem).getShard(format("%s/shards/%d", actorSystemName, shardId)), actorId);
         } else if ("nodes".equals(components[2])) {
-            throw new IllegalArgumentException("Temporary Actors are not (yet) supported for Remote Actor System instances");
+            //throw new IllegalArgumentException("Temporary Actors are not (yet) supported for Remote Actor System instances");
+            return new DisconnectedActorNodeRef(clusterName,actorSystemName,components[3],actorId);
         } else if ("services".equals(components[2])) {
-            throw new IllegalArgumentException("Service Actors are not (yet) supported for Remote Actor System instances");
+            //throw new IllegalArgumentException("Service Actors are not (yet) supported for Remote Actor System instances");
+            return new DisconnectedServiceActorRef(clusterName,actorSystemName,components[3],actorId);
         } else {
             throw new IllegalArgumentException(format(EXCEPTION_FORMAT, refSpec));
         }

@@ -132,48 +132,6 @@ public class ActorRefToolsTest {
     }
 
     @Test
-    public void testParseServiceActorRefWithOldFormat() {
-        String nodeId = UUID.randomUUID().toString();
-        InternalActorSystems internalActorSystems = mock(InternalActorSystems.class);
-        InternalActorSystem actorSystem = mock(InternalActorSystem.class);
-        ActorNode node = mock(ActorNode.class);
-        NodeKey nodeKey = new NodeKey("Pi",nodeId);
-        when(internalActorSystems.getClusterName()).thenReturn("LocalCluster");
-        when(internalActorSystems.get("Pi")).thenReturn(actorSystem);
-        when(actorSystem.getNode("pi")).thenReturn(null);
-        when(actorSystem.getNode()).thenReturn(node);
-        when(node.getKey()).thenReturn(nodeKey);
-        String serviceRefString = String.format("actor://LocalCluster/Pi/services/%s/pi/calculate",nodeId);
-        String oldServiceRefString = "actor://LocalCluster/Pi/services/pi/calculate";
-        when(internalActorSystems.createServiceActorRef(node,"pi/calculate")).thenReturn(new ServiceActorRef("LocalCluster",node,"pi/calculate"));
-        ActorRef serviceRef = ActorRefTools.parse(oldServiceRefString,internalActorSystems);
-        assertNotNull(serviceRef);
-        assertEquals(serviceRef.getActorId(),"pi/calculate");
-        assertEquals(serviceRef.toString(),serviceRefString);
-    }
-
-    @Test
-    public void testParseServiceActorRefWithOldFormatWithoutSlashInActorId() {
-        String nodeId = UUID.randomUUID().toString();
-        InternalActorSystems internalActorSystems = mock(InternalActorSystems.class);
-        InternalActorSystem actorSystem = mock(InternalActorSystem.class);
-        ActorNode node = mock(ActorNode.class);
-        NodeKey nodeKey = new NodeKey("Pi",nodeId);
-        when(internalActorSystems.getClusterName()).thenReturn("LocalCluster");
-        when(internalActorSystems.get("Pi")).thenReturn(actorSystem);
-        when(actorSystem.getNode("pi")).thenReturn(null);
-        when(actorSystem.getNode()).thenReturn(node);
-        when(node.getKey()).thenReturn(nodeKey);
-        String serviceRefString = String.format("actor://LocalCluster/Pi/services/%s/calculate",nodeId);
-        String oldServiceRefString = "actor://LocalCluster/Pi/services/calculate";
-        when(internalActorSystems.createServiceActorRef(node,"calculate")).thenReturn(new ServiceActorRef("LocalCluster",node,"calculate"));
-        ActorRef serviceRef = ActorRefTools.parse(oldServiceRefString,internalActorSystems);
-        assertNotNull(serviceRef);
-        assertEquals(serviceRef.getActorId(),"calculate");
-        assertEquals(serviceRef.toString(),serviceRefString);
-    }
-
-    @Test
     public void testParseRemoteShardRef() {
         InternalActorSystems internalActorSystems = mock(InternalActorSystems.class);
         ActorSystem actorSystem = mock(ActorSystem.class, withSettings().extraInterfaces(ShardAccessor.class));

@@ -20,32 +20,40 @@ import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
 
+import javax.annotation.Nullable;
+
 import static java.lang.String.format;
 
 /**
- * @author Joost van de Wijgerd
+ *
+ * @author  Joost van de Wijgerd
  */
-public final class DisconnectedRemoteActorShardRef implements ActorRef,ActorContainerRef {
-    public static final String REFSPEC_FORMAT = "actor://%s/%s/shards/%d/%s";
+public final class DisconnectedServiceActorRef implements ActorRef, ActorContainerRef {
     private final String clusterName;
     private final String actorSystemName;
+    private final String nodeId;
     private final String actorId;
-    private final int shardId;
 
-    public DisconnectedRemoteActorShardRef(String clusterName, String actorSystemName, String actorId, int shardId) {
+    public DisconnectedServiceActorRef(String clusterName, String actorSystemName, String nodeId, String serviceId) {
         this.clusterName = clusterName;
         this.actorSystemName = actorSystemName;
-        this.actorId = actorId;
-        this.shardId = shardId;
+        this.nodeId = nodeId;
+        this.actorId = serviceId;
     }
 
+    public static String generateRefSpec(String clusterName, String actorSystemName, String nodeId,String actorId) {
+        if(actorId != null) {
+            return String.format("actor://%s/%s/services/%s/%s",clusterName,actorSystemName,nodeId,actorId);
+        } else {
+            return String.format("actor://%s/%s/services/%s",clusterName,actorSystemName,nodeId);
+        }
+    }
 
     @Override
     public String getActorPath() {
-        return format("%s/shards/%d", actorSystemName, shardId);
+        return String.format("%s/services/%s",actorSystemName,nodeId);
     }
 
-    @Override
     public String getActorId() {
         return actorId;
     }
@@ -56,18 +64,13 @@ public final class DisconnectedRemoteActorShardRef implements ActorRef,ActorCont
     }
 
     @Override
-    public void tell(Object message) throws IllegalStateException {
-        throw new IllegalStateException(format("Remote Actor Cluster %s is not configured, ensure a correct remote configuration in the config.yaml",clusterName));
+    public void tell(Object message) {
+        throw new IllegalStateException(format("Actor Node %s is not active, referenced service cannot be reached right now",nodeId));
     }
 
     @Override
     public ActorContainer get() {
-        throw new IllegalStateException(format("Remote Actor Cluster %s is not configured, ensure a correct remote configuration in the config.yaml",clusterName));
-    }
-
-    @Override
-    public String toString() {
-        return format(REFSPEC_FORMAT,clusterName,actorSystemName,shardId,actorId);
+        throw new IllegalStateException(format("Actor Node %s is not active, referenced service cannot be reached right now",nodeId));
     }
 
     @Override
@@ -78,5 +81,10 @@ public final class DisconnectedRemoteActorShardRef implements ActorRef,ActorCont
     @Override
     public int hashCode() {
         return toString().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return generateRefSpec(this.clusterName,this.actorSystemName,this.nodeId,this.actorId);
     }
 }

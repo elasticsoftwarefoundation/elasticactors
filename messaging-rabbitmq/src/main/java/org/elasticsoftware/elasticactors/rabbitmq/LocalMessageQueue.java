@@ -189,7 +189,8 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
 
         @Override
         public void onError(final InternalMessage message,final Throwable exception) {
-            logger.error("Exception while handling message, acking anyway",exception);
+            // we have logging on a higher level already
+            //logger.error("Exception while handling message, acking anyway",exception);
             onDone(message);
         }
 

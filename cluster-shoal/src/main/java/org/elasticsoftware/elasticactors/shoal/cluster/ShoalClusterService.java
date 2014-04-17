@@ -33,6 +33,7 @@ import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.lang.String.format;
 
@@ -168,8 +169,22 @@ public final class ShoalClusterService implements ClusterService {
         }
     }
 
-    private void fireLeadershipChanged(GroupLeadershipNotificationSignal signal) {
+    private synchronized void fireLeadershipChanged(GroupLeadershipNotificationSignal signal) {
+        // we seem to be getting a false signal initially, however sometimes we seem to be getting the false signal
+        // (which is always for ourselves) before the real signal
         if(!startupLeadershipSignal.compareAndSet(true,false)) {
+            logger.info("fireLeadershipChanged member: "+signal.getMemberToken());
+            for (ClusterEventListener eventListener : eventListeners) {
+                try {
+                    eventListener.onMasterElected(convert(Arrays.asList(signal.getMemberToken())).get(0));
+                } catch (Exception e) {
+                    logger.error("Exception on fireLeadershipChanged",e);
+                }
+            }
+        } else if(!signal.getMemberToken().equals(nodeId)) {
+            // now the second signal is false, ensure the next signal will be ignored
+            startupLeadershipSignal.set(true);
+            // fire the event
             logger.info("fireLeadershipChanged member: "+signal.getMemberToken());
             for (ClusterEventListener eventListener : eventListeners) {
                 try {

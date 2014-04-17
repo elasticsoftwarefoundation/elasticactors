@@ -184,13 +184,13 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                     }
                 } else {
                     messageHandlerEventListener.onError(internalMessage,e.getCause());
-                    logger.error(String.format("Exception while handling InternalMessage for Actor [%s]",receiverRef.getActorId()),e.getCause());
+                    logger.error(String.format("Exception while handling InternalMessage for Actor [%s]; senderRef [%s], messageType [%s]",receiverRef.getActorId(),internalMessage.getSender(),internalMessage.getPayloadClass()),e.getCause());
                 }
             } catch(Exception e) {
                 //@todo: let the sender know his message could not be delivered
                 // we ack the message anyway
                 messageHandlerEventListener.onError(internalMessage,e);
-                logger.error(String.format("Exception while handling InternalMessage for Actor [%s]",receiverRef.getActorId()),e);
+                logger.error(String.format("Exception while handling InternalMessage for Actor [%s]; senderRef [%s], messageType [%s]",receiverRef.getActorId(),internalMessage.getSender(),internalMessage.getPayloadClass()),e.getCause());
             }
         } else {
             // the internalMessage is intended for the shard, this means it's about creating or destroying an actor
@@ -225,7 +225,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
             } catch(Exception e) {
                 // @todo: determine if this is a recoverable error case or just a programming error
                 messageHandlerEventListener.onError(internalMessage,e);
-                logger.error(String.format("Exception while handling InternalMessage for Shard [%s]",shardKey.toString()),e);
+                logger.error(String.format("Exception while handling InternalMessage for Shard [%s]; senderRef [%s], messageType [%s]",shardKey.toString(),internalMessage.getSender().toString(),internalMessage.getPayloadClass()),e);
             }
 
         }

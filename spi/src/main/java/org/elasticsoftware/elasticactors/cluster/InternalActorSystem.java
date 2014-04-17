@@ -29,6 +29,14 @@ public interface InternalActorSystem extends ActorSystem, ShardAccessor {
     InternalActorSystemConfiguration getConfiguration();
 
     /**
+     * Return a reference to a temporary actor
+     *
+     * @param actorId
+     * @return
+     */
+    ActorRef tempActorFor(String actorId);
+
+    /**
      * Return the singleton instance of an {@link ElasticActor}
      *
      * @param actorRef

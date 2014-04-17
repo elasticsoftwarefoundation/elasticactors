@@ -176,7 +176,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                 //@todo: let the sender know his message could not be delivered
                 // we ack the message anyway
                 messageHandlerEventListener.onError(internalMessage,e);
-                logger.error(String.format("Exception while handling InternalMessage or Actor [%s]",receiverRef.getActorId()),e);
+                logger.error(String.format("Exception while handling InternalMessage for Actor [%s]; senderRef [%s], messageType [%s] ",receiverRef.getActorId(),internalMessage.getSender().toString(), internalMessage.getPayloadClass()),e);
             }
         } else {
             // the internalMessage is intended for the shard, this means it's about creating or destroying an actor
@@ -211,7 +211,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
             } catch(Exception e) {
                 // @todo: determine if this is a recoverable error case or just a programming error
                 messageHandlerEventListener.onError(internalMessage,e);
-                logger.error(String.format("Exception while handling InternalMessage for Shard [%s]", nodeKey.toString()),e);
+                logger.error(String.format("Exception while handling InternalMessage for Shard [%s]; senderRef [%s], messageType [%s]", nodeKey.toString(), internalMessage.getSender().toString(), internalMessage.getPayloadClass()),e);
             }
 
         }

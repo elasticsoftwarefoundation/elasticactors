@@ -150,12 +150,7 @@ public interface ActorSystem {
      */
     void stop(ActorRef actorRef) throws Exception;
 
+    ActorSystemConfiguration getConfiguration();
 
-    /**
-     * Return a reference to a temporary actor
-     *
-     * @param actorId
-     * @return
-     */
-    ActorRef tempActorFor(String actorId);
+
 }
