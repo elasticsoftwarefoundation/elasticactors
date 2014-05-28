@@ -57,7 +57,7 @@ public final class ServiceActorRef implements ActorRef, ActorContainerRef {
             node.sendMessage(sender,this,message);
         } catch (Exception e) {
             // @todo: notify sender of the failure
-            logger.error(format("Failed to send message to %s", sender.toString()),e);
+            logger.error(format("Failed to send message to %s", this.toString()),e);
         }
     }
 

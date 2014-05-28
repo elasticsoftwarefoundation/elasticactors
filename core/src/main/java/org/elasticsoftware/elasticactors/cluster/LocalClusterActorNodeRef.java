@@ -67,7 +67,7 @@ public final class LocalClusterActorNodeRef implements ActorRef, ActorContainerR
             node.sendMessage(sender,this,message);
         } catch (Exception e) {
             // @todo: notify sender of the failure
-            logger.error(String.format("Failed to send message to %s",sender.toString()),e);
+            logger.error(String.format("Failed to send message to %s",this.toString()),e);
         }
     }
 

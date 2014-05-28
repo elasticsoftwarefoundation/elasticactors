@@ -23,7 +23,7 @@ import org.elasticsoftware.elasticactors.ElasticActor;
  *
  * @author Leonard Wolters
  */
-public class NoopSerializationFramework implements SerializationFramework {
+public final class NoopSerializationFramework implements SerializationFramework {
 
     @Override
     public void register(Class<?> messageClass) {

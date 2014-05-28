@@ -68,8 +68,7 @@ public final class ActorShardRef implements ActorRef, ActorContainerRef {
         try {
             shard.sendMessage(sender,this,message);
         } catch (Exception e) {
-            logger.error(String.format("Failed to send message to %s", 
-            		sender != null ? sender.toString() : "null"), e);
+            logger.error(String.format("Failed to send message to %s", this.toString()), e);
             if(sender != null && sender instanceof TypedActor<?>) {
             	try {
             		((TypedActor<?>) sender).onUndeliverable(sender, message);
