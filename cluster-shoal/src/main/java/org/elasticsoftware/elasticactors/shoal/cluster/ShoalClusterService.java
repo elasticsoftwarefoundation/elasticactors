@@ -105,6 +105,7 @@ public final class ShoalClusterService implements ClusterService {
 
         props.setProperty(ServiceProviderConfigurationKeys.MULTICASTADDRESS.toString(),"229.9.1.1");
         props.setProperty(GrizzlyConfigConstants.BIND_INTERFACE_NAME.toString(),interfaceName);
+        props.setProperty(ServiceProviderConfigurationKeys.DISCOVERY_TIMEOUT.toString(),"10000");
 
         GroupManagementService gms =
                 (GroupManagementService) GMSFactory.startGMSModule(serverName, groupName, GroupManagementService.MemberType.CORE, props);
