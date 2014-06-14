@@ -26,6 +26,7 @@ import org.elasticsoftware.elasticactors.cluster.ClusterMessageHandler;
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.elasticsoftware.elasticactors.cluster.PhysicalNodeImpl;
 
+import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
@@ -33,7 +34,6 @@ import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.lang.String.format;
 
@@ -46,15 +46,19 @@ public final class ShoalClusterService implements ClusterService {
     private final String clusterName;
     private final String nodeId;
     private final InetAddress nodeAddress;
+    private final Integer nodePort;
+    private final String discoveryNodes;
     private final AtomicBoolean startupLeadershipSignal = new AtomicBoolean(true);
     private final Queue<ClusterEventListener> eventListeners = new ConcurrentLinkedQueue<>();
     private GroupManagementService gms;
     private ClusterMessageHandler clusterMessageHandler;
 
-    public ShoalClusterService(String clusterName, String nodeId, InetAddress nodeAddress) {
+    public ShoalClusterService(String clusterName, String nodeId, InetAddress nodeAddress,Integer nodePort,@Nullable String discoveryNodes) {
         this.clusterName = clusterName;
         this.nodeId = nodeId;
         this.nodeAddress = nodeAddress;
+        this.nodePort = nodePort;
+        this.discoveryNodes = discoveryNodes;
     }
 
     @PostConstruct
@@ -105,7 +109,11 @@ public final class ShoalClusterService implements ClusterService {
 
         props.setProperty(ServiceProviderConfigurationKeys.MULTICASTADDRESS.toString(),"229.9.1.1");
         props.setProperty(GrizzlyConfigConstants.BIND_INTERFACE_NAME.toString(),interfaceName);
-        props.setProperty(ServiceProviderConfigurationKeys.DISCOVERY_TIMEOUT.toString(),"10000");
+        props.setProperty(GrizzlyConfigConstants.TCPSTARTPORT.toString(),nodePort.toString());
+        props.setProperty(GrizzlyConfigConstants.TCPENDPORT.toString(),nodePort.toString());
+        if(discoveryNodes != null) {
+            props.setProperty(GrizzlyConfigConstants.DISCOVERY_URI_LIST.toString(),discoveryNodes);
+        }
 
         GroupManagementService gms =
                 (GroupManagementService) GMSFactory.startGMSModule(serverName, groupName, GroupManagementService.MemberType.CORE, props);
