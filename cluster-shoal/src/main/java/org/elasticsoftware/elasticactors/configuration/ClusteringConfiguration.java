@@ -37,7 +37,6 @@ public class ClusteringConfiguration {
     @Bean(name= "clusterService")
     public ClusterService createClusterService() throws UnknownHostException {
         String nodeId = env.getRequiredProperty("ea.node.id");
-        //@todo: fix node address
         InetAddress nodeAddress = InetAddress.getByName(env.getRequiredProperty("ea.node.address"));
         int nodePort = env.getProperty("ea.node.port",Integer.class,9090);
         String clusterName = env.getRequiredProperty("ea.cluster");
