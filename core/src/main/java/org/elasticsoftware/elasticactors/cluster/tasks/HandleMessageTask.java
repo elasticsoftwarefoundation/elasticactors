@@ -22,12 +22,8 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
-import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
-import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
-
-import java.util.Arrays;
 
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 

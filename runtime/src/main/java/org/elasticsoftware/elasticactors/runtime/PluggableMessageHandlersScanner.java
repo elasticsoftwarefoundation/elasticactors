@@ -16,14 +16,11 @@
 
 package org.elasticsoftware.elasticactors.runtime;
 
-import com.google.common.base.Supplier;
-import com.google.common.collect.*;
-import org.apache.log4j.Logger;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.ListMultimap;
 import org.elasticsoftware.elasticactors.MessageHandlersRegistry;
 import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.PluggableMessageHandlers;
-import org.elasticsoftware.elasticactors.serialization.Message;
-import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
@@ -32,8 +29,6 @@ import org.springframework.context.ApplicationContext;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 

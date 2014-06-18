@@ -20,8 +20,6 @@ import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
 
-import javax.annotation.Nullable;
-
 import static java.lang.String.format;
 
 /**

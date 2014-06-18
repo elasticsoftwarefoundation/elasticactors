@@ -16,9 +16,6 @@
 
 package org.elasticsoftware.elasticactors.state;
 
-import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
-import org.elasticsoftware.elasticactors.state.PersistenceConfig;
-
 import java.util.Arrays;
 
 /**

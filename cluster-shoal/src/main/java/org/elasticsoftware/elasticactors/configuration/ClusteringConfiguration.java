@@ -21,11 +21,9 @@ import org.elasticsoftware.elasticactors.shoal.cluster.ShoalClusterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
-import org.springframework.util.StringUtils;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Set;
 
 /**
  * @author Joost van de Wijgerd
