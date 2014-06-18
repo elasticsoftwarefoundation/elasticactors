@@ -16,23 +16,26 @@
 
 package org.elasticsoftware.elasticactors;
 
+import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
+import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
+import org.elasticsoftware.elasticactors.state.PersistenceConfig;
+import org.elasticsoftware.elasticactors.state.PersistenceConfigHelper;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.lang.String.format;
 
 /**
  * @author Joost van de Wijgerd
  */
-public abstract class MethodActor extends TypedActor<Object> {
+public abstract class MethodActor extends TypedActor<Object> implements PersistenceAdvisor {
+    private static final Logger logger = Logger.getLogger(MethodActor.class);
     private final Map<Class<?>,List<HandlerMethodDefinition>> handlerCache = new HashMap<>();
     @Nullable private final Class<? extends ActorState> stateClass;
 
@@ -49,7 +52,60 @@ public abstract class MethodActor extends TypedActor<Object> {
                     updateHandlerCache(aClass,null);
                 }
             }
+            // see if we have a MessageHandlersRegistry
+            Class<? extends MessageHandlersRegistry> registryClass = otherHandlers.registryClass();
+            if(registryClass != null && !(MessageHandlers.NoopMessageHandlersRegistry.class.equals(registryClass))) {
+                // try to instantiate the registry
+                try {
+                    MessageHandlersRegistry registry = registryClass.newInstance();
+                    registry.init();
+                    List<Class<?>> messageHandlers = registry.getMessageHandlers(getClass());
+                    if(messageHandlers != null) {
+                        for (Class<?> messageHandler : messageHandlers) {
+                            updateHandlerCache(messageHandler,null);
+                        }
+                    }
+                } catch(Exception e) {
+                    logger.error(format("Exception while instantiating MessageHandlersRegistry of type [%s]",registryClass.getName()),e);
+                }
+            }
         }
+    }
+
+    @Override
+    public final boolean shouldUpdateState(Object message) {
+        // need to take into account the loaded handlers here
+        final List<HandlerMethodDefinition> definitions = handlerCache.get(message.getClass());
+        if(definitions != null) {
+            boolean configFound = false;
+            for (HandlerMethodDefinition definition : definitions) {
+                // see if we have a @PersistenceConfig on the declaring class
+                PersistenceConfig persistenceConfig = definition.handlerMethod.getDeclaringClass().getAnnotation(PersistenceConfig.class);
+                // if we need to persist, return
+                if(persistenceConfig != null) {
+                    configFound = true;
+                    if(PersistenceConfigHelper.shouldUpdateState(persistenceConfig,message)) {
+                        return true;
+                    }
+                }
+                // else search further
+            }
+            // if we are here, and we have a config found, then return false
+            if(configFound) {
+                return false;
+            }
+        }
+        // if we are here, we might be dealing with a MessageHandlers class that is not annotated, so look the
+        // MethodActor itself
+        return PersistenceConfigHelper.shouldUpdateState(getClass().getAnnotation(PersistenceConfig.class),message);
+    }
+
+    @Override
+    public final boolean shouldUpdateState(ActorLifecycleStep lifecycleStep) {
+        // this one only looks at the MethodActor implementation, not at the loaded handlers as they shouldn't define
+        // lifecycle behavior
+        final PersistenceConfig persistenceConfig = getClass().getAnnotation(PersistenceConfig.class);
+        return PersistenceConfigHelper.shouldUpdateState(persistenceConfig,lifecycleStep);
     }
 
     private void updateHandlerCache(Class<?> clazz,@Nullable Object instance) {
@@ -128,13 +184,13 @@ public abstract class MethodActor extends TypedActor<Object> {
     }
 
     private final class HandlerMethodDefinition {
-        private final Object targetInstance;
+        private final @Nullable Object targetInstance;
         private final Method handlerMethod;
         private final ParameterType[] parameterTypeOrdering;
         private final Class<?> messageClass;
 
 
-        private HandlerMethodDefinition(Object targetInstance, Method handlerMethod) throws IllegalArgumentException, IllegalStateException {
+        private HandlerMethodDefinition(@Nullable Object targetInstance, Method handlerMethod) throws IllegalArgumentException, IllegalStateException {
             this.targetInstance = targetInstance;
             this.handlerMethod = handlerMethod;
             Class<?>[] parameterTypes = handlerMethod.getParameterTypes();
@@ -190,9 +246,5 @@ public abstract class MethodActor extends TypedActor<Object> {
             return arguments;
 
         }
-
-
-
-
     }
 }

@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.MessageHandlersRegistry;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
@@ -27,6 +28,7 @@ import org.elasticsoftware.elasticactors.cluster.scheduler.ShardedScheduler;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
+import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
@@ -88,6 +90,11 @@ public class NodeConfiguration {
     @Bean(name = {"messagesScanner"})
     public MessagesScanner createMessageScanner() {
         return new MessagesScanner();
+    }
+
+    @Bean(name = {"messageHandlersRegistry"})
+    public MessageHandlersRegistry createPluggableMessagesHandlersScanner() {
+        return new PluggableMessageHandlersScanner();
     }
 
     @Bean(name = {"nodeSelectorFactory"})

@@ -23,9 +23,10 @@ import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
-import org.elasticsoftware.elasticactors.state.PersistentActor;
-import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.state.*;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
+
+import java.util.Arrays;
 
 /**
  * @author Joost van de Wijgerd
@@ -98,4 +99,32 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                                                 ActorRef receiverRef,
                                                 InternalMessage internalMessage);
 
+    protected final boolean shouldUpdateState(ElasticActor elasticActor,ActorLifecycleStep lifecycleStep) {
+        if(PersistenceAdvisor.class.isAssignableFrom(elasticActor.getClass())) {
+            return ((PersistenceAdvisor)elasticActor).shouldUpdateState(lifecycleStep);
+        } else {
+            PersistenceConfig persistenceConfig = elasticActor.getClass().getAnnotation(PersistenceConfig.class);
+            return persistenceConfig == null || Arrays.asList(persistenceConfig.persistOn()).contains(lifecycleStep);
+        }
+    }
+
+    protected final boolean shouldUpdateState(ElasticActor elasticActor, Object message) {
+        if(PersistenceAdvisor.class.isAssignableFrom(elasticActor.getClass())) {
+            return ((PersistenceAdvisor)elasticActor).shouldUpdateState(message);
+        } else {
+            // look at the annotation on the actor class
+            PersistenceConfig persistenceConfig = elasticActor.getClass().getAnnotation(PersistenceConfig.class);
+            if (persistenceConfig != null) {
+                // look for not excluded when persist all is on
+                if(persistenceConfig.persistOnMessages()) {
+                    return !Arrays.asList(persistenceConfig.excluded()).contains(message.getClass());
+                } else {
+                    // look for included otherwise
+                    return Arrays.asList(persistenceConfig.included()).contains(message.getClass());
+                }
+            } else {
+                return true;
+            }
+        }
+    }
 }

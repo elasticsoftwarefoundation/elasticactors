@@ -72,7 +72,6 @@ public final class CreateActorTask extends ActorLifecycleTask {
             logger.error("Exception calling postCreate",e);
         }
         // check persistence config (if any) -> by default return true
-        PersistenceConfig persistenceConfig = receiver.getClass().getAnnotation(PersistenceConfig.class);
-        return persistenceConfig == null || Arrays.asList(persistenceConfig.persistOn()).contains(ActorLifecycleStep.CREATE);
+        return shouldUpdateState(receiver, ActorLifecycleStep.CREATE);
     }
 }

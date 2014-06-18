@@ -53,7 +53,6 @@ public final class PassivateActorTask extends ActorLifecycleTask {
             logger.error("Exception calling prePassivate",e);
         }
         // check persistence config (if any) -> by default return false
-        PersistenceConfig persistenceConfig = receiver.getClass().getAnnotation(PersistenceConfig.class);
-        return persistenceConfig != null && Arrays.asList(persistenceConfig.persistOn()).contains(ActorLifecycleStep.PASSIVATE);
+        return shouldUpdateState(receiver,ActorLifecycleStep.PASSIVATE);
     }
 }

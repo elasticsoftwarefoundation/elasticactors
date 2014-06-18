@@ -83,10 +83,10 @@ public final class ActivateActorTask extends ActorLifecycleTask {
         // when the preActivate has a result we should always store the state
         if(!overridePersistenceConfig) {
             // check persistence config (if any)
-            PersistenceConfig persistenceConfig = receiver.getClass().getAnnotation(PersistenceConfig.class);
-            return persistenceConfig == null || Arrays.asList(persistenceConfig.persistOn()).contains(ActorLifecycleStep.ACTIVATE);
+            return shouldUpdateState(receiver,ActorLifecycleStep.ACTIVATE);
         } else {
             return overridePersistenceConfig;
         }
     }
+
 }

@@ -37,4 +37,19 @@ public @interface MessageHandlers {
      * @return
      */
     Class<?>[] value();
+    /**
+     * Another extension point that can be used to load classes that have {@link MessageHandler} methods at runtime.
+     * The {@link MethodActor} will instantiate the class and then call
+     * {@link org.elasticsoftware.elasticactors.MessageHandlersRegistry#init()},
+     * subsequently the {@link org.elasticsoftware.elasticactors.MessageHandlersRegistry#getMessageHandlers(Class)} will be
+     * used to obtain a list of classes.
+     *
+     * @return
+     */
+    Class<? extends  MessageHandlersRegistry> registryClass() default NoopMessageHandlersRegistry.class;
+
+    /**
+     * Default (null) MessageHandlersRegistry
+     */
+    abstract class NoopMessageHandlersRegistry implements MessageHandlersRegistry {}
 }

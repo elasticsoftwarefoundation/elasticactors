@@ -22,6 +22,7 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
@@ -56,7 +57,7 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
             Object message = deserializeMessage(actorSystem, internalMessage);
             try {
                 receiver.onUndeliverable(internalMessage.getSender(), message);
-                return shouldUpdateState(receiver.getClass(),message);
+                return shouldUpdateState(receiver,message);
             } catch (Exception e) {
                 // @todo: handle by sending back a message (if possible)
                 log.error(String.format("Exception while handling undeliverable message for actor [%s]", receiverRef.toString()), e);
@@ -66,22 +67,6 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
             log.error(String.format("Exception while Deserializing Message class %s in ActorSystem [%s]",
                     internalMessage.getPayloadClass(), actorSystem.getName()), e);
             return false;
-        }
-    }
-
-    private boolean shouldUpdateState(Class<? extends  ElasticActor> actorClass, Object message) {
-        // look at the annotation on the actor class
-        PersistenceConfig persistenceConfig = actorClass.getAnnotation(PersistenceConfig.class);
-        if (persistenceConfig != null) {
-            // look for not excluded when persist all is on
-            if(persistenceConfig.persistOnMessages()) {
-                return !Arrays.asList(persistenceConfig.excluded()).contains(message.getClass());
-            } else {
-                // look for included otherwise
-                return Arrays.asList(persistenceConfig.included()).contains(message.getClass());
-            }
-        } else {
-            return true;
         }
     }
 }
