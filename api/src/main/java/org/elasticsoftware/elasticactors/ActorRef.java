@@ -61,14 +61,16 @@ public interface ActorRef {
      *
      * @param message       the message to send (needs to be annotated with {@link org.elasticsoftware.elasticactors.serialization.Message}
      * @param sender        the sender, this can be self, but it can also be another {@link ActorRef}
+     * @throws              MessageDeliveryException when something is wrong with the Messaging Subsystem
      */
-    void tell(Object message, ActorRef sender);
+    void tell(Object message, ActorRef sender) throws MessageDeliveryException;
 
     /**
      * Equivalent to calling ActorRef.tell(message,getSelf())
      *
      * @param message       the message to send (needs to be annotated with {@link org.elasticsoftware.elasticactors.serialization.Message}
-     * @throws  IllegalStateException if the method is not called withing a {@link ElasticActor} lifecycle or on(Message) method
+     * @throws              IllegalStateException if the method is not called withing a {@link ElasticActor} lifecycle or on(Message) method
+     * @throws              MessageDeliveryException when somthing is wrong with the Messaging Subsystem
      */
-    void tell(Object message) throws IllegalStateException;
+    void tell(Object message) throws IllegalStateException, MessageDeliveryException;
 }

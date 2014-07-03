@@ -19,12 +19,14 @@ package org.elasticsoftware.elasticactors.cluster.tasks;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 
+import static java.lang.String.format;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
@@ -54,13 +56,21 @@ public final class HandleMessageTask extends ActorLifecycleTask {
             try {
                 receiver.onReceive(internalMessage.getSender(), message);
                 return shouldUpdateState(receiver, message);
+            } catch(MessageDeliveryException e) {
+                // see if it is a recoverable exception
+                if(!e.isRecoverable()) {
+                    log.error(format("Unrecoverable MessageDeliveryException while handling message for actor [%s]", receiverRef.toString()), e);
+                }
+                // message cannot be sent but state should be updated as the received message did most likely change
+                // the state
+                return shouldUpdateState(receiver, message);
+
             } catch (Exception e) {
-                // @todo: handle by sending back a message (if possible)
-                log.error(String.format("Exception while handling message for actor [%s]", receiverRef.toString()), e);
+                log.error(format("Exception while handling message for actor [%s]", receiverRef.toString()), e);
                 return false;
             }
         } catch (Exception e) {
-            log.error(String.format("Exception while Deserializing Message class %s in ActorSystem [%s]",
+            log.error(format("Exception while Deserializing Message class %s in ActorSystem [%s]",
                     internalMessage.getPayloadClass(), actorSystem.getName()), e);
             return false;
         }

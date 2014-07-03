@@ -17,40 +17,53 @@
 package org.elasticsoftware.elasticactors.rabbitmq;
 
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.MessageProperties;
+import net.jodah.lyra.event.DefaultChannelListener;
 import org.apache.log4j.Logger;
+import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class RemoteMessageQueue implements MessageQueue {
+public final class RemoteMessageQueue extends DefaultChannelListener implements MessageQueue {
     private final Logger logger;
     private final Channel producerChannel;
     private final String exchangeName;
     private final String queueName;
+    private final ChannelListenerRegistry channelListenerRegistry;
+    private final AtomicBoolean recovering = new AtomicBoolean(false);
 
-    public RemoteMessageQueue(Channel producerChannel, String exchangeName, String queueName) {
+    public RemoteMessageQueue(ChannelListenerRegistry channelListenerRegistry,Channel producerChannel, String exchangeName, String queueName) {
         this.producerChannel = producerChannel;
         this.exchangeName = exchangeName;
         this.queueName = queueName;
         this.logger = Logger.getLogger(String.format("Producer[%s->%s]",exchangeName,queueName));
+        this.channelListenerRegistry = channelListenerRegistry;
+        this.channelListenerRegistry.addChannelListener(this.producerChannel,this);
     }
 
     @Override
     public boolean offer(InternalMessage message) {
+        // see if we are recovering first
+        if(this.recovering.get()) {
+            throw new MessageDeliveryException("MessagingService is recovering",true);
+        }
         try {
             final AMQP.BasicProperties props = message.isDurable() ? MessageProperties.PERSISTENT_BASIC : MessageProperties.BASIC;
             producerChannel.basicPublish(exchangeName, queueName,false,false,props,message.toByteArray());
             return true;
         } catch (IOException e) {
-            // @todo: what to do with the message?
-            logger.error("IOException on publish",e);
-            return false;
+            throw new MessageDeliveryException("IOException while publishing message",e,false);
+        } catch(AlreadyClosedException e) {
+            this.recovering.set(true);
+            throw new MessageDeliveryException("MessagingService is recovering",true);
         }
     }
 
@@ -76,6 +89,20 @@ public final class RemoteMessageQueue implements MessageQueue {
 
     @Override
     public void destroy() {
-        // nothing to do, channel is reused across other remote queues as well
+        this.channelListenerRegistry.removeChannelListener(this.producerChannel,this);
+    }
+
+    @Override
+    public void onRecovery(Channel channel) {
+        // reset the recovery flag
+        if(this.recovering.compareAndSet(true,false)) {
+            logger.info("RabbitMQ Channel recovered");
+        }
+    }
+
+    @Override
+    public void onRecoveryFailure(Channel channel, Throwable failure) {
+        // log an error
+        logger.error("RabbitMQ Channel recovery failed");
     }
 }

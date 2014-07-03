@@ -91,7 +91,6 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     public void init() throws Exception {
         //@todo: take this value from the configuration file
         actorRefCache = CacheBuilder.newBuilder().maximumSize(10240).build();
-
     }
 
     @PreDestroy
@@ -288,9 +287,6 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
                 } catch (Exception e) {
                     logger.error("Initializing Remote ActorSystems failed",e);
                 }
-                // apparently new nodes seem to catch on to the changed ClusterView faster than existing nodes
-                // need to solve this in a more elegant way but for now we just pause for a bit to let the others
-                // catch up
             }
             LocalActorSystemInstance instance = applicationContext.getBean(LocalActorSystemInstance.class);
             logger.info(format("Updating %d nodes for ActorSystem[%s]", clusterNodes.size(), instance.getName()));

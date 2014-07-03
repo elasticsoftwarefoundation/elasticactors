@@ -24,7 +24,8 @@ import net.jodah.lyra.ConnectionOptions;
 import net.jodah.lyra.Connections;
 import net.jodah.lyra.config.Config;
 import net.jodah.lyra.config.RecoveryPolicy;
-import net.jodah.lyra.config.RetryPolicy;
+import net.jodah.lyra.event.ChannelListener;
+import net.jodah.lyra.event.DefaultChannelListener;
 import net.jodah.lyra.util.Duration;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.PhysicalNode;
@@ -35,13 +36,18 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import static java.lang.String.format;
 
 /**
  * @author Joost van de Wijgerd
  */
-public class RabbitMQMessagingService implements MessagingService {
+public final class RabbitMQMessagingService extends DefaultChannelListener implements MessagingService, ChannelListenerRegistry {
     private static final Logger logger = Logger.getLogger(RabbitMQMessagingService.class);
     private final ConnectionFactory connectionFactory = new ConnectionFactory();
     private final String rabbitmqHosts;
@@ -59,6 +65,7 @@ public class RabbitMQMessagingService implements MessagingService {
     private final String username;
     private final String password;
     private final InternalMessageDeserializer internalMessageDeserializer;
+    private final ConcurrentMap<Channel,Set<ChannelListener>> channelListenerRegistry = new ConcurrentHashMap<>();
 
     public RabbitMQMessagingService(String elasticActorsCluster, String rabbitmqHosts, String username, String password, ThreadBoundExecutor<String> queueExecutor, InternalMessageDeserializer internalMessageDeserializer) {
         this.rabbitmqHosts = rabbitmqHosts;
@@ -83,10 +90,8 @@ public class RabbitMQMessagingService implements MessagingService {
         Config config = new Config()
                 .withRecoveryPolicy(new RecoveryPolicy()
                         .withMaxAttempts(-1)
-                        .withBackoff(Duration.seconds(1),Duration.seconds(30))
-                ).withRetryPolicy(new RetryPolicy()
-                        .withMaxAttempts(-1)
-                        .withBackoff(Duration.seconds(1),Duration.seconds(30)));
+                        .withInterval(Duration.seconds(1)))
+                .withChannelListeners(this);
 
         ConnectionOptions connectionOptions = new ConnectionOptions(connectionFactory).withAddresses(rabbitmqHosts);
         connectionOptions.withUsername(username);
@@ -112,8 +117,6 @@ public class RabbitMQMessagingService implements MessagingService {
         }
     }
 
-
-
     @Override
     public void sendWireMessage(String queueName, byte[] serializedMessage, PhysicalNode receiver) throws IOException {
         producerChannel.basicPublish(exchangeName,queueName,true,false,null,serializedMessage);
@@ -131,6 +134,55 @@ public class RabbitMQMessagingService implements MessagingService {
         return remoteActorSystemMessageQueueFactoryFactory;
     }
 
+    @Override
+    public void addChannelListener(final Channel channel,final ChannelListener channelListener) {
+        Set<ChannelListener> listeners = this.channelListenerRegistry.get(channel);
+        if(listeners == null) {
+            listeners = Collections.newSetFromMap(new ConcurrentHashMap<ChannelListener, Boolean>());
+            if(this.channelListenerRegistry.putIfAbsent(channel,listeners) != null) {
+                // was already created
+                listeners = this.channelListenerRegistry.get(channel);
+            }
+        }
+        listeners.add(channelListener);
+    }
+
+    @Override
+    public void removeChannelListener(final Channel channel,final ChannelListener channelListener) {
+        final Set<ChannelListener> listeners = this.channelListenerRegistry.get(channel);
+        if(listeners != null) {
+            listeners.remove(channelListener);
+        }
+    }
+
+    @Override
+    public void onRecovery(final Channel channel) {
+        final Set<ChannelListener> listeners = this.channelListenerRegistry.get(channel);
+        if(listeners != null) {
+            for (ChannelListener listener : listeners) {
+                try {
+                    listener.onRecovery(channel);
+                } catch(Exception e) {
+                    logger.error(format("Exception while calling onRecovery on ChannelListener [%s]",listener.toString()),e);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onRecoveryFailure(final Channel channel,final Throwable failure) {
+        final Set<ChannelListener> listeners = this.channelListenerRegistry.get(channel);
+        if(listeners != null) {
+            for (ChannelListener listener : listeners) {
+                try {
+                    listener.onRecoveryFailure(channel,failure);
+                } catch(Exception e) {
+                    logger.error(format("Exception while calling onRecoveryFailure on ChannelListener [%s]",listener.toString()),e);
+                }
+            }
+        }
+    }
+
     private void ensureQueueExists(final Channel channel,final String queueName) throws IOException {
         // ensure we have the queue created on the broker
         AMQP.Queue.DeclareOk result = channel.queueDeclare(queueName, true, false, false, null);
@@ -143,7 +195,12 @@ public class RabbitMQMessagingService implements MessagingService {
         public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
             final String queueName = format(QUEUE_NAME_FORMAT,elasticActorsCluster,name);
             ensureQueueExists(consumerChannel,queueName);
-            LocalMessageQueue messageQueue = new LocalMessageQueue(queueExecutor, consumerChannel,producerChannel,exchangeName,queueName,messageHandler, internalMessageDeserializer);
+            LocalMessageQueue messageQueue = new LocalMessageQueue(queueExecutor,
+                                                                   RabbitMQMessagingService.this,
+                                                                   consumerChannel,
+                                                                   producerChannel,
+                                                                   exchangeName,queueName,messageHandler,
+                                                                   internalMessageDeserializer);
             messageQueue.initialize();
             return messageQueue;
         }
@@ -154,7 +211,7 @@ public class RabbitMQMessagingService implements MessagingService {
         public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
             final String queueName = format(QUEUE_NAME_FORMAT,elasticActorsCluster,name);
             ensureQueueExists(producerChannel,queueName);
-            return new RemoteMessageQueue(producerChannel,exchangeName,queueName);
+            return new RemoteMessageQueue(RabbitMQMessagingService.this,producerChannel,exchangeName,queueName);
         }
     }
 
@@ -169,7 +226,7 @@ public class RabbitMQMessagingService implements MessagingService {
         public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
             final String queueName = format(QUEUE_NAME_FORMAT,this.clusterName,name);
             ensureQueueExists(producerChannel,queueName);
-            return new RemoteMessageQueue(producerChannel,exchangeName,queueName);
+            return new RemoteMessageQueue(RabbitMQMessagingService.this,producerChannel,exchangeName,queueName);
         }
     }
 

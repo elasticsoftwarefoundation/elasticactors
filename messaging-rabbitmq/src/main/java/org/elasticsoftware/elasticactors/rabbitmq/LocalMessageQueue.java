@@ -17,7 +17,9 @@
 package org.elasticsoftware.elasticactors.rabbitmq;
 
 import com.rabbitmq.client.*;
+import net.jodah.lyra.event.ChannelListener;
 import org.apache.log4j.Logger;
+import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
@@ -29,11 +31,12 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class LocalMessageQueue extends DefaultConsumer implements MessageQueue {
+public final class LocalMessageQueue extends DefaultConsumer implements MessageQueue, ChannelListener {
     private final Logger logger;
     private final Channel consumerChannel;
     private final Channel producerChannel;
@@ -44,8 +47,17 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
     private final ThreadBoundExecutor<String> queueExecutor;
     private final CountDownLatch destroyLatch = new CountDownLatch(1);
     private final InternalMessageDeserializer internalMessageDeserializer;
+    private final AtomicBoolean recovering = new AtomicBoolean(false);
+    private final ChannelListenerRegistry channelListenerRegistry;
 
-    public LocalMessageQueue(ThreadBoundExecutor<String> queueExecutor, Channel consumerChannel, Channel producerChannel, String exchangeName, String queueName, MessageHandler messageHandler, InternalMessageDeserializer internalMessageDeserializer) {
+    public LocalMessageQueue(ThreadBoundExecutor<String> queueExecutor,
+                             ChannelListenerRegistry channelListenerRegistry,
+                             Channel consumerChannel,
+                             Channel producerChannel,
+                             String exchangeName,
+                             String queueName,
+                             MessageHandler messageHandler,
+                             InternalMessageDeserializer internalMessageDeserializer) {
         super(consumerChannel);
         this.queueExecutor = queueExecutor;
         this.consumerChannel = consumerChannel;
@@ -55,10 +67,16 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
         this.messageHandler = messageHandler;
         this.internalMessageDeserializer = internalMessageDeserializer;
         this.logger = Logger.getLogger(String.format("Producer[%s->%s]",exchangeName,queueName));
+        this.channelListenerRegistry = channelListenerRegistry;
+        this.channelListenerRegistry.addChannelListener(this.producerChannel,this);
     }
 
     @Override
     public boolean offer(final InternalMessage message) {
+        // see if we are recovering first
+        if(this.recovering.get()) {
+            throw new MessageDeliveryException("MessagingService is recovering",true);
+        }
         if(!message.isDurable()) {
             // execute on a separate (thread bound) executor
             queueExecutor.execute(new InternalMessageHandler(queueName,message,messageHandler,transientAck,logger));
@@ -69,9 +87,10 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
                 producerChannel.basicPublish(exchangeName, queueName,false,false,props,message.toByteArray());
                 return true;
             } catch (IOException e) {
-                // @todo: what to do with the message?
-                logger.error("IOException on publish",e);
-                return false;
+                throw new MessageDeliveryException("IOException while publishing message",e,false);
+            } catch(AlreadyClosedException e) {
+                this.recovering.set(true);
+                throw new MessageDeliveryException("MessagingService is recovering",true);
             }
         }
     }
@@ -107,6 +126,8 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
             logger.error("IOException while cancelling consumer",e);
         } catch (InterruptedException e) {
             // ignore
+        } finally {
+            this.channelListenerRegistry.removeChannelListener(this.producerChannel,this);
         }
     }
 
@@ -146,6 +167,35 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
                 logger.error("Exception while acking failed message",ioe);
             }
         }
+    }
+
+    @Override
+    public void onConsumerRecovery(Channel channel) {
+        // ignore
+    }
+
+    @Override
+    public void onCreate(Channel channel) {
+        // ignore
+    }
+
+    @Override
+    public void onCreateFailure(Throwable failure) {
+        // ignore
+    }
+
+    @Override
+    public void onRecovery(Channel channel) {
+        // reset the recovery flag
+        if(this.recovering.compareAndSet(true,false)) {
+            logger.info("RabbitMQ Channel recovered");
+        }
+    }
+
+    @Override
+    public void onRecoveryFailure(Channel channel, Throwable failure) {
+        // log an error
+        logger.error("RabbitMQ Channel recovery failed");
     }
 
     private static final class InternalMessageHandler implements ThreadBoundRunnable<String> {

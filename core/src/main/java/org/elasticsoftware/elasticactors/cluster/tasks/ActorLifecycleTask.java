@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.state.*;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
@@ -67,6 +68,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         // setup the context
         Exception executionException = null;
         InternalActorContext.setContext(persistentActor);
+        // SerializationContext.initialize();
         boolean shouldUpdateState = false;
         try {
             shouldUpdateState = doInActorContext(actorSystem, receiver, receiverRef, internalMessage);
@@ -74,6 +76,8 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             log.error("Exception in doInActorContext",e);
             executionException = e;
         } finally {
+            // reset the serialization context
+            // SerializationContext.reset();
             // clear the state from the thread
             InternalActorContext.getAndClearContext();
             // check if we have state now that needs to be put in the cache

@@ -67,15 +67,10 @@ public final class ActorShardRef implements ActorRef, ActorContainerRef {
     public void tell(Object message, ActorRef sender) {
         try {
             shard.sendMessage(sender,this,message);
+        } catch(MessageDeliveryException e) {
+            throw e;
         } catch (Exception e) {
-            logger.error(String.format("Failed to send message to %s", this.toString()), e);
-            if(sender != null && sender instanceof TypedActor<?>) {
-            	try {
-            		((TypedActor<?>) sender).onUndeliverable(sender, message);
-            	} catch (Exception e1) {
-                    logger.error(String.format("Failed onUndeliverable(%s,%s)", sender.toString(), message), e1);
-            	}
-            }
+            throw new MessageDeliveryException("Unexpected Exception while sending message",e,false);
         }
     }
 

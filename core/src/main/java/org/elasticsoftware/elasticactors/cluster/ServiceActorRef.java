@@ -55,9 +55,10 @@ public final class ServiceActorRef implements ActorRef, ActorContainerRef {
     public void tell(Object message, ActorRef sender) {
         try {
             node.sendMessage(sender,this,message);
+        } catch(MessageDeliveryException e) {
+            throw e;
         } catch (Exception e) {
-            // @todo: notify sender of the failure
-            logger.error(format("Failed to send message to %s", this.toString()),e);
+            throw new MessageDeliveryException("Unexpected Exception while sending message",e,false);
         }
     }
 

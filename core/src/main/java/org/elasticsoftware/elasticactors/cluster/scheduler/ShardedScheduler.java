@@ -125,8 +125,7 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
 
     @Override
     public ScheduledMessageRef create(String refSpec) {
-        // @todo: this is a bit hacky since we need to cast here
-        final InternalActorSystems cluster = (InternalActorSystems) actorSystem.getParent();
+        final InternalActorSystems cluster = actorSystem.getParent();
         return ScheduledMessageRefTools.parse(refSpec,cluster);
     }
 
@@ -152,10 +151,26 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
                 } else {
                     logger.error(format("Could not find Deserializer for ScheduledMessage of type [%s]",message.getMessageClass().getName()));
                 }
+            } catch(MessageDeliveryException e) {
+                // see if it's a recoverable exception
+                if(e.isRecoverable()) {
+                    // we need to reschedule the message otherwise it will get lost
+                    // because we generate a key it will be impossible to cancel, however technically it fired already
+                    // so it should be no problem
+                    long fireTime = System.currentTimeMillis() + 1000L;
+                    ScheduledMessage rescheduledMessage = new ScheduledMessageImpl(fireTime,message.getSender(),message.getReceiver(),message.getMessageClass(),message.getMessageBytes());
+                    scheduledMessageRepository.create(shardKey, rescheduledMessage);
+                    workManager.schedule(shardKey,rescheduledMessage);
+                    logger.warn("Got a recoverable MessageDeliveryException, rescheduling ScheduledMessage to fire in 1000 msecs");
+                } else {
+                    logger.error("Got an unrecoverable MessageDeliveryException",e);
+                }
             } catch(IOException e) {
                 // try to figure out what is wrong with the bytes
                 String jsonMessage = new String(message.getMessageBytes(), Charsets.UTF_8);
                 logger.error(format("IOException while deserializing ScheduledMessage contents [%s] of message class [%s]",jsonMessage,message.getMessageClass().getName()),e);
+            } catch(Exception e) {
+                logger.error("Caught unexpected Exception while exexuting ScheduledMessage",e);
             } finally {
                 // always remove from the backing store
                 scheduledMessageRepository.delete(shardKey, message.getKey());
