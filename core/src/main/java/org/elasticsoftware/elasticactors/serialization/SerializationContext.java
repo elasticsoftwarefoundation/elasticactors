@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.IdentityHashMap;
 
-import static java.lang.String.format;
-
 /**
  * @author Joost van de Wijgerd
  */
