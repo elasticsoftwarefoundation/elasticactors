@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.messaging;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
 
 import java.io.IOException;
@@ -82,7 +83,8 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
 
     @Override
     public <T> T getPayload(MessageDeserializer<T> deserializer) throws IOException {
-        return deserializer.deserialize(payload);
+        //return deserializer.deserialize(payload);
+        return SerializationContext.deserialize(deserializer, payload);
     }
 
     @Override

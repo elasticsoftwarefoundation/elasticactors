@@ -42,10 +42,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.net.InetAddress;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -72,6 +69,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     private final LinkedBlockingQueue<ShardReleasedMessage> shardReleasedMessages = new LinkedBlockingQueue<>();
     private final AtomicReference<List<PhysicalNode>> currentTopology = new AtomicReference<>(null);
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("CLUSTER_SCHEDULER"));
+    private final List<RebalancingEventListener> rebalancingEventListeners = new CopyOnWriteArrayList<>();
 
     public ElasticActorsNode(String clusterName, String nodeId, InetAddress nodeAddress, InternalActorSystemConfiguration configuration) {
         this.clusterName = clusterName;
@@ -196,6 +194,11 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     }
 
     @Override
+    public void registerRebalancingEventListener(RebalancingEventListener eventListener) {
+        this.rebalancingEventListeners.add(eventListener);
+    }
+
+    @Override
     public <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass) {
         return systemSerializers.get(messageClass);
     }
@@ -288,6 +291,18 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
                     logger.error("Initializing Remote ActorSystems failed",e);
                 }
             }
+            // call the pre methods on the RebalancingEventListeners
+            for (RebalancingEventListener rebalancingEventListener : rebalancingEventListeners) {
+                try {
+                    if(shardDistributionStrategy instanceof RunningNodeScaleDownStrategy) {
+                        rebalancingEventListener.preScaleDown();
+                    } else {
+                        rebalancingEventListener.preScaleUp();
+                    }
+                } catch(Exception e) {
+                    logger.warn(format("Exception while calling RebalancingEventListener preScaleUp/Down [%s]",rebalancingEventListener.getClass().getName()),e);
+                }
+            }
             LocalActorSystemInstance instance = applicationContext.getBean(LocalActorSystemInstance.class);
             logger.info(format("Updating %d nodes for ActorSystem[%s]", clusterNodes.size(), instance.getName()));
             try {
@@ -300,6 +315,18 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
                 instance.distributeShards(clusterNodes,shardDistributionStrategy);
             } catch (Exception e) {
                 logger.error(format("ActorSystem[%s] failed to (re-)distribute shards", instance.getName()), e);
+            }
+            // call the post methods on the RebalancingEventListeners
+            for (RebalancingEventListener rebalancingEventListener : rebalancingEventListeners) {
+                try {
+                    if(shardDistributionStrategy instanceof RunningNodeScaleDownStrategy) {
+                        rebalancingEventListener.postScaleDown();
+                    } else {
+                        rebalancingEventListener.postScaleUp();
+                    }
+                } catch(Exception e) {
+                    logger.warn(format("Exception while calling RebalancingEventListener postScaleUp/Down [%s]",rebalancingEventListener.getClass().getName()),e);
+                }
             }
         }
     }

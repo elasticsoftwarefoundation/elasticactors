@@ -20,6 +20,7 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ActorSystems;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
+import org.elasticsoftware.elasticactors.cluster.RebalancingEventListener;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
@@ -46,6 +47,11 @@ public class TestActorSystemsInstance implements ActorSystems,ActorRefFactory {
     @Override
     public ActorSystem get(String actorSystemName) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void registerRebalancingEventListener(RebalancingEventListener eventListener) {
+        // silently ignore
     }
 
     public <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass) {

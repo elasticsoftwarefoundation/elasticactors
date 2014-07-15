@@ -26,6 +26,7 @@ import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 
 /**
  * @author Joost van de Wijgerd
@@ -54,7 +55,7 @@ public final class RemoteActorNode extends AbstractActorContainer implements Act
         // get the durable flag
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
-        messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message),message.getClass().getName(),durable));
+        messageQueue.offer(new InternalMessageImpl(from, to, SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable));
     }
 
     @Override

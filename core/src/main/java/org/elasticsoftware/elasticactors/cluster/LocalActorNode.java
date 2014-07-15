@@ -29,6 +29,7 @@ import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,7 +96,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
             Message messageAnnotation = message.getClass().getAnnotation(Message.class);
             final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
             MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-            messageQueue.offer(new InternalMessageImpl(from, to, messageSerializer.serialize(message),message.getClass().getName(),durable));
+            messageQueue.offer(new InternalMessageImpl(from, to, SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable));
         }
     }
 

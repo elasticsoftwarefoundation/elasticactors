@@ -16,6 +16,8 @@
 
 package org.elasticsoftware.elasticactors;
 
+import org.elasticsoftware.elasticactors.cluster.RebalancingEventListener;
+
 import javax.annotation.Nullable;
 
 /**
@@ -49,4 +51,11 @@ public interface ActorSystems {
      * @return                  the remote {@link ActorSystem} instance
      */
     ActorSystem getRemote(String clusterName,@Nullable String actorSystemName);
+
+    /**
+     * Register a {@link RebalancingEventListener} that can be used to listen to the rebalancing events (pre and post)
+     *
+     * @param eventListener
+     */
+    void registerRebalancingEventListener(RebalancingEventListener eventListener);
 }

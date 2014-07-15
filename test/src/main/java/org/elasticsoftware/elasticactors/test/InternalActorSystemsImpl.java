@@ -106,6 +106,11 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
     }
 
     @Override
+    public void registerRebalancingEventListener(RebalancingEventListener eventListener) {
+        // not supported (silently ignore)
+    }
+
+    @Override
     public <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass) {
         return systemSerializers.get(messageClass);
     }

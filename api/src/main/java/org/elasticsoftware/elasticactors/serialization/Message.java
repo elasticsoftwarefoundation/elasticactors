@@ -25,7 +25,32 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface Message {
+    /**
+     * Determines which framework will be used to serialize and deserialize this message
+     *
+     * @return
+     */
     Class<? extends SerializationFramework> serializationFramework();
 
+    /**
+     * If a message is durable it will always be put on the Message layer. Depending on the implementation of the underlying
+     * Messaging fabric the message will also be made durable in the queue. If a message is not durable, messages sent to
+     * {@link org.elasticsoftware.elasticactors.ElasticActor}s that live in the same JVM are not send to to Messaging layer
+     * but are delivered directly (on a seperate thread).
+     *
+     * Non durable messages for {@link org.elasticsoftware.elasticactors.ElasticActor}s that reside in a remote JVM are
+     * not persisted to disc in the Message layer and thus take up fewer resources.
+     *
+     * @return  whether this message is durable (defaults to true)
+     */
     boolean durable() default true;
+
+    /**
+     * If a message is marked as immutable, the framework can implement several optimizations. Most notably: messages that
+     * are forwarded or messages that are send to multiple {@link org.elasticsoftware.elasticactors.ElasticActor}s are not
+     * only serialized once.
+     *
+     * @return  whether this message is immutable (defaults to false)
+     */
+    boolean immutable() default false;
 }
