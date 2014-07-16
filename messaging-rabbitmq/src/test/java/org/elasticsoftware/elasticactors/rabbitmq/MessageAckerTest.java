@@ -2,7 +2,6 @@ package org.elasticsoftware.elasticactors.rabbitmq;
 
 import com.rabbitmq.client.Channel;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
-import org.mockito.verification.VerificationMode;
 import org.testng.annotations.Test;
 
 import static org.mockito.Mockito.*;
