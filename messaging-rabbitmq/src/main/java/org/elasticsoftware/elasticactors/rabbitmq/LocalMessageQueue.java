@@ -33,6 +33,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static java.lang.String.format;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -49,6 +51,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
     private final InternalMessageDeserializer internalMessageDeserializer;
     private final AtomicBoolean recovering = new AtomicBoolean(false);
     private final ChannelListenerRegistry channelListenerRegistry;
+    private final MessageAcker messageAcker;
 
     public LocalMessageQueue(ThreadBoundExecutor<String> queueExecutor,
                              ChannelListenerRegistry channelListenerRegistry,
@@ -57,7 +60,8 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
                              String exchangeName,
                              String queueName,
                              MessageHandler messageHandler,
-                             InternalMessageDeserializer internalMessageDeserializer) {
+                             InternalMessageDeserializer internalMessageDeserializer,
+                             MessageAcker messageAcker) {
         super(consumerChannel);
         this.queueExecutor = queueExecutor;
         this.consumerChannel = consumerChannel;
@@ -66,7 +70,8 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
         this.queueName = queueName;
         this.messageHandler = messageHandler;
         this.internalMessageDeserializer = internalMessageDeserializer;
-        this.logger = Logger.getLogger(String.format("Producer[%s->%s]",exchangeName,queueName));
+        this.messageAcker = messageAcker;
+        this.logger = Logger.getLogger(format("LocalMessageQueue[%s->%s]", exchangeName, queueName));
         this.channelListenerRegistry = channelListenerRegistry;
         this.channelListenerRegistry.addChannelListener(this.producerChannel,this);
     }
@@ -139,7 +144,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
     @Override
     public void handleCancel(String consumerTag) throws IOException {
         // we were cancelled by an outside force, should not happen. treat as an error
-        logger.error(String.format("Unexpectedly cancelled: consumerTag = %s",consumerTag));
+        logger.error(format("Unexpectedly cancelled: consumerTag = %s", consumerTag));
     }
 
     @Override
@@ -155,10 +160,9 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
         try {
-            // get the body data
-            final InternalMessage message = internalMessageDeserializer.deserialize(body);
+            messageAcker.deliver(envelope.getDeliveryTag());
             // execute on seperate (thread bound) executor
-            queueExecutor.execute(new InternalMessageHandler(queueName,message,messageHandler,new RabbitMQAck(envelope,message),logger));
+            queueExecutor.execute(new RabbitMQMessageHandler(queueName,body,internalMessageDeserializer,messageHandler,new RabbitMQAck(envelope),logger));
         } catch(Exception e) {
             logger.error("Unexpected Exception on handleDelivery.. Acking the message so it will not clog up the system",e);
             try {
@@ -198,6 +202,59 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
         logger.error("RabbitMQ Channel recovery failed");
     }
 
+    private static final class RabbitMQMessageHandler implements ThreadBoundRunnable<String> {
+        private final String queueName;
+        private final InternalMessageDeserializer internalMessageDeserializer;
+        private final byte[] body;
+        private final MessageHandler messageHandler;
+        private final MessageHandlerEventListener listener;
+        private final Logger logger;
+
+        private RabbitMQMessageHandler(String queueName, byte[] body, InternalMessageDeserializer internalMessageDeserializer, MessageHandler messageHandler, MessageHandlerEventListener listener, Logger logger) {
+            this.queueName = queueName;
+            this.internalMessageDeserializer = internalMessageDeserializer;
+            this.body = body;
+            this.messageHandler = messageHandler;
+            this.listener = listener;
+            this.logger = logger;
+        }
+
+        @Override
+        public String getKey() {
+            return queueName;
+        }
+
+        @Override
+        public void run() {
+            try {
+                // get the body data
+                final InternalMessage message = internalMessageDeserializer.deserialize(body);
+                messageHandler.handleMessage(message,listener);
+            } catch(Exception e) {
+                logger.error("Unexpected exception on #handleMessage",e);
+            }
+        }
+    }
+
+    private final class RabbitMQAck implements MessageHandlerEventListener {
+        private final Envelope envelope;
+        //private final InternalMessage message;
+
+        private RabbitMQAck(Envelope envelope) {
+            this.envelope = envelope;
+        }
+
+        @Override
+        public void onError(final InternalMessage message,final Throwable exception) {
+            onDone(message);
+        }
+
+        @Override
+        public void onDone(final InternalMessage message) {
+            messageAcker.ack(envelope.getDeliveryTag());
+        }
+    }
+
     private static final class InternalMessageHandler implements ThreadBoundRunnable<String> {
         private final String queueName;
         private final InternalMessage message;
@@ -228,41 +285,11 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
         }
     }
 
-    private final class RabbitMQAck implements MessageHandlerEventListener {
-        private final Envelope envelope;
-        private final InternalMessage message;
-
-        private RabbitMQAck(Envelope envelope, InternalMessage message) {
-            this.envelope = envelope;
-            this.message = message;
-        }
-
-        @Override
-        public void onError(final InternalMessage message,final Throwable exception) {
-            // we have logging on a higher level already
-            //logger.error("Exception while handling message, acking anyway",exception);
-            onDone(message);
-        }
-
-        @Override
-        public void onDone(final InternalMessage message) {
-            if(this.message != message) {
-                throw new IllegalArgumentException(String.format("Trying to ack wrong message: expected %d, got %d ",
-                                                                 this.message.hashCode(),message.hashCode()));
-            }
-            try {
-                consumerChannel.basicAck(envelope.getDeliveryTag(),false);
-            } catch (IOException e) {
-                logger.error("Exception while acking message",e);
-            }
-        }
-    }
-
     private final class TransientAck implements MessageHandlerEventListener {
 
         @Override
         public void onError(InternalMessage message, Throwable exception) {
-            logger.error(String.format("Error handling transient message, payloadClass [%s]",message.getPayloadClass()),exception);
+            logger.error(format("Error handling transient message, payloadClass [%s]", message.getPayloadClass()),exception);
         }
 
         @Override

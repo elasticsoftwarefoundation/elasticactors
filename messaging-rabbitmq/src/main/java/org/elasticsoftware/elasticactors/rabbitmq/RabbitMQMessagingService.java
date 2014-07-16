@@ -31,6 +31,7 @@ import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
+import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 
 import javax.annotation.PostConstruct;
@@ -65,6 +66,7 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
     private final String password;
     private final InternalMessageDeserializer internalMessageDeserializer;
     private final ConcurrentMap<Channel,Set<ChannelListener>> channelListenerRegistry = new ConcurrentHashMap<>();
+    private MessageAcker messageAcker;
 
     public RabbitMQMessagingService(String elasticActorsCluster, String rabbitmqHosts, String username, String password, ThreadBoundExecutor<String> queueExecutor, InternalMessageDeserializer internalMessageDeserializer) {
         this.rabbitmqHosts = rabbitmqHosts;
@@ -103,11 +105,14 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
         producerChannel = clientConnection.createChannel();
         // ensure the exchange is there
         consumerChannel.exchangeDeclare(exchangeName,"direct",true);
+        messageAcker = new MessageAcker(consumerChannel,new DaemonThreadFactory("RABBITMQ-MESSAGE_ACKER"));
+        messageAcker.start();
     }
 
     @PreDestroy
     public void stop() {
         try {
+            messageAcker.stop();
             producerChannel.close();
             consumerChannel.close();
             clientConnection.close();
@@ -199,7 +204,7 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
                                                                    consumerChannel,
                                                                    producerChannel,
                                                                    exchangeName,queueName,messageHandler,
-                                                                   internalMessageDeserializer);
+                                                                   internalMessageDeserializer, messageAcker);
             messageQueue.initialize();
             return messageQueue;
         }

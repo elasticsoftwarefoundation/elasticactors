@@ -1,0 +1,62 @@
+package org.elasticsoftware.elasticactors.rabbitmq;
+
+import com.rabbitmq.client.Channel;
+import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
+import org.mockito.verification.VerificationMode;
+import org.testng.annotations.Test;
+
+import static org.mockito.Mockito.*;
+
+/**
+ * @author Joost van de Wijgerd
+ */
+public class MessageAckerTest {
+    @Test
+    public void testAcking() throws Exception {
+        Channel channel = mock(Channel.class);
+
+        MessageAcker messageAcker = new MessageAcker(channel,new DaemonThreadFactory("RABBITMQ-MESSAGE_ACKER"));
+        messageAcker.start();
+
+        for(long i = 1; i < 1000; i++) {
+            messageAcker.deliver(i);
+        }
+
+        Thread.sleep(1000);
+
+        verifyZeroInteractions(channel);
+
+        // ack the first 99 but not the first (nothing should be acked)
+        for(long i = 2; i < 100; i++) {
+            messageAcker.ack(i);
+        }
+
+        Thread.sleep(1000);
+
+        verifyZeroInteractions(channel);
+
+        // now ack the first (this should cause an ack on the channel
+        messageAcker.ack(1);
+
+        verify(channel,timeout(1000)).basicAck(99, true);
+
+        messageAcker.ack(102);
+        messageAcker.ack(100);
+
+        verify(channel,timeout(1000)).basicAck(100, true);
+
+        messageAcker.ack(101);
+
+        verify(channel,timeout(1000)).basicAck(102, true);
+
+        for(long i = 103; i < 1000; i++) {
+            messageAcker.ack(i);
+        }
+
+        verify(channel,timeout(1000)).basicAck(999, true);
+
+        messageAcker.stop();
+
+
+    }
+}
