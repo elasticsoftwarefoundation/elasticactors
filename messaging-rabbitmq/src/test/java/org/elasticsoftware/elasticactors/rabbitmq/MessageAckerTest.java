@@ -17,7 +17,11 @@ public class MessageAckerTest {
         MessageAcker messageAcker = new MessageAcker(channel,new DaemonThreadFactory("RABBITMQ-MESSAGE_ACKER"));
         messageAcker.start();
 
-        for(long i = 1; i < 1000; i++) {
+        // deliver out of order
+        for(long i = 100; i < 1000; i++) {
+            messageAcker.deliver(i);
+        }
+        for(long i = 1; i < 100; i++) {
             messageAcker.deliver(i);
         }
 

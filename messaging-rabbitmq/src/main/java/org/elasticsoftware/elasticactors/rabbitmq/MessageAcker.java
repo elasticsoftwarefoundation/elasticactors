@@ -4,7 +4,9 @@ import com.rabbitmq.client.Channel;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
+import java.security.KeyStore;
 import java.util.ArrayDeque;
+import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
@@ -20,8 +22,9 @@ public final class MessageAcker implements Runnable {
     private final Channel consumerChannel;
     private final LinkedBlockingQueue<Tag> tagQueue = new LinkedBlockingQueue<>();
     private long lastAckedTag = -1;
-    private long lastDeliveredTag = -1;
-    private final ArrayDeque<Long> pendingTags = new ArrayDeque<>(1024);
+    private long highestDeliveredTag = -1;
+    private final TreeSet<Long> pendingTags = new TreeSet<>();
+    //private final ArrayDeque<Long> pendingTags = new ArrayDeque<>(1024);
     private final long maxWaitMillis = 1000;
     private final ThreadFactory threadFactory;
     private final CountDownLatch shutdownLatch = new CountDownLatch(1);
@@ -68,12 +71,12 @@ public final class MessageAcker implements Runnable {
                         startTime = System.currentTimeMillis();
                     } else if(tag.type == TagType.DELIVERED) {
                         // register the last delivered tag
-                        lastDeliveredTag = tag.value;
-                        // add to the end of the list
-                        pendingTags.addLast(tag.value);
+                        highestDeliveredTag = (tag.value > highestDeliveredTag) ? tag.value : highestDeliveredTag;
+                        // add to the end of the list (in order)
+                        pendingTags.add(tag.value);
                     } else if(tag.type == TagType.ACK) {
                         // search from the beginning and delete
-                        pendingTags.removeFirstOccurrence(tag.value);
+                        pendingTags.remove(tag.value);
                     } else if(tag.type == TagType.RESET) {
                         // not sure what to do here
                     } else if(tag.type == TagType.STOP) {
@@ -95,13 +98,12 @@ public final class MessageAcker implements Runnable {
 
     private void flushAck() {
         // we should only send an ack if something has change
-        if(lastAckedTag == lastDeliveredTag) {
+        if(lastAckedTag == highestDeliveredTag) {
             return;
         }
-
         // get the head of the deque
-        Long lowestUnAckedTag = pendingTags.peekFirst();
-        long ackUntil = (lowestUnAckedTag != null) ? lowestUnAckedTag - 1 : lastDeliveredTag;
+        Long lowestUnAckedTag = (pendingTags.isEmpty()) ? null : pendingTags.first();
+        long ackUntil = (lowestUnAckedTag != null) ? lowestUnAckedTag - 1 : highestDeliveredTag;
         // don't ack 0 as it will ack all pending messages!!!
         if(ackUntil > 0) {
             try {
