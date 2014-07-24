@@ -108,7 +108,7 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
         Long lowestUnAckedTag = (pendingTags.isEmpty()) ? null : pendingTags.first();
         long ackUntil = (lowestUnAckedTag != null) ? lowestUnAckedTag - 1 : highestDeliveredTag;
         // don't ack 0 as it will ack all pending messages!!!
-        if(ackUntil > 0) {
+        if(ackUntil > 0 && ackUntil > lastAckedTag) {
             try {
                 consumerChannel.basicAck(ackUntil,true);
                 if(logger.isInfoEnabled()) {

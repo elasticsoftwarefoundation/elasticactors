@@ -58,6 +58,14 @@ public class BufferingMessageAckerTest {
 
         verify(channel,timeout(1000)).basicAck(999, true);
 
+        // deliver one more message
+
+        messageAcker.deliver(1000);
+
+        Thread.sleep(1000);
+
+        verifyZeroInteractions(channel);
+
         messageAcker.stop();
 
 
