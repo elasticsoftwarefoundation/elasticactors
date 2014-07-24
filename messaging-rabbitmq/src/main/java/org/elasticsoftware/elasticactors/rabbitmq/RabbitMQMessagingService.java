@@ -105,7 +105,8 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
         producerChannel = clientConnection.createChannel();
         // ensure the exchange is there
         consumerChannel.exchangeDeclare(exchangeName,"direct",true);
-        messageAcker = new MessageAcker(consumerChannel,new DaemonThreadFactory("RABBITMQ-MESSAGE_ACKER"));
+        // @todo: make the actual MessageAcker implemention configurable
+        messageAcker = new DirectMessageAcker(consumerChannel);
         messageAcker.start();
     }
 

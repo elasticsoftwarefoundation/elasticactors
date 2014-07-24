@@ -9,12 +9,12 @@ import static org.mockito.Mockito.*;
 /**
  * @author Joost van de Wijgerd
  */
-public class MessageAckerTest {
+public class BufferingMessageAckerTest {
     @Test
     public void testAcking() throws Exception {
         Channel channel = mock(Channel.class);
 
-        MessageAcker messageAcker = new MessageAcker(channel,new DaemonThreadFactory("RABBITMQ-MESSAGE_ACKER"));
+        BufferingMessageAcker messageAcker = new BufferingMessageAcker(channel);
         messageAcker.start();
 
         // deliver out of order
