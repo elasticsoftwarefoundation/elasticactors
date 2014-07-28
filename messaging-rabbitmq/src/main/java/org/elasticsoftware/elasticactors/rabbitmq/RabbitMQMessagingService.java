@@ -43,6 +43,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.String.format;
+import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.BUFFERED;
+import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.DIRECT;
 
 /**
  * @author Joost van de Wijgerd
@@ -66,14 +68,22 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
     private final String password;
     private final InternalMessageDeserializer internalMessageDeserializer;
     private final ConcurrentMap<Channel,Set<ChannelListener>> channelListenerRegistry = new ConcurrentHashMap<>();
+    private final MessageAcker.Type ackType;
     private MessageAcker messageAcker;
 
-    public RabbitMQMessagingService(String elasticActorsCluster, String rabbitmqHosts, String username, String password, ThreadBoundExecutor<String> queueExecutor, InternalMessageDeserializer internalMessageDeserializer) {
+    public RabbitMQMessagingService(String elasticActorsCluster,
+                                    String rabbitmqHosts,
+                                    String username,
+                                    String password,
+                                    MessageAcker.Type ackType,
+                                    ThreadBoundExecutor<String> queueExecutor,
+                                    InternalMessageDeserializer internalMessageDeserializer) {
         this.rabbitmqHosts = rabbitmqHosts;
         this.elasticActorsCluster = elasticActorsCluster;
         this.queueExecutor = queueExecutor;
         this.username = username;
         this.password = password;
+        this.ackType = ackType;
         this.internalMessageDeserializer = internalMessageDeserializer;
         this.exchangeName = format(EA_EXCHANGE_FORMAT, elasticActorsCluster);
         this.localMessageQueueFactory = new LocalMessageQueueFactory();
@@ -105,8 +115,7 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
         producerChannel = clientConnection.createChannel();
         // ensure the exchange is there
         consumerChannel.exchangeDeclare(exchangeName,"direct",true);
-        // @todo: make the actual MessageAcker implemention configurable
-        messageAcker = new DirectMessageAcker(consumerChannel);
+        messageAcker = (ackType == DIRECT) ? new DirectMessageAcker(consumerChannel) : new BufferingMessageAcker(consumerChannel);
         messageAcker.start();
     }
 

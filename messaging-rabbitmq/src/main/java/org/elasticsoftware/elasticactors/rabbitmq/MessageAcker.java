@@ -11,4 +11,8 @@ public interface MessageAcker {
     void start();
 
     void stop();
+
+    public enum Type {
+        DIRECT,BUFFERED
+    }
 }

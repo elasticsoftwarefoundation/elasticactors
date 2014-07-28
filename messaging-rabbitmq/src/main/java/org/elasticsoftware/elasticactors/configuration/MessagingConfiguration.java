@@ -20,6 +20,7 @@ import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
 import org.elasticsoftware.elasticactors.messaging.MessagingService;
+import org.elasticsoftware.elasticactors.rabbitmq.MessageAcker;
 import org.elasticsoftware.elasticactors.rabbitmq.RabbitMQMessagingService;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
@@ -30,6 +31,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 
 import javax.annotation.PostConstruct;
+
+import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.DIRECT;
 
 /**
  * @author Joost van de Wijgerd
@@ -49,7 +52,14 @@ public class MessagingConfiguration {
         String rabbitMQHosts = env.getRequiredProperty("ea.rabbitmq.hosts");
         String rabbitMQUsername= env.getProperty("ea.rabbitmq.username","guest");
         String rabbitMQPassword = env.getProperty("ea.rabbitmq.password","guest");
-        messagingService = new RabbitMQMessagingService(clusterName,rabbitMQHosts, rabbitMQUsername, rabbitMQPassword,queueExecutor, new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory)));
+        MessageAcker.Type ackType = env.getProperty("ea.rabbitmq.ack",MessageAcker.Type.class, DIRECT);
+        messagingService = new RabbitMQMessagingService(clusterName,
+                                                        rabbitMQHosts,
+                                                        rabbitMQUsername,
+                                                        rabbitMQPassword,
+                                                        ackType,
+                                                        queueExecutor,
+                                                        new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory)));
     }
 
     @Bean(name = {"messagingService,remoteActorSystemMessageQueueFactoryFactory"})

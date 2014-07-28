@@ -82,6 +82,7 @@ public class RabbitMQMessagingServiceTest {
                                                                                  System.getProperty("host","localhost"),
                                                                                  System.getProperty("username","guest"),
                                                                                  System.getProperty("password","guest"),
+                                                                                 MessageAcker.Type.DIRECT,
                                                                                  queueExecutor, new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory)));
         messagingService.start();
 
