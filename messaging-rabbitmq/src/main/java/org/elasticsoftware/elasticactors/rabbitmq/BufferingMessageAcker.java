@@ -70,8 +70,8 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
                     Tag tag = tagQueue.poll(maxWaitMillis - elapsedTime,TimeUnit.MILLISECONDS);
                     if(tag == null) {
                         // timeout fired, flush ack and reset the start time
+                        startTime = System.currentTimeMillis();  // setting start time first so flushAck execution time is not counted
                         flushAck();
-                        startTime = System.currentTimeMillis();
                     } else if(tag.type == TagType.DELIVERED) {
                         // register the last delivered tag
                         highestDeliveredTag = (tag.value > highestDeliveredTag) ? tag.value : highestDeliveredTag;
@@ -90,8 +90,8 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
                     }
                 } else {
                     // time is elapsed, flush and reset the start time
-                    flushAck();
                     startTime = System.currentTimeMillis();
+                    flushAck();
                 }
             } catch(Throwable t) {
                 logger.warn("Caught Throwable",t);
