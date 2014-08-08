@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.MessageHandlersRegistry;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
@@ -29,6 +30,7 @@ import org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
+import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
 import org.elasticsoftware.elasticactors.test.InternalActorSystemsImpl;
 import org.elasticsoftware.elasticactors.test.cluster.SingleNodeClusterService;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
@@ -97,6 +99,11 @@ public class TestConfiguration {
     @Bean(name = {"messagesScanner"})
     public MessagesScanner createMessageScanner() {
         return new MessagesScanner();
+    }
+
+    @Bean(name = {"messageHandlersRegistry"})
+    public PluggableMessageHandlersScanner createPluggableMessagesHandlersScanner() {
+        return new PluggableMessageHandlersScanner();
     }
 
     @Bean(name = {"nodeSelectorFactory"})

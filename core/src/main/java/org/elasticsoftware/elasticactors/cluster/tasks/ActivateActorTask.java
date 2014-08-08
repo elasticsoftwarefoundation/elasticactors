@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.cluster.tasks;
 
 import org.apache.log4j.Logger;
+import org.elasticsoftware.elasticactors.ActorLifecycleListener;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
@@ -27,6 +28,8 @@ import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
+
+import java.util.List;
 
 /**
  * @author Joost van de Wijgerd
@@ -86,4 +89,8 @@ public final class ActivateActorTask extends ActorLifecycleTask {
         }
     }
 
+    @Override
+    protected void executeLifecycleListener(ActorLifecycleListener listener,ActorRef actorRef,ActorState actorState) {
+        listener.postActivate(actorRef,actorState);
+    }
 }

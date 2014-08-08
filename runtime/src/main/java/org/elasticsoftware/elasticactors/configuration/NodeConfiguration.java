@@ -93,7 +93,7 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"messageHandlersRegistry"})
-    public MessageHandlersRegistry createPluggableMessagesHandlersScanner() {
+    public PluggableMessageHandlersScanner createPluggableMessagesHandlersScanner() {
         return new PluggableMessageHandlersScanner();
     }
 
@@ -104,13 +104,13 @@ public class NodeConfiguration {
 
     @Bean(name = {"nodeActorCacheManager"})
     public NodeActorCacheManager createNodeActorCacheManager() {
-        int maximumSize = env.getProperty("ea.nodeCache.maximumSize",Integer.class,1024);
+        int maximumSize = env.getProperty("ea.nodeCache.maximumSize",Integer.class,10240);
         return new NodeActorCacheManager(maximumSize);
     }
 
     @Bean(name = {"shardActorCacheManager"})
     public ShardActorCacheManager createShardActorCacheManager() {
-        int maximumSize = env.getProperty("ea.shardCache.maximumSize",Integer.class,1024);
+        int maximumSize = env.getProperty("ea.shardCache.maximumSize",Integer.class,10240);
         return new ShardActorCacheManager(maximumSize);
     }
 

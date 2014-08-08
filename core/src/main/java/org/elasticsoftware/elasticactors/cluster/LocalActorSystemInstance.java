@@ -68,6 +68,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private SchedulerService scheduler;
     private NodeActorCacheManager nodeActorCacheManager;
     private ShardActorCacheManager shardActorCacheManager;
+    private ActorLifecycleListenerRegistry actorLifecycleListenerRegistry;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private final ConcurrentMap<String, ActorNode> activeNodes = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, ActorNodeAdapter> activeNodeAdapters = new ConcurrentHashMap<>();
@@ -372,6 +373,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
+    public List<ActorLifecycleListener<?>> getActorLifecycleListeners(Class<? extends ElasticActor> actorClass) {
+        return actorLifecycleListenerRegistry.getListeners(actorClass);
+    }
+
+    @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass) throws Exception {
         return actorOf(actorId, actorClass, null);
     }
@@ -466,6 +472,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     @Autowired
     public void setShardActorCacheManager(ShardActorCacheManager shardActorCacheManager) {
         this.shardActorCacheManager = shardActorCacheManager;
+    }
+
+    @Autowired
+    public void setActorLifecycleListenerRegistry(ActorLifecycleListenerRegistry actorLifecycleListenerRegistry) {
+        this.actorLifecycleListenerRegistry = actorLifecycleListenerRegistry;
     }
 
     private final class ActorShardAdapter implements ActorShard {

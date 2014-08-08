@@ -17,7 +17,9 @@
 package org.elasticsoftware.elasticactors.cluster.tasks;
 
 import org.apache.log4j.Logger;
+import org.elasticsoftware.elasticactors.ActorLifecycleListener;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
@@ -51,5 +53,10 @@ public final class PassivateActorTask extends ActorLifecycleTask {
         }
         // check persistence config (if any) -> by default return false
         return shouldUpdateState(receiver,ActorLifecycleStep.PASSIVATE);
+    }
+
+    @Override
+    protected void executeLifecycleListener(ActorLifecycleListener listener,ActorRef actorRef,ActorState actorState) {
+        listener.prePassivate(actorRef,actorState);
     }
 }

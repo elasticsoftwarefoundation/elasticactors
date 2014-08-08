@@ -17,9 +17,7 @@
 package org.elasticsoftware.elasticactors.cluster.tasks;
 
 import org.apache.log4j.Logger;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ElasticActor;
-import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
@@ -28,6 +26,7 @@ import org.elasticsoftware.elasticactors.state.*;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author Joost van de Wijgerd
@@ -72,6 +71,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         boolean shouldUpdateState = false;
         try {
             shouldUpdateState = doInActorContext(actorSystem, receiver, receiverRef, internalMessage);
+            executeLifecycleListeners();
         } catch (Exception e) {
             log.error("Exception in doInActorContext",e);
             executionException = e;
@@ -102,6 +102,23 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                                                 ElasticActor receiver,
                                                 ActorRef receiverRef,
                                                 InternalMessage internalMessage);
+
+    private void executeLifecycleListeners() {
+        final List<ActorLifecycleListener<?>> lifecycleListeners = actorSystem.getActorLifecycleListeners(persistentActor.getActorClass());
+        if(lifecycleListeners != null) {
+            for (ActorLifecycleListener<?> lifecycleListener : lifecycleListeners) {
+                try {
+                    executeLifecycleListener(lifecycleListener,persistentActor.getSelf(),persistentActor.getState());
+                } catch(Throwable t) {
+                    log.warn("Exception while executing ActorLifecycleListener",t);
+                }
+            }
+        }
+    }
+
+    protected void executeLifecycleListener(ActorLifecycleListener listener,ActorRef actorRef,ActorState actorState) {
+
+    }
 
     protected final boolean shouldUpdateState(ElasticActor elasticActor,ActorLifecycleStep lifecycleStep) {
         if(PersistenceAdvisor.class.isAssignableFrom(elasticActor.getClass())) {
