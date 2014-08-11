@@ -77,6 +77,6 @@ public final class CreateActorTask extends ActorLifecycleTask {
     @Override
     protected void executeLifecycleListener(ActorLifecycleListener listener,ActorRef actorRef,ActorState actorState) {
         listener.postCreate(actorRef,actorState);
-        listener.postActivate(actorRef,actorState);
+        listener.postActivate(actorRef,actorState,null);
     }
 }

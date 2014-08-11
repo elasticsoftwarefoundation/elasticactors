@@ -91,6 +91,6 @@ public final class ActivateActorTask extends ActorLifecycleTask {
 
     @Override
     protected void executeLifecycleListener(ActorLifecycleListener listener,ActorRef actorRef,ActorState actorState) {
-        listener.postActivate(actorRef,actorState);
+        listener.postActivate(actorRef,actorState,persistentActor.getPreviousActorStateVersion());
     }
 }

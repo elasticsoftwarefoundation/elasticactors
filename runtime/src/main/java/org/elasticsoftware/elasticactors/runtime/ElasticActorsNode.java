@@ -37,6 +37,7 @@ import org.elasticsoftware.elasticactors.util.ManifestTools;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.env.Environment;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -65,6 +66,8 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     private Cache<String,ActorRef> actorRefCache;
     @Autowired
     private ApplicationContext applicationContext;
+    @Autowired
+    private Environment environment;
     private ClusterService clusterService;
     private final LinkedBlockingQueue<ShardReleasedMessage> shardReleasedMessages = new LinkedBlockingQueue<>();
     private final AtomicReference<List<PhysicalNode>> currentTopology = new AtomicReference<>(null);
@@ -87,8 +90,8 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
 
     @PostConstruct
     public void init() throws Exception {
-        //@todo: take this value from the configuration file
-        actorRefCache = CacheBuilder.newBuilder().maximumSize(10240).build();
+        int maximumSize = environment.getProperty("ea.actorRefCache.maximumSize",Integer.class,10240);
+        actorRefCache = CacheBuilder.newBuilder().maximumSize(maximumSize).build();
     }
 
     @PreDestroy

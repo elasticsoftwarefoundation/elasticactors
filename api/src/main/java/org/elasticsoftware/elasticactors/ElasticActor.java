@@ -43,6 +43,21 @@ public interface ElasticActor<T> {
      */
     void postCreate(@Nullable ActorRef creator) throws Exception;
 
+    /**
+     * Called before an instance of the {@link ElasticActor} is loaded in to memory. This hook gives developers a chance to make changes to the
+     * {@link ActorState} structure. The raw bytes are passed in as well as an instance of the {@link SerializationFramework}.
+     * This framework is configured via {@link org.elasticsoftware.elasticactors.Actor#serializationFramework()}.
+     *
+     * The versions are strings that passed in come from the {@link java.util.jar.Manifest} file, Implementation-Version attribute.
+     * The version format is determined by the application and is set to UNKNOWN if it cannot be determined from the Manifest
+     *
+     * @param previousVersion           the previous version of the {@link ActorState}
+     * @param currentVersion            the current version of the application
+     * @param serializedForm
+     * @param serializationFramework
+     * @return
+     * @throws Exception
+     */
     ActorState preActivate(String previousVersion,String currentVersion,byte[] serializedForm,SerializationFramework serializationFramework) throws Exception;
 
     /**
@@ -57,7 +72,7 @@ public interface ElasticActor<T> {
      * @see                 {@link ActorContextHolder#getState(Class)}
      * @see                 {@link org.elasticsoftware.elasticactors.ActorContextHolder#getSystem()}
      */
-    void postActivate(@Deprecated String previousVersion) throws Exception;
+    void postActivate(@Nullable String previousVersion) throws Exception;
 
     /**
      * Receive a Message. The message object will be annotated with {@link org.elasticsoftware.elasticactors.serialization.Message}.

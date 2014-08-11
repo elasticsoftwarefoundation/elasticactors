@@ -27,10 +27,7 @@ import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.lang.String.format;
 
@@ -39,6 +36,7 @@ import static java.lang.String.format;
  */
 public abstract class MethodActor extends TypedActor<Object> implements PersistenceAdvisor {
     private static final Logger logger = Logger.getLogger(MethodActor.class);
+    private static final MessageHandlerOrderComparator ORDER_COMPARATOR = new MessageHandlerOrderComparator();
     private final Map<Class<?>,List<HandlerMethodDefinition>> handlerCache = new HashMap<>();
     @Nullable private final Class<? extends ActorState> stateClass;
 
@@ -73,6 +71,8 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                 }
             }
         }
+        // order the MessageHandlers
+        orderHandlerCache();
     }
 
     @Override
@@ -111,13 +111,20 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
         return PersistenceConfigHelper.shouldUpdateState(persistenceConfig,lifecycleStep);
     }
 
+    private void orderHandlerCache() {
+        for (List<HandlerMethodDefinition> definitions : handlerCache.values()) {
+            Collections.sort(definitions,ORDER_COMPARATOR);
+        }
+    }
+
     private void updateHandlerCache(Class<?> clazz,@Nullable Object instance) {
         final Method[] methods = clazz.getMethods();
         for (Method method : methods) {
-            if(method.isAnnotationPresent(MessageHandler.class)) {
+            MessageHandler messageHandlerAnnotation = method.getAnnotation(MessageHandler.class);
+            if(messageHandlerAnnotation != null) {
                 HandlerMethodDefinition definition;
                 if(Modifier.isStatic(method.getModifiers())) {
-                    definition = new HandlerMethodDefinition(null, method);
+                    definition = new HandlerMethodDefinition(null, method, messageHandlerAnnotation.order());
                 } else {
                     if(instance == null) {
                         // try to create instance with no-args constructor
@@ -127,7 +134,7 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                             throw new IllegalArgumentException(format("Cannot create instance of type %s",clazz.getName()),e);
                         }
                     }
-                    definition = new HandlerMethodDefinition(instance, method);
+                    definition = new HandlerMethodDefinition(instance, method, messageHandlerAnnotation.order());
 
                 }
                 List<HandlerMethodDefinition> definitions = handlerCache.get(definition.messageClass);
@@ -191,11 +198,12 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
         private final Method handlerMethod;
         private final ParameterType[] parameterTypeOrdering;
         private final Class<?> messageClass;
+        private final int order;
 
-
-        private HandlerMethodDefinition(@Nullable Object targetInstance, Method handlerMethod) throws IllegalArgumentException, IllegalStateException {
+        private HandlerMethodDefinition(@Nullable Object targetInstance, Method handlerMethod, int order) throws IllegalArgumentException, IllegalStateException {
             this.targetInstance = targetInstance;
             this.handlerMethod = handlerMethod;
+            this.order = order;
             Class<?>[] parameterTypes = handlerMethod.getParameterTypes();
             // do some sanity checking
             if(parameterTypes.length == 0) {
@@ -247,7 +255,15 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
 
             }
             return arguments;
+        }
+    }
 
+    private static final class MessageHandlerOrderComparator implements Comparator<HandlerMethodDefinition> {
+        @Override
+        public int compare(HandlerMethodDefinition o1, HandlerMethodDefinition o2) {
+            int i1 = o1.order;
+            int i2 = o2.order;
+            return (i1 < i2) ? -1 : (i1 > i2) ? 1 : 0;
         }
     }
 }

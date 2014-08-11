@@ -18,12 +18,15 @@ package org.elasticsoftware.elasticactors.runtime;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.elasticsoftware.elasticactors.test.TestActor;
 import org.springframework.util.ResourceUtils;
 import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static org.testng.Assert.*;
@@ -63,5 +66,16 @@ public class DefaultConfigurationTest {
         Map configuration = objectMapper.readValue(new FileInputStream(configFile), Map.class);
 
         assertNotNull(configuration);
+    }
+
+    @Test
+    public void testLoadComplexObject() throws IOException {
+        File configFile = ResourceUtils.getFile("classpath:ea-test.yaml");
+
+        // yaml mapper
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        DefaultConfiguration configuration = objectMapper.readValue(new FileInputStream(configFile), DefaultConfiguration.class);
+
+        configuration.getProperty(TestActor.class, "pushConfigurations", List.class, Collections.emptyList());
     }
 }

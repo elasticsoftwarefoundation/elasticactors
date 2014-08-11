@@ -25,4 +25,22 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface MessageHandler {
+    /**
+     * Useful constant for the highest precedence value.
+     * @see java.lang.Integer#MIN_VALUE
+     */
+    int HIGHEST_PRECEDENCE = Integer.MIN_VALUE;
+
+    /**
+     * Useful constant for the lowest precedence value.
+     * @see java.lang.Integer#MAX_VALUE
+     */
+    int LOWEST_PRECEDENCE = Integer.MAX_VALUE;
+
+    /**
+     * The order of this {@link MessageHandler} withing the chain of handlers. The lower the value, the higher the order.
+     *
+     * @return
+     */
+    int order() default LOWEST_PRECEDENCE;
 }
