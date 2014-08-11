@@ -29,8 +29,6 @@ import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 
-import java.util.List;
-
 /**
  * @author Joost van de Wijgerd
  */

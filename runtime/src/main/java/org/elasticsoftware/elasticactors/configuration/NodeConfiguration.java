@@ -19,7 +19,6 @@ package org.elasticsoftware.elasticactors.configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
-import org.elasticsoftware.elasticactors.MessageHandlersRegistry;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;

@@ -31,7 +31,6 @@ import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
-import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 
 import javax.annotation.PostConstruct;
@@ -43,7 +42,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.String.format;
-import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.BUFFERED;
 import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.DIRECT;
 
 /**
