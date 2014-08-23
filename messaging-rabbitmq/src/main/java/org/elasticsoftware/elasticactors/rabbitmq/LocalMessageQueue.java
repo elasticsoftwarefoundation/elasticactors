@@ -165,11 +165,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
             queueExecutor.execute(new RabbitMQMessageHandler(queueName,body,internalMessageDeserializer,messageHandler,new RabbitMQAck(envelope),logger));
         } catch(Exception e) {
             logger.error("Unexpected Exception on handleDelivery.. Acking the message so it will not clog up the system",e);
-            try {
-                consumerChannel.basicAck(envelope.getDeliveryTag(),false);
-            } catch (IOException ioe) {
-                logger.error("Exception while acking failed message",ioe);
-            }
+            messageAcker.ack(envelope.getDeliveryTag());
         }
     }
 
