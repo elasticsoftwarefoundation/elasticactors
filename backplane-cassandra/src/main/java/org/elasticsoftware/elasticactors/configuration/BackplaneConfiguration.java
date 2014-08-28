@@ -63,7 +63,8 @@ public class BackplaneConfiguration {
         hostConfigurator.setAutoDiscoverHosts(false);
         hostConfigurator.setMaxActive(env.getProperty("ea.cassandra.maxActive",Integer.class,Runtime.getRuntime().availableProcessors() * 3));
         hostConfigurator.setRetryDownedHosts(true);
-        hostConfigurator.setMaxWaitTimeWhenExhausted(1000L);
+        hostConfigurator.setRetryDownedHostsDelayInSeconds(env.getProperty("ea.cassandra.retryDownedHostsDelayInSeconds",Integer.class,1));
+        hostConfigurator.setMaxWaitTimeWhenExhausted(2000L);
         String cassandraClusterName = env.getProperty("ea.cassandra.cluster","ElasticActorsCluster");
         Cluster cluster = HFactory.getOrCreateCluster(cassandraClusterName,hostConfigurator);
         String cassandraKeyspaceName = env.getProperty("ea.cassandra.keyspace","ElasticActors");
