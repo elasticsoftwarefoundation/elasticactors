@@ -96,24 +96,32 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor<String
 
         @Override
         public void run() {
-            boolean running = true;
-            Runnable r = null;
-            while (running) {
-                try {
-                    r = queue.take();
-                    r.run();
-                } catch (InterruptedException e) {
-                    LOG.warn(String.format("Consumer on queue %s interrupted.", Thread.currentThread().getName()));
-                    //ignore
-                } catch (Throwable exception) {
-                    LOG.error(String.format("exception on queue %s while executing runnable: %s", Thread.currentThread().getName(), r), exception);
-                } finally {
-                    if (r != null && r.getClass().equals(ShutdownTask.class)) {
-                        running = false;
+            try {
+                boolean running = true;
+                Runnable r = null;
+                while (running) {
+                    try {
+                        r = queue.take();
+                        r.run();
+                    } catch (InterruptedException e) {
+                        LOG.warn(String.format("Consumer on queue %s interrupted.", Thread.currentThread().getName()));
+                        //ignore
+                    } catch (Throwable exception) {
+                        LOG.error(String.format("exception on queue %s while executing runnable: %s", Thread.currentThread().getName(), r), exception);
+                    } finally {
+                        if (r != null && r.getClass().equals(ShutdownTask.class)) {
+                            running = false;
+                        }
+                        // reset r so that we get a correct null value if the queue.take() is interrupted
+                        r = null;
                     }
-                    // reset r so that we get a correct null value if the queue.take() is interrupted
-                    r = null;
                 }
+            } catch(Throwable unexpectedThrowable) {
+                // we observed some cases where trying to log the inner exception threw an error
+                // don't use the logger here as that seems to be causing the problem in the first place
+                System.err.println("Caught and unexpected Throwable while logging");
+                System.err.println("This problem happens when jar files change at runtime, JVM might be UNSTABLE");
+                unexpectedThrowable.printStackTrace(System.err);
             }
         }
     }
