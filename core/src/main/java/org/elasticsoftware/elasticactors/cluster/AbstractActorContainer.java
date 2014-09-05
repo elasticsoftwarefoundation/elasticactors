@@ -23,6 +23,8 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.messaging.*;
 
+import static java.lang.String.format;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -66,10 +68,13 @@ public abstract class AbstractActorContainer implements ActorContainer, MessageH
     }
 
     protected void handleUndeliverable(InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
+        // if a message-undeliverable is undeliverable, don't send an undeliverable message back!
         ActorRef senderRef = internalMessage.getSender();
         try {
-            if (senderRef != null && senderRef instanceof ActorContainerRef) {
+            if (senderRef != null && senderRef instanceof ActorContainerRef && !internalMessage.isUndeliverable()) {
                 ((ActorContainerRef) senderRef).get().undeliverableMessage(internalMessage);
+            } else if(internalMessage.isUndeliverable()) {
+                logger.error(format("Receiver for undeliverable message not found: message type '%s' , receiver '%s'",internalMessage.getPayloadClass(),internalMessage.getReceiver().toString()));
             } else {
                 logger.warn("Could not send message undeliverable");
             }
