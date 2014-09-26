@@ -16,12 +16,13 @@
 
 package org.elasticsoftware.elasticactors.cassandra.state;
 
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.cassandra.service.template.ColumnFamilyTemplate;
 import me.prettyprint.cassandra.service.template.ColumnFamilyUpdater;
 import me.prettyprint.hector.api.beans.Composite;
 import me.prettyprint.hector.api.beans.HColumn;
+import me.prettyprint.hector.api.exceptions.HPoolRecoverableException;
+import me.prettyprint.hector.api.exceptions.HTimedOutException;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
@@ -45,29 +46,44 @@ public final class CassandraPersistentActorRepository implements PersistentActor
     }
 
     @Override
-    public boolean contains(ShardKey shard, String actorId) {
-        return columnFamilyTemplate.querySingleColumn(createKey(shard),actorId, ByteBufferSerializer.get()) != null;
+    public boolean contains(final ShardKey shard,final String actorId) {
+        return querySingleColumnWithRetry(shard,actorId) != null;
     }
 
     @Override
-    public void update(ShardKey shard, PersistentActor persistentActor) throws IOException {
+    public void update(final ShardKey shard,final PersistentActor persistentActor) throws IOException {
         ColumnFamilyUpdater<Composite,String> updater = columnFamilyTemplate.createUpdater(createKey(shard));
         updater.setByteArray(persistentActor.getSelf().getActorId(), serializer.serialize(persistentActor));
         columnFamilyTemplate.update(updater);
     }
 
     @Override
-    public void delete(ShardKey shard, String actorId) {
+    public void delete(final ShardKey shard,final String actorId) {
         columnFamilyTemplate.deleteColumn(createKey(shard),actorId);
     }
 
     @Override
-    public PersistentActor<ShardKey> get(ShardKey shard, String actorId) throws IOException {
-        HColumn<String,byte[]> column = columnFamilyTemplate.querySingleColumn(createKey(shard), actorId, BytesArraySerializer.get());
+    public PersistentActor<ShardKey> get(final ShardKey shard,final String actorId) throws IOException {
+        HColumn<String,byte[]> column = querySingleColumnWithRetry(shard, actorId);
         if(column != null) {
             return deserializer.deserialize(column.getValue());
         } else {
             return null;
+        }
+    }
+
+    private HColumn<String,byte[]> querySingleColumnWithRetry(final ShardKey shard,final String actorId) {
+        // try three times, and
+        int attemptsRemaining = 3;
+        while(true) {
+            attemptsRemaining--;
+            try {
+                return columnFamilyTemplate.querySingleColumn(createKey(shard), actorId, BytesArraySerializer.get());
+            } catch(HTimedOutException | HPoolRecoverableException e) {
+                if(attemptsRemaining <= 0) {
+                    throw e;
+                }
+            }
         }
     }
 
