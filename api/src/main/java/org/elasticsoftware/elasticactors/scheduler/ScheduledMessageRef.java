@@ -10,4 +10,6 @@ public interface ScheduledMessageRef {
     String REFSPEC_FORMAT = "message://%s/%s/shards/%d/%d/%s";
 
     void cancel() throws Exception;
+
+    public long getFireTime();
 }

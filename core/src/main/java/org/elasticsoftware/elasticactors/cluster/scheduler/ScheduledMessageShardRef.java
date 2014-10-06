@@ -50,6 +50,11 @@ public final class ScheduledMessageShardRef implements ScheduledMessageRef, Acto
     }
 
     @Override
+    public long getFireTime() {
+        return scheduledMessageKey.getFireTime();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if(!(o instanceof ScheduledMessageRef)) return false;

@@ -19,7 +19,7 @@
 
     <groupId>org.elasticsoftware.elasticactors</groupId>
     <artifactId>elasticactors-parent</artifactId>
-    <version>0.16.4-SNAPSHOT</version>
+    <version>0.17.0-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
