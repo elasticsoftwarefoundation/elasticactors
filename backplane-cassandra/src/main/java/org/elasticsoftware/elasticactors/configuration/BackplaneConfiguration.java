@@ -73,6 +73,9 @@ public class BackplaneConfiguration {
             new ThriftColumnFamilyTemplate<>(keyspace,"PersistentActors", CompositeSerializer.get(),StringSerializer.get());
         scheduledMessagesColumnFamilyTemplate =
             new ThriftColumnFamilyTemplate<>(keyspace,"ScheduledMessages",CompositeSerializer.get(), CompositeSerializer.get());
+        // return
+        // @TODO: make this configurable and use the ColumnSliceIterator
+        scheduledMessagesColumnFamilyTemplate.setCount(Integer.MAX_VALUE);
     }
 
     @Bean(name = {"persistentActorRepository"})
