@@ -39,7 +39,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public final class LocalMessageQueue extends DefaultConsumer implements MessageQueue, ChannelListener {
-    private final Logger logger;
+    private static final Logger logger = Logger.getLogger(LocalMessageQueue.class);
     private final Channel consumerChannel;
     private final Channel producerChannel;
     private final String exchangeName;
@@ -71,7 +71,6 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
         this.messageHandler = messageHandler;
         this.internalMessageDeserializer = internalMessageDeserializer;
         this.messageAcker = messageAcker;
-        this.logger = Logger.getLogger(format("LocalMessageQueue[%s->%s]", exchangeName, queueName));
         this.channelListenerRegistry = channelListenerRegistry;
         this.channelListenerRegistry.addChannelListener(this.producerChannel,this);
     }
@@ -205,6 +204,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
         private final MessageHandler messageHandler;
         private final MessageHandlerEventListener listener;
         private final Logger logger;
+        private final long startTime;
 
         private RabbitMQMessageHandler(String queueName, byte[] body, InternalMessageDeserializer internalMessageDeserializer, MessageHandler messageHandler, MessageHandlerEventListener listener, Logger logger) {
             this.queueName = queueName;
@@ -213,6 +213,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
             this.messageHandler = messageHandler;
             this.listener = listener;
             this.logger = logger;
+            this.startTime = System.currentTimeMillis();
         }
 
         @Override
@@ -222,12 +223,20 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
 
         @Override
         public void run() {
+            InternalMessage message = null;
             try {
                 // get the body data
-                final InternalMessage message = internalMessageDeserializer.deserialize(body);
+                message = internalMessageDeserializer.deserialize(body);
                 messageHandler.handleMessage(message,listener);
             } catch(Exception e) {
                 logger.error("Unexpected exception on #handleMessage",e);
+            } finally {
+                if(logger.isTraceEnabled()) {
+                    long endTime = System.currentTimeMillis();
+                    if(message != null) {
+                        logger.trace(format("(rabbit) Message of type [%s] with id [%s] for Actor [%s] took %d msecs to execute on queue [%s]", message.getPayloadClass(), message.getId().toString(), message.getReceiver().getActorId(), endTime - startTime, queueName));
+                    }
+                }
             }
         }
     }
@@ -257,6 +266,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
         private final MessageHandler messageHandler;
         private final MessageHandlerEventListener listener;
         private final Logger logger;
+        private final long startTime;
 
         private InternalMessageHandler(String queueName, InternalMessage message, MessageHandler messageHandler, MessageHandlerEventListener listener, Logger logger) {
             this.queueName = queueName;
@@ -264,6 +274,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
             this.messageHandler = messageHandler;
             this.listener = listener;
             this.logger = logger;
+            this.startTime = System.currentTimeMillis();
         }
 
         @Override
@@ -277,6 +288,11 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
                 messageHandler.handleMessage(message,listener);
             } catch(Exception e) {
                 logger.error("Unexpected exception on #handleMessage",e);
+            } finally {
+                if(logger.isTraceEnabled()) {
+                    long endTime = System.currentTimeMillis();
+                    logger.trace(format("(local) Message of type [%s] with id [%s] for Actor [%s] took %d msecs to execute on queue [%s]",message.getPayloadClass(),message.getId().toString(),message.getReceiver().getActorId(),endTime-startTime,queueName));
+                }
             }
         }
     }

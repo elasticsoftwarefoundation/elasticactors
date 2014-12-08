@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
+import static java.lang.String.format;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
@@ -35,6 +36,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     private final ElasticActor serviceActor;
     private final InternalMessage internalMessage;
     private final MessageHandlerEventListener messageHandlerEventListener;
+    private final long startTime;
 
     public HandleServiceMessageTask(InternalActorSystem actorSystem,
                                     ActorRef serviceRef,
@@ -46,6 +48,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         this.serviceActor = serviceActor;
         this.internalMessage = internalMessage;
         this.messageHandlerEventListener = messageHandlerEventListener;
+        this.startTime = System.currentTimeMillis();
     }
 
     @Override
@@ -93,6 +96,11 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
             } else {
                 messageHandlerEventListener.onError(internalMessage,executionException);
             }
+        }
+        // do some trace logging
+        if(logger.isTraceEnabled()) {
+            long endTime = System.currentTimeMillis();
+            logger.trace(format("(%s) Message of type [%s] with id [%s] for actor [%s] took %d msecs to execute (state update %b)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",serviceRef.getActorId(),endTime-startTime,false));
         }
     }
 }

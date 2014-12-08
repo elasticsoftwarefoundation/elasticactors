@@ -28,6 +28,8 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import java.util.Arrays;
 import java.util.List;
 
+import static java.lang.String.format;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -40,6 +42,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
     private final PersistentActorRepository persistentActorRepository;
     private final InternalMessage internalMessage;
     private final MessageHandlerEventListener messageHandlerEventListener;
+    private final long startTime;
 
     protected ActorLifecycleTask(PersistentActorRepository persistentActorRepository,
                                  PersistentActor persistentActor,
@@ -55,6 +58,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         this.receiver = receiver;
         this.messageHandlerEventListener = messageHandlerEventListener;
         this.internalMessage = internalMessage;
+        this.startTime = System.currentTimeMillis();
     }
 
     @Override
@@ -85,7 +89,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                 try {
                     persistentActorRepository.update((ShardKey) persistentActor.getKey(), persistentActor);
                 } catch (Exception e) {
-                    log.error(String.format("Exception while serializing ActorState for actor [%s]", receiverRef.getActorId()), e);
+                    log.error(format("Exception while serializing ActorState for actor [%s]", receiverRef.getActorId()), e);
                 }
             }
             if(messageHandlerEventListener != null) {
@@ -94,6 +98,11 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                 } else {
                     messageHandlerEventListener.onError(internalMessage,executionException);
                 }
+            }
+            // do some trace logging
+            if(log.isTraceEnabled()) {
+                long endTime = System.currentTimeMillis();
+                log.trace(format("(%s) Message of type [%s] with id [%s] for actor [%s] took %d msecs to execute (state update %b)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",receiverRef.getActorId(),endTime-startTime,shouldUpdateState));
             }
         }
     }
