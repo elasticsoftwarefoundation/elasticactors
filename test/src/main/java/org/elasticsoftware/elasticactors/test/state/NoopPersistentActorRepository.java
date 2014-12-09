@@ -17,6 +17,8 @@
 package org.elasticsoftware.elasticactors.test.state;
 
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 
@@ -33,6 +35,11 @@ public final class NoopPersistentActorRepository implements PersistentActorRepos
 
     @Override
     public void update(ShardKey shard, PersistentActor persistentActor) throws IOException {
+        // do nothing
+    }
+
+    @Override
+    public void updateAsync(ShardKey shard, PersistentActor persistentActor, InternalMessage message, MessageHandlerEventListener messageHandlerEventListener) {
         // do nothing
     }
 

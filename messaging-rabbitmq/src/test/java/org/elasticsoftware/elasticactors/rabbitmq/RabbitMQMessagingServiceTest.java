@@ -76,7 +76,7 @@ public class RabbitMQMessagingServiceTest {
     @Test(enabled = false)
     public void testAllLocal() throws Exception {
         int workers = Runtime.getRuntime().availableProcessors() * 3;
-        ThreadBoundExecutor<String> queueExecutor = new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
+        ThreadBoundExecutor queueExecutor = new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
 
         RabbitMQMessagingService messagingService = new RabbitMQMessagingService(CLUSTER_NAME,
                                                                                  System.getProperty("host","localhost"),

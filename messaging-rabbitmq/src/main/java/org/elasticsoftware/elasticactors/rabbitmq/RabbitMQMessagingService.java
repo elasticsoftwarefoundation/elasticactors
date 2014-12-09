@@ -61,7 +61,7 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
     private final LocalMessageQueueFactory localMessageQueueFactory;
     private final RemoteMessageQueueFactory remoteMessageQueueFactory;
     private final RemoteActorSystemMessageQueueFactoryFactory remoteActorSystemMessageQueueFactoryFactory;
-    private final ThreadBoundExecutor<String> queueExecutor;
+    private final ThreadBoundExecutor queueExecutor;
     private final String username;
     private final String password;
     private final InternalMessageDeserializer internalMessageDeserializer;
@@ -74,7 +74,7 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
                                     String username,
                                     String password,
                                     MessageAcker.Type ackType,
-                                    ThreadBoundExecutor<String> queueExecutor,
+                                    ThreadBoundExecutor queueExecutor,
                                     InternalMessageDeserializer internalMessageDeserializer) {
         this.rabbitmqHosts = rabbitmqHosts;
         this.elasticActorsCluster = elasticActorsCluster;

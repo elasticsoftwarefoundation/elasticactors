@@ -32,7 +32,7 @@ import javax.annotation.PostConstruct;
  */
 public class MessagingConfiguration {
     @Autowired @Qualifier("queueExecutor")
-    private ThreadBoundExecutor<String> queueExecutor;
+    private ThreadBoundExecutor queueExecutor;
     private TestMessagingService messagingService;
 
     @PostConstruct

@@ -23,26 +23,46 @@ import me.prettyprint.hector.api.beans.Composite;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.exceptions.HPoolRecoverableException;
 import me.prettyprint.hector.api.exceptions.HTimedOutException;
+import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import java.io.IOException;
+import java.util.List;
+
+import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class CassandraPersistentActorRepository implements PersistentActorRepository {
+    private static final Logger logger = Logger.getLogger(CassandraPersistentActorRepository.class);
     private final String clusterName;
+    private final ThreadBoundExecutor asyncUpdateExecutor;
+    private final long readExecutionThresholdMillis;
     private ColumnFamilyTemplate<Composite,String> columnFamilyTemplate;
     private Deserializer<byte[],PersistentActor> deserializer;
     private Serializer<PersistentActor,byte[]> serializer;
 
-    public CassandraPersistentActorRepository(String clusterName) {
+    public CassandraPersistentActorRepository(String clusterName, ThreadBoundExecutor asyncUpdateExecutor) {
+        this(clusterName,asyncUpdateExecutor,200);
+    }
+
+    public CassandraPersistentActorRepository(String clusterName, ThreadBoundExecutor asyncUpdateExecutor, long readExecutionThresholdMillis) {
         this.clusterName = clusterName;
+        this.asyncUpdateExecutor = asyncUpdateExecutor;
+        this.readExecutionThresholdMillis = readExecutionThresholdMillis;
     }
 
     @Override
@@ -55,6 +75,16 @@ public final class CassandraPersistentActorRepository implements PersistentActor
         ColumnFamilyUpdater<Composite,String> updater = columnFamilyTemplate.createUpdater(createKey(shard));
         updater.setByteArray(persistentActor.getSelf().getActorId(), serializer.serialize(persistentActor));
         columnFamilyTemplate.update(updater);
+    }
+
+    @Override
+    public void updateAsync(ShardKey shard, PersistentActor persistentActor, InternalMessage message, MessageHandlerEventListener messageHandlerEventListener) throws IOException {
+        // serialize the data on the calling thread (to avoid thread visibility issues)
+        final byte[] serializedActorBytes = serializer.serialize(persistentActor);
+        asyncUpdateExecutor.execute(new PersistentActorUpdateEvent(createKey(shard),shard,
+                                                                   persistentActor.getSelf().getActorId(),
+                                                                   serializedActorBytes, message,
+                                                                   messageHandlerEventListener));
     }
 
     @Override
@@ -73,16 +103,24 @@ public final class CassandraPersistentActorRepository implements PersistentActor
     }
 
     private HColumn<String,byte[]> querySingleColumnWithRetry(final ShardKey shard,final String actorId) {
-        // try three times, and
+        // try three times, and log a warning when we exceed the readExecutionThreshold
+        final long startTime = currentTimeMillis();
         int attemptsRemaining = 3;
-        while(true) {
-            attemptsRemaining--;
-            try {
-                return columnFamilyTemplate.querySingleColumn(createKey(shard), actorId, BytesArraySerializer.get());
-            } catch(HTimedOutException | HPoolRecoverableException e) {
-                if(attemptsRemaining <= 0) {
-                    throw e;
+        try {
+            while (true) {
+                attemptsRemaining--;
+                try {
+                    return columnFamilyTemplate.querySingleColumn(createKey(shard), actorId, BytesArraySerializer.get());
+                } catch (HTimedOutException | HPoolRecoverableException e) {
+                    if (attemptsRemaining <= 0) {
+                        throw e;
+                    }
                 }
+            }
+        } finally {
+            final long endTime = currentTimeMillis();
+            if((endTime - startTime) > readExecutionThresholdMillis) {
+                logger.warn(format("Cassandra read operation took %d msecs (%d retries) for actorId [%s] on shard [%s]",(endTime - startTime),(2 - attemptsRemaining),actorId,shard.toString()));
             }
         }
     }
@@ -105,4 +143,5 @@ public final class CassandraPersistentActorRepository implements PersistentActor
     public void setSerializer(Serializer serializer) {
         this.serializer = serializer;
     }
+
 }

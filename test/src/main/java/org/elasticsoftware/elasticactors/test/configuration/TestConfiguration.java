@@ -123,13 +123,13 @@ public class TestConfiguration {
     }
 
     @Bean(name = {"actorExecutor"}, destroyMethod = "shutdown")
-    public ThreadBoundExecutor<String> createActorExecutor() {
+    public ThreadBoundExecutor createActorExecutor() {
         int workers = Runtime.getRuntime().availableProcessors() * 3;
         return new ThreadBoundExecutorImpl(new DaemonThreadFactory("ACTOR-WORKER"),workers);
     }
 
     @Bean(name = {"queueExecutor"}, destroyMethod = "shutdown")
-    public ThreadBoundExecutor<String> createQueueExecutor() {
+    public ThreadBoundExecutor createQueueExecutor() {
         int workers = Runtime.getRuntime().availableProcessors() * 3;
         return new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
     }

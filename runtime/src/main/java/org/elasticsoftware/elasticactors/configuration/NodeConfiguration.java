@@ -114,14 +114,14 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"actorExecutor"}, destroyMethod = "shutdown")
-    public ThreadBoundExecutor<String> createActorExecutor() {
-        int workers = Runtime.getRuntime().availableProcessors() * 3;
+    public ThreadBoundExecutor createActorExecutor() {
+        final int workers = env.getProperty("ea.actorExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
         return new ThreadBoundExecutorImpl(new DaemonThreadFactory("ACTOR-WORKER"),workers);
     }
 
     @Bean(name = {"queueExecutor"}, destroyMethod = "shutdown")
-    public ThreadBoundExecutor<String> createQueueExecutor() {
-        int workers = Runtime.getRuntime().availableProcessors() * 3;
+    public ThreadBoundExecutor createQueueExecutor() {
+        final int workers = env.getProperty("ea.queueExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
         return new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
     }
 

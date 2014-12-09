@@ -17,6 +17,8 @@
 package org.elasticsoftware.elasticactors.redis.state;
 
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
@@ -47,6 +49,11 @@ public class RedisPersistentActorRepository implements PersistentActorRepository
     @Override
     public void update(ShardKey shard, PersistentActor persistentActor) throws IOException {
         //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void updateAsync(ShardKey shard, PersistentActor persistentActor, InternalMessage message, MessageHandlerEventListener messageHandlerEventListener) {
+        // do nothing
     }
 
     @Override

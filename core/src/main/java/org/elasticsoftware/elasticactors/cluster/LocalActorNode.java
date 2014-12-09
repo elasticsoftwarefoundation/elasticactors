@@ -49,7 +49,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     private static final Logger logger = Logger.getLogger(LocalActorNode.class);
     private final InternalActorSystem actorSystem;
     private final NodeKey nodeKey;
-    private ThreadBoundExecutor<String> actorExecutor;
+    private ThreadBoundExecutor actorExecutor;
     private final NodeActorCacheManager actorCacheManager;
     private Cache<ActorRef,PersistentActor<NodeKey>> actorCache;
     private final Set<ElasticActor> initializedActors = new HashSet<>();
@@ -256,7 +256,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     }
 
     @Autowired
-    public void setActorExecutor(@Qualifier("actorExecutor") ThreadBoundExecutor<String> actorExecutor) {
+    public void setActorExecutor(@Qualifier("actorExecutor") ThreadBoundExecutor actorExecutor) {
         this.actorExecutor = actorExecutor;
     }
 

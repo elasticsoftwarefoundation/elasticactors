@@ -16,18 +16,24 @@
 
 package org.elasticsoftware.elasticactors.util.concurrent;
 
+import org.apache.log4j.Logger;
+
+import java.util.List;
+
 /**
- * ThreadBoundExecutor
- *
- * <p/>
- * A same thread executor guarantees that a runnable executed on the executor that has the same key
- * will always be executed by the same thread.
- *
- * @param <T> The type of the key
  * @author Joost van de Wijgerd
  */
-public interface ThreadBoundExecutor<T extends ThreadBoundEvent<?>> {
+public final class ThreadBoundRunnableEventProcessor implements ThreadBoundEventProcessor<ThreadBoundRunnable> {
+    private static final Logger logger = Logger.getLogger(ThreadBoundExecutorImpl.class);
 
-    public void execute(T runnable);
-
+    @Override
+    public void process(List<ThreadBoundRunnable> events) {
+        for (ThreadBoundRunnable r : events) {
+            try {
+                r.run();
+            } catch (Throwable exception) {
+                logger.error(String.format("exception on queue %s while executing runnable: %s", Thread.currentThread().getName(), r), exception);
+            }
+        }
+    }
 }

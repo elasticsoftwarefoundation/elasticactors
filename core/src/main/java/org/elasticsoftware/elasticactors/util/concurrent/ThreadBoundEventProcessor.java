@@ -16,18 +16,11 @@
 
 package org.elasticsoftware.elasticactors.util.concurrent;
 
+import java.util.List;
+
 /**
- * ThreadBoundExecutor
- *
- * <p/>
- * A same thread executor guarantees that a runnable executed on the executor that has the same key
- * will always be executed by the same thread.
- *
- * @param <T> The type of the key
  * @author Joost van de Wijgerd
  */
-public interface ThreadBoundExecutor<T extends ThreadBoundEvent<?>> {
-
-    public void execute(T runnable);
-
+public interface ThreadBoundEventProcessor<T extends ThreadBoundEvent> {
+    void process(List<T> events);
 }

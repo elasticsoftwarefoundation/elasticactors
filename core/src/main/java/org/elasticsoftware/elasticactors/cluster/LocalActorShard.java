@@ -55,7 +55,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     private static final Logger logger = Logger.getLogger(LocalActorShard.class);
     private final InternalActorSystem actorSystem;
     private final ShardKey shardKey;
-    private ThreadBoundExecutor<String> actorExecutor;
+    private ThreadBoundExecutor actorExecutor;
     private Cache<ActorRef,PersistentActor<ShardKey>> actorCache;
     private PersistentActorRepository persistentActorRepository;
     private final ShardActorCacheManager actorCacheManager;
@@ -302,7 +302,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         }
 
     @Autowired
-    public void setActorExecutor(@Qualifier("actorExecutor") ThreadBoundExecutor<String> actorExecutor) {
+    public void setActorExecutor(@Qualifier("actorExecutor") ThreadBoundExecutor actorExecutor) {
         this.actorExecutor = actorExecutor;
     }
 

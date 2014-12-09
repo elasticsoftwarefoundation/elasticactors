@@ -32,9 +32,9 @@ public final class LocalMessageQueue implements MessageQueue {
     private final String queueName;
     private final MessageHandler messageHandler;
     private final TransientAck transientAck = new TransientAck();
-    private final ThreadBoundExecutor<String> queueExecutor;
+    private final ThreadBoundExecutor queueExecutor;
 
-    public LocalMessageQueue(ThreadBoundExecutor<String> queueExecutor,String queueName, MessageHandler messageHandler) {
+    public LocalMessageQueue(ThreadBoundExecutor queueExecutor,String queueName, MessageHandler messageHandler) {
         this.queueExecutor = queueExecutor;
         this.queueName = queueName;
         this.messageHandler = messageHandler;

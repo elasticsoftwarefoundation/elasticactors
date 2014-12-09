@@ -29,9 +29,9 @@ import java.io.IOException;
  * @author Joost van de Wijgerd
  */
 public final class TestMessagingService implements MessagingService, MessageQueueFactory {
-    private final ThreadBoundExecutor<String> queueExecutor;
+    private final ThreadBoundExecutor queueExecutor;
 
-    public TestMessagingService(ThreadBoundExecutor<String> queueExecutor) {
+    public TestMessagingService(ThreadBoundExecutor queueExecutor) {
         this.queueExecutor = queueExecutor;
     }
 

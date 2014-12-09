@@ -87,12 +87,12 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             // check if we have state now that needs to be put in the cache
             if (persistentActorRepository != null && persistentActor.getState() != null && shouldUpdateState) {
                 try {
-                    persistentActorRepository.update((ShardKey) persistentActor.getKey(), persistentActor);
+                    persistentActorRepository.updateAsync((ShardKey) persistentActor.getKey(), persistentActor,
+                                                          internalMessage, messageHandlerEventListener);
                 } catch (Exception e) {
                     log.error(format("Exception while serializing ActorState for actor [%s]", receiverRef.getActorId()), e);
                 }
-            }
-            if(messageHandlerEventListener != null) {
+            } else if(messageHandlerEventListener != null) {
                 if(executionException == null) {
                     messageHandlerEventListener.onDone(internalMessage);
                 } else {

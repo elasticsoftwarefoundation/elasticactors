@@ -19,7 +19,7 @@
 
     <groupId>org.elasticsoftware.elasticactors</groupId>
     <artifactId>elasticactors-parent</artifactId>
-    <version>0.17.3-SNAPSHOT</version>
+    <version>0.18.0-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -45,6 +45,7 @@
         <rabbitmq.version>3.3.0</rabbitmq.version>
         <lyra.version>0.4.0</lyra.version>
         <lz4.version>1.2.0</lz4.version>
+        <kafka.version>0.8.1.1</kafka.version>
         <!-- testing -->
         <testng-version>5.10</testng-version>
         <mockito.version>1.9.5</mockito.version>
@@ -110,6 +111,7 @@
         <module>backplane-redis</module>
         <module>backplane-cassandra</module>
         <module>messaging-rabbitmq</module>
+        <module>messaging-kafka</module>
         <module>test</module>
     </modules>
 

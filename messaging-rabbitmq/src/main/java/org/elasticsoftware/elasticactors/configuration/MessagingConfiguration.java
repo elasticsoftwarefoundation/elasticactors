@@ -41,7 +41,7 @@ public class MessagingConfiguration {
     @Autowired
     private Environment env;
     @Autowired @Qualifier("queueExecutor")
-    private ThreadBoundExecutor<String> queueExecutor;
+    private ThreadBoundExecutor queueExecutor;
     @Autowired
     private ActorRefFactory actorRefFactory;
     private RabbitMQMessagingService messagingService;

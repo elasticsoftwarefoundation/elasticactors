@@ -22,8 +22,6 @@ package org.elasticsoftware.elasticactors.util.concurrent;
  *
  * @author Joost van de Wijgerd
  */
-public interface ThreadBoundRunnable<T> extends Runnable {
-
-    T getKey();
+public interface ThreadBoundRunnable<T> extends Runnable, ThreadBoundEvent<T> {
 
 }

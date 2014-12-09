@@ -17,6 +17,8 @@
 package org.elasticsoftware.elasticactors.state;
 
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 
 import java.io.IOException;
 
@@ -27,6 +29,8 @@ public interface PersistentActorRepository {
     boolean contains(ShardKey shard,String actorId);
 
     void update(ShardKey shard,PersistentActor persistentActor) throws IOException;
+
+    void updateAsync(ShardKey shard, PersistentActor persistentActor, InternalMessage message, MessageHandlerEventListener messageHandlerEventListener) throws IOException;
 
     void delete(ShardKey shard,String actorId);
 

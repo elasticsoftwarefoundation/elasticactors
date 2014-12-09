@@ -20,18 +20,18 @@ import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor<String> {
-
+public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
     private static final Logger LOG = Logger.getLogger(ThreadBoundExecutorImpl.class);
 
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
-    private final List<BlockingQueue<Runnable>> queues = new ArrayList<BlockingQueue<Runnable>>();
+    private final List<BlockingQueue<ThreadBoundEvent>> queues = new ArrayList<>();
 
     /**
      * Create an executor with numberOfThreads worker threads.
@@ -39,10 +39,13 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor<String
      * @param numberOfThreads
      */
     public ThreadBoundExecutorImpl(ThreadFactory threadFactory, int numberOfThreads) {
+        this(new ThreadBoundRunnableEventProcessor(),1,threadFactory,numberOfThreads);
+    }
 
+    public ThreadBoundExecutorImpl(ThreadBoundEventProcessor eventProcessor, int maxBatchSize, ThreadFactory threadFactory, int numberOfThreads) {
         for (int i = 0; i < numberOfThreads; i++) {
-            BlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
-            Thread t = threadFactory.newThread(new Consumer(queue));
+            BlockingQueue<ThreadBoundEvent> queue = new LinkedBlockingQueue<>();
+            Thread t = threadFactory.newThread(new Consumer(queue,eventProcessor,maxBatchSize));
             queues.add(queue);
             t.start();
         }
@@ -51,15 +54,15 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor<String
     /**
      * Schedule a runnable for execution.
      *
-     * @param runnable The runnable to execute
+     * @param event The runnable to execute
      */
-    public void execute(ThreadBoundRunnable<String> runnable) {
+    public void execute(ThreadBoundEvent event) {
         if (shuttingDown.get()) {
             throw new RejectedExecutionException("The system is shutting down.");
         }
-        int bucket = getBucket(runnable.getKey());
-        BlockingQueue<Runnable> queue = queues.get(bucket);
-        queue.add(runnable);
+        int bucket = getBucket(event.getKey());
+        BlockingQueue<ThreadBoundEvent> queue = queues.get(bucket);
+        queue.add(event);
     }
 
 
@@ -71,7 +74,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor<String
         LOG.info("shutting down the ThreadBoundExecutor");
         if (shuttingDown.compareAndSet(false, true)) {
             final CountDownLatch shuttingDownLatch = new CountDownLatch(queues.size());
-            for (BlockingQueue<Runnable> queue : queues) {
+            for (BlockingQueue<ThreadBoundEvent> queue : queues) {
                 queue.add(new ShutdownTask(shuttingDownLatch));
             }
             try {
@@ -88,32 +91,66 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor<String
 
 
     private static final class Consumer implements Runnable {
-        private final BlockingQueue<Runnable> queue;
+        private final BlockingQueue<ThreadBoundEvent> queue;
+        private final int maxBatchSize;
+        private final ArrayList<ThreadBoundEvent> batch;
+        private final ThreadBoundEventProcessor<ThreadBoundEvent> eventProcessor;
 
-        public Consumer(BlockingQueue<Runnable> queue) {
+        public Consumer(BlockingQueue<ThreadBoundEvent> queue) {
+            this(queue,new ThreadBoundRunnableEventProcessor(),1);
+        }
+
+        public Consumer(BlockingQueue<ThreadBoundEvent> queue, ThreadBoundEventProcessor eventProcessor, int maxBatchSize) {
             this.queue = queue;
+            this.eventProcessor = eventProcessor;
+            // store this -1 as we will always use take to get the first element of the batch
+            this.maxBatchSize = maxBatchSize - 1;
+            this.batch = new ArrayList<>(maxBatchSize);
         }
 
         @Override
         public void run() {
             try {
                 boolean running = true;
-                Runnable r = null;
                 while (running) {
                     try {
-                        r = queue.take();
-                        r.run();
+                        // block on event availability
+                        ThreadBoundEvent event = queue.take();
+                        // add to the batch, and see if we can add more
+                        batch.add(event);
+                        if(maxBatchSize > 0) {
+                            queue.drainTo(batch, maxBatchSize);
+                        }
+                        // check for the stop condition (and remove it)
+                        // treat batches of 1 (the most common case) specially
+                        if(batch.size() > 1) {
+                            ListIterator<ThreadBoundEvent> itr = batch.listIterator();
+                            while (itr.hasNext()) {
+                                ThreadBoundEvent next = itr.next();
+                                if (next.getClass().equals(ShutdownTask.class)) {
+                                    running = false;
+                                    ((ShutdownTask)next).latch.countDown();
+                                    itr.remove();
+                                }
+                            }
+                            eventProcessor.process(batch);
+                        } else {
+                            // just the one event, no need to iterate
+                            if(event.getClass().equals(ShutdownTask.class)) {
+                                running = false;
+                                ((ShutdownTask)event).latch.countDown();
+                            } else {
+                                eventProcessor.process(batch);
+                            }
+                        }
                     } catch (InterruptedException e) {
                         LOG.warn(String.format("Consumer on queue %s interrupted.", Thread.currentThread().getName()));
                         //ignore
                     } catch (Throwable exception) {
-                        LOG.error(String.format("exception on queue %s while executing runnable: %s", Thread.currentThread().getName(), r), exception);
+                        LOG.error(String.format("exception on queue %s while executing events", Thread.currentThread().getName()), exception);
                     } finally {
-                        if (r != null && r.getClass().equals(ShutdownTask.class)) {
-                            running = false;
-                        }
-                        // reset r so that we get a correct null value if the queue.take() is interrupted
-                        r = null;
+                        // reset the batch
+                        batch.clear();
                     }
                 }
             } catch(Throwable unexpectedThrowable) {
@@ -126,7 +163,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor<String
         }
     }
 
-    private static final class ShutdownTask implements Runnable {
+    private static final class ShutdownTask implements ThreadBoundRunnable<Object> {
 
         private final CountDownLatch latch;
 
@@ -142,6 +179,11 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor<String
         @Override
         public String toString() {
             return "ShutdownTask";
+        }
+
+        @Override
+        public Object getKey() {
+            return null;
         }
     }
 

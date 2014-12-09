@@ -29,6 +29,7 @@ import org.elasticsoftware.elasticactors.cassandra.cluster.scheduler.CassandraSc
 import org.elasticsoftware.elasticactors.cassandra.serialization.CompressingSerializer;
 import org.elasticsoftware.elasticactors.cassandra.serialization.DecompressingDeserializer;
 import org.elasticsoftware.elasticactors.cassandra.state.CassandraPersistentActorRepository;
+import org.elasticsoftware.elasticactors.cassandra.state.PersistentActorUpdateEventProcessor;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRepository;
@@ -37,7 +38,11 @@ import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorD
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorSerializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageDeserializer;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 
@@ -78,9 +83,16 @@ public class BackplaneConfiguration {
         scheduledMessagesColumnFamilyTemplate.setCount(Integer.MAX_VALUE);
     }
 
+    @Bean(name = {"asyncUpdateExecutor"}, destroyMethod = "shutdown")
+    public ThreadBoundExecutor createAsyncUpdateExecutor() {
+        final int workers = env.getProperty("ea.asyncUpdateExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
+        final int batchSize = env.getProperty("ea.asyncUpdateExecutor.batchSize",Integer.class,20);
+        return new ThreadBoundExecutorImpl(new PersistentActorUpdateEventProcessor(persistentActorsColumnFamilyTemplate),batchSize,new DaemonThreadFactory("UPDATE-EXECUTOR-WORKER"),workers);
+    }
+
     @Bean(name = {"persistentActorRepository"})
-    public PersistentActorRepository getPersistentActorRepository() {
-        CassandraPersistentActorRepository persistentActorRepository = new CassandraPersistentActorRepository(cluster.getClusterName());
+    public PersistentActorRepository getPersistentActorRepository(@Qualifier("asyncUpdateExecutor") ThreadBoundExecutor asyncUpdateExecutor) {
+        CassandraPersistentActorRepository persistentActorRepository = new CassandraPersistentActorRepository(cluster.getClusterName(), asyncUpdateExecutor);
         persistentActorRepository.setColumnFamilyTemplate(persistentActorsColumnFamilyTemplate);
         persistentActorRepository.setSerializer(new CompressingSerializer<>(new PersistentActorSerializer(cluster),512));
         persistentActorRepository.setDeserializer(new DecompressingDeserializer<>(new PersistentActorDeserializer(actorRefFactory,cluster)));
@@ -89,8 +101,7 @@ public class BackplaneConfiguration {
 
     @Bean(name = {"scheduledMessageRepository"})
     public ScheduledMessageRepository getScheduledMessageRepository() {
-        CassandraScheduledMessageRepository scheduledMessageRepository = new CassandraScheduledMessageRepository(cluster.getClusterName(), scheduledMessagesColumnFamilyTemplate, new ScheduledMessageDeserializer(new ActorRefDeserializer(actorRefFactory)));
-        return scheduledMessageRepository;
+        return new CassandraScheduledMessageRepository(cluster.getClusterName(), scheduledMessagesColumnFamilyTemplate, new ScheduledMessageDeserializer(new ActorRefDeserializer(actorRefFactory)));
     }
 }
 

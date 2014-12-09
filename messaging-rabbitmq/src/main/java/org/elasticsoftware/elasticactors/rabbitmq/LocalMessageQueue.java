@@ -46,14 +46,14 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
     private final String queueName;
     private final MessageHandler messageHandler;
     private final TransientAck transientAck = new TransientAck();
-    private final ThreadBoundExecutor<String> queueExecutor;
+    private final ThreadBoundExecutor queueExecutor;
     private final CountDownLatch destroyLatch = new CountDownLatch(1);
     private final InternalMessageDeserializer internalMessageDeserializer;
     private final AtomicBoolean recovering = new AtomicBoolean(false);
     private final ChannelListenerRegistry channelListenerRegistry;
     private final MessageAcker messageAcker;
 
-    public LocalMessageQueue(ThreadBoundExecutor<String> queueExecutor,
+    public LocalMessageQueue(ThreadBoundExecutor queueExecutor,
                              ChannelListenerRegistry channelListenerRegistry,
                              Channel consumerChannel,
                              Channel producerChannel,
