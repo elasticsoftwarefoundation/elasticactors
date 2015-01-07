@@ -89,12 +89,12 @@ public final class ActorShardRef implements ActorRef, ActorContainerRef {
 
     @Override
     public boolean equals(Object o) {
-        return this == o || o instanceof ActorRef && this.toString().equals(o.toString());
+        return this == o || o instanceof ActorRef && this.refSpec.equals(o.toString());
     }
 
     @Override
     public int hashCode() {
-        return toString().hashCode();
+        return this.refSpec.hashCode();
     }
 
     @Override

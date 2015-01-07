@@ -42,7 +42,9 @@ import org.springframework.core.env.Environment;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.net.InetAddress;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -64,6 +66,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private final Cache<Class<? extends ElasticActor>,String> actorStateVersionCache = CacheBuilder.newBuilder().maximumSize(1024).build();
     private Cache<String,ActorRef> actorRefCache;
+    private final Map<Class<? extends SerializationFramework>,SerializationFramework> serializationFrameworks = new HashMap<>();
     @Autowired
     private ApplicationContext applicationContext;
     @Autowired
@@ -92,6 +95,11 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     public void init() throws Exception {
         int maximumSize = environment.getProperty("ea.actorRefCache.maximumSize",Integer.class,10240);
         actorRefCache = CacheBuilder.newBuilder().maximumSize(maximumSize).build();
+        // cache the serialization frameworks for quick lookup (application context lookup is sloooooowwwwww)
+        Map<String,SerializationFramework> frameworks = applicationContext.getBeansOfType(SerializationFramework.class);
+        for (SerializationFramework serializationFramework : frameworks.values()) {
+            this.serializationFrameworks.put(serializationFramework.getClass(),serializationFramework);
+        }
     }
 
     @PreDestroy
@@ -213,7 +221,8 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
 
     @Override
     public SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass) {
-        return applicationContext.getBean(frameworkClass);
+        //return applicationContext.getBean(frameworkClass);
+        return this.serializationFrameworks.get(frameworkClass);
     }
 
     @Override
