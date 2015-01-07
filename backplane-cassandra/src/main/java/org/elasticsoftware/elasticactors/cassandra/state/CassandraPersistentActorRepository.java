@@ -31,13 +31,9 @@ import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import java.io.IOException;
-import java.util.List;
 
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;

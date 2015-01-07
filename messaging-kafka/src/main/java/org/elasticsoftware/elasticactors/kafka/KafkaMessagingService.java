@@ -1,6 +1,5 @@
 package org.elasticsoftware.elasticactors.kafka;
 
-import kafka.javaapi.PartitionMetadata;
 import kafka.javaapi.TopicMetadata;
 import kafka.javaapi.TopicMetadataRequest;
 import kafka.javaapi.consumer.SimpleConsumer;
@@ -11,12 +10,9 @@ import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MessagingService;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import static java.util.Collections.singletonList;

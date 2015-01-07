@@ -27,7 +27,6 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;

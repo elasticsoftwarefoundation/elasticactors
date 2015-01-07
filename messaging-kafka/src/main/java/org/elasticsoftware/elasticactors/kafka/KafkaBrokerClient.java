@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.kafka;
 
-import kafka.api.FetchRequest;
 import kafka.api.FetchRequestBuilder;
 import kafka.common.ErrorMapping;
 import kafka.javaapi.FetchResponse;
