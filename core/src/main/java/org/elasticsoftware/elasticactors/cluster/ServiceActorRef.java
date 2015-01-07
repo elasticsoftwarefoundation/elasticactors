@@ -27,15 +27,14 @@ import static java.lang.String.format;
  * @author  Joost van de Wijgerd
  */
 public final class ServiceActorRef implements ActorRef, ActorContainerRef {
-    private static final Logger logger = Logger.getLogger(ServiceActorRef.class);
-    private final String clusterName;
     private final ActorNode node;
     private final String serviceId;
+    private final String refSpec;
 
     public ServiceActorRef(String clusterName, ActorNode node, String serviceId) {
-        this.clusterName = clusterName;
         this.node = node;
         this.serviceId = serviceId;
+        this.refSpec = generateRefSpec(clusterName, node, serviceId);
     }
 
     public static String generateRefSpec(String clusterName,ActorNode node,String serviceId) {
@@ -84,12 +83,12 @@ public final class ServiceActorRef implements ActorRef, ActorContainerRef {
 
     @Override
     public int hashCode() {
-        return toString().hashCode();
+        return this.refSpec.hashCode();
     }
 
 
     @Override
     public String toString() {
-        return generateRefSpec(this.clusterName,this.node,this.serviceId);
+        return this.refSpec;
     }
 }

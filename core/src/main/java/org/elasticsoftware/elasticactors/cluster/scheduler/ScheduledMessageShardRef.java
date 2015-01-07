@@ -26,14 +26,14 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public final class ScheduledMessageShardRef implements ScheduledMessageRef, ActorContainerRef {
-    private final String clusterName;
     private final ActorShard shard;
     private final ScheduledMessageKey scheduledMessageKey;
+    private final String refSpec;
 
     public ScheduledMessageShardRef(String clusterName, ActorShard shard, ScheduledMessageKey scheduledMessageKey) {
-        this.clusterName = clusterName;
         this.shard = shard;
         this.scheduledMessageKey = scheduledMessageKey;
+        this.refSpec = format(REFSPEC_FORMAT,clusterName,shard.getKey().getActorSystemName(),shard.getKey().getShardId(),scheduledMessageKey.getFireTime(),scheduledMessageKey.getId().toString());
     }
 
     @Override
@@ -64,11 +64,11 @@ public final class ScheduledMessageShardRef implements ScheduledMessageRef, Acto
 
     @Override
     public int hashCode() {
-        return toString().hashCode();
+        return this.refSpec.hashCode();
     }
 
     @Override
     public String toString() {
-        return format(REFSPEC_FORMAT,clusterName,shard.getKey().getActorSystemName(),shard.getKey().getShardId(),scheduledMessageKey.getFireTime(),scheduledMessageKey.getId().toString());
+        return this.refSpec;
     }
 }

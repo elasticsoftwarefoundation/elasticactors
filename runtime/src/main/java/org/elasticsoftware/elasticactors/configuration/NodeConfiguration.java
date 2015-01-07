@@ -82,8 +82,11 @@ public class NodeConfiguration {
     @Bean(name = {"objectMapper"})
     public ObjectMapper createObjectMapper(ShardedScheduler schedulerService) {
         String basePackages = env.getProperty("ea.scan.packages",String.class,"");
+        Boolean useAfterburner = env.getProperty("ea.base.useAfterburner",Boolean.class,Boolean.FALSE);
         // @todo: fix version
-        return new ObjectMapperBuilder(node,schedulerService,"1.0.0",basePackages).build();
+        ObjectMapperBuilder builder = new ObjectMapperBuilder(node,schedulerService,"1.0.0",basePackages);
+        builder.setUseAfterBurner(useAfterburner);
+        return builder.build();
     }
 
     @Bean(name = {"messagesScanner"})

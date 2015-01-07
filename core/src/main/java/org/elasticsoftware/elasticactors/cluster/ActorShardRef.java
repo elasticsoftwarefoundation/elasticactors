@@ -27,15 +27,14 @@ import javax.annotation.Nullable;
  * @author  Joost van de Wijgerd
  */
 public final class ActorShardRef implements ActorRef, ActorContainerRef {
-    private static final Logger logger = Logger.getLogger(ActorShardRef.class);
-    private final String clusterName;
     private final ActorShard shard;
     private final String actorId;
+    private final String refSpec;
 
     public ActorShardRef(String clusterName, ActorShard shard,@Nullable String actorId) {
-        this.clusterName = clusterName;
         this.shard = shard;
         this.actorId = actorId;
+        this.refSpec = generateRefSpec(clusterName, shard, actorId);
     }
 
     public ActorShardRef(String clusterName, ActorShard shard) {
@@ -101,6 +100,6 @@ public final class ActorShardRef implements ActorRef, ActorContainerRef {
 
     @Override
     public String toString() {
-        return generateRefSpec(this.clusterName,this.shard,this.actorId);
+        return this.refSpec;
     }
 }

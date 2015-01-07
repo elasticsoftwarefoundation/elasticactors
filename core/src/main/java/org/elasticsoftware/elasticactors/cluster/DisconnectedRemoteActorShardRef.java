@@ -31,12 +31,14 @@ public final class DisconnectedRemoteActorShardRef implements ActorRef,ActorCont
     private final String actorSystemName;
     private final String actorId;
     private final int shardId;
+    private final String refSpec;
 
     public DisconnectedRemoteActorShardRef(String clusterName, String actorSystemName, String actorId, int shardId) {
         this.clusterName = clusterName;
         this.actorSystemName = actorSystemName;
         this.actorId = actorId;
         this.shardId = shardId;
+        this.refSpec = format(REFSPEC_FORMAT,clusterName,actorSystemName,shardId,actorId);
     }
 
 
@@ -67,7 +69,7 @@ public final class DisconnectedRemoteActorShardRef implements ActorRef,ActorCont
 
     @Override
     public String toString() {
-        return format(REFSPEC_FORMAT,clusterName,actorSystemName,shardId,actorId);
+        return this.refSpec;
     }
 
     @Override
@@ -77,6 +79,6 @@ public final class DisconnectedRemoteActorShardRef implements ActorRef,ActorCont
 
     @Override
     public int hashCode() {
-        return toString().hashCode();
+        return this.refSpec.hashCode();
     }
 }

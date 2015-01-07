@@ -27,8 +27,10 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 /**
  * @author Joost van de Wijgerd
@@ -42,7 +44,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
     private final PersistentActorRepository persistentActorRepository;
     private final InternalMessage internalMessage;
     private final MessageHandlerEventListener messageHandlerEventListener;
-    private final long startTime;
+    private final Measurement measurement;
 
     protected ActorLifecycleTask(PersistentActorRepository persistentActorRepository,
                                  PersistentActor persistentActor,
@@ -58,7 +60,8 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         this.receiver = receiver;
         this.messageHandlerEventListener = messageHandlerEventListener;
         this.internalMessage = internalMessage;
-        this.startTime = System.currentTimeMillis();
+        // only measure when trace is enabled
+        this.measurement = log.isTraceEnabled() ? new Measurement(System.nanoTime()) : null;
     }
 
     @Override
@@ -68,6 +71,10 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
 
     @Override
     public final void run() {
+        // measure start of the execution
+        if(this.measurement != null) {
+            this.measurement.setExecutionStart(System.nanoTime());
+        }
         // setup the context
         Exception executionException = null;
         InternalActorContext.setContext(persistentActor);
@@ -84,7 +91,11 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             SerializationContext.reset();
             // clear the state from the thread
             InternalActorContext.getAndClearContext();
-            // check if we have state now that needs to be put in the cache
+            // marks the end of the execution path
+            if(this.measurement != null) {
+                this.measurement.setExecutionEnd(System.nanoTime());
+            }
+            // check if we have state now that needs to be written to the persistent actor store
             if (persistentActorRepository != null && persistentActor.getState() != null && shouldUpdateState) {
                 try {
                     persistentActorRepository.updateAsync((ShardKey) persistentActor.getKey(), persistentActor,
@@ -92,17 +103,24 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                 } catch (Exception e) {
                     log.error(format("Exception while serializing ActorState for actor [%s]", receiverRef.getActorId()), e);
                 }
+                // measure the serialization time
+                if(this.measurement != null) {
+                    this.measurement.setSerializationEnd(System.nanoTime());
+                }
             } else if(messageHandlerEventListener != null) {
                 if(executionException == null) {
                     messageHandlerEventListener.onDone(internalMessage);
                 } else {
                     messageHandlerEventListener.onError(internalMessage,executionException);
                 }
+                // measure the ack time
+                if(this.measurement != null) {
+                    this.measurement.setAckEnd(System.nanoTime());
+                }
             }
             // do some trace logging
-            if(log.isTraceEnabled()) {
-                long endTime = System.currentTimeMillis();
-                log.trace(format("(%s) Message of type [%s] with id [%s] for actor [%s] took %d msecs to execute (state update %b)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",receiverRef.getActorId(),endTime-startTime,shouldUpdateState));
+            if(this.measurement != null) {
+                log.trace(format("(%s) Message of type [%s] with id [%s] for actor [%s] took %d microsecs in queue, %d microsecs to execute, %d microsecs to serialize and %d microsecs to ack (state update %b)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",receiverRef.getActorId(),measurement.getQueueDuration(MICROSECONDS),measurement.getExecutionDuration(MICROSECONDS),measurement.getSerializationDuration(MICROSECONDS),measurement.getAckDuration(MICROSECONDS),measurement.isSerialized()));
             }
         }
     }

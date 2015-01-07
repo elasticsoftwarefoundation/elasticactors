@@ -25,15 +25,14 @@ import org.elasticsoftware.elasticactors.*;
  * @author  Joost van de Wijgerd
  */
 public final class LocalClusterActorNodeRef implements ActorRef, ActorContainerRef {
-    private static final Logger logger = Logger.getLogger(LocalClusterActorNodeRef.class);
-    private final String clusterName;
     private final ActorNode node;
     private final String actorId;
+    private final String refSpec;
 
     public LocalClusterActorNodeRef(String clusterName, ActorNode node, String actorId) {
-        this.clusterName = clusterName;
         this.node = node;
         this.actorId = actorId;
+        this.refSpec = generateRefSpec(clusterName, node, actorId);
     }
 
     public static String generateRefSpec(String clusterName, ActorNode node,String actorId) {
@@ -94,11 +93,11 @@ public final class LocalClusterActorNodeRef implements ActorRef, ActorContainerR
 
     @Override
     public int hashCode() {
-        return toString().hashCode();
+        return this.refSpec.hashCode();
     }
 
     @Override
     public String toString() {
-        return generateRefSpec(this.clusterName,this.node,this.actorId);
+        return this.refSpec;
     }
 }

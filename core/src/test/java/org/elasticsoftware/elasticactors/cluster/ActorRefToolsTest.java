@@ -41,7 +41,8 @@ public class ActorRefToolsTest {
         when(configuration.getNumberOfShards()).thenReturn(1);
         when(actorSystem.getShard("Pi/shards/0")).thenReturn(shard);
         when(shard.getKey()).thenReturn(shardKey);
-        when(internalActorSystems.createPersistentActorRef(shard,"master")).thenReturn(new ActorShardRef("LocalNode",shard,"master"));
+        ActorShardRef shardRef = new ActorShardRef("LocalNode",shard,"master");
+        when(internalActorSystems.createPersistentActorRef(shard,"master")).thenReturn(shardRef);
         ActorRef actorRef = ActorRefTools.parse("actor://LocalNode/Pi/shards/0/master",internalActorSystems);
         assertNotNull(actorRef);
         assertEquals(actorRef.getActorId(),"master");
@@ -61,7 +62,8 @@ public class ActorRefToolsTest {
         when(configuration.getNumberOfShards()).thenReturn(1);
         when(actorSystem.getShard("Pi/shards/0")).thenReturn(shard);
         when(shard.getKey()).thenReturn(shardKey);
-        when(internalActorSystems.createPersistentActorRef(shard,null)).thenReturn(new ActorShardRef("LocalNode",shard,null));
+        ActorShardRef shardRef = new ActorShardRef("LocalNode",shard,null);
+        when(internalActorSystems.createPersistentActorRef(shard,null)).thenReturn(shardRef);
         ActorRef actorRef = ActorRefTools.parse("actor://LocalNode/Pi/shards/0",internalActorSystems);
         assertNotNull(actorRef);
         assertNull(actorRef.getActorId());
@@ -80,7 +82,8 @@ public class ActorRefToolsTest {
         when(actorSystem.getNode(nodeId)).thenReturn(node);
         when(node.getKey()).thenReturn(nodeKey);
         String serviceRefString = String.format("actor://LocalCluster/Pi/services/%s/pi/calculate",nodeId);
-        when(internalActorSystems.createServiceActorRef(node,"pi/calculate")).thenReturn(new ServiceActorRef("LocalCluster",node,"pi/calculate"));
+        ServiceActorRef serviceActorRef = new ServiceActorRef("LocalCluster",node,"pi/calculate");
+        when(internalActorSystems.createServiceActorRef(node,"pi/calculate")).thenReturn(serviceActorRef);
         ActorRef serviceRef = ActorRefTools.parse(serviceRefString,internalActorSystems);
         assertNotNull(serviceRef);
         assertEquals(serviceRef.getActorId(),"pi/calculate");
@@ -104,8 +107,10 @@ public class ActorRefToolsTest {
         when(localNode.getKey()).thenReturn(nodeKey);
         when(remoteNode.getKey()).thenReturn(remoteNodeKey);
         String serviceRefString = String.format("actor://trading.dev.getbux.com/trading/services/%s/trading.service.GGM","trading002.dev.getbux.com");
-        when(internalActorSystems.createServiceActorRef(localNode,"trading.service.GGM")).thenReturn(new ServiceActorRef("trading.dev.getbux.com",localNode,"trading.service.GGM"));
-        when(internalActorSystems.createServiceActorRef(remoteNode,"trading.service.GGM")).thenReturn(new ServiceActorRef("trading.dev.getbux.com",remoteNode,"trading.service.GGM"));
+        ServiceActorRef localRef = new ServiceActorRef("trading.dev.getbux.com",localNode,"trading.service.GGM");
+        ServiceActorRef remoteRef = new ServiceActorRef("trading.dev.getbux.com",remoteNode,"trading.service.GGM");
+        when(internalActorSystems.createServiceActorRef(localNode,"trading.service.GGM")).thenReturn(localRef);
+        when(internalActorSystems.createServiceActorRef(remoteNode,"trading.service.GGM")).thenReturn(remoteRef);
         ActorRef serviceRef = ActorRefTools.parse(serviceRefString,internalActorSystems);
         assertNotNull(serviceRef);
         assertEquals(serviceRef.getActorId(),"trading.service.GGM");
@@ -124,7 +129,8 @@ public class ActorRefToolsTest {
         when(actorSystem.getNode(nodeId)).thenReturn(node);
         when(node.getKey()).thenReturn(nodeKey);
         String serviceRefString = String.format("actor://LocalCluster/Pi/services/%s/pi/calculate/with/multiple/slashes",nodeId);
-        when(internalActorSystems.createServiceActorRef(node,"pi/calculate/with/multiple/slashes")).thenReturn(new ServiceActorRef("LocalCluster",node,"pi/calculate/with/multiple/slashes"));
+        ServiceActorRef serviceActorRef = new ServiceActorRef("LocalCluster",node,"pi/calculate/with/multiple/slashes");
+        when(internalActorSystems.createServiceActorRef(node,"pi/calculate/with/multiple/slashes")).thenReturn(serviceActorRef);
         ActorRef serviceRef = ActorRefTools.parse(serviceRefString,internalActorSystems);
         assertNotNull(serviceRef);
         assertEquals(serviceRef.getActorId(),"pi/calculate/with/multiple/slashes");

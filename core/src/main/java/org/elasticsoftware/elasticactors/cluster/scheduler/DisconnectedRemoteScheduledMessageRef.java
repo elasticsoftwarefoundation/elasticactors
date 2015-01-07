@@ -27,15 +27,13 @@ import static java.lang.String.format;
  */
 public final class DisconnectedRemoteScheduledMessageRef implements ScheduledMessageRef, ActorContainerRef {
     private final String clusterName;
-    private final String actorSystemName;
-    private final int shardId;
     private final ScheduledMessageKey scheduledMessageKey;
+    private final String refSpec;
 
     public DisconnectedRemoteScheduledMessageRef(String clusterName, String actorSystemName, int shardId, ScheduledMessageKey scheduledMessageKey) {
         this.clusterName = clusterName;
-        this.actorSystemName = actorSystemName;
-        this.shardId = shardId;
         this.scheduledMessageKey = scheduledMessageKey;
+        this.refSpec = format(REFSPEC_FORMAT,clusterName,actorSystemName,shardId,scheduledMessageKey.getFireTime(),scheduledMessageKey.getId().toString());
     }
 
     @Override
@@ -65,11 +63,11 @@ public final class DisconnectedRemoteScheduledMessageRef implements ScheduledMes
 
     @Override
     public int hashCode() {
-        return toString().hashCode();
+        return this.refSpec.hashCode();
     }
 
     @Override
     public String toString() {
-        return format(REFSPEC_FORMAT,clusterName,actorSystemName,shardId,scheduledMessageKey.getFireTime(),scheduledMessageKey.getId().toString());
+        return this.refSpec;
     }
 }

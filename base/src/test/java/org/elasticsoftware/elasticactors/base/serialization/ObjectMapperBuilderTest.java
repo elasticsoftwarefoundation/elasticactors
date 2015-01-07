@@ -16,10 +16,14 @@
 
 package org.elasticsoftware.elasticactors.base.serialization;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRefFactory;
 import org.testng.annotations.Test;
+
+import java.math.BigDecimal;
 
 import static org.mockito.Mockito.mock;
 import static org.testng.Assert.assertNotNull;
@@ -35,5 +39,14 @@ public class ObjectMapperBuilderTest {
         ObjectMapper objectMapper = new ObjectMapperBuilder(actorRefFactory,scheduledMessageRefFactory,"1.0.0").build();
         // check if everything was scanned correctly
         assertNotNull(objectMapper);
+    }
+
+    // wait for release 2.4.5
+    @Test(enabled = false)
+    public void testAfterburnerModule() throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new AfterburnerModule());
+
+        objectMapper.writeValueAsString(new TestObjectWIthJsonSerialize(new BigDecimal("870.04")));
     }
 }

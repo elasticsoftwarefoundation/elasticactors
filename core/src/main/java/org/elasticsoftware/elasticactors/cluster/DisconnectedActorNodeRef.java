@@ -29,16 +29,16 @@ import static java.lang.String.format;
  * @author  Joost van de Wijgerd
  */
 public final class DisconnectedActorNodeRef implements ActorRef, ActorContainerRef {
-    private final String clusterName;
     private final String actorSystemName;
     private final String nodeId;
     private final String actorId;
+    private final String refSpec;
 
     public DisconnectedActorNodeRef(String clusterName, String actorSystemName, String nodeId,@Nullable String actorId) {
-        this.clusterName = clusterName;
         this.actorSystemName = actorSystemName;
         this.nodeId = nodeId;
         this.actorId = actorId;
+        this.refSpec = generateRefSpec(clusterName, actorSystemName, nodeId, actorId);
     }
 
     public static String generateRefSpec(String clusterName, String actorSystemName, String nodeId,String actorId) {
@@ -85,6 +85,6 @@ public final class DisconnectedActorNodeRef implements ActorRef, ActorContainerR
 
     @Override
     public String toString() {
-        return generateRefSpec(this.clusterName,this.actorSystemName,this.nodeId,this.actorId);
+        return this.refSpec;
     }
 }

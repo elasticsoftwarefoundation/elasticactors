@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRefFactory;
@@ -49,6 +50,7 @@ public class ObjectMapperBuilder {
     private final ActorRefFactory actorRefFactory;
     private final ScheduledMessageRefFactory scheduledMessageRefFactory;
     private final String basePackages;
+    private boolean useAfterBurner = false;
 
     public ObjectMapperBuilder(ActorRefFactory actorRefFactory,ScheduledMessageRefFactory scheduledMessageRefFactory, String version) {
         this(actorRefFactory,scheduledMessageRefFactory, "",version);
@@ -59,6 +61,11 @@ public class ObjectMapperBuilder {
         this.actorRefFactory = actorRefFactory;
         this.scheduledMessageRefFactory = scheduledMessageRefFactory;
         this.basePackages = basePackages;
+    }
+
+    public ObjectMapperBuilder setUseAfterBurner(boolean useAfterBurner) {
+        this.useAfterBurner = useAfterBurner;
+        return this;
     }
 
     public final ObjectMapper build() {
@@ -100,6 +107,15 @@ public class ObjectMapperBuilder {
         registerCustomDeserializers(reflections,jacksonModule);
 
         objectMapper.registerModule(jacksonModule);
+
+        if(useAfterBurner) {
+            // register the afterburner module to increase performance
+            // afterburner does NOT work correctly with jackson version lower than 2.4.5! (if @JsonSerialize annotation is used)
+            AfterburnerModule afterburnerModule = new AfterburnerModule();
+            //afterburnerModule.setUseValueClassLoader(false);
+            //afterburnerModule.setUseOptimizedBeanDeserializer(false);
+            objectMapper.registerModule(afterburnerModule);
+        }
 
         return objectMapper;
     }
