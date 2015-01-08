@@ -95,11 +95,6 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     public void init() throws Exception {
         int maximumSize = environment.getProperty("ea.actorRefCache.maximumSize",Integer.class,10240);
         actorRefCache = CacheBuilder.newBuilder().maximumSize(maximumSize).build();
-        // cache the serialization frameworks for quick lookup (application context lookup is sloooooowwwwww)
-        Map<String,SerializationFramework> frameworks = applicationContext.getBeansOfType(SerializationFramework.class);
-        for (SerializationFramework serializationFramework : frameworks.values()) {
-            this.serializationFrameworks.put(serializationFramework.getClass(),serializationFramework);
-        }
     }
 
     @PreDestroy
@@ -222,7 +217,14 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     @Override
     public SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass) {
         //return applicationContext.getBean(frameworkClass);
-        return this.serializationFrameworks.get(frameworkClass);
+        // cache the serialization frameworks for quick lookup (application context lookup is sloooooowwwwww)
+        SerializationFramework serializationFramework = this.serializationFrameworks.get(frameworkClass);
+        if(serializationFramework == null) {
+            serializationFramework = applicationContext.getBean(frameworkClass);
+            // @todo: this is not thread safe and should happen at the initialization stage
+            this.serializationFrameworks.put(frameworkClass,serializationFramework);
+        }
+        return serializationFramework;
     }
 
     @Override
