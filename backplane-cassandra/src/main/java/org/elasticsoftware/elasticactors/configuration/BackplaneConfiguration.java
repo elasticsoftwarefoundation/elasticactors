@@ -94,7 +94,8 @@ public class BackplaneConfiguration {
     public PersistentActorRepository getPersistentActorRepository(@Qualifier("asyncUpdateExecutor") ThreadBoundExecutor asyncUpdateExecutor) {
         CassandraPersistentActorRepository persistentActorRepository = new CassandraPersistentActorRepository(cluster.getClusterName(), asyncUpdateExecutor);
         persistentActorRepository.setColumnFamilyTemplate(persistentActorsColumnFamilyTemplate);
-        persistentActorRepository.setSerializer(new CompressingSerializer<>(new PersistentActorSerializer(cluster),512));
+        final Integer compressionThreshold = env.getProperty("ea.persistentActorRepository.compressionThreshold",Integer.class, 512);
+        persistentActorRepository.setSerializer(new CompressingSerializer<>(new PersistentActorSerializer(cluster),compressionThreshold));
         persistentActorRepository.setDeserializer(new DecompressingDeserializer<>(new PersistentActorDeserializer(actorRefFactory,cluster)));
         return persistentActorRepository;
     }
