@@ -28,6 +28,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 
 /**
@@ -40,6 +41,7 @@ public final class DefaultConfiguration implements InternalActorSystemConfigurat
     private final List<DefaultRemoteConfiguration> remoteConfigurations;
     private final Map<String,Object> properties = new LinkedHashMap<>();
     private final ConversionService conversionService = new DefaultConversionService();
+    private final Map<String,ElasticActor> serviceActors = new HashMap<>();
 
     @JsonCreator
     public DefaultConfiguration(@JsonProperty("name") String name,
@@ -74,8 +76,14 @@ public final class DefaultConfiguration implements InternalActorSystemConfigurat
     }
 
     @Override
-    public ElasticActor<?> getService(String serviceId) {
-        return applicationContext.getBean(serviceId,ElasticActor.class);
+    public ElasticActor<?> getService(final String serviceId) {
+        // cache it locally as the lookup in the application context is really slow
+        ElasticActor serviceActor = this.serviceActors.get(serviceId);
+        if(serviceActor == null) {
+            serviceActor = applicationContext.getBean(serviceId, ElasticActor.class);
+            this.serviceActors.put(serviceId, serviceActor);
+        }
+        return serviceActor;
     }
 
     @Override
@@ -89,7 +97,6 @@ public final class DefaultConfiguration implements InternalActorSystemConfigurat
         if(componentProperties != null) {
             Object value = componentProperties.get(key);
             if(value != null) {
-
                 if(conversionService.canConvert(value.getClass(),targetType)) {
                     return conversionService.convert(value,targetType);
                 }
