@@ -22,10 +22,12 @@ package org.elasticsoftware.elasticactors;
 public final class ShardKey {
     private final String actorSystemName;
     private final int shardId;
+    private final String spec;
 
     public ShardKey(String actorSystemName, int shardId) {
         this.actorSystemName = actorSystemName;
         this.shardId = shardId;
+        this.spec = String.format("%s/shards/%d",actorSystemName,shardId);
     }
 
     public int getShardId() {
@@ -38,7 +40,7 @@ public final class ShardKey {
 
     @Override
     public String toString() {
-        return String.format("%s/shards/%d",actorSystemName,shardId);
+        return this.spec;
     }
 
     public static ShardKey fromString(String shardKey) {

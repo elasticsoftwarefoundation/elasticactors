@@ -26,6 +26,8 @@ import java.util.UUID;
  */
 public final class UUIDTools {
 
+    private UUIDTools() {}
+
     /**
      * Convert a UUID to it's byte[] representation. Will return a byte[] of length 16
      *
@@ -64,6 +66,12 @@ public final class UUIDTools {
     }
 
     public static UUID createTimeBasedUUID() {
+        return new java.util.UUID(UUIDGen.newTime(),com.eaio.uuid.UUIDGen.getClockSeqAndNode());
+    }
+
+    // not fast enough!
+    @Deprecated
+    public static UUID createTimeBasedUUIDOld() {
         return java.util.UUID.fromString(new com.eaio.uuid.UUID(UUIDGen.newTime(), com.eaio.uuid.UUIDGen.getClockSeqAndNode()).toString());
     }
 
