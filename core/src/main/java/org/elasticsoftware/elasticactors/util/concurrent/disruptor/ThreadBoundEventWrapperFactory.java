@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2014 The Original Authors
+ * Copyright 2013 - 2015 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,16 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.util.concurrent;
+package org.elasticsoftware.elasticactors.util.concurrent.disruptor;
+
+import com.lmax.disruptor.EventFactory;
 
 /**
- * ThreadBoundExecutor
- *
- * <p/>
- * A same thread executor guarantees that a runnable executed on the executor that has the same key
- * will always be executed by the same thread.
- *
- * @param <T> The type of the key
  * @author Joost van de Wijgerd
  */
-public interface ThreadBoundExecutor<T extends ThreadBoundEvent<?>> {
-
-    public void execute(T runnable);
-
-    void shutdown();
+public final class ThreadBoundEventWrapperFactory implements EventFactory<ThreadBoundEventWrapper> {
+    @Override
+    public ThreadBoundEventWrapper newInstance() {
+        return new ThreadBoundEventWrapper();
+    }
 }

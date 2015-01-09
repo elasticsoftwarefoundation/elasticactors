@@ -12,6 +12,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * @author Joost van de Wijgerd
@@ -23,8 +25,6 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
     private long lastAckedTag = -1;
     private long highestDeliveredTag = -1;
     private final TreeSet<Long> pendingTags = new TreeSet<>();
-    //private final ArrayDeque<Long> pendingTags = new ArrayDeque<>(1024);
-    private final long maxWaitMillis = 1000;
     private final ThreadFactory threadFactory;
     private final CountDownLatch shutdownLatch = new CountDownLatch(1);
 
@@ -61,37 +61,28 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
 
     @Override
     public void run() {
-        long startTime = System.currentTimeMillis();
         while(true) {
             try {
-                long elapsedTime = System.currentTimeMillis() - startTime;
-                // there is still time
-                if(elapsedTime < maxWaitMillis) {
-                    Tag tag = tagQueue.poll(maxWaitMillis - elapsedTime,TimeUnit.MILLISECONDS);
-                    if(tag == null) {
-                        // timeout fired, flush ack and reset the start time
-                        startTime = System.currentTimeMillis();  // setting start time first so flushAck execution time is not counted
-                        flushAck();
-                    } else if(tag.type == TagType.DELIVERED) {
-                        // register the last delivered tag
-                        highestDeliveredTag = (tag.value > highestDeliveredTag) ? tag.value : highestDeliveredTag;
-                        // add to the end of the list (in order)
-                        pendingTags.add(tag.value);
-                    } else if(tag.type == TagType.ACK) {
-                        // search from the beginning and delete
-                        pendingTags.remove(tag.value);
-                    } else if(tag.type == TagType.RESET) {
-                        // not sure what to do here
-                    } else if(tag.type == TagType.STOP) {
-                        // flush first
-                        flushAck();
-                        shutdownLatch.countDown();
-                        break;
-                    }
-                } else {
-                    // time is elapsed, flush and reset the start time
-                    startTime = System.currentTimeMillis();
+                // poll with a short wait time (@todo: this could be dangerous)
+                Tag tag = tagQueue.poll(200, MICROSECONDS);
+                // need to trigger the flush
+                if(tag == null) {
                     flushAck();
+                } else if(tag.type == TagType.DELIVERED) {
+                    // register the last delivered tag
+                    highestDeliveredTag = (tag.value > highestDeliveredTag) ? tag.value : highestDeliveredTag;
+                    // add to the end of the list (in order)
+                    pendingTags.add(tag.value);
+                } else if(tag.type == TagType.ACK) {
+                    // search from the beginning and delete
+                    pendingTags.remove(tag.value);
+                } else if(tag.type == TagType.RESET) {
+                    // not sure what to do here
+                } else if(tag.type == TagType.STOP) {
+                    // flush first
+                    flushAck();
+                    shutdownLatch.countDown();
+                    break;
                 }
             } catch(Throwable t) {
                 logger.warn("Caught Throwable",t);

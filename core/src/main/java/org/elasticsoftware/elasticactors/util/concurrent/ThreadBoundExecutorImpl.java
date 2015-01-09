@@ -24,12 +24,14 @@ import java.util.ListIterator;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static java.lang.String.format;
+
 /**
  * @author Joost van de Wijgerd
  */
 public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
     private static final Logger LOG = Logger.getLogger(ThreadBoundExecutorImpl.class);
-
+    private final ThreadFactory threadFactory;
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
     private final List<BlockingQueue<ThreadBoundEvent>> queues = new ArrayList<>();
 
@@ -43,6 +45,8 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
     }
 
     public ThreadBoundExecutorImpl(ThreadBoundEventProcessor eventProcessor, int maxBatchSize, ThreadFactory threadFactory, int numberOfThreads) {
+        this.threadFactory = threadFactory;
+        LOG.info(format("Initializing (LinkedBlockingQueue)ThreadBoundExecutor[%s]",threadFactory.toString()));
         for (int i = 0; i < numberOfThreads; i++) {
             BlockingQueue<ThreadBoundEvent> queue = new LinkedBlockingQueue<>();
             Thread t = threadFactory.newThread(new Consumer(queue,eventProcessor,maxBatchSize));
@@ -71,7 +75,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
     }
 
     public void shutdown() {
-        LOG.info("shutting down the ThreadBoundExecutor");
+        LOG.info(format("shutting down the (LinkedBlockingQueue)ThreadBoundExecutor[%s]",threadFactory.toString()));
         if (shuttingDown.compareAndSet(false, true)) {
             final CountDownLatch shuttingDownLatch = new CountDownLatch(queues.size());
             for (BlockingQueue<ThreadBoundEvent> queue : queues) {
@@ -79,14 +83,14 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
             }
             try {
                 if (!shuttingDownLatch.await(30, TimeUnit.SECONDS)) {
-                    LOG.error("timeout while waiting for ThreadBoundExecutor queues to empty");
+                    LOG.error(format("timeout while waiting for (LinkedBlockingQueue)ThreadBoundExecutor[%s] queues to empty",threadFactory.toString()));
                 }
             } catch (InterruptedException ignore) {
                 //we are shutting down anyway
-                LOG.warn("ThreadBoundExecutor shutdown interrupted.");
+                LOG.warn(format("(LinkedBlockingQueue)ThreadBoundExecutor[%s] shutdown interrupted.",threadFactory.toString()));
             }
         }
-        LOG.info("ThreadBoundExecutor shut down completed");
+        LOG.info(format("(LinkedBlockingQueue)ThreadBoundExecutor[%s] shut down completed",threadFactory.toString()));
     }
 
 

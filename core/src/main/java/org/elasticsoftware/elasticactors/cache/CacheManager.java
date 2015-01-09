@@ -139,10 +139,12 @@ public class CacheManager<K,V> {
     private static final class CacheKey {
         private final Object segmentKey;
         private final Object cacheKey;
+        private final int hashCode;
 
         private CacheKey(Object segmentKey, Object cacheKey) {
             this.segmentKey = segmentKey;
             this.cacheKey = cacheKey;
+            this.hashCode = (segmentKey.hashCode() * 31) + cacheKey.hashCode();
         }
 
         @Override
@@ -160,9 +162,7 @@ public class CacheManager<K,V> {
 
         @Override
         public int hashCode() {
-            int result = segmentKey.hashCode();
-            result = 31 * result + cacheKey.hashCode();
-            return result;
+            return this.hashCode;
         }
     }
 

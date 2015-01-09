@@ -24,6 +24,7 @@ import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
@@ -36,7 +37,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     private final ElasticActor serviceActor;
     private final InternalMessage internalMessage;
     private final MessageHandlerEventListener messageHandlerEventListener;
-    private final long startTime;
+    private final Measurement measurement;
 
     public HandleServiceMessageTask(InternalActorSystem actorSystem,
                                     ActorRef serviceRef,
@@ -48,7 +49,8 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         this.serviceActor = serviceActor;
         this.internalMessage = internalMessage;
         this.messageHandlerEventListener = messageHandlerEventListener;
-        this.startTime = System.currentTimeMillis();
+        // only measure when trace is enabled
+        this.measurement = logger.isTraceEnabled() ? new Measurement(System.nanoTime()) : null;
     }
 
     @Override
@@ -78,6 +80,10 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
 
     @Override
     public void run() {
+        // measure start of the execution
+        if(this.measurement != null) {
+            this.measurement.setExecutionStart(System.nanoTime());
+        }
         Exception executionException = null;
         InternalActorContext.setContext(this);
         try {
@@ -90,17 +96,24 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         } finally {
             InternalActorContext.getAndClearContext();
         }
+        // marks the end of the execution path
+        if(this.measurement != null) {
+            this.measurement.setExecutionEnd(System.nanoTime());
+        }
         if(messageHandlerEventListener != null) {
             if(executionException == null) {
                 messageHandlerEventListener.onDone(internalMessage);
             } else {
                 messageHandlerEventListener.onError(internalMessage,executionException);
             }
+            // measure the ack time
+            if(this.measurement != null) {
+                this.measurement.setAckEnd(System.nanoTime());
+            }
         }
         // do some trace logging
-        if(logger.isTraceEnabled()) {
-            long endTime = System.currentTimeMillis();
-            logger.trace(format("(%s) Message of type [%s] with id [%s] for actor [%s] took %d msecs to execute (state update %b)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",serviceRef.getActorId(),endTime-startTime,false));
+        if(this.measurement != null) {
+            logger.trace(format("(%s) Message of type [%s] with id [%s] for actor [%s] took %d microsecs in queue, %d microsecs to execute, 0 microsecs to serialize and %d microsecs to ack (state update false)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",serviceRef.getActorId(),measurement.getQueueDuration(MICROSECONDS),measurement.getExecutionDuration(MICROSECONDS),measurement.getAckDuration(MICROSECONDS)));
         }
     }
 }

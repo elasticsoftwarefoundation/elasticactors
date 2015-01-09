@@ -37,4 +37,9 @@ public final class DaemonThreadFactory implements ThreadFactory {
         t.setName(String.format("%s - %d",name,threadCount.incrementAndGet()));
         return t;
     }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 }

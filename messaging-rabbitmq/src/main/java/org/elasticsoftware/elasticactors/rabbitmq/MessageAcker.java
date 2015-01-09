@@ -13,6 +13,6 @@ public interface MessageAcker {
     void stop();
 
     public enum Type {
-        DIRECT,BUFFERED
+        DIRECT,BUFFERED,WRITE_BEHIND
     }
 }

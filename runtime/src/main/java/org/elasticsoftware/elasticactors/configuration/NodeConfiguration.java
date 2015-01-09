@@ -119,13 +119,23 @@ public class NodeConfiguration {
     @Bean(name = {"actorExecutor"}, destroyMethod = "shutdown")
     public ThreadBoundExecutor createActorExecutor() {
         final int workers = env.getProperty("ea.actorExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
-        return new ThreadBoundExecutorImpl(new DaemonThreadFactory("ACTOR-WORKER"),workers);
+        final Boolean useDisruptor = env.getProperty("ea.actorExecutor.useDisruptor",Boolean.class,Boolean.FALSE);
+        if(useDisruptor) {
+            return new org.elasticsoftware.elasticactors.util.concurrent.disruptor.ThreadBoundExecutorImpl(new DaemonThreadFactory("ACTOR-WORKER"),workers);
+        } else {
+            return new ThreadBoundExecutorImpl(new DaemonThreadFactory("ACTOR-WORKER"), workers);
+        }
     }
 
     @Bean(name = {"queueExecutor"}, destroyMethod = "shutdown")
     public ThreadBoundExecutor createQueueExecutor() {
         final int workers = env.getProperty("ea.queueExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
-        return new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
+        final Boolean useDisruptor = env.getProperty("ea.actorExecutor.useDisruptor",Boolean.class,Boolean.FALSE);
+        if(useDisruptor) {
+            return new org.elasticsoftware.elasticactors.util.concurrent.disruptor.ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"), workers);
+        } else {
+            return new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"), workers);
+        }
     }
 
     @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
