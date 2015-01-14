@@ -59,7 +59,11 @@ public final class RemoteActorSystems {
     @PreDestroy
     public void destroy() {
         for (RemoteActorSystemInstance remoteActorSystemInstance : remoteActorSystems.values()) {
-            remoteActorSystemInstance.destroy();
+            try {
+                remoteActorSystemInstance.destroy();
+            } catch(Exception e) {
+                // ignore
+            }
         }
     }
 

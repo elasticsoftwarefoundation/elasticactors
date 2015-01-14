@@ -33,6 +33,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -117,6 +118,7 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"actorExecutor"}, destroyMethod = "shutdown")
+    @DependsOn("asyncUpdateExecutor")
     public ThreadBoundExecutor createActorExecutor() {
         final int workers = env.getProperty("ea.actorExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
         final Boolean useDisruptor = env.getProperty("ea.actorExecutor.useDisruptor",Boolean.class,Boolean.FALSE);
@@ -128,6 +130,7 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"queueExecutor"}, destroyMethod = "shutdown")
+    @DependsOn("actorExecutor")
     public ThreadBoundExecutor createQueueExecutor() {
         final int workers = env.getProperty("ea.queueExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
         final Boolean useDisruptor = env.getProperty("ea.actorExecutor.useDisruptor",Boolean.class,Boolean.FALSE);
