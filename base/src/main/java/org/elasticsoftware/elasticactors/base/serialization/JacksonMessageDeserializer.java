@@ -41,4 +41,9 @@ public final class JacksonMessageDeserializer<T> implements MessageDeserializer<
         serializedObject.get(buf);
         return objectMapper.readValue(buf, objectClass);
     }
+
+    @Override
+    public Class<T> getMessageClass() {
+        return objectClass;
+    }
 }

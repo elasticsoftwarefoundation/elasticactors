@@ -68,10 +68,8 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
             throw new RejectedExecutionException("The system is shutting down.");
         }
         final RingBuffer<ThreadBoundEventWrapper> ringBuffer = this.disruptors.get(getBucket(event.getKey())).getRingBuffer();
-        while(!ringBuffer.tryPublishEvent(translator,event)) {
-            // @todo: not sure if this is the correct strategy.. thread will spin...
-            Thread.yield();
-        }
+        // this method will wait when the buffer is overflowing ( using Lock.parkNanos(1) )
+        ringBuffer.publishEvent(translator, event);
     }
 
     @Override

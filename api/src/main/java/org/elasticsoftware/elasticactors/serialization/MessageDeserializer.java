@@ -25,4 +25,6 @@ import java.nio.ByteBuffer;
 public interface MessageDeserializer<O> extends Deserializer<ByteBuffer,O> {
     @Override
     O deserialize(ByteBuffer serializedObject) throws IOException;
+
+    Class<O> getMessageClass();
 }

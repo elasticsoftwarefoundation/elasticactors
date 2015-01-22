@@ -40,4 +40,8 @@ public final class DestroyActorMessageDeserializer implements MessageDeserialize
         return new DestroyActorMessage(actorRefDeserializer.deserialize(protobufMessage.getActorRef()));
     }
 
+    @Override
+    public Class<DestroyActorMessage> getMessageClass() {
+        return DestroyActorMessage.class;
+    }
 }

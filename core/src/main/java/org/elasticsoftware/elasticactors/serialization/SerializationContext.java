@@ -11,7 +11,7 @@ import java.util.Map;
  */
 public final class SerializationContext {
     private static final ThreadLocal<IdentityHashMap<Object,ByteBuffer>> serializationCache = new ThreadLocal<>();
-    private static final ThreadLocal<EvictingMap<ByteBuffer,Object>> deserializationCache = new ThreadLocal<>();
+    private static final ThreadLocal<EvictingMap<DeserializationKey,Object>> deserializationCache = new ThreadLocal<>();
     private static final boolean deserializationCacheEnabled = Boolean.valueOf(System.getProperty("ea.deserializationCache.enabled", "false"));
 
     private SerializationContext() {}
@@ -22,7 +22,7 @@ public final class SerializationContext {
             serializationCache.set(new IdentityHashMap<Object, ByteBuffer>());
         }
         if(deserializationCacheEnabled && deserializationCache.get() == null) {
-            deserializationCache.set(new EvictingMap<ByteBuffer, Object>());
+            deserializationCache.set(new EvictingMap<DeserializationKey, Object>());
         }
     }
 
@@ -33,11 +33,11 @@ public final class SerializationContext {
     }
 
     public static <T> T deserialize(final MessageDeserializer<T> deserializer,final ByteBuffer bytes) throws IOException {
-        final EvictingMap<ByteBuffer, Object> deserializationCache = (deserializationCacheEnabled) ? SerializationContext.deserializationCache.get() : null;
+        final EvictingMap<DeserializationKey, Object> deserializationCache = (deserializationCacheEnabled) ? SerializationContext.deserializationCache.get() : null;
 
         // see if we already have the deserialized version cached
         if(deserializationCache != null) {
-            Object message = deserializationCache.get(bytes);
+            Object message = deserializationCache.get(new DeserializationKey(deserializer.getMessageClass(), bytes));
             if(message != null) {
                 // pre cached
                 return (T) message;
@@ -50,10 +50,11 @@ public final class SerializationContext {
         if(immutableAnnotation != null && immutableAnnotation.immutable() && serializationCache.get() != null) {
             // reset the bytebuffer back to mark before returning
             bytes.reset();
+            // optimize serialization as well
             serializationCache.get().put(message,bytes.asReadOnlyBuffer());
             if(deserializationCache != null) {
                 // this should speed up subsequent deserializations of the same bytes
-                deserializationCache.put(bytes.asReadOnlyBuffer(), message);
+                deserializationCache.put(new DeserializationKey(deserializer.getMessageClass(),bytes.asReadOnlyBuffer()), message);
             }
         }
         return message;
@@ -64,7 +65,7 @@ public final class SerializationContext {
         //final Message messsageAnnotation = message.getClass().getAnnotation(Message.class);
         final Message immutableAnnotation = message.getClass().getAnnotation(Message.class);
         if(immutableAnnotation != null && immutableAnnotation.immutable() && serializationCache.get() != null) {
-            final EvictingMap<ByteBuffer, Object> deserializationCache = (deserializationCacheEnabled) ? SerializationContext.deserializationCache.get() : null;
+            final EvictingMap<DeserializationKey, Object> deserializationCache = (deserializationCacheEnabled) ? SerializationContext.deserializationCache.get() : null;
             ByteBuffer cachedBuffer = serializationCache.get().get(message);
             if(cachedBuffer != null) {
                 // we have a cached version
@@ -76,7 +77,7 @@ public final class SerializationContext {
                 // store it
                 serializationCache.get().put(message,serializedBuffer.asReadOnlyBuffer());
                 if(deserializationCache != null) {
-                    deserializationCache.put(serializedBuffer.asReadOnlyBuffer(), message);
+                    deserializationCache.put(new DeserializationKey(message.getClass(),serializedBuffer.asReadOnlyBuffer()), message);
                 }
                 return serializedBuffer;
             }
@@ -84,6 +85,34 @@ public final class SerializationContext {
         // message is not immutable, just serialize it
         return serializer.serialize(message);
 
+    }
+
+    private static final class DeserializationKey {
+        private final Class<?> objectClass;
+        private final ByteBuffer bytes;
+
+        public DeserializationKey(Class<?> objectClass, ByteBuffer bytes) {
+            this.objectClass = objectClass;
+            this.bytes = bytes;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            DeserializationKey that = (DeserializationKey) o;
+
+            return objectClass.equals(that.objectClass) && bytes.equals(that.bytes);
+
+        }
+
+        @Override
+        public int hashCode() {
+            int result = objectClass.hashCode();
+            result = 31 * result + bytes.hashCode();
+            return result;
+        }
     }
 
     private static final class EvictingMap<K, V> extends LinkedHashMap<K, V> {

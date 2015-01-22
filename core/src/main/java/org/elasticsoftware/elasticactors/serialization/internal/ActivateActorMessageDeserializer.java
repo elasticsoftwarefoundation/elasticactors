@@ -45,5 +45,8 @@ public final class ActivateActorMessageDeserializer implements MessageDeserializ
                                               : ActorType.PERSISTENT);
     }
 
-
+    @Override
+    public Class<ActivateActorMessage> getMessageClass() {
+        return ActivateActorMessage.class;
+    }
 }

@@ -42,5 +42,8 @@ public final class CancelScheduledMessageMessageDeserializer implements MessageD
                                                  protobufMessage.getFireTime());
     }
 
-
+    @Override
+    public Class<CancelScheduledMessageMessage> getMessageClass() {
+        return CancelScheduledMessageMessage.class;
+    }
 }

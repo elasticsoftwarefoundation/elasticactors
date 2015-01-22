@@ -63,4 +63,9 @@ public final class CreateActorMessageDeserializer implements MessageDeserializer
             throw new IOException(e);
         }
     }
+
+    @Override
+    public Class<CreateActorMessage> getMessageClass() {
+        return CreateActorMessage.class;
+    }
 }
