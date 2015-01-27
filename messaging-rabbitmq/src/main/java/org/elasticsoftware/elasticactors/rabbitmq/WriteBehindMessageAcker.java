@@ -53,10 +53,7 @@ public final class WriteBehindMessageAcker implements MessageAcker {
     public void ack(long deliveryTag) {
         if(!shuttingDown.get()) {
             // put the event on the RingBuffer
-            while(!this.disruptor.getRingBuffer().tryPublishEvent(translator, deliveryTag)) {
-                // @todo: this could lead to high CPU load
-                Thread.yield();
-            }
+            this.disruptor.publishEvent(translator,deliveryTag);
         }
     }
 

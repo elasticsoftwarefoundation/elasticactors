@@ -59,6 +59,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     private Cache<ActorRef,PersistentActor<ShardKey>> actorCache;
     private PersistentActorRepository persistentActorRepository;
     private final ShardActorCacheManager actorCacheManager;
+    // the cacheloader instance that is reused to avoid garbage being created on each call
+    private final CacheLoader cacheLoader = new CacheLoader();
 
     public LocalActorShard(PhysicalNode node,
                            InternalActorSystem actorSystem,
@@ -135,27 +137,11 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                               final MessageHandlerEventListener messageHandlerEventListener) {
         final ActorRef receiverRef = internalMessage.getReceiver();
         if(receiverRef.getActorId() != null) {
+            // make sure we load the right value from the cache
+            cacheLoader.initialize(receiverRef);
             try {
                 // load persistent actor from cache or persistent store
-                PersistentActor<ShardKey> actor = actorCache.get(internalMessage.getReceiver(), new Callable<PersistentActor<ShardKey>>() {
-                    @Override
-                    public PersistentActor<ShardKey> call() throws Exception {
-                        PersistentActor<ShardKey> loadedActor = persistentActorRepository.get(shardKey, receiverRef.getActorId());
-                        if(loadedActor == null) {
-                            // @todo: using Spring DataAccesException here, might want to change this or use in Repository implementation
-                            throw new EmptyResultDataAccessException(String.format("Actor [%s] not found in Shard [%s]",receiverRef.getActorId(),shardKey.toString()),1);
-                        } else {
-                            ElasticActor actorInstance = actorSystem.getActorInstance(internalMessage.getReceiver(),
-                                                                                      loadedActor.getActorClass());
-                            actorExecutor.execute(new ActivateActorTask(persistentActorRepository,
-                                                                        loadedActor,
-                                                                        actorSystem,
-                                                                        actorInstance,
-                                                                        internalMessage.getReceiver()));
-                            return loadedActor;
-                        }
-                    }
-                });
+                PersistentActor<ShardKey> actor = actorCache.get(internalMessage.getReceiver(), cacheLoader);
 
                 // find actor class behind receiver ActorRef
                 ElasticActor actorInstance = actorSystem.getActorInstance(internalMessage.getReceiver(),
@@ -192,6 +178,9 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                 // we ack the message anyway
                 messageHandlerEventListener.onError(internalMessage,e);
                 logger.error(String.format("Exception while handling InternalMessage for Actor [%s]; senderRef [%s], messageType [%s]",receiverRef.getActorId(),internalMessage.getSender(),internalMessage.getPayloadClass()),e.getCause());
+            } finally {
+                // ensure the cacheLoader is reset
+                this.cacheLoader.reset();
             }
         } else {
             // the internalMessage is intended for the shard, this means it's about creating or destroying an actor
@@ -257,49 +246,37 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     }
 
     private void activateActor(final ActorRef actorRef) throws Exception {
-        // load persistent actor from cache or persistent store
-        PersistentActor<ShardKey> actor = actorCache.get(actorRef, new Callable<PersistentActor<ShardKey>>() {
-            @Override
-            public PersistentActor<ShardKey> call() throws Exception {
-                PersistentActor<ShardKey> loadedActor = persistentActorRepository.get(shardKey,actorRef.getActorId());
-                if(loadedActor == null) {
-                    // @todo: using Spring DataAccesException here, might want to change this or use in Repository implementation
-                    throw new EmptyResultDataAccessException(String.format("Actor [%s] not found in Shard [%s]",actorRef.getActorId(),shardKey.toString()),1);
-                } else {
-                    ElasticActor actorInstance = actorSystem.getActorInstance(actorRef,loadedActor.getActorClass());
-                    actorExecutor.execute(new ActivateActorTask(persistentActorRepository,
-                                                                loadedActor,
-                                                                actorSystem,
-                                                                actorInstance,
-                                                                actorRef));
-                    return loadedActor;
-                }
-            }
-        });
+        // prepare the cache loader
+        this.cacheLoader.initialize(actorRef);
+        try {
+            actorCache.get(actorRef,cacheLoader);
+        } finally{
+            this.cacheLoader.reset();
+        }
     }
 
     private void destroyActor(DestroyActorMessage destroyMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         final ActorRef actorRef = destroyMessage.getActorRef();
-        // need to load it here to know the ActorClass!
-        PersistentActor<ShardKey> persistentActor = actorCache.get(actorRef, new Callable<PersistentActor<ShardKey>>() {
-            @Override
-            public PersistentActor<ShardKey> call() throws Exception {
-                return persistentActorRepository.get(shardKey,actorRef.getActorId());
-            }
-        });
-        // delete actor state here to avoid race condition
-        persistentActorRepository.delete(this.shardKey,actorRef.getActorId());
-        actorCache.invalidate(actorRef);
-        // find actor class behind receiver ActorRef
-        ElasticActor actorInstance = actorSystem.getActorInstance(actorRef,persistentActor.getActorClass());
-        // call preDestroy
-        actorExecutor.execute(new DestroyActorTask(persistentActor,
-                                                   actorSystem,
-                                                   actorInstance,
-                                                   actorRef,
-                                                   internalMessage,
-                                                   messageHandlerEventListener));
+        this.cacheLoader.initialize(actorRef);
+        try {
+            // need to load it here to know the ActorClass!
+            PersistentActor<ShardKey> persistentActor = actorCache.get(actorRef,cacheLoader);
+            // delete actor state here to avoid race condition
+            persistentActorRepository.delete(this.shardKey,actorRef.getActorId());
+            actorCache.invalidate(actorRef);
+            // find actor class behind receiver ActorRef
+            ElasticActor actorInstance = actorSystem.getActorInstance(actorRef,persistentActor.getActorClass());
+            // call preDestroy
+            actorExecutor.execute(new DestroyActorTask(persistentActor,
+                    actorSystem,
+                    actorInstance,
+                    actorRef,
+                    internalMessage,
+                    messageHandlerEventListener));
+        } finally {
+            this.cacheLoader.reset();
         }
+    }
 
     @Autowired
     public void setActorExecutor(@Qualifier("actorExecutor") ThreadBoundExecutor actorExecutor) {
@@ -309,6 +286,44 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     @Autowired
     public void setPersistentActorRepository(PersistentActorRepository persistentActorRepository) {
         this.persistentActorRepository = persistentActorRepository;
+    }
+
+    /**
+     * To avoid creation of these callable, we cache it at the Shard instance, setting the values as necesser
+     *
+     */
+    private final class CacheLoader implements Callable<PersistentActor<ShardKey>> {
+        // @todo: don't think this needs to be volatile as all access will happen in one thread only
+        private ActorRef actorRef = null;
+
+        public CacheLoader() {
+        }
+
+        public void initialize(ActorRef actorRef) {
+            this.actorRef = actorRef;
+        }
+
+        public void reset() {
+            this.actorRef = null;
+        }
+
+        @Override
+        public PersistentActor<ShardKey> call() throws Exception {
+            PersistentActor<ShardKey> loadedActor = persistentActorRepository.get(shardKey, actorRef.getActorId());
+            if(loadedActor == null) {
+                // @todo: using Spring DataAccesException here, might want to change this or use in Repository implementation
+                throw new EmptyResultDataAccessException(String.format("Actor [%s] not found in Shard [%s]", actorRef.getActorId(), shardKey.toString()),1);
+            } else {
+                ElasticActor actorInstance = actorSystem.getActorInstance(actorRef,
+                                                                          loadedActor.getActorClass());
+                actorExecutor.execute(new ActivateActorTask(persistentActorRepository,
+                                                            loadedActor,
+                                                            actorSystem,
+                                                            actorInstance,
+                                                            actorRef));
+                return loadedActor;
+            }
+        }
     }
 }
 

@@ -12,6 +12,13 @@ import java.util.Map;
 public final class SerializationContext {
     private static final ThreadLocal<IdentityHashMap<Object,ByteBuffer>> serializationCache = new ThreadLocal<>();
     private static final ThreadLocal<EvictingMap<DeserializationKey,Object>> deserializationCache = new ThreadLocal<>();
+    // keypool to avoid too much garbage being generated
+    private static final ThreadLocal<DeserializationKey> keyPool = new ThreadLocal<DeserializationKey>() {
+        @Override
+        protected DeserializationKey initialValue() {
+            return new DeserializationKey(null,null);
+        }
+    };
     private static final boolean deserializationCacheEnabled = Boolean.valueOf(System.getProperty("ea.deserializationCache.enabled", "false"));
 
     private SerializationContext() {}
@@ -37,7 +44,7 @@ public final class SerializationContext {
 
         // see if we already have the deserialized version cached
         if(deserializationCache != null) {
-            Object message = deserializationCache.get(new DeserializationKey(deserializer.getMessageClass(), bytes));
+            Object message = deserializationCache.get(keyPool.get().populate(deserializer.getMessageClass(), bytes));
             if(message != null) {
                 // pre cached
                 return (T) message;
@@ -88,12 +95,33 @@ public final class SerializationContext {
     }
 
     private static final class DeserializationKey {
-        private final Class<?> objectClass;
-        private final ByteBuffer bytes;
+        private Class<?> objectClass;
+        private ByteBuffer bytes;
 
         public DeserializationKey(Class<?> objectClass, ByteBuffer bytes) {
             this.objectClass = objectClass;
             this.bytes = bytes;
+        }
+
+        public void setObjectClass(Class<?> objectClass) {
+            this.objectClass = objectClass;
+        }
+
+        public void setBytes(ByteBuffer bytes) {
+            this.bytes = bytes;
+        }
+
+        /**
+         * Convenient method to populate the object with new values
+         *
+         * @param objectClass
+         * @param bytes
+         * @return
+         */
+        public DeserializationKey populate(Class<?> objectClass, ByteBuffer bytes) {
+            this.objectClass = objectClass;
+            this.bytes = bytes;
+            return this;
         }
 
         @Override
