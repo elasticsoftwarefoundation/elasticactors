@@ -264,15 +264,17 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
             // delete actor state here to avoid race condition
             persistentActorRepository.delete(this.shardKey,actorRef.getActorId());
             actorCache.invalidate(actorRef);
+            // seems like we need to call an explicit cleanup for the cache to clear
+            actorCache.cleanUp();
             // find actor class behind receiver ActorRef
             ElasticActor actorInstance = actorSystem.getActorInstance(actorRef,persistentActor.getActorClass());
             // call preDestroy
-            actorExecutor.execute(new DestroyActorTask(persistentActor,
-                    actorSystem,
-                    actorInstance,
-                    actorRef,
-                    internalMessage,
-                    messageHandlerEventListener));
+            actorExecutor.execute(new DestroyActorTask( persistentActor,
+                                                        actorSystem,
+                                                        actorInstance,
+                                                        actorRef,
+                                                        internalMessage,
+                                                        messageHandlerEventListener));
         } finally {
             this.cacheLoader.reset();
         }

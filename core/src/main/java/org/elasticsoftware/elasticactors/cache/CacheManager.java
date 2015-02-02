@@ -173,7 +173,9 @@ public class CacheManager<K,V> {
                 segmentIndex.remove(notification.getKey().segmentKey,notification.getKey());
             }
             EvictionListener<V> evictionListener = evictionListeners.get(notification.getKey().segmentKey);
-            if(evictionListener != null) {
+            // only notify when it was not evicted explicitly (when a entry was deleted)
+            // otherwise the prePassivate will run
+            if(evictionListener != null && notification.wasEvicted()) {
                 evictionListener.onEvicted(notification.getValue());
             }
         }
