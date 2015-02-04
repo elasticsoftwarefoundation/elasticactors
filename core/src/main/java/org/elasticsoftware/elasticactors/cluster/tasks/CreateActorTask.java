@@ -17,10 +17,7 @@
 package org.elasticsoftware.elasticactors.cluster.tasks;
 
 import org.apache.log4j.Logger;
-import org.elasticsoftware.elasticactors.ActorLifecycleListener;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ActorState;
-import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
@@ -28,11 +25,16 @@ import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 
+import javax.annotation.Nullable;
+
 /**
  * @author Joost van de Wijgerd
  */
 public final class CreateActorTask extends ActorLifecycleTask {
     private static final Logger logger = Logger.getLogger(CreateActorTask.class);
+    @Nullable
+    private final PersistentActor persistentActor;
+
 
     public CreateActorTask(PersistentActor persistentActor,
                            InternalActorSystem actorSystem,
@@ -51,7 +53,7 @@ public final class CreateActorTask extends ActorLifecycleTask {
                            InternalMessage createActorMessage,
                            MessageHandlerEventListener messageHandlerEventListener) {
         super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef,messageHandlerEventListener, createActorMessage);
-
+        this.persistentActor = (persistentActorRepository != null) ? persistentActor : null;
     }
 
     @Override
@@ -63,6 +65,11 @@ public final class CreateActorTask extends ActorLifecycleTask {
             logger.debug(String.format("Creating Actor for ref [%s] of type [%s]",receiverRef.toString(),receiver.getClass().getName()));
         }
         try {
+            // first update (this is async fire and forget for now)
+            if(persistentActor != null) {
+                persistentActorRepository.update((ShardKey) persistentActor.getKey(), persistentActor);
+            }
+
             // @todo: somehow figure out the creator
             receiver.postCreate(null);
             receiver.postActivate(null);

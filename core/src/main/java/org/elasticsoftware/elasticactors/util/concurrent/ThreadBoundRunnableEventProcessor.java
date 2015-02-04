@@ -36,4 +36,15 @@ public final class ThreadBoundRunnableEventProcessor implements ThreadBoundEvent
             }
         }
     }
+
+    @Override
+    public void process(ThreadBoundRunnable... events) {
+        for (ThreadBoundRunnable event : events) {
+            try {
+                event.run();
+            } catch (Throwable exception) {
+                logger.error(String.format("exception on queue %s while executing runnable: %s", Thread.currentThread().getName(), event), exception);
+            }
+        }
+    }
 }

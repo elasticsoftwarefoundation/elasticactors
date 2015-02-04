@@ -53,6 +53,8 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
 @Configurable
 public final class LocalActorShard extends AbstractActorContainer implements ActorShard, EvictionListener<PersistentActor<ShardKey>> {
     private static final Logger logger = Logger.getLogger(LocalActorShard.class);
+    // this instance acts as a tombstone for stopped actors
+    private static final PersistentActor<ShardKey> TOMBSTONE = new PersistentActor<>(null,null,null,null,null,null);
     private final InternalActorSystem actorSystem;
     private final ShardKey shardKey;
     private ThreadBoundExecutor actorExecutor;
@@ -100,8 +102,11 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
 
     @Override
     public void onEvicted(PersistentActor<ShardKey> value) {
-        ElasticActor actorInstance = actorSystem.getActorInstance(value.getSelf(),value.getActorClass());
-        actorExecutor.execute(new PassivateActorTask(persistentActorRepository,value,actorSystem,actorInstance,value.getSelf()));
+        // see if it is not a tombstone that gets evicted
+        if(!(TOMBSTONE == value)) {
+            ElasticActor actorInstance = actorSystem.getActorInstance(value.getSelf(), value.getActorClass());
+            actorExecutor.execute(new PassivateActorTask(persistentActorRepository, value, actorSystem, actorInstance, value.getSelf()));
+        }
     }
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
@@ -142,25 +147,33 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
             try {
                 // load persistent actor from cache or persistent store
                 PersistentActor<ShardKey> actor = actorCache.get(internalMessage.getReceiver(), cacheLoader);
-
-                // find actor class behind receiver ActorRef
-                ElasticActor actorInstance = actorSystem.getActorInstance(internalMessage.getReceiver(),
-                                                                          actor.getActorClass());
-                // execute on it's own thread
-                if(internalMessage.isUndeliverable()) {
-                    actorExecutor.execute(new HandleUndeliverableMessageTask(actorSystem,
-                                                                            actorInstance,
-                                                                            internalMessage,
-                                                                            actor,
-                                                                            persistentActorRepository,
-                                                                            messageHandlerEventListener));
+                // see if we don't have a recently destroyed actor
+                if(TOMBSTONE == actor) {
+                    try {
+                        handleUndeliverable(internalMessage, messageHandlerEventListener);
+                    } catch (Exception ex) {
+                        logger.error("Exception while sending message undeliverable",ex);
+                    }
                 } else {
-                    actorExecutor.execute(new HandleMessageTask(actorSystem,
-                                                                actorInstance,
-                                                                internalMessage,
-                                                                actor,
-                                                                persistentActorRepository,
-                                                                messageHandlerEventListener));
+                    // find actor class behind receiver ActorRef
+                    ElasticActor actorInstance = actorSystem.getActorInstance(internalMessage.getReceiver(),
+                            actor.getActorClass());
+                    // execute on it's own thread
+                    if (internalMessage.isUndeliverable()) {
+                        actorExecutor.execute(new HandleUndeliverableMessageTask(actorSystem,
+                                actorInstance,
+                                internalMessage,
+                                actor,
+                                persistentActorRepository,
+                                messageHandlerEventListener));
+                    } else {
+                        actorExecutor.execute(new HandleMessageTask(actorSystem,
+                                actorInstance,
+                                internalMessage,
+                                actor,
+                                persistentActorRepository,
+                                messageHandlerEventListener));
+                    }
                 }
             } catch(UncheckedExecutionException e) {
                 if(e.getCause() instanceof EmptyResultDataAccessException) {
@@ -222,7 +235,12 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     }
 
     private boolean actorExists(ActorRef actorRef) {
-        return actorCache.getIfPresent(actorRef) != null || persistentActorRepository.contains(shardKey,actorRef.getActorId());
+        PersistentActor<ShardKey> persistentActor = actorCache.getIfPresent(actorRef);
+        if(persistentActor != null) {
+            return !(TOMBSTONE == persistentActor);
+        } else {
+            return persistentActorRepository.contains(shardKey, actorRef.getActorId());
+        }
     }
 
     private void createActor(CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
@@ -231,7 +249,10 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         final String actorStateVersion = ManifestTools.extractActorStateVersion(actorClass);
         PersistentActor<ShardKey> persistentActor =
                 new PersistentActor<>(shardKey, actorSystem, actorStateVersion, ref, actorClass, createMessage.getInitialState());
-        persistentActorRepository.update(this.shardKey,persistentActor);
+
+        // Actor state is now created in the create actor task
+        // persistentActorRepository.update(this.shardKey,persistentActor);
+
         actorCache.put(ref,persistentActor);
         // find actor class behind receiver ActorRef
         ElasticActor actorInstance = actorSystem.getActorInstance(ref,persistentActor.getActorClass());
@@ -261,15 +282,20 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         try {
             // need to load it here to know the ActorClass!
             PersistentActor<ShardKey> persistentActor = actorCache.get(actorRef,cacheLoader);
-            // delete actor state here to avoid race condition
+            // we used to delete actor state here to avoid race condition
+            /*
             persistentActorRepository.delete(this.shardKey,actorRef.getActorId());
             actorCache.invalidate(actorRef);
             // seems like we need to call an explicit cleanup for the cache to clear
             actorCache.cleanUp();
+            */
+            // now we handle it in the destroy task, but mark the actor as destroyed
+            actorCache.put(actorRef,TOMBSTONE);
             // find actor class behind receiver ActorRef
             ElasticActor actorInstance = actorSystem.getActorInstance(actorRef,persistentActor.getActorClass());
             // call preDestroy
-            actorExecutor.execute(new DestroyActorTask( persistentActor,
+            actorExecutor.execute(new DestroyActorTask( persistentActorRepository,
+                                                        persistentActor,
                                                         actorSystem,
                                                         actorInstance,
                                                         actorRef,

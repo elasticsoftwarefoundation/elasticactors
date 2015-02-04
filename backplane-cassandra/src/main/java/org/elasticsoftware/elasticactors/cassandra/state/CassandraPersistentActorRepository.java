@@ -68,9 +68,11 @@ public final class CassandraPersistentActorRepository implements PersistentActor
 
     @Override
     public void update(final ShardKey shard,final PersistentActor persistentActor) throws IOException {
-        ColumnFamilyUpdater<Composite,String> updater = columnFamilyTemplate.createUpdater(createKey(shard));
-        updater.setByteArray(persistentActor.getSelf().getActorId(), serializer.serialize(persistentActor));
-        columnFamilyTemplate.update(updater);
+        // serialize the data on the calling thread (to avoid thread visibility issues)
+        final byte[] serializedActorBytes = serializer.serialize(persistentActor);
+        asyncUpdateExecutor.execute(new PersistentActorUpdateEvent(createKey(shard), shard,
+                                                                    persistentActor.getSelf().getActorId(),
+                                                                    serializedActorBytes, null, null));
     }
 
     @Override
@@ -85,7 +87,7 @@ public final class CassandraPersistentActorRepository implements PersistentActor
 
     @Override
     public void delete(final ShardKey shard,final String actorId) {
-        columnFamilyTemplate.deleteColumn(createKey(shard),actorId);
+        asyncUpdateExecutor.execute(new PersistentActorUpdateEvent(createKey(shard), shard, actorId, null, null, null));
     }
 
     @Override

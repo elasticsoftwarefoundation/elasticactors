@@ -17,10 +17,7 @@
 package org.elasticsoftware.elasticactors.cluster.tasks;
 
 import org.apache.log4j.Logger;
-import org.elasticsoftware.elasticactors.ActorLifecycleListener;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ActorState;
-import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
@@ -32,6 +29,8 @@ import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
  */
 public final class DestroyActorTask extends ActorLifecycleTask {
     private static final Logger logger = Logger.getLogger(DestroyActorTask.class);
+    private final PersistentActorRepository persistentActorRepository;
+    private final ShardKey shardKey;
 
     public DestroyActorTask(PersistentActor persistentActor,
                             InternalActorSystem actorSystem,
@@ -50,6 +49,8 @@ public final class DestroyActorTask extends ActorLifecycleTask {
                             InternalMessage createActorMessage,
                             MessageHandlerEventListener messageHandlerEventListener) {
         super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef,messageHandlerEventListener, createActorMessage);
+        this.persistentActorRepository = persistentActorRepository;
+        this.shardKey = (ShardKey) persistentActor.getKey();
 
     }
 
@@ -64,7 +65,8 @@ public final class DestroyActorTask extends ActorLifecycleTask {
         try {
             // @todo: figure out the destroyer
             receiver.preDestroy(null);
-            // entry is deleted in LocalActorShard to avoid race condition
+            // delete entry here to serialize on state updates
+            persistentActorRepository.delete(shardKey, receiverRef.getActorId());
         } catch (Exception e) {
             logger.error("Exception calling preDestroy",e);
         }

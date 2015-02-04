@@ -22,6 +22,8 @@ import me.prettyprint.hector.api.beans.Composite;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static java.lang.String.format;
@@ -45,8 +47,14 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
         try {
             ColumnFamilyUpdater<Composite, String> updater = columnFamilyTemplate.createUpdater();
             for (PersistentActorUpdateEvent event : events) {
-                updater.addKey(event.getRowKey());
-                updater.setByteArray(event.getPersistentActorId(), event.getPersistentActorBytes());
+                if(event.getPersistentActorBytes() != null) {
+                    updater.addKey(event.getRowKey());
+                    updater.setByteArray(event.getPersistentActorId(), event.getPersistentActorBytes());
+                } else {
+                    // it's a delete
+                    updater.addKey(event.getRowKey());
+                    updater.deleteColumn(event.getPersistentActorId());
+                }
             }
             columnFamilyTemplate.update(updater);
         } catch(Exception e) {
@@ -67,5 +75,10 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
                 logger.trace(format("Updating %d Actor state entrie(s) took %d msecs",events.size(),endTime-startTime));
             }
         }
+    }
+
+    @Override
+    public void process(PersistentActorUpdateEvent... events) {
+        process(Arrays.asList(events));
     }
 }

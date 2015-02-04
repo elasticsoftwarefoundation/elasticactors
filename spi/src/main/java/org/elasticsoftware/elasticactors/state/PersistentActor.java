@@ -122,4 +122,5 @@ public final class PersistentActor<K> implements ActorContext {
     public ActorSystem getActorSystem() {
         return actorSystem;
     }
+
 }

@@ -40,7 +40,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
     private final ElasticActor receiver;
     private final InternalActorSystem actorSystem;
     private final PersistentActor persistentActor;
-    private final PersistentActorRepository persistentActorRepository;
+    protected final PersistentActorRepository persistentActorRepository;
     private final InternalMessage internalMessage;
     private final MessageHandlerEventListener messageHandlerEventListener;
     private final Measurement measurement;

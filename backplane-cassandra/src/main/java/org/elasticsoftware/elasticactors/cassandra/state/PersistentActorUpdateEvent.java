@@ -22,6 +22,8 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
 
+import javax.annotation.Nullable;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -36,9 +38,9 @@ public final class PersistentActorUpdateEvent implements ThreadBoundEvent<Intege
     public PersistentActorUpdateEvent(Composite rowKey,
                                       ShardKey shardKey,
                                       String persistentActorId,
-                                      byte[] persistentActorBytes,
-                                      InternalMessage message,
-                                      MessageHandlerEventListener eventListener) {
+                                      @Nullable byte[] persistentActorBytes,
+                                      @Nullable InternalMessage message,
+                                      @Nullable MessageHandlerEventListener eventListener) {
         this.rowKey = rowKey;
         this.shardKey = shardKey;
         this.persistentActorId = persistentActorId;
@@ -64,14 +66,17 @@ public final class PersistentActorUpdateEvent implements ThreadBoundEvent<Intege
         return persistentActorId;
     }
 
+    @Nullable
     public byte[] getPersistentActorBytes() {
         return persistentActorBytes;
     }
 
+    @Nullable
     public InternalMessage getMessage() {
         return message;
     }
 
+    @Nullable
     public MessageHandlerEventListener getEventListener() {
         return eventListener;
     }
