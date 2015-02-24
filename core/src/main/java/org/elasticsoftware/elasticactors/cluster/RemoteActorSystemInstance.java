@@ -151,6 +151,11 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
         throw new UnsupportedOperationException("Access to the ActorSystemConfiguration is not supported for Remote ActorSystem instances");
     }
 
+    @Override
+    public ActorSystemEventListenerRegistry getEventListenerRegistry() {
+        throw new UnsupportedOperationException("ActorSystemEventListenerRegistry is not supported for Remote ActorSystem instances");
+    }
+
     private ActorShard shardFor(String actorId) {
         return shards[Math.abs(hashFunction.hashString(actorId, Charsets.UTF_8).asInt()) % shards.length];
     }

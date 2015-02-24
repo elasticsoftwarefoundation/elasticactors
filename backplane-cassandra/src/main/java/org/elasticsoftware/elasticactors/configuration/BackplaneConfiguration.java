@@ -25,12 +25,14 @@ import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.Composite;
 import me.prettyprint.hector.api.factory.HFactory;
+import org.elasticsoftware.elasticactors.cassandra.cluster.CassandraActorSystemEventListenerRepository;
 import org.elasticsoftware.elasticactors.cassandra.cluster.scheduler.CassandraScheduledMessageRepository;
 import org.elasticsoftware.elasticactors.cassandra.serialization.CompressingSerializer;
 import org.elasticsoftware.elasticactors.cassandra.serialization.DecompressingDeserializer;
 import org.elasticsoftware.elasticactors.cassandra.state.CassandraPersistentActorRepository;
 import org.elasticsoftware.elasticactors.cassandra.state.PersistentActorUpdateEventProcessor;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
+import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRepository;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRepository;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
@@ -61,6 +63,7 @@ public class BackplaneConfiguration {
     private ActorRefFactory actorRefFactory;
     private ColumnFamilyTemplate<Composite,String> persistentActorsColumnFamilyTemplate;
     private ColumnFamilyTemplate<Composite,Composite> scheduledMessagesColumnFamilyTemplate;
+    private ColumnFamilyTemplate<Composite,String> actorSystemEventListenersColumnFamilyTemplate;
 
     @PostConstruct
     public void initialize() {
@@ -79,9 +82,12 @@ public class BackplaneConfiguration {
             new ThriftColumnFamilyTemplate<>(keyspace,"PersistentActors", CompositeSerializer.get(),StringSerializer.get());
         scheduledMessagesColumnFamilyTemplate =
             new ThriftColumnFamilyTemplate<>(keyspace,"ScheduledMessages",CompositeSerializer.get(), CompositeSerializer.get());
+        actorSystemEventListenersColumnFamilyTemplate =
+                new ThriftColumnFamilyTemplate<>(keyspace,"ActorSystemEventListeners", CompositeSerializer.get(),StringSerializer.get());
         // return
         // @TODO: make this configurable and use the ColumnSliceIterator
         scheduledMessagesColumnFamilyTemplate.setCount(Integer.MAX_VALUE);
+        actorSystemEventListenersColumnFamilyTemplate.setCount(Integer.MAX_VALUE);
     }
 
     @Bean(name = {"asyncUpdateExecutor"}, destroyMethod = "shutdown")
@@ -104,6 +110,11 @@ public class BackplaneConfiguration {
     @Bean(name = {"scheduledMessageRepository"})
     public ScheduledMessageRepository getScheduledMessageRepository() {
         return new CassandraScheduledMessageRepository(cluster.getClusterName(), scheduledMessagesColumnFamilyTemplate, new ScheduledMessageDeserializer(new ActorRefDeserializer(actorRefFactory)));
+    }
+
+    @Bean(name = {"actorSystemEventListenerRepository"})
+    public ActorSystemEventListenerRepository getActorSystemEventListenerRepository() {
+        return new CassandraActorSystemEventListenerRepository(cluster.getClusterName(), actorSystemEventListenersColumnFamilyTemplate);
     }
 }
 

@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors;
 
+import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRegistry;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
 
 import javax.annotation.Nullable;
@@ -150,7 +151,23 @@ public interface ActorSystem {
      */
     void stop(ActorRef actorRef) throws Exception;
 
+    /**
+     * Gives access to the configuration object
+     *
+     * @return      the configuration object
+     */
     ActorSystemConfiguration getConfiguration();
 
+    /**
+     * The {@link ActorSystemEventListenerRegistry} can be used to register messages that will be sent when an event
+     * (as defined in {@link org.elasticsoftware.elasticactors.cluster.ActorSystemEvent} enum is triggered.
+     *
+     * The most interesting use case is to ensure that a certain Actor will always be activated when it's shard gets
+     * initialized (by subscribing to the {@link org.elasticsoftware.elasticactors.cluster.ActorSystemEvent#ACTOR_SHARD_INITIALIZED}
+     * event).
+     *
+     * @return  the {@link org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRegistry} for this {@link org.elasticsoftware.elasticactors.ActorSystem}
+     */
+    ActorSystemEventListenerRegistry getEventListenerRegistry();
 
 }

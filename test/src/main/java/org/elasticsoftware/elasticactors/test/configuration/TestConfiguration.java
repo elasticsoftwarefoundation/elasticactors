@@ -31,6 +31,7 @@ import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
 import org.elasticsoftware.elasticactors.test.InternalActorSystemsImpl;
+import org.elasticsoftware.elasticactors.test.cluster.NoopActorSystemEventRegistryService;
 import org.elasticsoftware.elasticactors.test.cluster.SingleNodeClusterService;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
@@ -142,5 +143,10 @@ public class TestConfiguration {
     @Bean(name= "clusterService")
     public ClusterService createClusterService() {
         return new SingleNodeClusterService(this.localNode);
+    }
+
+    @Bean(name = {"actorSystemEventListenerService"})
+    public ActorSystemEventListenerService createActorSystemEventListenerService() {
+        return new NoopActorSystemEventRegistryService();
     }
 }

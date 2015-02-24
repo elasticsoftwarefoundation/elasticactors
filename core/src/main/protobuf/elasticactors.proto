@@ -28,6 +28,12 @@ message ScheduledMessage {
     optional bytes message = 6;
 }
 
+message ActorSystemEventListener {
+    optional string actorId = 1;
+    optional string messageClass = 2;
+    optional bytes message = 3;
+}
+
 message PersistentActor {
     optional string actorRef = 1;
     optional string actorClass = 2;

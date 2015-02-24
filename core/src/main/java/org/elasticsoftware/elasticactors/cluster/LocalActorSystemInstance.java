@@ -51,6 +51,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.lang.String.format;
+import static org.elasticsoftware.elasticactors.cluster.ActorSystemEvent.ACTOR_SHARD_INITIALIZED;
 
 /**
  * @author Joost van de Wijgerd
@@ -67,6 +68,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private MessageQueueFactory localMessageQueueFactory;
     private MessageQueueFactory remoteMessageQueueFactory;
     private SchedulerService scheduler;
+    private ActorSystemEventListenerService actorSystemEventListenerService;
     private NodeActorCacheManager nodeActorCacheManager;
     private ShardActorCacheManager shardActorCacheManager;
     private ActorLifecycleListenerRegistry actorLifecycleListenerRegistry;
@@ -181,6 +183,9 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         for (int j = 0; j < shardLocks.length; j++) {
             writeLocks[j] = shardLocks[j].writeLock();
         }
+        // store the id's of the new local shard in order to generate the events later
+        final List<Integer> newLocalShards = new ArrayList<>(shards.length);
+
         try {
             for (Lock writeLock : writeLocks) {
                 writeLock.lock();
@@ -190,7 +195,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                 ShardKey shardKey = new ShardKey(configuration.getName(), i);
                 PhysicalNode node = nodeSelector.getPrimary(shardKey.toString());
                 if (node.isLocal()) {
-
                     // this instance should start owning the shard now
                     final ActorShard currentShard = shards[i];
                     if (currentShard == null || !currentShard.getOwningNode().isLocal()) {
@@ -207,6 +211,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                         shards[i] = newShard;
                         // register with the strategy to wait for shard to be released
                         strategy.registerWaitForRelease(newShard,node);
+                        // add it to the new local shards
+                        newLocalShards.add(i);
                         // initialize
                         // newShard.init();
                         // start owning the scheduler shard (this will start sending messages, but everything is blocked so it should be no problem)
@@ -267,7 +273,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                 }
             }
         }
-
+        // now we need to generate the events for the new local shards (if any)
+        logger.info(format("Generating ACTOR_SHARD_INITIALIZED events for %d new shards",newLocalShards.size()));
+        for (Integer newLocalShard : newLocalShards) {
+            this.actorSystemEventListenerService.generateEvents(shardAdapters[newLocalShard], ACTOR_SHARD_INITIALIZED);
+        }
     }
 
     public int getNumberOfShards() {
@@ -369,6 +379,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
+    public ActorSystemEventListenerRegistry getEventListenerRegistry() {
+        return this.actorSystemEventListenerService;
+    }
+
+    @Override
     public InternalScheduler getInternalScheduler() {
         return scheduler;
     }
@@ -463,6 +478,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     @Autowired
     public void setScheduler(SchedulerService scheduler) {
         this.scheduler = scheduler;
+    }
+
+    @Autowired
+    public void setActorSystemEventListenerService(ActorSystemEventListenerService actorSystemEventListenerService) {
+        this.actorSystemEventListenerService = actorSystemEventListenerService;
     }
 
     @Autowired
