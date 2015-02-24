@@ -18,12 +18,8 @@ package org.elasticsoftware.elasticactors.serialization.internal;
 
 import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListener;
-import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
-import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Joost van de Wijgerd

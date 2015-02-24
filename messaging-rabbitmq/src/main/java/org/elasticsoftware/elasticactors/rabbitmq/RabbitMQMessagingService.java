@@ -43,7 +43,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.String.format;
 import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.BUFFERED;
-import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.DIRECT;
 import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.WRITE_BEHIND;
 
 /**

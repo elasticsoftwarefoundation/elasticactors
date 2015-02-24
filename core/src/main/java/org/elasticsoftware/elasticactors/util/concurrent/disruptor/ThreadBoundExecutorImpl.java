@@ -27,7 +27,10 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnableEven
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.lang.String.format;

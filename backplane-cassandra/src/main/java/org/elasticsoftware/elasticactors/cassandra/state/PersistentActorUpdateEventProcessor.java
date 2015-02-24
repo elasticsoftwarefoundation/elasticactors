@@ -22,7 +22,6 @@ import me.prettyprint.hector.api.beans.Composite;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 

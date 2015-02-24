@@ -17,7 +17,6 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.apache.log4j.Logger;
-import org.elasticsoftware.elasticactors.ActorContextHolder;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.ShardKey;
