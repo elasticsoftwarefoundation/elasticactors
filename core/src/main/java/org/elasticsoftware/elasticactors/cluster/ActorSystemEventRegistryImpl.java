@@ -59,7 +59,7 @@ public final class ActorSystemEventRegistryImpl implements ActorSystemEventListe
         // ugly casting needed here
         ShardKey shardKey = ((ActorShard)((ActorShardRef) receiver).get()).getKey();
         // store the reference
-        MessageSerializer serializer = getActorSystem().getSerializer(message.getClass());
+        MessageSerializer serializer = actorSystem.getSerializer(message.getClass());
         ByteBuffer serializedMessage = serializer.serialize(message);
         byte[] serializedBytes = new byte[serializedMessage.remaining()];
         serializedMessage.get(serializedBytes);
@@ -80,21 +80,17 @@ public final class ActorSystemEventRegistryImpl implements ActorSystemEventListe
     public void generateEvents(ActorShard actorShard, ActorSystemEvent actorSystemEvent) {
         List<ActorSystemEventListener> listeners = eventListenerRepository.getAll(actorShard.getKey(), actorSystemEvent);
         for (ActorSystemEventListener listener : listeners) {
-            MessageDeserializer deserializer = getActorSystem().getDeserializer(listener.getMessageClass());
+            MessageDeserializer deserializer = actorSystem.getDeserializer(listener.getMessageClass());
             if(deserializer != null) {
                 try {
                     Object message = deserializer.deserialize(ByteBuffer.wrap(listener.getMessageBytes()));
-                    ActorRef receiver = getActorSystem().actorFor(listener.getActorId());
+                    ActorRef receiver = actorSystem.actorFor(listener.getActorId());
                     actorShard.sendMessage(null, receiver, message);
                 } catch(Exception e) {
                     logger.error(format("Exception while sending message [%s] to actorId [%s] for ActorSystemEvent.%s",listener.getMessageClass().getName(),listener.getActorId(),actorSystemEvent.name()),e);
                 }
             }
         }
-    }
-
-    private InternalActorSystem getActorSystem() {
-        return actorSystem;
     }
 
 }
