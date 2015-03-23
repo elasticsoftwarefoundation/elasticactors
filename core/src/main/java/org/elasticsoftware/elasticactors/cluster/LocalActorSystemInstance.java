@@ -86,9 +86,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         this.shardAdapters = new ActorShardAdapter[shards.length];
         for (int i = 0; i < shards.length; i++) {
             shardLocks[i] = new ReentrantReadWriteLock();
-            // always put a writelock on when creating to avoid race conditions at startup
-            shardLocks[i].writeLock().lock();
-            // this lock will be released after initial rebalancing
             shardAdapters[i] = new ActorShardAdapter(new ShardKey(configuration.getName(), i));
         }
         this.localNodeAdapter = new ActorNodeAdapter(new NodeKey(configuration.getName(), localNode.getId()));
@@ -189,11 +186,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         final List<Integer> newLocalShards = new ArrayList<>(shards.length);
 
         try {
-            // when initializing, the locks where already set during creation (to avoid race condition on startup)
-            if(!initializing) {
-                for (Lock writeLock : writeLocks) {
-                    writeLock.lock();
-                }
+            for (Lock writeLock : writeLocks) {
+                writeLock.lock();
             }
 
             for (int i = 0; i < configuration.getNumberOfShards(); i++) {
@@ -418,7 +412,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     @Override
     public <T> ActorRef tempActorOf(Class<T> actorClass, ActorState initialState) throws Exception {
         // if we have state we need to wrap it
-
         String actorId = UUID.randomUUID().toString();
         CreateActorMessage createActorMessage = new CreateActorMessage(getName(),
                                                                        actorClass.getName(),
