@@ -95,8 +95,19 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
             // get the durable flag
             Message messageAnnotation = message.getClass().getAnnotation(Message.class);
             final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
-            MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-            messageQueue.offer(new InternalMessageImpl(from, to, SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable));
+            final boolean immutable = (messageAnnotation != null) && messageAnnotation.immutable();
+            if(durable) {
+                // durable so it will go over the bus and needs to be serialized
+                MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
+                messageQueue.offer(new InternalMessageImpl(from, to, SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), true));
+            } else if(!immutable) {
+                // it's not durable, but it's mutable so we need to serialize here
+                MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
+                messageQueue.offer(new InternalMessageImpl(from, to, SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), false));
+            } else {
+                // as the message is immutable we can safely send it as a TransientInternalMessage
+                messageQueue.offer(new TransientInternalMessage(from,to,message));
+            }
         }
     }
 
