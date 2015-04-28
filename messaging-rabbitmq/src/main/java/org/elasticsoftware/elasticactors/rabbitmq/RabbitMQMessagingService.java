@@ -42,6 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.String.format;
+import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.ASYNC;
 import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.BUFFERED;
 import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.WRITE_BEHIND;
 
@@ -118,6 +119,8 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
             messageAcker = new BufferingMessageAcker(consumerChannel);
         } else if(ackType == WRITE_BEHIND) {
             messageAcker = new WriteBehindMessageAcker(consumerChannel);
+        } else if(ackType == ASYNC) {
+            messageAcker = new AsyncMessageAcker(consumerChannel);
         } else {
             messageAcker = new DirectMessageAcker(consumerChannel);
         }
