@@ -39,7 +39,7 @@ public final class WriteBehindMessageAcker implements MessageAcker {
 
     public WriteBehindMessageAcker(Channel consumerChannel) {
         this.consumerChannel = consumerChannel;
-        this.disruptor = new Disruptor<>(new AckEventFactory(), 10240, Executors.newCachedThreadPool(new DaemonThreadFactory("RABBITMQ-MESSAGE_ACKER")));
+        this.disruptor = new Disruptor<>(new AckEventFactory(), 16384, Executors.newCachedThreadPool(new DaemonThreadFactory("RABBITMQ-MESSAGE_ACKER")));
         this.disruptor.handleEventsWith(new AckEventHandler());
     }
 

@@ -170,10 +170,12 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                 } catch (InvocationTargetException e) {
                     final Throwable cause = e.getCause();
                     if(Exception.class.isAssignableFrom(cause.getClass())) {
-                        throw (Exception) cause;
+                        // throw (Exception) cause;
+                        logger.error(format("Unexpected Exception in handlerMethod: %s",definition.handlerMethod.toString()), cause);
                     } else {
                         // this is some system error, don't swallow it but just rethrow the Invocation Target Exception
-                        throw e;
+                        // throw e;
+                        logger.error(format("Unexpected InvocationTargetException in handlerMethod: %s",definition.handlerMethod.toString()), e);
                     }
                 }
             }
