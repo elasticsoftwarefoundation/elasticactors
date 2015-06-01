@@ -29,6 +29,8 @@ import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 
+import static java.lang.String.format;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -68,14 +70,14 @@ public final class ActivateActorTask extends ActorLifecycleTask {
                 this.persistentActor.setState(actorState);
                 this.persistentActor.setSerializedState(null);
             } catch(Exception e) {
-                logger.error("Exception calling preActivate",e);
+                logger.error(format("Exception calling preActivate for actorId [%s]", receiverRef.getActorId()),e);
             }
         }
 
         try {
             receiver.postActivate(persistentActor.getPreviousActorStateVersion());
         } catch (Exception e) {
-            logger.error("Exception calling postActivate",e);
+            logger.error(format("Exception calling postActivate for actorId [%s]", receiverRef.getActorId()),e);
             return false;
         }
         // when the preActivate has a result we should always store the state
