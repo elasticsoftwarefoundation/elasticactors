@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.configuration;
 import me.prettyprint.cassandra.serializers.CompositeSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.service.CassandraHostConfigurator;
+import me.prettyprint.cassandra.service.ThriftCluster;
 import me.prettyprint.cassandra.service.template.ColumnFamilyTemplate;
 import me.prettyprint.cassandra.service.template.ThriftColumnFamilyTemplate;
 import me.prettyprint.hector.api.Cluster;
@@ -74,7 +75,18 @@ public class BackplaneConfiguration {
         hostConfigurator.setRetryDownedHostsDelayInSeconds(env.getProperty("ea.cassandra.retryDownedHostsDelayInSeconds",Integer.class,1));
         hostConfigurator.setMaxWaitTimeWhenExhausted(2000L);
         String cassandraClusterName = env.getProperty("ea.cassandra.cluster","ElasticActorsCluster");
-        Cluster cluster = HFactory.getOrCreateCluster(cassandraClusterName,hostConfigurator);
+        // it seems that there are issues with the CassandraHostRetryService and retrying downed hosts
+        // if we don't let the HFactory manage the cluster then CassandraHostRetryService doesn't try to
+        // be smart about finding out if a host was removed from the ring and so it will keep on retrying
+        // all configured hosts (and ultimately fail-back when the host comes back online)
+        // the default is TRUE, which will let HFactory manage the cluster
+        Boolean manageClusterThroughHFactory = env.getProperty("ea.cassandra.hfactory.manageCluster", Boolean.class, Boolean.TRUE);
+        Cluster cluster;
+        if(manageClusterThroughHFactory) {
+            cluster = HFactory.getOrCreateCluster(cassandraClusterName, hostConfigurator);
+        } else {
+            cluster = new ThriftCluster(cassandraClusterName, hostConfigurator, null);
+        }
         String cassandraKeyspaceName = env.getProperty("ea.cassandra.keyspace","ElasticActors");
         Keyspace keyspace = HFactory.createKeyspace(cassandraKeyspaceName,cluster);
         persistentActorsColumnFamilyTemplate =
