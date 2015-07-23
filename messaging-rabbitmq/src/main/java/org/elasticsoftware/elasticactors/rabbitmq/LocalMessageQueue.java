@@ -169,11 +169,6 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
     }
 
     @Override
-    public void onConsumerRecovery(Channel channel) {
-        // ignore
-    }
-
-    @Override
     public void onCreate(Channel channel) {
         // ignore
     }
@@ -185,6 +180,16 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
 
     @Override
     public void onRecovery(Channel channel) {
+
+    }
+
+    @Override
+    public void onRecoveryStarted(Channel channel) {
+
+    }
+
+    @Override
+    public void onRecoveryCompleted(Channel channel) {
         // reset the recovery flag
         if(this.recovering.compareAndSet(true,false)) {
             logger.info("RabbitMQ Channel recovered");

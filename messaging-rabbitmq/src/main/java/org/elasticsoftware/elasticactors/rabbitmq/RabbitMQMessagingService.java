@@ -40,6 +40,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeoutException;
 
 import static java.lang.String.format;
 import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.ASYNC;
@@ -92,7 +93,7 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
     }
 
     @PostConstruct
-    public void start() throws IOException {
+    public void start() throws IOException, TimeoutException {
         // millis
         connectionFactory.setConnectionTimeout(1000);
         // seconds
@@ -134,7 +135,7 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
             producerChannel.close();
             consumerChannel.close();
             clientConnection.close();
-        } catch (IOException e) {
+        } catch (IOException|TimeoutException e) {
             logger.error("Failed to close all RabbitMQ Client resources",e);
         }
     }

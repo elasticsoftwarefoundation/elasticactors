@@ -115,7 +115,7 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
             }
         }
         // sender param didn't fit the criteria
-        throw new IllegalArgumentException(format("sender ref: %s needs to be a non-temp, non-service, locally sharded actor ref",sender.toString()));
+        throw new IllegalArgumentException(format("sender ref: %s needs to be a non-temp, non-service, locally sharded actor ref",(sender == null) ? "null" : sender.toString()));
     }
 
     @Override
