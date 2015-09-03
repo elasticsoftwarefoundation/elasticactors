@@ -71,6 +71,11 @@ public final class ServiceActorRef implements ActorRef, ActorContainerRef {
     }
 
     @Override
+    public boolean isLocal() {
+        return node.isLocal();
+    }
+
+    @Override
     public ActorContainer get() {
         return node;
     }

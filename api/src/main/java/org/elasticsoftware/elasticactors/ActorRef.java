@@ -73,4 +73,13 @@ public interface ActorRef {
      * @throws              MessageDeliveryException when somthing is wrong with the Messaging Subsystem
      */
     void tell(Object message) throws IllegalStateException, MessageDeliveryException;
+
+    /**
+     * Return whether the Actor is co-located on the same JVM as the caller. There can be significant performance
+     * improvements (especially immutable and non-durable {@link org.elasticsoftware.elasticactors.serialization.Message}s
+     * are highly optimized in this scenario)
+     *
+     * @return              true if the referenced Actor is running on the same JVM as the caller, false otherwise
+     */
+    boolean isLocal();
 }

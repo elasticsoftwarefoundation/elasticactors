@@ -271,6 +271,9 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
         this.actorExecutor = actorExecutor;
     }
 
-
+    @Override
+    public boolean isLocal() {
+        return true;
+    }
 }
 

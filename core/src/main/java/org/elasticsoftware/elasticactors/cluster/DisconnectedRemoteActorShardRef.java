@@ -63,6 +63,11 @@ public final class DisconnectedRemoteActorShardRef implements ActorRef,ActorCont
     }
 
     @Override
+    public boolean isLocal() {
+        return false;
+    }
+
+    @Override
     public ActorContainer get() {
         throw new IllegalStateException(format("Remote Actor Cluster %s is not configured, ensure a correct remote configuration in the config.yaml",clusterName));
     }

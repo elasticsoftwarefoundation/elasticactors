@@ -616,6 +616,12 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         public void destroy() {
             // should not be called on the adapter, just do nothing
         }
+
+        @Override
+        public boolean isLocal() {
+            ActorNode node = activeNodes.get(key.getNodeId());
+            return node != null && node.isLocal();
+        }
     }
 
 }

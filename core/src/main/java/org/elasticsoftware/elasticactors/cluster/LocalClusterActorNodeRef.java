@@ -81,6 +81,11 @@ public final class LocalClusterActorNodeRef implements ActorRef, ActorContainerR
     }
 
     @Override
+    public boolean isLocal() {
+        return node.isLocal();
+    }
+
+    @Override
     public ActorContainer get() {
         return node;
     }

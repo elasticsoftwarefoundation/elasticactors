@@ -77,4 +77,9 @@ public final class RemoteActorNode extends AbstractActorContainer implements Act
     public void handleMessage(InternalMessage message, MessageHandlerEventListener messageHandlerEventListener) {
         // nothing to do
     }
+
+    @Override
+    public boolean isLocal() {
+        return false;
+    }
 }

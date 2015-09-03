@@ -21,4 +21,6 @@ package org.elasticsoftware.elasticactors;
  */
 public interface ActorNode extends ActorContainer {
     NodeKey getKey();
+
+    boolean isLocal();
 }

@@ -83,6 +83,11 @@ public final class ActorShardRef implements ActorRef, ActorContainerRef {
     }
 
     @Override
+    public boolean isLocal() {
+        return shard.getOwningNode().isLocal();
+    }
+
+    @Override
     public ActorContainer get() {
         return shard;
     }

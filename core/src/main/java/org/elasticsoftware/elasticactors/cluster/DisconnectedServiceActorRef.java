@@ -67,6 +67,11 @@ public final class DisconnectedServiceActorRef implements ActorRef, ActorContain
     }
 
     @Override
+    public boolean isLocal() {
+        return false;
+    }
+
+    @Override
     public ActorContainer get() {
         throw new IllegalStateException(format("Actor Node %s is not active, referenced service cannot be reached right now",nodeId));
     }

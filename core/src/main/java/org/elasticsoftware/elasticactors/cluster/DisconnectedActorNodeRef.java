@@ -69,6 +69,11 @@ public final class DisconnectedActorNodeRef implements ActorRef, ActorContainerR
     }
 
     @Override
+    public boolean isLocal() {
+        return false;
+    }
+
+    @Override
     public ActorContainer get() {
         throw new IllegalStateException(format("Actor Node %s is not active, referenced actorId cannot be reached and probably doesn't exist anymore. It is a Bad Idea to serialize Temp Actor Refs",nodeId));
     }
