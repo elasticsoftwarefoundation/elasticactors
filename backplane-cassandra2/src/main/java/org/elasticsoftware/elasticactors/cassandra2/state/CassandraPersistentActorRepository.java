@@ -56,7 +56,7 @@ public final class CassandraPersistentActorRepository implements PersistentActor
 
     public CassandraPersistentActorRepository(Session cassandraSession, String clusterName, ThreadBoundExecutor asyncUpdateExecutor, Serializer serializer, Deserializer deserializer, long readExecutionThresholdMillis) {
         this.cassandraSession = cassandraSession;
-        this.selectStatement = cassandraSession.prepare("select value from PersistentActors where key = ? and key2 = ? column1 = ?");
+        this.selectStatement = cassandraSession.prepare("select value from \"PersistentActors\" where key = ? and key2 = ? AND column1 = ?");
         this.clusterName = clusterName;
         this.asyncUpdateExecutor = asyncUpdateExecutor;
         this.readExecutionThresholdMillis = readExecutionThresholdMillis;
@@ -108,7 +108,7 @@ public final class CassandraPersistentActorRepository implements PersistentActor
         // log a warning when we exceed the readExecutionThreshold
         final long startTime = currentTimeMillis();
         try {
-            ResultSet resultSet = cassandraSession.execute(selectStatement.bind(actorId, clusterName, shard.toString()));
+            ResultSet resultSet = cassandraSession.execute(selectStatement.bind(clusterName, shard.toString(), actorId));
             return resultSet.one();
         } finally {
             final long endTime = currentTimeMillis();

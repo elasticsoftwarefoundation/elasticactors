@@ -21,9 +21,7 @@ import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import static com.datastax.driver.core.BatchStatement.Type.UNLOGGED;
 import static java.lang.String.format;
@@ -34,16 +32,39 @@ import static java.lang.System.currentTimeMillis;
  */
 public final class PersistentActorUpdateEventProcessor implements ThreadBoundEventProcessor<PersistentActorUpdateEvent> {
     private static final Logger logger = Logger.getLogger(PersistentActorUpdateEventProcessor.class);
-    public static final String INSERT_QUERY = "INSERT INTO PersistentActors (key, key2, column1, value) VALUES (?, ?, ?, ?)";
-    public static final String DELETE_QUERY = "DELETE ? FROM PersistentActors where key = ? and key2 = ?";
+    public static final String INSERT_QUERY = "INSERT INTO \"PersistentActors\" (key, key2, column1, value) VALUES (?, ?, ?, ?)";
+    public static final String DELETE_QUERY = "DELETE FROM \"PersistentActors\" where key = ? AND key2 = ? AND column1 = ?";
     private final Session cassandraSession;
     private final PreparedStatement insertStatement;
     private final PreparedStatement deleteStatement;
+    private final Map<Integer,PreparedStatement> batchStatements = new HashMap<>();
 
-    public PersistentActorUpdateEventProcessor(Session cassandraSession) {
+    public PersistentActorUpdateEventProcessor(Session cassandraSession, int maxBatchSize) {
         this.cassandraSession = cassandraSession;
         this.insertStatement = cassandraSession.prepare(INSERT_QUERY);
         this.deleteStatement = cassandraSession.prepare(DELETE_QUERY);
+        prepateBatchIfNeeded(maxBatchSize);
+    }
+
+    /**
+     * Helper methods to optimize for the batching INSERT statements (protocol V1 only)
+     *
+     * @param maxBatchSize
+     */
+    private void prepateBatchIfNeeded(int maxBatchSize) {
+        // check the protocol to see if BatchStatements are supported
+        ProtocolVersion protocolVersion = cassandraSession.getCluster().getConfiguration().getProtocolOptions().getProtocolVersionEnum();
+        if(ProtocolVersion.V1.equals(protocolVersion)) {
+            for (int batchSize = 2; batchSize <= maxBatchSize ; batchSize++) {
+                // create a prepared statement (INSERT only)
+                StringBuilder batchBuilder = new StringBuilder("BEGIN UNLOGGED BATCH ");
+                for (int i = 0; i < batchSize; i++) {
+                    batchBuilder.append("   ").append(INSERT_QUERY).append("; ");
+                }
+                batchBuilder.append("APPLY BATCH");
+                batchStatements.put(batchSize, cassandraSession.prepare(batchBuilder.toString()));
+            }
+        }
     }
 
     @Override
@@ -72,7 +93,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
                 // check the protocol to see if BatchStatements are supported
                 ProtocolVersion protocolVersion = cassandraSession.getCluster().getConfiguration().getProtocolOptions().getProtocolVersionEnum();
                 if(ProtocolVersion.V1.equals(protocolVersion)) {
-                    executeBatchV1(events);
+                    executeBatchV1Optimized(events);
                 } else {
                     executeBatchV2AndUp(events);
                 }
@@ -114,15 +135,45 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
                 // delete query
                 batchBuilder.append(DELETE_QUERY);
                 // add the 3 arguments in order
-                arguments.add(event.getPersistentActorId());
                 arguments.add(event.getRowKey()[0]);
                 arguments.add(event.getRowKey()[1]);
+                arguments.add(event.getPersistentActorId());
             }
             batchBuilder.append("; ");
         }
         batchBuilder.append("APPLY BATCH");
+        // @todo: this causes a warning, but doing it without seems to fail with binary values!
         PreparedStatement batchStatement = cassandraSession.prepare(batchBuilder.toString());
-        cassandraSession.execute(batchStatement.bind(arguments));
+        cassandraSession.execute(batchStatement.bind(arguments.toArray()));
+    }
+
+    private void executeBatchV1Optimized(List<PersistentActorUpdateEvent> events) {
+        // assume most common case is inserts
+        List<Object> arguments = new LinkedList<>();
+        int batchSize = 0;
+        for (PersistentActorUpdateEvent event : events) {
+            if(event.getPersistentActorBytes() != null) {
+                // add the 4 arguments in order
+                arguments.add(event.getRowKey()[0]);
+                arguments.add(event.getRowKey()[1]);
+                arguments.add(event.getPersistentActorId());
+                arguments.add(event.getPersistentActorBytes());
+                batchSize += 1;
+            } else {
+                // not supported, we need to fall back to the un-optimized version
+                break;
+            }
+        }
+        PreparedStatement batchStatement = null;
+        if(batchSize == events.size()) {
+            batchStatement = batchStatements.get(batchSize);
+        }
+        if(batchStatement != null) {
+            cassandraSession.execute(batchStatement.bind(arguments.toArray()));
+        } else {
+            // fallback to non-optimized version
+            executeBatchV1(events);
+        }
     }
 
     private void executeBatchV2AndUp(List<PersistentActorUpdateEvent> events) {

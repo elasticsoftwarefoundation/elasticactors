@@ -110,7 +110,7 @@ public class BackplaneConfiguration {
     public ThreadBoundExecutor createAsyncUpdateExecutor() {
         final int workers = env.getProperty("ea.asyncUpdateExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
         final int batchSize = env.getProperty("ea.asyncUpdateExecutor.batchSize",Integer.class,20);
-        return new ThreadBoundExecutorImpl(new PersistentActorUpdateEventProcessor(cassandraSession),batchSize,new DaemonThreadFactory("UPDATE-EXECUTOR-WORKER"),workers);
+        return new ThreadBoundExecutorImpl(new PersistentActorUpdateEventProcessor(cassandraSession, batchSize),batchSize,new DaemonThreadFactory("UPDATE-EXECUTOR-WORKER"),workers);
     }
 
     @Bean(name = {"persistentActorRepository"})

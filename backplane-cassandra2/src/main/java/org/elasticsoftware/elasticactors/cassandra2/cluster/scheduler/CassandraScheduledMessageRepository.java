@@ -40,33 +40,32 @@ public final class CassandraScheduledMessageRepository implements ScheduledMessa
     private static final Logger logger = Logger.getLogger(CassandraScheduledMessageRepository.class);
     private final String clusterName;
     private final Session cassandraSession;
+    private final PreparedStatement insertStatement;
+    private final PreparedStatement deleteStatement;
+    private final PreparedStatement selectStatement;
     private final ScheduledMessageDeserializer scheduledMessageDeserializer;
 
     public CassandraScheduledMessageRepository(String clusterName, Session cassandraSession, ScheduledMessageDeserializer scheduledMessageDeserializer) {
         this.clusterName = clusterName;
         this.cassandraSession = cassandraSession;
         this.scheduledMessageDeserializer = scheduledMessageDeserializer;
+        this.insertStatement = cassandraSession.prepare("INSERT INTO \"ScheduledMessages\" (key, key2, column1, column2, value) VALUES (?, ?, ?, ?, ?)");
+        this.deleteStatement = cassandraSession.prepare("DELETE FROM \"ScheduledMessages\" WHERE key = ? AND key2 = ? AND column1 = ? AND column2 = ?");
+        this.selectStatement = cassandraSession.prepare("SELECT value from \"ScheduledMessages\" WHERE key = ? AND key2 = ?");
     }
 
     @Override
     public void create(ShardKey shardKey, ScheduledMessage scheduledMessage) {
-        PreparedStatement insertStatement = cassandraSession.prepare("INSERT INTO ScheduledMessages (key, key2, column1, column2, value) VALUES (?, ?, ?, ?, ?)");
-        UUID id = scheduledMessage.getId();
-        final com.eaio.uuid.UUID timeUuid = new com.eaio.uuid.UUID(id.getMostSignificantBits(),id.getLeastSignificantBits());
-        cassandraSession.execute(insertStatement.bind(clusterName, shardKey.toString(), scheduledMessage.getFireTime(TimeUnit.MILLISECONDS), timeUuid, ByteBuffer.wrap(ScheduledMessageSerializer.get().serialize(scheduledMessage))));
+        cassandraSession.execute(insertStatement.bind(clusterName, shardKey.toString(), scheduledMessage.getFireTime(TimeUnit.MILLISECONDS), scheduledMessage.getId(), ByteBuffer.wrap(ScheduledMessageSerializer.get().serialize(scheduledMessage))));
     }
 
     @Override
     public void delete(ShardKey shardKey, ScheduledMessageKey scheduledMessageKey) {
-        PreparedStatement deleteStatement = cassandraSession.prepare("DELETE ? FROM ScheduledMessages WHERE key = ? AND key2 = ? AND column1 = ? AND column2 = ?");
-        UUID id = scheduledMessageKey.getId();
-        final com.eaio.uuid.UUID timeUuid = new com.eaio.uuid.UUID(id.getMostSignificantBits(),id.getLeastSignificantBits());
-        cassandraSession.execute(deleteStatement.bind(clusterName, shardKey.toString(), scheduledMessageKey.getFireTime(), timeUuid));
+        cassandraSession.execute(deleteStatement.bind(clusterName, shardKey.toString(), scheduledMessageKey.getFireTime(), scheduledMessageKey.getId()));
     }
 
     @Override
     public List<ScheduledMessage> getAll(ShardKey shardKey) {
-        PreparedStatement selectStatement = cassandraSession.prepare("SELECT value from ScheduledMessages WHERE key = ? AND key2 = ?");
         ResultSet resultSet = cassandraSession.execute(selectStatement.bind(clusterName, shardKey.toString()).setFetchSize(Integer.MAX_VALUE));
         List<ScheduledMessage> resultList = new LinkedList<>();
         for (Row resultRow : resultSet) {

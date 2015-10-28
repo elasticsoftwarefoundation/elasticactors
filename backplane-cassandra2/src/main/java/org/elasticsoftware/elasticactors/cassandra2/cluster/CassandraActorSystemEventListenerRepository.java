@@ -35,9 +35,9 @@ import java.util.*;
  */
 public final class CassandraActorSystemEventListenerRepository implements ActorSystemEventListenerRepository {
     private static final Logger logger = Logger.getLogger(CassandraActorSystemEventListenerRepository.class);
-    public static final String INSERT_QUERY = "INSERT INTO ActorSystemEventListeners (key, key2, key3, column1, value) VALUES (?, ?, ?, ?, ?)";
-    public static final String DELETE_QUERY = "DELETE ? FROM ActorSystemEventListeners WHERE key = ? and key2 = ? and key3 = ?";
-    public static final String SELECT_QUERY = "SELECT value FROM ActorSystemEventListeners WHERE key = ? and key2 = ? and key3 = ?";
+    public static final String INSERT_QUERY = "INSERT INTO \"ActorSystemEventListeners\" (key, key2, key3, column1, value) VALUES (?, ?, ?, ?, ?)";
+    public static final String DELETE_QUERY = "DELETE FROM \"ActorSystemEventListeners\" WHERE key = ? AND key2 = ? AND key3 = ? AND column1 = ?";
+    public static final String SELECT_QUERY = "SELECT value FROM \"ActorSystemEventListeners\" WHERE key = ? and key2 = ? and key3 = ?";
     private final String clusterName;
     private final Session cassandraSession;
     private final PreparedStatement insertStatement;
@@ -61,7 +61,7 @@ public final class CassandraActorSystemEventListenerRepository implements ActorS
 
     @Override
     public void delete(ShardKey shardKey, ActorSystemEvent event, ActorRef listenerId) {
-        cassandraSession.execute(deleteStatement.bind(listenerId.getActorId(),clusterName, shardKey.toString(), event.name()));
+        cassandraSession.execute(deleteStatement.bind(clusterName, shardKey.toString(), event.name(), listenerId.getActorId()));
     }
 
     @Override
