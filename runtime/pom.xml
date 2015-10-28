@@ -56,20 +56,19 @@
             <artifactId>elasticactors-base</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!--<dependency>
-            <groupId>org.elasticsoftware.elasticactors</groupId>
-            <artifactId>elasticactors-http</artifactId>
-            <version>${project.version}</version>
-        </dependency>-->
+        <!-- this dependency is only here for compilation purposes -->
         <dependency>
             <groupId>org.elasticsoftware.elasticactors</groupId>
             <artifactId>messaging-rabbitmq</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
+        <!-- this dependency is only here for compilation purposes -->
         <dependency>
             <groupId>org.elasticsoftware.elasticactors</groupId>
             <artifactId>backplane-cassandra</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.elasticsoftware.elasticactors</groupId>
@@ -77,9 +76,10 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.cassandra</groupId>
-            <artifactId>cassandra-thrift</artifactId>
-            <version>${cassandra.version}</version>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>${servlet-api.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
