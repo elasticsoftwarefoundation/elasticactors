@@ -56,7 +56,7 @@ public final class CassandraActorSystemEventListenerRepository implements ActorS
     @Override
     public void create(ShardKey shardKey, ActorSystemEvent event, ActorSystemEventListener listener) {
         byte[] value = ActorSystemEventListenerSerializer.get().serialize(listener);
-        cassandraSession.execute(insertStatement.bind(clusterName, shardKey.toString(), event.name(), listener.getActorId(), value));
+        cassandraSession.execute(insertStatement.bind(clusterName, shardKey.toString(), event.name(), listener.getActorId(), ByteBuffer.wrap(value)));
     }
 
     @Override
