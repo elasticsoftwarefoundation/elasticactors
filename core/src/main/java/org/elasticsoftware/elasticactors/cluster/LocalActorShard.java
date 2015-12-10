@@ -24,10 +24,7 @@ import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
 import org.elasticsoftware.elasticactors.cluster.tasks.*;
-import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
-import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
-import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
@@ -128,12 +125,17 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         Message messageAnnotation = Class.forName(message.getPayloadClass()).getAnnotation(Message.class);
         final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
         // input is the message that cannot be delivered
-        InternalMessageImpl undeliverableMessage = new InternalMessageImpl(message.getReceiver(),
-                message.getSender(),
-                message.getPayload(),
-                message.getPayloadClass(),
-                durable,
-                true);
+        InternalMessage undeliverableMessage;
+        if (message instanceof InternalMessageImpl) {
+            undeliverableMessage = new InternalMessageImpl( message.getReceiver(),
+                                                            message.getSender(),
+                                                            message.getPayload(),
+                                                            message.getPayloadClass(),
+                                                            durable,
+                                                            true);
+        } else {
+            undeliverableMessage = new TransientInternalMessage(message.getReceiver(), message.getSender(), message.getPayload(null), true);
+        }
         messageQueue.offer(undeliverableMessage);
     }
 
