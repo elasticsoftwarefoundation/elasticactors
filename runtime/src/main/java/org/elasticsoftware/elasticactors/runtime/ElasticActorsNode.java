@@ -302,7 +302,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
                 try {
                     remoteActorSystems.init();
                 } catch (Exception e) {
-                    logger.error("Initializing Remote ActorSystems failed",e);
+                    logger.error("IMPORTANT: Initializing Remote ActorSystems failed, ElasticActors cluster is unstable. Please check all nodes",e);
                 }
             }
             // call the pre methods on the RebalancingEventListeners
@@ -322,13 +322,13 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
             try {
                 instance.updateNodes(clusterNodes);
             } catch (Exception e) {
-                logger.error(format("ActorSystem[%s] failed to update nodes", instance.getName()), e);
+                logger.error(format("IMPORTANT: ActorSystem[%s] failed to update nodes, ElasticActors cluster is unstable. Please check all nodes", instance.getName()), e);
             }
             logger.info(format("Rebalancing %d shards for ActorSystem[%s] using %s", instance.getNumberOfShards(), instance.getName(), shardDistributionStrategy.getClass().getSimpleName()));
             try {
                 instance.distributeShards(clusterNodes,shardDistributionStrategy);
             } catch (Exception e) {
-                logger.error(format("ActorSystem[%s] failed to (re-)distribute shards", instance.getName()), e);
+                logger.error(format("IMPORTANT: ActorSystem[%s] failed to (re-)distribute shards,ElasticActors cluster is unstable. Please check all nodes", instance.getName()), e);
             }
             // call the post methods on the RebalancingEventListeners
             for (RebalancingEventListener rebalancingEventListener : rebalancingEventListeners) {

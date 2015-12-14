@@ -197,8 +197,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                     // this instance should start owning the shard now
                     final ActorShard currentShard = shards[i];
                     if (currentShard == null || !currentShard.getOwningNode().isLocal()) {
+                        String owningNodeId = currentShard != null ? currentShard.getOwningNode().getId() : "<No Node>";
                         logger.info(format("I will own %s", shardKey.toString()));
-
                         // destroy the current remote shard instance
                         if (currentShard != null) {
                             currentShard.destroy();
@@ -208,14 +208,19 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                                 this, i, shardAdapters[i].myRef, localMessageQueueFactory, shardActorCacheManager);
 
                         shards[i] = newShard;
-                        // register with the strategy to wait for shard to be released
-                        strategy.registerWaitForRelease(newShard,node);
-                        // add it to the new local shards
-                        newLocalShards.add(i);
-                        // initialize
-                        // newShard.init();
-                        // start owning the scheduler shard (this will start sending messages, but everything is blocked so it should be no problem)
-                        scheduler.registerShard(newShard.getKey());
+                        try {
+                            // register with the strategy to wait for shard to be released
+                            strategy.registerWaitForRelease(newShard, node);
+                        } catch(Exception e) {
+                            logger.error(format("IMPORTANT: waiting on release of shard %s from node %s failed,  ElasticActors cluster is unstable. Please check all nodes", shardKey, owningNodeId), e);
+                        } finally {
+                            // add it to the new local shards
+                            newLocalShards.add(i);
+                            // initialize
+                            // newShard.init();
+                            // start owning the scheduler shard (this will start sending messages, but everything is blocked so it should be no problem)
+                            scheduler.registerShard(newShard.getKey());
+                        }
                     } else {
                         // we own the shard already, no change needed
                         logger.info(format("I already own %s", shardKey.toString()));
@@ -225,21 +230,23 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                     final ActorShard currentShard = shards[i];
                     if (currentShard == null || currentShard.getOwningNode().isLocal()) {
                         logger.info(format("%s will own %s", node, shardKey));
-
-                        // destroy the current local shard instance
-                        if (currentShard != null) {
-                            // stop owning the scheduler shard
-                            scheduler.unregisterShard(currentShard.getKey());
-                            currentShard.destroy();
-                            strategy.signalRelease(currentShard,node);
+                        try {
+                            // destroy the current local shard instance
+                            if (currentShard != null) {
+                                // stop owning the scheduler shard
+                                scheduler.unregisterShard(currentShard.getKey());
+                                currentShard.destroy();
+                                strategy.signalRelease(currentShard, node);
+                            }
+                        } catch(Exception e) {
+                            logger.error(format("IMPORTANT: signalling release of shard %s to node %s failed, ElasticActors cluster is unstable. Please check all nodes", shardKey, node), e);
+                        } finally {
+                            // create a new remote shard and swap it
+                            RemoteActorShard newShard = new RemoteActorShard(node, this, i, shardAdapters[i].myRef, remoteMessageQueueFactory);
+                            shards[i] = newShard;
+                            // initialize
+                            newShard.init();
                         }
-                        // create a new remote shard and swap it
-                        RemoteActorShard newShard = new RemoteActorShard(node, this, i, shardAdapters[i].myRef, remoteMessageQueueFactory);
-
-                        shards[i] = newShard;
-                        // initialize
-                        newShard.init();
-
                     } else {
                         // shard was already remote
                         logger.info(format("%s will own %s", node, shardKey));

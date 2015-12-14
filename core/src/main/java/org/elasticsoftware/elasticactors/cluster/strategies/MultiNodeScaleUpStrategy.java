@@ -67,7 +67,7 @@ public abstract class MultiNodeScaleUpStrategy implements ShardDistributionStrat
                         logger.info(format("Initializing LocalShard %s",shardKey.toString()));
                         localShard.init();
                     } else {
-                        logger.error(format("Got a ShardReleasedMessage for an unregisterd shard [%s]",shardKey));
+                        logger.error(format("IMPORTANT: Got a ShardReleasedMessage for an unregistered shard [%s], ElasticActors cluster is unstable. Please check all nodes",shardKey));
                     }
                 }
                 // reset the waitTime interval
@@ -75,7 +75,7 @@ public abstract class MultiNodeScaleUpStrategy implements ShardDistributionStrat
             } catch(InterruptedException e) {
                 //ignore
             } catch(Exception e) {
-                logger.error("Exception on initializing LocalShard, SYSTEM UNSTABLE. Aborting",e);
+                logger.error("IMPORTANT: Exception on initializing LocalShard, ElasticActors cluster is unstable. Please check all nodes",e);
                 return false;
             }
         }
@@ -87,7 +87,7 @@ public abstract class MultiNodeScaleUpStrategy implements ShardDistributionStrat
                 try {
                     actorShard.init();
                 } catch (Exception e) {
-                    logger.error("Exception on initializing LocalShard, SYSTEM UNSTABLE. Aborting",e);
+                    logger.error("IMPORTANT: Exception on initializing LocalShard, ElasticActors cluster is unstable. Please check all nodes",e);
                     return false;
                 }
             }
