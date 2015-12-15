@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.aspectj.EnableSpringConfigured;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
+import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -36,7 +37,7 @@ import java.util.concurrent.Executor;
 @EnableAsync(annotation = Asynchronous.class)
 @PropertySource(value = "file:/etc/elasticactors/system.properties")
 @Import(value = {ClusteringConfiguration.class,NodeConfiguration.class,MessagingConfiguration.class,BackplaneConfiguration.class})
-public class AppConfiguration implements AsyncConfigurer {
+public class AppConfiguration extends AsyncConfigurerSupport {
     @Bean(name = "asyncExecutor")
     public Executor getAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

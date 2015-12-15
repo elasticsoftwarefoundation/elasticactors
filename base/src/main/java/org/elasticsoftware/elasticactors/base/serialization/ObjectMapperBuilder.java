@@ -27,7 +27,7 @@ import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import org.apache.log4j.Logger;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRefFactory;
-import org.jodah.typetools.TypeResolver;
+import net.jodah.typetools.TypeResolver;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
