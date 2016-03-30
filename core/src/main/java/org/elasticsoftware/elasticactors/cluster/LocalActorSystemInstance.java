@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import org.apache.log4j.Logger;
@@ -45,11 +46,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
 import static org.elasticsoftware.elasticactors.cluster.ActorSystemEvent.ACTOR_SHARD_INITIALIZED;
 
 /**
@@ -184,6 +189,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         }
         // store the id's of the new local shard in order to generate the events later
         final List<Integer> newLocalShards = new ArrayList<>(shards.length);
+        // this is for reporting the number of shards per node
+        final List<String> nodeCount = new ArrayList<>(shards.length);
 
         try {
             for (Lock writeLock : writeLocks) {
@@ -193,6 +200,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
             for (int i = 0; i < configuration.getNumberOfShards(); i++) {
                 ShardKey shardKey = new ShardKey(configuration.getName(), i);
                 PhysicalNode node = nodeSelector.getPrimary(shardKey.toString());
+                nodeCount.add(node.getId());
                 if (node.isLocal()) {
                     // this instance should start owning the shard now
                     final ActorShard currentShard = shards[i];
@@ -278,6 +286,13 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                             new ActivateActorMessage(getName(), elasticActorEntry, ActorType.SERVICE));
                 }
             }
+        }
+        // print out the shard distribution here
+        Map<String, Long> collect = nodeCount.stream().collect(groupingBy(Function.identity(), counting()));
+        SortedMap<String, Long> sortedNodes = new TreeMap<>(collect);
+        logger.info("Cluster shard mapping summary:");
+        for (Map.Entry<String, Long> entry : sortedNodes.entrySet()) {
+            logger.info(format("\t%s has %d shards assigned", entry.getKey(), entry.getValue()));
         }
         // now we need to generate the events for the new local shards (if any)
         logger.info(format("Generating ACTOR_SHARD_INITIALIZED events for %d new shards",newLocalShards.size()));
@@ -406,6 +421,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass,@Nullable ActorState initialState) throws Exception {
+        // @todo: do a sanity check on the actor class here
         // determine shard
         final ActorShard shard = shardFor(actorId);
         // send CreateActorMessage to shard
