@@ -1,6 +1,5 @@
 package org.elasticsoftware.elasticactors.test;
 
-import org.apache.logging.log4j.LogManager;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.base.actors.ActorDelegate;

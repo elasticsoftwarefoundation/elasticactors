@@ -38,12 +38,20 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
     private final PreparedStatement insertStatement;
     private final PreparedStatement deleteStatement;
     private final Map<Integer,PreparedStatement> batchStatements = new HashMap<>();
+    private final boolean optimizedV1Batches;
 
     public PersistentActorUpdateEventProcessor(Session cassandraSession, int maxBatchSize) {
+        this(cassandraSession, maxBatchSize, true);
+    }
+
+    public PersistentActorUpdateEventProcessor(Session cassandraSession, int maxBatchSize, boolean optimizedV1Batches) {
         this.cassandraSession = cassandraSession;
         this.insertStatement = cassandraSession.prepare(INSERT_QUERY);
         this.deleteStatement = cassandraSession.prepare(DELETE_QUERY);
-        prepateBatchIfNeeded(maxBatchSize);
+        if(optimizedV1Batches) {
+            prepateBatchIfNeeded(maxBatchSize);
+        }
+        this.optimizedV1Batches = optimizedV1Batches;
     }
 
     /**
@@ -93,7 +101,11 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
                 // check the protocol to see if BatchStatements are supported
                 ProtocolVersion protocolVersion = cassandraSession.getCluster().getConfiguration().getProtocolOptions().getProtocolVersionEnum();
                 if(ProtocolVersion.V1.equals(protocolVersion)) {
-                    executeBatchV1Optimized(events);
+                    if(this.optimizedV1Batches) {
+                        executeBatchV1Optimized(events);
+                    } else {
+                        executeBatchV1(events);
+                    }
                 } else {
                     executeBatchV2AndUp(events);
                 }
