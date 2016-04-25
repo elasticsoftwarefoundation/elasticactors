@@ -16,7 +16,8 @@
 
 package org.elasticsoftware.elasticactors.util.concurrent;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ import java.util.List;
  * @author Joost van de Wijgerd
  */
 public final class ThreadBoundRunnableEventProcessor implements ThreadBoundEventProcessor<ThreadBoundRunnable> {
-    private static final Logger logger = Logger.getLogger(ThreadBoundExecutorImpl.class);
+    private static final Logger logger = LogManager.getLogger(ThreadBoundExecutorImpl.class);
 
     @Override
     public void process(List<ThreadBoundRunnable> events) {

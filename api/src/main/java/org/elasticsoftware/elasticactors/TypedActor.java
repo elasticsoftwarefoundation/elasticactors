@@ -17,14 +17,15 @@
 package org.elasticsoftware.elasticactors;
 
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 
 /**
  * @author Joost van de Wijgerd
  */
 public abstract class TypedActor<T> implements ElasticActor<T> {
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = LogManager.getLogger(getClass());
 
     @Override
     public void postCreate(ActorRef creator) throws Exception {

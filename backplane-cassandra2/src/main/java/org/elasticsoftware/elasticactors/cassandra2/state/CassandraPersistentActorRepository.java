@@ -20,7 +20,8 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
@@ -41,7 +42,7 @@ import static java.lang.System.currentTimeMillis;
  * @author Joost van de Wijgerd
  */
 public final class CassandraPersistentActorRepository implements PersistentActorRepository {
-    private static final Logger logger = Logger.getLogger(CassandraPersistentActorRepository.class);
+    private static final Logger logger = LogManager.getLogger(CassandraPersistentActorRepository.class);
     private final String clusterName;
     private final ThreadBoundExecutor asyncUpdateExecutor;
     private final long readExecutionThresholdMillis;

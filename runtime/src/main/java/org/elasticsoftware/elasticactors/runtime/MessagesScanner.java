@@ -16,7 +16,8 @@
 
 package org.elasticsoftware.elasticactors.runtime;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.reflections.Reflections;
@@ -37,7 +38,7 @@ import java.util.Set;
  */
 @Named
 public final class MessagesScanner {
-    private static final Logger logger = Logger.getLogger(MessagesScanner.class);
+    private static final Logger logger = LogManager.getLogger(MessagesScanner.class);
     @Inject
     private ApplicationContext applicationContext;
 

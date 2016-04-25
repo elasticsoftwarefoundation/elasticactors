@@ -17,7 +17,8 @@
 package org.elasticsoftware.elasticactors.cluster.scheduler;
 
 import com.google.common.base.Charsets;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
@@ -46,7 +47,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public final class ShardedScheduler implements SchedulerService,WorkExecutorFactory,ScheduledMessageRefFactory {
-    private static final Logger logger = Logger.getLogger(ShardedScheduler.class);
+    private static final Logger logger = LogManager.getLogger(ShardedScheduler.class);
     private ShardedScheduledWorkManager<ShardKey,ScheduledMessage> workManager;
     private ScheduledMessageRepository scheduledMessageRepository;
     private InternalActorSystem actorSystem;

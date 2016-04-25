@@ -18,7 +18,8 @@ package org.elasticsoftware.elasticactors.rabbitmq;
 
 import com.rabbitmq.client.*;
 import net.jodah.lyra.event.ChannelListener;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
@@ -39,7 +40,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public final class LocalMessageQueue extends DefaultConsumer implements MessageQueue, ChannelListener {
-    private static final Logger logger = Logger.getLogger(LocalMessageQueue.class);
+    private static final Logger logger = LogManager.getLogger(LocalMessageQueue.class);
     private final Channel consumerChannel;
     private final Channel producerChannel;
     private final String exchangeName;

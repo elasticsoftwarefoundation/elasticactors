@@ -16,7 +16,8 @@
 
 package org.elasticsoftware.elasticactors.util.concurrent;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +31,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
-    private static final Logger LOG = Logger.getLogger(ThreadBoundExecutorImpl.class);
+    private static final Logger LOG = LogManager.getLogger(ThreadBoundExecutorImpl.class);
     private final ThreadFactory threadFactory;
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
     private final List<BlockingQueue<ThreadBoundEvent>> queues = new ArrayList<>();
@@ -160,7 +161,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
             } catch(Throwable unexpectedThrowable) {
                 // we observed some cases where trying to log the inner exception threw an error
                 // don't use the logger here as that seems to be causing the problem in the first place
-                System.err.println("Caught and unexpected Throwable while logging");
+                System.err.println("Caught an unexpected Throwable while logging");
                 System.err.println("This problem happens when jar files change at runtime, JVM might be UNSTABLE");
                 unexpectedThrowable.printStackTrace(System.err);
             }

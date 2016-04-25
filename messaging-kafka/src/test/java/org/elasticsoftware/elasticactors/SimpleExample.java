@@ -184,7 +184,7 @@ public class SimpleExample {
         }
         if (returnMetaData != null) {
             m_replicaBrokers.clear();
-            for (kafka.cluster.Broker replica : returnMetaData.replicas()) {
+            for (kafka.cluster.BrokerEndPoint replica : returnMetaData.replicas()) {
                 m_replicaBrokers.add(replica.host());
             }
         }

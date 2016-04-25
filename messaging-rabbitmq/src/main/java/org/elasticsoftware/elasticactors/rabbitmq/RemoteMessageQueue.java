@@ -21,7 +21,8 @@ import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.MessageProperties;
 import net.jodah.lyra.event.DefaultChannelListener;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
@@ -44,7 +45,7 @@ public final class RemoteMessageQueue extends DefaultChannelListener implements 
         this.producerChannel = producerChannel;
         this.exchangeName = exchangeName;
         this.queueName = queueName;
-        this.logger = Logger.getLogger(String.format("Producer[%s->%s]",exchangeName,queueName));
+        this.logger = LogManager.getLogger(String.format("Producer[%s->%s]",exchangeName,queueName));
         this.channelListenerRegistry = channelListenerRegistry;
         this.channelListenerRegistry.addChannelListener(this.producerChannel,this);
     }

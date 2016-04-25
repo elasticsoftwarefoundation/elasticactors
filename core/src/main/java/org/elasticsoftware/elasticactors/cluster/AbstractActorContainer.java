@@ -16,7 +16,8 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
@@ -29,7 +30,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public abstract class AbstractActorContainer implements ActorContainer, MessageHandler {
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = LogManager.getLogger(getClass());
     private final ActorRef myRef;
     private final MessageQueueFactory messageQueueFactory;
     protected MessageQueue messageQueue;

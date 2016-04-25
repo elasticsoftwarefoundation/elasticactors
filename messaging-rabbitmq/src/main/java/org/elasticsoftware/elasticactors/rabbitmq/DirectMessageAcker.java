@@ -1,7 +1,8 @@
 package org.elasticsoftware.elasticactors.rabbitmq;
 
 import com.rabbitmq.client.Channel;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
@@ -9,7 +10,7 @@ import java.io.IOException;
  * @author Joost van de Wijgerd
  */
 public final class DirectMessageAcker implements MessageAcker {
-    private static final Logger logger = Logger.getLogger(DirectMessageAcker.class);
+    private static final Logger logger = LogManager.getLogger(DirectMessageAcker.class);
     private final Channel consumerChannel;
 
     public DirectMessageAcker(Channel consumerChannel) {

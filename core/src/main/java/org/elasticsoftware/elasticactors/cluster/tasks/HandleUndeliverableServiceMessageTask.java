@@ -16,7 +16,8 @@
 
 package org.elasticsoftware.elasticactors.cluster.tasks;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
@@ -29,7 +30,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  * @author Joost van de Wijgerd
  */
 public final class HandleUndeliverableServiceMessageTask implements ThreadBoundRunnable<String>, ActorContext {
-    private static final Logger logger = Logger.getLogger(HandleUndeliverableServiceMessageTask.class);
+    private static final Logger logger = LogManager.getLogger(HandleUndeliverableServiceMessageTask.class);
     private final ActorRef serviceRef;
     private final InternalActorSystem actorSystem;
     private final ElasticActor serviceActor;

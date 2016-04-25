@@ -16,7 +16,8 @@
 
 package org.elasticsoftware.elasticactors.cluster.tasks;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
@@ -35,7 +36,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  * @author Joost van de Wijged
  */
 public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
-    private static final Logger log = Logger.getLogger(HandleUndeliverableMessageTask.class);
+    private static final Logger log = LogManager.getLogger(HandleUndeliverableMessageTask.class);
 
     public HandleUndeliverableMessageTask(InternalActorSystem actorSystem,
                                           ElasticActor receiver,

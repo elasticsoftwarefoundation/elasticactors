@@ -19,7 +19,8 @@ package org.elasticsoftware.elasticactors.cassandra.state;
 import me.prettyprint.cassandra.service.template.ColumnFamilyTemplate;
 import me.prettyprint.cassandra.service.template.ColumnFamilyUpdater;
 import me.prettyprint.hector.api.beans.Composite;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 
 import java.util.Arrays;
@@ -32,7 +33,7 @@ import static java.lang.System.currentTimeMillis;
  * @author Joost van de Wijgerd
  */
 public final class PersistentActorUpdateEventProcessor implements ThreadBoundEventProcessor<PersistentActorUpdateEvent> {
-    private static final Logger logger = Logger.getLogger(PersistentActorUpdateEventProcessor.class);
+    private static final Logger logger = LogManager.getLogger(PersistentActorUpdateEventProcessor.class);
     private final ColumnFamilyTemplate<Composite,String> columnFamilyTemplate;
 
     public PersistentActorUpdateEventProcessor(ColumnFamilyTemplate<Composite, String> columnFamilyTemplate) {

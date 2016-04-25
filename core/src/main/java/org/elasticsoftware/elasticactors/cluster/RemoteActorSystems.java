@@ -16,7 +16,8 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.RemoteActorSystemConfiguration;
@@ -34,7 +35,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public final class RemoteActorSystems {
-    private static final Logger logger = Logger.getLogger(RemoteActorSystems.class);
+    private static final Logger logger = LogManager.getLogger(RemoteActorSystems.class);
     private final Map<String,RemoteActorSystemInstance> remoteActorSystems = new HashMap<>();
     private final InternalActorSystemConfiguration configuration;
     private final InternalActorSystems cluster;

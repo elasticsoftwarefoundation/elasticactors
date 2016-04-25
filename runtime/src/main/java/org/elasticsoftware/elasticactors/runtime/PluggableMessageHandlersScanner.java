@@ -18,7 +18,8 @@ package org.elasticsoftware.elasticactors.runtime;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
@@ -38,7 +39,7 @@ import java.util.Set;
  */
 @Named
 public final class PluggableMessageHandlersScanner implements MessageHandlersRegistry, ActorLifecycleListenerRegistry {
-    private static final Logger logger = Logger.getLogger(PluggableMessageHandlersScanner.class);
+    private static final Logger logger = LogManager.getLogger(PluggableMessageHandlersScanner.class);
     @Inject
     private ApplicationContext applicationContext;
     private final ListMultimap<Class<? extends MethodActor>,Class<?>> registry = LinkedListMultimap.create();

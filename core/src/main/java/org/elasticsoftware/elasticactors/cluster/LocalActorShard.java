@@ -18,7 +18,8 @@ package org.elasticsoftware.elasticactors.cluster;
 
 import com.google.common.cache.Cache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
@@ -49,7 +50,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  */
 @Configurable
 public final class LocalActorShard extends AbstractActorContainer implements ActorShard, EvictionListener<PersistentActor<ShardKey>> {
-    private static final Logger logger = Logger.getLogger(LocalActorShard.class);
+    private static final Logger logger = LogManager.getLogger(LocalActorShard.class);
     // this instance acts as a tombstone for stopped actors
     private static final PersistentActor<ShardKey> TOMBSTONE = new PersistentActor<>(null,null,null,null,null,null);
     private final InternalActorSystem actorSystem;

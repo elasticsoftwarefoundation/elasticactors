@@ -17,10 +17,10 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
@@ -46,7 +46,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -61,7 +60,7 @@ import static org.elasticsoftware.elasticactors.cluster.ActorSystemEvent.ACTOR_S
  * @author Joost van de Wijgerd
  */
 public final class LocalActorSystemInstance implements InternalActorSystem {
-    private static final Logger logger = Logger.getLogger(LocalActorSystemInstance.class);
+    private static final Logger logger = LogManager.getLogger(LocalActorSystemInstance.class);
     private final InternalActorSystemConfiguration configuration;
     private final ActorShard[] shards;
     private final ReadWriteLock[] shardLocks;

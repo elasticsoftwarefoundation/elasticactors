@@ -17,7 +17,8 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import com.google.common.cache.Cache;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
@@ -46,7 +47,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  */
 @Configurable
 public final class LocalActorNode extends AbstractActorContainer implements ActorNode, EvictionListener<PersistentActor<NodeKey>> {
-    private static final Logger logger = Logger.getLogger(LocalActorNode.class);
+    private static final Logger logger = LogManager.getLogger(LocalActorNode.class);
     private final InternalActorSystem actorSystem;
     private final NodeKey nodeKey;
     private ThreadBoundExecutor actorExecutor;

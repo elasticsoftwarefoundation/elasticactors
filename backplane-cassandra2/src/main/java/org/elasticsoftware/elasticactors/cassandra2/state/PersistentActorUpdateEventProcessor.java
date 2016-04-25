@@ -17,10 +17,10 @@
 package org.elasticsoftware.elasticactors.cassandra2.state;
 
 import com.datastax.driver.core.*;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 
-import java.nio.ByteBuffer;
 import java.util.*;
 
 import static com.datastax.driver.core.BatchStatement.Type.UNLOGGED;
@@ -31,7 +31,7 @@ import static java.lang.System.currentTimeMillis;
  * @author Joost van de Wijgerd
  */
 public final class PersistentActorUpdateEventProcessor implements ThreadBoundEventProcessor<PersistentActorUpdateEvent> {
-    private static final Logger logger = Logger.getLogger(PersistentActorUpdateEventProcessor.class);
+    private static final Logger logger = LogManager.getLogger(PersistentActorUpdateEventProcessor.class);
     public static final String INSERT_QUERY = "INSERT INTO \"PersistentActors\" (key, key2, column1, value) VALUES (?, ?, ?, ?)";
     public static final String DELETE_QUERY = "DELETE FROM \"PersistentActors\" where key = ? AND key2 = ? AND column1 = ?";
     private final Session cassandraSession;

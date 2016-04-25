@@ -24,10 +24,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
-import org.apache.log4j.Logger;
+import net.jodah.typetools.TypeResolver;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRefFactory;
-import net.jodah.typetools.TypeResolver;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
@@ -44,7 +45,7 @@ import java.util.*;
  * @author Joost van de Wijgerd
  */
 public class ObjectMapperBuilder {
-    private static final Logger logger = Logger.getLogger(ObjectMapperBuilder.class);
+    private static final Logger logger = LogManager.getLogger(ObjectMapperBuilder.class);
     public static final String RESOURCE_NAME = "META-INF/elasticactors.properties";
     private final String version;
     private final ActorRefFactory actorRefFactory;

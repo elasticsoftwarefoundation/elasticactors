@@ -21,7 +21,8 @@ import me.prettyprint.cassandra.service.template.ColumnFamilyRowMapper;
 import me.prettyprint.cassandra.service.template.ColumnFamilyTemplate;
 import me.prettyprint.cassandra.service.template.ColumnFamilyUpdater;
 import me.prettyprint.hector.api.beans.Composite;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEvent;
@@ -39,7 +40,7 @@ import java.util.List;
  * @author Joost van de Wijgerd
  */
 public final class CassandraActorSystemEventListenerRepository implements ActorSystemEventListenerRepository {
-    private static final Logger logger = Logger.getLogger(CassandraActorSystemEventListenerRepository.class);
+    private static final Logger logger = LogManager.getLogger(CassandraActorSystemEventListenerRepository.class);
     private final String clusterName;
     private final ColumnFamilyTemplate<Composite,String> columnFamilyTemplate;
     private final ListResultMapper resultMapper = new ListResultMapper();

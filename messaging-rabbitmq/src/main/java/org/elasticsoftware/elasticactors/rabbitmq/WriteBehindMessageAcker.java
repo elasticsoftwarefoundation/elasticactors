@@ -21,7 +21,8 @@ import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventTranslatorOneArg;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.rabbitmq.client.Channel;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 
 import java.util.concurrent.Executors;
@@ -31,7 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author Joost van de Wijgerd
  */
 public final class WriteBehindMessageAcker implements MessageAcker {
-    private static final Logger logger = Logger.getLogger(WriteBehindMessageAcker.class);
+    private static final Logger logger = LogManager.getLogger(WriteBehindMessageAcker.class);
     private final Channel consumerChannel;
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
     private final Disruptor<AckEvent> disruptor;

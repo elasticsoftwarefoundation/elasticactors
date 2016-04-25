@@ -27,7 +27,8 @@ import net.jodah.lyra.config.RecoveryPolicy;
 import net.jodah.lyra.event.ChannelListener;
 import net.jodah.lyra.event.DefaultChannelListener;
 import net.jodah.lyra.util.Duration;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
@@ -43,15 +44,13 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeoutException;
 
 import static java.lang.String.format;
-import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.ASYNC;
-import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.BUFFERED;
-import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.WRITE_BEHIND;
+import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.*;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class RabbitMQMessagingService extends DefaultChannelListener implements MessagingService, ChannelListenerRegistry {
-    private static final Logger logger = Logger.getLogger(RabbitMQMessagingService.class);
+    private static final Logger logger = LogManager.getLogger(RabbitMQMessagingService.class);
     private final ConnectionFactory connectionFactory = new ConnectionFactory();
     private final String rabbitmqHosts;
     private static final String QUEUE_NAME_FORMAT = "%s/%s";

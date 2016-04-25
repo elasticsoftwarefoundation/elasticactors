@@ -19,7 +19,8 @@ package org.elasticsoftware.elasticactors.shoal.cluster;
 import com.sun.enterprise.ee.cms.core.*;
 import com.sun.enterprise.ee.cms.impl.client.*;
 import com.sun.enterprise.mgmt.transport.grizzly.GrizzlyConfigConstants;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ClusterEventListener;
 import org.elasticsoftware.elasticactors.cluster.ClusterMessageHandler;
@@ -41,7 +42,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public final class ShoalClusterService implements ClusterService {
-    private static final Logger logger = Logger.getLogger(ShoalClusterService.class);
+    private static final Logger logger = LogManager.getLogger(ShoalClusterService.class);
     private static final String COMPONENT_NAME = "ElasticActors";
     private final String clusterName;
     private final String nodeId;

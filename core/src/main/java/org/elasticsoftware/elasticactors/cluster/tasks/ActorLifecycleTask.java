@@ -16,7 +16,8 @@
 
 package org.elasticsoftware.elasticactors.cluster.tasks;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
@@ -35,7 +36,7 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
  * @author Joost van de Wijgerd
  */
 public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> {
-    private static final Logger log = Logger.getLogger(ActorLifecycleTask.class);
+    private static final Logger log = LogManager.getLogger(ActorLifecycleTask.class);
     private final ActorRef receiverRef;
     private final ElasticActor receiver;
     private final InternalActorSystem actorSystem;

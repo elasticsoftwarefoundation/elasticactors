@@ -23,7 +23,8 @@ import me.prettyprint.cassandra.service.template.ColumnFamilyRowMapper;
 import me.prettyprint.cassandra.service.template.ColumnFamilyTemplate;
 import me.prettyprint.cassandra.service.template.ColumnFamilyUpdater;
 import me.prettyprint.hector.api.beans.Composite;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
@@ -42,7 +43,7 @@ import java.util.concurrent.TimeUnit;
  * @author Joost van de Wijgerd
  */
 public final class CassandraScheduledMessageRepository implements ScheduledMessageRepository {
-    private static final Logger logger = Logger.getLogger(CassandraScheduledMessageRepository.class);
+    private static final Logger logger = LogManager.getLogger(CassandraScheduledMessageRepository.class);
     private final String clusterName;
     private final ColumnFamilyTemplate<Composite,Composite> columnFamilyTemplate;
     private final ListResultMapper resultMapper = new ListResultMapper();

@@ -19,7 +19,8 @@ package org.elasticsoftware.elasticactors.runtime;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.*;
 import org.elasticsoftware.elasticactors.cluster.messaging.ShardReleasedMessage;
@@ -55,7 +56,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public final class ElasticActorsNode implements PhysicalNode, InternalActorSystems, ActorRefFactory, ClusterEventListener, ClusterMessageHandler {
-    private static final Logger logger = Logger.getLogger(ElasticActorsNode.class);
+    private static final Logger logger = LogManager.getLogger(ElasticActorsNode.class);
     private final String clusterName;
     private final String nodeId;
     private final InetAddress nodeAddress;

@@ -16,7 +16,8 @@
 
 package org.elasticsoftware.elasticactors.cluster.strategies;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
@@ -34,7 +35,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public abstract class MultiNodeScaleUpStrategy implements ShardDistributionStrategy {
-    protected final Logger logger = Logger.getLogger(this.getClass());
+    protected final Logger logger = LogManager.getLogger(this.getClass());
     private final LinkedBlockingQueue<ShardReleasedMessage> shardReleasedMessages;
     private final Map<ShardKey,ActorShard> registeredShards = new HashMap<>();
 

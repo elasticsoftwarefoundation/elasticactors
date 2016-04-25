@@ -16,7 +16,8 @@
 
 package org.elasticsoftware.elasticactors.cluster.tasks;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
@@ -28,7 +29,7 @@ import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
  * @author Joost van de Wijgerd
  */
 public final class DestroyActorTask extends ActorLifecycleTask {
-    private static final Logger logger = Logger.getLogger(DestroyActorTask.class);
+    private static final Logger logger = LogManager.getLogger(DestroyActorTask.class);
     private final PersistentActorRepository persistentActorRepository;
     private final ShardKey shardKey;
 

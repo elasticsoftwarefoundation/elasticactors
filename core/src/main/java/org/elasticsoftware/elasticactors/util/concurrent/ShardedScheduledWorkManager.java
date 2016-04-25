@@ -16,7 +16,8 @@
 
 package org.elasticsoftware.elasticactors.util.concurrent;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -36,7 +37,7 @@ import static java.lang.String.format;
  * @param <T>   The Scheduled Object that will be passed to {@link WorkExecutor#execute(Object, Object)} after the delay has expired
  */
 public final class ShardedScheduledWorkManager<K,T extends Delayed> {
-    private static final Logger LOGGER = Logger.getLogger(ShardedScheduledWorkManager.class);
+    private static final Logger LOGGER = LogManager.getLogger(ShardedScheduledWorkManager.class);
     public static final long MAX_AWAIT_MILLIS = 60000L;
 
     private final ExecutorService executor;

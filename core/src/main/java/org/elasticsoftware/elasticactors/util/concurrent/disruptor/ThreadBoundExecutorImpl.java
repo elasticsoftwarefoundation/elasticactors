@@ -19,7 +19,8 @@ package org.elasticsoftware.elasticactors.util.concurrent.disruptor;
 import com.lmax.disruptor.EventTranslatorOneArg;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
@@ -39,7 +40,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
-    private static final Logger LOG = Logger.getLogger(ThreadBoundExecutorImpl.class);
+    private static final Logger LOG = LogManager.getLogger(ThreadBoundExecutorImpl.class);
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
     private final ThreadFactory threadFactory;
     private final List<Disruptor<ThreadBoundEventWrapper>> disruptors;

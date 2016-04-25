@@ -16,7 +16,8 @@
 
 package org.elasticsoftware.elasticactors;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
@@ -35,7 +36,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public abstract class MethodActor extends TypedActor<Object> implements PersistenceAdvisor {
-    private static final Logger logger = Logger.getLogger(MethodActor.class);
+    private static final Logger logger = LogManager.getLogger(MethodActor.class);
     private static final MessageHandlerOrderComparator ORDER_COMPARATOR = new MessageHandlerOrderComparator();
     private final Map<Class<?>,List<HandlerMethodDefinition>> handlerCache = new HashMap<>();
     @Nullable private final Class<? extends ActorState> stateClass;

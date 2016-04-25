@@ -17,7 +17,8 @@
 package org.elasticsoftware.elasticactors.rabbitmq;
 
 import com.rabbitmq.client.Channel;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 
 import java.util.concurrent.ExecutorService;
@@ -31,7 +32,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
  * @author Joost van de Wijgerd
  */
 public final class AsyncMessageAcker implements MessageAcker {
-    private static final Logger logger = Logger.getLogger(AsyncMessageAcker.class);
+    private static final Logger logger = LogManager.getLogger(AsyncMessageAcker.class);
     private final ExecutorService executorService = newSingleThreadExecutor(new DaemonThreadFactory("RABBITMQ-MESSAGE_ACKER"));
     private final Channel consumerChannel;
 
