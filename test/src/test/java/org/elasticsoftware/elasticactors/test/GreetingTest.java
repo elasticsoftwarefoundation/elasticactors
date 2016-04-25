@@ -1,6 +1,6 @@
 package org.elasticsoftware.elasticactors.test;
 
-import org.apache.log4j.BasicConfigurator;
+import org.apache.logging.log4j.LogManager;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.base.actors.ActorDelegate;
@@ -19,7 +19,7 @@ import static org.testng.Assert.assertTrue;
 public class GreetingTest {
     @Test
     public void testGreeting() throws Exception {
-        BasicConfigurator.configure();
+
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
 
