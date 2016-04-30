@@ -48,6 +48,7 @@
         <kafka.version>0.9.0.1</kafka.version>
         <cassandra-driver.version>2.1.10</cassandra-driver.version>
         <servlet-api.version>3.0.1</servlet-api.version>
+        <activemq-artemis.version>1.2.0</activemq-artemis.version>
         <!-- testing -->
         <testng-version>5.10</testng-version>
         <mockito.version>1.9.5</mockito.version>
@@ -116,6 +117,7 @@
         <module>messaging-kafka</module>
         <module>test</module>
         <module>backplane-cassandra2</module>
+        <module>messaging-activemq</module>
     </modules>
 
     <build>
