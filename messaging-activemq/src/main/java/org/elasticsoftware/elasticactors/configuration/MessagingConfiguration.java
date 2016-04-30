@@ -49,8 +49,12 @@ public class MessagingConfiguration {
         String activeMQHosts = env.getRequiredProperty("ea.activemq.hosts");
         String activeMQUsername= env.getProperty("ea.activemq.username","guest");
         String activeMQPassword = env.getProperty("ea.activemq.password","guest");
-        messagingService = new ActiveMQArtemisMessagingService(activeMQHosts, activeMQUsername, activeMQPassword, clusterName, queueExecutor,
-                                new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory)));
+        boolean useMessageHandler = env.getProperty("ea.activemq.useMessageHandler", Boolean.TYPE, false);
+        boolean useReceiveImmediate = env.getProperty("ea.activemq.useReceiveImmediate", Boolean.TYPE, false);
+        messagingService = new ActiveMQArtemisMessagingService(activeMQHosts, activeMQUsername, activeMQPassword,
+                                clusterName, queueExecutor,
+                                new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory)),
+                                useMessageHandler, useReceiveImmediate);
     }
 
     @Bean(name = {"messagingService,remoteActorSystemMessageQueueFactoryFactory"})

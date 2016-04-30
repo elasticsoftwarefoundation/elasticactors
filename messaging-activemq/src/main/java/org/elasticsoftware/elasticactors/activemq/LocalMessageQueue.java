@@ -32,6 +32,7 @@ import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageD
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -54,21 +55,27 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
     private final ClientProducer producer;
     private final ClientConsumer consumer;
     private final MessageHandler messageHandler;
-    private final CountDownLatch destroyLatch = new CountDownLatch(1);
     private final AtomicBoolean recovering = new AtomicBoolean(false);
     private final TransientAck transientAck = new TransientAck();
+    private final ActiveMQMessageProcessor messageProcessor;
+    private final CountDownLatch destroyLatch = new CountDownLatch(1);
+    private final boolean useMessageHandler;
+    private boolean running = true;
 
     LocalMessageQueue(ThreadBoundExecutor queueExecutor, InternalMessageDeserializer internalMessageDeserializer,
-                             String queueName, String routingKey, ClientSession clientSession,
-                             ClientProducer producer,  MessageHandler messageHandler) throws ActiveMQException {
+                      String queueName, String routingKey, ClientSession clientSession,
+                      ClientProducer producer, MessageHandler messageHandler,
+                      boolean useMessageHandler, boolean useImmediateReceive) throws ActiveMQException {
         this.queueExecutor = queueExecutor;
         this.internalMessageDeserializer = internalMessageDeserializer;
         this.queueName = queueName;
         this.routingKey = routingKey;
         this.clientSession = clientSession;
         this.producer = producer;
+        this.useMessageHandler = useMessageHandler;
         this.consumer = clientSession.createConsumer(queueName);
         this.messageHandler = messageHandler;
+        this.messageProcessor = new ActiveMQMessageProcessor(queueName, internalMessageDeserializer, messageHandler, useImmediateReceive);
     }
 
     @Override
@@ -85,7 +92,7 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
             ClientMessage clientMessage = clientSession.createMessage(message.isDurable());
             clientMessage.getBodyBuffer().writeBytes(message.toByteArray());
             clientMessage.putStringProperty("routingKey", routingKey);
-            // use the duplicate detection from
+            // use the duplicate detection from ActiveMQ
             clientMessage.putBytesProperty(HDR_DUPLICATE_DETECTION_ID, toByteArray(message.getId()));
             try {
                 producer.send(clientMessage);
@@ -116,14 +123,20 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
 
     @Override
     public void initialize() throws Exception {
-        consumer.setMessageHandler(this);
+        if(useMessageHandler) {
+            consumer.setMessageHandler(this);
+        } else {
+            // start the receive loop
+            receiveMessage();
+        }
     }
 
     @Override
     public void destroy() {
         try {
+            queueExecutor.execute(new DestroyQueue(queueName));
+            destroyLatch.await(3, TimeUnit.SECONDS);
             consumer.close();
-            destroyLatch.await(4, TimeUnit.SECONDS);
         } catch (ActiveMQException | InterruptedException e) {
             logger.warn("Exception while closing consumer", e);
         }
@@ -135,6 +148,59 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
         message.getBodyBuffer().readBytes(bodyBuffer);
         // execute on separate (thread bound) executor
         queueExecutor.execute(new ActiveMQMessageHandler(queueName,bodyBuffer,internalMessageDeserializer,messageHandler,new ActiveMQAck(message),logger));
+    }
+
+    private void receiveMessage() {
+        if(running) {
+            queueExecutor.execute(messageProcessor);
+        } else {
+            destroyLatch.countDown();
+        }
+    }
+
+    private final class ActiveMQMessageProcessor implements ThreadBoundRunnable<String> {
+        private final String queueName;
+        private final InternalMessageDeserializer internalMessageDeserializer;
+        private final org.elasticsoftware.elasticactors.messaging.MessageHandler messageHandler;
+        private final boolean receiveImmediate;
+
+        private ActiveMQMessageProcessor(String queueName, InternalMessageDeserializer internalMessageDeserializer,
+                                         MessageHandler messageHandler, boolean receiveImmediate) {
+            this.queueName = queueName;
+            this.internalMessageDeserializer = internalMessageDeserializer;
+            this.messageHandler = messageHandler;
+            this.receiveImmediate = receiveImmediate;
+        }
+
+        @Override
+        public String getKey() {
+            return queueName;
+        }
+
+        @Override
+        public void run() {
+            try {
+                ClientMessage clientMessage = receiveImmediate ? consumer.receiveImmediate() : consumer.receive(1);
+                if(clientMessage != null) {
+                    byte[] bodyBuffer = new byte[clientMessage.getBodySize()];
+                    clientMessage.getBodyBuffer().readBytes(bodyBuffer);
+                    // get the body data
+                    InternalMessage message = internalMessageDeserializer.deserialize(bodyBuffer);
+                    messageHandler.handleMessage(message, new ActiveMQAck(clientMessage));
+                }
+            } catch(ActiveMQException e) {
+                logger.error("Unexpected exception on consumer.receive*", e);
+            } catch(IOException e) {
+                logger.error("Exception deserializing InteralMessage", e);
+            } catch(Exception e) {
+                logger.error("Unexpected exception in handleMessage", e);
+            } finally {
+                // @todo: performance logging here
+                // we reschedule ourselves for the next run
+                receiveMessage();
+            }
+        }
+
     }
 
     private static final class ActiveMQMessageHandler implements ThreadBoundRunnable<String> {
@@ -178,7 +244,6 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
 
     private final class ActiveMQAck implements MessageHandlerEventListener {
         private final ClientMessage clientMessage;
-        //private final InternalMessage message;
 
         private ActiveMQAck(ClientMessage clientMessage) {
             this.clientMessage = clientMessage;
@@ -241,6 +306,27 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
         @Override
         public void onDone(InternalMessage message) {
             // do nothing
+        }
+    }
+
+    private final class DestroyQueue implements ThreadBoundRunnable<String> {
+        private final String queueName;
+
+        private DestroyQueue(String queueName) {
+            this.queueName = queueName;
+        }
+
+        @Override
+        public void run() {
+            running = false;
+            if(useMessageHandler) {
+                destroyLatch.countDown();
+            }
+        }
+
+        @Override
+        public String getKey() {
+            return queueName;
         }
     }
 

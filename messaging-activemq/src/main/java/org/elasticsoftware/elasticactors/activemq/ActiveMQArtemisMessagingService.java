@@ -63,10 +63,13 @@ public final class ActiveMQArtemisMessagingService implements MessagingService {
     private ClientSession clientSession;
     private ClientProducer localClusterClientProducer;
     private final Map<String, ClientProducer> remoteClusterClientProducers = newHashMap();
+    private final boolean useMessageHandler;
+    private final boolean useImmediateReceive;
 
     public ActiveMQArtemisMessagingService(String activeMQHosts, String activeMQUsername, String activeMQPassword,
                                            String elasticActorsCluster, ThreadBoundExecutor queueExecutor,
-                                           InternalMessageDeserializer internalMessageDeserializer) {
+                                           InternalMessageDeserializer internalMessageDeserializer,
+                                           boolean useMessageHandler, boolean useImmediateReceive) {
         this.activeMQHosts = activeMQHosts;
         this.activeMQUsername = activeMQUsername;
         this.activeMQPassword = activeMQPassword;
@@ -76,6 +79,8 @@ public final class ActiveMQArtemisMessagingService implements MessagingService {
         this.localMessageQueueFactory = new LocalMessageQueueFactory();
         this.remoteMessageQueueFactory = new RemoteMessageQueueFactory();
         this.remoteActorSystemMessageQueueFactoryFactory = new RemoteActorSystemMessageQueueFactoryFactory();
+        this.useMessageHandler = useMessageHandler;
+        this.useImmediateReceive = useImmediateReceive;
     }
 
     @PostConstruct
@@ -188,7 +193,7 @@ public final class ActiveMQArtemisMessagingService implements MessagingService {
             ensureQueueExists(clientSession, queueName, name);
             LocalMessageQueue messageQueue = new LocalMessageQueue(queueExecutor, internalMessageDeserializer,
                                                                    queueName, name, clientSession, localClusterClientProducer,
-                                                                   messageHandler);
+                                                                   messageHandler, useMessageHandler, useImmediateReceive);
             messageQueue.initialize();
             return messageQueue;
         }
