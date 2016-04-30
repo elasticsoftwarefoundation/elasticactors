@@ -49,6 +49,7 @@
         <cassandra-driver.version>2.1.10</cassandra-driver.version>
         <servlet-api.version>3.0.1</servlet-api.version>
         <activemq-artemis.version>1.2.0</activemq-artemis.version>
+        <disruptor.version>3.3.4</disruptor.version>
         <!-- testing -->
         <testng-version>5.10</testng-version>
         <mockito.version>1.9.5</mockito.version>

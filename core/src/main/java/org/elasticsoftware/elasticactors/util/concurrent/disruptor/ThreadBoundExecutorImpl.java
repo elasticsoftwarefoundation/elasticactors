@@ -28,8 +28,6 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnableEven
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -57,9 +55,8 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
         LOG.info(format("Initializing (Disruptor)ThreadBoundExecutor[%s]",threadFactory.toString()));
         ThreadBoundEventWrapperFactory eventFactory = new ThreadBoundEventWrapperFactory();
 
-        Executor executor = Executors.newCachedThreadPool(threadFactory);
         for (int i = 0; i < workers; i++) {
-            Disruptor<ThreadBoundEventWrapper> disruptor = new Disruptor<>(eventFactory,bufferSize,executor);
+            Disruptor<ThreadBoundEventWrapper> disruptor = new Disruptor<>(eventFactory,bufferSize,threadFactory);
             disruptor.handleEventsWith(new ThreadBoundEventHandler(eventProcessor, bufferSize));
             this.disruptors.add(disruptor);
             disruptor.start();
