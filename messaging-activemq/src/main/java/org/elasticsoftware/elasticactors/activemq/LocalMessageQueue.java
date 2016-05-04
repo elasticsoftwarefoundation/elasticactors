@@ -17,10 +17,7 @@
 package org.elasticsoftware.elasticactors.activemq;
 
 import org.apache.activemq.artemis.api.core.ActiveMQException;
-import org.apache.activemq.artemis.api.core.client.ClientConsumer;
-import org.apache.activemq.artemis.api.core.client.ClientMessage;
-import org.apache.activemq.artemis.api.core.client.ClientProducer;
-import org.apache.activemq.artemis.api.core.client.ClientSession;
+import org.apache.activemq.artemis.api.core.client.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
@@ -63,15 +60,15 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
     private boolean running = true;
 
     LocalMessageQueue(ThreadBoundExecutor queueExecutor, InternalMessageDeserializer internalMessageDeserializer,
-                      String queueName, String routingKey, ClientSession clientSession,
-                      ClientProducer producer, MessageHandler messageHandler,
+                      String queueName, String routingKey, ClientSession clientSession, ClientProducer clientProducer,
+                      MessageHandler messageHandler,
                       boolean useMessageHandler, boolean useImmediateReceive) throws ActiveMQException {
         this.queueExecutor = queueExecutor;
         this.internalMessageDeserializer = internalMessageDeserializer;
         this.queueName = queueName;
         this.routingKey = routingKey;
         this.clientSession = clientSession;
-        this.producer = producer;
+        this.producer = clientProducer;
         this.useMessageHandler = useMessageHandler;
         this.consumer = clientSession.createConsumer(queueName);
         this.messageHandler = messageHandler;
@@ -89,20 +86,8 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
             queueExecutor.execute(new InternalMessageHandler(queueName,message,messageHandler,transientAck,logger));
             return true;
         } else {
-            ClientMessage clientMessage = clientSession.createMessage(message.isDurable());
-            clientMessage.getBodyBuffer().writeBytes(message.toByteArray());
-            clientMessage.putStringProperty("routingKey", routingKey);
-            // use the duplicate detection from ActiveMQ
-            clientMessage.putBytesProperty(HDR_DUPLICATE_DETECTION_ID, toByteArray(message.getId()));
-            try {
-                producer.send(clientMessage);
-                return true;
-            } catch (ActiveMQException e) {
-                throw new MessageDeliveryException("IOException while publishing message",e,false);
-            } /*catch(SomeRecoverableException e) { @todo: figure out which exceptions are recoverable
-                this.recovering.set(true);
-                throw new MessageDeliveryException("MessagingService is recovering",true);
-            } */
+            queueExecutor.execute(new SendMessage(message));
+            return true;
         }
     }
 
@@ -129,6 +114,7 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
             // start the receive loop
             receiveMessage();
         }
+        clientSession.start();
     }
 
     @Override
@@ -137,6 +123,8 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
             queueExecutor.execute(new DestroyQueue(queueName));
             destroyLatch.await(3, TimeUnit.SECONDS);
             consumer.close();
+            producer.close();
+            clientSession.close();
         } catch (ActiveMQException | InterruptedException e) {
             logger.warn("Exception while closing consumer", e);
         }
@@ -256,11 +244,61 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
 
         @Override
         public void onDone(final InternalMessage message) {
+            queueExecutor.execute(new AcknowledgeMessage(queueName, clientMessage));
+        }
+    }
+
+    private final class SendMessage implements ThreadBoundRunnable<String> {
+        private final InternalMessage message;
+
+        public SendMessage(InternalMessage message) {
+            this.message = message;
+        }
+
+        @Override
+        public void run() {
+            ClientMessage clientMessage = clientSession.createMessage(message.isDurable());
+            clientMessage.getBodyBuffer().writeBytes(message.toByteArray());
+            clientMessage.putStringProperty("routingKey", routingKey);
+            // use the duplicate detection from ActiveMQ
+            clientMessage.putBytesProperty(HDR_DUPLICATE_DETECTION_ID, toByteArray(message.getId()));
             try {
-                this.clientMessage.acknowledge();
+                producer.send(clientMessage);
+            } catch (ActiveMQException e) {
+                throw new MessageDeliveryException("IOException while publishing message",e,false);
+            } /*catch(SomeRecoverableException e) { @todo: figure out which exceptions are recoverable
+                this.recovering.set(true);
+                throw new MessageDeliveryException("MessagingService is recovering",true);
+            } */
+        }
+
+        @Override
+        public String getKey() {
+            return queueName;
+        }
+    }
+
+    private static final class AcknowledgeMessage implements ThreadBoundRunnable<String> {
+        private final String queueName;
+        private final ClientMessage clientMessage;
+
+        public AcknowledgeMessage(String queueName, ClientMessage clientMessage) {
+            this.queueName = queueName;
+            this.clientMessage = clientMessage;
+        }
+
+        @Override
+        public void run() {
+            try {
+                this.clientMessage.individualAcknowledge();
             } catch (ActiveMQException e) {
                 logger.error("Exception while acking message", e);
             }
+        }
+
+        @Override
+        public String getKey() {
+            return queueName;
         }
     }
 

@@ -20,6 +20,7 @@ import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientProducer;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
+import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
@@ -39,11 +40,11 @@ public final class RemoteMessageQueue implements MessageQueue {
     private final ClientProducer producer;
     private final AtomicBoolean recovering = new AtomicBoolean(false);
 
-    RemoteMessageQueue(String queueName, String routingKey, ClientSession clientSession, ClientProducer producer) {
+    RemoteMessageQueue(String queueName, String routingKey, ClientSession clientSession, ClientProducer clientProducer) throws ActiveMQException {
         this.queueName = queueName;
         this.routingKey = routingKey;
         this.clientSession = clientSession;
-        this.producer = producer;
+        this.producer = clientProducer;
     }
 
     @Override
@@ -87,11 +88,16 @@ public final class RemoteMessageQueue implements MessageQueue {
 
     @Override
     public void initialize() throws Exception {
-
+        clientSession.start();
     }
 
     @Override
     public void destroy() {
-
+        try {
+            producer.close();
+            clientSession.close();
+        } catch(ActiveMQException e) {
+            // @todo: add logging
+        }
     }
 }

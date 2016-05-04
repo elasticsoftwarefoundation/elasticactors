@@ -68,7 +68,7 @@ public class BackplaneConfiguration {
     public void initialize() {
         String cassandraHosts = env.getProperty("ea.cassandra.hosts","localhost:9160");
         String cassandraClusterName = env.getProperty("ea.cassandra.cluster","ElasticActorsCluster");
-        String cassandraKeyspaceName = env.getProperty("ea.cassandra.keyspace","ElasticActors");
+        String cassandraKeyspaceName = env.getProperty("ea.cassandra.keyspace","\"ElasticActors\"");
 
         Set<String> hostSet = StringUtils.commaDelimitedListToSet(cassandraHosts);
 

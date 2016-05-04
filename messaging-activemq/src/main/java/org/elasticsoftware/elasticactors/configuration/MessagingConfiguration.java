@@ -49,7 +49,7 @@ public class MessagingConfiguration {
         String activeMQHosts = env.getRequiredProperty("ea.activemq.hosts");
         String activeMQUsername= env.getProperty("ea.activemq.username","guest");
         String activeMQPassword = env.getProperty("ea.activemq.password","guest");
-        boolean useMessageHandler = env.getProperty("ea.activemq.useMessageHandler", Boolean.TYPE, false);
+        boolean useMessageHandler = env.getProperty("ea.activemq.useMessageHandler", Boolean.TYPE, true);
         boolean useReceiveImmediate = env.getProperty("ea.activemq.useReceiveImmediate", Boolean.TYPE, false);
         messagingService = new ActiveMQArtemisMessagingService(activeMQHosts, activeMQUsername, activeMQPassword,
                                 clusterName, queueExecutor,

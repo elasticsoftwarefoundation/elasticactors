@@ -49,7 +49,7 @@ public final class ActiveMQArtemisMessagingService implements MessagingService {
     private static final Logger logger = LogManager.getLogger(ActiveMQArtemisMessagingService.class);
     private static final String QUEUE_NAME_FORMAT = "%s/%s";
     private static final String EA_ADDRESS_FORMAT = "ea.%s";
-    private static final int SERVER_DEFAULT_PORT = 61617;
+    private static final int SERVER_DEFAULT_PORT = 61616;
     private final String activeMQHosts;
     private final String activeMQUsername;
     private final String activeMQPassword;
@@ -59,10 +59,8 @@ public final class ActiveMQArtemisMessagingService implements MessagingService {
     private final RemoteActorSystemMessageQueueFactoryFactory remoteActorSystemMessageQueueFactoryFactory;
     private final ThreadBoundExecutor queueExecutor;
     private final InternalMessageDeserializer internalMessageDeserializer;
+    private ServerLocator serverLocator;
     private ClientSessionFactory clientSessionFactory;
-    private ClientSession clientSession;
-    private ClientProducer localClusterClientProducer;
-    private final Map<String, ClientProducer> remoteClusterClientProducers = newHashMap();
     private final boolean useMessageHandler;
     private final boolean useImmediateReceive;
 
@@ -103,35 +101,36 @@ public final class ActiveMQArtemisMessagingService implements MessagingService {
             transportConfigurations[i++] = createConnector(host, port);
         }
 
-        ServerLocator serverLocator = ActiveMQClient.createServerLocatorWithHA(transportConfigurations);
+        serverLocator = ActiveMQClient.createServerLocatorWithHA(transportConfigurations);
         // @todo: make this configurable to increase performance?
         serverLocator.setBlockOnDurableSend(true);
         serverLocator.setBlockOnNonDurableSend(false);
-        serverLocator.setUseGlobalPools(true);
+        serverLocator.setUseGlobalPools(false);
         //serverLocator.setAckBatchSize(1);
         serverLocator.setClientFailureCheckPeriod(4000L);
         //serverLocator.setConnectionTTL()
         serverLocator.setFailoverOnInitialConnection(true);
         serverLocator.setScheduledThreadPoolMaxSize(1);
         serverLocator.setThreadPoolMaxSize(3);
-        serverLocator.setInitialConnectAttempts(-1);
+        serverLocator.setInitialConnectAttempts(1);
         serverLocator.setMaxRetryInterval(32000L);
         serverLocator.setRetryInterval(1000L);
         serverLocator.setRetryIntervalMultiplier(2);
         serverLocator.setReconnectAttempts(-1);
         serverLocator.setConnectionTTL(-1);
+        // turning off flow control
+        serverLocator.setProducerMaxRate(-1);
+        serverLocator.setProducerWindowSize(-1);
+        serverLocator.setConsumerMaxRate(-1);
+        serverLocator.setConsumerWindowSize(-1);
         this.clientSessionFactory = serverLocator.createSessionFactory();
-        this.clientSession = clientSessionFactory.createSession(activeMQUsername, activeMQPassword, false, true, true, false, serverLocator.getAckBatchSize());
-        // this.clientSession.addFailoverListener();
-        this.localClusterClientProducer = clientSession.createProducer(format(EA_ADDRESS_FORMAT, elasticActorsCluster));
-        // need to start the clientSession
-        clientSession.start();
     }
 
     private TransportConfiguration createConnector(String host, int port) {
         Map<String, Object> connectionParams = new HashMap<>();
 
         connectionParams.put(HOST_PROP_NAME, host);
+        connectionParams.put(NIO_REMOTING_THREADS_PROPNAME, 2);
         connectionParams.put(PORT_PROP_NAME, port);
         connectionParams.put(TCP_NODELAY_PROPNAME, true);
         // tuned for Gigabit switched single datacenter connections
@@ -146,18 +145,8 @@ public final class ActiveMQArtemisMessagingService implements MessagingService {
 
     @PreDestroy
     public void stop() {
-        try {
-            // close the remote producers
-            for (ClientProducer clientProducer : remoteClusterClientProducers.values()) {
-                clientProducer.close();
-            }
-            // close the local producer
-            localClusterClientProducer.close();
-            // end the session
-            clientSession.stop();
-        } catch (ActiveMQException e) {
-            logger.error("Exception while stopping ClientSession" , e);
-        }
+        clientSessionFactory.close();
+        serverLocator.close();
     }
 
     @Override
@@ -170,8 +159,13 @@ public final class ActiveMQArtemisMessagingService implements MessagingService {
         ClientSession.QueueQuery queueQuery = clientSession.queueQuery(toSimpleString(queueName));
         if(!queueQuery.isExists()) {
             // need to create it
-            clientSession.createQueue(format(EA_ADDRESS_FORMAT, elasticActorsCluster), queueName, format("routingKey=%s", routingKey ), true);
-        }
+            clientSession.createQueue(format(EA_ADDRESS_FORMAT, elasticActorsCluster), queueName, format("routingKey='%s'", routingKey ), true);
+        } /* else {
+            // delete it for once
+            clientSession.deleteQueue(queueName);
+            // need to create it
+            clientSession.createQueue(format(EA_ADDRESS_FORMAT, elasticActorsCluster), queueName, format("routingKey='%s'", routingKey ), true);
+        } */
     }
 
     public MessageQueueFactory getLocalMessageQueueFactory() {
@@ -190,9 +184,10 @@ public final class ActiveMQArtemisMessagingService implements MessagingService {
         @Override
         public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
             final String queueName = format(QUEUE_NAME_FORMAT,elasticActorsCluster,name);
+            ClientSession clientSession =  clientSessionFactory.createSession(activeMQUsername, activeMQPassword, false, true, true, false, serverLocator.getAckBatchSize());
             ensureQueueExists(clientSession, queueName, name);
             LocalMessageQueue messageQueue = new LocalMessageQueue(queueExecutor, internalMessageDeserializer,
-                                                                   queueName, name, clientSession, localClusterClientProducer,
+                                                                   queueName, name, clientSession, clientSession.createProducer(format(EA_ADDRESS_FORMAT, elasticActorsCluster)),
                                                                    messageHandler, useMessageHandler, useImmediateReceive);
             messageQueue.initialize();
             return messageQueue;
@@ -203,41 +198,32 @@ public final class ActiveMQArtemisMessagingService implements MessagingService {
         @Override
         public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
             final String queueName = format(QUEUE_NAME_FORMAT,elasticActorsCluster,name);
+            ClientSession clientSession =  clientSessionFactory.createSession(activeMQUsername, activeMQPassword, false, true, true, false, serverLocator.getAckBatchSize());
             ensureQueueExists(clientSession, queueName, name);
-            return new RemoteMessageQueue(queueName, name, clientSession, localClusterClientProducer);
+            return new RemoteMessageQueue(queueName, name, clientSession, clientSession.createProducer(format(EA_ADDRESS_FORMAT, elasticActorsCluster)));
         }
     }
 
     private final class RemoteActorSystemMessageQueueFactory implements MessageQueueFactory {
         private final String clusterName;
-        private final ClientProducer remoteClusterClientProducer;
 
-        private RemoteActorSystemMessageQueueFactory(String clusterName, ClientProducer remoteClusterClientProducer) {
+        private RemoteActorSystemMessageQueueFactory(String clusterName) {
             this.clusterName = clusterName;
-            this.remoteClusterClientProducer = remoteClusterClientProducer;
         }
 
         @Override
         public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
             final String queueName = format(QUEUE_NAME_FORMAT,this.clusterName,name);
+            ClientSession clientSession =  clientSessionFactory.createSession(activeMQUsername, activeMQPassword, false, true, true, false, serverLocator.getAckBatchSize());
             ensureQueueExists(clientSession, queueName, name);
-            return new RemoteMessageQueue(queueName, name, clientSession, remoteClusterClientProducer);
+            return new RemoteMessageQueue(queueName, name, clientSession, clientSession.createProducer(format(EA_ADDRESS_FORMAT, clusterName)));
         }
     }
 
     private final class RemoteActorSystemMessageQueueFactoryFactory implements MessageQueueFactoryFactory {
         @Override
         public MessageQueueFactory create(String clusterName) {
-            try {
-                ClientProducer remoteClusterClientProducer = remoteClusterClientProducers.get(clusterName);
-                if(remoteClusterClientProducer == null) {
-                    remoteClusterClientProducer = clientSession.createProducer(format(EA_ADDRESS_FORMAT, clusterName));
-                    remoteClusterClientProducers.put(clusterName, remoteClusterClientProducer);
-                }
-                return new RemoteActorSystemMessageQueueFactory(clusterName, remoteClusterClientProducer);
-            } catch(ActiveMQException e) {
-                throw new MessagingServiceInitializationException(format("Exception initializating ClientProducer on Remote ActorSystem %s", clusterName), e, false);
-            }
+            return new RemoteActorSystemMessageQueueFactory(clusterName);
         }
     }
 }
