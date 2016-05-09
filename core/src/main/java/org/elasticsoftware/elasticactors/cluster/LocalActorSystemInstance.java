@@ -481,7 +481,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
-    public ActorRefGroup groupOf(ActorRef... members) throws IllegalArgumentException {
+    public ActorRefGroup groupOf(Collection<ActorRef> members) throws IllegalArgumentException {
         // all members have to be persistent actor refs
         for (ActorRef member : members) {
             if(!(member instanceof ActorShardRef)) {

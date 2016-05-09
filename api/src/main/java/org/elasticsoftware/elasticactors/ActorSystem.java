@@ -20,6 +20,7 @@ import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRegistr
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 
 /**
  * An {@link ActorSystem} is a collection of {@link ElasticActor} instances. {@link ElasticActor}s are persistent and
@@ -182,6 +183,6 @@ public interface ActorSystem {
      * @throws IllegalArgumentException if one of the members is not a Persistent Actor
      * (i.e. not created with {@link #actorOf(String, Class, ActorState)}, {@link #actorOf(String, Class)} or {@link #actorFor(String)}   }
      */
-    ActorRefGroup groupOf(ActorRef... members) throws IllegalArgumentException;
+    ActorRefGroup groupOf(Collection<ActorRef> members) throws IllegalArgumentException;
 
 }

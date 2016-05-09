@@ -27,6 +27,7 @@ import org.elasticsoftware.elasticactors.scheduler.Scheduler;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.Collection;
 
 /**
  * @author Joost van de Wijgerd
@@ -117,7 +118,7 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
     }
 
     @Override
-    public ActorRefGroup groupOf(ActorRef... members) throws IllegalArgumentException {
+    public ActorRefGroup groupOf(Collection<ActorRef> members) throws IllegalArgumentException {
         throw new UnsupportedOperationException("Creating Remote ActorRefGroup objects is not supported for Remote ActorSystem instances");
     }
 
