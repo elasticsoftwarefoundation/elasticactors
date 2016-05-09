@@ -20,6 +20,7 @@ import com.google.common.base.Charsets;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
@@ -55,6 +56,7 @@ public class RabbitMQMessagingServiceTest {
     private ActorRef senderRef;
     private ActorRef receiverRef;
     private ActorRefFactory actorRefFactory;
+    private InternalActorSystem internalActorSystem;
 
     @BeforeTest(alwaysRun = true)
     public void setUp() {
@@ -62,6 +64,7 @@ public class RabbitMQMessagingServiceTest {
         receiverRef = mock(ActorRef.class);
 
         actorRefFactory = mock(ActorRefFactory.class);
+        internalActorSystem = mock(InternalActorSystem.class);
 
         when(receiverRef.toString()).thenReturn("actor://test.vdwbv.com/test/shards/1/testReceiver");
         when(senderRef.toString()).thenReturn("actor://test.vdwbv.com/test/shards/1/testSender");
@@ -83,7 +86,7 @@ public class RabbitMQMessagingServiceTest {
                                                                                  System.getProperty("username","guest"),
                                                                                  System.getProperty("password","guest"),
                                                                                  MessageAcker.Type.DIRECT,
-                                                                                 queueExecutor, new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory)));
+                                                                                 queueExecutor, new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem));
         messagingService.start();
 
         final CountDownLatch waitLatch = new CountDownLatch(NUM_MESSAGES);

@@ -26,11 +26,13 @@ import static java.lang.String.format;
  * @author  Joost van de Wijgerd
  */
 public final class ServiceActorRef implements ActorRef, ActorContainerRef {
+    private final String clusterName;
     private final ActorNode node;
     private final String serviceId;
     private final String refSpec;
 
     public ServiceActorRef(String clusterName, ActorNode node, String serviceId) {
+        this.clusterName = clusterName;
         this.node = node;
         this.serviceId = serviceId;
         this.refSpec = generateRefSpec(clusterName, node, serviceId);
@@ -38,6 +40,11 @@ public final class ServiceActorRef implements ActorRef, ActorContainerRef {
 
     public static String generateRefSpec(String clusterName,ActorNode node,String serviceId) {
         return format("actor://%s/%s/services/%s/%s", clusterName, node.getKey().getActorSystemName(), node.getKey().getNodeId(), serviceId);
+    }
+
+    @Override
+    public String getActorCluster() {
+        return clusterName;
     }
 
     @Override
@@ -76,7 +83,7 @@ public final class ServiceActorRef implements ActorRef, ActorContainerRef {
     }
 
     @Override
-    public ActorContainer get() {
+    public ActorContainer getActorContainer() {
         return node;
     }
 

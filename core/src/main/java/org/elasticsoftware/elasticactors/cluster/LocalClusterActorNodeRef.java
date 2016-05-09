@@ -24,11 +24,13 @@ import org.elasticsoftware.elasticactors.*;
  * @author  Joost van de Wijgerd
  */
 public final class LocalClusterActorNodeRef implements ActorRef, ActorContainerRef {
+    private final String clusterName;
     private final ActorNode node;
     private final String actorId;
     private final String refSpec;
 
     public LocalClusterActorNodeRef(String clusterName, ActorNode node, String actorId) {
+        this.clusterName = clusterName;
         this.node = node;
         this.actorId = actorId;
         this.refSpec = generateRefSpec(clusterName, node, actorId);
@@ -48,6 +50,11 @@ public final class LocalClusterActorNodeRef implements ActorRef, ActorContainerR
 
     public LocalClusterActorNodeRef(String clusterName, ActorNode node) {
         this(clusterName, node, null);
+    }
+
+    @Override
+    public String getActorCluster() {
+        return clusterName;
     }
 
     @Override
@@ -86,7 +93,7 @@ public final class LocalClusterActorNodeRef implements ActorRef, ActorContainerR
     }
 
     @Override
-    public ActorContainer get() {
+    public ActorContainer getActorContainer() {
         return node;
     }
 

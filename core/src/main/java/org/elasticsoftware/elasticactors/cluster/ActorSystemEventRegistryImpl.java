@@ -58,7 +58,7 @@ public final class ActorSystemEventRegistryImpl implements ActorSystemEventListe
             throw new IllegalArgumentException("ActorRef must be referencing a Persistent Actor (i.e. annotated with @Actor)");
         }
         // ugly casting needed here
-        ShardKey shardKey = ((ActorShard)((ActorShardRef) receiver).get()).getKey();
+        ShardKey shardKey = ((ActorShard)((ActorShardRef) receiver).getActorContainer()).getKey();
         // store the reference
         MessageSerializer serializer = actorSystem.getSerializer(message.getClass());
         ByteBuffer serializedMessage = serializer.serialize(message);
@@ -73,7 +73,7 @@ public final class ActorSystemEventRegistryImpl implements ActorSystemEventListe
             throw new IllegalArgumentException("ActorRef must be referencing a Persistent Actor (i.e. annotated with @Actor)");
         }
         // ugly casting needed here
-        ShardKey shardKey = ((ActorShard)((ActorShardRef) receiver).get()).getKey();
+        ShardKey shardKey = ((ActorShard)((ActorShardRef) receiver).getActorContainer()).getKey();
         eventListenerRepository.delete(shardKey, event, receiver);
     }
 

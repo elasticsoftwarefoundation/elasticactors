@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
+import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.PhysicalNode;
@@ -25,6 +26,8 @@ import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+
+import java.util.List;
 
 /**
  * @author Joost van de Wijgerd
@@ -65,21 +68,25 @@ public final class RemoteActorSystemActorShard implements ActorShard, MessageHan
     }
 
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
+        sendMessage(from, ImmutableList.of(to), message);
+    }
+
+    public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
         MessageSerializer messageSerializer = getSerializer(message.getClass());
         // get the durable flag
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
-        messageQueue.offer(new InternalMessageImpl(from, to, SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable));
+        messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable));
     }
 
     @Override
-    public void undeliverableMessage(InternalMessage message) throws Exception {
+    public void undeliverableMessage(InternalMessage message, ActorRef receiverRef) throws Exception {
         // input is the message that cannot be delivered
-        InternalMessageImpl undeliverableMessage = new InternalMessageImpl(message.getReceiver(),
+        InternalMessageImpl undeliverableMessage = new InternalMessageImpl(receiverRef,
                                                                            message.getSender(),
                                                                            message.getPayload(),
                                                                            message.getPayloadClass(),
-                                                                           true,
+                                                                           message.isDurable(),
                                                                            true);
         messageQueue.offer(undeliverableMessage);
     }

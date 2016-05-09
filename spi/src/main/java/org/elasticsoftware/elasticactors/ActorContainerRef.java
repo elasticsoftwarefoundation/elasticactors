@@ -20,5 +20,5 @@ package org.elasticsoftware.elasticactors;
  * @author Joost van de Wijgerd
  */
 public interface ActorContainerRef {
-    ActorContainer get();
+    ActorContainer getActorContainer();
 }

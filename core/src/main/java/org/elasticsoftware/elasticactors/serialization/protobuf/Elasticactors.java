@@ -186,6 +186,26 @@ public final class Elasticactors {
      * <code>optional bool undeliverable = 7;</code>
      */
     boolean getUndeliverable();
+
+    // repeated string receivers = 8;
+    /**
+     * <code>repeated string receivers = 8;</code>
+     */
+    java.util.List<java.lang.String>
+    getReceiversList();
+    /**
+     * <code>repeated string receivers = 8;</code>
+     */
+    int getReceiversCount();
+    /**
+     * <code>repeated string receivers = 8;</code>
+     */
+    java.lang.String getReceivers(int index);
+    /**
+     * <code>repeated string receivers = 8;</code>
+     */
+    com.google.protobuf.ByteString
+        getReceiversBytes(int index);
   }
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.InternalMessage}
@@ -273,6 +293,14 @@ public final class Elasticactors {
               undeliverable_ = input.readBool();
               break;
             }
+            case 66: {
+              if (!((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+                receivers_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000080;
+              }
+              receivers_.add(input.readBytes());
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -281,6 +309,9 @@ public final class Elasticactors {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+          receivers_ = new com.google.protobuf.UnmodifiableLazyStringList(receivers_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -506,6 +537,36 @@ public final class Elasticactors {
       return undeliverable_;
     }
 
+    // repeated string receivers = 8;
+    public static final int RECEIVERS_FIELD_NUMBER = 8;
+    private com.google.protobuf.LazyStringList receivers_;
+    /**
+     * <code>repeated string receivers = 8;</code>
+     */
+    public java.util.List<java.lang.String>
+        getReceiversList() {
+      return receivers_;
+    }
+    /**
+     * <code>repeated string receivers = 8;</code>
+     */
+    public int getReceiversCount() {
+      return receivers_.size();
+    }
+    /**
+     * <code>repeated string receivers = 8;</code>
+     */
+    public java.lang.String getReceivers(int index) {
+      return receivers_.get(index);
+    }
+    /**
+     * <code>repeated string receivers = 8;</code>
+     */
+    public com.google.protobuf.ByteString
+        getReceiversBytes(int index) {
+      return receivers_.getByteString(index);
+    }
+
     private void initFields() {
       receiver_ = "";
       sender_ = "";
@@ -514,6 +575,7 @@ public final class Elasticactors {
       id_ = com.google.protobuf.ByteString.EMPTY;
       durable_ = false;
       undeliverable_ = false;
+      receivers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -547,6 +609,9 @@ public final class Elasticactors {
       }
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
         output.writeBool(7, undeliverable_);
+      }
+      for (int i = 0; i < receivers_.size(); i++) {
+        output.writeBytes(8, receivers_.getByteString(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -584,6 +649,15 @@ public final class Elasticactors {
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(7, undeliverable_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < receivers_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(receivers_.getByteString(i));
+        }
+        size += dataSize;
+        size += 1 * getReceiversList().size();
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -715,6 +789,8 @@ public final class Elasticactors {
         bitField0_ = (bitField0_ & ~0x00000020);
         undeliverable_ = false;
         bitField0_ = (bitField0_ & ~0x00000040);
+        receivers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
@@ -771,6 +847,12 @@ public final class Elasticactors {
           to_bitField0_ |= 0x00000040;
         }
         result.undeliverable_ = undeliverable_;
+        if (((bitField0_ & 0x00000080) == 0x00000080)) {
+          receivers_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              receivers_);
+          bitField0_ = (bitField0_ & ~0x00000080);
+        }
+        result.receivers_ = receivers_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -813,6 +895,16 @@ public final class Elasticactors {
         }
         if (other.hasUndeliverable()) {
           setUndeliverable(other.getUndeliverable());
+        }
+        if (!other.receivers_.isEmpty()) {
+          if (receivers_.isEmpty()) {
+            receivers_ = other.receivers_;
+            bitField0_ = (bitField0_ & ~0x00000080);
+          } else {
+            ensureReceiversIsMutable();
+            receivers_.addAll(other.receivers_);
+          }
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1197,6 +1289,99 @@ public final class Elasticactors {
       public Builder clearUndeliverable() {
         bitField0_ = (bitField0_ & ~0x00000040);
         undeliverable_ = false;
+        onChanged();
+        return this;
+      }
+
+      // repeated string receivers = 8;
+      private com.google.protobuf.LazyStringList receivers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureReceiversIsMutable() {
+        if (!((bitField0_ & 0x00000080) == 0x00000080)) {
+          receivers_ = new com.google.protobuf.LazyStringArrayList(receivers_);
+          bitField0_ |= 0x00000080;
+         }
+      }
+      /**
+       * <code>repeated string receivers = 8;</code>
+       */
+      public java.util.List<java.lang.String>
+          getReceiversList() {
+        return java.util.Collections.unmodifiableList(receivers_);
+      }
+      /**
+       * <code>repeated string receivers = 8;</code>
+       */
+      public int getReceiversCount() {
+        return receivers_.size();
+      }
+      /**
+       * <code>repeated string receivers = 8;</code>
+       */
+      public java.lang.String getReceivers(int index) {
+        return receivers_.get(index);
+      }
+      /**
+       * <code>repeated string receivers = 8;</code>
+       */
+      public com.google.protobuf.ByteString
+          getReceiversBytes(int index) {
+        return receivers_.getByteString(index);
+      }
+      /**
+       * <code>repeated string receivers = 8;</code>
+       */
+      public Builder setReceivers(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureReceiversIsMutable();
+        receivers_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string receivers = 8;</code>
+       */
+      public Builder addReceivers(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureReceiversIsMutable();
+        receivers_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string receivers = 8;</code>
+       */
+      public Builder addAllReceivers(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureReceiversIsMutable();
+        super.addAll(values, receivers_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string receivers = 8;</code>
+       */
+      public Builder clearReceivers() {
+        receivers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000080);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string receivers = 8;</code>
+       */
+      public Builder addReceiversBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureReceiversIsMutable();
+        receivers_.add(value);
         onChanged();
         return this;
       }
@@ -7214,32 +7399,33 @@ public final class Elasticactors {
     java.lang.String[] descriptorData = {
       "\n\023elasticactors.proto\0228org.elasticsoftwa" +
       "re.elasticactors.serialization.protobuf\"" +
-      "\216\001\n\017InternalMessage\022\020\n\010receiver\030\001 \001(\t\022\016\n" +
+      "\241\001\n\017InternalMessage\022\020\n\010receiver\030\001 \001(\t\022\016\n" +
       "\006sender\030\002 \001(\t\022\024\n\014payloadClass\030\003 \001(\t\022\017\n\007p" +
       "ayload\030\004 \001(\014\022\n\n\002id\030\005 \001(\014\022\017\n\007durable\030\006 \001(" +
-      "\010\022\025\n\rundeliverable\030\007 \001(\010\"y\n\020ScheduledMes" +
-      "sage\022\n\n\002id\030\001 \001(\014\022\020\n\010fireTime\030\002 \001(\004\022\020\n\010re" +
-      "ceiver\030\003 \001(\t\022\016\n\006sender\030\004 \001(\t\022\024\n\014messageC" +
-      "lass\030\005 \001(\t\022\017\n\007message\030\006 \001(\014\"R\n\030ActorSyst" +
-      "emEventListener\022\017\n\007actorId\030\001 \001(\t\022\024\n\014mess",
-      "ageClass\030\002 \001(\t\022\017\n\007message\030\003 \001(\014\"t\n\017Persi" +
-      "stentActor\022\020\n\010actorRef\030\001 \001(\t\022\022\n\nactorCla" +
-      "ss\030\002 \001(\t\022\032\n\022actorSystemVersion\030\003 \001(\t\022\r\n\005" +
-      "state\030\004 \001(\014\022\020\n\010shardKey\030\005 \001(\t\"\267\001\n\022Create" +
-      "ActorMessage\022\017\n\007actorId\030\001 \001(\t\022\024\n\014initial" +
-      "State\030\002 \001(\014\022\022\n\nactorClass\030\003 \001(\t\022\023\n\013actor" +
-      "System\030\004 \001(\t\022Q\n\004type\030\005 \001(\0162C.org.elastic" +
-      "software.elasticactors.serialization.pro" +
-      "tobuf.ActorType\"\'\n\023DestroyActorMessage\022\020" +
-      "\n\010actorRef\030\001 \001(\t\"\217\001\n\024ActivateActorMessag",
-      "e\022\023\n\013actorSystem\030\001 \001(\t\022\017\n\007actorId\030\002 \001(\t\022" +
-      "Q\n\004type\030\003 \001(\0162C.org.elasticsoftware.elas" +
-      "ticactors.serialization.protobuf.ActorTy" +
-      "pe\"9\n\013WireMessage\022\021\n\tqueueName\030\001 \001(\t\022\027\n\017" +
-      "internalMessage\030\002 \001(\014\"D\n\035CancelScheduled" +
-      "MessageMessage\022\021\n\tmessageId\030\001 \001(\014\022\020\n\010fir" +
-      "eTime\030\002 \001(\004*2\n\tActorType\022\016\n\nPERSISTENT\020\000" +
-      "\022\010\n\004TEMP\020\001\022\013\n\007SERVICE\020\002B\002H\001"
+      "\010\022\025\n\rundeliverable\030\007 \001(\010\022\021\n\treceivers\030\010 " +
+      "\003(\t\"y\n\020ScheduledMessage\022\n\n\002id\030\001 \001(\014\022\020\n\010f" +
+      "ireTime\030\002 \001(\004\022\020\n\010receiver\030\003 \001(\t\022\016\n\006sende" +
+      "r\030\004 \001(\t\022\024\n\014messageClass\030\005 \001(\t\022\017\n\007message" +
+      "\030\006 \001(\014\"R\n\030ActorSystemEventListener\022\017\n\007ac",
+      "torId\030\001 \001(\t\022\024\n\014messageClass\030\002 \001(\t\022\017\n\007mes" +
+      "sage\030\003 \001(\014\"t\n\017PersistentActor\022\020\n\010actorRe" +
+      "f\030\001 \001(\t\022\022\n\nactorClass\030\002 \001(\t\022\032\n\022actorSyst" +
+      "emVersion\030\003 \001(\t\022\r\n\005state\030\004 \001(\014\022\020\n\010shardK" +
+      "ey\030\005 \001(\t\"\267\001\n\022CreateActorMessage\022\017\n\007actor" +
+      "Id\030\001 \001(\t\022\024\n\014initialState\030\002 \001(\014\022\022\n\nactorC" +
+      "lass\030\003 \001(\t\022\023\n\013actorSystem\030\004 \001(\t\022Q\n\004type\030" +
+      "\005 \001(\0162C.org.elasticsoftware.elasticactor" +
+      "s.serialization.protobuf.ActorType\"\'\n\023De" +
+      "stroyActorMessage\022\020\n\010actorRef\030\001 \001(\t\"\217\001\n\024",
+      "ActivateActorMessage\022\023\n\013actorSystem\030\001 \001(" +
+      "\t\022\017\n\007actorId\030\002 \001(\t\022Q\n\004type\030\003 \001(\0162C.org.e" +
+      "lasticsoftware.elasticactors.serializati" +
+      "on.protobuf.ActorType\"9\n\013WireMessage\022\021\n\t" +
+      "queueName\030\001 \001(\t\022\027\n\017internalMessage\030\002 \001(\014" +
+      "\"D\n\035CancelScheduledMessageMessage\022\021\n\tmes" +
+      "sageId\030\001 \001(\014\022\020\n\010fireTime\030\002 \001(\004*2\n\tActorT" +
+      "ype\022\016\n\nPERSISTENT\020\000\022\010\n\004TEMP\020\001\022\013\n\007SERVICE" +
+      "\020\002B\002H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -7251,7 +7437,7 @@ public final class Elasticactors {
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_InternalMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_InternalMessage_descriptor,
-              new java.lang.String[] { "Receiver", "Sender", "PayloadClass", "Payload", "Id", "Durable", "Undeliverable", });
+              new java.lang.String[] { "Receiver", "Sender", "PayloadClass", "Payload", "Id", "Durable", "Undeliverable", "Receivers", });
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ScheduledMessage_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ScheduledMessage_fieldAccessorTable = new

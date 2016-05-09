@@ -240,7 +240,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
                 if(logger.isTraceEnabled()) {
                     long endTime = System.currentTimeMillis();
                     if(message != null) {
-                        logger.trace(format("(rabbit) Message of type [%s] with id [%s] for Actor [%s] took %d msecs to execute on queue [%s]", message.getPayloadClass(), message.getId().toString(), message.getReceiver().getActorId(), endTime - startTime, queueName));
+                        logger.trace(format("(rabbit) Message of type [%s] with id [%s] took %d msecs to execute on queue [%s]", message.getPayloadClass(), message.getId().toString(), endTime - startTime, queueName));
                     }
                 }
             }
@@ -297,7 +297,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
             } finally {
                 if(logger.isTraceEnabled()) {
                     long endTime = System.currentTimeMillis();
-                    logger.trace(format("(local) Message of type [%s] with id [%s] for Actor [%s] took %d msecs to execute on queue [%s]",message.getPayloadClass(),message.getId().toString(),message.getReceiver().getActorId(),endTime-startTime,queueName));
+                    logger.trace(format("(local) Message of type [%s] with id [%s] took %d msecs to execute on queue [%s]",message.getPayloadClass(),message.getId().toString(), endTime-startTime,queueName));
                 }
             }
         }

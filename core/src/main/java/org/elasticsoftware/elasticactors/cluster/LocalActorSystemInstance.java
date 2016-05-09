@@ -17,6 +17,9 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.SetMultimap;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import org.apache.logging.log4j.LogManager;
@@ -478,10 +481,27 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
+    public ActorRefGroup groupOf(ActorRef... members) throws IllegalArgumentException {
+        // all members have to be persistent actor refs
+        for (ActorRef member : members) {
+            if(!(member instanceof ActorShardRef)) {
+                throw new IllegalArgumentException("Only Persistent Actors (annotated with @Actor) of the same ElasticActors cluster are allowed to form a group");
+            }
+        }
+        // build the map
+        ImmutableListMultimap.Builder<ActorShardRef, ActorRef> memberMap = ImmutableListMultimap.builder();
+        for (ActorRef member : members) {
+            memberMap.put((ActorShardRef)((ActorShardRef)member).getActorContainer().getActorRef(), member);
+        }
+
+        return new LocalActorRefGroup(memberMap.build());
+    }
+
+    @Override
     public void stop(ActorRef actorRef) throws Exception {
         // set sender if we have any in the current context
         ActorRef sender = ActorContextHolder.getSelf();
-        ActorContainer handlingContainer = ((ActorContainerRef) actorRef).get();
+        ActorContainer handlingContainer = ((ActorContainerRef) actorRef).getActorContainer();
         handlingContainer.sendMessage(sender, handlingContainer.getActorRef(), new DestroyActorMessage(actorRef));
     }
 
@@ -562,11 +582,22 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         }
 
         @Override
-        public void undeliverableMessage(InternalMessage message) throws Exception {
+        public void sendMessage(ActorRef sender, List<? extends ActorRef> receivers, Object message) throws Exception {
             final Lock readLock = shardLocks[key.getShardId()].readLock();
             try {
                 readLock.lock();
-                shards[key.getShardId()].undeliverableMessage(message);
+                shards[key.getShardId()].sendMessage(sender, receivers, message);
+            } finally {
+                readLock.unlock();
+            }
+        }
+
+        @Override
+        public void undeliverableMessage(InternalMessage message, ActorRef receiverRef) throws Exception {
+            final Lock readLock = shardLocks[key.getShardId()].readLock();
+            try {
+                readLock.lock();
+                shards[key.getShardId()].undeliverableMessage(message, receiverRef);
             } finally {
                 readLock.unlock();
             }
@@ -620,8 +651,14 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         }
 
         @Override
-        public void undeliverableMessage(InternalMessage message) throws Exception {
-            activeNodes.get(key.getNodeId()).undeliverableMessage(message);
+        public void sendMessage(ActorRef sender, List<? extends ActorRef> receivers, Object message) throws Exception {
+            // @todo: check if we need to lock here like with ActorShards
+            activeNodes.get(key.getNodeId()).sendMessage(sender, receivers, message);
+        }
+
+        @Override
+        public void undeliverableMessage(InternalMessage message, ActorRef receiverRef) throws Exception {
+            activeNodes.get(key.getNodeId()).undeliverableMessage(message, receiverRef);
         }
 
         @Override

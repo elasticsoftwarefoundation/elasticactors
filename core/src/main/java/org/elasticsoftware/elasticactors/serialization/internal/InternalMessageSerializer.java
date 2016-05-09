@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.serialization.internal;
 
 import com.google.protobuf.ByteString;
+import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
@@ -40,8 +41,10 @@ public final class InternalMessageSerializer implements Serializer<InternalMessa
         // rewind the payload to not fuck up the internal message
         internalMessage.getPayload().rewind(); // @todo: this is a bit ugly
         builder.setPayloadClass(internalMessage.getPayloadClass());
-        builder.setReceiver(ActorRefSerializer.get().serialize(internalMessage.getReceiver()));
-        if (internalMessage.getSender() != null) {
+        for (ActorRef receiver : internalMessage.getReceivers()) {
+            builder.addReceivers(ActorRefSerializer.get().serialize(receiver));
+        }
+        if(internalMessage.getSender() != null) {
             builder.setSender(ActorRefSerializer.get().serialize(internalMessage.getSender()));
         }
         builder.setDurable(internalMessage.isDurable());

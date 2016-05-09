@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorContainer;
@@ -68,14 +69,14 @@ public abstract class AbstractActorContainer implements ActorContainer, MessageH
         return localNode;
     }
 
-    protected void handleUndeliverable(InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
+    protected void handleUndeliverable(InternalMessage internalMessage, ActorRef receiverRef, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         // if a message-undeliverable is undeliverable, don't send an undeliverable message back!
         ActorRef senderRef = internalMessage.getSender();
         try {
             if (senderRef != null && senderRef instanceof ActorContainerRef && !internalMessage.isUndeliverable()) {
-                ((ActorContainerRef) senderRef).get().undeliverableMessage(internalMessage);
+                ((ActorContainerRef) senderRef).getActorContainer().undeliverableMessage(internalMessage, receiverRef);
             } else if(internalMessage.isUndeliverable()) {
-                logger.error(format("Receiver for undeliverable message not found: message type '%s' , receiver '%s'",internalMessage.getPayloadClass(),internalMessage.getReceiver().toString()));
+                logger.error(format("Receiver for undeliverable message not found: message type '%s' , receiver '%s'", internalMessage.getPayloadClass(), receiverRef.toString()));
             } else {
                 logger.warn("Could not send message undeliverable");
             }
@@ -83,5 +84,9 @@ public abstract class AbstractActorContainer implements ActorContainer, MessageH
             // ack anyway
             messageHandlerEventListener.onDone(internalMessage);
         }
+    }
+
+    public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
+        sendMessage(from, ImmutableList.of(to), message);
     }
 }

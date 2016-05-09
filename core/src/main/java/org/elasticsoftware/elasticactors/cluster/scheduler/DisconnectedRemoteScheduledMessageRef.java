@@ -47,7 +47,7 @@ public final class DisconnectedRemoteScheduledMessageRef implements ScheduledMes
     }
 
     @Override
-    public ActorContainer get() {
+    public ActorContainer getActorContainer() {
         throw new IllegalStateException(format("Remote Actor Cluster %s is not configured, ensure a correct remote configuration in the config.yaml",clusterName));
     }
 

@@ -117,6 +117,11 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
     }
 
     @Override
+    public ActorRefGroup groupOf(ActorRef... members) throws IllegalArgumentException {
+        throw new UnsupportedOperationException("Creating Remote ActorRefGroup objects is not supported for Remote ActorSystem instances");
+    }
+
+    @Override
     public ActorSystems getParent() {
         return localActorSystems;
     }
@@ -125,7 +130,7 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
     public void stop(ActorRef actorRef) throws Exception {
         // set sender if we have any in the current context
         ActorRef sender = ActorContextHolder.getSelf();
-        ActorContainer handlingContainer = ((ActorContainerRef) actorRef).get();
+        ActorContainer handlingContainer = ((ActorContainerRef) actorRef).getActorContainer();
         handlingContainer.sendMessage(sender, handlingContainer.getActorRef(), new DestroyActorMessage(actorRef));
     }
 

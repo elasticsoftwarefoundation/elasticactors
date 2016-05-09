@@ -16,14 +16,17 @@
 
 package org.elasticsoftware.elasticactors.messaging;
 
+import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -31,7 +34,7 @@ import java.util.UUID;
  */
 public final class InternalMessageImpl implements InternalMessage,Serializable {
     private final ActorRef sender;
-    private final ActorRef receiver;
+    private final ImmutableList<ActorRef> receivers;
     private final UUID id;
     private final ByteBuffer payload;
     private final String payloadClass;
@@ -39,25 +42,25 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
     private final boolean undeliverable;
     private transient byte[] serializedForm;
 
-    public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass);
-    }
-
     public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass,boolean durable) {
         this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass,durable,false);
     }
 
-    public InternalMessageImpl(UUID id, ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass) {
-        this(id,sender,receiver,payload,payloadClass,true,false);
+    public InternalMessageImpl(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass,boolean durable) {
+        this(UUIDTools.createTimeBasedUUID(), sender, receivers, payload, payloadClass,durable,false);
     }
 
     public InternalMessageImpl(ActorRef sender, ActorRef receiver,ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
         this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass,durable,undeliverable);
     }
 
-    public InternalMessageImpl(UUID id,ActorRef sender, ActorRef receiver,ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
+    public InternalMessageImpl(UUID id, ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
+        this(id, sender, ImmutableList.of(receiver), payload, payloadClass, durable, undeliverable);
+    }
+
+    public InternalMessageImpl(UUID id, ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
         this.sender = sender;
-        this.receiver = receiver;
+        this.receivers = receivers;
         this.id = id;
         this.payload = payload;
         this.payloadClass = payloadClass;
@@ -69,8 +72,9 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
         return sender;
     }
 
-    public ActorRef getReceiver() {
-        return receiver;
+    @Override
+    public ImmutableList<ActorRef> getReceivers() {
+        return receivers;
     }
 
     public UUID getId() {
@@ -108,5 +112,10 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
             serializedForm = InternalMessageSerializer.get().serialize(this);
         }
         return serializedForm;
+    }
+
+    @Override
+    public InternalMessage copyOf() {
+        return new InternalMessageImpl(id, sender, receivers, payload.asReadOnlyBuffer(), payloadClass, durable, undeliverable);
     }
 }

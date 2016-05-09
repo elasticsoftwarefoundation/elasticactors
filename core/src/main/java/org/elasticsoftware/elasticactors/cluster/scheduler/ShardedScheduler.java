@@ -94,7 +94,7 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
     public ScheduledMessageRef scheduleOnce(ActorRef sender, Object message, ActorRef receiver, long delay, TimeUnit timeUnit) {
         // this method only works when sender is a local persistent actor (so no temp or service actor)
         if(sender instanceof ActorContainerRef) {
-            ActorContainer actorContainer = ((ActorContainerRef)sender).get();
+            ActorContainer actorContainer = ((ActorContainerRef)sender).getActorContainer();
             if(actorContainer instanceof ActorShard) {
                 ActorShard actorShard = (ActorShard) actorContainer;
                 if(actorShard.getOwningNode().isLocal()) {

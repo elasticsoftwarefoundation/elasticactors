@@ -40,11 +40,12 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
 
     public HandleUndeliverableMessageTask(InternalActorSystem actorSystem,
                                           ElasticActor receiver,
+                                          ActorRef receiverRef,
                                           InternalMessage internalMessage,
                                           PersistentActor persistentActor,
                                           PersistentActorRepository persistentActorRepository,
                                           MessageHandlerEventListener messageHandlerEventListener) {
-        super(persistentActorRepository, persistentActor, actorSystem, receiver, internalMessage.getReceiver(), messageHandlerEventListener, internalMessage);
+        super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage);
     }
 
 

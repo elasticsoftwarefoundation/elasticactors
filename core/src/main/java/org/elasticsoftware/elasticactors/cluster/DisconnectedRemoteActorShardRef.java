@@ -41,6 +41,10 @@ public final class DisconnectedRemoteActorShardRef implements ActorRef,ActorCont
         this.refSpec = format(REFSPEC_FORMAT,clusterName,actorSystemName,shardId,actorId);
     }
 
+    @Override
+    public String getActorCluster() {
+        return clusterName;
+    }
 
     @Override
     public String getActorPath() {
@@ -68,7 +72,7 @@ public final class DisconnectedRemoteActorShardRef implements ActorRef,ActorCont
     }
 
     @Override
-    public ActorContainer get() {
+    public ActorContainer getActorContainer() {
         throw new IllegalStateException(format("Remote Actor Cluster %s is not configured, ensure a correct remote configuration in the config.yaml",clusterName));
     }
 

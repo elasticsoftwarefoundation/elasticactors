@@ -37,6 +37,7 @@ package org.elasticsoftware.elasticactors;
  * @author Joost van de Wijgerd
  */
 public interface ActorRef {
+    String getActorCluster();
     /**
      * The path of an actor is the Shard (or Node) where the actor is located. It looks like:
      * <actorSystem>/shards/<shardId> or <actorSystem>/nodes/<nodeId>

@@ -29,12 +29,14 @@ import static java.lang.String.format;
  * @author  Joost van de Wijgerd
  */
 public final class DisconnectedActorNodeRef implements ActorRef, ActorContainerRef {
+    private final String clusterName;
     private final String actorSystemName;
     private final String nodeId;
     private final String actorId;
     private final String refSpec;
 
     public DisconnectedActorNodeRef(String clusterName, String actorSystemName, String nodeId,@Nullable String actorId) {
+        this.clusterName = clusterName;
         this.actorSystemName = actorSystemName;
         this.nodeId = nodeId;
         this.actorId = actorId;
@@ -47,6 +49,11 @@ public final class DisconnectedActorNodeRef implements ActorRef, ActorContainerR
         } else {
             return String.format("actor://%s/%s/nodes/%s",clusterName,actorSystemName,nodeId);
         }
+    }
+
+    @Override
+    public String getActorCluster() {
+        return clusterName;
     }
 
     @Override
@@ -74,7 +81,7 @@ public final class DisconnectedActorNodeRef implements ActorRef, ActorContainerR
     }
 
     @Override
-    public ActorContainer get() {
+    public ActorContainer getActorContainer() {
         throw new IllegalStateException(format("Actor Node %s is not active, referenced actorId cannot be reached and probably doesn't exist anymore. It is a Bad Idea to serialize Temp Actor Refs",nodeId));
     }
 

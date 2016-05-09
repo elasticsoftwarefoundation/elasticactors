@@ -16,12 +16,14 @@
 
 package org.elasticsoftware.elasticactors.messaging;
 
+import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -29,7 +31,7 @@ import java.util.UUID;
  */
 public final class TransientInternalMessage implements InternalMessage,Serializable {
     private final ActorRef sender;
-    private final ActorRef receiver;
+    private final ImmutableList<ActorRef> receivers;
     private final UUID id;
     private final Object payload;
     private final boolean undeliverable;
@@ -38,9 +40,17 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
         this(sender,receiver,payload,false);
     }
 
+    public TransientInternalMessage(ActorRef sender, ImmutableList<ActorRef> receivers, Object payload) {
+        this(sender,receivers,payload,false);
+    }
+
     public TransientInternalMessage(ActorRef sender, ActorRef receiver, Object payload, boolean undeliverable) {
+        this(sender, ImmutableList.of(receiver), payload, undeliverable);
+    }
+
+    public TransientInternalMessage(ActorRef sender, ImmutableList<ActorRef> receivers, Object payload, boolean undeliverable) {
         this.sender = sender;
-        this.receiver = receiver;
+        this.receivers = receivers;
         this.id = UUIDTools.createTimeBasedUUID();
         this.payload = payload;
         this.undeliverable = undeliverable;
@@ -50,8 +60,9 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
         return sender;
     }
 
-    public ActorRef getReceiver() {
-        return receiver;
+    @Override
+    public ImmutableList<ActorRef> getReceivers() {
+        return receivers;
     }
 
     public UUID getId() {
@@ -85,5 +96,10 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
     @Override
     public byte[] toByteArray() {
         throw new UnsupportedOperationException(String.format("This implementation is intended to be used local only, for remote use [%s]",InternalMessageImpl.class.getSimpleName()));
+    }
+
+    @Override
+    public InternalMessage copyOf() {
+        return this;
     }
 }

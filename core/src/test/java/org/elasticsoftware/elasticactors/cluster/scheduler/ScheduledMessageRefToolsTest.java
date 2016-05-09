@@ -86,7 +86,7 @@ public class ScheduledMessageRefToolsTest {
             assertEquals(e.getMessage(),"Remote Actor Cluster RemoteCluster is not configured, ensure a correct remote configuration in the config.yaml");
         }
         try {
-            ((DisconnectedRemoteScheduledMessageRef) messageRef).get();
+            ((DisconnectedRemoteScheduledMessageRef) messageRef).getActorContainer();
             fail("messageRef.get() did not throw IllegalArgumentException");
         } catch (IllegalStateException e) {
             assertEquals(e.getMessage(),"Remote Actor Cluster RemoteCluster is not configured, ensure a correct remote configuration in the config.yaml");

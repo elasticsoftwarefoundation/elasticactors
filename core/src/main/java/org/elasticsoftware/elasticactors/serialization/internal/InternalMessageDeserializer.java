@@ -16,35 +16,80 @@
 
 package org.elasticsoftware.elasticactors.serialization.internal;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.messaging.ImmutableInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
+import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+
+import static org.elasticsoftware.elasticactors.messaging.UUIDTools.toUUID;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class InternalMessageDeserializer implements Deserializer<byte[],InternalMessage> {
     private final ActorRefDeserializer actorRefDeserializer;
+    private final InternalActorSystem internalActorSystem;
 
-    public InternalMessageDeserializer(ActorRefDeserializer actorRefDeserializer) {
+    public InternalMessageDeserializer(ActorRefDeserializer actorRefDeserializer, InternalActorSystem internalActorSystem) {
         this.actorRefDeserializer = actorRefDeserializer;
+        this.internalActorSystem = internalActorSystem;
     }
 
     @Override
     public InternalMessage deserialize(byte[] serializedObject) throws IOException {
         Elasticactors.InternalMessage protobufMessage = Elasticactors.InternalMessage.parseFrom(serializedObject);
         ActorRef sender = (protobufMessage.hasSender()) ? actorRefDeserializer.deserialize(protobufMessage.getSender()) : null;
-        ActorRef receiver = actorRefDeserializer.deserialize(protobufMessage.getReceiver());
-        String messageClass = protobufMessage.getPayloadClass();
-        UUID id = UUIDTools.toUUID(protobufMessage.getId().toByteArray());
-        boolean durable = (protobufMessage.hasDurable()) ? protobufMessage.getDurable() : true;
-        boolean undeliverable = protobufMessage.hasUndeliverable() ? protobufMessage.getUndeliverable() : false;
-        return new InternalMessageImpl(id,sender,receiver,protobufMessage.getPayload().asReadOnlyByteBuffer(),messageClass,durable,undeliverable);
+        // there is either a receiver or a list of receivers
+        ImmutableList<ActorRef> receivers;
+        ActorRef singleReceiver = (protobufMessage.hasReceiver()) ? actorRefDeserializer.deserialize(protobufMessage.getReceiver()) : null;
+        if(singleReceiver == null) {
+            ImmutableList.Builder<ActorRef> listBuilder = ImmutableList.builder();
+            for (String receiver : protobufMessage.getReceiversList()) {
+                listBuilder.add(actorRefDeserializer.deserialize(receiver));
+            }
+            receivers = listBuilder.build();
+        } else {
+            receivers = ImmutableList.of(singleReceiver);
+        }
+        String messageClassString = protobufMessage.getPayloadClass();
+        UUID id = toUUID(protobufMessage.getId().toByteArray());
+        boolean durable = (!protobufMessage.hasDurable()) || protobufMessage.getDurable();
+        boolean undeliverable = protobufMessage.hasUndeliverable() && protobufMessage.getUndeliverable();
+        //return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable);
+        // optimize immutable message if possible
+
+        Class<?> messageClass = isImmutableMessageClass(messageClassString);
+        if(messageClass == null) {
+            return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable);
+        } else {
+            Object payloadObject = internalActorSystem.getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
+            return new ImmutableInternalMessage(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), payloadObject, durable, undeliverable);
+        }
+    }
+
+    private Class<?> isImmutableMessageClass(String messageClassString) {
+        try {
+            Class<?> messageClass = Class.forName(messageClassString);
+            Message messageAnnotation = messageClass.getAnnotation(Message.class);
+            if(messageAnnotation != null &&  messageAnnotation.immutable()) {
+                return messageClass;
+            } else {
+                return null;
+            }
+        } catch(Exception e) {
+            return null;
+        }
     }
 }

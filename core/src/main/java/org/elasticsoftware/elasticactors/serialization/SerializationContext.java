@@ -20,12 +20,13 @@ public final class SerializationContext {
         }
     };
     private static final boolean deserializationCacheEnabled = Boolean.valueOf(System.getProperty("ea.deserializationCache.enabled", "false"));
+    private static final boolean serializationCacheEnabled = Boolean.valueOf(System.getProperty("ea.serializationCache.enabled", "false"));
 
     private SerializationContext() {}
 
     public static void initialize() {
         // only create once per thread
-        if(serializationCache.get() == null) {
+        if(serializationCacheEnabled && serializationCache.get() == null) {
             serializationCache.set(new IdentityHashMap<Object, ByteBuffer>());
         }
         if(deserializationCacheEnabled && deserializationCache.get() == null) {

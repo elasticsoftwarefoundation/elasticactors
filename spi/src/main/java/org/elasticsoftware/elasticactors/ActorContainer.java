@@ -18,6 +18,8 @@ package org.elasticsoftware.elasticactors;
 
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 
+import java.util.List;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -26,7 +28,9 @@ public interface ActorContainer {
 
     void sendMessage(ActorRef sender, ActorRef receiver, Object message) throws Exception;
 
-    void undeliverableMessage(InternalMessage undeliverableMessage) throws Exception;
+    void sendMessage(ActorRef sender, List<? extends ActorRef> receiver, Object message) throws Exception;
+
+    void undeliverableMessage(InternalMessage undeliverableMessage, ActorRef receiverRef) throws Exception;
 
     void offerInternalMessage(InternalMessage message);
 

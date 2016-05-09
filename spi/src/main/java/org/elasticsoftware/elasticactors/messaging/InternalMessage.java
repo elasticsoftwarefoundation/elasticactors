@@ -19,8 +19,10 @@ package org.elasticsoftware.elasticactors.messaging;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -31,7 +33,7 @@ public interface InternalMessage {
 
     ActorRef getSender();
 
-    ActorRef getReceiver();
+    List<ActorRef> getReceivers();
 
     ByteBuffer getPayload();
 
@@ -44,4 +46,6 @@ public interface InternalMessage {
     <T> T getPayload(MessageDeserializer<T> deserializer) throws IOException;
 
     boolean isUndeliverable();
+
+    InternalMessage copyOf();
 }

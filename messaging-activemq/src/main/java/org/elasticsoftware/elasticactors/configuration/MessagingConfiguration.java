@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.configuration;
 
 import org.elasticsoftware.elasticactors.activemq.ActiveMQArtemisMessagingService;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
 import org.elasticsoftware.elasticactors.messaging.MessagingService;
@@ -41,6 +42,8 @@ public class MessagingConfiguration {
     private ThreadBoundExecutor queueExecutor;
     @Autowired
     private ActorRefFactory actorRefFactory;
+    @Autowired
+    private InternalActorSystem internalActorSystem;
     private ActiveMQArtemisMessagingService messagingService;
 
     @PostConstruct
@@ -53,7 +56,7 @@ public class MessagingConfiguration {
         boolean useReceiveImmediate = env.getProperty("ea.activemq.useReceiveImmediate", Boolean.TYPE, false);
         messagingService = new ActiveMQArtemisMessagingService(activeMQHosts, activeMQUsername, activeMQPassword,
                                 clusterName, queueExecutor,
-                                new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory)),
+                                new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem),
                                 useMessageHandler, useReceiveImmediate);
     }
 

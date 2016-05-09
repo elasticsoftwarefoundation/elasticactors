@@ -170,4 +170,18 @@ public interface ActorSystem {
      */
     ActorSystemEventListenerRegistry getEventListenerRegistry();
 
+    /**
+     * Creates a group of {@link org.elasticsoftware.elasticactors.ActorRef} instances that will all receive the
+     * same message. Can be used to efficiently broadcast messages to large groups of Actors.
+     *
+     * Cannot be used to group {@link org.elasticsoftware.elasticactors.TempActor}s or {@link org.elasticsoftware.elasticactors.ServiceActor}s
+     *
+     * @param members   The members that compose this group
+     *
+     * @return
+     * @throws IllegalArgumentException if one of the members is not a Persistent Actor
+     * (i.e. not created with {@link #actorOf(String, Class, ActorState)}, {@link #actorOf(String, Class)} or {@link #actorFor(String)}   }
+     */
+    ActorRefGroup groupOf(ActorRef... members) throws IllegalArgumentException;
+
 }

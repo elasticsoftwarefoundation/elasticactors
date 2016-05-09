@@ -26,11 +26,13 @@ import javax.annotation.Nullable;
  * @author  Joost van de Wijgerd
  */
 public final class ActorShardRef implements ActorRef, ActorContainerRef {
+    private final String clusterName;
     private final ActorShard shard;
     private final String actorId;
     private final String refSpec;
 
     public ActorShardRef(String clusterName, ActorShard shard,@Nullable String actorId) {
+        this.clusterName = clusterName;
         this.shard = shard;
         this.actorId = actorId;
         this.refSpec = generateRefSpec(clusterName, shard, actorId);
@@ -50,6 +52,11 @@ public final class ActorShardRef implements ActorRef, ActorContainerRef {
                     clusterName,shard.getKey().getActorSystemName(),
                     shard.getKey().getShardId());
         }
+    }
+
+    @Override
+    public String getActorCluster() {
+        return clusterName;
     }
 
     @Override
@@ -88,7 +95,7 @@ public final class ActorShardRef implements ActorRef, ActorContainerRef {
     }
 
     @Override
-    public ActorContainer get() {
+    public ActorContainer getActorContainer() {
         return shard;
     }
 

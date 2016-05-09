@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import com.google.common.cache.Cache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,6 +42,7 @@ import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.EmptyResultDataAccessException;
 
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
@@ -107,133 +109,140 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         }
     }
 
-    public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
+    public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
         MessageSerializer<Object> messageSerializer = (MessageSerializer<Object>) actorSystem.getSerializer(message.getClass());
         if(messageSerializer == null) {
-        	logger.error(String.format("No message serializer found for class: %s. NOT sending message", 
-        			message.getClass().getSimpleName()));
-        	return;
+            logger.error(String.format("No message serializer found for class: %s. NOT sending message",
+                    message.getClass().getSimpleName()));
+            return;
         }
         // get the durable flag
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
-        messageQueue.offer(new InternalMessageImpl(from, to, SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable));
+        messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable));
     }
 
     @Override
-    public void undeliverableMessage(InternalMessage message) throws Exception {
-        // get the durable flag
-        Message messageAnnotation = Class.forName(message.getPayloadClass()).getAnnotation(Message.class);
-        final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
+    public void undeliverableMessage(InternalMessage message, ActorRef receiverRef) throws Exception {
         // input is the message that cannot be delivered
         InternalMessage undeliverableMessage;
-        if (message instanceof InternalMessageImpl) {
-            undeliverableMessage = new InternalMessageImpl( message.getReceiver(),
+        if (message instanceof TransientInternalMessage) {
+            undeliverableMessage = new TransientInternalMessage(receiverRef, message.getSender(), message.getPayload(null), true);
+        } else {
+            undeliverableMessage = new InternalMessageImpl( receiverRef,
                                                             message.getSender(),
                                                             message.getPayload(),
                                                             message.getPayloadClass(),
-                                                            durable,
+                                                            message.isDurable(),
                                                             true);
-        } else {
-            undeliverableMessage = new TransientInternalMessage(message.getReceiver(), message.getSender(), message.getPayload(null), true);
         }
         messageQueue.offer(undeliverableMessage);
     }
 
     @Override
-    public void handleMessage(final InternalMessage internalMessage,
-                              final MessageHandlerEventListener messageHandlerEventListener) {
-        final ActorRef receiverRef = internalMessage.getReceiver();
-        if(receiverRef.getActorId() != null) {
-            // make sure we load the right value from the cache
-            cacheLoader.initialize(receiverRef);
-            try {
-                // load persistent actor from cache or persistent store
-                PersistentActor<ShardKey> actor = actorCache.get(internalMessage.getReceiver(), cacheLoader);
-                // see if we don't have a recently destroyed actor
-                if(TOMBSTONE == actor) {
-                    try {
-                        handleUndeliverable(internalMessage, messageHandlerEventListener);
-                    } catch (Exception ex) {
-                        logger.error("Exception while sending message undeliverable",ex);
-                    }
-                } else {
-                    // find actor class behind receiver ActorRef
-                    ElasticActor actorInstance = actorSystem.getActorInstance(internalMessage.getReceiver(),
-                            actor.getActorClass());
-                    // execute on it's own thread
-                    if (internalMessage.isUndeliverable()) {
-                        actorExecutor.execute(new HandleUndeliverableMessageTask(actorSystem,
-                                actorInstance,
-                                internalMessage,
-                                actor,
-                                persistentActorRepository,
-                                messageHandlerEventListener));
+    public void handleMessage(final InternalMessage im,
+                              final MessageHandlerEventListener mhel) {
+        // we only need to copy if there are more than one receivers
+        boolean needsCopy = false;
+        MessageHandlerEventListener messageHandlerEventListener = mhel;
+        if(im.getReceivers().size() > 1) {
+            needsCopy = true;
+            messageHandlerEventListener = new MultiMessageHandlerEventListener(mhel, im.getReceivers().size());
+        }
+        for (ActorRef receiverRef : im.getReceivers()) {
+            InternalMessage internalMessage = (needsCopy) ? im.copyOf() : im;
+            if (receiverRef.getActorId() != null) {
+                // make sure we load the right value from the cache
+                cacheLoader.initialize(receiverRef);
+                try {
+                    // load persistent actor from cache or persistent store
+                    PersistentActor<ShardKey> actor = actorCache.get(receiverRef, cacheLoader);
+                    // see if we don't have a recently destroyed actor
+                    if (TOMBSTONE == actor) {
+                        try {
+                            handleUndeliverable(internalMessage, receiverRef, messageHandlerEventListener);
+                        } catch (Exception ex) {
+                            logger.error("Exception while sending message undeliverable", ex);
+                        }
                     } else {
-                        actorExecutor.execute(new HandleMessageTask(actorSystem,
-                                actorInstance,
-                                internalMessage,
-                                actor,
-                                persistentActorRepository,
-                                messageHandlerEventListener));
+                        // find actor class behind receiver ActorRef
+                        ElasticActor actorInstance = actorSystem.getActorInstance(receiverRef, actor.getActorClass());
+                        // execute on it's own thread
+                        if (internalMessage.isUndeliverable()) {
+                            actorExecutor.execute(new HandleUndeliverableMessageTask(actorSystem,
+                                    actorInstance,
+                                    receiverRef,
+                                    internalMessage,
+                                    actor,
+                                    persistentActorRepository,
+                                    messageHandlerEventListener));
+                        } else {
+                            actorExecutor.execute(new HandleMessageTask(actorSystem,
+                                    actorInstance,
+                                    receiverRef,
+                                    internalMessage,
+                                    actor,
+                                    persistentActorRepository,
+                                    messageHandlerEventListener));
+                        }
                     }
-                }
-            } catch(UncheckedExecutionException e) {
-                if(e.getCause() instanceof EmptyResultDataAccessException) {
-                    try {
-                        handleUndeliverable(internalMessage, messageHandlerEventListener);
-                    } catch (Exception ex) {
-                        logger.error("Exception while sending message undeliverable",ex);
-                    }
-                } else {
-                    messageHandlerEventListener.onError(internalMessage,e.getCause());
-                    logger.error(String.format("Exception while handling InternalMessage for Actor [%s]; senderRef [%s], messageType [%s]",receiverRef.getActorId(),internalMessage.getSender(),internalMessage.getPayloadClass()),e.getCause());
-                }
-            } catch(Exception e) {
-                //@todo: let the sender know his message could not be delivered
-                // we ack the message anyway
-                messageHandlerEventListener.onError(internalMessage,e);
-                logger.error(String.format("Exception while handling InternalMessage for Actor [%s]; senderRef [%s], messageType [%s]",receiverRef.getActorId(),internalMessage.getSender(),internalMessage.getPayloadClass()),e.getCause());
-            } finally {
-                // ensure the cacheLoader is reset
-                this.cacheLoader.reset();
-            }
-        } else {
-            // the internalMessage is intended for the shard, this means it's about creating or destroying an actor
-            // or cancelling a scheduled message which will piggyback on the ActorShard messaging layer
-            try {
-                Object message = deserializeMessage(actorSystem, internalMessage);
-                // check if the actor exists
-                if(message instanceof CreateActorMessage) {
-                    CreateActorMessage createActorMessage = (CreateActorMessage) message;
-                    if(!actorExists(actorSystem.actorFor(createActorMessage.getActorId()))) {
-                        createActor(createActorMessage,internalMessage,messageHandlerEventListener);
+                } catch (UncheckedExecutionException e) {
+                    if (e.getCause() instanceof EmptyResultDataAccessException) {
+                        try {
+                            handleUndeliverable(internalMessage, receiverRef, messageHandlerEventListener);
+                        } catch (Exception ex) {
+                            logger.error("Exception while sending message undeliverable", ex);
+                        }
                     } else {
-                        // we need to activate the actor since we need to run the postActivate logic
-                        activateActor(actorSystem.actorFor(createActorMessage.getActorId()));
-                        // ack message anyway
+                        messageHandlerEventListener.onError(internalMessage, e.getCause());
+                        logger.error(String.format("Exception while handling InternalMessage for Actor [%s]; senderRef [%s], messageType [%s]", receiverRef.getActorId(), internalMessage.getSender(), internalMessage.getPayloadClass()), e.getCause());
+                    }
+                } catch (Exception e) {
+                    //@todo: let the sender know his message could not be delivered
+                    // we ack the message anyway
+                    messageHandlerEventListener.onError(internalMessage, e);
+                    logger.error(String.format("Exception while handling InternalMessage for Actor [%s]; senderRef [%s], messageType [%s]", receiverRef.getActorId(), internalMessage.getSender(), internalMessage.getPayloadClass()), e.getCause());
+                } finally {
+                    // ensure the cacheLoader is reset
+                    this.cacheLoader.reset();
+                }
+            } else {
+                // the internalMessage is intended for the shard, this means it's about creating or destroying an actor
+                // or cancelling a scheduled message which will piggyback on the ActorShard messaging layer
+                try {
+                    Object message = deserializeMessage(actorSystem, internalMessage);
+                    // check if the actor exists
+                    if (message instanceof CreateActorMessage) {
+                        CreateActorMessage createActorMessage = (CreateActorMessage) message;
+                        if (!actorExists(actorSystem.actorFor(createActorMessage.getActorId()))) {
+                            createActor(createActorMessage, internalMessage, messageHandlerEventListener);
+                        } else {
+                            // we need to activate the actor since we need to run the postActivate logic
+                            activateActor(actorSystem.actorFor(createActorMessage.getActorId()));
+                            // ack message anyway
+                            messageHandlerEventListener.onDone(internalMessage);
+                        }
+                    } else if (message instanceof DestroyActorMessage) {
+                        DestroyActorMessage destroyActorMessage = (DestroyActorMessage) message;
+                        if (actorExists(destroyActorMessage.getActorRef())) {
+                            destroyActor(destroyActorMessage, internalMessage, messageHandlerEventListener);
+                        } else {
+                            // ack message anyway
+                            messageHandlerEventListener.onDone(internalMessage);
+                        }
+                    } else if (message instanceof CancelScheduledMessageMessage) {
+                        CancelScheduledMessageMessage cancelMessage = (CancelScheduledMessageMessage) message;
+                        actorSystem.getInternalScheduler().cancel(this.shardKey, new ScheduledMessageKey(cancelMessage.getMessageId(), cancelMessage.getFireTime()));
+                        // ack the message
                         messageHandlerEventListener.onDone(internalMessage);
                     }
-                } else if(message instanceof DestroyActorMessage) {
-                    DestroyActorMessage destroyActorMessage = (DestroyActorMessage) message;
-                    if(actorExists(destroyActorMessage.getActorRef())) {
-                        destroyActor(destroyActorMessage,internalMessage,messageHandlerEventListener);
-                    } else {
-                        // ack message anyway
-                        messageHandlerEventListener.onDone(internalMessage);
-                    }
-                } else if(message instanceof CancelScheduledMessageMessage) {
-                    CancelScheduledMessageMessage cancelMessage = (CancelScheduledMessageMessage) message;
-                    actorSystem.getInternalScheduler().cancel(this.shardKey,new ScheduledMessageKey(cancelMessage.getMessageId(),cancelMessage.getFireTime()));
-                    // ack the message
-                    messageHandlerEventListener.onDone(internalMessage);
+                } catch (Exception e) {
+                    // @todo: determine if this is a recoverable error case or just a programming error
+                    messageHandlerEventListener.onError(internalMessage, e);
+                    logger.error(String.format("Exception while handling InternalMessage for Shard [%s]; senderRef [%s], messageType [%s]", shardKey.toString(), internalMessage.getSender().toString(), internalMessage.getPayloadClass()), e);
                 }
-            } catch(Exception e) {
-                // @todo: determine if this is a recoverable error case or just a programming error
-                messageHandlerEventListener.onError(internalMessage,e);
-                logger.error(String.format("Exception while handling InternalMessage for Shard [%s]; senderRef [%s], messageType [%s]",shardKey.toString(),internalMessage.getSender().toString(),internalMessage.getPayloadClass()),e);
-            }
 
+            }
         }
     }
 

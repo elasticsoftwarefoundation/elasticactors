@@ -31,7 +31,7 @@ import java.io.IOException;
  * @author Joost van de Wijgerd
  */
 public final class SerializationTools {
-    public static Object deserializeMessage(InternalActorSystem actorSystem,InternalMessage internalMessage) throws Exception {
+    public static Object deserializeMessage(InternalActorSystem actorSystem, InternalMessage internalMessage) throws Exception {
         Class<?> messageClass = Class.forName(internalMessage.getPayloadClass());
         MessageDeserializer<?> deserializer = actorSystem.getDeserializer(messageClass);
 
@@ -45,7 +45,7 @@ public final class SerializationTools {
 
     }
 
-    public static ActorState deserializeActorState(InternalActorSystems actorSystems,Class<? extends ElasticActor> actorClass, byte[] serializedState) throws IOException {
+    public static ActorState deserializeActorState(InternalActorSystems actorSystems, Class<? extends ElasticActor> actorClass, byte[] serializedState) throws IOException {
         Actor actorAnnotation = actorClass.getAnnotation(Actor.class);
         if(actorAnnotation != null) {
             SerializationFramework framework = actorSystems.getSerializationFramework(actorAnnotation.serializationFramework());
@@ -56,7 +56,7 @@ public final class SerializationTools {
         }
     }
 
-    public static byte[] serializeActorState(InternalActorSystems actorSystems,Class<? extends ElasticActor> actorClass,ActorState actorState) throws IOException {
+    public static byte[] serializeActorState(InternalActorSystems actorSystems, Class<? extends ElasticActor> actorClass,ActorState actorState) throws IOException {
         Actor actorAnnotation = actorClass.getAnnotation(Actor.class);
         if(actorAnnotation != null) {
             SerializationFramework framework = actorSystems.getSerializationFramework(actorAnnotation.serializationFramework());
@@ -67,7 +67,7 @@ public final class SerializationTools {
         }
     }
 
-    public static SerializationFramework getSerializationFramework(InternalActorSystems actorSystems,Class<? extends ElasticActor> actorClass) {
+    public static SerializationFramework getSerializationFramework(InternalActorSystems actorSystems, Class<? extends ElasticActor> actorClass) {
         Actor actorAnnotation = actorClass.getAnnotation(Actor.class);
         if(actorAnnotation != null) {
             return actorSystems.getSerializationFramework(actorAnnotation.serializationFramework());

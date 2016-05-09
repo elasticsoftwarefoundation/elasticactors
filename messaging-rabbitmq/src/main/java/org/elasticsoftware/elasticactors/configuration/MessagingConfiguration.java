@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.configuration;
 
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
 import org.elasticsoftware.elasticactors.messaging.MessagingService;
@@ -44,6 +45,8 @@ public class MessagingConfiguration {
     private ThreadBoundExecutor queueExecutor;
     @Autowired
     private ActorRefFactory actorRefFactory;
+    @Autowired
+    private InternalActorSystem internalActorSystem;
     private RabbitMQMessagingService messagingService;
 
     @PostConstruct
@@ -59,7 +62,7 @@ public class MessagingConfiguration {
                                                         rabbitMQPassword,
                                                         ackType,
                                                         queueExecutor,
-                                                        new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory)));
+                                                        new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem));
     }
 
     @Bean(name = {"messagingService,remoteActorSystemMessageQueueFactoryFactory"})

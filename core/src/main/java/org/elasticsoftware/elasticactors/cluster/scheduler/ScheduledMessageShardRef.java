@@ -37,7 +37,7 @@ public final class ScheduledMessageShardRef implements ScheduledMessageRef, Acto
     }
 
     @Override
-    public ActorContainer get() {
+    public ActorContainer getActorContainer() {
         return shard;
     }
 

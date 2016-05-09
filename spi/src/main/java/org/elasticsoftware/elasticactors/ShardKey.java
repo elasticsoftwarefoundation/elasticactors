@@ -19,7 +19,7 @@ package org.elasticsoftware.elasticactors;
 /**
  * @author Joost van de Wijgerd
  */
-public final class ShardKey {
+public final class ShardKey implements Comparable<ShardKey> {
     private final String actorSystemName;
     private final int shardId;
     private final String spec;
@@ -68,7 +68,13 @@ public final class ShardKey {
     @Override
     public int hashCode() {
         int result = actorSystemName.hashCode();
-        result = 31 * result + shardId;
+        result = 768 * result + shardId;
         return result;
+    }
+
+    @Override
+    public int compareTo(ShardKey other) {
+        int result = this.actorSystemName.compareTo(other.actorSystemName);
+        return (result != 0) ? result : Integer.compare(this.shardId, other.shardId);
     }
 }
