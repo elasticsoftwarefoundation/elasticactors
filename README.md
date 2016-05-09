@@ -5,7 +5,7 @@ Persistent Stateful Actor System
 
 ### Current released version
 
-0.23.0
+[ ![Download](https://api.bintray.com/packages/elasticsoftwarefoundation/maven/org.elasticsoftware.elasticactors/images/download.svg) ](https://bintray.com/elasticsoftwarefoundation/maven/org.elasticsoftware.elasticactors/_latestVersion)
 
 ### Add Elastic Actors to your Project
 
