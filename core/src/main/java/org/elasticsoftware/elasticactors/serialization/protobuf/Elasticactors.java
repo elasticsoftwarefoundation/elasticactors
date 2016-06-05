@@ -206,6 +206,16 @@ public final class Elasticactors {
      */
     com.google.protobuf.ByteString
         getReceiversBytes(int index);
+
+    // optional int32 deliveryMode = 9;
+    /**
+     * <code>optional int32 deliveryMode = 9;</code>
+     */
+    boolean hasDeliveryMode();
+    /**
+     * <code>optional int32 deliveryMode = 9;</code>
+     */
+    int getDeliveryMode();
   }
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.InternalMessage}
@@ -299,6 +309,11 @@ public final class Elasticactors {
                 mutable_bitField0_ |= 0x00000080;
               }
               receivers_.add(input.readBytes());
+              break;
+            }
+            case 72: {
+              bitField0_ |= 0x00000080;
+              deliveryMode_ = input.readInt32();
               break;
             }
           }
@@ -567,6 +582,22 @@ public final class Elasticactors {
       return receivers_.getByteString(index);
     }
 
+    // optional int32 deliveryMode = 9;
+    public static final int DELIVERYMODE_FIELD_NUMBER = 9;
+    private int deliveryMode_;
+    /**
+     * <code>optional int32 deliveryMode = 9;</code>
+     */
+    public boolean hasDeliveryMode() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional int32 deliveryMode = 9;</code>
+     */
+    public int getDeliveryMode() {
+      return deliveryMode_;
+    }
+
     private void initFields() {
       receiver_ = "";
       sender_ = "";
@@ -576,6 +607,7 @@ public final class Elasticactors {
       durable_ = false;
       undeliverable_ = false;
       receivers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      deliveryMode_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -612,6 +644,9 @@ public final class Elasticactors {
       }
       for (int i = 0; i < receivers_.size(); i++) {
         output.writeBytes(8, receivers_.getByteString(i));
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeInt32(9, deliveryMode_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -658,6 +693,10 @@ public final class Elasticactors {
         }
         size += dataSize;
         size += 1 * getReceiversList().size();
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(9, deliveryMode_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -791,6 +830,8 @@ public final class Elasticactors {
         bitField0_ = (bitField0_ & ~0x00000040);
         receivers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000080);
+        deliveryMode_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -853,6 +894,10 @@ public final class Elasticactors {
           bitField0_ = (bitField0_ & ~0x00000080);
         }
         result.receivers_ = receivers_;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.deliveryMode_ = deliveryMode_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -905,6 +950,9 @@ public final class Elasticactors {
             receivers_.addAll(other.receivers_);
           }
           onChanged();
+        }
+        if (other.hasDeliveryMode()) {
+          setDeliveryMode(other.getDeliveryMode());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1382,6 +1430,39 @@ public final class Elasticactors {
   }
   ensureReceiversIsMutable();
         receivers_.add(value);
+        onChanged();
+        return this;
+      }
+
+      // optional int32 deliveryMode = 9;
+      private int deliveryMode_ ;
+      /**
+       * <code>optional int32 deliveryMode = 9;</code>
+       */
+      public boolean hasDeliveryMode() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional int32 deliveryMode = 9;</code>
+       */
+      public int getDeliveryMode() {
+        return deliveryMode_;
+      }
+      /**
+       * <code>optional int32 deliveryMode = 9;</code>
+       */
+      public Builder setDeliveryMode(int value) {
+        bitField0_ |= 0x00000100;
+        deliveryMode_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 deliveryMode = 9;</code>
+       */
+      public Builder clearDeliveryMode() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        deliveryMode_ = 0;
         onChanged();
         return this;
       }
@@ -7399,33 +7480,33 @@ public final class Elasticactors {
     java.lang.String[] descriptorData = {
       "\n\023elasticactors.proto\0228org.elasticsoftwa" +
       "re.elasticactors.serialization.protobuf\"" +
-      "\241\001\n\017InternalMessage\022\020\n\010receiver\030\001 \001(\t\022\016\n" +
+      "\267\001\n\017InternalMessage\022\020\n\010receiver\030\001 \001(\t\022\016\n" +
       "\006sender\030\002 \001(\t\022\024\n\014payloadClass\030\003 \001(\t\022\017\n\007p" +
       "ayload\030\004 \001(\014\022\n\n\002id\030\005 \001(\014\022\017\n\007durable\030\006 \001(" +
       "\010\022\025\n\rundeliverable\030\007 \001(\010\022\021\n\treceivers\030\010 " +
-      "\003(\t\"y\n\020ScheduledMessage\022\n\n\002id\030\001 \001(\014\022\020\n\010f" +
-      "ireTime\030\002 \001(\004\022\020\n\010receiver\030\003 \001(\t\022\016\n\006sende" +
-      "r\030\004 \001(\t\022\024\n\014messageClass\030\005 \001(\t\022\017\n\007message" +
-      "\030\006 \001(\014\"R\n\030ActorSystemEventListener\022\017\n\007ac",
-      "torId\030\001 \001(\t\022\024\n\014messageClass\030\002 \001(\t\022\017\n\007mes" +
-      "sage\030\003 \001(\014\"t\n\017PersistentActor\022\020\n\010actorRe" +
-      "f\030\001 \001(\t\022\022\n\nactorClass\030\002 \001(\t\022\032\n\022actorSyst" +
-      "emVersion\030\003 \001(\t\022\r\n\005state\030\004 \001(\014\022\020\n\010shardK" +
-      "ey\030\005 \001(\t\"\267\001\n\022CreateActorMessage\022\017\n\007actor" +
-      "Id\030\001 \001(\t\022\024\n\014initialState\030\002 \001(\014\022\022\n\nactorC" +
-      "lass\030\003 \001(\t\022\023\n\013actorSystem\030\004 \001(\t\022Q\n\004type\030" +
-      "\005 \001(\0162C.org.elasticsoftware.elasticactor" +
-      "s.serialization.protobuf.ActorType\"\'\n\023De" +
-      "stroyActorMessage\022\020\n\010actorRef\030\001 \001(\t\"\217\001\n\024",
-      "ActivateActorMessage\022\023\n\013actorSystem\030\001 \001(" +
-      "\t\022\017\n\007actorId\030\002 \001(\t\022Q\n\004type\030\003 \001(\0162C.org.e" +
-      "lasticsoftware.elasticactors.serializati" +
-      "on.protobuf.ActorType\"9\n\013WireMessage\022\021\n\t" +
-      "queueName\030\001 \001(\t\022\027\n\017internalMessage\030\002 \001(\014" +
-      "\"D\n\035CancelScheduledMessageMessage\022\021\n\tmes" +
-      "sageId\030\001 \001(\014\022\020\n\010fireTime\030\002 \001(\004*2\n\tActorT" +
-      "ype\022\016\n\nPERSISTENT\020\000\022\010\n\004TEMP\020\001\022\013\n\007SERVICE" +
-      "\020\002B\002H\001"
+      "\003(\t\022\024\n\014deliveryMode\030\t \001(\005\"y\n\020ScheduledMe" +
+      "ssage\022\n\n\002id\030\001 \001(\014\022\020\n\010fireTime\030\002 \001(\004\022\020\n\010r" +
+      "eceiver\030\003 \001(\t\022\016\n\006sender\030\004 \001(\t\022\024\n\014message" +
+      "Class\030\005 \001(\t\022\017\n\007message\030\006 \001(\014\"R\n\030ActorSys",
+      "temEventListener\022\017\n\007actorId\030\001 \001(\t\022\024\n\014mes" +
+      "sageClass\030\002 \001(\t\022\017\n\007message\030\003 \001(\014\"t\n\017Pers" +
+      "istentActor\022\020\n\010actorRef\030\001 \001(\t\022\022\n\nactorCl" +
+      "ass\030\002 \001(\t\022\032\n\022actorSystemVersion\030\003 \001(\t\022\r\n" +
+      "\005state\030\004 \001(\014\022\020\n\010shardKey\030\005 \001(\t\"\267\001\n\022Creat" +
+      "eActorMessage\022\017\n\007actorId\030\001 \001(\t\022\024\n\014initia" +
+      "lState\030\002 \001(\014\022\022\n\nactorClass\030\003 \001(\t\022\023\n\013acto" +
+      "rSystem\030\004 \001(\t\022Q\n\004type\030\005 \001(\0162C.org.elasti" +
+      "csoftware.elasticactors.serialization.pr" +
+      "otobuf.ActorType\"\'\n\023DestroyActorMessage\022",
+      "\020\n\010actorRef\030\001 \001(\t\"\217\001\n\024ActivateActorMessa" +
+      "ge\022\023\n\013actorSystem\030\001 \001(\t\022\017\n\007actorId\030\002 \001(\t" +
+      "\022Q\n\004type\030\003 \001(\0162C.org.elasticsoftware.ela" +
+      "sticactors.serialization.protobuf.ActorT" +
+      "ype\"9\n\013WireMessage\022\021\n\tqueueName\030\001 \001(\t\022\027\n" +
+      "\017internalMessage\030\002 \001(\014\"D\n\035CancelSchedule" +
+      "dMessageMessage\022\021\n\tmessageId\030\001 \001(\014\022\020\n\010fi" +
+      "reTime\030\002 \001(\004*2\n\tActorType\022\016\n\nPERSISTENT\020" +
+      "\000\022\010\n\004TEMP\020\001\022\013\n\007SERVICE\020\002B\002H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -7437,7 +7518,7 @@ public final class Elasticactors {
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_InternalMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_InternalMessage_descriptor,
-              new java.lang.String[] { "Receiver", "Sender", "PayloadClass", "Payload", "Id", "Durable", "Undeliverable", "Receivers", });
+              new java.lang.String[] { "Receiver", "Sender", "PayloadClass", "Payload", "Id", "Durable", "Undeliverable", "Receivers", "DeliveryMode", });
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ScheduledMessage_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ScheduledMessage_fieldAccessorTable = new

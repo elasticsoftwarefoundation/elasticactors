@@ -59,10 +59,6 @@ public abstract class AbstractActorContainer implements ActorContainer, MessageH
         return myRef;
     }
 
-    @Override
-    public final void offerInternalMessage(InternalMessage message) {
-        messageQueue.add(message);
-    }
 
     @Override
     public final PhysicalNode getPhysicalNode() {

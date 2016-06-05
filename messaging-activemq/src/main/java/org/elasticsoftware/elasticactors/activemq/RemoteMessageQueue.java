@@ -71,16 +71,6 @@ public final class RemoteMessageQueue implements MessageQueue {
     }
 
     @Override
-    public boolean add(InternalMessage message) {
-        return offer(message);
-    }
-
-    @Override
-    public InternalMessage poll() {
-        return null;
-    }
-
-    @Override
     public String getName() {
         return queueName;
     }

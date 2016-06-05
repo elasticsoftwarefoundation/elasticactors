@@ -26,10 +26,13 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 
 import java.util.List;
+
+import static org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode.SYSTEM_DEFAULT;
 
 /**
  * @author Joost van de Wijgerd
@@ -58,7 +61,8 @@ public final class RemoteActorNode extends AbstractActorContainer implements Act
         // get the durable flag
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
-        messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable));
+        MessageDeliveryMode deliveryMode = (messageAnnotation == null || messageAnnotation.deliveryMode() == SYSTEM_DEFAULT) ? actorSystem.getConfiguration().getMessageDeliveryMode() : messageAnnotation.deliveryMode();
+        messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable,deliveryMode));
     }
 
     @Override
@@ -69,7 +73,8 @@ public final class RemoteActorNode extends AbstractActorContainer implements Act
                                                                            message.getPayload(),
                                                                            message.getPayloadClass(),
                                                                            message.isDurable(),
-                                                                           true);
+                                                                           true,
+                                                                           message.getDeliveryMode());
         messageQueue.offer(undeliverableMessage);
     }
 

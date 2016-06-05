@@ -391,11 +391,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         return configuration.getName();
     }
 
-    //@Override
-    public String getVersion() {
-        return configuration.getVersion();
-    }
-
     @Override
     public Scheduler getScheduler() {
         return scheduler;
@@ -604,17 +599,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         }
 
         @Override
-        public void offerInternalMessage(InternalMessage message) {
-            final Lock readLock = shardLocks[key.getShardId()].readLock();
-            try {
-                readLock.lock();
-                shards[key.getShardId()].offerInternalMessage(message);
-            } finally {
-                readLock.unlock();
-            }
-        }
-
-        @Override
         public void init() throws Exception {
             // should not be called on the adapter, just do nothing
         }
@@ -659,11 +643,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         @Override
         public void undeliverableMessage(InternalMessage message, ActorRef receiverRef) throws Exception {
             activeNodes.get(key.getNodeId()).undeliverableMessage(message, receiverRef);
-        }
-
-        @Override
-        public void offerInternalMessage(InternalMessage message) {
-            activeNodes.get(key.getNodeId()).offerInternalMessage(message);
         }
 
         @Override

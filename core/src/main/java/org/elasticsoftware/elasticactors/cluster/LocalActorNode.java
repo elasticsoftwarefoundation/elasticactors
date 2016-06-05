@@ -30,6 +30,7 @@ import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
@@ -42,6 +43,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode.STRICT_ORDER;
+import static org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode.SYSTEM_DEFAULT;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
@@ -91,25 +94,26 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     }
 
     public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
+        Message messageAnnotation = message.getClass().getAnnotation(Message.class);
+        final MessageDeliveryMode deliveryMode = (messageAnnotation == null || messageAnnotation.deliveryMode() == SYSTEM_DEFAULT) ? actorSystem.getConfiguration().getMessageDeliveryMode() : messageAnnotation.deliveryMode();
         // we need some special handling for the CreateActorMessage in case of Temp Actor
         if(CreateActorMessage.class.equals(message.getClass()) && ActorType.TEMP.equals(CreateActorMessage.class.cast(message).getType())) {
-            messageQueue.offer(new TransientInternalMessage(from, ImmutableList.copyOf(to),message));
+            messageQueue.offer(new TransientInternalMessage(from, ImmutableList.copyOf(to),message, deliveryMode));
         } else {
             // get the durable flag
-            Message messageAnnotation = message.getClass().getAnnotation(Message.class);
             final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
             final boolean immutable = (messageAnnotation != null) && messageAnnotation.immutable();
             if(durable) {
                 // durable so it will go over the bus and needs to be serialized
                 MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), true));
-            } else if(!immutable) {
+                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), true, deliveryMode));
+            } else if(!immutable || deliveryMode == STRICT_ORDER) {
                 // it's not durable, but it's mutable so we need to serialize here
                 MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), false));
+                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), false, deliveryMode));
             } else {
-                // as the message is immutable we can safely send it as a TransientInternalMessage
-                messageQueue.offer(new TransientInternalMessage(from,ImmutableList.copyOf(to),message));
+                // as the message is immutable and not strictly ordered we can safely send it as a TransientInternalMessage
+                messageQueue.offer(new TransientInternalMessage(from,ImmutableList.copyOf(to),message, deliveryMode));
             }
         }
     }
@@ -122,7 +126,8 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                                                                            message.getPayload(),
                                                                            message.getPayloadClass(),
                                                                            message.isDurable(),
-                                                                           true);
+                                                                           true,
+                                                                            message.getDeliveryMode());
         messageQueue.offer(undeliverableMessage);
     }
 
@@ -246,12 +251,13 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
 
     private void createActor(CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         ActorRef ref = actorSystem.tempActorFor(createMessage.getActorId());
+        Class<? extends ElasticActor> actorClass = (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass());
         PersistentActor<NodeKey> persistentActor =
                 new PersistentActor<NodeKey>(nodeKey,
                                              actorSystem,
                                              actorSystem.getConfiguration().getVersion(),
                                              ref,
-                                             (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass()),
+                                             actorClass,
                                              createMessage.getInitialState());
         actorCache.put(ref,persistentActor);
         // find actor class behind receiver ActorRef

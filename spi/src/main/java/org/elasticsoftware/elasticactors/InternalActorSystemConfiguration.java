@@ -1,5 +1,7 @@
 package org.elasticsoftware.elasticactors;
 
+import org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode;
+
 import java.util.List;
 import java.util.Set;
 
@@ -28,4 +30,13 @@ public interface InternalActorSystemConfiguration extends ActorSystemConfigurati
      * @return
      */
     List<? extends RemoteActorSystemConfiguration> getRemoteConfigurations();
+
+    /**
+     * Returns the default {@link org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode} that is used when
+     * {@link org.elasticsoftware.elasticactors.serialization.Message#deliveryMode()} equals {@link org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode#SYSTEM_DEFAULT}
+     *
+     *
+     * @return
+     */
+    MessageDeliveryMode getMessageDeliveryMode();
 }

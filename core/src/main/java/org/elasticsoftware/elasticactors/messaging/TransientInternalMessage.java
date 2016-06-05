@@ -18,12 +18,12 @@ package org.elasticsoftware.elasticactors.messaging;
 
 import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -35,22 +35,20 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
     private final UUID id;
     private final Object payload;
     private final boolean undeliverable;
+    private final MessageDeliveryMode deliveryMode;
 
-    public TransientInternalMessage(ActorRef sender, ActorRef receiver, Object payload) {
-        this(sender,receiver,payload,false);
+    public TransientInternalMessage(ActorRef sender, ImmutableList<ActorRef> receivers, Object payload, MessageDeliveryMode deliveryMode) {
+        this(sender,receivers,payload,false, deliveryMode);
     }
 
-    public TransientInternalMessage(ActorRef sender, ImmutableList<ActorRef> receivers, Object payload) {
-        this(sender,receivers,payload,false);
+    public TransientInternalMessage(ActorRef sender, ActorRef receiver, Object payload, boolean undeliverable, MessageDeliveryMode deliveryMode) {
+        this(sender, ImmutableList.of(receiver), payload, undeliverable, deliveryMode);
     }
 
-    public TransientInternalMessage(ActorRef sender, ActorRef receiver, Object payload, boolean undeliverable) {
-        this(sender, ImmutableList.of(receiver), payload, undeliverable);
-    }
-
-    public TransientInternalMessage(ActorRef sender, ImmutableList<ActorRef> receivers, Object payload, boolean undeliverable) {
+    public TransientInternalMessage(ActorRef sender, ImmutableList<ActorRef> receivers, Object payload, boolean undeliverable, MessageDeliveryMode deliveryMode) {
         this.sender = sender;
         this.receivers = receivers;
+        this.deliveryMode = deliveryMode;
         this.id = UUIDTools.createTimeBasedUUID();
         this.payload = payload;
         this.undeliverable = undeliverable;
@@ -91,6 +89,11 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
     @Override
     public boolean isUndeliverable() {
         return undeliverable;
+    }
+
+    @Override
+    public MessageDeliveryMode getDeliveryMode() {
+        return deliveryMode;
     }
 
     @Override

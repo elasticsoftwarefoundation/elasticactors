@@ -22,12 +22,11 @@ import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.messaging.*;
-import org.elasticsoftware.elasticactors.serialization.Message;
-import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.SerializationContext;
-import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.*;
 
 import java.util.List;
+
+import static org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode.SYSTEM_DEFAULT;
 
 /**
  * @author Joost van de Wijgerd
@@ -76,7 +75,8 @@ public final class RemoteActorSystemActorShard implements ActorShard, MessageHan
         // get the durable flag
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
-        messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable));
+        MessageDeliveryMode deliveryMode = (messageAnnotation == null || messageAnnotation.deliveryMode() == SYSTEM_DEFAULT) ? actorSystems.get(null).getConfiguration().getMessageDeliveryMode() : messageAnnotation.deliveryMode();
+        messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable, deliveryMode));
     }
 
     @Override
@@ -87,14 +87,11 @@ public final class RemoteActorSystemActorShard implements ActorShard, MessageHan
                                                                            message.getPayload(),
                                                                            message.getPayloadClass(),
                                                                            message.isDurable(),
-                                                                           true);
+                                                                           true,
+                                                                           message.getDeliveryMode());
         messageQueue.offer(undeliverableMessage);
     }
 
-    @Override
-    public void offerInternalMessage(InternalMessage message) {
-        messageQueue.add(message);
-    }
 
     @Override
     public void init() throws Exception {

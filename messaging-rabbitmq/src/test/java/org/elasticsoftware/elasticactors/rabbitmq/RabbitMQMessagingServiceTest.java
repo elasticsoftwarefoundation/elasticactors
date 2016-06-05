@@ -17,11 +17,13 @@
 package org.elasticsoftware.elasticactors.rabbitmq;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.*;
+import org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
@@ -168,6 +170,6 @@ public class RabbitMQMessagingServiceTest {
 
     private InternalMessage createInternalMessage(String name,int count) {
         ByteBuffer payload = ByteBuffer.wrap(format(PAYLOAD_FORMAT, count, name).getBytes(Charsets.UTF_8));
-        return new InternalMessageImpl(senderRef,receiverRef,payload,String.class.getName(),true);
+        return new InternalMessageImpl(senderRef, ImmutableList.of(receiverRef),payload,String.class.getName(),true, MessageDeliveryMode.STRICT_ORDER);
     }
 }

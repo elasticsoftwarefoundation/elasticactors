@@ -18,6 +18,8 @@ package org.elasticsoftware.elasticactors.serialization;
 
 import java.lang.annotation.*;
 
+import static org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode.SYSTEM_DEFAULT;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -53,4 +55,22 @@ public @interface Message {
      * @return  whether this message is immutable (defaults to false)
      */
     boolean immutable() default false;
+
+    /**
+     * With the default delivery mode ({@link org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode#STRICT_ORDER})
+     * all messages (durable and non-durable) between 2 actors are always guaranteed to arrive in the same order as they were sent.
+     * This is achieved by sending all messages via the messaging layer.
+     *
+     * If you know what you are doing it is also possible to use the {@link org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode#LOCAL_NON_DURABLE_OPTIMIZED}
+     * mode. In this case the message will be sent via the in-jvm queues when the actors are co-located on the same jvm.
+     * Bare in mind however that this can lead to out-of-order delivery when mixing durable and non-durable messages. So if your
+     * logic relies on message order the make all your messages in that flow either durable or non-durable or use
+     * {@link org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode#STRICT_ORDER} mode.
+     *
+     * By default this is set to ({@link org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode#SYSTEM_DEFAULT})
+     * which means it will use the globally set value (which defaults to STRICT_ORDER)
+     *
+     * @return  the {@link org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode} to use for this message
+     */
+    MessageDeliveryMode deliveryMode() default SYSTEM_DEFAULT;
 }

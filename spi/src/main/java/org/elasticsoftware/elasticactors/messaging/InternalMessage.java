@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.messaging;
 
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 
 import javax.annotation.Nullable;
@@ -48,4 +49,6 @@ public interface InternalMessage {
     boolean isUndeliverable();
 
     InternalMessage copyOf();
+
+    MessageDeliveryMode getDeliveryMode();
 }

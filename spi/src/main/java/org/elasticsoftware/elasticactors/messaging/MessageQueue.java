@@ -22,10 +22,6 @@ package org.elasticsoftware.elasticactors.messaging;
 public interface MessageQueue {
     boolean offer(InternalMessage message);
 
-    boolean add(InternalMessage message);
-
-    InternalMessage poll();
-
     String getName();
 
     void initialize() throws Exception;

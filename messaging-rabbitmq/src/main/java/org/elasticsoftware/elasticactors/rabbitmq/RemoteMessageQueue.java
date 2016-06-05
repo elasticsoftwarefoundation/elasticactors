@@ -69,16 +69,6 @@ public final class RemoteMessageQueue extends DefaultChannelListener implements 
     }
 
     @Override
-    public boolean add(InternalMessage message) {
-        return offer(message);
-    }
-
-    @Override
-    public InternalMessage poll() {
-        throw new UnsupportedOperationException("Remote queues cannot be polled");
-    }
-
-    @Override
     public String getName() {
         return queueName;
     }

@@ -17,23 +17,23 @@
 package org.elasticsoftware.elasticactors.serialization.internal;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.ImmutableInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
-import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import static org.elasticsoftware.elasticactors.messaging.UUIDTools.toUUID;
+import static org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode.STRICT_ORDER;
+import static org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode.SYSTEM_DEFAULT;
+import static org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode.findById;
 
 /**
  * @author Joost van de Wijgerd
@@ -67,15 +67,16 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
         UUID id = toUUID(protobufMessage.getId().toByteArray());
         boolean durable = (!protobufMessage.hasDurable()) || protobufMessage.getDurable();
         boolean undeliverable = protobufMessage.hasUndeliverable() && protobufMessage.getUndeliverable();
-        //return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable);
+        MessageDeliveryMode deliveryMode = protobufMessage.hasDeliveryMode() ? findById(protobufMessage.getDeliveryMode()) : SYSTEM_DEFAULT;
+        // if system default we need to lookup the actual system default setting
+        deliveryMode = (deliveryMode == SYSTEM_DEFAULT) ? internalActorSystem.getConfiguration().getMessageDeliveryMode() : deliveryMode;
         // optimize immutable message if possible
-
         Class<?> messageClass = isImmutableMessageClass(messageClassString);
         if(messageClass == null) {
-            return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable);
+            return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable, deliveryMode);
         } else {
             Object payloadObject = internalActorSystem.getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
-            return new ImmutableInternalMessage(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), payloadObject, durable, undeliverable);
+            return new ImmutableInternalMessage(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), payloadObject, durable, undeliverable, deliveryMode);
         }
     }
 

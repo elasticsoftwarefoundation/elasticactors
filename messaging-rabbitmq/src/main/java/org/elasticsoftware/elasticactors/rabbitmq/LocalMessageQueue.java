@@ -25,6 +25,7 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
+import org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
@@ -35,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.lang.String.format;
+import static org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode.LOCAL_NON_DURABLE_OPTIMIZED;
 
 /**
  * @author Joost van de Wijgerd
@@ -82,7 +84,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
         if(this.recovering.get()) {
             throw new MessageDeliveryException("MessagingService is recovering",true);
         }
-        if(!message.isDurable()) {
+        if(!message.isDurable() && message.getDeliveryMode() == LOCAL_NON_DURABLE_OPTIMIZED) {
             // execute on a separate (thread bound) executor
             queueExecutor.execute(new InternalMessageHandler(queueName,message,messageHandler,transientAck,logger));
             return true;
@@ -98,16 +100,6 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
                 throw new MessageDeliveryException("MessagingService is recovering",true);
             }
         }
-    }
-
-    @Override
-    public boolean add(InternalMessage message) {
-        return offer(message);
-    }
-
-    @Override
-    public InternalMessage poll() {
-        return null;
     }
 
     @Override

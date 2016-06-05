@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.messaging;
 
 import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
@@ -28,6 +29,8 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.UUID;
+
+import static org.elasticsoftware.elasticactors.messaging.UUIDTools.createTimeBasedUUID;
 
 /**
  * @author Joost van de Wijgerd
@@ -40,25 +43,26 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
     private final String payloadClass;
     private final boolean durable;
     private final boolean undeliverable;
+    private final MessageDeliveryMode deliveryMode;
     private transient byte[] serializedForm;
 
-    public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass,boolean durable) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass,durable,false);
+    public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable, MessageDeliveryMode deliveryMode) {
+        this(sender, ImmutableList.of(receiver), payload, payloadClass, durable, undeliverable, deliveryMode);
     }
 
-    public InternalMessageImpl(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass,boolean durable) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receivers, payload, payloadClass,durable,false);
+    public InternalMessageImpl(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass, boolean durable, MessageDeliveryMode deliveryMode) {
+        this(sender, receivers, payload, payloadClass, durable, false, deliveryMode);
     }
 
-    public InternalMessageImpl(ActorRef sender, ActorRef receiver,ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass,durable,undeliverable);
+    public InternalMessageImpl(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable, MessageDeliveryMode deliveryMode) {
+        this(createTimeBasedUUID(), sender, receivers, payload, payloadClass, durable, undeliverable, deliveryMode);
     }
 
-    public InternalMessageImpl(UUID id, ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
-        this(id, sender, ImmutableList.of(receiver), payload, payloadClass, durable, undeliverable);
+    public InternalMessageImpl(UUID id, ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass, boolean durable, MessageDeliveryMode deliveryMode) {
+        this(id, sender, receivers, payload, payloadClass, durable, false, deliveryMode);
     }
 
-    public InternalMessageImpl(UUID id, ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
+    public InternalMessageImpl(UUID id, ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable, MessageDeliveryMode deliveryMode) {
         this.sender = sender;
         this.receivers = receivers;
         this.id = id;
@@ -66,6 +70,7 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
         this.payloadClass = payloadClass;
         this.durable = durable;
         this.undeliverable = undeliverable;
+        this.deliveryMode = deliveryMode;
     }
 
     public ActorRef getSender() {
@@ -107,6 +112,11 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
     }
 
     @Override
+    public MessageDeliveryMode getDeliveryMode() {
+        return deliveryMode;
+    }
+
+    @Override
     public byte[] toByteArray() {
         if(serializedForm == null) {
             serializedForm = InternalMessageSerializer.get().serialize(this);
@@ -116,6 +126,6 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
 
     @Override
     public InternalMessage copyOf() {
-        return new InternalMessageImpl(id, sender, receivers, payload.asReadOnlyBuffer(), payloadClass, durable, undeliverable);
+        return new InternalMessageImpl(id, sender, receivers, payload.asReadOnlyBuffer(), payloadClass, durable, undeliverable, deliveryMode);
     }
 }

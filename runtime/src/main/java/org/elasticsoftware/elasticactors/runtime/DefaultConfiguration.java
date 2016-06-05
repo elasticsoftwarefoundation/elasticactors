@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.ServiceActor;
+import org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -29,6 +30,9 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 
 import java.util.*;
+
+import static org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode.STRICT_ORDER;
+import static org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode.SYSTEM_DEFAULT;
 
 /**
  * @author Joost van de Wijgerd
@@ -41,13 +45,16 @@ public final class DefaultConfiguration implements InternalActorSystemConfigurat
     private final Map<String,Object> properties = new LinkedHashMap<>();
     private final ConversionService conversionService = new DefaultConversionService();
     private final Map<String,ElasticActor> serviceActors = new HashMap<>();
+    private final MessageDeliveryMode defaultMessageDeliveryMode;
 
     @JsonCreator
     public DefaultConfiguration(@JsonProperty("name") String name,
                                 @JsonProperty("shards") int numberOfShards,
-                                @JsonProperty("remoteActorSystems") List<DefaultRemoteConfiguration> remoteConfigurations) {
+                                @JsonProperty("remoteActorSystems") List<DefaultRemoteConfiguration> remoteConfigurations,
+                                @JsonProperty("defaultMessageDeliveryMode") MessageDeliveryMode defaultMessageDeliveryMode) {
         this.name = name;
         this.numberOfShards = numberOfShards;
+        this.defaultMessageDeliveryMode = (defaultMessageDeliveryMode == null || defaultMessageDeliveryMode == SYSTEM_DEFAULT) ? STRICT_ORDER : defaultMessageDeliveryMode;
         this.remoteConfigurations = (remoteConfigurations != null) ? remoteConfigurations : Collections.<DefaultRemoteConfiguration>emptyList();
     }
 
@@ -144,5 +151,11 @@ public final class DefaultConfiguration implements InternalActorSystemConfigurat
     @Override
     public List<DefaultRemoteConfiguration> getRemoteConfigurations() {
         return remoteConfigurations;
+    }
+
+    @JsonProperty("defaultMessageDeliveryMode")
+    @Override
+    public MessageDeliveryMode getMessageDeliveryMode() {
+        return defaultMessageDeliveryMode;
     }
 }

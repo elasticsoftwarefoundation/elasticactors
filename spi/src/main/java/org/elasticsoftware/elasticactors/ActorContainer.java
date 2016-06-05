@@ -28,11 +28,9 @@ public interface ActorContainer {
 
     void sendMessage(ActorRef sender, ActorRef receiver, Object message) throws Exception;
 
-    void sendMessage(ActorRef sender, List<? extends ActorRef> receiver, Object message) throws Exception;
+    void sendMessage(ActorRef sender, List<? extends ActorRef> receivers, Object message) throws Exception;
 
     void undeliverableMessage(InternalMessage undeliverableMessage, ActorRef receiverRef) throws Exception;
-
-    void offerInternalMessage(InternalMessage message);
 
     void init() throws Exception;
 

@@ -18,6 +18,7 @@ message InternalMessage {
     optional bool durable = 6;
     optional bool undeliverable = 7;
     repeated string receivers = 8;
+    optional int32 deliveryMode = 9;
 }
 
 message ScheduledMessage {
