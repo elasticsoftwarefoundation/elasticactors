@@ -72,15 +72,25 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
 
     @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass) throws Exception {
-        return actorOf(actorId, actorClass, null);
+        return actorOf(actorId, actorClass.getName(), null);
+    }
+
+    @Override
+    public ActorRef actorOf(String actorId, String actorClassName) throws Exception {
+        return actorOf(actorId, actorClassName, null);
     }
 
     @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception {
+        return actorOf(actorId, actorClass.getName(), initialState);
+    }
+
+    @Override
+    public ActorRef actorOf(String actorId, String actorClassName, ActorState initialState) throws Exception {
         // determine shard
         ActorShard shard = shardFor(actorId);
         // send CreateActorMessage to shard
-        CreateActorMessage createActorMessage = new CreateActorMessage(getName(), actorClass.getName(), actorId, initialState);
+        CreateActorMessage createActorMessage = new CreateActorMessage(getName(), actorClassName, actorId, initialState);
         ActorRef creator = ActorContextHolder.getSelf();
         shard.sendMessage(creator, shard.getActorRef(), createActorMessage);
         // create actor ref
