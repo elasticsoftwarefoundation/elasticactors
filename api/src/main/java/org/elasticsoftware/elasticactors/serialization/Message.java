@@ -25,6 +25,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface Message {
+    public static final int NO_TIMEOUT = -1;
+
     /**
      * Determines which framework will be used to serialize and deserialize this message
      *
@@ -53,4 +55,14 @@ public @interface Message {
      * @return  whether this message is immutable (defaults to false)
      */
     boolean immutable() default false;
+
+    /**
+     * Determines how long a message stays queued up in the underlying messaging service. If it isn't consumed within
+     * {@link #timeout()} seconds it will not be delivered to the receiver.
+     *
+     * This is useful for cases where the ActorSystem gets overloaded and can't keep up. Defaults to -1 (NO_TIMEOUT)
+     *
+     * @return  the timeout value (in milliseconds) for the message pojo annotation with this annotation
+     */
+    int timeout() default NO_TIMEOUT;
 }

@@ -88,14 +88,28 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
             return true;
         } else {
             try {
-                final AMQP.BasicProperties props = message.isDurable() ? MessageProperties.PERSISTENT_BASIC : MessageProperties.BASIC;
-                producerChannel.basicPublish(exchangeName, queueName,false,false,props,message.toByteArray());
+                final AMQP.BasicProperties props = createProps(message);
+                producerChannel.basicPublish(exchangeName, queueName, false, false, props, message.toByteArray());
                 return true;
             } catch (IOException e) {
                 throw new MessageDeliveryException("IOException while publishing message",e,false);
             } catch(AlreadyClosedException e) {
                 this.recovering.set(true);
                 throw new MessageDeliveryException("MessagingService is recovering",true);
+            }
+        }
+    }
+
+    private AMQP.BasicProperties createProps(InternalMessage message) {
+        if(message.getTimeout() < 0) {
+            return message.isDurable() ? MessageProperties.PERSISTENT_BASIC : MessageProperties.BASIC;
+        } else {
+            if(message.isDurable()) {
+                return new AMQP.BasicProperties.Builder().contentType("application/octet-stream").deliveryMode(2)
+                        .priority(0).expiration(String.valueOf(message.getTimeout())).build();
+            } else {
+                return new AMQP.BasicProperties.Builder().contentType("application/octet-stream").deliveryMode(1)
+                        .priority(0).expiration(String.valueOf(message.getTimeout())).build();
             }
         }
     }
@@ -117,7 +131,6 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
 
     @Override
     public void initialize() throws Exception {
-        // @todo: possibly loop until we are the only consumer on the queue
         consumerChannel.basicQos(0);
         consumerChannel.basicConsume(queueName,false,this);
     }

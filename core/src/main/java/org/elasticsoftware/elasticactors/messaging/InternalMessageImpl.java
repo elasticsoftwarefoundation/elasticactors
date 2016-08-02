@@ -40,25 +40,41 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
     private final String payloadClass;
     private final boolean durable;
     private final boolean undeliverable;
+    private final int timeout;
     private transient byte[] serializedForm;
 
     public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass,boolean durable) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass,durable,false);
+        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass, durable, false);
     }
 
     public InternalMessageImpl(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass,boolean durable) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receivers, payload, payloadClass,durable,false);
+        this(UUIDTools.createTimeBasedUUID(), sender, receivers, payload, payloadClass, durable, false, NO_TIMEOUT);
+    }
+
+    public InternalMessageImpl(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass,boolean durable, int timeout) {
+        this(UUIDTools.createTimeBasedUUID(), sender, receivers, payload, payloadClass, durable, false, timeout);
     }
 
     public InternalMessageImpl(ActorRef sender, ActorRef receiver,ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass,durable,undeliverable);
+        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass, durable, undeliverable);
+    }
+
+    public InternalMessageImpl(ActorRef sender, ActorRef receiver,ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable, int timeout) {
+        this(UUIDTools.createTimeBasedUUID(), sender, ImmutableList.of(receiver), payload, payloadClass, durable, undeliverable, timeout);
     }
 
     public InternalMessageImpl(UUID id, ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
-        this(id, sender, ImmutableList.of(receiver), payload, payloadClass, durable, undeliverable);
+        this(id, sender, ImmutableList.of(receiver), payload, payloadClass, durable, undeliverable, NO_TIMEOUT);
     }
 
-    public InternalMessageImpl(UUID id, ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
+    public InternalMessageImpl(UUID id,
+                               ActorRef sender,
+                               ImmutableList<ActorRef> receivers,
+                               ByteBuffer payload,
+                               String payloadClass,
+                               boolean durable,
+                               boolean undeliverable,
+                               int timeout) {
         this.sender = sender;
         this.receivers = receivers;
         this.id = id;
@@ -66,6 +82,7 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
         this.payloadClass = payloadClass;
         this.durable = durable;
         this.undeliverable = undeliverable;
+        this.timeout = timeout;
     }
 
     public ActorRef getSender() {
@@ -107,6 +124,11 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
     }
 
     @Override
+    public int getTimeout() {
+        return timeout;
+    }
+
+    @Override
     public byte[] toByteArray() {
         if(serializedForm == null) {
             serializedForm = InternalMessageSerializer.get().serialize(this);
@@ -116,6 +138,6 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
 
     @Override
     public InternalMessage copyOf() {
-        return new InternalMessageImpl(id, sender, receivers, payload.asReadOnlyBuffer(), payloadClass, durable, undeliverable);
+        return new InternalMessageImpl(id, sender, receivers, payload.asReadOnlyBuffer(), payloadClass, durable, undeliverable, timeout);
     }
 }

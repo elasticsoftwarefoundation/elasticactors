@@ -58,7 +58,8 @@ public final class RemoteActorNode extends AbstractActorContainer implements Act
         // get the durable flag
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
-        messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable));
+        final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
+        messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable,timeout));
     }
 
     @Override
@@ -69,7 +70,8 @@ public final class RemoteActorNode extends AbstractActorContainer implements Act
                                                                            message.getPayload(),
                                                                            message.getPayloadClass(),
                                                                            message.isDurable(),
-                                                                           true);
+                                                                           true,
+                                                                           message.getTimeout());
         messageQueue.offer(undeliverableMessage);
     }
 

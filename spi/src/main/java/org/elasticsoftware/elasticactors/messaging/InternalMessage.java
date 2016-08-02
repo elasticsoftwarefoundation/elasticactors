@@ -29,6 +29,8 @@ import java.util.UUID;
  * @author Joost van de Wijgerd
  */
 public interface InternalMessage {
+    public static final int NO_TIMEOUT = -1;
+
     UUID getId();
 
     ActorRef getSender();
@@ -48,4 +50,6 @@ public interface InternalMessage {
     boolean isUndeliverable();
 
     InternalMessage copyOf();
+
+    int getTimeout();
 }

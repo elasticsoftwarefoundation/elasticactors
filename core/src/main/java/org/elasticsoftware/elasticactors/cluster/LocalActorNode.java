@@ -99,14 +99,15 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
             Message messageAnnotation = message.getClass().getAnnotation(Message.class);
             final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
             final boolean immutable = (messageAnnotation != null) && messageAnnotation.immutable();
+            final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
             if(durable) {
                 // durable so it will go over the bus and needs to be serialized
                 MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), true));
+                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), true, timeout));
             } else if(!immutable) {
                 // it's not durable, but it's mutable so we need to serialize here
                 MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), false));
+                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), false, timeout));
             } else {
                 // as the message is immutable we can safely send it as a TransientInternalMessage
                 messageQueue.offer(new TransientInternalMessage(from,ImmutableList.copyOf(to),message));
@@ -122,7 +123,8 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                                                                            message.getPayload(),
                                                                            message.getPayloadClass(),
                                                                            message.isDurable(),
-                                                                           true);
+                                                                           true,
+                                                                           message.getTimeout());
         messageQueue.offer(undeliverableMessage);
     }
 

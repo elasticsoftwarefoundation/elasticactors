@@ -57,7 +57,7 @@ public final class RemoteMessageQueue extends DefaultChannelListener implements 
             throw new MessageDeliveryException("MessagingService is recovering",true);
         }
         try {
-            final AMQP.BasicProperties props = message.isDurable() ? MessageProperties.PERSISTENT_BASIC : MessageProperties.BASIC;
+            final AMQP.BasicProperties props = createProps(message);
             producerChannel.basicPublish(exchangeName, queueName,false,false,props,message.toByteArray());
             return true;
         } catch (IOException e) {
@@ -65,6 +65,20 @@ public final class RemoteMessageQueue extends DefaultChannelListener implements 
         } catch(AlreadyClosedException e) {
             this.recovering.set(true);
             throw new MessageDeliveryException("MessagingService is recovering",true);
+        }
+    }
+
+    private AMQP.BasicProperties createProps(InternalMessage message) {
+        if(message.getTimeout() < 0) {
+            return message.isDurable() ? MessageProperties.PERSISTENT_BASIC : MessageProperties.BASIC;
+        } else {
+            if(message.isDurable()) {
+                return new AMQP.BasicProperties.Builder().contentType("application/octet-stream").deliveryMode(2)
+                        .priority(0).expiration(String.valueOf(message.getTimeout())).build();
+            } else {
+                return new AMQP.BasicProperties.Builder().contentType("application/octet-stream").deliveryMode(1)
+                        .priority(0).expiration(String.valueOf(message.getTimeout())).build();
+            }
         }
     }
 
