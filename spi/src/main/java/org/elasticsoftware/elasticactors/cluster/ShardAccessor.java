@@ -7,12 +7,20 @@ import org.elasticsoftware.elasticactors.ActorShard;
  */
 public interface ShardAccessor {
     /**
-     * Return the {@link org.elasticsoftware.elasticactors.ActorShard} that belongs to the give path.
+     * Return the {@link org.elasticsoftware.elasticactors.ActorShard} that belongs to the given path.
      *
      * @param actorPath
      * @return
      */
     ActorShard getShard(String actorPath);
 
+    /**
+     * Return an ActorShard with the given shardId
+     *
+     * @param shardId
+     * @return
+     */
     ActorShard getShard(int shardId);
+
+    int getNumberOfShards();
 }

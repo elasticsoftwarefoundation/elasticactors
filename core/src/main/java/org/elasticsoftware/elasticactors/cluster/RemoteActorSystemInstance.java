@@ -163,6 +163,11 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
     }
 
     @Override
+    public int getNumberOfShards() {
+        return shards.length;
+    }
+
+    @Override
     public ActorSystemConfiguration getConfiguration() {
         throw new UnsupportedOperationException("Access to the ActorSystemConfiguration is not supported for Remote ActorSystem instances");
     }

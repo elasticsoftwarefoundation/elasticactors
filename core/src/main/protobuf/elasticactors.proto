@@ -77,3 +77,11 @@ message CancelScheduledMessageMessage {
     optional bytes messageId = 1;
     optional uint64 fireTime = 2;
 }
+
+message ActorNodeMessage {
+    optional string receiver = 1;
+    optional string nodeId = 2;
+    optional string payloadClass = 3;
+    optional bytes payload = 4;
+    optional bool undeliverable = 5;
+}
