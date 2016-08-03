@@ -41,14 +41,15 @@ public final class ActorNodeMessageSerializer implements MessageSerializer<Actor
 
 
     @Override
-    public ByteBuffer serialize(ActorNodeMessage message) throws IOException {
+    public ByteBuffer serialize(ActorNodeMessage actorNodeMessage) throws IOException {
+        Object message = actorNodeMessage.getMessage();
         Elasticactors.ActorNodeMessage.Builder builder = Elasticactors.ActorNodeMessage.newBuilder();
-        builder.setReceiver(ActorRefSerializer.get().serialize(message.getReceiverRef()));
-        builder.setNodeId(message.getNodeId());
-        builder.setPayloadClass(message.getMessage().getClass().getName());
+        builder.setReceiver(ActorRefSerializer.get().serialize(actorNodeMessage.getReceiverRef()));
+        builder.setNodeId(actorNodeMessage.getNodeId());
+        builder.setPayloadClass(message.getClass().getName());
         MessageSerializer serializer = actorSystems.get(null).getSerializer(message.getClass());
-        builder.setPayload(ByteString.copyFrom(serializer.serialize(message.getMessage())));
-        builder.setUndeliverable(message.isUndeliverable());
+        builder.setPayload(ByteString.copyFrom(serializer.serialize(message)));
+        builder.setUndeliverable(actorNodeMessage.isUndeliverable());
         return ByteBuffer.wrap(builder.build().toByteArray());
     }
 

@@ -115,7 +115,7 @@ public final class ActorRefTools {
         } else if ("nodes".equals(components[2])) {
             ActorSystem remoteActorSystem = actorSystems.getRemote(clusterName, actorSystemName);
             if(remoteActorSystem == null) {
-                return new DisconnectedActorNodeRef(clusterName, actorSystemName, components[3], actorId);
+                return new DisconnectedRemoteActorNodeRef(clusterName, actorSystemName, components[3], actorId);
             } else {
                 // get a random shard to use as a hub
                 int randomShardId = ThreadLocalRandom.current().nextInt(((ShardAccessor) remoteActorSystem).getNumberOfShards());
