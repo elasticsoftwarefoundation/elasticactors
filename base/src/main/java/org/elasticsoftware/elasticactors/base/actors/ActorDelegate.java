@@ -18,6 +18,8 @@ package org.elasticsoftware.elasticactors.base.actors;
 
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.TypedActor;
+import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 
 /**
  * @author Joost van de Wijgerd
@@ -40,5 +42,10 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
     @Override
     public ActorDelegate<T> getBody() {
         return this;
+    }
+
+    @Override
+    public Class<? extends SerializationFramework> getSerializationFramework() {
+        return NoopSerializationFramework.class;
     }
 }

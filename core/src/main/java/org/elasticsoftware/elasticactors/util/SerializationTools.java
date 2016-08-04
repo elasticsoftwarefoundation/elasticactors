@@ -67,6 +67,11 @@ public final class SerializationTools {
         }
     }
 
+    public static byte[] serializeActorState(InternalActorSystems actorSystems, ActorState actorState) throws IOException {
+        SerializationFramework framework = actorSystems.getSerializationFramework(actorState.getSerializationFramework());
+        return framework.getActorStateSerializer(actorState).serialize(actorState);
+    }
+
     public static SerializationFramework getSerializationFramework(InternalActorSystems actorSystems, Class<? extends ElasticActor> actorClass) {
         Actor actorAnnotation = actorClass.getAnnotation(Actor.class);
         if(actorAnnotation != null) {

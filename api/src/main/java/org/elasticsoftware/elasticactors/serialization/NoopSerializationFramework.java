@@ -45,6 +45,11 @@ public final class NoopSerializationFramework implements SerializationFramework 
     }
 
     @Override
+    public Serializer<ActorState, byte[]> getActorStateSerializer(ActorState actorState) {
+        return null;
+    }
+
+    @Override
     public Deserializer<byte[], ActorState> getActorStateDeserializer(Class<? extends ElasticActor> actorClass) {
         return null;
     }
