@@ -16,10 +16,10 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import org.elasticsoftware.elasticactors.ActorNode;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ActorSystem;
-import org.elasticsoftware.elasticactors.ActorSystems;
+import org.elasticsoftware.elasticactors.*;
+
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static java.lang.String.format;
 
@@ -100,7 +100,7 @@ public final class ActorRefTools {
         }
     }
 
-    private static ActorRef handleRemoteActorSystemReference(String refSpec, String[] components, String actorId, ActorSystems actorSystems) {
+    private static ActorRef handleRemoteActorSystemReference(String refSpec, String[] components, String actorId, InternalActorSystems actorSystems) {
         String clusterName = components[0];
         String actorSystemName = components[1];
         if ("shards".equals(components[2])) {
@@ -113,11 +113,17 @@ public final class ActorRefTools {
             }
             return new ActorShardRef(clusterName, ((ShardAccessor) remoteActorSystem).getShard(format("%s/shards/%d", actorSystemName, shardId)), actorId);
         } else if ("nodes".equals(components[2])) {
-            //throw new IllegalArgumentException("Temporary Actors are not (yet) supported for Remote Actor System instances");
-            return new DisconnectedActorNodeRef(clusterName,actorSystemName,components[3],actorId);
+            ActorSystem remoteActorSystem = actorSystems.getRemote(clusterName, actorSystemName);
+            if(remoteActorSystem == null) {
+                return new DisconnectedRemoteActorNodeRef(clusterName, actorSystemName, components[3], actorId);
+            } else {
+                // get a random shard to use as a hub
+                int randomShardId = ThreadLocalRandom.current().nextInt(((ShardAccessor) remoteActorSystem).getNumberOfShards());
+                ActorShard actorShard = ((ShardAccessor) remoteActorSystem).getShard(randomShardId);
+                return new RemoteClusterActorNodeRef(actorSystems.get(null), clusterName, actorShard, components[3], actorId);
+            }
         } else if ("services".equals(components[2])) {
-            //throw new IllegalArgumentException("Service Actors are not (yet) supported for Remote Actor System instances");
-            return new DisconnectedServiceActorRef(clusterName,actorSystemName,components[3],actorId);
+            return new DisconnectedServiceActorRef(clusterName, actorSystemName, components[3], actorId);
         } else {
             throw new IllegalArgumentException(format(EXCEPTION_FORMAT, refSpec));
         }

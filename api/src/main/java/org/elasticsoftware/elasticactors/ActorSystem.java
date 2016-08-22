@@ -57,6 +57,29 @@ public interface ActorSystem {
      */
     <T> ActorRef actorOf(String actorId, Class<T> actorClass) throws Exception;
 
+
+    /**
+     * Create a new {@link ElasticActor} of the given type. There will be no state passed (null). This is
+     * an asynchronous method that could potentially fail. However the {@link ActorRef} is fully functional
+     * and can be used to send messages immediately. All messages are handled on the same thread and will be
+     * executed in order from the perspective of the receiving {@link ElasticActor}<br/>
+     * This is a idempotent method, when an actor with the same actorId already exists, the method will silently
+     * succeed. However the {@link ActorState} will NOT be overwritten.
+     *
+     * This method takes the name of the actor class as a parameter. This is mainly handy in the case where actors need
+     * to be created on a remote ActorSystem. There is no strong type checking on the actor class and also no exception
+     * will be thrown if the class doesn't exist on the remote end.
+     *
+     * When you are dealing with local actors, always prefer the stronger typed version of this method
+     *
+     * @param actorId           the actorId of the actor to create
+     * @param actorClassName    the type class name of the actor. Needs to be annotated with {@link Actor}
+     * @param <T>               generic type info
+     * @return                  the {@link ActorRef} pointing to the newly created actor
+     * @throws Exception        when something unexpected happens
+     */
+    ActorRef actorOf(String actorId, String actorClassName) throws Exception;
+
     /**
      * Create a new {@link ElasticActor} of the given type with the given initial {@link ActorState}. This is
      * an asynchronous method that could potentially fail. However the {@link ActorRef} is fully functional
@@ -73,6 +96,29 @@ public interface ActorSystem {
      * @throws Exception    when something unexpected happens
      */
     <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception;
+
+    /**
+     * Create a new {@link ElasticActor} of the given type with the given initial {@link ActorState}. This is
+     * an asynchronous method that could potentially fail. However the {@link ActorRef} is fully functional
+     * and can be used to send messages immediately. All messages are handled on the same thread and will be
+     * executed in order from the perspective of the receiving {@link ElasticActor}<br/>
+     * This is a idempotent method, when an actor with the same actorId already exists, the method will silently
+     * succeed. However the {@link ActorState} will NOT be overwritten.
+     *
+     * This method takes the name of the actor class as a parameter. This is mainly handy in the case where actors need
+     * to be created on a remote ActorSystem. There is no strong type checking on the actor class and also no exception
+     * will be thrown if the class doesn't exist on the remote end.
+     *
+     * When you are dealing with local actors, always prefer the stronger typed version of this method
+     *
+     * @param actorId           the actorId of the actor to create
+     * @param actorClassName    the type class name of the actor. Needs to be annotated with {@link Actor}
+     * @param initialState      the initial state, should be of type {@link org.elasticsoftware.elasticactors.Actor#stateClass()}
+     * @param <T>               generic type info
+     * @return                  the {@link ActorRef} pointing to the newly created actor
+     * @throws Exception        when something unexpected happens
+     */
+    ActorRef actorOf(String actorId, String actorClassName, ActorState initialState) throws Exception;
 
     /**
      * Create a Temporary Actor with the given initial {@link ActorState}. A Temp Actor is an {@link ElasticActor}

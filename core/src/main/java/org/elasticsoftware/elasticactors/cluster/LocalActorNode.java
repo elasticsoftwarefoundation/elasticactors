@@ -103,14 +103,15 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
             // get the durable flag
             final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
             final boolean immutable = (messageAnnotation != null) && messageAnnotation.immutable();
+            final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
             if(durable) {
                 // durable so it will go over the bus and needs to be serialized
                 MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), true, deliveryMode));
-            } else if(!immutable || deliveryMode == STRICT_ORDER) {
+                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), true, timeout, deliveryMode));
+            } else if(!immutable) {
                 // it's not durable, but it's mutable so we need to serialize here
                 MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), false, deliveryMode));
+                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), false, timeout, deliveryMode));
             } else {
                 // as the message is immutable and not strictly ordered we can safely send it as a TransientInternalMessage
                 messageQueue.offer(new TransientInternalMessage(from,ImmutableList.copyOf(to),message, deliveryMode));
@@ -127,7 +128,8 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                                                                            message.getPayloadClass(),
                                                                            message.isDurable(),
                                                                            true,
-                                                                            message.getDeliveryMode());
+                                                                           message.getTimeout(),
+                                                                           message.getDeliveryMode());
         messageQueue.offer(undeliverableMessage);
     }
 

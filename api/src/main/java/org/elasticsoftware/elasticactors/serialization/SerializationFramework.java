@@ -56,6 +56,8 @@ public interface SerializationFramework {
      */
     Serializer<ActorState, byte[]> getActorStateSerializer(Class<? extends ElasticActor> actorClass);
 
+    Serializer<ActorState, byte[]> getActorStateSerializer(ActorState actorState);
+
     /**
      * Return the deserializer for the specified actor class
      *

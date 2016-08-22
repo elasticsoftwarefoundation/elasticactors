@@ -39,10 +39,36 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
     private final Object payloadObject;
     private final boolean durable;
     private final boolean undeliverable;
+    private final int timeout;
     private final MessageDeliveryMode deliveryMode;
     private transient byte[] serializedForm;
 
-    public ImmutableInternalMessage(UUID id, ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, Object payloadObject, boolean durable, boolean undeliverable, MessageDeliveryMode deliveryMode) {
+
+    public ImmutableInternalMessage(ActorRef sender, ActorRef receiver, ByteBuffer payload, Object payloadObject, boolean durable) {
+        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadObject,durable,false);
+    }
+
+    public ImmutableInternalMessage(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, Object payloadObject, boolean durable) {
+        this(UUIDTools.createTimeBasedUUID(), sender, receivers, payload, payloadObject,durable,false, NO_TIMEOUT);
+    }
+
+    public ImmutableInternalMessage(ActorRef sender, ActorRef receiver, ByteBuffer payload, Object payloadObject, boolean durable, boolean undeliverable) {
+        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadObject,durable,undeliverable);
+    }
+
+    public ImmutableInternalMessage(UUID id, ActorRef sender, ActorRef receiver, ByteBuffer payload, Object payloadObject, boolean durable, boolean undeliverable) {
+        this(id, sender, ImmutableList.of(receiver), payload, payloadObject, durable, undeliverable, NO_TIMEOUT);
+    }
+
+    public ImmutableInternalMessage(UUID id,
+                                    ActorRef sender,
+                                    ImmutableList<ActorRef> receivers,
+                                    ByteBuffer payload,
+                                    Object payloadObject,
+                                    boolean durable,
+                                    boolean undeliverable,
+                                    int timeout,
+                                    MessageDeliveryMode deliveryMode) {
         this.sender = sender;
         this.receivers = receivers;
         this.id = id;
@@ -51,6 +77,7 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
         this.durable = durable;
         this.undeliverable = undeliverable;
         this.deliveryMode = deliveryMode;
+        this.timeout = timeout;
     }
 
     public ActorRef getSender() {
@@ -93,6 +120,11 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
     @Override
     public MessageDeliveryMode getDeliveryMode() {
         return deliveryMode;
+    }
+
+    @Override
+    public int getTimeout() {
+        return timeout;
     }
 
     @Override

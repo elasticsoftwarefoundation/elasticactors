@@ -67,16 +67,18 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
         UUID id = toUUID(protobufMessage.getId().toByteArray());
         boolean durable = (!protobufMessage.hasDurable()) || protobufMessage.getDurable();
         boolean undeliverable = protobufMessage.hasUndeliverable() && protobufMessage.getUndeliverable();
+        int timeout = protobufMessage.hasTimeout() ? protobufMessage.getTimeout() : InternalMessage.NO_TIMEOUT;
+        //return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable);
         MessageDeliveryMode deliveryMode = protobufMessage.hasDeliveryMode() ? findById(protobufMessage.getDeliveryMode()) : SYSTEM_DEFAULT;
         // if system default we need to lookup the actual system default setting
         deliveryMode = (deliveryMode == SYSTEM_DEFAULT) ? internalActorSystem.getConfiguration().getMessageDeliveryMode() : deliveryMode;
         // optimize immutable message if possible
         Class<?> messageClass = isImmutableMessageClass(messageClassString);
         if(messageClass == null) {
-            return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable, deliveryMode);
+            return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable, timeout, deliveryMode);
         } else {
             Object payloadObject = internalActorSystem.getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
-            return new ImmutableInternalMessage(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), payloadObject, durable, undeliverable, deliveryMode);
+            return new ImmutableInternalMessage(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), payloadObject, durable, undeliverable, timeout, deliveryMode);
         }
     }
 

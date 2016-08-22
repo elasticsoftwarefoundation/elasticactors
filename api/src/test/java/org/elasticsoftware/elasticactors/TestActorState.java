@@ -16,6 +16,9 @@
 
 package org.elasticsoftware.elasticactors;
 
+import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -62,5 +65,10 @@ public class TestActorState implements ActorState<TestActorState> {
     @Override
     public TestActorState getBody() {
         return this;
+    }
+
+    @Override
+    public Class<? extends SerializationFramework> getSerializationFramework() {
+        return NoopSerializationFramework.class;
     }
 }

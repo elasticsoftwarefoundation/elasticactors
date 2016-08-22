@@ -70,6 +70,11 @@ public final class JacksonSerializationFramework implements SerializationFramewo
     }
 
     @Override
+    public Serializer<ActorState, byte[]> getActorStateSerializer(ActorState actorState) {
+        return actorStateSerializer;
+    }
+
+    @Override
     public Deserializer<byte[], ActorState> getActorStateDeserializer(Class<? extends ElasticActor> actorClass) {
         return actorStateDeserializer;
     }

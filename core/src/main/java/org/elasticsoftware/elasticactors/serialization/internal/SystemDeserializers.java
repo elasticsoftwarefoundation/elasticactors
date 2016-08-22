@@ -18,10 +18,7 @@ package org.elasticsoftware.elasticactors.serialization.internal;
 
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
-import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
-import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
-import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
-import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.*;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 
 import java.util.HashMap;
@@ -39,6 +36,7 @@ public final class SystemDeserializers {
         systemDeserializers.put(DestroyActorMessage.class,new DestroyActorMessageDeserializer(actorRefDeserializer));
         systemDeserializers.put(ActivateActorMessage.class,new ActivateActorMessageDeserializer());
         systemDeserializers.put(CancelScheduledMessageMessage.class,new CancelScheduledMessageMessageDeserializer());
+        systemDeserializers.put(ActorNodeMessage.class, new ActorNodeMessageDeserializer(actorRefDeserializer, cluster));
         //@todo: add more deserializers here
     }
 

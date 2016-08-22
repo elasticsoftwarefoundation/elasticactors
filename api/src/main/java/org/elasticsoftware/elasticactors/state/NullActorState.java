@@ -17,6 +17,8 @@
 package org.elasticsoftware.elasticactors.state;
 
 import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 
 /**
  * @author Joost van de Wijgerd
@@ -25,5 +27,10 @@ public final class NullActorState implements ActorState<NullActorState> {
     @Override
     public NullActorState getBody() {
         return this;
+    }
+
+    @Override
+    public Class<? extends SerializationFramework> getSerializationFramework() {
+        return NoopSerializationFramework.class;
     }
 }

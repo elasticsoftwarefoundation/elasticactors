@@ -67,8 +67,9 @@ public final class RemoteActorShard extends AbstractActorContainer implements Ac
         // get the durable flag
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
+        final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
         MessageDeliveryMode deliveryMode = (messageAnnotation == null || messageAnnotation.deliveryMode() == SYSTEM_DEFAULT) ? actorSystem.getConfiguration().getMessageDeliveryMode() : messageAnnotation.deliveryMode();
-        messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable,deliveryMode));
+        messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable,timeout,deliveryMode));
     }
 
     @Override
@@ -80,7 +81,8 @@ public final class RemoteActorShard extends AbstractActorContainer implements Ac
                                                                            message.getPayloadClass(),
                                                                            message.isDurable(),
                                                                            true,
-                                                                            message.getDeliveryMode());
+                                                                           message.getTimeout(),
+                                                                           message.getDeliveryMode());
         messageQueue.offer(undeliverableMessage);
     }
 

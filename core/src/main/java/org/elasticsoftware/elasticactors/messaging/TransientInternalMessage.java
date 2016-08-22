@@ -97,6 +97,11 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
     }
 
     @Override
+    public int getTimeout() {
+        return NO_TIMEOUT;
+    }
+
+    @Override
     public byte[] toByteArray() {
         throw new UnsupportedOperationException(String.format("This implementation is intended to be used local only, for remote use [%s]",InternalMessageImpl.class.getSimpleName()));
     }

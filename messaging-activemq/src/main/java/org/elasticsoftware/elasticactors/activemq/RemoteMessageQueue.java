@@ -58,6 +58,10 @@ public final class RemoteMessageQueue implements MessageQueue {
         clientMessage.putStringProperty("routingKey", routingKey);
         // duplicate detection
         clientMessage.putBytesProperty(HDR_DUPLICATE_DETECTION_ID, toByteArray(message.getId()));
+        // set timeout if needed
+        if(message.getTimeout() >= 0) {
+            clientMessage.setExpiration(System.currentTimeMillis() + message.getTimeout());
+        }
         try {
             producer.send(clientMessage);
             return true;

@@ -257,6 +257,10 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
             clientMessage.putStringProperty("routingKey", routingKey);
             // use the duplicate detection from ActiveMQ
             clientMessage.putBytesProperty(HDR_DUPLICATE_DETECTION_ID, toByteArray(message.getId()));
+            // set timeout if needed
+            if(message.getTimeout() >= 0) {
+                clientMessage.setExpiration(System.currentTimeMillis() + message.getTimeout());
+            }
             try {
                 producer.send(clientMessage);
             } catch (ActiveMQException e) {

@@ -44,6 +44,7 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
     private final boolean durable;
     private final boolean undeliverable;
     private final MessageDeliveryMode deliveryMode;
+    private final int timeout;
     private transient byte[] serializedForm;
 
     public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable, MessageDeliveryMode deliveryMode) {
@@ -62,6 +63,15 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
         this(id, sender, receivers, payload, payloadClass, durable, false, deliveryMode);
     }
 
+    public InternalMessageImpl(UUID id,
+                               ActorRef sender,
+                               ImmutableList<ActorRef> receivers,
+                               ByteBuffer payload,
+                               String payloadClass,
+                               boolean durable,
+                               boolean undeliverable,
+                               int timeout,
+                               MessageDeliveryMode deliveryMode) {
     public InternalMessageImpl(UUID id, ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable, MessageDeliveryMode deliveryMode) {
         this.sender = sender;
         this.receivers = receivers;
@@ -71,6 +81,7 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
         this.durable = durable;
         this.undeliverable = undeliverable;
         this.deliveryMode = deliveryMode;
+        this.timeout = timeout;
     }
 
     public ActorRef getSender() {
@@ -112,6 +123,11 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
     }
 
     @Override
+    public int getTimeout() {
+        return timeout;
+    }
+
+    @Override
     public MessageDeliveryMode getDeliveryMode() {
         return deliveryMode;
     }
@@ -126,6 +142,6 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
 
     @Override
     public InternalMessage copyOf() {
-        return new InternalMessageImpl(id, sender, receivers, payload.asReadOnlyBuffer(), payloadClass, durable, undeliverable, deliveryMode);
+        return new InternalMessageImpl(id, sender, receivers, payload.asReadOnlyBuffer(), payloadClass, durable, undeliverable, timeout, deliveryMode);
     }
 }

@@ -16,6 +16,8 @@
 
 package org.elasticsoftware.elasticactors;
 
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+
 /**
  * Tagging interface for the state object of an {@link ElasticActor}. The interface has a generic
  * type Body that should normally be the same type as the implementing class. The reason behind this
@@ -31,5 +33,12 @@ public interface ActorState<Body> {
      * @return  the body (the actual state)
      */
     Body getBody();
+
+    /**
+     * Returns the type of the SerializationFramework that should be used to serialize this state class
+     *
+     * @return
+     */
+    Class<? extends SerializationFramework> getSerializationFramework();
 }
 

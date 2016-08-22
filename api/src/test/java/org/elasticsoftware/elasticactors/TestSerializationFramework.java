@@ -43,6 +43,11 @@ public final class TestSerializationFramework implements SerializationFramework 
     }
 
     @Override
+    public Serializer<ActorState, byte[]> getActorStateSerializer(ActorState actorState) {
+        return null;
+    }
+
+    @Override
     public Deserializer<byte[], ActorState> getActorStateDeserializer(Class<? extends ElasticActor> actorClass) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
