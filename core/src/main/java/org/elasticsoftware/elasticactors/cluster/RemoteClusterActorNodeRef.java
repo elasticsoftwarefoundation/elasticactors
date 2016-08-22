@@ -150,11 +150,6 @@ public final class RemoteClusterActorNodeRef implements ActorRef, ActorContainer
     }
 
     @Override
-    public void offerInternalMessage(InternalMessage message) {
-        throw new UnsupportedOperationException("RemoteClusterActorNodeRef cannot be used to obtain a reference to the remote ActorNode");
-    }
-
-    @Override
     public void init() throws Exception {
         // do nothing
     }

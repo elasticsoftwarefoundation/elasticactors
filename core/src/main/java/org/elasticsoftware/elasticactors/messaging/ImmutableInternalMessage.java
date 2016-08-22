@@ -28,6 +28,8 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+import static org.elasticsoftware.elasticactors.serialization.MessageDeliveryMode.SYSTEM_DEFAULT;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -49,7 +51,7 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
     }
 
     public ImmutableInternalMessage(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, Object payloadObject, boolean durable) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receivers, payload, payloadObject,durable,false, NO_TIMEOUT);
+        this(UUIDTools.createTimeBasedUUID(), sender, receivers, payload, payloadObject,durable,false, NO_TIMEOUT, SYSTEM_DEFAULT);
     }
 
     public ImmutableInternalMessage(ActorRef sender, ActorRef receiver, ByteBuffer payload, Object payloadObject, boolean durable, boolean undeliverable) {
@@ -57,7 +59,7 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
     }
 
     public ImmutableInternalMessage(UUID id, ActorRef sender, ActorRef receiver, ByteBuffer payload, Object payloadObject, boolean durable, boolean undeliverable) {
-        this(id, sender, ImmutableList.of(receiver), payload, payloadObject, durable, undeliverable, NO_TIMEOUT);
+        this(id, sender, ImmutableList.of(receiver), payload, payloadObject, durable, undeliverable, NO_TIMEOUT, SYSTEM_DEFAULT);
     }
 
     public ImmutableInternalMessage(UUID id,

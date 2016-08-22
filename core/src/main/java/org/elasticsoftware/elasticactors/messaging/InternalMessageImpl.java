@@ -47,20 +47,20 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
     private final int timeout;
     private transient byte[] serializedForm;
 
-    public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable, MessageDeliveryMode deliveryMode) {
-        this(sender, ImmutableList.of(receiver), payload, payloadClass, durable, undeliverable, deliveryMode);
+    public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable, int timeout, MessageDeliveryMode deliveryMode) {
+        this(sender, ImmutableList.of(receiver), payload, payloadClass, durable, undeliverable, timeout, deliveryMode);
     }
 
-    public InternalMessageImpl(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass, boolean durable, MessageDeliveryMode deliveryMode) {
-        this(sender, receivers, payload, payloadClass, durable, false, deliveryMode);
+    public InternalMessageImpl(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass, boolean durable, int timeout, MessageDeliveryMode deliveryMode) {
+        this(sender, receivers, payload, payloadClass, durable, false, timeout, deliveryMode);
     }
 
-    public InternalMessageImpl(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable, MessageDeliveryMode deliveryMode) {
-        this(createTimeBasedUUID(), sender, receivers, payload, payloadClass, durable, undeliverable, deliveryMode);
+    public InternalMessageImpl(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable, int timeout, MessageDeliveryMode deliveryMode) {
+        this(createTimeBasedUUID(), sender, receivers, payload, payloadClass, durable, undeliverable, timeout, deliveryMode);
     }
 
-    public InternalMessageImpl(UUID id, ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass, boolean durable, MessageDeliveryMode deliveryMode) {
-        this(id, sender, receivers, payload, payloadClass, durable, false, deliveryMode);
+    public InternalMessageImpl(UUID id, ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass, boolean durable, int timeout, MessageDeliveryMode deliveryMode) {
+        this(id, sender, receivers, payload, payloadClass, durable, false, timeout, deliveryMode);
     }
 
     public InternalMessageImpl(UUID id,
@@ -72,7 +72,6 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
                                boolean undeliverable,
                                int timeout,
                                MessageDeliveryMode deliveryMode) {
-    public InternalMessageImpl(UUID id, ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable, MessageDeliveryMode deliveryMode) {
         this.sender = sender;
         this.receivers = receivers;
         this.id = id;
