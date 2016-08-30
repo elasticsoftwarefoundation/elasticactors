@@ -1,6 +1,7 @@
 package org.elasticsoftware.elasticactors.rabbitmq;
 
 import com.rabbitmq.client.Channel;
+import org.elasticsoftware.elasticactors.rabbitmq.ack.BufferingMessageAcker;
 import org.testng.annotations.Test;
 
 import static org.mockito.Mockito.*;
