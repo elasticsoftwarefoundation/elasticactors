@@ -43,7 +43,9 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
 
@@ -63,7 +65,7 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
     private final String exchangeName;
     private Connection clientConnection;
     private Channel consumerChannel;
-    private final ThreadLocal<Channel> producerChannels;
+    private final List<Channel> producerChannels;
     private final LocalMessageQueueFactory localMessageQueueFactory;
     private final RemoteMessageQueueFactory remoteMessageQueueFactory;
     private final RemoteActorSystemMessageQueueFactoryFactory remoteActorSystemMessageQueueFactoryFactory;
@@ -93,7 +95,7 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
         this.localMessageQueueFactory = new LocalMessageQueueFactory();
         this.remoteMessageQueueFactory = new RemoteMessageQueueFactory();
         this.remoteActorSystemMessageQueueFactoryFactory = new RemoteActorSystemMessageQueueFactoryFactory();
-        this.producerChannels = new ThreadLocal<>();
+        this.producerChannels = new ArrayList<>(queueExecutor.getThreadCount());
     }
 
     @PostConstruct
@@ -118,6 +120,10 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
         // create a seperate consumer channel
         consumerChannel = clientConnection.createChannel();
         consumerChannel.basicQos(0);
+        // prepare the consumer channels
+        for (int i = 0; i < queueExecutor.getThreadCount(); i++) {
+            producerChannels.add(clientConnection.createChannel());
+        }
         // ensure the exchange is there
         consumerChannel.exchangeDeclare(exchangeName,"direct",true);
         if(ackType == BUFFERED) {
@@ -218,12 +224,17 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
         channel.queueBind(queueName,exchangeName,queueName);
     }
 
+    private int getBucket(Object key) {
+        return Math.abs(key.hashCode()) % queueExecutor.getThreadCount();
+    }
+
     private final class LocalMessageQueueFactory implements MessageQueueFactory {
         @Override
         public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
             final String queueName = format(QUEUE_NAME_FORMAT,elasticActorsCluster,name);
             LocalMessageQueueCreator creator = new LocalMessageQueueCreator(queueName, messageHandler);
-            queueExecutor.execute(creator);
+            // queueExecutor.execute(creator);
+            creator.run();
             return creator.getMessageQueue();
         }
     }
@@ -233,7 +244,8 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
         public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
             final String queueName = format(QUEUE_NAME_FORMAT,elasticActorsCluster,name);
             RemoteMessageQueueCreator creator = new RemoteMessageQueueCreator(queueName, exchangeName);
-            queueExecutor.execute(creator);
+            // queueExecutor.execute(creator);
+            creator.run();
             return creator.getMessageQueue();
         }
     }
@@ -251,7 +263,8 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
         public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
             final String queueName = format(QUEUE_NAME_FORMAT,this.clusterName,name);
             RemoteMessageQueueCreator creator = new RemoteMessageQueueCreator(queueName, this.exchangeName);
-            queueExecutor.execute(creator);
+            // queueExecutor.execute(creator);
+            creator.run();
             return creator.getMessageQueue();
         }
     }
@@ -278,11 +291,7 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
         @Override
         public void run() {
             try {
-                Channel producerChannel = producerChannels.get();
-                if(producerChannel == null) {
-                    producerChannel = clientConnection.createChannel();
-                    producerChannels.set(producerChannel);
-                }
+                Channel producerChannel = producerChannels.get(getBucket(this.queueName));
                 ensureQueueExists(producerChannel, queueName);
                 this.messageQueue = new LocalMessageQueue(queueExecutor,
                                                           RabbitMQMessagingService.this,
@@ -327,13 +336,9 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
         @Override
         public void run() {
             try {
-                Channel producerChannel = producerChannels.get();
-                if(producerChannel == null) {
-                    producerChannel = clientConnection.createChannel();
-                    producerChannels.set(producerChannel);
-                }
+                Channel producerChannel = producerChannels.get(getBucket(this.queueName));
                 ensureQueueExists(producerChannel,queueName);
-                this.messageQueue =  new RemoteMessageQueue(RabbitMQMessagingService.this, queueExecutor, producerChannel,exchangeName,queueName);
+                this.messageQueue =  new RemoteMessageQueue(RabbitMQMessagingService.this, queueExecutor, producerChannel, exchangeName, queueName);
                 messageQueue.initialize();
             } catch(Exception e) {
                 this.exception = e;

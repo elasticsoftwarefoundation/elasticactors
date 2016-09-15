@@ -85,6 +85,11 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
         LOG.info(format("(Disruptor)ThreadBoundExecutor[%s] shut down completed",threadFactory.toString()));
     }
 
+    @Override
+    public int getThreadCount() {
+        return disruptors.size();
+    }
+
     private int getBucket(Object key) {
         return Math.abs(key.hashCode()) % disruptors.size();
     }

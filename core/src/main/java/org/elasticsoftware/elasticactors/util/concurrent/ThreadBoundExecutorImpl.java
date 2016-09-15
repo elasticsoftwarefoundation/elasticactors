@@ -70,6 +70,10 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
         queue.add(event);
     }
 
+    @Override
+    public int getThreadCount() {
+        return queues.size();
+    }
 
     private int getBucket(Object key) {
         return Math.abs(key.hashCode()) % queues.size();
