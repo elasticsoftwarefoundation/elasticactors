@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright 2013 - 2014 The Original Authors
+  ~ Copyright 2013 - 2016 The Original Authors
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -120,6 +120,7 @@
         <module>test</module>
         <module>backplane-cassandra2</module>
         <module>messaging-activemq</module>
+        <module>reactive-streams</module>
     </modules>
 
     <build>
