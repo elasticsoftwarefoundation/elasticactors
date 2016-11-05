@@ -92,28 +92,27 @@ public class ActorRefToolsTest {
 
     @Test
     public void testParseServiceActorRefOnAnotherNodeThatsNotYetJoinedMyClusterView() {
-        // /trading.service.GGM
-        String nodeId = "trading001.dev.getbux.com";
+        String nodeId = "node001.elasticsoftwarefoundation.org";
         InternalActorSystems internalActorSystems = mock(InternalActorSystems.class);
         InternalActorSystem actorSystem = mock(InternalActorSystem.class);
         ActorNode localNode = mock(ActorNode.class);
         ActorNode remoteNode = mock(ActorNode.class);
-        NodeKey nodeKey = new NodeKey("trading",nodeId);
-        NodeKey remoteNodeKey = new NodeKey("trading","trading002.dev.getbux.com");
-        when(internalActorSystems.getClusterName()).thenReturn("trading.dev.getbux.com");
-        when(internalActorSystems.get("trading")).thenReturn(actorSystem);
-        when(actorSystem.getNode("trading002.dev.getbux.com")).thenReturn(remoteNode);
+        NodeKey nodeKey = new NodeKey("test",nodeId);
+        NodeKey remoteNodeKey = new NodeKey("test","node002.elasticsoftwarefoundation.org");
+        when(internalActorSystems.getClusterName()).thenReturn("test.elasticsoftwarefoundation.org");
+        when(internalActorSystems.get("test")).thenReturn(actorSystem);
+        when(actorSystem.getNode("node002.elasticsoftwarefoundation.org")).thenReturn(remoteNode);
         when(actorSystem.getNode()).thenReturn(localNode);
         when(localNode.getKey()).thenReturn(nodeKey);
         when(remoteNode.getKey()).thenReturn(remoteNodeKey);
-        String serviceRefString = String.format("actor://trading.dev.getbux.com/trading/services/%s/trading.service.GGM","trading002.dev.getbux.com");
-        ServiceActorRef localRef = new ServiceActorRef("trading.dev.getbux.com",localNode,"trading.service.GGM");
-        ServiceActorRef remoteRef = new ServiceActorRef("trading.dev.getbux.com",remoteNode,"trading.service.GGM");
-        when(internalActorSystems.createServiceActorRef(localNode,"trading.service.GGM")).thenReturn(localRef);
-        when(internalActorSystems.createServiceActorRef(remoteNode,"trading.service.GGM")).thenReturn(remoteRef);
+        String serviceRefString = String.format("actor://test.elasticsoftwarefoundation.org/test/services/%s/testService","node002.elasticsoftwarefoundation.org");
+        ServiceActorRef localRef = new ServiceActorRef("test.elasticsoftwarefoundation.org",localNode,"testService");
+        ServiceActorRef remoteRef = new ServiceActorRef("test.elasticsoftwarefoundation.org",remoteNode,"testService");
+        when(internalActorSystems.createServiceActorRef(localNode,"testService")).thenReturn(localRef);
+        when(internalActorSystems.createServiceActorRef(remoteNode,"testService")).thenReturn(remoteRef);
         ActorRef serviceRef = ActorRefTools.parse(serviceRefString,internalActorSystems);
         assertNotNull(serviceRef);
-        assertEquals(serviceRef.getActorId(),"trading.service.GGM");
+        assertEquals(serviceRef.getActorId(),"testService");
         assertEquals(serviceRef.toString(),serviceRefString);
     }
 
