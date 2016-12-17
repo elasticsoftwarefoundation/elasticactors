@@ -25,7 +25,11 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
  * @author Joost van de Wijgerd
  */
 public abstract class TypedActor<T> implements ElasticActor<T> {
-    private final Logger logger = LogManager.getLogger(getClass());
+
+    @Override
+    public <S extends ActorState> S preCreate(Object input) {
+        return null;
+    }
 
     @Override
     public void postCreate(ActorRef creator) throws Exception {
@@ -63,7 +67,7 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
         return ActorContextHolder.getSelf();
     }
 
-    protected <T extends ActorState> T getState(Class<T> stateClass) {
+    protected <S extends ActorState> S getState(Class<S> stateClass) {
         return ActorContextHolder.getState(stateClass);
     }
 

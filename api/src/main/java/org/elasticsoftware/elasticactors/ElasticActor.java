@@ -31,6 +31,8 @@ import javax.annotation.Nullable;
  * @see     {@link MethodActor}
  */
 public interface ElasticActor<T> {
+    <S extends ActorState> S preCreate(Object input);
+
     /**
      * Called after the instance of the {@link ElasticActor} was created. Will be called exactly once in the
      * lifecycle of an Actor. Access to the {@link ActorContext} can be obtained by using the {@link ActorContextHolder} methods

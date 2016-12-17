@@ -27,7 +27,7 @@ import java.util.Map;
  * @author Joost van de Wijgerd
  */
 public final class SystemSerializers {
-    private final Map<Class,MessageSerializer> systemSerializers = new HashMap<Class,MessageSerializer>();
+    private final Map<Class, MessageSerializer> systemSerializers = new HashMap<Class,MessageSerializer>();
 
     public SystemSerializers(InternalActorSystems cluster) {
         systemSerializers.put(CreateActorMessage.class,new CreateActorMessageSerializer(cluster));

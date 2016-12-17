@@ -294,6 +294,9 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     private void createActor(CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         ActorRef ref = actorSystem.actorFor(createMessage.getActorId());
         final Class<? extends ElasticActor> actorClass = (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass());
+        // find actor class behind receiver ActorRef
+        ElasticActor actorInstance = actorSystem.getActorInstance(ref, actorClass);
+        //actorInstance.preCreate()
         final String actorStateVersion = ManifestTools.extractActorStateVersion(actorClass);
         PersistentActor<ShardKey> persistentActor =
                 new PersistentActor<>(shardKey, actorSystem, actorStateVersion, ref, actorClass, createMessage.getInitialState());
@@ -302,8 +305,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         // persistentActorRepository.update(this.shardKey,persistentActor);
 
         actorCache.put(ref,persistentActor);
-        // find actor class behind receiver ActorRef
-        ElasticActor actorInstance = actorSystem.getActorInstance(ref,persistentActor.getActorClass());
+
         // call postCreate
         actorExecutor.execute(new CreateActorTask(persistentActorRepository,
                                                   persistentActor,
