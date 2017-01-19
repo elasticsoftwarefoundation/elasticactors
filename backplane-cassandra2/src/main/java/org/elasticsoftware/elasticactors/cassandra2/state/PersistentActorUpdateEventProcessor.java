@@ -61,7 +61,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
      */
     private void prepateBatchIfNeeded(int maxBatchSize) {
         // check the protocol to see if BatchStatements are supported
-        ProtocolVersion protocolVersion = cassandraSession.getCluster().getConfiguration().getProtocolOptions().getProtocolVersionEnum();
+        ProtocolVersion protocolVersion = cassandraSession.getCluster().getConfiguration().getProtocolOptions().getProtocolVersion();
         if(ProtocolVersion.V1.equals(protocolVersion)) {
             for (int batchSize = 2; batchSize <= maxBatchSize ; batchSize++) {
                 // create a prepared statement (INSERT only)
@@ -99,7 +99,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
                 cassandraSession.execute(boundStatement);
             } else {
                 // check the protocol to see if BatchStatements are supported
-                ProtocolVersion protocolVersion = cassandraSession.getCluster().getConfiguration().getProtocolOptions().getProtocolVersionEnum();
+                ProtocolVersion protocolVersion = cassandraSession.getCluster().getConfiguration().getProtocolOptions().getProtocolVersion();
                 if(ProtocolVersion.V1.equals(protocolVersion)) {
                     if(this.optimizedV1Batches) {
                         executeBatchV1Optimized(events);

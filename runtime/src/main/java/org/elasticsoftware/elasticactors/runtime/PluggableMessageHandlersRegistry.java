@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2014 The Original Authors
+ * Copyright 2013 - 2016 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,10 @@ import org.elasticsoftware.elasticactors.MethodActor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 
+import java.util.Collections;
 import java.util.List;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Implementation of the {@link MessageHandlersRegistry} that autowires the {@link PluggableMessageHandlersScanner}
@@ -48,6 +51,6 @@ public final class PluggableMessageHandlersRegistry implements MessageHandlersRe
 
     @Override
     public List<Class<?>> getMessageHandlers(Class<? extends MethodActor> methodActor) {
-        return delegate.getMessageHandlers(methodActor);
+        return delegate != null ? delegate.getMessageHandlers(methodActor) : emptyList();
     }
 }

@@ -27,7 +27,7 @@ minimal dependency:
 <dependency>
     <groupId>org.elasticsoftware.elasticactors</groupId>
     <artifactId>elasticactors-api</artifactId>
-    <version>${elasticactors.version}/version>
+    <version>${elasticactors.version}</version>
 </dependency>
 ```
 convenient base classes inclusing a Jackson 2 based serialization framework:

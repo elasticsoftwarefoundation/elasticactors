@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2014 The Original Authors
+ * Copyright 2013 - 2016 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
 import org.elasticsoftware.elasticactors.messaging.MessagingService;
+import org.elasticsoftware.elasticactors.rabbitmq.RabbitMQMessagingServiceInterface;
 import org.elasticsoftware.elasticactors.rabbitmq.MessageAcker;
 import org.elasticsoftware.elasticactors.rabbitmq.RabbitMQMessagingService;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
@@ -47,7 +48,7 @@ public class MessagingConfiguration {
     private ActorRefFactory actorRefFactory;
     @Autowired
     private InternalActorSystem internalActorSystem;
-    private RabbitMQMessagingService messagingService;
+    private RabbitMQMessagingServiceInterface messagingService;
 
     @PostConstruct
     public void initialize() {
@@ -56,13 +57,24 @@ public class MessagingConfiguration {
         String rabbitMQUsername= env.getProperty("ea.rabbitmq.username","guest");
         String rabbitMQPassword = env.getProperty("ea.rabbitmq.password","guest");
         MessageAcker.Type ackType = env.getProperty("ea.rabbitmq.ack",MessageAcker.Type.class, DIRECT);
-        messagingService = new RabbitMQMessagingService(clusterName,
-                                                        rabbitMQHosts,
-                                                        rabbitMQUsername,
-                                                        rabbitMQPassword,
-                                                        ackType,
-                                                        queueExecutor,
-                                                        new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem));
+        String threadModel = env.getProperty("ea.rabbitmq.threadmodel", "sc");
+        if("cpt".equals(threadModel)) {
+            messagingService = new org.elasticsoftware.elasticactors.rabbitmq.cpt.RabbitMQMessagingService(clusterName,
+                    rabbitMQHosts,
+                    rabbitMQUsername,
+                    rabbitMQPassword,
+                    ackType,
+                    queueExecutor,
+                    new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem));
+        } else {
+            messagingService = new RabbitMQMessagingService(clusterName,
+                    rabbitMQHosts,
+                    rabbitMQUsername,
+                    rabbitMQPassword,
+                    ackType,
+                    queueExecutor,
+                    new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem));
+        }
     }
 
     @Bean(name = {"messagingService,remoteActorSystemMessageQueueFactoryFactory"})

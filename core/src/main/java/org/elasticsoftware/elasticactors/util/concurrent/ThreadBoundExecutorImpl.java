@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2014 The Original Authors
+ * Copyright 2013 - 2016 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,6 +70,10 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
         queue.add(event);
     }
 
+    @Override
+    public int getThreadCount() {
+        return queues.size();
+    }
 
     private int getBucket(Object key) {
         return Math.abs(key.hashCode()) % queues.size();

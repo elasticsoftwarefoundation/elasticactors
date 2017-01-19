@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.rabbitmq;
+package org.elasticsoftware.elasticactors.rabbitmq.ack;
 
 import com.rabbitmq.client.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.elasticsoftware.elasticactors.rabbitmq.MessageAcker;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 
 import java.util.concurrent.ExecutorService;

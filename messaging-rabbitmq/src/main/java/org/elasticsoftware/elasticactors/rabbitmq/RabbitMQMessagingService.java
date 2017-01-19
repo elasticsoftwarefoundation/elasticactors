@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2014 The Original Authors
+ * Copyright 2013 - 2016 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.messaging.*;
+import org.elasticsoftware.elasticactors.rabbitmq.ack.AsyncMessageAcker;
+import org.elasticsoftware.elasticactors.rabbitmq.ack.BufferingMessageAcker;
+import org.elasticsoftware.elasticactors.rabbitmq.ack.DirectMessageAcker;
+import org.elasticsoftware.elasticactors.rabbitmq.ack.WriteBehindMessageAcker;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 
@@ -49,7 +53,7 @@ import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.*;
 /**
  * @author Joost van de Wijgerd
  */
-public final class RabbitMQMessagingService extends DefaultChannelListener implements MessagingService, ChannelListenerRegistry {
+public final class RabbitMQMessagingService extends DefaultChannelListener implements RabbitMQMessagingServiceInterface, ChannelListenerRegistry {
     private static final Logger logger = LogManager.getLogger(RabbitMQMessagingService.class);
     private final ConnectionFactory connectionFactory = new ConnectionFactory();
     private final String rabbitmqHosts;

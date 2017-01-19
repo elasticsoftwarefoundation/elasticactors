@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright 2013 - 2014 The Original Authors
+  ~ Copyright 2013 - 2016 The Original Authors
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@
     <parent>
         <artifactId>elasticactors-parent</artifactId>
         <groupId>org.elasticsoftware.elasticactors</groupId>
-        <version>0.25.5-SNAPSHOT</version>
+        <version>0.26.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>elasticactors-runtime</artifactId>
-    <version>0.25.5-SNAPSHOT</version>
+    <version>0.26.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Elastic Software Foundation :: ElasticActors :: Runtime</name>
