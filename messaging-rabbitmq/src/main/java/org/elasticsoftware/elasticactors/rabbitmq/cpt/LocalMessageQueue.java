@@ -109,16 +109,6 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
     }
 
     @Override
-    public boolean add(InternalMessage message) {
-        return offer(message);
-    }
-
-    @Override
-    public InternalMessage poll() {
-        return null;
-    }
-
-    @Override
     public String getName() {
         return queueName;
     }
