@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors.rabbitmq.cpt;
 
+import com.google.common.base.Throwables;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -48,6 +49,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 import static java.lang.String.format;
 import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.*;
@@ -55,7 +57,7 @@ import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.*;
 /**
  * @author Joost van de Wijgerd
  */
-public final class RabbitMQMessagingService extends DefaultChannelListener implements ChannelListenerRegistry, RabbitMQMessagingServiceInterface {
+public final class RabbitMQMessagingService implements ChannelListenerRegistry, RabbitMQMessagingServiceInterface, ChannelListener {
     private static final Logger logger = LogManager.getLogger(RabbitMQMessagingService.class);
     private final ConnectionFactory connectionFactory = new ConnectionFactory();
     private final String rabbitmqHosts;
@@ -190,28 +192,43 @@ public final class RabbitMQMessagingService extends DefaultChannelListener imple
     }
 
     @Override
-    public void onRecovery(final Channel channel) {
-        final Set<ChannelListener> listeners = this.channelListenerRegistry.get(channel);
-        if(listeners != null) {
-            for (ChannelListener listener : listeners) {
-                try {
-                    listener.onRecovery(channel);
-                } catch(Exception e) {
-                    logger.error(format("Exception while calling onRecovery on ChannelListener [%s]",listener.toString()),e);
-                }
-            }
-        }
+    public void onCreate(final Channel channel) {
+        propagateChannelEvent(channel, c -> c.onCreate(channel), "onCreate");
     }
 
     @Override
-    public void onRecoveryFailure(final Channel channel,final Throwable failure) {
+    public void onCreateFailure(final Throwable failure) {
+        logger.error("Channel creation failed, reason: " + System.lineSeparator() + Throwables.getStackTraceAsString(failure));
+    }
+
+    @Override
+    public void onRecoveryStarted(final Channel channel) {
+        propagateChannelEvent(channel, c -> c.onRecoveryStarted(channel), "onRecoveryStarted");
+    }
+
+    @Override
+    public void onRecovery(final Channel channel) {
+        propagateChannelEvent(channel, c -> c.onRecovery(channel), "onRecovery");
+    }
+
+    @Override
+    public void onRecoveryCompleted(final Channel channel) {
+        propagateChannelEvent(channel, c -> c.onRecoveryCompleted(channel), "onRecoveryCompleted");
+    }
+
+    @Override
+    public void onRecoveryFailure(final Channel channel, final Throwable failure) {
+        propagateChannelEvent(channel, c -> c.onRecoveryFailure(channel, failure), "onRecoveryFailure");
+    }
+
+    private void propagateChannelEvent(final Channel channel, final Consumer<ChannelListener> channelEvent, final String channelEventName) {
         final Set<ChannelListener> listeners = this.channelListenerRegistry.get(channel);
         if(listeners != null) {
             for (ChannelListener listener : listeners) {
                 try {
-                    listener.onRecoveryFailure(channel,failure);
+                    channelEvent.accept(listener);
                 } catch(Exception e) {
-                    logger.error(format("Exception while calling onRecoveryFailure on ChannelListener [%s]",listener.toString()),e);
+                    logger.error(format("Exception while calling [%s] on ChannelListener [%s]", channelEventName, listener.toString()),e);
                 }
             }
         }
