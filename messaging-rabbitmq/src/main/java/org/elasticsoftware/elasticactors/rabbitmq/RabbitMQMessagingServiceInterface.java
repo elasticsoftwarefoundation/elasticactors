@@ -29,4 +29,10 @@ public interface RabbitMQMessagingServiceInterface extends MessagingService {
     MessageQueueFactory getRemoteMessageQueueFactory();
 
     MessageQueueFactoryFactory getRemoteActorSystemMessageQueueFactoryFactory();
+
+    boolean isClientConnectionOpen();
+
+    boolean areConsumerChannelsOpen();
+
+    boolean areProducerChannelsOpen();
 }

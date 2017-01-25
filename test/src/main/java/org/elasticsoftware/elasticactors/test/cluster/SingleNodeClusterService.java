@@ -62,6 +62,11 @@ public class SingleNodeClusterService implements ClusterService {
     }
 
     @Override
+    public void removeEventListener(ClusterEventListener eventListener) {
+        this.eventListeners.remove(eventListener);
+    }
+
+    @Override
     public void sendMessage(String memberToken, byte[] message) throws Exception {
         //@todo: send to local?
     }

@@ -17,22 +17,23 @@
 package org.elasticsoftware.elasticactors.rabbitmq.cpt;
 
 import com.google.common.base.Throwables;
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.*;
 import net.jodah.lyra.ConnectionOptions;
 import net.jodah.lyra.Connections;
 import net.jodah.lyra.config.Config;
 import net.jodah.lyra.config.RecoveryPolicy;
 import net.jodah.lyra.event.ChannelListener;
-import net.jodah.lyra.event.DefaultChannelListener;
 import net.jodah.lyra.util.Duration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.PhysicalNode;
-import org.elasticsoftware.elasticactors.messaging.*;
-import org.elasticsoftware.elasticactors.rabbitmq.*;
+import org.elasticsoftware.elasticactors.messaging.MessageHandler;
+import org.elasticsoftware.elasticactors.messaging.MessageQueue;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
+import org.elasticsoftware.elasticactors.rabbitmq.ChannelListenerRegistry;
+import org.elasticsoftware.elasticactors.rabbitmq.MessageAcker;
+import org.elasticsoftware.elasticactors.rabbitmq.RabbitMQMessagingServiceInterface;
 import org.elasticsoftware.elasticactors.rabbitmq.ack.AsyncMessageAcker;
 import org.elasticsoftware.elasticactors.rabbitmq.ack.BufferingMessageAcker;
 import org.elasticsoftware.elasticactors.rabbitmq.ack.DirectMessageAcker;
@@ -48,7 +49,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import static java.lang.String.format;
@@ -234,6 +238,18 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
         }
     }
 
+    public boolean isClientConnectionOpen() {
+        return clientConnection != null && clientConnection.isOpen();
+    }
+
+    public boolean areConsumerChannelsOpen() {
+        return consumerChannel != null && consumerChannel.isOpen();
+    }
+
+    public boolean areProducerChannelsOpen() {
+        return producerChannels.stream().allMatch(ShutdownNotifier::isOpen);
+    }
+
     private void ensureQueueExists(final Channel channel,final String queueName) throws IOException {
         // ensure we have the queue created on the broker
         AMQP.Queue.DeclareOk result = channel.queueDeclare(queueName, true, false, false, null);
@@ -311,11 +327,11 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
                 Channel producerChannel = producerChannels.get(getBucket(this.queueName));
                 ensureQueueExists(producerChannel, queueName);
                 this.messageQueue = new LocalMessageQueue(queueExecutor,
-                                                          RabbitMQMessagingService.this,
-                                                          consumerChannel,
-                                                          producerChannel,
-                                                          exchangeName, queueName, messageHandler,
-                                                          internalMessageDeserializer, messageAcker);
+                        RabbitMQMessagingService.this,
+                        consumerChannel,
+                        producerChannel,
+                        exchangeName, queueName, messageHandler,
+                        internalMessageDeserializer, messageAcker);
                 messageQueue.initialize();
             } catch(Exception e) {
                 this.exception = e;

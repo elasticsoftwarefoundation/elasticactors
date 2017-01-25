@@ -95,6 +95,11 @@ public final class ShoalClusterService implements ClusterService {
     }
 
     @Override
+    public void removeEventListener(ClusterEventListener eventListener) {
+        this.eventListeners.remove(eventListener);
+    }
+
+    @Override
     public void sendMessage(final String memberToken, final byte[] message) throws Exception {
         gms.getGroupHandle().sendMessage(memberToken,COMPONENT_NAME,message);
     }
