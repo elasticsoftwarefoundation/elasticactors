@@ -28,13 +28,13 @@ public class CassandraHealthCheck implements HealthCheck {
         }
 
         try {
-            String query = QueryBuilder.select().countAll().from("system", "schema_keyspaces").getQueryString();
+            String query = QueryBuilder.select().countAll().from("\"ElasticActors\"", "\"PersistentActors\"").getQueryString();
             ResultSet results = cassandraSession.execute(query);
-            if (results.one() != null) {
-                return unhealthy("No results found in Cassandra system table");
+            if (results.one() == null) {
+                return unhealthy("No results found in Cassandra ElasticActors table");
             }
         } catch (Exception e) {
-            return unhealthy("Unable to query Cassandra system table", e);
+            return unhealthy("Unable to query Cassandra ElasticActors table: " + e.getMessage(), e);
         }
 
         return healthy();

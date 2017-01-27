@@ -164,7 +164,7 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"internalActorSystemHealthCheck"})
-    public InternalActorSystemHealthCheck createHealthCheck(InternalActorSystem internalActorSystem, ClusterService clusterService) {
-        return new InternalActorSystemHealthCheck(internalActorSystem, clusterService, nodeSelectorFactory);
+    public InternalActorSystemHealthCheck createHealthCheck(InternalActorSystem internalActorSystem) {
+        return new InternalActorSystemHealthCheck(internalActorSystem);
     }
 }
