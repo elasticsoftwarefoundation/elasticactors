@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2016 The Original Authors
+ * Copyright 2013 - 2017 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,7 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.SetMultimap;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import org.apache.logging.log4j.LogManager;
@@ -83,6 +81,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     private final ConcurrentMap<String, ActorNodeAdapter> activeNodeAdapters = new ConcurrentHashMap<>();
     private final ActorNodeAdapter localNodeAdapter;
     private final HashFunction hashFunction = Hashing.murmur3_32();
+    private final AtomicBoolean stable = new AtomicBoolean(false);
 
     public LocalActorSystemInstance(PhysicalNode localNode, InternalActorSystems cluster, InternalActorSystemConfiguration configuration, NodeSelectorFactory nodeSelectorFactory) {
         this.configuration = configuration;
@@ -194,6 +193,9 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         // this is for reporting the number of shards per node
         final List<String> nodeCount = new ArrayList<>(shards.length);
 
+        // assume we are stable until the resharding process tells us otherwise
+        boolean stable = true;
+
         try {
             for (Lock writeLock : writeLocks) {
                 writeLock.lock();
@@ -223,6 +225,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                             strategy.registerWaitForRelease(newShard, node);
                         } catch(Exception e) {
                             logger.error(format("IMPORTANT: waiting on release of shard %s from node %s failed,  ElasticActors cluster is unstable. Please check all nodes", shardKey, owningNodeId), e);
+                            stable = false;
                         } finally {
                             // add it to the new local shards
                             newLocalShards.add(i);
@@ -250,6 +253,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                             }
                         } catch(Exception e) {
                             logger.error(format("IMPORTANT: signalling release of shard %s to node %s failed, ElasticActors cluster is unstable. Please check all nodes", shardKey, node), e);
+                            stable = false;
                         } finally {
                             // create a new remote shard and swap it
                             RemoteActorShard newShard = new RemoteActorShard(node, this, i, shardAdapters[i].myRef, remoteMessageQueueFactory);
@@ -266,14 +270,15 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
             // now we have released all local shards, wait for the new local shards to become available
             if(!strategy.waitForReleasedShards(10, TimeUnit.SECONDS)) {
                 // timeout while waiting for the shards
-                // @todo: what to do now?
+                stable = false;
             }
-
         } finally {
             // unlock all
             for (Lock writeLock : writeLocks) {
                 writeLock.unlock();
             }
+
+            this.stable.set(stable);
         }
         // This needs to happen after we initialize the shards as services expect the system to be initialized and
         // should be allowed to send messages to shards
@@ -508,6 +513,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         ActorRef sender = ActorContextHolder.getSelf();
         ActorContainer handlingContainer = ((ActorContainerRef) actorRef).getActorContainer();
         handlingContainer.sendMessage(sender, handlingContainer.getActorRef(), new DestroyActorMessage(actorRef));
+    }
+
+    @Override
+    public boolean isStable() {
+        return stable.get();
     }
 
     @Autowired

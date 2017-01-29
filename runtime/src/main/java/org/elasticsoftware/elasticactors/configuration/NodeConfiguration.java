@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2016 The Original Authors
+ * Copyright 2013 - 2017 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.*;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ShardedScheduler;
+import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
@@ -162,4 +163,8 @@ public class NodeConfiguration {
         return new ActorSystemEventRegistryImpl();
     }
 
+    @Bean(name = {"internalActorSystemHealthCheck"})
+    public InternalActorSystemHealthCheck createHealthCheck(InternalActorSystem internalActorSystem) {
+        return new InternalActorSystemHealthCheck(internalActorSystem);
+    }
 }
