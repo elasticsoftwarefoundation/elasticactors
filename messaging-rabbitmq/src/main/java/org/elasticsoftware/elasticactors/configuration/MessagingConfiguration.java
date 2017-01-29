@@ -24,6 +24,7 @@ import org.elasticsoftware.elasticactors.messaging.MessagingService;
 import org.elasticsoftware.elasticactors.rabbitmq.RabbitMQMessagingServiceInterface;
 import org.elasticsoftware.elasticactors.rabbitmq.MessageAcker;
 import org.elasticsoftware.elasticactors.rabbitmq.RabbitMQMessagingService;
+import org.elasticsoftware.elasticactors.rabbitmq.health.RabbitMQHealthCheck;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
@@ -95,5 +96,10 @@ public class MessagingConfiguration {
     @Bean(name = "remoteActorSystemMessageQueueFactoryFactory")
     public MessageQueueFactoryFactory getRemoteActorSystemMessageQueueFactoryFactory() {
         return messagingService.getRemoteActorSystemMessageQueueFactoryFactory();
+    }
+
+    @Bean(name = "rabbitMQHealthCheck")
+    public RabbitMQHealthCheck getHealthCheck() {
+        return new RabbitMQHealthCheck(messagingService);
     }
 }

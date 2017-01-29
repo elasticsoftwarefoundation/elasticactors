@@ -212,6 +212,18 @@ public final class RabbitMQMessagingService implements RabbitMQMessagingServiceI
         propagateChannelEvent(channel, c -> c.onRecoveryFailure(channel, failure), "onRecoveryFailure");
     }
 
+    public boolean isClientConnectionOpen() {
+        return clientConnection != null && clientConnection.isOpen();
+    }
+
+    public boolean areConsumerChannelsOpen() {
+        return consumerChannel != null && consumerChannel.isOpen();
+    }
+
+    public boolean areProducerChannelsOpen() {
+        return producerChannel != null && producerChannel.isOpen();
+    }
+
     private void propagateChannelEvent(final Channel channel, final Consumer<ChannelListener> channelEvent, final String channelEventName) {
         final Set<ChannelListener> listeners = this.channelListenerRegistry.get(channel);
         if(listeners != null) {

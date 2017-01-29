@@ -26,6 +26,8 @@ public interface ClusterService {
 
     void addEventListener(ClusterEventListener eventListener);
 
+    void removeEventListener(ClusterEventListener eventListener);
+
     void sendMessage(String memberToken, byte[] message) throws Exception;
 
     void setClusterMessageHandler(ClusterMessageHandler clusterMessageHandler);
