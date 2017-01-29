@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2016 The Original Authors
+ * Copyright 2013 - 2017 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,6 +59,11 @@ public class SingleNodeClusterService implements ClusterService {
     @Override
     public void addEventListener(ClusterEventListener eventListener) {
         eventListeners.add(eventListener);
+    }
+
+    @Override
+    public void removeEventListener(ClusterEventListener eventListener) {
+        this.eventListeners.remove(eventListener);
     }
 
     @Override

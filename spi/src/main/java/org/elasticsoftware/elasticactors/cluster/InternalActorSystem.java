@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2016 The Original Authors
+ * Copyright 2013 - 2017 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -93,4 +93,12 @@ public interface InternalActorSystem extends ActorSystem, ShardAccessor {
     InternalActorSystems getParent();
 
     List<ActorLifecycleListener<?>> getActorLifecycleListeners(Class<? extends ElasticActor> actorClass);
+
+    /**
+     * Returns whether or not the actor system is currently stable, i.e. if all shards have been assigned and initialized
+     * properly.
+     *
+     * @return true when the actor system is stable, false otherwise.
+     */
+    boolean isStable();
 }

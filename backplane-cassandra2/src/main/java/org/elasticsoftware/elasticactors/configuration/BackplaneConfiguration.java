@@ -23,6 +23,7 @@ import com.datastax.driver.core.policies.LoggingRetryPolicy;
 import com.datastax.driver.core.policies.RoundRobinPolicy;
 import org.elasticsoftware.elasticactors.cassandra2.cluster.CassandraActorSystemEventListenerRepository;
 import org.elasticsoftware.elasticactors.cassandra2.cluster.scheduler.CassandraScheduledMessageRepository;
+import org.elasticsoftware.elasticactors.cassandra2.health.CassandraHealthCheck;
 import org.elasticsoftware.elasticactors.cassandra2.serialization.CompressingSerializer;
 import org.elasticsoftware.elasticactors.cassandra2.serialization.DecompressingDeserializer;
 import org.elasticsoftware.elasticactors.cassandra2.state.CassandraPersistentActorRepository;
@@ -130,5 +131,10 @@ public class BackplaneConfiguration {
     @Bean(name = {"actorSystemEventListenerRepository"})
     public ActorSystemEventListenerRepository getActorSystemEventListenerRepository() {
         return new CassandraActorSystemEventListenerRepository(cluster.getClusterName(), cassandraSession);
+    }
+
+    @Bean(name = "cassandraHealthCheck")
+    public CassandraHealthCheck getHealthCheck() {
+        return new CassandraHealthCheck(cassandraSession);
     }
 }
