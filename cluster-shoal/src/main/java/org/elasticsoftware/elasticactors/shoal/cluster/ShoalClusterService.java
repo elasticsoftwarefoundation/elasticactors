@@ -125,34 +125,27 @@ public final class ShoalClusterService implements ClusterService {
                 (GroupManagementService) GMSFactory.startGMSModule(serverName, groupName, GroupManagementService.MemberType.CORE, props);
 
 
-        final CallBack gmsCallback = new CallBack() {
-            @Override
-            public void processNotification(Signal notification) {
-                logger.info(format("got signal [%s] from member [%s]", notification.getClass().getSimpleName(), notification.getMemberToken()));
-                if(notification instanceof JoinedAndReadyNotificationSignal) {
-                    fireTopologyChanged(((JoinedAndReadyNotificationSignal)notification).getCurrentView());
-                } else if(notification instanceof PlannedShutdownSignal) {
-                    fireTopologyChanged(((PlannedShutdownSignal)notification).getCurrentView());
-                } else if(notification instanceof FailureNotificationSignal) {
-                    fireTopologyChanged(((FailureNotificationSignal) notification).getCurrentView());
-                } else if(notification instanceof GroupLeadershipNotificationSignal) {
-                    fireLeadershipChanged((GroupLeadershipNotificationSignal)notification);
-                }
+        final CallBack gmsCallback = notification -> {
+            logger.info(format("got signal [%s] from member [%s]", notification.getClass().getSimpleName(), notification.getMemberToken()));
+            if(notification instanceof JoinedAndReadyNotificationSignal) {
+                fireTopologyChanged(((JoinedAndReadyNotificationSignal)notification).getCurrentView());
+            } else if(notification instanceof PlannedShutdownSignal) {
+                fireTopologyChanged(((PlannedShutdownSignal)notification).getCurrentView());
+            } else if(notification instanceof FailureNotificationSignal) {
+                fireTopologyChanged(((FailureNotificationSignal) notification).getCurrentView());
+            } else if(notification instanceof GroupLeadershipNotificationSignal) {
+                fireLeadershipChanged((GroupLeadershipNotificationSignal)notification);
             }
         };
 
-        final CallBack messagingCallback = new CallBack() {
-
-            @Override
-            public void processNotification(Signal notification) {
-                if(notification instanceof MessageSignal) {
-                    if(clusterMessageHandler != null) {
-                        MessageSignal messageSignal = (MessageSignal) notification;
-                        try {
-                            clusterMessageHandler.handleMessage(messageSignal.getMessage(),messageSignal.getMemberToken());
-                        } catch (Exception e) {
-                            logger.error(format("Exception while handling MessageSignal from member %s, signal bytes (HEX): -", messageSignal.getMemberToken()),e);
-                        }
+        final CallBack messagingCallback = notification -> {
+            if(notification instanceof MessageSignal) {
+                if(clusterMessageHandler != null) {
+                    MessageSignal messageSignal = (MessageSignal) notification;
+                    try {
+                        clusterMessageHandler.handleMessage(messageSignal.getMessage(),messageSignal.getMemberToken());
+                    } catch (Exception e) {
+                        logger.error(format("Exception while handling MessageSignal from member %s, signal bytes (HEX): -", messageSignal.getMemberToken()),e);
                     }
                 }
             }
