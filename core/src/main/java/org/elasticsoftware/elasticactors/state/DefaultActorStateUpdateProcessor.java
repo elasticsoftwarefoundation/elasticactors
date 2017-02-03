@@ -62,7 +62,7 @@ public class DefaultActorStateUpdateProcessor implements ActorStateUpdateProcess
             try {
                 listener.onUpdate(events);
             } catch(Exception e) {
-                logger.error(String.format("Unexpected Exeption while processing ActorStateUpdates on listener of type %s", listener.getClass().getSimpleName()), e);
+                logger.error(String.format("Unexpected Exception while processing ActorStateUpdates on listener of type %s", listener.getClass().getSimpleName()), e);
             }
         }
     }
