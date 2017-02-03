@@ -163,7 +163,7 @@ public class TestConfiguration {
         if(listeners.isEmpty()) {
             return new NoopActorStateUpdateProcessor();
         } else {
-            return new DefaultActorStateUpdateProcessor(listeners.values());
+            return new DefaultActorStateUpdateProcessor(listeners.values(), 1, 20);
         }
     }
 

@@ -38,9 +38,9 @@ public class DefaultActorStateUpdateProcessor implements ActorStateUpdateProcess
     private final ThreadBoundExecutor<ActorStateUpdateEvent> executor;
     private final List<ActorStateUpdateListener> listeners = new ArrayList<>();
 
-    public DefaultActorStateUpdateProcessor(Collection<ActorStateUpdateListener> listeners) {
+    public DefaultActorStateUpdateProcessor(Collection<ActorStateUpdateListener> listeners, int workerCount, int maxBatchSize) {
         this.listeners.addAll(listeners);
-        this.executor = new ThreadBoundExecutorImpl(this, 20, new DaemonThreadFactory("ACTORSTATE-UPDATE-WORKER"), 8);
+        this.executor = new ThreadBoundExecutorImpl(this, maxBatchSize, new DaemonThreadFactory("ACTORSTATE-UPDATE-WORKER"), workerCount);
     }
 
     @Override

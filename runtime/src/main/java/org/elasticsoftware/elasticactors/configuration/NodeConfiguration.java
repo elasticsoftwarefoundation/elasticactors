@@ -180,7 +180,9 @@ public class NodeConfiguration {
         if(listeners.isEmpty()) {
             return new NoopActorStateUpdateProcessor();
         } else {
-            return new DefaultActorStateUpdateProcessor(listeners.values());
+            final int workers = env.getProperty("ea.actorStateUpdateProcessor.workerCount",Integer.class,1);
+            final int maxBatchSize = env.getProperty("ea.actorStateUpdateProcessor.maxBatchSize",Integer.class,20);
+            return new DefaultActorStateUpdateProcessor(listeners.values(), workers, maxBatchSize);
         }
     }
 }
