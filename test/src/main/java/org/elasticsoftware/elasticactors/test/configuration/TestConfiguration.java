@@ -37,6 +37,7 @@ import org.elasticsoftware.elasticactors.state.NoopActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.test.InternalActorSystemsImpl;
 import org.elasticsoftware.elasticactors.test.cluster.NoopActorSystemEventRegistryService;
 import org.elasticsoftware.elasticactors.test.cluster.SingleNodeClusterService;
+import org.elasticsoftware.elasticactors.test.state.LoggingActorStateUpdateListener;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
@@ -164,5 +165,10 @@ public class TestConfiguration {
         } else {
             return new DefaultActorStateUpdateProcessor(listeners.values());
         }
+    }
+
+    @Bean(name = {"loggingActorStateUpdateListener"})
+    public LoggingActorStateUpdateListener createLoggingActorStateUpdateListener() {
+        return new LoggingActorStateUpdateListener();
     }
 }
