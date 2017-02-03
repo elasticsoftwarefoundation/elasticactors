@@ -19,6 +19,9 @@ package org.elasticsoftware.elasticactors.state;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 
+import java.io.IOError;
+import java.io.IOException;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -121,6 +124,11 @@ public final class PersistentActor<K> implements ActorContext {
     @Override
     public ActorSystem getActorSystem() {
         return actorSystem;
+    }
+
+    public void serializeState() throws IOException {
+        this.serializedState = actorSystem.getParent().getSerializationFramework(actorState.getSerializationFramework())
+                .getActorStateSerializer(this.actorState).serialize(this.actorState);
     }
 
 }
