@@ -28,7 +28,7 @@ package org.elasticsoftware.elasticactors.util.concurrent;
  */
 public interface ThreadBoundExecutor<T extends ThreadBoundEvent<?>> {
 
-    public void execute(T runnable);
+    void execute(T runnable);
 
     void shutdown();
 

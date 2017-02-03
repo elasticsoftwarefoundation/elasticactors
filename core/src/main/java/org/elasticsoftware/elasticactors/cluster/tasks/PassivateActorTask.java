@@ -57,7 +57,13 @@ public final class PassivateActorTask extends ActorLifecycleTask {
     }
 
     @Override
-    protected void executeLifecycleListener(ActorLifecycleListener listener,ActorRef actorRef,ActorState actorState) {
+    protected ActorLifecycleStep executeLifecycleListener(ActorLifecycleListener listener,ActorRef actorRef,ActorState actorState) {
         listener.prePassivate(actorRef,actorState);
+        return ActorLifecycleStep.PASSIVATE;
+    }
+
+    @Override
+    protected ActorLifecycleStep getLifeCycleStep() {
+        return ActorLifecycleStep.PASSIVATE;
     }
 }

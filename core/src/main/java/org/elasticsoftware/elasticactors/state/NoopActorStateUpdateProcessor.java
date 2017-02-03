@@ -16,28 +16,14 @@
 
 package org.elasticsoftware.elasticactors.state;
 
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ElasticActor;
-
 import javax.annotation.Nullable;
-import java.nio.ByteBuffer;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface ActorStateUpdate {
-    String getVersion();
-
-    @Nullable
-    ActorLifecycleStep getLifecycleStep();
-
-    @Nullable
-    Class getMessageClass();
-
-    Class<? extends ElasticActor> getActorClass();
-
-    ActorRef getActorRef();
-
-    @Nullable
-    ByteBuffer getSerializedState();
+public final class NoopActorStateUpdateProcessor implements ActorStateUpdateProcessor {
+    @Override
+    public void process(@Nullable ActorLifecycleStep lifecycleStep, @Nullable Object message, PersistentActor persistentActor) {
+        // do nothing
+    }
 }

@@ -16,11 +16,12 @@
 
 package org.elasticsoftware.elasticactors.state;
 
+
+import java.util.List;
+
 /**
  * @author Joost van de Wijgerd
  */
 public interface ActorStateUpdateListener {
-    void onUpdate(ActorStateUpdate... updates);
-
-    void onDelete(ActorStateUpdate update);
+    void onUpdate(List<? extends ActorStateUpdate> updates);
 }

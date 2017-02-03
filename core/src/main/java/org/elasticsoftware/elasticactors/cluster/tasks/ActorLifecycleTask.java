@@ -80,6 +80,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         InternalActorContext.setContext(persistentActor);
         SerializationContext.initialize();
         boolean shouldUpdateState = false;
+        ActorLifecycleStep lifecycleStep = null;
         try {
             shouldUpdateState = doInActorContext(actorSystem, receiver, receiverRef, internalMessage);
             executeLifecycleListeners();
@@ -98,8 +99,11 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             // check if we have state now that needs to be written to the persistent actor store
             if (persistentActorRepository != null && persistentActor.getState() != null && shouldUpdateState) {
                 try {
+                    // generate the serialized state (will be used
+                    persistentActor.serializeState();
                     persistentActorRepository.updateAsync((ShardKey) persistentActor.getKey(), persistentActor,
                                                           internalMessage, messageHandlerEventListener);
+                    //
                 } catch (Exception e) {
                     log.error(format("Exception while serializing ActorState for actor [%s]", receiverRef.getActorId()), e);
                 }
@@ -143,8 +147,12 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         }
     }
 
-    protected void executeLifecycleListener(ActorLifecycleListener listener,ActorRef actorRef,ActorState actorState) {
+    protected ActorLifecycleStep executeLifecycleListener(ActorLifecycleListener listener,ActorRef actorRef,ActorState actorState) {
+        return null;
+    }
 
+    protected ActorLifecycleStep getLifeCycleStep() {
+        return null;
     }
 
     protected final boolean shouldUpdateState(ElasticActor elasticActor,ActorLifecycleStep lifecycleStep) {
