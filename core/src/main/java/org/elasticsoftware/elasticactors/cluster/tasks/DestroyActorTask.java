@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 
@@ -31,27 +32,17 @@ import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
  */
 public final class DestroyActorTask extends ActorLifecycleTask {
     private static final Logger logger = LogManager.getLogger(DestroyActorTask.class);
-    private final PersistentActorRepository persistentActorRepository;
     private final ShardKey shardKey;
 
-    public DestroyActorTask(PersistentActor persistentActor,
-                            InternalActorSystem actorSystem,
-                            ElasticActor receiver,
-                            ActorRef receiverRef,
-                            InternalMessage createActorMessage,
-                            MessageHandlerEventListener messageHandlerEventListener) {
-        this(null,persistentActor,actorSystem,receiver,receiverRef,createActorMessage,messageHandlerEventListener);
-    }
-
-    public DestroyActorTask(PersistentActorRepository persistentActorRepository,
+    public DestroyActorTask(ActorStateUpdateProcessor actorStateUpdateProcessor,
+                            PersistentActorRepository persistentActorRepository,
                             PersistentActor persistentActor,
                             InternalActorSystem actorSystem,
                             ElasticActor receiver,
                             ActorRef receiverRef,
                             InternalMessage createActorMessage,
                             MessageHandlerEventListener messageHandlerEventListener) {
-        super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef,messageHandlerEventListener, createActorMessage);
-        this.persistentActorRepository = persistentActorRepository;
+        super(actorStateUpdateProcessor, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef,messageHandlerEventListener, createActorMessage);
         this.shardKey = (ShardKey) persistentActor.getKey();
 
     }

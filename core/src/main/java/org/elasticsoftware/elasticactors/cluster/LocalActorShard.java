@@ -34,6 +34,7 @@ import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.elasticsoftware.elasticactors.util.ManifestTools;
@@ -62,6 +63,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     private ThreadBoundExecutor actorExecutor;
     private Cache<ActorRef,PersistentActor<ShardKey>> actorCache;
     private PersistentActorRepository persistentActorRepository;
+    private ActorStateUpdateProcessor actorStateUpdateProcessor;
     private final ShardActorCacheManager actorCacheManager;
     // the cacheloader instance that is reused to avoid garbage being created on each call
     private final CacheLoader cacheLoader = new CacheLoader();
@@ -107,7 +109,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         // see if it is not a tombstone that gets evicted
         if(!(TOMBSTONE == value)) {
             ElasticActor actorInstance = actorSystem.getActorInstance(value.getSelf(), value.getActorClass());
-            actorExecutor.execute(new PassivateActorTask(persistentActorRepository, value, actorSystem, actorInstance, value.getSelf()));
+            actorExecutor.execute(new PassivateActorTask(actorStateUpdateProcessor, persistentActorRepository, value,
+                    actorSystem, actorInstance, value.getSelf()));
         }
     }
 
@@ -184,6 +187,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                                     internalMessage,
                                     actor,
                                     persistentActorRepository,
+                                    actorStateUpdateProcessor,
                                     messageHandlerEventListener));
                         } else {
                             actorExecutor.execute(new HandleMessageTask(actorSystem,
@@ -192,6 +196,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                                     internalMessage,
                                     actor,
                                     persistentActorRepository,
+                                    actorStateUpdateProcessor,
                                     messageHandlerEventListener));
                         }
                     }
@@ -305,7 +310,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         // find actor class behind receiver ActorRef
         ElasticActor actorInstance = actorSystem.getActorInstance(ref,persistentActor.getActorClass());
         // call postCreate
-        actorExecutor.execute(new CreateActorTask(persistentActorRepository,
+        actorExecutor.execute(new CreateActorTask(actorStateUpdateProcessor,
+                                                  persistentActorRepository,
                                                   persistentActor,
                                                   actorSystem,
                                                   actorInstance,
@@ -342,7 +348,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
             // find actor class behind receiver ActorRef
             ElasticActor actorInstance = actorSystem.getActorInstance(actorRef,persistentActor.getActorClass());
             // call preDestroy
-            actorExecutor.execute(new DestroyActorTask( persistentActorRepository,
+            actorExecutor.execute(new DestroyActorTask( actorStateUpdateProcessor,
+                                                        persistentActorRepository,
                                                         persistentActor,
                                                         actorSystem,
                                                         actorInstance,
@@ -362,6 +369,11 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     @Autowired
     public void setPersistentActorRepository(PersistentActorRepository persistentActorRepository) {
         this.persistentActorRepository = persistentActorRepository;
+    }
+
+    @Autowired
+    public void setActorStateUpdateProcessor(ActorStateUpdateProcessor actorStateUpdateProcessor) {
+        this.actorStateUpdateProcessor = actorStateUpdateProcessor;
     }
 
     /**
@@ -392,7 +404,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
             } else {
                 ElasticActor actorInstance = actorSystem.getActorInstance(actorRef,
                                                                           loadedActor.getActorClass());
-                actorExecutor.execute(new ActivateActorTask(persistentActorRepository,
+                actorExecutor.execute(new ActivateActorTask(actorStateUpdateProcessor,
+                                                            persistentActorRepository,
                                                             loadedActor,
                                                             actorSystem,
                                                             actorInstance,

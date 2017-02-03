@@ -24,6 +24,7 @@ import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 
@@ -43,9 +44,31 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
                                           ActorRef receiverRef,
                                           InternalMessage internalMessage,
                                           PersistentActor persistentActor,
+                                          MessageHandlerEventListener messageHandlerEventListener) {
+        this(actorSystem, receiver, receiverRef, internalMessage, persistentActor, null,
+                null, messageHandlerEventListener);
+    }
+
+    public HandleUndeliverableMessageTask(InternalActorSystem actorSystem,
+                                          ElasticActor receiver,
+                                          ActorRef receiverRef,
+                                          InternalMessage internalMessage,
+                                          PersistentActor persistentActor,
                                           PersistentActorRepository persistentActorRepository,
                                           MessageHandlerEventListener messageHandlerEventListener) {
-        super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage);
+        this(actorSystem, receiver, receiverRef, internalMessage, persistentActor, persistentActorRepository,
+                null, messageHandlerEventListener);
+    }
+
+    public HandleUndeliverableMessageTask(InternalActorSystem actorSystem,
+                                          ElasticActor receiver,
+                                          ActorRef receiverRef,
+                                          InternalMessage internalMessage,
+                                          PersistentActor persistentActor,
+                                          PersistentActorRepository persistentActorRepository,
+                                          ActorStateUpdateProcessor actorStateUpdateProcessor,
+                                          MessageHandlerEventListener messageHandlerEventListener) {
+        super(actorStateUpdateProcessor, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage);
     }
 
 

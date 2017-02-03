@@ -155,7 +155,6 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                                                                                      receiverRef,
                                                                                      internalMessage,
                                                                                      actor,
-                                                                                     null,
                                                                                      messageHandlerEventListener));
                         } else {
                             actorExecutor.execute(new HandleMessageTask(actorSystem,
@@ -163,7 +162,6 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                                                                         receiverRef,
                                                                         internalMessage,
                                                                         actor,
-                                                                        null,
                                                                         messageHandlerEventListener));
                         }
 

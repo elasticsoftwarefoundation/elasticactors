@@ -45,14 +45,17 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
     private final InternalMessage internalMessage;
     private final MessageHandlerEventListener messageHandlerEventListener;
     private final Measurement measurement;
+    private final ActorStateUpdateProcessor actorStateUpdateProcessor;
 
-    protected ActorLifecycleTask(PersistentActorRepository persistentActorRepository,
+    protected ActorLifecycleTask(ActorStateUpdateProcessor actorStateUpdateProcessor,
+                                 PersistentActorRepository persistentActorRepository,
                                  PersistentActor persistentActor,
                                  InternalActorSystem actorSystem,
                                  ElasticActor receiver,
                                  ActorRef receiverRef,
                                  MessageHandlerEventListener messageHandlerEventListener,
                                  InternalMessage internalMessage) {
+        this.actorStateUpdateProcessor = actorStateUpdateProcessor;
         this.persistentActorRepository = persistentActorRepository;
         this.receiverRef = receiverRef;
         this.persistentActor = persistentActor;
@@ -80,7 +83,6 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         InternalActorContext.setContext(persistentActor);
         SerializationContext.initialize();
         boolean shouldUpdateState = false;
-        ActorLifecycleStep lifecycleStep = null;
         try {
             shouldUpdateState = doInActorContext(actorSystem, receiver, receiverRef, internalMessage);
             executeLifecycleListeners();
@@ -99,13 +101,25 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             // check if we have state now that needs to be written to the persistent actor store
             if (persistentActorRepository != null && persistentActor.getState() != null && shouldUpdateState) {
                 try {
-                    // generate the serialized state (will be used
+                    // generate the serialized state
                     persistentActor.serializeState();
                     persistentActorRepository.updateAsync((ShardKey) persistentActor.getKey(), persistentActor,
                                                           internalMessage, messageHandlerEventListener);
-                    //
+                    // if we have a configured actor state update processor, then use it
+                    if(actorStateUpdateProcessor != null) {
+                        // this is either a lifecycle step or an incoming message
+                        if(getLifeCycleStep() != null) {
+                            actorStateUpdateProcessor.process(getLifeCycleStep(), null, persistentActor);
+                        } else {
+                            // it's an incoming message so the messageClass in the internal message is what we need
+                            actorStateUpdateProcessor.process(null, Class.forName(internalMessage.getPayloadClass()), persistentActor);
+                        }
+                    }
                 } catch (Exception e) {
                     log.error(format("Exception while serializing ActorState for actor [%s]", receiverRef.getActorId()), e);
+                } finally {
+                    // always ensure we release the memory of the serialized state
+                     persistentActor.setSerializedState(null);
                 }
                 // measure the serialization time
                 if(this.measurement != null) {
