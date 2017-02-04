@@ -84,4 +84,8 @@ public final class ActorStateUpdateEvent implements ThreadBoundEvent<String>, Ac
     public ByteBuffer getSerializedState() {
         return serializedState;
     }
+
+    public ActorStateUpdateEvent copyOf() {
+        return new ActorStateUpdateEvent(actorClass, actorRef, serializedState.duplicate(), version, lifecycleStep, messageClass);
+    }
 }
