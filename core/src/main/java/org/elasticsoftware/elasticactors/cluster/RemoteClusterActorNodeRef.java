@@ -31,8 +31,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author  Joost van de Wijgerd
  */
-public final class RemoteClusterActorNodeRef implements ActorRef, ActorContainerRef, ActorContainer {
-    private final InternalActorSystem actorSystem;
+public final class RemoteClusterActorNodeRef extends AbstractActorRef implements ActorContainerRef, ActorContainer {
     private final String clusterName;
     private final ActorShard delegatingShard;
     private final String nodeId;
@@ -44,11 +43,11 @@ public final class RemoteClusterActorNodeRef implements ActorRef, ActorContainer
     }
 
     public RemoteClusterActorNodeRef(InternalActorSystem actorSystem, String clusterName, ActorShard delegatingShard, String nodeId, String actorId) {
+        super(actorSystem);
         this.clusterName = clusterName;
         this.delegatingShard = delegatingShard;
         this.nodeId = nodeId;
         this.actorId = actorId;
-        this.actorSystem = actorSystem;
         this.refSpec = generateRefSpec(clusterName, delegatingShard, nodeId, actorId);
     }
 
@@ -101,39 +100,6 @@ public final class RemoteClusterActorNodeRef implements ActorRef, ActorContainer
         } else {
             throw new IllegalStateException("Cannot determine ActorRef(self) Only use this method while inside an ElasticActor Lifecycle or on(Message) method!");
         }
-    }
-
-    @Override
-    public <T> CompletableFuture<T> ask(Object message, Class<T> responseType) {
-        CompletableFuture<T> future = new CompletableFuture<>();
-        try {
-            ActorRef replyRef = actorSystem.tempActorOf(ReplyActor.class, new ActorDelegate<T>() {
-                @Override
-                public ActorDelegate<T> getBody() {
-                    return this;
-                }
-
-                @Override
-                public void onUndeliverable(ActorRef receiver, Object message) {
-                    future.completeExceptionally(new MessageDeliveryException("Unable to deliver message", false));
-                }
-
-                @Override
-                public void onReceive(ActorRef sender, Object message) {
-                    if (responseType.isInstance(message)) {
-                        future.complete((T) message);
-                    } else if (message instanceof Throwable) {
-                        future.completeExceptionally((Throwable) message);
-                    } else {
-                        future.completeExceptionally(new UnexpectedResponseTypeException("Receiver unexpectedly responsed with a message of type " + message.getClass().getTypeName()));
-                    }
-                }
-            });
-            tell(message, replyRef);
-        } catch (Exception e) {
-            future.completeExceptionally(e);
-        }
-        return future;
     }
 
     @Override

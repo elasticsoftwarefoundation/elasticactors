@@ -77,12 +77,12 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
 
     @Override
     public ActorRef createTempActorRef(ActorNode node, String actorId) {
-        return new LocalClusterActorNodeRef(getClusterName(), node, actorId, get(null));
+        return new LocalClusterActorNodeRef(get(null), getClusterName(), node, actorId);
     }
 
     @Override
     public ActorRef createServiceActorRef(ActorNode node, String actorId) {
-        return new ServiceActorRef(getClusterName(), node, actorId, get(null));
+        return new ServiceActorRef(get(null), getClusterName(), node, actorId);
     }
 
     @Override
