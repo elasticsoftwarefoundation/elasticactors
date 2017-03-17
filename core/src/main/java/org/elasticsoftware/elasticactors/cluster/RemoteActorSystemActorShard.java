@@ -48,7 +48,7 @@ public final class RemoteActorSystemActorShard implements ActorShard, MessageHan
                                        MessageQueueFactory messageQueueFactory) {
         this.actorSystems = actorSystems;
         this.shardKey = new ShardKey(remoteActorSystemName, vNodeKey);
-        this.myRef = new ActorShardRef(remoteClusterName,this);
+        this.myRef = new ActorShardRef(remoteClusterName, this, actorSystems.get(null));
         this.messageQueueFactory = messageQueueFactory;
     }
 

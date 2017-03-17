@@ -17,8 +17,11 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.actors.ActorDelegate;
+import org.elasticsoftware.elasticactors.actors.ReplyActor;
 
 import javax.annotation.Nullable;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * {@link org.elasticsoftware.elasticactors.ActorRef} that references an actor in the local cluster
@@ -30,16 +33,18 @@ public final class ActorShardRef implements ActorRef, ActorContainerRef {
     private final ActorShard shard;
     private final String actorId;
     private final String refSpec;
+    private final ActorSystem actorSystem;
 
-    public ActorShardRef(String clusterName, ActorShard shard,@Nullable String actorId) {
+    public ActorShardRef(String clusterName, ActorShard shard,@Nullable String actorId, ActorSystem actorSystem) {
         this.clusterName = clusterName;
         this.shard = shard;
         this.actorId = actorId;
         this.refSpec = generateRefSpec(clusterName, shard, actorId);
+        this.actorSystem = actorSystem;
     }
 
-    public ActorShardRef(String clusterName, ActorShard shard) {
-        this(clusterName, shard, null);
+    public ActorShardRef(String clusterName, ActorShard shard, ActorSystem actorSystem) {
+        this(clusterName, shard, null, actorSystem);
     }
 
     public static String generateRefSpec(String clusterName,ActorShard shard,@Nullable String actorId) {
@@ -87,6 +92,39 @@ public final class ActorShardRef implements ActorRef, ActorContainerRef {
         } else {
             throw new IllegalStateException("Cannot determine ActorRef(self) Only use this method while inside an ElasticActor Lifecycle or on(Message) method!");
         }
+    }
+
+    @Override
+    public <T> CompletableFuture<T> ask(Object message, Class<T> responseType) {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        try {
+            ActorRef replyRef = actorSystem.tempActorOf(ReplyActor.class, new ActorDelegate<T>() {
+                @Override
+                public ActorDelegate<T> getBody() {
+                    return this;
+                }
+
+                @Override
+                public void onUndeliverable(ActorRef receiver, Object message) {
+                    future.completeExceptionally(new MessageDeliveryException("Unable to deliver message", false));
+                }
+
+                @Override
+                public void onReceive(ActorRef sender, Object message) {
+                    if (responseType.isInstance(message)) {
+                        future.complete((T) message);
+                    } else if (message instanceof Throwable) {
+                        future.completeExceptionally((Throwable) message);
+                    } else {
+                        future.completeExceptionally(new UnexpectedResponseTypeException("Receiver unexpectedly responsed with a message of type " + message.getClass().getTypeName()));
+                    }
+                }
+            });
+            tell(message, replyRef);
+        } catch (Exception e) {
+            future.completeExceptionally(e);
+        }
+        return future;
     }
 
     @Override

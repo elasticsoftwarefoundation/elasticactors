@@ -41,7 +41,7 @@ public class ActorRefToolsTest {
         when(configuration.getNumberOfShards()).thenReturn(1);
         when(actorSystem.getShard("Pi/shards/0")).thenReturn(shard);
         when(shard.getKey()).thenReturn(shardKey);
-        ActorShardRef shardRef = new ActorShardRef("LocalNode",shard,"master");
+        ActorShardRef shardRef = new ActorShardRef("LocalNode",shard,"master", actorSystem);
         when(internalActorSystems.createPersistentActorRef(shard,"master")).thenReturn(shardRef);
         ActorRef actorRef = ActorRefTools.parse("actor://LocalNode/Pi/shards/0/master",internalActorSystems);
         assertNotNull(actorRef);
@@ -82,7 +82,7 @@ public class ActorRefToolsTest {
         when(actorSystem.getNode(nodeId)).thenReturn(node);
         when(node.getKey()).thenReturn(nodeKey);
         String serviceRefString = String.format("actor://LocalCluster/Pi/services/%s/pi/calculate",nodeId);
-        ServiceActorRef serviceActorRef = new ServiceActorRef("LocalCluster",node,"pi/calculate");
+        ServiceActorRef serviceActorRef = new ServiceActorRef("LocalCluster",node,"pi/calculate", actorSystem);
         when(internalActorSystems.createServiceActorRef(node,"pi/calculate")).thenReturn(serviceActorRef);
         ActorRef serviceRef = ActorRefTools.parse(serviceRefString,internalActorSystems);
         assertNotNull(serviceRef);
@@ -106,8 +106,8 @@ public class ActorRefToolsTest {
         when(localNode.getKey()).thenReturn(nodeKey);
         when(remoteNode.getKey()).thenReturn(remoteNodeKey);
         String serviceRefString = String.format("actor://test.elasticsoftwarefoundation.org/test/services/%s/testService","node002.elasticsoftwarefoundation.org");
-        ServiceActorRef localRef = new ServiceActorRef("test.elasticsoftwarefoundation.org",localNode,"testService");
-        ServiceActorRef remoteRef = new ServiceActorRef("test.elasticsoftwarefoundation.org",remoteNode,"testService");
+        ServiceActorRef localRef = new ServiceActorRef("test.elasticsoftwarefoundation.org",localNode,"testService", actorSystem);
+        ServiceActorRef remoteRef = new ServiceActorRef("test.elasticsoftwarefoundation.org",remoteNode,"testService", actorSystem);
         when(internalActorSystems.createServiceActorRef(localNode,"testService")).thenReturn(localRef);
         when(internalActorSystems.createServiceActorRef(remoteNode,"testService")).thenReturn(remoteRef);
         ActorRef serviceRef = ActorRefTools.parse(serviceRefString,internalActorSystems);
@@ -128,7 +128,7 @@ public class ActorRefToolsTest {
         when(actorSystem.getNode(nodeId)).thenReturn(node);
         when(node.getKey()).thenReturn(nodeKey);
         String serviceRefString = String.format("actor://LocalCluster/Pi/services/%s/pi/calculate/with/multiple/slashes",nodeId);
-        ServiceActorRef serviceActorRef = new ServiceActorRef("LocalCluster",node,"pi/calculate/with/multiple/slashes");
+        ServiceActorRef serviceActorRef = new ServiceActorRef("LocalCluster",node,"pi/calculate/with/multiple/slashes", actorSystem);
         when(internalActorSystems.createServiceActorRef(node,"pi/calculate/with/multiple/slashes")).thenReturn(serviceActorRef);
         ActorRef serviceRef = ActorRefTools.parse(serviceRefString,internalActorSystems);
         assertNotNull(serviceRef);

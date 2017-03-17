@@ -19,8 +19,11 @@ package org.elasticsoftware.elasticactors.cluster;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorSystem;
 
 import javax.annotation.Nullable;
+
+import java.util.concurrent.CompletableFuture;
 
 import static java.lang.String.format;
 
@@ -73,6 +76,13 @@ public final class DisconnectedRemoteActorNodeRef implements ActorRef, ActorCont
     @Override
     public void tell(Object message) {
         throw new IllegalStateException(format("Remote Actor Node %s cannot be reached, make sure to configure the remote actor system [%s] in the configuration",nodeId, clusterName));
+    }
+
+    @Override
+    public <T> CompletableFuture<T> ask(Object message, Class<T> responseType) {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        future.completeExceptionally(new IllegalStateException(format("Remote Actor Node %s cannot be reached, make sure to configure the remote actor system [%s] in the configuration", nodeId, clusterName)));
+        return future;
     }
 
     @Override

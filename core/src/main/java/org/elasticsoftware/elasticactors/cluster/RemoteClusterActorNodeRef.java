@@ -17,11 +17,14 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.actors.ActorDelegate;
+import org.elasticsoftware.elasticactors.actors.ReplyActor;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * {@link org.elasticsoftware.elasticactors.ActorRef} that references an actor in the local cluster
@@ -98,6 +101,39 @@ public final class RemoteClusterActorNodeRef implements ActorRef, ActorContainer
         } else {
             throw new IllegalStateException("Cannot determine ActorRef(self) Only use this method while inside an ElasticActor Lifecycle or on(Message) method!");
         }
+    }
+
+    @Override
+    public <T> CompletableFuture<T> ask(Object message, Class<T> responseType) {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        try {
+            ActorRef replyRef = actorSystem.tempActorOf(ReplyActor.class, new ActorDelegate<T>() {
+                @Override
+                public ActorDelegate<T> getBody() {
+                    return this;
+                }
+
+                @Override
+                public void onUndeliverable(ActorRef receiver, Object message) {
+                    future.completeExceptionally(new MessageDeliveryException("Unable to deliver message", false));
+                }
+
+                @Override
+                public void onReceive(ActorRef sender, Object message) {
+                    if (responseType.isInstance(message)) {
+                        future.complete((T) message);
+                    } else if (message instanceof Throwable) {
+                        future.completeExceptionally((Throwable) message);
+                    } else {
+                        future.completeExceptionally(new UnexpectedResponseTypeException("Receiver unexpectedly responsed with a message of type " + message.getClass().getTypeName()));
+                    }
+                }
+            });
+            tell(message, replyRef);
+        } catch (Exception e) {
+            future.completeExceptionally(e);
+        }
+        return future;
     }
 
     @Override

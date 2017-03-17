@@ -19,6 +19,9 @@ package org.elasticsoftware.elasticactors.cluster;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorSystem;
+
+import java.util.concurrent.CompletableFuture;
 
 import static java.lang.String.format;
 
@@ -64,6 +67,13 @@ public final class DisconnectedRemoteActorShardRef implements ActorRef,ActorCont
     @Override
     public void tell(Object message) throws IllegalStateException {
         throw new IllegalStateException(format("Remote Actor Cluster %s is not configured, ensure a correct remote configuration in the config.yaml",clusterName));
+    }
+
+    @Override
+    public <T> CompletableFuture<T> ask(Object message, Class<T> responseType) {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        future.completeExceptionally(new IllegalStateException(format("Remote Actor Cluster %s is not configured, ensure a correct remote configuration in the config.yaml", clusterName)));
+        return future;
     }
 
     @Override
