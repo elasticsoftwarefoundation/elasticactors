@@ -95,7 +95,7 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
         shard.sendMessage(creator, shard.getActorRef(), createActorMessage);
         // create actor ref
         // @todo: add cache to speed up performance
-        return new ActorShardRef(configuration.getClusterName(), shard, actorId);
+        return new ActorShardRef(configuration.getClusterName(), shard, actorId, this);
     }
 
     @Override
@@ -109,7 +109,7 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
         ActorShard shard = shardFor(actorId);
         // return actor ref
         // @todo: add cache to speed up performance
-        return new ActorShardRef(configuration.getClusterName(), shard, actorId);
+        return new ActorShardRef(configuration.getClusterName(), shard, actorId, this);
     }
 
     @Override

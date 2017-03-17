@@ -19,8 +19,11 @@ package org.elasticsoftware.elasticactors.cluster;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorSystem;
 
 import javax.annotation.Nullable;
+
+import java.util.concurrent.CompletableFuture;
 
 import static java.lang.String.format;
 
@@ -73,6 +76,13 @@ public final class DisconnectedActorNodeRef implements ActorRef, ActorContainerR
     @Override
     public void tell(Object message) {
         throw new IllegalStateException(format("Actor Node %s is not active, referenced actorId cannot be reached and probably doesn't exist anymore. It is a Bad Idea to serialize Temp Actor Refs",nodeId));
+    }
+
+    @Override
+    public <T> CompletableFuture<T> ask(Object message, Class<T> responseType) {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        future.completeExceptionally(new IllegalStateException(format("Actor Node %s is not active, referenced actorId cannot be reached and probably doesn't exist anymore. It is a Bad Idea to serialize Temp Actor Refs", nodeId)));
+        return future;
     }
 
     @Override
