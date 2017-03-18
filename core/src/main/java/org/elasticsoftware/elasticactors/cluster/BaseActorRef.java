@@ -17,25 +17,31 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.UnexpectedResponseTypeException;
 import org.elasticsoftware.elasticactors.actors.ActorDelegate;
 import org.elasticsoftware.elasticactors.actors.ReplyActor;
 
+import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * @author Joost van de Wijgerd
  */
-public abstract class AbstractActorRef implements ActorRef {
+public abstract class BaseActorRef implements ActorRef {
     protected final InternalActorSystem actorSystem;
+    protected final String clusterName;
+    protected final String actorId;
+    protected final String refSpec;
 
-    public AbstractActorRef(InternalActorSystem actorSystem) {
+    public BaseActorRef(InternalActorSystem actorSystem, String clusterName, @Nullable String actorId, String refSpec) {
         this.actorSystem = actorSystem;
+        this.actorId = actorId;
+        this.clusterName = clusterName;
+        this.refSpec = refSpec;
     }
 
-    public <T> CompletableFuture<T> ask(Object message, Class<T> responseType) {
+    public final <T> CompletableFuture<T> ask(Object message, Class<T> responseType) {
         CompletableFuture<T> future = new CompletableFuture<>();
         try {
             ActorRef replyRef = actorSystem.tempActorOf(ReplyActor.class, new ActorDelegate<T>() {
@@ -65,5 +71,30 @@ public abstract class AbstractActorRef implements ActorRef {
             future.completeExceptionally(e);
         }
         return future;
+    }
+
+    @Override
+    public final String getActorCluster() {
+        return clusterName;
+    }
+
+    @Override
+    public final String getActorId() {
+        return actorId;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        return this == o || o instanceof ActorRef && this.refSpec.equals(o.toString());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this.refSpec.hashCode();
+    }
+
+    @Override
+    public final String toString() {
+        return this.refSpec;
     }
 }

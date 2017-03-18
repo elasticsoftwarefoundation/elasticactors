@@ -25,18 +25,12 @@ import javax.annotation.Nullable;
  *
  * @author  Joost van de Wijgerd
  */
-public final class ActorShardRef extends AbstractActorRef implements ActorContainerRef {
-    private final String clusterName;
+public final class ActorShardRef extends BaseActorRef implements ActorContainerRef {
     private final ActorShard shard;
-    private final String actorId;
-    private final String refSpec;
 
     public ActorShardRef(String clusterName, ActorShard shard,@Nullable String actorId, InternalActorSystem actorSystem) {
-        super(actorSystem);
-        this.clusterName = clusterName;
+        super(actorSystem, clusterName, actorId, generateRefSpec(clusterName, shard, actorId));
         this.shard = shard;
-        this.actorId = actorId;
-        this.refSpec = generateRefSpec(clusterName, shard, actorId);
     }
 
     public ActorShardRef(InternalActorSystem actorSystem, String clusterName, ActorShard shard) {
@@ -56,17 +50,8 @@ public final class ActorShardRef extends AbstractActorRef implements ActorContai
     }
 
     @Override
-    public String getActorCluster() {
-        return clusterName;
-    }
-
-    @Override
     public String getActorPath() {
         return String.format("%s/shards/%d",shard.getKey().getActorSystemName(),shard.getKey().getShardId());
-    }
-
-    public String getActorId() {
-        return actorId;
     }
 
     @Override
@@ -100,18 +85,4 @@ public final class ActorShardRef extends AbstractActorRef implements ActorContai
         return shard;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        return this == o || o instanceof ActorRef && this.refSpec.equals(o.toString());
-    }
-
-    @Override
-    public int hashCode() {
-        return this.refSpec.hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return this.refSpec;
-    }
 }

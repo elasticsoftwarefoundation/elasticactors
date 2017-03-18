@@ -23,22 +23,16 @@ import org.elasticsoftware.elasticactors.*;
  *
  * @author  Joost van de Wijgerd
  */
-public final class LocalClusterActorNodeRef extends AbstractActorRef implements ActorContainerRef {
-    private final String clusterName;
+public final class LocalClusterActorNodeRef extends BaseActorRef implements ActorContainerRef {
     private final ActorNode node;
-    private final String actorId;
-    private final String refSpec;
 
     public LocalClusterActorNodeRef(InternalActorSystem actorSystem, String clusterName, ActorNode node) {
         this(actorSystem, clusterName, node, null);
     }
 
     public LocalClusterActorNodeRef(InternalActorSystem actorSystem, String clusterName, ActorNode node, String actorId) {
-        super(actorSystem);
-        this.clusterName = clusterName;
+        super(actorSystem, clusterName, actorId, generateRefSpec(clusterName, node, actorId));
         this.node = node;
-        this.actorId = actorId;
-        this.refSpec = generateRefSpec(clusterName, node, actorId);
     }
 
     public static String generateRefSpec(String clusterName, ActorNode node,String actorId) {
@@ -53,20 +47,9 @@ public final class LocalClusterActorNodeRef extends AbstractActorRef implements 
         }
     }
 
-
-
-    @Override
-    public String getActorCluster() {
-        return clusterName;
-    }
-
     @Override
     public String getActorPath() {
         return String.format("%s/nodes/%s",node.getKey().getActorSystemName(),node.getKey().getNodeId());
-    }
-
-    public String getActorId() {
-        return actorId;
     }
 
     @Override
@@ -98,20 +81,5 @@ public final class LocalClusterActorNodeRef extends AbstractActorRef implements 
     @Override
     public ActorContainer getActorContainer() {
         return node;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return this == o || o instanceof ActorRef && this.toString().equals(o.toString());
-    }
-
-    @Override
-    public int hashCode() {
-        return this.refSpec.hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return this.refSpec;
     }
 }

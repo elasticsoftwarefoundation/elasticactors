@@ -25,36 +25,22 @@ import static java.lang.String.format;
  *
  * @author  Joost van de Wijgerd
  */
-public final class ServiceActorRef extends AbstractActorRef implements ActorContainerRef {
-    private final String clusterName;
+public final class ServiceActorRef extends BaseActorRef implements ActorContainerRef {
     private final ActorNode node;
-    private final String serviceId;
-    private final String refSpec;
 
     public ServiceActorRef(InternalActorSystem actorSystem, String clusterName, ActorNode node, String serviceId) {
-        super(actorSystem);
-        this.clusterName = clusterName;
+        super(actorSystem, clusterName, serviceId, generateRefSpec(clusterName, node, serviceId));
         this.node = node;
-        this.serviceId = serviceId;
-        this.refSpec = generateRefSpec(clusterName, node, serviceId);
     }
 
     public static String generateRefSpec(String clusterName,ActorNode node,String serviceId) {
         return format("actor://%s/%s/services/%s/%s", clusterName, node.getKey().getActorSystemName(), node.getKey().getNodeId(), serviceId);
     }
 
-    @Override
-    public String getActorCluster() {
-        return clusterName;
-    }
 
     @Override
     public String getActorPath() {
         return format("%s/services/%s", node.getKey().getActorSystemName(), node.getKey().getNodeId());
-    }
-
-    public String getActorId() {
-        return serviceId;
     }
 
     @Override
@@ -87,20 +73,5 @@ public final class ServiceActorRef extends AbstractActorRef implements ActorCont
     public ActorContainer getActorContainer() {
         return node;
     }
-
-    @Override
-    public boolean equals(Object o) {
-        return this == o || o instanceof ActorRef && this.toString().equals(o.toString());
-    }
-
-    @Override
-    public int hashCode() {
-        return this.refSpec.hashCode();
-    }
-
-
-    @Override
-    public String toString() {
-        return this.refSpec;
-    }
+    
 }

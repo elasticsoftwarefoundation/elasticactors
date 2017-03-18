@@ -17,38 +17,29 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.*;
-import org.elasticsoftware.elasticactors.actors.ActorDelegate;
-import org.elasticsoftware.elasticactors.actors.ReplyActor;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * {@link org.elasticsoftware.elasticactors.ActorRef} that references an actor in the local cluster
  *
  * @author  Joost van de Wijgerd
  */
-public final class RemoteClusterActorNodeRef extends AbstractActorRef implements ActorContainerRef, ActorContainer {
-    private final String clusterName;
+public final class RemoteClusterActorNodeRef extends BaseActorRef implements ActorContainerRef, ActorContainer {
     private final ActorShard delegatingShard;
     private final String nodeId;
-    private final String actorId;
-    private final String refSpec;
 
     public RemoteClusterActorNodeRef(InternalActorSystem actorSystem, String clusterName, ActorShard delegatingShard, String nodeId) {
         this(actorSystem, clusterName, delegatingShard, nodeId, null);
     }
 
     public RemoteClusterActorNodeRef(InternalActorSystem actorSystem, String clusterName, ActorShard delegatingShard, String nodeId, String actorId) {
-        super(actorSystem);
-        this.clusterName = clusterName;
+        super(actorSystem, clusterName, actorId, generateRefSpec(clusterName, delegatingShard, nodeId, actorId));
         this.delegatingShard = delegatingShard;
         this.nodeId = nodeId;
-        this.actorId = actorId;
-        this.refSpec = generateRefSpec(clusterName, delegatingShard, nodeId, actorId);
     }
 
     public static String generateRefSpec(String clusterName, ActorShard delegatingShard, String nodeId, String actorId) {
@@ -64,20 +55,11 @@ public final class RemoteClusterActorNodeRef extends AbstractActorRef implements
     }
 
 
-
-    @Override
-    public String getActorCluster() {
-        return clusterName;
-    }
-
     @Override
     public String getActorPath() {
         return String.format("%s/nodes/%s",delegatingShard.getKey().getActorSystemName(),nodeId);
     }
 
-    public String getActorId() {
-        return actorId;
-    }
 
     @Override
     public void tell(Object message, ActorRef sender) {
@@ -110,21 +92,6 @@ public final class RemoteClusterActorNodeRef extends AbstractActorRef implements
     @Override
     public ActorContainer getActorContainer() {
         return this;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return this == o || o instanceof ActorRef && this.toString().equals(o.toString());
-    }
-
-    @Override
-    public int hashCode() {
-        return this.refSpec.hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return this.refSpec;
     }
 
     @Override
