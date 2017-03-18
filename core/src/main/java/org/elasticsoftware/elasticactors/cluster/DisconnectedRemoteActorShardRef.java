@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.cluster;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.reactivestreams.Publisher;
 
 import static java.lang.String.format;
 
@@ -89,5 +90,10 @@ public final class DisconnectedRemoteActorShardRef implements ActorRef,ActorCont
     @Override
     public int hashCode() {
         return this.refSpec.hashCode();
+    }
+
+    @Override
+    public <T> Publisher<T> publisherOf(String messageName) {
+        return null;
     }
 }

@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.cluster;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.reactivestreams.Publisher;
 
 import javax.annotation.Nullable;
 
@@ -98,5 +99,10 @@ public final class DisconnectedActorNodeRef implements ActorRef, ActorContainerR
     @Override
     public String toString() {
         return this.refSpec;
+    }
+
+    @Override
+    public <T> Publisher<T> publisherOf(String messageName) {
+        return null;
     }
 }

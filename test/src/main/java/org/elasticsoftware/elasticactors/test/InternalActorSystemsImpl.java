@@ -72,7 +72,7 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
 
     @Override
     public ActorRef createPersistentActorRef(ActorShard shard, String actorId) {
-        return new ActorShardRef(getClusterName(),shard,actorId);
+        return new ActorShardRef(get(null), getClusterName(),shard,actorId);
     }
 
     @Override

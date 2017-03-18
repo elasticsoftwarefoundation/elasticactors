@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.*;
+import org.reactivestreams.Publisher;
 
 import static java.lang.String.format;
 
@@ -75,6 +76,11 @@ public final class ServiceActorRef implements ActorRef, ActorContainerRef {
         } else {
             throw new IllegalStateException("Cannot determine ActorRef(self) Only use this method while inside an ElasticActor Lifecycle or on(Message) method!");
         }
+    }
+
+    @Override
+    public <T> Publisher<T> publisherOf(String messageName) {
+        return null;
     }
 
     @Override

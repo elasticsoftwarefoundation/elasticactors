@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.*;
+import org.reactivestreams.Publisher;
 
 /**
  * {@link org.elasticsoftware.elasticactors.ActorRef} that references an actor in the local cluster
@@ -110,5 +111,10 @@ public final class LocalClusterActorNodeRef implements ActorRef, ActorContainerR
     @Override
     public String toString() {
         return this.refSpec;
+    }
+
+    @Override
+    public <T> Publisher<T> publisherOf(String messageName) {
+        return null;
     }
 }

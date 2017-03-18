@@ -16,6 +16,8 @@
 
 package org.elasticsoftware.elasticactors;
 
+import org.reactivestreams.Publisher;
+
 /**
  * This is the main entry point for the ElasticActors API. When a {@link org.elasticsoftware.elasticactors.serialization.Message}
  * needs to be send to an {@link ElasticActor} first the {@link ActorRef} needs to be obtained. An Actor Reference
@@ -83,4 +85,6 @@ public interface ActorRef {
      * @return              true if the referenced Actor is running on the same JVM as the caller, false otherwise
      */
     boolean isLocal();
+
+    <T> Publisher<T> publisherOf(String messageName);
 }

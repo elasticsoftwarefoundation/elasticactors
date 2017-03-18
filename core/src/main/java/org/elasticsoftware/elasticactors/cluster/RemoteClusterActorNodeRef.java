@@ -20,6 +20,7 @@ import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
+import org.reactivestreams.Publisher;
 
 import java.util.List;
 
@@ -162,5 +163,10 @@ public final class RemoteClusterActorNodeRef implements ActorRef, ActorContainer
     @Override
     public void destroy() {
         // do nothing
+    }
+
+    @Override
+    public <T> Publisher<T> publisherOf(String messageName) {
+        return null;
     }
 }

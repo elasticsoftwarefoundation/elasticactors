@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.cluster;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.reactivestreams.Publisher;
 
 import static java.lang.String.format;
 
@@ -71,6 +72,11 @@ public final class DisconnectedServiceActorRef implements ActorRef, ActorContain
     @Override
     public void tell(Object message) {
         throw new IllegalStateException(format("Actor Node %s is not active, referenced service cannot be reached right now",nodeId));
+    }
+
+    @Override
+    public <T> Publisher<T> publisherOf(String messageName) {
+        return null;
     }
 
     @Override

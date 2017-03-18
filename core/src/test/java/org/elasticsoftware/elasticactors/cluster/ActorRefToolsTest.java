@@ -41,7 +41,7 @@ public class ActorRefToolsTest {
         when(configuration.getNumberOfShards()).thenReturn(1);
         when(actorSystem.getShard("Pi/shards/0")).thenReturn(shard);
         when(shard.getKey()).thenReturn(shardKey);
-        ActorShardRef shardRef = new ActorShardRef("LocalNode",shard,"master");
+        ActorShardRef shardRef = new ActorShardRef(actorSystem, "LocalNode",shard,"master");
         when(internalActorSystems.createPersistentActorRef(shard,"master")).thenReturn(shardRef);
         ActorRef actorRef = ActorRefTools.parse("actor://LocalNode/Pi/shards/0/master",internalActorSystems);
         assertNotNull(actorRef);
@@ -62,7 +62,7 @@ public class ActorRefToolsTest {
         when(configuration.getNumberOfShards()).thenReturn(1);
         when(actorSystem.getShard("Pi/shards/0")).thenReturn(shard);
         when(shard.getKey()).thenReturn(shardKey);
-        ActorShardRef shardRef = new ActorShardRef("LocalNode",shard,null);
+        ActorShardRef shardRef = new ActorShardRef(actorSystem, "LocalNode",shard,null);
         when(internalActorSystems.createPersistentActorRef(shard,null)).thenReturn(shardRef);
         ActorRef actorRef = ActorRefTools.parse("actor://LocalNode/Pi/shards/0",internalActorSystems);
         assertNotNull(actorRef);

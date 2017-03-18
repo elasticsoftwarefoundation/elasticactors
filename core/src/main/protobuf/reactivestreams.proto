@@ -1,0 +1,12 @@
+package org.elasticsoftware.elasticactors.serialization.protobuf;
+
+option optimize_for = SPEED;
+
+message SubscribeMessage {
+    optional string messageName = 1;
+}
+
+message SubscriptionMessage {
+    optional string messageName = 1;
+}
+

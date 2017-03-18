@@ -233,7 +233,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
         final String refSpec = ActorShardRef.generateRefSpec(clusterName,shard,actorId);
         ActorRef ref = actorRefCache.getIfPresent(refSpec);
         if(ref == null) {
-            ref = new ActorShardRef(clusterName,shard,actorId);
+            ref = new ActorShardRef(get(null), clusterName,shard,actorId);
             actorRefCache.put(refSpec,ref);
         }
         return ref;

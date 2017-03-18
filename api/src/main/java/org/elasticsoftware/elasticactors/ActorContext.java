@@ -16,6 +16,8 @@
 
 package org.elasticsoftware.elasticactors;
 
+import java.util.Collection;
+
 /**
  * When an {@link org.elasticsoftware.elasticactors.state.ActorLifecycleStep} method is called or
  * when a {@link org.elasticsoftware.elasticactors.serialization.Message} is delivered to a
@@ -68,5 +70,7 @@ public interface ActorContext {
      * @return  the {@link ActorSystem} this actor is part of
      */
     ActorSystem getActorSystem();
+
+    Collection<? extends PersistentSubscription> getSubscriptions();
 
 }

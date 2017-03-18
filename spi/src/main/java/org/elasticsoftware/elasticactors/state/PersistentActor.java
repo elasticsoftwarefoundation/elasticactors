@@ -19,6 +19,9 @@ package org.elasticsoftware.elasticactors.state;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 
+import java.util.Collection;
+import java.util.Collections;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -123,4 +126,8 @@ public final class PersistentActor<K> implements ActorContext {
         return actorSystem;
     }
 
+    @Override
+    public Collection<? extends PersistentSubscription> getSubscriptions() {
+        return Collections.emptySet();
+    }
 }

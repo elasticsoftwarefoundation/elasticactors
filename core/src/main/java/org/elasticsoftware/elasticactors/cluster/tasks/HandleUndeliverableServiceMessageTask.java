@@ -24,6 +24,8 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
+import java.util.Collection;
+
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
@@ -72,6 +74,11 @@ public final class HandleUndeliverableServiceMessageTask implements ThreadBoundR
     @Override
     public String getKey() {
         return serviceRef.getActorId();
+    }
+
+    @Override
+    public Collection<? extends PersistentSubscription> getSubscriptions() {
+        return null;
     }
 
     @Override
