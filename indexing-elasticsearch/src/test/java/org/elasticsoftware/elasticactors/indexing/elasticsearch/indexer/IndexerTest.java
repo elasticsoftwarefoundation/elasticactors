@@ -24,6 +24,8 @@ import java.util.Collections;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static org.awaitility.Awaitility.await;
+import static org.awaitility.Duration.FIVE_SECONDS;
+import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static org.elasticsoftware.elasticactors.indexing.elasticsearch.IndexConfig.VersioningStrategy.NONE;
 import static org.elasticsoftware.elasticactors.indexing.elasticsearch.IndexConfig.VersioningStrategy.REINDEX_ON_ACTIVATE;
 import static org.mockito.Mockito.mock;
@@ -71,8 +73,8 @@ public class IndexerTest {
         indexer.onUpdate(newArrayList(update));
 
         await()
-                .atMost(Duration.ONE_SECOND)
-                .pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS)
+                .atMost(FIVE_SECONDS)
+                .pollInterval(ONE_HUNDRED_MILLISECONDS)
                 .until(() -> {
                     refreshIndices();
                     return client.prepareGet("test_index", "type_name", "1").execute().get().isExists();
@@ -90,8 +92,8 @@ public class IndexerTest {
         indexer.onUpdate(newArrayList(update));
 
         await()
-                .atMost(Duration.ONE_SECOND)
-                .pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS)
+                .atMost(FIVE_SECONDS)
+                .pollInterval(ONE_HUNDRED_MILLISECONDS)
                 .until(() -> {
                     refreshIndices();
                     return client.prepareGet("test_index_v1", "type_name", "1").execute().get().isExists();
@@ -121,8 +123,8 @@ public class IndexerTest {
         indexer.onUpdate(newArrayList(update));
 
         await()
-                .atMost(Duration.FIVE_SECONDS)
-                .pollInterval(Duration.ONE_SECOND)
+                .atMost(FIVE_SECONDS)
+                .pollInterval(ONE_HUNDRED_MILLISECONDS)
                 .until(() -> {
                     refreshIndices();
                     return !client.prepareGet("test_index_v1", "type_name", "1").execute().get().isExists();
@@ -137,8 +139,8 @@ public class IndexerTest {
         indexer.onUpdate(newArrayList(update));
 
         await()
-                .atMost(Duration.ONE_SECOND)
-                .pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS)
+                .atMost(FIVE_SECONDS)
+                .pollInterval(ONE_HUNDRED_MILLISECONDS)
                 .until(() -> {
                     refreshIndices();
                     return client.prepareGet("test_index", "type_name", "1").execute().get().isExists();
@@ -156,8 +158,8 @@ public class IndexerTest {
         indexer.onUpdate(newArrayList(update));
 
         await()
-                .atMost(Duration.ONE_SECOND)
-                .pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS)
+                .atMost(FIVE_SECONDS)
+                .pollInterval(ONE_HUNDRED_MILLISECONDS)
                 .until(() -> {
                     refreshIndices();
                     return client.prepareGet("test_index_v1-0", "type_name", "1").execute().get().isExists();
@@ -171,8 +173,8 @@ public class IndexerTest {
         indexer.onUpdate(newArrayList(update));
 
         await()
-                .atMost(Duration.ONE_SECOND)
-                .pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS)
+                .atMost(FIVE_SECONDS)
+                .pollInterval(ONE_HUNDRED_MILLISECONDS)
                 .until(() -> {
                     refreshIndices();
                     return !client.prepareGet("test_index_v1-0", "type_name", "1").execute().get().isExists()
