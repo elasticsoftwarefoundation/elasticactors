@@ -17,10 +17,8 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.MessageDeliveryException;
-import org.elasticsoftware.elasticactors.UnexpectedResponseTypeException;
-import org.elasticsoftware.elasticactors.actors.ActorDelegate;
-import org.elasticsoftware.elasticactors.actors.ReplyActor;
+import org.elasticsoftware.elasticactors.core.actors.CompletableFutureDelegate;
+import org.elasticsoftware.elasticactors.core.actors.ReplyActor;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
@@ -42,31 +40,10 @@ public abstract class BaseActorRef implements ActorRef {
     }
 
     public final <T> CompletableFuture<T> ask(Object message, Class<T> responseType) {
-        CompletableFuture<T> future = new CompletableFuture<>();
+        final CompletableFuture<T> future = new CompletableFuture<>();
         try {
-            ActorRef replyRef = actorSystem.tempActorOf(ReplyActor.class, new ActorDelegate<T>() {
-                @Override
-                public ActorDelegate<T> getBody() {
-                    return this;
-                }
-
-                @Override
-                public void onUndeliverable(ActorRef receiver, Object message) {
-                    future.completeExceptionally(new MessageDeliveryException("Unable to deliver message", false));
-                }
-
-                @Override
-                public void onReceive(ActorRef sender, Object message) {
-                    if (responseType.isInstance(message)) {
-                        future.complete((T) message);
-                    } else if (message instanceof Throwable) {
-                        future.completeExceptionally((Throwable) message);
-                    } else {
-                        future.completeExceptionally(new UnexpectedResponseTypeException("Receiver unexpectedly responsed with a message of type " + message.getClass().getTypeName()));
-                    }
-                }
-            });
-            tell(message, replyRef);
+            ActorRef replyRef = actorSystem.tempActorOf(ReplyActor.class, new CompletableFutureDelegate<>(future, responseType));
+            this.tell(message, replyRef);
         } catch (Exception e) {
             future.completeExceptionally(e);
         }

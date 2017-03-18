@@ -23,7 +23,7 @@ import static java.lang.String.format;
 /**
  * @author Joost van de Wijgerd
  */
-public final class DisconnectedRemoteActorShardRef extends BaseDisconnectedActorRef implements ActorContainerRef {
+public final class DisconnectedRemoteActorShardRef extends BaseDisconnectedActorRef {
     private static final String REFSPEC_FORMAT = "actor://%s/%s/shards/%d/%s";
     private final int shardId;
 
