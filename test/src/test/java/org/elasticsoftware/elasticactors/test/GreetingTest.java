@@ -23,9 +23,12 @@ import org.elasticsoftware.elasticactors.base.actors.ReplyActor;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.String.format;
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 /**
@@ -60,6 +63,57 @@ public class GreetingTest {
         greeter.tell(new Greeting("Joost van de Wijgerd"),replyActor);
 
         assertTrue(countDownLatch.await(5, TimeUnit.SECONDS));
+
+        testActorSystem.destroy();
+    }
+
+    @Test
+    public void testAskGreeting() throws Exception {
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+        ActorRef echo = actorSystem.actorOf("e", EchoGreetingActor.class);
+
+
+        Greeting response = echo.ask(new Greeting("echo"), Greeting.class).get();
+
+        assertEquals(response.getWho(), "echo");
+        testActorSystem.destroy();
+    }
+
+    @Test
+    public void testAskGreetingAsync() throws Exception {
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+        ActorRef echo = actorSystem.actorOf("e", EchoGreetingActor.class);
+
+        final CountDownLatch waitLatch = new CountDownLatch(1);
+        final AtomicReference<String> response = new AtomicReference<>();
+
+        echo.ask(new Greeting("echo"), Greeting.class).whenComplete((greeting, throwable) -> {
+            System.out.println(Thread.currentThread().getName());
+            response.set(greeting.getWho());
+            waitLatch.countDown();
+        });
+
+        waitLatch.await();
+
+        assertEquals(response.get(), "echo");
+        testActorSystem.destroy();
+    }
+
+    @Test(expectedExceptions = ExecutionException.class)
+    public void testUnexpectedResponse() throws Exception {
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+        ActorRef echo = actorSystem.actorOf("e", EchoGreetingActor.class);
+
+        Greeting response = echo.ask(new Greeting("Santa Claus"), Greeting.class).get();
 
         testActorSystem.destroy();
     }

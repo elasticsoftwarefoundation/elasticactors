@@ -72,17 +72,17 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
 
     @Override
     public ActorRef createPersistentActorRef(ActorShard shard, String actorId) {
-        return new ActorShardRef(getClusterName(),shard,actorId);
+        return new ActorShardRef(getClusterName(), shard, actorId, get(null));
     }
 
     @Override
     public ActorRef createTempActorRef(ActorNode node, String actorId) {
-        return new LocalClusterActorNodeRef(getClusterName(),node,actorId);
+        return new LocalClusterActorNodeRef(get(null), getClusterName(), node, actorId);
     }
 
     @Override
     public ActorRef createServiceActorRef(ActorNode node, String actorId) {
-        return new ServiceActorRef(getClusterName(),node,actorId);
+        return new ServiceActorRef(get(null), getClusterName(), node, actorId);
     }
 
     @Override
