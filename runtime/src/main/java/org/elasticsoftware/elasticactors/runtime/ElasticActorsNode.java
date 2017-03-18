@@ -233,7 +233,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
         final String refSpec = ActorShardRef.generateRefSpec(clusterName,shard,actorId);
         ActorRef ref = actorRefCache.getIfPresent(refSpec);
         if(ref == null) {
-            ref = new ActorShardRef(get(null), clusterName,shard,actorId);
+            ref = new ActorShardRef(clusterName, shard, actorId, get(null));
             actorRefCache.put(refSpec,ref);
         }
         return ref;
@@ -244,7 +244,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
         final String refSpec = LocalClusterActorNodeRef.generateRefSpec(this.clusterName,node,actorId);
         ActorRef ref = actorRefCache.getIfPresent(refSpec);
         if(ref == null) {
-            ref = new LocalClusterActorNodeRef(clusterName,node,actorId);
+            ref = new LocalClusterActorNodeRef(get(null), clusterName, node, actorId);
             actorRefCache.put(refSpec,ref);
         }
         return ref;
@@ -255,7 +255,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
         final String refSpec = ServiceActorRef.generateRefSpec(this.clusterName,node,actorId);
         ActorRef ref = actorRefCache.getIfPresent(refSpec);
         if(ref == null) {
-            ref = new ServiceActorRef(clusterName,node,actorId);
+            ref = new ServiceActorRef(get(null), clusterName, node, actorId);
             actorRefCache.put(refSpec,ref);
         }
         return ref;

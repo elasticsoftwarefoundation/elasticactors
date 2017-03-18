@@ -16,11 +16,6 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import org.elasticsoftware.elasticactors.ActorContainer;
-import org.elasticsoftware.elasticactors.ActorContainerRef;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.reactivestreams.Publisher;
-
 import javax.annotation.Nullable;
 
 import static java.lang.String.format;
@@ -29,80 +24,30 @@ import static java.lang.String.format;
  *
  * @author  Joost van de Wijgerd
  */
-public final class DisconnectedActorNodeRef implements ActorRef, ActorContainerRef {
-    private final String clusterName;
-    private final String actorSystemName;
+public final class DisconnectedActorNodeRef extends BaseDisconnectedActorRef {
     private final String nodeId;
-    private final String actorId;
-    private final String refSpec;
 
-    public DisconnectedActorNodeRef(String clusterName, String actorSystemName, String nodeId,@Nullable String actorId) {
-        this.clusterName = clusterName;
-        this.actorSystemName = actorSystemName;
+    DisconnectedActorNodeRef(String clusterName, String actorSystemName, String nodeId,@Nullable String actorId) {
+        super(actorId, clusterName, generateRefSpec(clusterName, actorSystemName, nodeId, actorId), actorSystemName);
         this.nodeId = nodeId;
-        this.actorId = actorId;
-        this.refSpec = generateRefSpec(clusterName, actorSystemName, nodeId, actorId);
     }
 
     public static String generateRefSpec(String clusterName, String actorSystemName, String nodeId,String actorId) {
         if(actorId != null) {
-            return String.format("actor://%s/%s/nodes/%s/%s",clusterName,actorSystemName,nodeId,actorId);
+            return format("actor://%s/%s/nodes/%s/%s",clusterName,actorSystemName,nodeId,actorId);
         } else {
-            return String.format("actor://%s/%s/nodes/%s",clusterName,actorSystemName,nodeId);
+            return format("actor://%s/%s/nodes/%s",clusterName,actorSystemName,nodeId);
         }
     }
 
     @Override
-    public String getActorCluster() {
-        return clusterName;
-    }
-
-    @Override
     public String getActorPath() {
-        return String.format("%s/nodes/%s",actorSystemName,nodeId);
-    }
-
-    public String getActorId() {
-        return actorId;
+        return format("%s/nodes/%s",actorSystemName,nodeId);
     }
 
     @Override
-    public void tell(Object message, ActorRef sender) {
-        tell(message);
+    protected String getExceptionMessage() {
+        return format("Actor Node %s is not active, referenced actorId cannot be reached and probably doesn't exist anymore. It is a Bad Idea to serialize Temp Actor Refs",nodeId);
     }
 
-    @Override
-    public void tell(Object message) {
-        throw new IllegalStateException(format("Actor Node %s is not active, referenced actorId cannot be reached and probably doesn't exist anymore. It is a Bad Idea to serialize Temp Actor Refs",nodeId));
-    }
-
-    @Override
-    public boolean isLocal() {
-        return false;
-    }
-
-    @Override
-    public ActorContainer getActorContainer() {
-        throw new IllegalStateException(format("Actor Node %s is not active, referenced actorId cannot be reached and probably doesn't exist anymore. It is a Bad Idea to serialize Temp Actor Refs",nodeId));
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return this == o || o instanceof ActorRef && this.toString().equals(o.toString());
-    }
-
-    @Override
-    public int hashCode() {
-        return toString().hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return this.refSpec;
-    }
-
-    @Override
-    public <T> Publisher<T> publisherOf(String messageName) {
-        return null;
-    }
 }

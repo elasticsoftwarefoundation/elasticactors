@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.*;
 
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static java.lang.String.format;
@@ -110,7 +111,7 @@ public final class ActorRefTools {
                 // even when the remote actor cannot be reached
                 return new DisconnectedRemoteActorShardRef(clusterName,actorSystemName,actorId,shardId);
             }
-            return new ActorShardRef(actorSystems.get(null), clusterName, ((ShardAccessor) remoteActorSystem).getShard(format("%s/shards/%d", actorSystemName, shardId)), actorId);
+            return new ActorShardRef(clusterName, ((ShardAccessor) remoteActorSystem).getShard(format("%s/shards/%d", actorSystemName, shardId)), actorId, actorSystems.get(null));
         } else if ("nodes".equals(components[2])) {
             ActorSystem remoteActorSystem = actorSystems.getRemote(clusterName, actorSystemName);
             if(remoteActorSystem == null) {
