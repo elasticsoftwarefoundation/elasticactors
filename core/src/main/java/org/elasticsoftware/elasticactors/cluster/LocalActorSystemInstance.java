@@ -566,7 +566,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
         private ActorShardAdapter(ShardKey key) {
             this.key = key;
-            this.myRef = new ActorShardRef(cluster.getClusterName(), this, LocalActorSystemInstance.this);
+            this.myRef = new ActorShardRef(LocalActorSystemInstance.this, cluster.getClusterName(), this);
         }
 
         @Override

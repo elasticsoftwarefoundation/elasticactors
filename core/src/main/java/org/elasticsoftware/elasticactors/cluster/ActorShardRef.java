@@ -39,7 +39,7 @@ public final class ActorShardRef extends AbstractActorRef implements ActorContai
         this.refSpec = generateRefSpec(clusterName, shard, actorId);
     }
 
-    public ActorShardRef(String clusterName, ActorShard shard, InternalActorSystem actorSystem) {
+    public ActorShardRef(InternalActorSystem actorSystem, String clusterName, ActorShard shard) {
         this(clusterName, shard, null, actorSystem);
     }
 
