@@ -51,7 +51,8 @@ public final class CreateActorMessageDeserializer implements MessageDeserializer
                                               : null,
                                       protobufMessage.hasType()
                                               ? ActorType.values()[protobufMessage.getType().getNumber()]
-                                              : ActorType.PERSISTENT);
+                                              : ActorType.PERSISTENT,
+                                      protobufMessage.getAffinityKey());
     }
 
     private ActorState deserializeState(String actorClass,byte[] serializedState) throws IOException {

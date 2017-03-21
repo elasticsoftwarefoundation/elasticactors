@@ -50,6 +50,9 @@ public final class CreateActorMessageSerializer implements MessageSerializer<Cre
                                                                        message.getInitialState())));
         }
         builder.setType(Elasticactors.ActorType.valueOf(message.getType().ordinal()));
+        if(message.getAffinityKey() != null) {
+            builder.setAffinityKey(message.getAffinityKey());
+        }
         return ByteBuffer.wrap(builder.build().toByteArray());
     }
 

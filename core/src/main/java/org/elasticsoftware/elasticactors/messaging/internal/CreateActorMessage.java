@@ -29,17 +29,23 @@ public final class CreateActorMessage implements Serializable {
     private final String actorClass;
     private final ActorState initialState;
     private final ActorType type;
+    private final String affinityKey;
 
     public CreateActorMessage(String actorSystem, String actorClass, String actorId, ActorState initialState) {
         this(actorSystem,actorClass,actorId,initialState,ActorType.PERSISTENT);
     }
 
     public CreateActorMessage(String actorSystem, String actorClass, String actorId, ActorState initialState, ActorType type) {
+        this(actorSystem, actorClass, actorId, initialState, type, null);
+    }
+
+    public CreateActorMessage(String actorSystem, String actorClass, String actorId, ActorState initialState, ActorType type, String affinityKey) {
         this.actorSystem = actorSystem;
         this.actorId = actorId;
         this.actorClass = actorClass;
         this.initialState = initialState;
         this.type = type;
+        this.affinityKey = affinityKey;
     }
 
     public String getActorSystem() {
@@ -60,5 +66,9 @@ public final class CreateActorMessage implements Serializable {
 
     public ActorType getType() {
         return type;
+    }
+
+    public String getAffinityKey() {
+        return affinityKey;
     }
 }
