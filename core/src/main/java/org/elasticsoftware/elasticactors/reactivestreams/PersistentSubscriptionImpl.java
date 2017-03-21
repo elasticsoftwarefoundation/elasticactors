@@ -14,19 +14,23 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.reactive;
+package org.elasticsoftware.elasticactors.reactivestreams;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.CancelMessage;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.RequestMessage;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class PersistentSubscriptionImpl implements PersistentSubscription {
+    private final ActorRef subscriberRef;
     private final ActorRef publisherRef;
     private final String messageName;
 
-    public PersistentSubscriptionImpl(ActorRef publisherRef, String messageName) {
+    public PersistentSubscriptionImpl(ActorRef subscriberRef, ActorRef publisherRef, String messageName) {
+        this.subscriberRef = subscriberRef;
         this.publisherRef = publisherRef;
         this.messageName = messageName;
     }
@@ -43,11 +47,11 @@ public final class PersistentSubscriptionImpl implements PersistentSubscription 
 
     @Override
     public void request(long n) {
-
+        publisherRef.tell(new RequestMessage(n), subscriberRef);
     }
 
     @Override
     public void cancel() {
-
+        publisherRef.tell(new CancelMessage(subscriberRef, messageName), subscriberRef);
     }
 }

@@ -16,12 +16,17 @@
 
 package org.elasticsoftware.elasticactors;
 
+import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
+
 /**
  * @author Joost van de Wijgerd
  */
-public abstract class TypedReactiveActor<T> extends TypedActor<T> implements ReactiveActor<T> {
+public abstract class ReactiveMethodActor extends MethodActor implements ReactiveActor<Object>, PersistenceAdvisor {
+
+
+
     @Override
-    public void onReceive(ActorRef sender, T message) throws Exception {
+    public void onReceive(ActorRef sender, Object message) throws Exception {
         if(message instanceof Throwable) {
             onError((Throwable)message);
         } else {

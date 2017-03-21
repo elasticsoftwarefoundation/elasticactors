@@ -16,14 +16,22 @@
 
 package org.elasticsoftware.elasticactors.messaging.reactivestreams;
 
+import org.elasticsoftware.elasticactors.ActorRef;
+
 /**
  * @author Joost van de Wijgerd
  */
 public final class SubscribeMessage {
+    private final ActorRef subscriberRef;
     private final String messageName;
 
-    public SubscribeMessage(String messageName) {
+    public SubscribeMessage(ActorRef subscriberRef, String messageName) {
+        this.subscriberRef = subscriberRef;
         this.messageName = messageName;
+    }
+
+    public ActorRef getSubscriberRef() {
+        return subscriberRef;
     }
 
     public String getMessageName() {

@@ -42,6 +42,19 @@ message PersistentActor {
     optional string actorSystemVersion = 3;
     optional bytes state = 4;
     optional string shardKey = 5;
+    repeated Subscriber subscribers = 6;
+    repeated Subscription subscriptions = 7;
+}
+
+message Subscriber {
+    optional string subscriberRef = 1;
+    optional string messageName = 2;
+    optional uint64 leases = 3;
+}
+
+message Subscription {
+    optional string publisherRef = 1;
+    optional string messageName = 2;
 }
 
 enum ActorType {

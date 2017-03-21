@@ -16,9 +16,14 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
+import org.elasticsoftware.elasticactors.ActorContextHolder;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ReactiveActor;
 import org.elasticsoftware.elasticactors.core.actors.CompletableFutureDelegate;
 import org.elasticsoftware.elasticactors.core.actors.ReplyActor;
+import org.elasticsoftware.elasticactors.core.actors.SubscriberDelegate;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.*;
+import org.reactivestreams.Publisher;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
@@ -51,6 +56,25 @@ public abstract class BaseActorRef implements ActorRef {
     }
 
     @Override
+    public <T> Publisher<T> publisherOf(String messageName) {
+        return subscriber -> {
+            // do we need to know if it is a persistent actor?
+            ActorRef subscriberRef = ActorContextHolder.getSelf();
+            if(subscriberRef != null && subscriber instanceof ReactiveActor) {
+                // the actor will handle the flow itself, subscriber will not be called directly
+                tell(new SubscribeMessage(subscriberRef, messageName), subscriberRef);
+            } else {
+                try {
+                    ActorRef delegateRef = actorSystem.tempActorOf(ReplyActor.class, new SubscriberDelegate(BaseActorRef.this, messageName, subscriber));
+                    tell(new SubscribeMessage(delegateRef, messageName), delegateRef);
+                } catch (Exception e) {
+                    subscriber.onError(e);
+                }
+            }
+        };
+    }
+
+    @Override
     public final String getActorCluster() {
         return clusterName;
     }
@@ -74,4 +98,7 @@ public abstract class BaseActorRef implements ActorRef {
     public final String toString() {
         return this.refSpec;
     }
+
+
+
 }

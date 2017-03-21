@@ -16,11 +16,14 @@
 
 package org.elasticsoftware.elasticactors.state;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Joost van de Wijgerd
@@ -34,6 +37,8 @@ public final class PersistentActor<K> implements ActorContext {
     private final ActorRef ref;
     private transient volatile byte[] serializedState;
     private volatile ActorState actorState;
+    private HashMultimap<String, MessageSubscriber> messageSubscribers;
+    private List<? extends PersistentSubscription> persistentSubscriptions;
 
     /**
      * This Constructor should be used when creating a new PersistentActor in memory
@@ -54,6 +59,8 @@ public final class PersistentActor<K> implements ActorContext {
         this.ref = ref;
         this.actorState = actorState;
         this.serializedState = null;
+        this.messageSubscribers = null;
+        this.persistentSubscriptions = null;
     }
 
     /**
@@ -67,7 +74,10 @@ public final class PersistentActor<K> implements ActorContext {
      * @param actorClass
      * @param serializedState
      */
-    public PersistentActor(K key, InternalActorSystem actorSystem,String currentActorStateVersion, String previousActorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass, byte[] serializedState) {
+    public PersistentActor(K key, InternalActorSystem actorSystem, String currentActorStateVersion,
+                           String previousActorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass,
+                           byte[] serializedState, HashMultimap<String, MessageSubscriber> messageSubscribers,
+                           List<? extends PersistentSubscription> persistentSubscriptions) {
         this.key = key;
         this.actorSystem = actorSystem;
         this.ref = ref;
@@ -76,6 +86,8 @@ public final class PersistentActor<K> implements ActorContext {
         this.actorState = null;
         this.currentActorStateVersion = currentActorStateVersion;
         this.previousActorSystemVersion = previousActorSystemVersion;
+        this.messageSubscribers = messageSubscribers;
+        this.persistentSubscriptions = persistentSubscriptions;
     }
 
     public K getKey() {
@@ -128,6 +140,14 @@ public final class PersistentActor<K> implements ActorContext {
 
     @Override
     public Collection<? extends PersistentSubscription> getSubscriptions() {
-        return Collections.emptySet();
+        return persistentSubscriptions != null ? ImmutableList.copyOf(persistentSubscriptions) : Collections.emptyList();
+    }
+
+    public List<? extends PersistentSubscription> getPersistentSubscriptions() {
+        return persistentSubscriptions;
+    }
+
+    public HashMultimap<String, MessageSubscriber> getMessageSubscribers() {
+        return messageSubscribers;
     }
 }

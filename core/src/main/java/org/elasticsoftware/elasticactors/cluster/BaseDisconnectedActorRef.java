@@ -19,6 +19,8 @@ package org.elasticsoftware.elasticactors.cluster;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
@@ -65,6 +67,11 @@ public abstract class BaseDisconnectedActorRef implements ActorRef, ActorContain
         CompletableFuture<T> future = new CompletableFuture<>();
         future.completeExceptionally(new IllegalStateException(getExceptionMessage()));
         return future;
+    }
+
+    @Override
+    public <T> Publisher<T> publisherOf(String messageName) {
+        return s -> s.onError(new IllegalStateException(getExceptionMessage()));
     }
 
     @Override

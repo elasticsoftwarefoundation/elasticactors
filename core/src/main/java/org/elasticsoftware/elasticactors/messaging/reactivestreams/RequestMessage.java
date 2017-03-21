@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors;
-
-import org.reactivestreams.Subscriber;
-
-import java.util.Collection;
+package org.elasticsoftware.elasticactors.messaging.reactivestreams;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface ReactiveActor<T> extends ElasticActor<T>, Subscriber<T> {
-    Collection<PersistentSubscription> getSubscriptions();
+public final class RequestMessage {
+    private final long n;
+
+    public RequestMessage(long n) {
+        this.n = n;
+    }
+
+    public long getN() {
+        return n;
+    }
 }

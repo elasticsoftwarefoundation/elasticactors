@@ -16,11 +16,7 @@
 
 package org.elasticsoftware.elasticactors;
 
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
-import org.reactivestreams.Subscription;
 
 /**
  * @author Joost van de Wijgerd
