@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors;
-
-import org.reactivestreams.Subscriber;
-
-import java.util.Collection;
+package org.elasticsoftware.elasticactors.messaging.reactivestreams;
 
 /**
+ * Tagging interface to signal that the message is part of the Reactive Streams protocol
+ *
  * @author Joost van de Wijgerd
  */
-public interface ReactiveActor<T> extends ElasticActor<T>, Subscriber<T> {
-    Collection<PersistentSubscription> getSubscriptions();
+public interface ReactiveStreamsProtocol {
 }

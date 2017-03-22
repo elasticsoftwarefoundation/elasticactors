@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -35,6 +37,8 @@ public final class PersistentActor<K> implements ActorContext {
     private final String previousActorSystemVersion;
     private final Class<? extends ElasticActor> actorClass;
     private final ActorRef ref;
+    @Nullable
+    private final String affinityKey;
     private transient volatile byte[] serializedState;
     private volatile ActorState actorState;
     private HashMultimap<String, MessageSubscriber> messageSubscribers;
@@ -51,16 +55,11 @@ public final class PersistentActor<K> implements ActorContext {
      * @param actorState
      */
     public PersistentActor(K key, InternalActorSystem actorSystem, String previousActorStateVersion, ActorRef ref, Class<? extends ElasticActor> actorClass,  ActorState actorState) {
-        this.key = key;
-        this.actorSystem = actorSystem;
-        this.currentActorStateVersion = previousActorStateVersion;
-        this.previousActorSystemVersion = previousActorStateVersion;
-        this.actorClass = actorClass;
-        this.ref = ref;
-        this.actorState = actorState;
-        this.serializedState = null;
-        this.messageSubscribers = null;
-        this.persistentSubscriptions = null;
+        this(key, actorSystem, previousActorStateVersion, previousActorStateVersion, actorClass, ref, null, null, actorState);
+    }
+
+    public PersistentActor(K key, InternalActorSystem actorSystem, String previousActorStateVersion, ActorRef ref, String affinityKey, Class<? extends ElasticActor> actorClass,  ActorState actorState) {
+        this(key, actorSystem, previousActorStateVersion, previousActorStateVersion, actorClass, ref, affinityKey, null, actorState);
     }
 
     /**
@@ -80,18 +79,24 @@ public final class PersistentActor<K> implements ActorContext {
                            List<? extends PersistentSubscription> persistentSubscriptions) {
         this.key = key;
         this.actorSystem = actorSystem;
-        this.ref = ref;
-        this.actorClass = actorClass;
-        this.serializedState = serializedState;
-        this.actorState = null;
         this.currentActorStateVersion = currentActorStateVersion;
         this.previousActorSystemVersion = previousActorSystemVersion;
         this.messageSubscribers = messageSubscribers;
         this.persistentSubscriptions = persistentSubscriptions;
+        this.actorClass = actorClass;
+        this.ref = ref;
+        this.affinityKey = affinityKey;
+        this.serializedState = serializedState;
+        this.actorState = actorState;
     }
 
     public K getKey() {
         return key;
+    }
+
+    @Nullable
+    public String getAffinityKey() {
+        return affinityKey;
     }
 
     public String getCurrentActorStateVersion() {

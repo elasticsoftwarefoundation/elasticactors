@@ -69,6 +69,7 @@ message CreateActorMessage {
     optional string actorClass = 3;
     optional string actorSystem = 4;
     optional ActorType type = 5;
+    optional string affinityKey = 6;
 }
 
 message DestroyActorMessage {

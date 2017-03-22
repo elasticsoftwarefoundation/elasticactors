@@ -146,8 +146,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                     PersistentActor<NodeKey> actor = actorCache.getIfPresent(receiverRef);
                     if(actor != null) {
                         // find actor class behind receiver ActorRef
-                        ElasticActor actorInstance = actorSystem.getActorInstance(receiverRef,
-                                actor.getActorClass());
+                        ElasticActor actorInstance = actorSystem.getActorInstance(receiverRef, actor.getActorClass());
                         // execute on it's own thread
                         if(internalMessage.isUndeliverable()) {
                             actorExecutor.execute(new HandleUndeliverableMessageTask(actorSystem,
@@ -249,12 +248,10 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     private void createActor(CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         ActorRef ref = actorSystem.tempActorFor(createMessage.getActorId());
         PersistentActor<NodeKey> persistentActor =
-                new PersistentActor<NodeKey>(nodeKey,
-                                             actorSystem,
-                                             actorSystem.getConfiguration().getVersion(),
-                                             ref,
-                                             (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass()),
-                                             createMessage.getInitialState());
+                new PersistentActor<>(nodeKey, actorSystem, actorSystem.getConfiguration().getVersion(), ref,
+                                        createMessage.getAffinityKey(),
+                                       (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass()),
+                                       createMessage.getInitialState());
         actorCache.put(ref,persistentActor);
         // find actor class behind receiver ActorRef
         ElasticActor actorInstance = actorSystem.getActorInstance(ref,persistentActor.getActorClass());

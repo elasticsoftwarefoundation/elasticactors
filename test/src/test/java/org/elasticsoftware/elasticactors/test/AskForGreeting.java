@@ -14,23 +14,14 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors;
+package org.elasticsoftware.elasticactors.test;
 
-import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
+import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.Message;
 
 /**
  * @author Joost van de Wijgerd
  */
-public abstract class ReactiveMethodActor extends MethodActor implements ReactiveActor<Object>, PersistenceAdvisor {
-
-
-
-    @Override
-    public void onReceive(ActorRef sender, Object message) throws Exception {
-        if(message instanceof Throwable) {
-            onError((Throwable)message);
-        } else {
-            onNext(message);
-        }
-    }
+@Message(serializationFramework = JacksonSerializationFramework.class,durable = true)
+public class AskForGreeting {
 }
