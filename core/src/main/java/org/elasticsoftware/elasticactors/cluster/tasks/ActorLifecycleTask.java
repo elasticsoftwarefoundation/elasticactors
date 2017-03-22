@@ -66,7 +66,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
 
     @Override
     public final String getKey() {
-        return receiverRef.getActorId();
+        return (persistentActor.getAffinityKey() != null) ? persistentActor.getAffinityKey() : receiverRef.getActorId();
     }
 
     @Override

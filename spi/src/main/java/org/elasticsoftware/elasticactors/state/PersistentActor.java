@@ -19,6 +19,8 @@ package org.elasticsoftware.elasticactors.state;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 
+import javax.annotation.Nullable;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -29,6 +31,8 @@ public final class PersistentActor<K> implements ActorContext {
     private final String previousActorSystemVersion;
     private final Class<? extends ElasticActor> actorClass;
     private final ActorRef ref;
+    @Nullable
+    private final String affinityKey;
     private transient volatile byte[] serializedState;
     private volatile ActorState actorState;
 
@@ -43,14 +47,11 @@ public final class PersistentActor<K> implements ActorContext {
      * @param actorState
      */
     public PersistentActor(K key, InternalActorSystem actorSystem, String previousActorStateVersion, ActorRef ref, Class<? extends ElasticActor> actorClass,  ActorState actorState) {
-        this.key = key;
-        this.actorSystem = actorSystem;
-        this.currentActorStateVersion = previousActorStateVersion;
-        this.previousActorSystemVersion = previousActorStateVersion;
-        this.actorClass = actorClass;
-        this.ref = ref;
-        this.actorState = actorState;
-        this.serializedState = null;
+        this(key, actorSystem, previousActorStateVersion, previousActorStateVersion, actorClass, ref, null, null, actorState);
+    }
+
+    public PersistentActor(K key, InternalActorSystem actorSystem, String previousActorStateVersion, ActorRef ref, String affinityKey, Class<? extends ElasticActor> actorClass,  ActorState actorState) {
+        this(key, actorSystem, previousActorStateVersion, previousActorStateVersion, actorClass, ref, affinityKey, null, actorState);
     }
 
     /**
@@ -64,19 +65,29 @@ public final class PersistentActor<K> implements ActorContext {
      * @param actorClass
      * @param serializedState
      */
-    public PersistentActor(K key, InternalActorSystem actorSystem,String currentActorStateVersion, String previousActorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass, byte[] serializedState) {
+    public PersistentActor(K key, InternalActorSystem actorSystem, String currentActorStateVersion, String previousActorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass, byte[] serializedState) {
+        this(key, actorSystem, currentActorStateVersion, previousActorSystemVersion, actorClass, ref, null, serializedState, null);
+    }
+
+    protected PersistentActor(K key, InternalActorSystem actorSystem, String currentActorStateVersion, String previousActorSystemVersion, Class<? extends ElasticActor> actorClass, ActorRef ref, String affinityKey, byte[] serializedState, ActorState actorState) {
         this.key = key;
         this.actorSystem = actorSystem;
-        this.ref = ref;
-        this.actorClass = actorClass;
-        this.serializedState = serializedState;
-        this.actorState = null;
         this.currentActorStateVersion = currentActorStateVersion;
         this.previousActorSystemVersion = previousActorSystemVersion;
+        this.actorClass = actorClass;
+        this.ref = ref;
+        this.affinityKey = affinityKey;
+        this.serializedState = serializedState;
+        this.actorState = actorState;
     }
 
     public K getKey() {
         return key;
+    }
+
+    @Nullable
+    public String getAffinityKey() {
+        return affinityKey;
     }
 
     public String getCurrentActorStateVersion() {

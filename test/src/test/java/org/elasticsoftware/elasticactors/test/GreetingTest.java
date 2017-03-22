@@ -83,6 +83,22 @@ public class GreetingTest {
     }
 
     @Test
+    public void testAskGreetingViaActor() throws Exception {
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+        ActorRef echo = actorSystem.actorOf("ask", AskForGreetingActor.class);
+
+
+        Greeting response = echo.ask(new AskForGreeting(), Greeting.class).get();
+
+        assertEquals(response.getWho(), "echo");
+        testActorSystem.destroy();
+    }
+
+
+    @Test
     public void testAskGreetingAsync() throws Exception {
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
