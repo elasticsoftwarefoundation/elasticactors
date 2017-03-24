@@ -36,7 +36,7 @@ public class ReactiveStreamsTest {
 
         ActorSystem actorSystem = testActorSystem.getActorSystem();
 
-        ActorRef testPublisher = actorSystem.actorOf("testPublisher", TestPublisher.class);
+        actorSystem.actorOf("testPublisher", TestPublisher.class);
 
         ActorRef subscriberOne = actorSystem.actorOf("subscriberOne", TestSubscriber.class);
 

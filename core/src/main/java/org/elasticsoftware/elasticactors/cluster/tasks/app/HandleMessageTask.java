@@ -26,10 +26,14 @@ import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
+import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.util.SerializationTools;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Set;
 
 import static java.lang.String.format;
@@ -87,17 +91,38 @@ public final class HandleMessageTask extends ActorLifecycleTask {
 
     private void notifySubscribers(InternalMessage internalMessage) {
         if(persistentActor.getMessageSubscribers() != null) {
-            // copy the bytes from the incoming message, discarding possible changes made in onReceive
-            internalMessage.getPayload().reset();
-            byte[] messageBytes = new byte[internalMessage.getPayload().remaining()];
-            internalMessage.getPayload().get(messageBytes).reset();
-            NextMessage nextMessage = new NextMessage(internalMessage.getPayloadClass(), messageBytes);
-            // todo consider using ActorRefGroup here
             try {
+                // copy the bytes from the incoming message, discarding possible changes made in onReceive
+                NextMessage nextMessage = new NextMessage(internalMessage.getPayloadClass(), getMessageBytes(internalMessage));
+                // todo consider using ActorRefGroup here
                 ((Set<MessageSubscriber>) persistentActor.getMessageSubscribers().get(internalMessage.getPayloadClass()))
                         .forEach(s -> s.getSubscriberRef().tell(nextMessage, receiverRef));
             } catch(Exception e) {
                 log.error("Unexpected exception while forwarding message to Subscribers", e);
+            }
+        }
+    }
+
+    private byte[] getMessageBytes(InternalMessage internalMessage) throws IOException {
+        if(internalMessage.getPayload() != null) {
+            if(internalMessage.getPayload().hasArray()) {
+                return internalMessage.getPayload().array();
+            } else {
+                internalMessage.getPayload().reset();
+                byte[] messageBytes = new byte[internalMessage.getPayload().remaining()];
+                internalMessage.getPayload().get(messageBytes).reset();
+                return messageBytes;
+            }
+        } else {
+            // transient message, need to serialize the bytes
+            Object message = internalMessage.getPayload(null);
+            ByteBuffer messageBytes = ((MessageSerializer<Object>)actorSystem.getSerializer(message.getClass())).serialize(message);
+            if(messageBytes.hasArray()) {
+                return messageBytes.array();
+            } else {
+                byte[] bytes = new byte[internalMessage.getPayload().remaining()];
+                messageBytes.get(bytes);
+                return bytes;
             }
         }
     }

@@ -39,7 +39,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
     private static final Logger log = LogManager.getLogger(ActorLifecycleTask.class);
     protected final ActorRef receiverRef;
     protected final ElasticActor receiver;
-    private final InternalActorSystem actorSystem;
+    protected final InternalActorSystem actorSystem;
     protected final PersistentActor persistentActor;
     protected final PersistentActorRepository persistentActorRepository;
     private final InternalMessage internalMessage;
