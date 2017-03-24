@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors;
 
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.reactivestreams.Subscriber;
 
 import javax.annotation.Nullable;
 
@@ -126,4 +127,6 @@ public interface ElasticActor<T> {
      * @see                 {@link org.elasticsoftware.elasticactors.ActorContextHolder#getSystem()}
      */
     void preDestroy(ActorRef destroyer) throws Exception;
+
+    Subscriber<T> asSubscriber();
 }

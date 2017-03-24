@@ -19,6 +19,8 @@ package org.elasticsoftware.elasticactors.cluster;
 import org.elasticsoftware.elasticactors.*;
 import org.reactivestreams.Publisher;
 
+import javax.naming.OperationNotSupportedException;
+
 import static java.lang.String.format;
 
 /**
@@ -66,8 +68,8 @@ public final class ServiceActorRef extends BaseActorRef implements ActorContaine
     }
 
     @Override
-    public <T> Publisher<T> publisherOf(String messageName) {
-        return null;
+    public <T> Publisher<T> publisherOf(Class<T> messageClass) {
+        return s -> s.onError(new UnsupportedOperationException("Services cannot be used as Publisher in the current implementation"));
     }
 
     @Override

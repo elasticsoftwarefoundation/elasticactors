@@ -25,6 +25,7 @@ import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * @author Joost van de Wijgerd
@@ -75,8 +76,8 @@ public final class ActivateServiceActorTask implements ThreadBoundRunnable<Strin
     }
 
     @Override
-    public Collection<? extends PersistentSubscription> getSubscriptions() {
-        return null;
+    public Collection<PersistentSubscription> getSubscriptions() {
+        return Collections.emptyList();
     }
 
     @Override

@@ -20,7 +20,9 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.reactivestreams.Subscription;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -42,7 +44,7 @@ public final class PersistentActor<K> implements ActorContext {
     private transient volatile byte[] serializedState;
     private volatile ActorState actorState;
     private HashMultimap<String, MessageSubscriber> messageSubscribers;
-    private List<? extends PersistentSubscription> persistentSubscriptions;
+    private List<PersistentSubscription> persistentSubscriptions;
 
     /**
      * This Constructor should be used when creating a new PersistentActor in memory
@@ -55,11 +57,11 @@ public final class PersistentActor<K> implements ActorContext {
      * @param actorState
      */
     public PersistentActor(K key, InternalActorSystem actorSystem, String previousActorStateVersion, ActorRef ref, Class<? extends ElasticActor> actorClass,  ActorState actorState) {
-        this(key, actorSystem, previousActorStateVersion, previousActorStateVersion, actorClass, ref, null, null, actorState);
+        this(key, actorSystem, previousActorStateVersion, previousActorStateVersion, actorClass, ref, null, null, actorState, null, null);
     }
 
     public PersistentActor(K key, InternalActorSystem actorSystem, String previousActorStateVersion, ActorRef ref, String affinityKey, Class<? extends ElasticActor> actorClass,  ActorState actorState) {
-        this(key, actorSystem, previousActorStateVersion, previousActorStateVersion, actorClass, ref, affinityKey, null, actorState);
+        this(key, actorSystem, previousActorStateVersion, previousActorStateVersion, actorClass, ref, affinityKey, null, actorState, null, null);
     }
 
     /**
@@ -76,18 +78,36 @@ public final class PersistentActor<K> implements ActorContext {
     public PersistentActor(K key, InternalActorSystem actorSystem, String currentActorStateVersion,
                            String previousActorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass,
                            byte[] serializedState, HashMultimap<String, MessageSubscriber> messageSubscribers,
-                           List<? extends PersistentSubscription> persistentSubscriptions) {
+                           List<PersistentSubscription> persistentSubscriptions) {
+        this(key, actorSystem, currentActorStateVersion, previousActorSystemVersion, actorClass, ref, null,
+                serializedState, null, messageSubscribers, persistentSubscriptions);
+    }
+
+    public PersistentActor(K key, InternalActorSystem actorSystem, String currentActorStateVersion,
+                           String previousActorSystemVersion, ActorRef ref, Class<? extends ElasticActor> actorClass,
+                           byte[] serializedState, String affinityKey,
+                           HashMultimap<String, MessageSubscriber> messageSubscribers,
+                           List<PersistentSubscription> persistentSubscriptions) {
+        this(key, actorSystem, currentActorStateVersion, previousActorSystemVersion, actorClass, ref, affinityKey,
+                serializedState, null, messageSubscribers, persistentSubscriptions);
+    }
+
+    protected PersistentActor(K key, InternalActorSystem actorSystem, String currentActorStateVersion,
+                              String previousActorSystemVersion, Class<? extends ElasticActor> actorClass,
+                              ActorRef ref, @Nullable String affinityKey, byte[] serializedState, ActorState actorState,
+                              HashMultimap<String, MessageSubscriber> messageSubscribers,
+                              List<PersistentSubscription> persistentSubscriptions) {
         this.key = key;
         this.actorSystem = actorSystem;
         this.currentActorStateVersion = currentActorStateVersion;
         this.previousActorSystemVersion = previousActorSystemVersion;
-        this.messageSubscribers = messageSubscribers;
-        this.persistentSubscriptions = persistentSubscriptions;
         this.actorClass = actorClass;
         this.ref = ref;
         this.affinityKey = affinityKey;
         this.serializedState = serializedState;
         this.actorState = actorState;
+        this.messageSubscribers = messageSubscribers;
+        this.persistentSubscriptions = persistentSubscriptions;
     }
 
     public K getKey() {
@@ -144,12 +164,49 @@ public final class PersistentActor<K> implements ActorContext {
     }
 
     @Override
-    public Collection<? extends PersistentSubscription> getSubscriptions() {
+    public Collection<PersistentSubscription> getSubscriptions() {
         return persistentSubscriptions != null ? ImmutableList.copyOf(persistentSubscriptions) : Collections.emptyList();
     }
 
-    public List<? extends PersistentSubscription> getPersistentSubscriptions() {
+    public void addSubscription(PersistentSubscription persistentSubscription) {
+        if(persistentSubscriptions == null) {
+            persistentSubscriptions = new ArrayList<>();
+        }
+        persistentSubscriptions.add(persistentSubscription);
+    }
+
+    public boolean removeSubscription(String messageName, ActorRef publisherRef) {
+        return persistentSubscriptions != null && persistentSubscriptions.removeIf(
+                p -> p.getMessageName().equals(messageName) && p.getPublisherRef().equals(publisherRef));
+    }
+
+    public void cancelSubscription(String messageName, ActorRef publisherRef) {
+        if(persistentSubscriptions != null) {
+            persistentSubscriptions.stream()
+                    .filter( p -> p.getMessageName().equals(messageName) && p.getPublisherRef().equals(publisherRef))
+                    .findFirst().ifPresent(Subscription::cancel);
+        }
+    }
+
+    public void cancelAllSubscriptions() {
+        if(persistentSubscriptions != null) {
+            persistentSubscriptions.stream().forEach(persistentSubscription -> persistentSubscription.cancel());
+        }
+    }
+
+    public List<PersistentSubscription> getPersistentSubscriptions() {
         return persistentSubscriptions;
+    }
+
+    public void addSubscriber(String messageName, MessageSubscriber messageSubscriber) {
+        if(messageSubscribers == null) {
+            messageSubscribers = HashMultimap.create();
+        }
+        messageSubscribers.put(messageName, messageSubscriber);
+    }
+
+    public boolean removeSubscriber(String messageName, MessageSubscriber messageSubscriber) {
+        return messageSubscribers != null && messageSubscribers.remove(messageName, messageSubscriber);
     }
 
     public HashMultimap<String, MessageSubscriber> getMessageSubscribers() {

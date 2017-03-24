@@ -21,7 +21,7 @@ import org.elasticsoftware.elasticactors.ActorRef;
 /**
  * @author Joost van de Wijgerd
  */
-public final class CancelMessage {
+public final class CancelMessage implements ReactiveStreamsProtocol {
     private final ActorRef subscriberRef;
     private final String messageName;
 

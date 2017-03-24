@@ -70,7 +70,7 @@ public abstract class BaseDisconnectedActorRef implements ActorRef, ActorContain
     }
 
     @Override
-    public <T> Publisher<T> publisherOf(String messageName) {
+    public <T> Publisher<T> publisherOf(Class<T> messageClass) {
         return s -> s.onError(new IllegalStateException(getExceptionMessage()));
     }
 

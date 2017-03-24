@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.cluster.tasks;
+package org.elasticsoftware.elasticactors.cluster.tasks.app;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,10 +22,15 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
+import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+
+import java.util.Set;
 
 import static java.lang.String.format;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
@@ -35,16 +40,16 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  *
  * @author Joost van de Wijged
  */
-public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
-    private static final Logger log = LogManager.getLogger(HandleUndeliverableMessageTask.class);
+public final class HandleMessageTask extends ActorLifecycleTask {
+    private static final Logger log = LogManager.getLogger(HandleMessageTask.class);
 
-    public HandleUndeliverableMessageTask(InternalActorSystem actorSystem,
-                                          ElasticActor receiver,
-                                          ActorRef receiverRef,
-                                          InternalMessage internalMessage,
-                                          PersistentActor persistentActor,
-                                          PersistentActorRepository persistentActorRepository,
-                                          MessageHandlerEventListener messageHandlerEventListener) {
+    public HandleMessageTask(InternalActorSystem actorSystem,
+                             ElasticActor receiver,
+                             ActorRef receiverRef,
+                             InternalMessage internalMessage,
+                             PersistentActor persistentActor,
+                             PersistentActorRepository persistentActorRepository,
+                             MessageHandlerEventListener messageHandlerEventListener) {
         super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage);
     }
 
@@ -56,8 +61,10 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
             try {
-                receiver.onUndeliverable(internalMessage.getSender(), message);
-                return shouldUpdateState(receiver,message);
+                receiver.onReceive(internalMessage.getSender(), message);
+                // reactive streams
+                notifySubscribers(internalMessage);
+                return shouldUpdateState(receiver, message);
             } catch(MessageDeliveryException e) {
                 // see if it is a recoverable exception
                 if(!e.isRecoverable()) {
@@ -66,14 +73,33 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
                 // message cannot be sent but state should be updated as the received message did most likely change
                 // the state
                 return shouldUpdateState(receiver, message);
+
             } catch (Exception e) {
-                log.error(String.format("Exception while handling undeliverable message for actor [%s]", receiverRef.toString()), e);
+                log.error(format("Exception while handling message for actor [%s]", receiverRef.toString()), e);
                 return false;
             }
         } catch (Exception e) {
-            log.error(String.format("Exception while Deserializing Message class %s in ActorSystem [%s]",
+            log.error(format("Exception while Deserializing Message class %s in ActorSystem [%s]",
                     internalMessage.getPayloadClass(), actorSystem.getName()), e);
             return false;
         }
     }
+
+    private void notifySubscribers(InternalMessage internalMessage) {
+        if(persistentActor.getMessageSubscribers() != null) {
+            // copy the bytes from the incoming message, discarding possible changes made in onReceive
+            internalMessage.getPayload().reset();
+            byte[] messageBytes = new byte[internalMessage.getPayload().remaining()];
+            internalMessage.getPayload().get(messageBytes).reset();
+            NextMessage nextMessage = new NextMessage(internalMessage.getPayloadClass(), messageBytes);
+            // todo consider using ActorRefGroup here
+            try {
+                ((Set<MessageSubscriber>) persistentActor.getMessageSubscribers().get(internalMessage.getPayloadClass()))
+                        .forEach(s -> s.getSubscriberRef().tell(nextMessage, receiverRef));
+            } catch(Exception e) {
+                log.error("Unexpected exception while forwarding message to Subscribers", e);
+            }
+        }
+    }
+
 }

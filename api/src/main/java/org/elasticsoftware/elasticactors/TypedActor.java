@@ -17,11 +17,16 @@
 package org.elasticsoftware.elasticactors;
 
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
+import java.util.Collection;
 
 /**
  * @author Joost van de Wijgerd
  */
 public abstract class TypedActor<T> implements ElasticActor<T> {
+    private final SubscriberRef SUBSCRIBER_INSTANCE = new SubscriberRef();
 
     @Override
     public void postCreate(ActorRef creator) throws Exception {
@@ -54,6 +59,37 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
         // do nothing by default
     }
 
+    public Subscriber<T> asSubscriber(){
+        return SUBSCRIBER_INSTANCE;
+    }
+
+    public final class SubscriberRef implements org.reactivestreams.Subscriber<T> {
+
+        private SubscriberRef() {
+        }
+
+        @Override
+        public void onSubscribe(Subscription s) {
+            // start the flow
+            s.request(Long.MAX_VALUE);
+        }
+
+        @Override
+        public void onNext(T t) {
+            throw new UnsupportedOperationException("Delegated to onReceive in this implementation");
+        }
+
+        @Override
+        public void onError(Throwable t) {
+            throw new UnsupportedOperationException("Delegated to onReceive in this implementation");
+        }
+
+        @Override
+        public void onComplete() {
+            // do nothing
+        }
+    }
+
     // Provide internal access to state etc
     protected final ActorRef getSelf() {
         return ActorContextHolder.getSelf();
@@ -67,7 +103,13 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
         return ActorContextHolder.getSystem();
     }
 
+    protected final Collection<PersistentSubscription> getSubscriptions() {
+        return ActorContextHolder.getSubscriptions();
+    }
+
     protected final void unhandled(Object message) {
         //@todo: implement logic for unhandled messages
     }
+
+
 }

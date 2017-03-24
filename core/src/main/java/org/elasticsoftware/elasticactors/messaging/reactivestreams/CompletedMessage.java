@@ -19,7 +19,7 @@ package org.elasticsoftware.elasticactors.messaging.reactivestreams;
 /**
  * @author Joost van de Wijgerd
  */
-public final class CompletedMessage {
+public final class CompletedMessage implements ReactiveStreamsProtocol {
     private final String messageName;
 
     public CompletedMessage(String messageName) {

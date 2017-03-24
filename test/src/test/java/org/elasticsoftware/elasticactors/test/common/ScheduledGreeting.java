@@ -14,26 +14,27 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.test;
+package org.elasticsoftware.elasticactors.test.common;
 
-import org.elasticsoftware.elasticactors.Actor;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.TypedActor;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
-import org.elasticsoftware.elasticactors.base.state.StringState;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
-
-import java.util.concurrent.TimeUnit;
+import org.elasticsoftware.elasticactors.serialization.Message;
 
 /**
  * @author Joost van de Wijgerd
  */
-@Actor(stateClass = StringState.class,serializationFramework = JacksonSerializationFramework.class)
-public class GreetingActor extends TypedActor<Greeting> {
-    @Override
-    public void onReceive(ActorRef sender, Greeting message) throws Exception {
-        System.out.println("Hello " + message.getWho());
-        ScheduledMessageRef messageRef = getSystem().getScheduler().scheduleOnce(getSelf(),new Greeting("Greeting Actor"),sender,1, TimeUnit.SECONDS);
-        sender.tell(new ScheduledGreeting(messageRef));
+@Message(serializationFramework = JacksonSerializationFramework.class,durable = true)
+public final class ScheduledGreeting {
+    private final ScheduledMessageRef messageRef;
+
+    @JsonCreator
+    public ScheduledGreeting(@JsonProperty("messageRef") ScheduledMessageRef messageRef) {
+        this.messageRef = messageRef;
+    }
+
+    public ScheduledMessageRef getMessageRef() {
+        return messageRef;
     }
 }

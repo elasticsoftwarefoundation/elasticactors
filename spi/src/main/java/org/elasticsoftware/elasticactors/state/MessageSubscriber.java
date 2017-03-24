@@ -18,6 +18,8 @@ package org.elasticsoftware.elasticactors.state;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 
+import static java.lang.Math.addExact;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -43,8 +45,17 @@ public final class MessageSubscriber {
     }
 
     public long incrementAndGet(long inc) {
-        // @todo: guard against overflow (how?)
-        return leases += inc;
+        if(inc == Long.MAX_VALUE) {
+            leases = Long.MAX_VALUE;
+        } else {
+            try {
+                leases = addExact(leases, inc);
+            } catch(ArithmeticException e) {
+                // set to max value
+                leases = Long.MAX_VALUE;
+            }
+        }
+        return leases;
     }
 
     public long decrementAndGet() {

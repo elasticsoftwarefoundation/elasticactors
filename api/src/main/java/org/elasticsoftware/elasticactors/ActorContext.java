@@ -71,6 +71,6 @@ public interface ActorContext {
      */
     ActorSystem getActorSystem();
 
-    Collection<? extends PersistentSubscription> getSubscriptions();
+    Collection<PersistentSubscription> getSubscriptions();
 
 }

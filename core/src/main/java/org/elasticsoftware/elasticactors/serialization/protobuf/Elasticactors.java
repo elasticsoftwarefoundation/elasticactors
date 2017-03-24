@@ -5708,6 +5708,16 @@ public final class Elasticactors {
      */
     com.google.protobuf.ByteString
         getMessageNameBytes();
+
+    // optional bool cancelled = 3;
+    /**
+     * <code>optional bool cancelled = 3;</code>
+     */
+    boolean hasCancelled();
+    /**
+     * <code>optional bool cancelled = 3;</code>
+     */
+    boolean getCancelled();
   }
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.Subscription}
@@ -5768,6 +5778,11 @@ public final class Elasticactors {
             case 18: {
               bitField0_ |= 0x00000002;
               messageName_ = input.readBytes();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              cancelled_ = input.readBool();
               break;
             }
           }
@@ -5896,9 +5911,26 @@ public final class Elasticactors {
       }
     }
 
+    // optional bool cancelled = 3;
+    public static final int CANCELLED_FIELD_NUMBER = 3;
+    private boolean cancelled_;
+    /**
+     * <code>optional bool cancelled = 3;</code>
+     */
+    public boolean hasCancelled() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional bool cancelled = 3;</code>
+     */
+    public boolean getCancelled() {
+      return cancelled_;
+    }
+
     private void initFields() {
       publisherRef_ = "";
       messageName_ = "";
+      cancelled_ = false;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -5918,6 +5950,9 @@ public final class Elasticactors {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(2, getMessageNameBytes());
       }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBool(3, cancelled_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -5934,6 +5969,10 @@ public final class Elasticactors {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, getMessageNameBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(3, cancelled_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -6055,6 +6094,8 @@ public final class Elasticactors {
         bitField0_ = (bitField0_ & ~0x00000001);
         messageName_ = "";
         bitField0_ = (bitField0_ & ~0x00000002);
+        cancelled_ = false;
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -6091,6 +6132,10 @@ public final class Elasticactors {
           to_bitField0_ |= 0x00000002;
         }
         result.messageName_ = messageName_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.cancelled_ = cancelled_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -6116,6 +6161,9 @@ public final class Elasticactors {
           bitField0_ |= 0x00000002;
           messageName_ = other.messageName_;
           onChanged();
+        }
+        if (other.hasCancelled()) {
+          setCancelled(other.getCancelled());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -6292,6 +6340,39 @@ public final class Elasticactors {
         return this;
       }
 
+      // optional bool cancelled = 3;
+      private boolean cancelled_ ;
+      /**
+       * <code>optional bool cancelled = 3;</code>
+       */
+      public boolean hasCancelled() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional bool cancelled = 3;</code>
+       */
+      public boolean getCancelled() {
+        return cancelled_;
+      }
+      /**
+       * <code>optional bool cancelled = 3;</code>
+       */
+      public Builder setCancelled(boolean value) {
+        bitField0_ |= 0x00000004;
+        cancelled_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool cancelled = 3;</code>
+       */
+      public Builder clearCancelled() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        cancelled_ = false;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:org.elasticsoftware.elasticactors.serialization.protobuf.Subscription)
     }
 
@@ -6370,6 +6451,21 @@ public final class Elasticactors {
      * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.ActorType type = 5;</code>
      */
     org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors.ActorType getType();
+
+    // optional string affinityKey = 6;
+    /**
+     * <code>optional string affinityKey = 6;</code>
+     */
+    boolean hasAffinityKey();
+    /**
+     * <code>optional string affinityKey = 6;</code>
+     */
+    java.lang.String getAffinityKey();
+    /**
+     * <code>optional string affinityKey = 6;</code>
+     */
+    com.google.protobuf.ByteString
+        getAffinityKeyBytes();
   }
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.CreateActorMessage}
@@ -6451,6 +6547,11 @@ public final class Elasticactors {
                 bitField0_ |= 0x00000010;
                 type_ = value;
               }
+              break;
+            }
+            case 50: {
+              bitField0_ |= 0x00000020;
+              affinityKey_ = input.readBytes();
               break;
             }
           }
@@ -6654,12 +6755,56 @@ public final class Elasticactors {
       return type_;
     }
 
+    // optional string affinityKey = 6;
+    public static final int AFFINITYKEY_FIELD_NUMBER = 6;
+    private java.lang.Object affinityKey_;
+    /**
+     * <code>optional string affinityKey = 6;</code>
+     */
+    public boolean hasAffinityKey() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional string affinityKey = 6;</code>
+     */
+    public java.lang.String getAffinityKey() {
+      java.lang.Object ref = affinityKey_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          affinityKey_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string affinityKey = 6;</code>
+     */
+    public com.google.protobuf.ByteString
+        getAffinityKeyBytes() {
+      java.lang.Object ref = affinityKey_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        affinityKey_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       actorId_ = "";
       initialState_ = com.google.protobuf.ByteString.EMPTY;
       actorClass_ = "";
       actorSystem_ = "";
       type_ = org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors.ActorType.PERSISTENT;
+      affinityKey_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -6687,6 +6832,9 @@ public final class Elasticactors {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeEnum(5, type_.getNumber());
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeBytes(6, getAffinityKeyBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -6716,6 +6864,10 @@ public final class Elasticactors {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(5, type_.getNumber());
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(6, getAffinityKeyBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -6843,6 +6995,8 @@ public final class Elasticactors {
         bitField0_ = (bitField0_ & ~0x00000008);
         type_ = org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors.ActorType.PERSISTENT;
         bitField0_ = (bitField0_ & ~0x00000010);
+        affinityKey_ = "";
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -6891,6 +7045,10 @@ public final class Elasticactors {
           to_bitField0_ |= 0x00000010;
         }
         result.type_ = type_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.affinityKey_ = affinityKey_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -6927,6 +7085,11 @@ public final class Elasticactors {
         }
         if (other.hasType()) {
           setType(other.getType());
+        }
+        if (other.hasAffinityKey()) {
+          bitField0_ |= 0x00000020;
+          affinityKey_ = other.affinityKey_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -7245,6 +7408,80 @@ public final class Elasticactors {
       public Builder clearType() {
         bitField0_ = (bitField0_ & ~0x00000010);
         type_ = org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors.ActorType.PERSISTENT;
+        onChanged();
+        return this;
+      }
+
+      // optional string affinityKey = 6;
+      private java.lang.Object affinityKey_ = "";
+      /**
+       * <code>optional string affinityKey = 6;</code>
+       */
+      public boolean hasAffinityKey() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional string affinityKey = 6;</code>
+       */
+      public java.lang.String getAffinityKey() {
+        java.lang.Object ref = affinityKey_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          affinityKey_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string affinityKey = 6;</code>
+       */
+      public com.google.protobuf.ByteString
+          getAffinityKeyBytes() {
+        java.lang.Object ref = affinityKey_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          affinityKey_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string affinityKey = 6;</code>
+       */
+      public Builder setAffinityKey(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        affinityKey_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string affinityKey = 6;</code>
+       */
+      public Builder clearAffinityKey() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        affinityKey_ = getDefaultInstance().getAffinityKey();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string affinityKey = 6;</code>
+       */
+      public Builder setAffinityKeyBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        affinityKey_ = value;
         onChanged();
         return this;
       }
@@ -10521,15 +10758,16 @@ public final class Elasticactors {
       "re.elasticactors.serialization.protobuf." +
       "Subscription\"H\n\nSubscriber\022\025\n\rsubscriber",
       "Ref\030\001 \001(\t\022\023\n\013messageName\030\002 \001(\t\022\016\n\006leases" +
-      "\030\003 \001(\004\"9\n\014Subscription\022\024\n\014publisherRef\030\001" +
-      " \001(\t\022\023\n\013messageName\030\002 \001(\t\"\267\001\n\022CreateActo" +
-      "rMessage\022\017\n\007actorId\030\001 \001(\t\022\024\n\014initialStat" +
-      "e\030\002 \001(\014\022\022\n\nactorClass\030\003 \001(\t\022\023\n\013actorSyst" +
-      "em\030\004 \001(\t\022Q\n\004type\030\005 \001(\0162C.org.elasticsoft" +
-      "ware.elasticactors.serialization.protobu" +
-      "f.ActorType\"\'\n\023DestroyActorMessage\022\020\n\010ac" +
-      "torRef\030\001 \001(\t\"\217\001\n\024ActivateActorMessage\022\023\n" +
-      "\013actorSystem\030\001 \001(\t\022\017\n\007actorId\030\002 \001(\t\022Q\n\004t",
+      "\030\003 \001(\004\"L\n\014Subscription\022\024\n\014publisherRef\030\001" +
+      " \001(\t\022\023\n\013messageName\030\002 \001(\t\022\021\n\tcancelled\030\003" +
+      " \001(\010\"\314\001\n\022CreateActorMessage\022\017\n\007actorId\030\001" +
+      " \001(\t\022\024\n\014initialState\030\002 \001(\014\022\022\n\nactorClass" +
+      "\030\003 \001(\t\022\023\n\013actorSystem\030\004 \001(\t\022Q\n\004type\030\005 \001(" +
+      "\0162C.org.elasticsoftware.elasticactors.se" +
+      "rialization.protobuf.ActorType\022\023\n\013affini" +
+      "tyKey\030\006 \001(\t\"\'\n\023DestroyActorMessage\022\020\n\010ac" +
+      "torRef\030\001 \001(\t\"\217\001\n\024ActivateActorMessage\022\023\n",
+      "\013actorSystem\030\001 \001(\t\022\017\n\007actorId\030\002 \001(\t\022Q\n\004t" +
       "ype\030\003 \001(\0162C.org.elasticsoftware.elastica" +
       "ctors.serialization.protobuf.ActorType\"9" +
       "\n\013WireMessage\022\021\n\tqueueName\030\001 \001(\t\022\027\n\017inte" +
@@ -10538,7 +10776,7 @@ public final class Elasticactors {
       "e\030\002 \001(\004\"r\n\020ActorNodeMessage\022\020\n\010receiver\030" +
       "\001 \001(\t\022\016\n\006nodeId\030\002 \001(\t\022\024\n\014payloadClass\030\003 " +
       "\001(\t\022\017\n\007payload\030\004 \001(\014\022\025\n\rundeliverable\030\005 " +
-      "\001(\010*2\n\tActorType\022\016\n\nPERSISTENT\020\000\022\010\n\004TEMP" +
+      "\001(\010*2\n\tActorType\022\016\n\nPERSISTENT\020\000\022\010\n\004TEMP",
       "\020\001\022\013\n\007SERVICE\020\002B\002H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
@@ -10581,13 +10819,13 @@ public final class Elasticactors {
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_Subscription_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_Subscription_descriptor,
-              new java.lang.String[] { "PublisherRef", "MessageName", });
+              new java.lang.String[] { "PublisherRef", "MessageName", "Cancelled", });
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CreateActorMessage_descriptor =
             getDescriptor().getMessageTypes().get(6);
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CreateActorMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CreateActorMessage_descriptor,
-              new java.lang.String[] { "ActorId", "InitialState", "ActorClass", "ActorSystem", "Type", });
+              new java.lang.String[] { "ActorId", "InitialState", "ActorClass", "ActorSystem", "Type", "AffinityKey", });
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_DestroyActorMessage_descriptor =
             getDescriptor().getMessageTypes().get(7);
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_DestroyActorMessage_fieldAccessorTable = new

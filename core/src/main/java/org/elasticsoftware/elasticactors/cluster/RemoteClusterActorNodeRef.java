@@ -135,7 +135,7 @@ public final class RemoteClusterActorNodeRef extends BaseActorRef implements Act
     }
 
     @Override
-    public <T> Publisher<T> publisherOf(String messageName) {
-        return null;
+    public <T> Publisher<T> publisherOf(Class<T> messageClass) {
+        return s -> s.onError(new UnsupportedOperationException("RemoteClusterActorNodeRef cannot be used to obtain a reference to the remote ActorNode"));
     }
 }

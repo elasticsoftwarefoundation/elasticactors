@@ -98,5 +98,5 @@ public interface ActorRef {
      */
     boolean isLocal();
 
-    <T> Publisher<T> publisherOf(String messageName);
+    <T> Publisher<T> publisherOf(Class<T> messageClass);
 }

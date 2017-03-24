@@ -16,6 +16,8 @@
 
 package org.elasticsoftware.elasticactors;
 
+import java.util.Collection;
+
 /**
  * Encapsulates a {@link ThreadLocal} that holds the {@link ActorContext} for the {@link ElasticActor} that
  * is currently being executed.
@@ -55,5 +57,9 @@ public class ActorContextHolder {
      */
     public static ActorSystem getSystem() {
         return threadContext.get().getActorSystem();
+    }
+
+    public static Collection<PersistentSubscription> getSubscriptions() {
+        return threadContext.get().getSubscriptions();
     }
 }

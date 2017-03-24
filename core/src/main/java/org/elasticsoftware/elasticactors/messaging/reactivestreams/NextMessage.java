@@ -14,14 +14,25 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.test;
-
-import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
-import org.elasticsoftware.elasticactors.serialization.Message;
+package org.elasticsoftware.elasticactors.messaging.reactivestreams;
 
 /**
  * @author Joost van de Wijgerd
  */
-@Message(serializationFramework = JacksonSerializationFramework.class,durable = true)
-public class AskForGreeting {
+public final class NextMessage implements ReactiveStreamsProtocol {
+    private final String messageName;
+    private final byte[] messageBytes;
+
+    public NextMessage(String messageName, byte[] messageBytes) {
+        this.messageName = messageName;
+        this.messageBytes = messageBytes;
+    }
+
+    public String getMessageName() {
+        return messageName;
+    }
+
+    public byte[] getMessageBytes() {
+        return messageBytes;
+    }
 }

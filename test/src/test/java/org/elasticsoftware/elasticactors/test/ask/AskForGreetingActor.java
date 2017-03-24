@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.test;
+package org.elasticsoftware.elasticactors.test.ask;
 
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
+import org.elasticsoftware.elasticactors.test.common.EchoGreetingActor;
+import org.elasticsoftware.elasticactors.test.common.Greeting;
 
 /**
  * @author Joost van de Wijgerd

@@ -19,7 +19,7 @@ package org.elasticsoftware.elasticactors.messaging.reactivestreams;
 /**
  * @author Joost van de Wijgerd
  */
-public final class SubscriptionMessage {
+public final class SubscriptionMessage implements ReactiveStreamsProtocol {
     private final String messageName;
 
     public SubscriptionMessage(String messageName) {

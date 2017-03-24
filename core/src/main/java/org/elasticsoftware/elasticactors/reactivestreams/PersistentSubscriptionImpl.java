@@ -21,6 +21,8 @@ import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.CancelMessage;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.RequestMessage;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -28,11 +30,17 @@ public final class PersistentSubscriptionImpl implements PersistentSubscription 
     private final ActorRef subscriberRef;
     private final ActorRef publisherRef;
     private final String messageName;
+    private final AtomicBoolean cancelled ;
 
     public PersistentSubscriptionImpl(ActorRef subscriberRef, ActorRef publisherRef, String messageName) {
+        this(subscriberRef, publisherRef, messageName, false);
+    }
+
+    public PersistentSubscriptionImpl(ActorRef subscriberRef, ActorRef publisherRef, String messageName, boolean cancelled) {
         this.subscriberRef = subscriberRef;
         this.publisherRef = publisherRef;
         this.messageName = messageName;
+        this.cancelled = new AtomicBoolean(cancelled);
     }
 
     @Override
@@ -46,12 +54,21 @@ public final class PersistentSubscriptionImpl implements PersistentSubscription 
     }
 
     @Override
+    public boolean isCancelled() {
+        return cancelled.get();
+    }
+
+    @Override
     public void request(long n) {
-        publisherRef.tell(new RequestMessage(n), subscriberRef);
+        if(!cancelled.get()) {
+            publisherRef.tell(new RequestMessage(messageName, n), subscriberRef);
+        }
     }
 
     @Override
     public void cancel() {
-        publisherRef.tell(new CancelMessage(subscriberRef, messageName), subscriberRef);
+        if(cancelled.compareAndSet(false, true)) {
+            publisherRef.tell(new CancelMessage(subscriberRef, messageName), subscriberRef);
+        }
     }
 }

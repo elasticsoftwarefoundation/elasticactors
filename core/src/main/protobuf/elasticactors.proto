@@ -55,6 +55,7 @@ message Subscriber {
 message Subscription {
     optional string publisherRef = 1;
     optional string messageName = 2;
+    optional bool cancelled = 3;
 }
 
 enum ActorType {

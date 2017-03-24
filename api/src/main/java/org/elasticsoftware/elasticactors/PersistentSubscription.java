@@ -25,4 +25,6 @@ public interface PersistentSubscription extends Subscription {
     ActorRef getPublisherRef();
 
     String getMessageName();
+
+    boolean isCancelled();
 }

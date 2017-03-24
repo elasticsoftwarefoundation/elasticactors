@@ -3,12 +3,30 @@ package org.elasticsoftware.elasticactors.serialization.protobuf;
 option optimize_for = SPEED;
 
 message SubscribeMessage {
-    optional string actorRef = 1;
+    optional string subscriberRef = 1;
     optional string messageName = 2;
 }
 
 message SubscriptionMessage {
-    optional string actorRef = 1;
+    optional string messageName = 1;
+}
+
+message CancelMessage {
+    optional string subscriberRef = 1;
     optional string messageName = 2;
+}
+
+message CompletedMessage {
+    optional string messageName = 1;
+}
+
+message NextMessage {
+    optional string messageName = 1;
+    optional bytes messageBytes = 2;
+}
+
+message RequestMessage {
+    optional string messageName = 1;
+    optional uint64 n = 2;
 }
 

@@ -18,11 +18,10 @@ package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.ActorContextHolder;
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ReactiveActor;
-import org.elasticsoftware.elasticactors.core.actors.CompletableFutureDelegate;
-import org.elasticsoftware.elasticactors.core.actors.ReplyActor;
-import org.elasticsoftware.elasticactors.core.actors.SubscriberDelegate;
+import org.elasticsoftware.elasticactors.TypedActor;
+import org.elasticsoftware.elasticactors.core.actors.*;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.*;
+import org.elasticsoftware.elasticactors.serialization.Message;
 import org.reactivestreams.Publisher;
 
 import javax.annotation.Nullable;
@@ -56,22 +55,34 @@ public abstract class BaseActorRef implements ActorRef {
     }
 
     @Override
-    public <T> Publisher<T> publisherOf(String messageName) {
-        return subscriber -> {
-            // do we need to know if it is a persistent actor?
-            ActorRef subscriberRef = ActorContextHolder.getSelf();
-            if(subscriberRef != null && subscriber instanceof ReactiveActor) {
-                // the actor will handle the flow itself, subscriber will not be called directly
-                tell(new SubscribeMessage(subscriberRef, messageName), subscriberRef);
-            } else {
+    public <T> Publisher<T> publisherOf(Class<T> messageClass) {
+        if(messageClass.getAnnotation(Message.class) == null) {
+            throw new IllegalArgumentException("messageClass needs to be annotated with @Message");
+        }
+        final String messageName = messageClass.getName();
+        // see if we are in an Actor Context or not
+        if(ActorContextHolder.getSelf() == null) {
+            return subscriber -> {
                 try {
-                    ActorRef delegateRef = actorSystem.tempActorOf(ReplyActor.class, new SubscriberDelegate(BaseActorRef.this, messageName, subscriber));
+                    // ActorRef delegateRef = actorSystem.tempActorOf(ReplyActor.class, new SubscriberDelegate(BaseActorRef.this, messageName, subscriber));
+                    ActorRef delegateRef = actorSystem.tempActorOf(SubscriberActor.class, new SubscriberState<>(subscriber));
                     tell(new SubscribeMessage(delegateRef, messageName), delegateRef);
                 } catch (Exception e) {
                     subscriber.onError(e);
                 }
-            }
-        };
+            };
+        } else {
+            // for now it is not possible to use lambda's or other anonymous classes while inside and ActorContext
+            // due to thread safety issue
+            return subscriber -> {
+                if(subscriber instanceof TypedActor.SubscriberRef) {
+                    // all is good, start the protocol handshake
+                    tell(new SubscribeMessage(ActorContextHolder.getSelf(), messageName), ActorContextHolder.getSelf());
+                } else {
+                    subscriber.onError(new IllegalStateException("Within the context of an Actor it is not possible to use lambda's or anonymous classes. Please use this.asSubscriber() to pass in the proper reference"));
+                }
+            };
+        }
     }
 
     @Override

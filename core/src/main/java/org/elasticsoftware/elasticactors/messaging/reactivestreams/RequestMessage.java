@@ -19,11 +19,17 @@ package org.elasticsoftware.elasticactors.messaging.reactivestreams;
 /**
  * @author Joost van de Wijgerd
  */
-public final class RequestMessage {
+public final class RequestMessage implements ReactiveStreamsProtocol {
+    private final String messageName;
     private final long n;
 
-    public RequestMessage(long n) {
+    public RequestMessage(String messageName, long n) {
+        this.messageName = messageName;
         this.n = n;
+    }
+
+    public String getMessageName() {
+        return messageName;
     }
 
     public long getN() {
