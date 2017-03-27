@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors;
 import org.reactivestreams.Publisher;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 /**
  * This is the main entry point for the ElasticActors API. When a {@link org.elasticsoftware.elasticactors.serialization.Message}
@@ -99,4 +100,6 @@ public interface ActorRef {
     boolean isLocal();
 
     <T> Publisher<T> publisherOf(Class<T> messageClass);
+
+    <T> Publisher<T> publisherOf(Class<T> messageClass, Consumer<ActorRef> undeliverableHandler);
 }

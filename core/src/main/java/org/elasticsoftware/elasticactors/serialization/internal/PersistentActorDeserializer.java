@@ -24,6 +24,7 @@ import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.reactivestreams.InternalPersistentSubscription;
 import org.elasticsoftware.elasticactors.reactivestreams.PersistentSubscriptionImpl;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
@@ -62,12 +63,12 @@ public final class PersistentActorDeserializer implements Deserializer<byte[],Pe
                 protobufMessage.getSubscribersList().forEach(s -> messageSubscribers.put(s.getMessageName(),
                         new MessageSubscriber(actorRefFactory.create(s.getSubscriberRef()), s.getLeases())));
             }
-            List<PersistentSubscription> persistentSubscriptions = null;
+            List<InternalPersistentSubscription> persistentSubscriptions = null;
 
             if(protobufMessage.getSubscriptionsCount() > 0) {
                 persistentSubscriptions = protobufMessage.getSubscriptionsList().stream()
                         .map(s -> new PersistentSubscriptionImpl(selfRef, actorRefFactory.create(s.getPublisherRef()),
-                                s.getMessageName(), s.getCancelled())).collect(Collectors.toList());
+                                s.getMessageName(), s.getCancelled() )).collect(Collectors.toList());
             }
 
             return new PersistentActor<>(shardKey,

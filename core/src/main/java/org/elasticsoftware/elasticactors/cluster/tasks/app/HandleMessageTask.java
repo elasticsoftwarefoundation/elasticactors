@@ -96,6 +96,7 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                 NextMessage nextMessage = new NextMessage(internalMessage.getPayloadClass(), getMessageBytes(internalMessage));
                 // todo consider using ActorRefGroup here
                 ((Set<MessageSubscriber>) persistentActor.getMessageSubscribers().get(internalMessage.getPayloadClass()))
+                        .stream().filter(messageSubscriber -> messageSubscriber.decrementAndGet() > 0)
                         .forEach(s -> s.getSubscriberRef().tell(nextMessage, receiverRef));
             } catch(Exception e) {
                 log.error("Unexpected exception while forwarding message to Subscribers", e);

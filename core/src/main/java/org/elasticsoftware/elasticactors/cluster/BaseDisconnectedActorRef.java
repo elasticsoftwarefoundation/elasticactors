@@ -24,6 +24,7 @@ import org.reactivestreams.Subscriber;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 /**
  * @author Joost van de Wijgerd
@@ -72,6 +73,11 @@ public abstract class BaseDisconnectedActorRef implements ActorRef, ActorContain
     @Override
     public <T> Publisher<T> publisherOf(Class<T> messageClass) {
         return s -> s.onError(new IllegalStateException(getExceptionMessage()));
+    }
+
+    @Override
+    public <T> Publisher<T> publisherOf(Class<T> messageClass, Consumer<ActorRef> undeliverableHandler) {
+        return publisherOf(messageClass);
     }
 
     @Override

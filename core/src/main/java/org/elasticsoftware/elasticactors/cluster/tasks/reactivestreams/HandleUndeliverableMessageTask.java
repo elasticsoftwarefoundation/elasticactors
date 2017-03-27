@@ -27,9 +27,12 @@ import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.*;
+import org.elasticsoftware.elasticactors.reactivestreams.InternalPersistentSubscription;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+
+import java.util.Optional;
 
 import static java.lang.String.format;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
@@ -79,16 +82,20 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
                 return persistentActor.removeSubscription(requestMessage.getMessageName(), internalMessage.getSender());
             } else if(message instanceof SubscribeMessage) {
                 // subscribe failed, the publishing actor doesn't exist
-                // signal onError or delegate to onReceive depending on the Subscriber impl
-                PublisherNotFoundException e = new PublisherNotFoundException(String.format("Actor[%s] does not exist",
-                        internalMessage.getSender().toString()), internalMessage.getSender());
-                // todo this will lead to casting errors if the TypedActor is strongly typed
-                if(receiver.asSubscriber() instanceof TypedActor.SubscriberRef) {
-                    receiver.onReceive(internalMessage.getSender(), e);
-                } else {
-                    receiver.asSubscriber().onError(e);
-                }
-                return false;
+                // signal onError or delegate to special undeliverable handler if present
+                SubscribeMessage subscribeMessage = (SubscribeMessage) message;
+                return persistentActor.removeSubscription(subscribeMessage.getMessageName(), internalMessage.getSender(),
+                        s -> {
+                            InternalPersistentSubscription subscription = (InternalPersistentSubscription) s;
+                            if(subscription.getUndeliverableFunction() != null) {
+                                subscription.getUndeliverableFunction().accept(internalMessage.getSender());
+                            } else {
+                                // call the onError with a special exception
+                                receiver.asSubscriber().onError(
+                                        new PublisherNotFoundException(String.format("Actor[%s] does not exist",
+                                        internalMessage.getSender().toString()), internalMessage.getSender()));
+                            }
+                        });
             } else if(message instanceof SubscriptionMessage) {
                 SubscriptionMessage subscriptionMessage = (SubscriptionMessage) message;
                 // the subscriber is gone, need to remove the subscriber reference

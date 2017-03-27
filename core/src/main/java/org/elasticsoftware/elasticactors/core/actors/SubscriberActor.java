@@ -19,14 +19,29 @@ package org.elasticsoftware.elasticactors.core.actors;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.TempActor;
 import org.elasticsoftware.elasticactors.TypedActor;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.SubscribeMessage;
+import org.elasticsoftware.elasticactors.reactivestreams.PersistentSubscriptionImpl;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+
+import static org.elasticsoftware.elasticactors.cluster.tasks.InternalActorContext.getAsProcessorContext;
 
 /**
  * @author Joost van de Wijgerd
  */
 @TempActor(stateClass = SubscriberState.class)
 public final class SubscriberActor<T> extends TypedActor<T> implements Subscriber<T> {
+
+    @Override
+    public void postCreate(ActorRef creator) throws Exception {
+        SubscriberState state = getState(SubscriberState.class);
+        // prepare the subscription
+        getAsProcessorContext().addSubscription(new PersistentSubscriptionImpl(getSelf(),
+                state.getPublisherRef(), state.getMessageName(), state.getUndeliverableFunction()));
+        // and start the sequence
+        state.getPublisherRef().tell(new SubscribeMessage(getSelf(), state.getMessageName()));
+    }
+
     @Override
     public void onReceive(ActorRef sender, T message) throws Exception {
         // not used, everything is delegated to the Subscriber interface

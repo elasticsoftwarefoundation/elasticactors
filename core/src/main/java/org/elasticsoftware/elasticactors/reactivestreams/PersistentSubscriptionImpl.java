@@ -17,30 +17,43 @@
 package org.elasticsoftware.elasticactors.reactivestreams;
 
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.CancelMessage;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.RequestMessage;
 
+import javax.annotation.Nullable;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class PersistentSubscriptionImpl implements PersistentSubscription {
+public final class PersistentSubscriptionImpl implements InternalPersistentSubscription {
     private final ActorRef subscriberRef;
     private final ActorRef publisherRef;
     private final String messageName;
-    private final AtomicBoolean cancelled ;
+    private final AtomicBoolean cancelled;
+    @Nullable
+    private final transient Consumer<ActorRef> undeliverableFunction;
 
     public PersistentSubscriptionImpl(ActorRef subscriberRef, ActorRef publisherRef, String messageName) {
-        this(subscriberRef, publisherRef, messageName, false);
+        this(subscriberRef, publisherRef, messageName, false, null);
+    }
+
+    public PersistentSubscriptionImpl(ActorRef subscriberRef, ActorRef publisherRef, String messageName, @Nullable Consumer<ActorRef> undeliverableFunction) {
+        this(subscriberRef, publisherRef, messageName, false, undeliverableFunction);
+
     }
 
     public PersistentSubscriptionImpl(ActorRef subscriberRef, ActorRef publisherRef, String messageName, boolean cancelled) {
+        this(subscriberRef, publisherRef, messageName, cancelled, null);
+    }
+
+    private PersistentSubscriptionImpl(ActorRef subscriberRef, ActorRef publisherRef, String messageName, boolean cancelled, Consumer<ActorRef> undeliverableFunction) {
         this.subscriberRef = subscriberRef;
         this.publisherRef = publisherRef;
         this.messageName = messageName;
         this.cancelled = new AtomicBoolean(cancelled);
+        this.undeliverableFunction = undeliverableFunction;
     }
 
     @Override
@@ -70,5 +83,11 @@ public final class PersistentSubscriptionImpl implements PersistentSubscription 
         if(cancelled.compareAndSet(false, true)) {
             publisherRef.tell(new CancelMessage(subscriberRef, messageName), subscriberRef);
         }
+    }
+
+    @Override
+    @Nullable
+    public Consumer<ActorRef> getUndeliverableFunction() {
+        return undeliverableFunction;
     }
 }

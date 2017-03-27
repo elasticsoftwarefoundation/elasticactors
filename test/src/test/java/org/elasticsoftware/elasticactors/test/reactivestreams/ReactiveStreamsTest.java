@@ -47,6 +47,22 @@ public class ReactiveStreamsTest {
         waitLatch.await();
     }
 
+    @Test
+    public void testCreateSubscriberWithoutFirstCreatingPublisher() throws Exception {
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+
+        ActorRef subscriberOne = actorSystem.actorOf("subscriberOne", TestSubscriber.class);
+
+        final CountDownLatch waitLatch = new CountDownLatch(1);
+
+        subscriberOne.publisherOf(StreamFinishedMessage.class).subscribe(new BlockingSubscriber<>(waitLatch));
+
+        waitLatch.await();
+    }
+
     private static final class BlockingSubscriber<T> implements Subscriber<T> {
         private final CountDownLatch waitLatch;
         private Subscription subscription;

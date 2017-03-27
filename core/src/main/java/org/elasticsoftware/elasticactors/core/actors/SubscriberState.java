@@ -16,23 +16,48 @@
 
 package org.elasticsoftware.elasticactors.core.actors;
 
+import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.reactivestreams.Subscriber;
+
+import javax.annotation.Nullable;
+import java.util.function.Consumer;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class SubscriberState<T> implements ActorState<SubscriberState> {
     private final Subscriber<T> subscriber;
+    private final ActorRef publisherRef;
+    private final String messageName;
+    private final Consumer<ActorRef> undeliverableFunction;
 
-    public SubscriberState(Subscriber<T> subscriber) {
+    public SubscriberState(Subscriber<T> subscriber,
+                           ActorRef publisherRef,
+                           String messageName,
+                           @Nullable Consumer<ActorRef> undeliverableFunction) {
         this.subscriber = subscriber;
+        this.publisherRef = publisherRef;
+        this.messageName = messageName;
+        this.undeliverableFunction = undeliverableFunction;
     }
 
     public Subscriber<T> getSubscriber() {
         return subscriber;
+    }
+
+    public ActorRef getPublisherRef() {
+        return publisherRef;
+    }
+
+    public String getMessageName() {
+        return messageName;
+    }
+
+    public Consumer<ActorRef> getUndeliverableFunction() {
+        return undeliverableFunction;
     }
 
     @Override

@@ -21,11 +21,15 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.core.actors.*;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.*;
+import org.elasticsoftware.elasticactors.reactivestreams.PersistentSubscriptionImpl;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.reactivestreams.Publisher;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+
+import static org.elasticsoftware.elasticactors.cluster.tasks.InternalActorContext.getAsProcessorContext;
 
 /**
  * @author Joost van de Wijgerd
@@ -55,18 +59,16 @@ public abstract class BaseActorRef implements ActorRef {
     }
 
     @Override
-    public <T> Publisher<T> publisherOf(Class<T> messageClass) {
+    public <T> Publisher<T> publisherOf(Class<T> messageClass, @Nullable Consumer<ActorRef> undeliverableHandler) {
         if(messageClass.getAnnotation(Message.class) == null) {
             throw new IllegalArgumentException("messageClass needs to be annotated with @Message");
         }
         final String messageName = messageClass.getName();
         // see if we are in an Actor Context or not
-        if(ActorContextHolder.getSelf() == null) {
+        if(!ActorContextHolder.hasActorContext()) {
             return subscriber -> {
                 try {
-                    // ActorRef delegateRef = actorSystem.tempActorOf(ReplyActor.class, new SubscriberDelegate(BaseActorRef.this, messageName, subscriber));
-                    ActorRef delegateRef = actorSystem.tempActorOf(SubscriberActor.class, new SubscriberState<>(subscriber));
-                    tell(new SubscribeMessage(delegateRef, messageName), delegateRef);
+                    actorSystem.tempActorOf(SubscriberActor.class, new SubscriberState<>(subscriber, this, messageName, undeliverableHandler));
                 } catch (Exception e) {
                     subscriber.onError(e);
                 }
@@ -76,6 +78,8 @@ public abstract class BaseActorRef implements ActorRef {
             // due to thread safety issue
             return subscriber -> {
                 if(subscriber instanceof TypedActor.SubscriberRef) {
+                    // prepare the subscription (will be not active at this point)
+                    getAsProcessorContext().addSubscription(new PersistentSubscriptionImpl(ActorContextHolder.getSelf(), this, messageName, undeliverableHandler));
                     // all is good, start the protocol handshake
                     tell(new SubscribeMessage(ActorContextHolder.getSelf(), messageName), ActorContextHolder.getSelf());
                 } else {
@@ -83,6 +87,11 @@ public abstract class BaseActorRef implements ActorRef {
                 }
             };
         }
+    }
+
+    @Override
+    public <T> Publisher<T> publisherOf(Class<T> messageClass) {
+        return publisherOf(messageClass, null);
     }
 
     @Override

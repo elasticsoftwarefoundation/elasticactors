@@ -25,7 +25,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface Message {
-    public static final int NO_TIMEOUT = -1;
+    int NO_TIMEOUT = -1;
 
     /**
      * Determines which framework will be used to serialize and deserialize this message

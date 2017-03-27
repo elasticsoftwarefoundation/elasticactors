@@ -18,12 +18,17 @@ package org.elasticsoftware.elasticactors.test.reactivestreams;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.PublisherNotFoundException;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.mockito.Mockito.mock;
 
 /**
  * @author Joost van de Wijgerd
@@ -146,5 +151,102 @@ public class AnonymousSubscriberTest {
         waitLatch.await();
 
         testActorSystem.destroy();
+    }
+
+    @Test
+    public void testUndeliverable() throws InterruptedException {
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+
+        ActorRef publisher = actorSystem.actorFor("testPublisher");
+
+        //Subscriber<StreamedMessage> subscriber = mock(Subscriber.class)
+        CountDownLatch waitLatch = new CountDownLatch(1);
+        AtomicBoolean testResult = new AtomicBoolean(false);
+
+        publisher.publisherOf(StreamedMessage.class).subscribe(new Subscriber<StreamedMessage>() {
+            @Override
+            public void onSubscribe(Subscription s) {
+                // should not happen in this test
+                waitLatch.countDown();
+            }
+
+            @Override
+            public void onNext(StreamedMessage streamedMessage) {
+                // should not happen in this test
+                waitLatch.countDown();
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                // we should be getting
+                if(t instanceof PublisherNotFoundException) {
+                    testResult.set(true);
+                }
+                waitLatch.countDown();
+            }
+
+            @Override
+            public void onComplete() {
+                // should not happen
+                waitLatch.countDown();
+            }
+        });
+
+        waitLatch.await();
+        Assert.assertTrue(testResult.get());
+    }
+
+    @Test
+    public void testUndeliverableWithFunction() throws InterruptedException {
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+
+        ActorRef publisher = actorSystem.actorFor("testPublisher");
+
+        CountDownLatch waitLatch = new CountDownLatch(1);
+        AtomicBoolean testResult = new AtomicBoolean(false);
+
+        publisher.publisherOf(StreamedMessage.class, actorRef -> {
+            if(actorRef.getActorId().equals("testPublisher")) {
+                testResult.set(true);
+            }
+            waitLatch.countDown();
+        }).subscribe(new DummySubscriber<>(waitLatch));
+
+        waitLatch.await();
+        Assert.assertTrue(testResult.get());
+    }
+
+    private static final class DummySubscriber<T> implements Subscriber<T> {
+        private final CountDownLatch waitLatch;
+
+        private DummySubscriber(CountDownLatch waitLatch) {
+            this.waitLatch = waitLatch;
+        }
+
+        @Override
+        public void onSubscribe(Subscription s) {
+            waitLatch.countDown();
+        }
+
+        @Override
+        public void onNext(T t) {
+            waitLatch.countDown();
+        }
+
+        @Override
+        public void onError(Throwable t) {
+            waitLatch.countDown();
+        }
+
+        @Override
+        public void onComplete() {
+            waitLatch.countDown();
+        }
     }
 }

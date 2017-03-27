@@ -31,6 +31,10 @@ public class ActorContextHolder {
 
     }
 
+    public static boolean hasActorContext() {
+        return threadContext.get() != null;
+    }
+
     /**
      *
      * @param stateClass        the class that implements {@link ActorState} interface

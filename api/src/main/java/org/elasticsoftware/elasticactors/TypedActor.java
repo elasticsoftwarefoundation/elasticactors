@@ -16,6 +16,8 @@
 
 package org.elasticsoftware.elasticactors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -26,6 +28,7 @@ import java.util.Collection;
  * @author Joost van de Wijgerd
  */
 public abstract class TypedActor<T> implements ElasticActor<T> {
+    protected final Logger logger = LogManager.getLogger(getClass());
     private final SubscriberRef SUBSCRIBER_INSTANCE = new SubscriberRef();
 
     @Override
@@ -70,7 +73,7 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
 
         @Override
         public void onSubscribe(Subscription s) {
-            // start the flow
+            // start the flow 
             s.request(Long.MAX_VALUE);
         }
 
@@ -81,7 +84,11 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
 
         @Override
         public void onError(Throwable t) {
-            throw new UnsupportedOperationException("Delegated to onReceive in this implementation");
+            if(t instanceof PublisherNotFoundException) {
+                logger.error("Subscribing has silently failed. If you want to handle this case, use ActorRef.publisherOf(Class<T>, Consumer<ActorRef)");
+            } else {
+                logger.error("Unexpected error on TypedActor.SubscriberRef", t);
+            }
         }
 
         @Override

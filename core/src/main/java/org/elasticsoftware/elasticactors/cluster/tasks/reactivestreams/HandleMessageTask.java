@@ -26,6 +26,7 @@ import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.*;
+import org.elasticsoftware.elasticactors.reactivestreams.InternalPersistentSubscription;
 import org.elasticsoftware.elasticactors.reactivestreams.PersistentSubscriptionImpl;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
@@ -36,6 +37,7 @@ import org.reactivestreams.Subscriber;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Optional;
 import java.util.Set;
 
 import static java.lang.String.format;
@@ -133,9 +135,19 @@ public final class HandleMessageTask extends ActorLifecycleTask {
     }
 
     private void handle(SubscriptionMessage subscriptionMessage, ActorRef subscriberRef, ActorRef publisherRef, Subscriber subscriber) {
-        PersistentSubscriptionImpl persistentSubscription = new PersistentSubscriptionImpl(subscriberRef, publisherRef, subscriptionMessage.getMessageName());
-        persistentActor.addSubscription(persistentSubscription);
-        subscriber.onSubscribe(persistentSubscription);
+        Optional<InternalPersistentSubscription> persistentSubscription =
+                persistentActor.getSubscription(subscriptionMessage.getMessageName(), publisherRef);
+        if(persistentSubscription.isPresent()) {
+            // notify the subscriber
+            subscriber.onSubscribe(persistentSubscription.get());
+        } else {
+            // we got a subscription message, but there is no corresponding PersistentSubscription ... this should not
+            // be possible. however since the other side now has a corresponding subscriber reference we need to cancel
+            // it to keep
+            log.error("Received a SubscriptionMessage but did not find a corresponding PersistentSubscription, sending a CancelMessage to the Publisher");
+            publisherRef.tell(new CancelMessage(subscriberRef, subscriptionMessage.getMessageName()));
+        }
+
     }
 
     private void handle(CompletedMessage completedMessage, ActorRef publisherRef, Subscriber subscriber) {

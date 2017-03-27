@@ -29,7 +29,16 @@ import org.reactivestreams.Subscription;
 public final class TestSubscriber extends MethodActor {
     @Override
     public void postCreate(ActorRef creator) throws Exception {
-        getSystem().actorFor("testPublisher").publisherOf(StreamedMessage.class).subscribe(asSubscriber());
+        getSystem().actorFor("testPublisher").publisherOf(StreamedMessage.class,
+                publisherRef -> {
+                    try {
+                        getSystem().actorOf("testPublisher", TestPublisher.class)
+                                .publisherOf(StreamedMessage.class).subscribe(asSubscriber());
+                    } catch(Exception e) {
+                        // ignore
+                    }
+                }
+        ).subscribe(asSubscriber());
     }
 
     @MessageHandler
