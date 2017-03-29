@@ -201,24 +201,7 @@ public final class PersistentActor<K> implements ActorContext, ProcessorContext 
     }
 
     public boolean removeSubscription(String messageName, ActorRef publisherRef) {
-        return removeSubscription(messageName, publisherRef, null);
-    }
-
-    public boolean removeSubscription(String messageName, ActorRef publisherRef, @Nullable Consumer<InternalPersistentSubscription> doOnRemove) {
-        if(persistentSubscriptions != null) {
-            ListIterator<InternalPersistentSubscription> itr = persistentSubscriptions.listIterator();
-            while (itr.hasNext()) {
-                InternalPersistentSubscription next = itr.next();
-                if(next.getMessageName().equals(messageName) && next.getPublisherRef().equals(publisherRef)) {
-                    itr.remove();
-                    if(doOnRemove != null) {
-                        doOnRemove.accept(next);
-                    }
-                    return true;
-                }
-            }
-        }
-        return false;
+        return persistentSubscriptions != null && persistentSubscriptions.removeIf(next -> next.getMessageName().equals(messageName) && next.getPublisherRef().equals(publisherRef));
     }
 
     public void cancelSubscription(String messageName, ActorRef publisherRef) {

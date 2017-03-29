@@ -49,7 +49,7 @@ public final class TestSubscriber extends MethodActor {
                 if(error instanceof PublisherNotFoundException) {
                     try {
                         getSystem().actorOf("testPublisher", TestPublisher.class).publisherOf(StreamedMessage.class)
-                                .subscribe(asSubscriber(StreamedMessage.class));
+                                .subscribe(this);
                     } catch(Exception e) {
 
                     }

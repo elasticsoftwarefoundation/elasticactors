@@ -111,6 +111,8 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask imp
                 Optional<InternalPersistentSubscription> persistentSubscription =
                     persistentActor.getSubscription(subscribeMessage.getMessageName(), internalMessage.getSender());
                 if(persistentSubscription.isPresent()) {
+                    // need to remove it from the internal state before we handle the error
+                    persistentActor.removeSubscription(subscribeMessage.getMessageName(), internalMessage.getSender());
                     currentSubscription = persistentSubscription.get();
                     InternalSubscriberContext.setContext(this);
                     try {
@@ -124,7 +126,6 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask imp
                                 receiverRef), e);
                     } finally {
                         InternalSubscriberContext.getAndClearContext();
-                        persistentActor.removeSubscription(subscribeMessage.getMessageName(), internalMessage.getSender());
                     }
                     return true;
                 } else {
