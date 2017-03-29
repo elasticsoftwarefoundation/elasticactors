@@ -73,7 +73,7 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
 
     protected class DefaultSubscriber extends TypedSubscriber<T> {
 
-        private DefaultSubscriber() {
+        protected DefaultSubscriber() {
         }
 
         @Override

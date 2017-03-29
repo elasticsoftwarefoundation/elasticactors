@@ -43,17 +43,7 @@ public final class TestSubscriber extends MethodActor {
 
     @Override
     public Subscriber asSubscriber(Class messageClass) {
-        return new UntypedSubscriber() {
-            @Override
-            public void onNext(Object message) {
-                // delegate
-                try {
-                    onReceive(getPublisher(), message);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
+        return new DefaultSubscriber() {
             @Override
             public void onError(Throwable error) {
                 if(error instanceof PublisherNotFoundException) {
