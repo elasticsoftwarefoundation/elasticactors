@@ -16,9 +16,13 @@
 
 package org.elasticsoftware.elasticactors.messaging.reactivestreams;
 
+import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
+
 /**
  * @author Joost van de Wijgerd
  */
+@Message(immutable = true, durable = false, serializationFramework = SystemSerializationFramework.class)
 public final class SubscriptionMessage implements ReactiveStreamsProtocol {
     private final String messageName;
 

@@ -17,10 +17,14 @@
 package org.elasticsoftware.elasticactors.messaging.reactivestreams;
 
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 
 /**
  * @author Joost van de Wijgerd
  */
+@Message(immutable = true, durable = false, serializationFramework = SystemSerializationFramework.class)
 public final class SubscribeMessage implements ReactiveStreamsProtocol {
     private final ActorRef subscriberRef;
     private final String messageName;

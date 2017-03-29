@@ -30,6 +30,7 @@ import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
+import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.test.InternalActorSystemsImpl;
 import org.elasticsoftware.elasticactors.test.cluster.NoopActorSystemEventRegistryService;
 import org.elasticsoftware.elasticactors.test.cluster.SingleNodeClusterService;
@@ -148,5 +149,10 @@ public class TestConfiguration {
     @Bean(name = {"actorSystemEventListenerService"})
     public ActorSystemEventListenerService createActorSystemEventListenerService() {
         return new NoopActorSystemEventRegistryService();
+    }
+
+    @Bean(name = "systemSerializationFramework")
+    public SystemSerializationFramework createSystemSerializationFramework(InternalActorSystems internalActorSystems) {
+        return new SystemSerializationFramework(internalActorSystems);
     }
 }
