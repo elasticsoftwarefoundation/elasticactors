@@ -17,9 +17,6 @@
 package org.elasticsoftware.elasticactors;
 
 import org.reactivestreams.Publisher;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 import java.util.concurrent.CompletionStage;
 
 /**
