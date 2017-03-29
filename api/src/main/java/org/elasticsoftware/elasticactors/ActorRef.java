@@ -16,7 +16,7 @@
 
 package org.elasticsoftware.elasticactors;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 /**
  * This is the main entry point for the ElasticActors API. When a {@link org.elasticsoftware.elasticactors.serialization.Message}
@@ -85,7 +85,7 @@ public interface ActorRef {
      * @param responseType  the expected message type of the response
      * @return              a CompletableFuture that completes with the response message
      */
-    <T> CompletableFuture<T> ask(Object message, Class<T> responseType);
+    <T> CompletionStage<T> ask(Object message, Class<T> responseType);
 
     /**
      * Return whether the Actor is co-located on the same JVM as the caller. There can be significant performance
