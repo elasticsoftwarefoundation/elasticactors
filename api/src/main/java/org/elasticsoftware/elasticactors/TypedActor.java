@@ -22,6 +22,7 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -62,13 +63,9 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
         // do nothing by default
     }
 
-    public Subscriber asSubscriber(){
-        return defaultSubscriber;
-    }
-
     @Override
-    public Subscriber asSubscriber(Class messageClass) {
-        return asSubscriber();
+    public Subscriber asSubscriber(@Nullable Class messageClass) {
+        return defaultSubscriber;
     }
 
     protected class DefaultSubscriber extends TypedSubscriber<T> {

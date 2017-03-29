@@ -129,9 +129,19 @@ public interface ElasticActor<T> {
      */
     void preDestroy(ActorRef destroyer) throws Exception;
 
-    Subscriber asSubscriber();
-
+    /**
+     * This is a factory method that will create a {@link Subscriber} for a given messageClass. The {@link TypedActor}
+     * implementation will return a {@link TypedActor.DefaultSubscriber} that will delegate the
+     * {@link Subscriber#onNext(Object)} to {@link TypedActor#onReceive(ActorRef, Object)} so normal messaging
+     * semantics can be observed. When custom handling is needed override this method and return an implementation
+     * that extends the {@link TypedSubscriber} abstract class.
+     *
+     * Similar to implementing an actor the {@link TypedSubscriber} should not have any state. Instead the
+     * {@link TypedSubscriber#getState(Class)} should be used to access the {@link ActorState}
+     *
+     * @param messageClass
+     * @param <MT>
+     * @return
+     */
     <MT> Subscriber<MT> asSubscriber(Class<MT> messageClass);
-
-
 }

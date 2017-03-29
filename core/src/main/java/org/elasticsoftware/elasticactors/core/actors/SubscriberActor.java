@@ -24,6 +24,8 @@ import org.elasticsoftware.elasticactors.reactivestreams.PersistentSubscriptionI
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import javax.annotation.Nullable;
+
 import static org.elasticsoftware.elasticactors.cluster.tasks.InternalActorContext.getAsProcessorContext;
 
 /**
@@ -48,7 +50,7 @@ public final class SubscriberActor<T> extends TypedActor<T> implements Subscribe
     }
 
     @Override
-    public Subscriber<T> asSubscriber() {
+    public Subscriber asSubscriber(@Nullable Class messageClass) {
         return this;
     }
 

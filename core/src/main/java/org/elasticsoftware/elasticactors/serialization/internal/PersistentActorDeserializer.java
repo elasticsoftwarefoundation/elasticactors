@@ -93,8 +93,8 @@ public final class PersistentActorDeserializer implements Deserializer<byte[],Pe
         try {
             return elasticActor.asSubscriber(Class.forName(messageName));
         } catch(ClassNotFoundException e) {
-            // did not find the message class, this should not happen but we now return the default subscriber
-            return elasticActor.asSubscriber();
+            // did not find the message class, this should not happen but we now return the generic subscriber
+            return elasticActor.asSubscriber(null);
         }
     }
 }
