@@ -42,7 +42,7 @@ public class AskTest {
         ActorRef echo = actorSystem.actorOf("e", EchoGreetingActor.class);
 
 
-        Greeting response = echo.ask(new Greeting("echo"), Greeting.class).get();
+        Greeting response = echo.ask(new Greeting("echo"), Greeting.class).toCompletableFuture().get();
 
         assertEquals(response.getWho(), "echo");
 
@@ -58,7 +58,7 @@ public class AskTest {
         ActorRef echo = actorSystem.actorOf("ask", AskForGreetingActor.class);
 
 
-        Greeting response = echo.ask(new AskForGreeting(), Greeting.class).get();
+        Greeting response = echo.ask(new AskForGreeting(), Greeting.class).toCompletableFuture().get();
 
         assertEquals(response.getWho(), "echo");
 
@@ -98,7 +98,7 @@ public class AskTest {
         ActorSystem actorSystem = testActorSystem.getActorSystem();
         ActorRef echo = actorSystem.actorOf("e", EchoGreetingActor.class);
 
-        Greeting response = echo.ask(new Greeting("Santa Claus"), Greeting.class).get();
+        Greeting response = echo.ask(new Greeting("Santa Claus"), Greeting.class).toCompletableFuture().get();
 
         testActorSystem.destroy();
     }
