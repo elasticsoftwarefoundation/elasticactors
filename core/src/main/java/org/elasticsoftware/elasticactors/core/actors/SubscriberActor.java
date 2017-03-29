@@ -37,7 +37,7 @@ public final class SubscriberActor<T> extends TypedActor<T> implements Subscribe
         SubscriberState state = getState(SubscriberState.class);
         // prepare the subscription
         getAsProcessorContext().addSubscription(new PersistentSubscriptionImpl(getSelf(),
-                state.getPublisherRef(), state.getMessageName(), state.getUndeliverableFunction()));
+                state.getPublisherRef(), state.getMessageName(), state.getSubscriber()));
         // and start the sequence
         state.getPublisherRef().tell(new SubscribeMessage(getSelf(), state.getMessageName()));
     }

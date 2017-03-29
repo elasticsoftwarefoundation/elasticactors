@@ -76,11 +76,6 @@ public abstract class BaseDisconnectedActorRef implements ActorRef, ActorContain
     }
 
     @Override
-    public <T> Publisher<T> publisherOf(Class<T> messageClass, Consumer<ActorRef> undeliverableHandler) {
-        return publisherOf(messageClass);
-    }
-
-    @Override
     public final boolean equals(Object o) {
         return this == o || o instanceof ActorRef && this.toString().equals(o.toString());
     }

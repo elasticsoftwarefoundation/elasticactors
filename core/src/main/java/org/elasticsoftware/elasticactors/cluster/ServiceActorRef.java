@@ -83,11 +83,6 @@ public final class ServiceActorRef extends BaseActorRef implements ActorContaine
     }
 
     @Override
-    public <T> Publisher<T> publisherOf(Class<T> messageClass, @Nullable Consumer<ActorRef> undeliverableHandler) {
-        return publisherOf(messageClass);
-    }
-
-    @Override
     public boolean isLocal() {
         return node.isLocal();
     }

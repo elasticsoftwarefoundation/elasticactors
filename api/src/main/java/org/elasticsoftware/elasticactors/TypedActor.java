@@ -29,7 +29,7 @@ import java.util.Collection;
  */
 public abstract class TypedActor<T> implements ElasticActor<T> {
     protected final Logger logger = LogManager.getLogger(getClass());
-    private final SubscriberRef SUBSCRIBER_INSTANCE = new SubscriberRef();
+    private final DefaultSubscriber defaultSubscriber = new DefaultSubscriber();
 
     @Override
     public void postCreate(ActorRef creator) throws Exception {
@@ -62,13 +62,18 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
         // do nothing by default
     }
 
-    public Subscriber<T> asSubscriber(){
-        return SUBSCRIBER_INSTANCE;
+    public Subscriber asSubscriber(){
+        return defaultSubscriber;
     }
 
-    public final class SubscriberRef implements org.reactivestreams.Subscriber<T> {
+    @Override
+    public Subscriber asSubscriber(Class messageClass) {
+        return asSubscriber();
+    }
 
-        private SubscriberRef() {
+    protected class DefaultSubscriber extends TypedSubscriber<T> {
+
+        private DefaultSubscriber() {
         }
 
         @Override
@@ -78,16 +83,22 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
         }
 
         @Override
-        public void onNext(T t) {
-            throw new UnsupportedOperationException("Delegated to onReceive in this implementation");
+        public void onNext(T message) {
+            // delegate to onReceive
+            try {
+                onReceive(getPublisher(), message);
+            } catch (Exception e) {
+                // wrap it in a runtime exception and let the higher level decide what to do
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
         public void onError(Throwable t) {
             if(t instanceof PublisherNotFoundException) {
-                logger.error("Subscribing has silently failed. If you want to handle this case, use ActorRef.publisherOf(Class<T>, Consumer<ActorRef)");
+                logger.error("Publisher does not exist, if you want to handle this case please provide your own TypedSubscriber implementation");
             } else {
-                logger.error("Unexpected error on TypedActor.SubscriberRef", t);
+                logger.error("Unexpected error in TypedActor.DefaultSubscriber", t);
             }
         }
 
@@ -102,7 +113,7 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
         return ActorContextHolder.getSelf();
     }
 
-    protected <T extends ActorState> T getState(Class<T> stateClass) {
+    protected <C extends ActorState> C getState(Class<C> stateClass) {
         return ActorContextHolder.getState(stateClass);
     }
 

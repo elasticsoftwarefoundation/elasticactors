@@ -32,16 +32,13 @@ public final class SubscriberState<T> implements ActorState<SubscriberState> {
     private final Subscriber<T> subscriber;
     private final ActorRef publisherRef;
     private final String messageName;
-    private final Consumer<ActorRef> undeliverableFunction;
 
     public SubscriberState(Subscriber<T> subscriber,
                            ActorRef publisherRef,
-                           String messageName,
-                           @Nullable Consumer<ActorRef> undeliverableFunction) {
+                           String messageName) {
         this.subscriber = subscriber;
         this.publisherRef = publisherRef;
         this.messageName = messageName;
-        this.undeliverableFunction = undeliverableFunction;
     }
 
     public Subscriber<T> getSubscriber() {
@@ -54,10 +51,6 @@ public final class SubscriberState<T> implements ActorState<SubscriberState> {
 
     public String getMessageName() {
         return messageName;
-    }
-
-    public Consumer<ActorRef> getUndeliverableFunction() {
-        return undeliverableFunction;
     }
 
     @Override

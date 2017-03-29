@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.reactivestreams;
-
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.PersistentSubscription;
-import org.elasticsoftware.elasticactors.TypedSubscriber;
-import org.reactivestreams.Subscriber;
-
-import java.util.function.Consumer;
+package org.elasticsoftware.elasticactors;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface InternalPersistentSubscription extends PersistentSubscription {
-
-    Subscriber getSubscriber();
+public abstract class UntypedSubscriber extends TypedSubscriber<Object> {
 }

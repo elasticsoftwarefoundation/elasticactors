@@ -129,5 +129,9 @@ public interface ElasticActor<T> {
      */
     void preDestroy(ActorRef destroyer) throws Exception;
 
-    Subscriber<T> asSubscriber();
+    Subscriber asSubscriber();
+
+    <MT> Subscriber<MT> asSubscriber(Class<MT> messageClass);
+
+
 }

@@ -30,6 +30,7 @@ import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
+import org.reactivestreams.Subscriber;
 import org.springframework.beans.factory.annotation.Configurable;
 
 import java.io.IOException;
@@ -68,7 +69,8 @@ public final class PersistentActorDeserializer implements Deserializer<byte[],Pe
             if(protobufMessage.getSubscriptionsCount() > 0) {
                 persistentSubscriptions = protobufMessage.getSubscriptionsList().stream()
                         .map(s -> new PersistentSubscriptionImpl(selfRef, actorRefFactory.create(s.getPublisherRef()),
-                                s.getMessageName(), s.getCancelled() )).collect(Collectors.toList());
+                                s.getMessageName(), s.getCancelled(),
+                                materializeSubscriber(selfRef, actorClass, s.getMessageName()) )).collect(Collectors.toList());
             }
 
             return new PersistentActor<>(shardKey,
@@ -82,6 +84,17 @@ public final class PersistentActorDeserializer implements Deserializer<byte[],Pe
                                          persistentSubscriptions);
         } catch(ClassNotFoundException e) {
             throw new IOException("Exception deserializing PersistentActor",e);
+        }
+    }
+
+    private Subscriber materializeSubscriber(ActorRef actorRef, Class<? extends ElasticActor> actorClass, String messageName) {
+        ElasticActor elasticActor = actorSystems.get(null).getActorInstance(actorRef, actorClass);
+        // currently the messageName == messageClassName
+        try {
+            return elasticActor.asSubscriber(Class.forName(messageName));
+        } catch(ClassNotFoundException e) {
+            // did not find the message class, this should not happen but we now return the default subscriber
+            return elasticActor.asSubscriber();
         }
     }
 }

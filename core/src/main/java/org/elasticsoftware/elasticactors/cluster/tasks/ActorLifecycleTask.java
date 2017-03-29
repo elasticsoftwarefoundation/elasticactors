@@ -42,7 +42,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
     protected final InternalActorSystem actorSystem;
     protected final PersistentActor persistentActor;
     protected final PersistentActorRepository persistentActorRepository;
-    private final InternalMessage internalMessage;
+    protected final InternalMessage internalMessage;
     private final MessageHandlerEventListener messageHandlerEventListener;
     private final Measurement measurement;
 

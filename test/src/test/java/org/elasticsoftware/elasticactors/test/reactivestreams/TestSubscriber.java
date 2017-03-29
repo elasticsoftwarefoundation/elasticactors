@@ -16,10 +16,8 @@
 
 package org.elasticsoftware.elasticactors.test.reactivestreams;
 
-import org.elasticsoftware.elasticactors.Actor;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.MessageHandler;
-import org.elasticsoftware.elasticactors.MethodActor;
+import org.elasticsoftware.elasticactors.*;
+import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 /**
@@ -29,16 +27,7 @@ import org.reactivestreams.Subscription;
 public final class TestSubscriber extends MethodActor {
     @Override
     public void postCreate(ActorRef creator) throws Exception {
-        getSystem().actorFor("testPublisher").publisherOf(StreamedMessage.class,
-                publisherRef -> {
-                    try {
-                        getSystem().actorOf("testPublisher", TestPublisher.class)
-                                .publisherOf(StreamedMessage.class).subscribe(asSubscriber());
-                    } catch(Exception e) {
-                        // ignore
-                    }
-                }
-        ).subscribe(asSubscriber());
+        getSystem().actorFor("testPublisher").publisherOf(StreamedMessage.class).subscribe(asSubscriber(StreamedMessage.class));
     }
 
     @MessageHandler
@@ -50,5 +39,32 @@ public final class TestSubscriber extends MethodActor {
                     subscription.getPublisherRef().equals(publisherRef)).forEach(Subscription::cancel);
             getSelf().tell(new StreamFinishedMessage());
         }
+    }
+
+    @Override
+    public Subscriber asSubscriber(Class messageClass) {
+        return new UntypedSubscriber() {
+            @Override
+            public void onNext(Object message) {
+                // delegate
+                try {
+                    onReceive(getPublisher(), message);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                if(error instanceof PublisherNotFoundException) {
+                    try {
+                        getSystem().actorOf("testPublisher", TestPublisher.class).publisherOf(StreamedMessage.class)
+                                .subscribe(asSubscriber(StreamedMessage.class));
+                    } catch(Exception e) {
+
+                    }
+                }
+            }
+        };
     }
 }

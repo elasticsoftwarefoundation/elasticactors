@@ -199,29 +199,6 @@ public class AnonymousSubscriberTest {
         Assert.assertTrue(testResult.get());
     }
 
-    @Test
-    public void testUndeliverableWithFunction() throws InterruptedException {
-        TestActorSystem testActorSystem = new TestActorSystem();
-        testActorSystem.initialize();
-
-        ActorSystem actorSystem = testActorSystem.getActorSystem();
-
-        ActorRef publisher = actorSystem.actorFor("testPublisher");
-
-        CountDownLatch waitLatch = new CountDownLatch(1);
-        AtomicBoolean testResult = new AtomicBoolean(false);
-
-        publisher.publisherOf(StreamedMessage.class, actorRef -> {
-            if(actorRef.getActorId().equals("testPublisher")) {
-                testResult.set(true);
-            }
-            waitLatch.countDown();
-        }).subscribe(new DummySubscriber<>(waitLatch));
-
-        waitLatch.await();
-        Assert.assertTrue(testResult.get());
-    }
-
     private static final class DummySubscriber<T> implements Subscriber<T> {
         private final CountDownLatch waitLatch;
 

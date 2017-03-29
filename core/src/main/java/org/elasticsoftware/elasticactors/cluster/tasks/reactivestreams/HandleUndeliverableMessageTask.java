@@ -18,10 +18,7 @@ package org.elasticsoftware.elasticactors.cluster.tasks.reactivestreams;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ElasticActor;
-import org.elasticsoftware.elasticactors.PublisherNotFoundException;
-import org.elasticsoftware.elasticactors.TypedActor;
+import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
@@ -42,8 +39,9 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  *
  * @author Joost van de Wijged
  */
-public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
+public final class HandleUndeliverableMessageTask extends ActorLifecycleTask implements SubscriberContext {
     private static final Logger log = LogManager.getLogger(HandleUndeliverableMessageTask.class);
+    private InternalPersistentSubscription currentSubscription;
 
     public HandleUndeliverableMessageTask(InternalActorSystem actorSystem,
                                           ElasticActor receiver,
@@ -55,6 +53,32 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
         super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage);
     }
 
+    // SubscriberContext implementation
+
+    @Override
+    public ActorRef getSelf() {
+        return receiverRef;
+    }
+
+    @Override
+    public ActorRef getPublisher() {
+        return internalMessage.getSender();
+    }
+
+    @Override
+    public <T extends ActorState> T getState(Class<T> stateClass) {
+        return stateClass.cast(persistentActor.getState());
+    }
+
+    @Override
+    public ActorSystem getActorSystem() {
+        return actorSystem;
+    }
+
+    @Override
+    public PersistentSubscription getSubscription() {
+        return currentSubscription;
+    }
 
     protected boolean doInActorContext(InternalActorSystem actorSystem,
                                        ElasticActor receiver,
@@ -84,18 +108,28 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
                 // subscribe failed, the publishing actor doesn't exist
                 // signal onError or delegate to special undeliverable handler if present
                 SubscribeMessage subscribeMessage = (SubscribeMessage) message;
-                return persistentActor.removeSubscription(subscribeMessage.getMessageName(), internalMessage.getSender(),
-                        s -> {
-                            InternalPersistentSubscription subscription = (InternalPersistentSubscription) s;
-                            if(subscription.getUndeliverableFunction() != null) {
-                                subscription.getUndeliverableFunction().accept(internalMessage.getSender());
-                            } else {
-                                // call the onError with a special exception
-                                receiver.asSubscriber().onError(
-                                        new PublisherNotFoundException(String.format("Actor[%s] does not exist",
+                Optional<InternalPersistentSubscription> persistentSubscription =
+                    persistentActor.getSubscription(subscribeMessage.getMessageName(), internalMessage.getSender());
+                if(persistentSubscription.isPresent()) {
+                    currentSubscription = persistentSubscription.get();
+                    InternalSubscriberContext.setContext(this);
+                    try {
+                        currentSubscription.getSubscriber().onError(
+                                new PublisherNotFoundException(String.format("Actor[%s] does not exist",
                                         internalMessage.getSender().toString()), internalMessage.getSender()));
-                            }
-                        });
+                    } catch(Exception e) {
+                        log.error(format("Unexpected Exception while calling onError on Subscriber with type %s of Actor %s",
+                                currentSubscription.getSubscriber() != null ?
+                                        currentSubscription.getSubscriber().getClass().getSimpleName() : null,
+                                receiverRef), e);
+                    } finally {
+                        InternalSubscriberContext.getAndClearContext();
+                        persistentActor.removeSubscription(subscribeMessage.getMessageName(), internalMessage.getSender());
+                    }
+                    return true;
+                } else {
+                    return false;
+                }
             } else if(message instanceof SubscriptionMessage) {
                 SubscriptionMessage subscriptionMessage = (SubscriptionMessage) message;
                 // the subscriber is gone, need to remove the subscriber reference

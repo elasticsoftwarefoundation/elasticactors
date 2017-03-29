@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.reactivestreams;
-
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.PersistentSubscription;
-import org.elasticsoftware.elasticactors.TypedSubscriber;
-import org.reactivestreams.Subscriber;
-
-import java.util.function.Consumer;
+package org.elasticsoftware.elasticactors;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface InternalPersistentSubscription extends PersistentSubscription {
+public interface SubscriberContext {
+    ActorRef getSelf();
 
-    Subscriber getSubscriber();
+    ActorRef getPublisher();
+
+    <T extends ActorState> T getState(Class<T> stateClass);
+
+    ActorSystem getActorSystem();
+
+    PersistentSubscription getSubscription();
 }
