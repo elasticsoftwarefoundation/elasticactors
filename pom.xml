@@ -31,13 +31,13 @@
         <cassandra.version>3.9</cassandra.version>
         <cassandra.version.md5>40f49dc7dbcd49e2e18e2dead7dd074a</cassandra.version.md5>
         <hectorclient.version>2.0-0</hectorclient.version>
-        <spring.version>4.3.4.RELEASE</spring.version>
+        <spring.version>4.3.7.RELEASE</spring.version>
         <aspectj.version>1.8.10</aspectj.version>
         <protobuf.version>2.6.1</protobuf.version>
         <grizzly.version>2.3.22</grizzly.version>
         <log4j.version>2.7</log4j.version>
         <guava.version>19.0</guava.version>
-        <jackson.version>2.8.5</jackson.version>
+        <jackson.version>2.8.7</jackson.version>
         <shoal.version>1.6.50</shoal.version>
         <slf4j.version>1.7.22</slf4j.version>
         <reflections.version>0.9.10</reflections.version>
@@ -47,7 +47,7 @@
         <lyra.version>0.5.3</lyra.version>
         <lz4.version>1.3.0</lz4.version>
         <kafka.version>0.10.1.0</kafka.version>
-        <cassandra-driver.version>3.1.2</cassandra-driver.version>
+        <cassandra-driver.version>3.1.4</cassandra-driver.version>
         <servlet-api.version>3.0.1</servlet-api.version>
         <activemq-artemis.version>1.5.1</activemq-artemis.version>
         <disruptor.version>3.3.6</disruptor.version>
@@ -62,10 +62,16 @@
         <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
         <tag>HEAD</tag>
     </scm>
-
-    <!--
-       http://veithen.blogspot.nl/2013/05/github-bintray-maven-release-plugin.html
-    -->
+    <repositories>
+    <repository>
+        <id>spring-milestones</id>
+        <name>Spring Milestones</name>
+        <url>https://repo.spring.io/libs-milestone</url>
+        <snapshots>
+            <enabled>false</enabled>
+        </snapshots>
+    </repository>
+    </repositories>
 
     <distributionManagement>
         <repository>

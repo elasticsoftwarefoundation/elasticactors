@@ -17,6 +17,12 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.*;
+import org.reactivestreams.Publisher;
+
+import javax.annotation.Nullable;
+import javax.naming.OperationNotSupportedException;
+
+import java.util.function.Consumer;
 
 import static java.lang.String.format;
 
@@ -61,6 +67,18 @@ public final class ServiceActorRef extends BaseActorRef implements ActorContaine
             tell(message,self);
         } else {
             throw new IllegalStateException("Cannot determine ActorRef(self) Only use this method while inside an ElasticActor Lifecycle or on(Message) method!");
+        }
+    }
+
+    @Override
+    public <T> Publisher<T> publisherOf(Class<T> messageClass) {
+        if(ActorContextHolder.hasActorContext()) {
+            // since we are executing within the context of an actor, sending the exception to the subscriber would be
+            // silently swallowed
+            throw new UnsupportedOperationException("Services cannot be used as Publisher in the current implementation");
+        } else {
+            // notify the subscriber
+            return s -> s.onError(new UnsupportedOperationException("Services cannot be used as Publisher in the current implementation"));
         }
     }
 

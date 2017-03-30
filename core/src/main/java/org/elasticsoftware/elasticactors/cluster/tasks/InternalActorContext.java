@@ -18,6 +18,8 @@ package org.elasticsoftware.elasticactors.cluster.tasks;
 
 import org.elasticsoftware.elasticactors.ActorContext;
 import org.elasticsoftware.elasticactors.ActorContextHolder;
+import org.elasticsoftware.elasticactors.reactivestreams.ProcessorContext;
+import org.elasticsoftware.elasticactors.state.PersistentActor;
 
 /**
  * @author Joost van de Wijgerd
@@ -38,5 +40,9 @@ public final class InternalActorContext extends ActorContextHolder {
         ActorContext state = threadContext.get();
         threadContext.set(null);
         return state;
+    }
+
+    public static ProcessorContext getAsProcessorContext() {
+        return (ProcessorContext) threadContext.get();
     }
 }

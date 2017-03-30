@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.test;
+package org.elasticsoftware.elasticactors.test.reactivestreams;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,16 +24,23 @@ import org.elasticsoftware.elasticactors.serialization.Message;
 /**
  * @author Joost van de Wijgerd
  */
-@Message(serializationFramework = JacksonSerializationFramework.class,durable = true)
-public class SpecialGreeting {
-    private final String who;
+@Message(serializationFramework = JacksonSerializationFramework.class, immutable = true, durable = false)
+public final class StreamedMessage {
+    private final String key;
+    private final Long sequenceNumber;
 
     @JsonCreator
-    public SpecialGreeting(@JsonProperty("who") String who) {
-        this.who = who;
+    public StreamedMessage(@JsonProperty("key") String key,
+                           @JsonProperty("sequenceNumber") Long sequenceNumber) {
+        this.key = key;
+        this.sequenceNumber = sequenceNumber;
     }
 
-    public String getWho() {
-        return who;
+    public String getKey() {
+        return key;
+    }
+
+    public Long getSequenceNumber() {
+        return sequenceNumber;
     }
 }

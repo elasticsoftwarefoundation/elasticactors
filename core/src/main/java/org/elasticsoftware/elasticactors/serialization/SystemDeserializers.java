@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.serialization.internal;
+package org.elasticsoftware.elasticactors.serialization;
 
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.messaging.internal.*;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.*;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.serialization.internal.*;
+import org.elasticsoftware.elasticactors.serialization.reactivestreams.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +40,14 @@ public final class SystemDeserializers {
         systemDeserializers.put(ActivateActorMessage.class,new ActivateActorMessageDeserializer());
         systemDeserializers.put(CancelScheduledMessageMessage.class,new CancelScheduledMessageMessageDeserializer());
         systemDeserializers.put(ActorNodeMessage.class, new ActorNodeMessageDeserializer(actorRefDeserializer, cluster));
-        //@todo: add more deserializers here
+        // reactive streams protocol
+        systemDeserializers.put(CancelMessage.class, new CancelMessageDeserializer(actorRefDeserializer));
+        systemDeserializers.put(CompletedMessage.class, new CompletedMessageDeserializer());
+        systemDeserializers.put(SubscribeMessage.class, new SubscribeMessageDeserializer(actorRefDeserializer));
+        systemDeserializers.put(RequestMessage.class, new RequestMessageDeserializer());
+        systemDeserializers.put(SubscriptionMessage.class, new SubscriptionMessageDeserializer());
+        systemDeserializers.put(NextMessage.class, new NextMessageDeserializer());
+
     }
 
     public <T> MessageDeserializer<T> get(Class<T> messageClass) {

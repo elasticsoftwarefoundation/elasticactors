@@ -22,8 +22,8 @@ import org.elasticsoftware.elasticactors.cluster.strategies.SingleNodeScaleUpStr
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
-import org.elasticsoftware.elasticactors.serialization.internal.SystemDeserializers;
-import org.elasticsoftware.elasticactors.serialization.internal.SystemSerializers;
+import org.elasticsoftware.elasticactors.serialization.SystemDeserializers;
+import org.elasticsoftware.elasticactors.serialization.SystemSerializers;
 import org.elasticsoftware.elasticactors.util.ManifestTools;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;

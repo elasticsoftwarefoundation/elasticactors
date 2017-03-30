@@ -16,12 +16,16 @@
 
 package org.elasticsoftware.elasticactors.messaging.internal;
 
+import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
+
 import java.io.Serializable;
 import java.util.UUID;
 
 /**
  * @author Joost van de Wijgerd
  */
+@Message(immutable = true, durable = false, serializationFramework = SystemSerializationFramework.class)
 public class CancelScheduledMessageMessage implements Serializable {
     private final UUID messageId;
     private final long fireTime;

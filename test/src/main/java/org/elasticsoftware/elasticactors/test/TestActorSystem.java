@@ -87,6 +87,13 @@ public final class TestActorSystem {
 
     @PreDestroy
     public void destroy() {
-        applicationContext.destroy();
+        try {
+            // give the system some time to clean up
+            Thread.sleep(1000);
+        } catch(InterruptedException e) {
+            // ignore
+        } finally {
+            applicationContext.destroy();
+        }
     }
 }

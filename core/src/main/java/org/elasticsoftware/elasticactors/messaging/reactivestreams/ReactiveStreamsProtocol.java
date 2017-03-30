@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.test;
-
-import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
-import org.elasticsoftware.elasticactors.serialization.Message;
+package org.elasticsoftware.elasticactors.messaging.reactivestreams;
 
 /**
+ * Tagging interface to signal that the message is part of the Reactive Streams protocol
+ *
  * @author Joost van de Wijgerd
  */
-@Message(serializationFramework = JacksonSerializationFramework.class,durable = true)
-public class AskForGreeting {
+public interface ReactiveStreamsProtocol {
 }

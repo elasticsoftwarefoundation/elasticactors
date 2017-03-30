@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors;
 
+import org.reactivestreams.Publisher;
 import java.util.concurrent.CompletionStage;
 
 /**
@@ -95,4 +96,23 @@ public interface ActorRef {
      * @return              true if the referenced Actor is running on the same JVM as the caller, false otherwise
      */
     boolean isLocal();
+
+    /**
+     * Returns a view of the referenced Actor as a {@link Publisher} of messages of type T. When this method is called
+     * from within a {@link ActorContext} (i.e. when executing {@link ElasticActor#onReceive(ActorRef, Object)} or any
+     * of the other {@link ElasticActor} lifecycle methods) the supplied {@link org.reactivestreams.Subscriber} should
+     * have been obtained by calling {@link ElasticActor#asSubscriber(Class)} on the calling actor.
+     *
+     * Because the {@link org.reactivestreams.Subscription} is persistent, the framework will call
+     * {@link ElasticActor#asSubscriber(Class)} when deserializing the state of the calling actor.
+     *
+     * It is also required for the supplied {@link org.reactivestreams.Subscriber} to extend {@link TypedSubscriber} when
+     * called within a {@link ActorContext} to ensure that the implementation has access to the correct
+     * {@link SubscriberContext}
+     *
+     * @param messageClass
+     * @param <T>
+     * @return
+     */
+    <T> Publisher<T> publisherOf(Class<T> messageClass);
 }

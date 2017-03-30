@@ -17,12 +17,15 @@
 package org.elasticsoftware.elasticactors.messaging.internal;
 
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 
 /**
  * This message is used to call a Temp or a Service actor ref from a remote cluster
  *
  * @author Joost van de Wijgerd
  */
+@Message(immutable = true, durable = false, serializationFramework = SystemSerializationFramework.class)
 public final class ActorNodeMessage {
     private final String nodeId;
     private final ActorRef receiverRef;

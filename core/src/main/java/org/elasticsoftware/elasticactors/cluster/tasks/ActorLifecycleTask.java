@@ -37,12 +37,12 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
  */
 public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> {
     private static final Logger log = LogManager.getLogger(ActorLifecycleTask.class);
-    private final ActorRef receiverRef;
-    private final ElasticActor receiver;
-    private final InternalActorSystem actorSystem;
-    private final PersistentActor persistentActor;
+    protected final ActorRef receiverRef;
+    protected final ElasticActor receiver;
+    protected final InternalActorSystem actorSystem;
+    protected final PersistentActor persistentActor;
     protected final PersistentActorRepository persistentActorRepository;
-    private final InternalMessage internalMessage;
+    protected final InternalMessage internalMessage;
     private final MessageHandlerEventListener messageHandlerEventListener;
     private final Measurement measurement;
 
