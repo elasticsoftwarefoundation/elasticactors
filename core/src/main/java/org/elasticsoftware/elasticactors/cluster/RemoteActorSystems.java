@@ -27,7 +27,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 
 import javax.annotation.PreDestroy;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
@@ -77,6 +79,21 @@ public final class RemoteActorSystems {
         RemoteActorSystemInstance actorSystem = remoteActorSystems.get(clusterName);
         if(actorSystem != null && actorSystem.getName().equals(actorSystemName)) {
             return actorSystem;
+        } else {
+            return null;
+        }
+    }
+
+    public ActorSystem get(String actorSystemName) {
+        List<RemoteActorSystemInstance> instances = remoteActorSystems.entrySet().stream().filter(entry -> entry.getValue().getName().equals(actorSystemName))
+                .map(Map.Entry::getValue).collect(Collectors.toList());
+        if(!instances.isEmpty()) {
+            if(instances.size() > 1) {
+                // cannot determine which one to use,
+                throw new IllegalArgumentException("Found multiple matching Remote ActorSystems, please use ActorSystems.get(clusterName, actorSystemName");
+            } else {
+                return instances.get(0);
+            }
         } else {
             return null;
         }

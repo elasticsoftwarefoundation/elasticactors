@@ -201,6 +201,12 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     }
 
     @Override
+    public ActorSystem getRemote(String actorSystemName) {
+        RemoteActorSystems remoteActorSystems = applicationContext.getBean(RemoteActorSystems.class);
+        return remoteActorSystems != null ? remoteActorSystems.get(actorSystemName) : null;
+    }
+
+    @Override
     public void registerRebalancingEventListener(RebalancingEventListener eventListener) {
         this.rebalancingEventListeners.add(eventListener);
     }

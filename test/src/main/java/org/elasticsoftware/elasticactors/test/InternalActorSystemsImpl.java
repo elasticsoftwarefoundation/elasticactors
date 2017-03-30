@@ -106,6 +106,11 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
     }
 
     @Override
+    public ActorSystem getRemote(String actorSystemName) {
+        return null;
+    }
+
+    @Override
     public void registerRebalancingEventListener(RebalancingEventListener eventListener) {
         // not supported (silently ignore)
     }
