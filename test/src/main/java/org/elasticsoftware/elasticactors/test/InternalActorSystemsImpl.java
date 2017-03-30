@@ -25,7 +25,6 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SystemDeserializers;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializers;
 import org.elasticsoftware.elasticactors.util.ManifestTools;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.PostConstruct;
@@ -39,25 +38,16 @@ import java.util.List;
 public final class InternalActorSystemsImpl implements InternalActorSystems, ActorRefFactory {
     private final SystemSerializers systemSerializers = new SystemSerializers(this);
     private final SystemDeserializers systemDeserializers = new SystemDeserializers(this,this);
-    @Autowired
-    private ApplicationContext applicationContext;
-    @Autowired
-    private LocalActorSystemInstance localActorSystemInstance;
-    @Autowired
-    private ClusterService clusterService;
+    private final ApplicationContext applicationContext;
+    private final ClusterService clusterService;
     private final PhysicalNode localNode;
 
-    public InternalActorSystemsImpl(PhysicalNode localNode) {
+    public InternalActorSystemsImpl(ApplicationContext applicationContext,
+                                    ClusterService clusterService,
+                                    PhysicalNode localNode) {
+        this.applicationContext = applicationContext;
+        this.clusterService = clusterService;
         this.localNode = localNode;
-    }
-
-    @PostConstruct
-    public void initialize() throws Exception {
-        final List<PhysicalNode> localNodes = Arrays.<PhysicalNode>asList(localNode);
-        localActorSystemInstance.updateNodes(localNodes);
-        localActorSystemInstance.distributeShards(localNodes,new SingleNodeScaleUpStrategy());
-        // signal master elected
-        clusterService.reportReady();
     }
 
     @PreDestroy
