@@ -30,10 +30,7 @@ import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
-import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
-import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
-import org.elasticsoftware.elasticactors.state.DefaultActorStateUpdateProcessor;
-import org.elasticsoftware.elasticactors.state.NoopActorStateUpdateProcessor;
+import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.test.InternalActorSystemsImpl;
 import org.elasticsoftware.elasticactors.test.cluster.NoopActorSystemEventRegistryService;
 import org.elasticsoftware.elasticactors.test.cluster.SingleNodeClusterService;
@@ -71,7 +68,6 @@ public class TestConfiguration {
     private InternalActorSystemConfiguration configuration;
     private final NodeSelectorFactory nodeSelectorFactory = new HashingNodeSelectorFactory();
     private final PhysicalNode localNode = new PhysicalNodeImpl(UUIDTools.createRandomUUID().toString(), InetAddress.getLoopbackAddress(), true);
-    private final InternalActorSystemsImpl internalActorSystems = new InternalActorSystemsImpl(localNode);
 
     @PostConstruct
     public void init() throws IOException {
@@ -82,14 +78,21 @@ public class TestConfiguration {
         configuration = objectMapper.readValue(configResource.getInputStream(), DefaultConfiguration.class);
     }
 
+    @Bean(name = "systemInitializer")
+    public SystemInitializer createSystemInitializer(LocalActorSystemInstance localActorSystemInstance, ClusterService clusterService) {
+        return new SystemInitializer(localNode, localActorSystemInstance, clusterService);
+
+    }
+
     @DependsOn("configuration") @Bean(name = {"internalActorSystem"})
-    public InternalActorSystem createLocalActorSystemInstance() {
+    public LocalActorSystemInstance createLocalActorSystemInstance(InternalActorSystems internalActorSystems) {
         return new LocalActorSystemInstance(localNode,internalActorSystems,configuration,nodeSelectorFactory);
     }
 
-    @DependsOn("internalActorSystem") @Bean(name = {"actorSystems,actorRefFactory"})
-    public InternalActorSystemsImpl getActorSystemsImpl() {
-        return internalActorSystems;
+    @Bean(name = {"actorSystems,actorRefFactory"})
+    public InternalActorSystemsImpl createInternalActorSystems(ApplicationContext applicationContext,
+                                                           ClusterService clusterService) {
+        return new InternalActorSystemsImpl(applicationContext, clusterService, localNode);
     }
 
     @Bean(name = {"configuration"})
@@ -98,9 +101,9 @@ public class TestConfiguration {
     }
 
     @Bean(name = {"objectMapper"})
-    public ObjectMapper createObjectMapper(SimpleScheduler simpleScheduler) {
+    public ObjectMapper createObjectMapper(SimpleScheduler simpleScheduler, InternalActorSystemsImpl actorRefFactory) {
         // @todo: fix version
-        return new ObjectMapperBuilder(internalActorSystems,simpleScheduler,"1.0.0").build();
+        return new ObjectMapperBuilder(actorRefFactory,simpleScheduler,"1.0.0").build();
     }
 
     @Bean(name = {"messagesScanner"})
@@ -170,5 +173,10 @@ public class TestConfiguration {
     @Bean(name = {"loggingActorStateUpdateListener"})
     public LoggingActorStateUpdateListener createLoggingActorStateUpdateListener() {
         return new LoggingActorStateUpdateListener();
+    }
+
+    @Bean(name = "systemSerializationFramework")
+    public SystemSerializationFramework createSystemSerializationFramework(InternalActorSystems internalActorSystems) {
+        return new SystemSerializationFramework(internalActorSystems);
     }
 }

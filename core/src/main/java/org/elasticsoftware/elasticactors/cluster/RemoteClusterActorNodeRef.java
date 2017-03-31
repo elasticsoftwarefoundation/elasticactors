@@ -20,6 +20,7 @@ import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
+import org.reactivestreams.Publisher;
 
 import java.util.List;
 
@@ -131,5 +132,10 @@ public final class RemoteClusterActorNodeRef extends BaseActorRef implements Act
     @Override
     public void destroy() {
         // do nothing
+    }
+
+    @Override
+    public <T> Publisher<T> publisherOf(Class<T> messageClass) {
+        return s -> s.onError(new UnsupportedOperationException("RemoteClusterActorNodeRef cannot be used to obtain a reference to the remote ActorNode"));
     }
 }

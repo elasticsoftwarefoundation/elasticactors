@@ -33,6 +33,7 @@ import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.DefaultActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.NoopActorStateUpdateProcessor;
+import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
@@ -95,6 +96,11 @@ public class NodeConfiguration {
         ObjectMapperBuilder builder = new ObjectMapperBuilder(node,schedulerService,"1.0.0",basePackages);
         builder.setUseAfterBurner(useAfterburner);
         return builder.build();
+    }
+
+    @Bean(name = "systemSerializationFramework")
+    public SystemSerializationFramework createSystemSerializationFramework(InternalActorSystems internalActorSystems) {
+        return new SystemSerializationFramework(internalActorSystems);
     }
 
     @Bean(name = {"messagesScanner"})

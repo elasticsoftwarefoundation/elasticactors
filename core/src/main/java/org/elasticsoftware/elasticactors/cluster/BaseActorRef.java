@@ -16,12 +16,19 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
+import org.elasticsoftware.elasticactors.ActorContextHolder;
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.core.actors.CompletableFutureDelegate;
-import org.elasticsoftware.elasticactors.core.actors.ReplyActor;
+import org.elasticsoftware.elasticactors.TypedSubscriber;
+import org.elasticsoftware.elasticactors.core.actors.*;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.*;
+import org.elasticsoftware.elasticactors.reactivestreams.PersistentSubscriptionImpl;
+import org.elasticsoftware.elasticactors.serialization.Message;
+import org.reactivestreams.Publisher;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
+
+import static org.elasticsoftware.elasticactors.cluster.tasks.InternalActorContext.getAsProcessorContext;
 
 /**
  * @author Joost van de Wijgerd
@@ -51,6 +58,37 @@ public abstract class BaseActorRef implements ActorRef {
     }
 
     @Override
+    public <T> Publisher<T> publisherOf(Class<T> messageClass) {
+        if(messageClass.getAnnotation(Message.class) == null) {
+            throw new IllegalArgumentException("messageClass needs to be annotated with @Message");
+        }
+        final String messageName = messageClass.getName();
+        // see if we are in an Actor Context or not
+        if(!ActorContextHolder.hasActorContext()) {
+            return subscriber -> {
+                try {
+                    actorSystem.tempActorOf(SubscriberActor.class, new SubscriberState<>(subscriber, this, messageName));
+                } catch (Exception e) {
+                    subscriber.onError(e);
+                }
+            };
+        } else {
+            // for now it is not possible to use lambda's or other anonymous classes while inside and ActorContext
+            // due to thread safety issue
+            return subscriber -> {
+                if(subscriber instanceof TypedSubscriber) {
+                    // prepare the subscription (will be not active at this point)
+                    getAsProcessorContext().addSubscription(new PersistentSubscriptionImpl(ActorContextHolder.getSelf(), this, messageName, subscriber));
+                    // all is good, start the protocol handshake
+                    tell(new SubscribeMessage(ActorContextHolder.getSelf(), messageName), ActorContextHolder.getSelf());
+                } else {
+                    subscriber.onError(new IllegalStateException("Within the context of an Actor it is not possible to use lambda's or anonymous classes. Please use this.asSubscriber() to pass in the proper reference"));
+                }
+            };
+        }
+    }
+
+    @Override
     public final String getActorCluster() {
         return clusterName;
     }
@@ -74,4 +112,7 @@ public abstract class BaseActorRef implements ActorRef {
     public final String toString() {
         return this.refSpec;
     }
+
+
+
 }

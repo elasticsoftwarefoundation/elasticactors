@@ -17,12 +17,15 @@
 package org.elasticsoftware.elasticactors.messaging.internal;
 
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 
 import java.io.Serializable;
 
 /**
  * @author Joost van de Wijgerd
  */
+@Message(immutable = true, durable = false, serializationFramework = SystemSerializationFramework.class)
 public final class DestroyActorMessage implements Serializable {
     private final ActorRef actorRef;
 

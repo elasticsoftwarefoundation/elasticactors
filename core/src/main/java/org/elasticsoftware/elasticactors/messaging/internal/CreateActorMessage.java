@@ -17,29 +17,38 @@
 package org.elasticsoftware.elasticactors.messaging.internal;
 
 import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 
 import java.io.Serializable;
 
 /**
  * @author Joost van de Wijgerd
  */
+@Message(immutable = true, durable = false, serializationFramework = SystemSerializationFramework.class)
 public final class CreateActorMessage implements Serializable {
     private final String actorSystem;
     private final String actorId;
     private final String actorClass;
     private final ActorState initialState;
     private final ActorType type;
+    private final String affinityKey;
 
     public CreateActorMessage(String actorSystem, String actorClass, String actorId, ActorState initialState) {
         this(actorSystem,actorClass,actorId,initialState,ActorType.PERSISTENT);
     }
 
     public CreateActorMessage(String actorSystem, String actorClass, String actorId, ActorState initialState, ActorType type) {
+        this(actorSystem, actorClass, actorId, initialState, type, null);
+    }
+
+    public CreateActorMessage(String actorSystem, String actorClass, String actorId, ActorState initialState, ActorType type, String affinityKey) {
         this.actorSystem = actorSystem;
         this.actorId = actorId;
         this.actorClass = actorClass;
         this.initialState = initialState;
         this.type = type;
+        this.affinityKey = affinityKey;
     }
 
     public String getActorSystem() {
@@ -60,5 +69,9 @@ public final class CreateActorMessage implements Serializable {
 
     public ActorType getType() {
         return type;
+    }
+
+    public String getAffinityKey() {
+        return affinityKey;
     }
 }

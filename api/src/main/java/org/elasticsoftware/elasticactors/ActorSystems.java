@@ -48,9 +48,20 @@ public interface ActorSystems {
      *
      * @param clusterName       the name of the remote cluster
      * @param actorSystemName   the {@link ActorSystem} name in the remote cluster or null to get the default
-     * @return                  the remote {@link ActorSystem} instance
+     * @return                  the remote {@link ActorSystem} instance or null if it doesn't exist / is not configured
      */
     ActorSystem getRemote(String clusterName,@Nullable String actorSystemName);
+
+    /**
+     * Obtain a reference to a remote {@link ActorSystem} instance. Currently only remote ActorSystems that
+     * use the same Message Bus as the local ElasticActors cluster instance can be addressed. This will find a
+     * {@link ActorSystem} with the given name in the locally configured remote {@link ActorSystem} instances.
+     *
+     * @param actorSystemName   the {@link ActorSystem} name in a remote cluster
+     * @return                  the remote {@link ActorSystem} instance or null if it doesn't exist / is not configured
+     * @throws IllegalArgumentException if there is more than one match
+     */
+    ActorSystem getRemote(String actorSystemName);
 
     /**
      * Register a {@link RebalancingEventListener} that can be used to listen to the rebalancing events (pre and post)

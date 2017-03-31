@@ -49,6 +49,21 @@ public final class PersistentActorSerializer implements Serializer<PersistentAct
         if (persistentActor.getState() != null) {
             builder.setState(ByteString.copyFrom(getSerializedState(persistentActor)));
         }
+
+        if(persistentActor.getPersistentSubscriptions() != null && !persistentActor.getPersistentSubscriptions().isEmpty()) {
+            persistentActor.getPersistentSubscriptions().forEach(s -> builder.addSubscriptions(
+                    Elasticactors.Subscription.newBuilder()
+                            .setPublisherRef(s.getPublisherRef().toString())
+                            .setMessageName(s.getMessageName())
+                            .setCancelled(s.isCancelled())));
+        }
+
+        if(persistentActor.getMessageSubscribers() != null && !persistentActor.getMessageSubscribers().isEmpty()) {
+            persistentActor.getMessageSubscribers().asMap().forEach((messageName, messageSubscribers) ->
+                    messageSubscribers.forEach(m -> builder.addSubscribers(Elasticactors.Subscriber.newBuilder()
+                            .setMessageName(messageName).setSubscriberRef(m.getSubscriberRef().toString()).setLeases(m.getLeases()))));
+        }
+
         return builder.build().toByteArray();
     }
 

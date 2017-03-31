@@ -453,11 +453,14 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     public <T> ActorRef tempActorOf(Class<T> actorClass, ActorState initialState) throws Exception {
         // if we have state we need to wrap it
         String actorId = UUID.randomUUID().toString();
+        // see if we are being called in the context of another actor (and set the affinity key)
+        String affinityKey = ActorContextHolder.hasActorContext() ? ActorContextHolder.getSelf().getActorId() : null;
         CreateActorMessage createActorMessage = new CreateActorMessage(getName(),
                                                                        actorClass.getName(),
                                                                        actorId,
                                                                        initialState,
-                                                                       ActorType.TEMP);
+                                                                       ActorType.TEMP,
+                                                                       affinityKey);
         this.localNodeAdapter.sendMessage(null, localNodeAdapter.getActorRef(), createActorMessage);
         return cluster.createTempActorRef(localNodeAdapter, actorId);
     }

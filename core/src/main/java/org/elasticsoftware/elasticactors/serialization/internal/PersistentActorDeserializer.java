@@ -16,16 +16,26 @@
 
 package org.elasticsoftware.elasticactors.serialization.internal;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
+import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.reactivestreams.InternalPersistentSubscription;
+import org.elasticsoftware.elasticactors.reactivestreams.PersistentSubscriptionImpl;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
+import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
+import org.reactivestreams.Subscriber;
 import org.springframework.beans.factory.annotation.Configurable;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Joost van de Wijgerd
@@ -47,16 +57,44 @@ public final class PersistentActorDeserializer implements Deserializer<byte[],Pe
         try {
             Class<? extends ElasticActor> actorClass = (Class<? extends ElasticActor>) Class.forName(protobufMessage.getActorClass());
             final String currentActorStateVersion = actorSystems.getActorStateVersion(actorClass);
+            final ActorRef selfRef = actorRefFactory.create(protobufMessage.getActorRef());
+            HashMultimap<String, MessageSubscriber> messageSubscribers = protobufMessage.getSubscribersCount() > 0 ? HashMultimap.create() : null;
+
+            if(protobufMessage.getSubscribersCount() > 0) {
+                protobufMessage.getSubscribersList().forEach(s -> messageSubscribers.put(s.getMessageName(),
+                        new MessageSubscriber(actorRefFactory.create(s.getSubscriberRef()), s.getLeases())));
+            }
+            List<InternalPersistentSubscription> persistentSubscriptions = null;
+
+            if(protobufMessage.getSubscriptionsCount() > 0) {
+                persistentSubscriptions = protobufMessage.getSubscriptionsList().stream()
+                        .map(s -> new PersistentSubscriptionImpl(selfRef, actorRefFactory.create(s.getPublisherRef()),
+                                s.getMessageName(), s.getCancelled(),
+                                materializeSubscriber(selfRef, actorClass, s.getMessageName()) )).collect(Collectors.toList());
+            }
 
             return new PersistentActor<>(shardKey,
                                          actorSystems.get(shardKey.getActorSystemName()),
                                          currentActorStateVersion,
                                          protobufMessage.getActorSystemVersion(),
-                                         actorRefFactory.create(protobufMessage.getActorRef()),
+                                         selfRef,
                                          actorClass,
-                                         protobufMessage.hasState() ? protobufMessage.getState().toByteArray() : null);
+                                         protobufMessage.hasState() ? protobufMessage.getState().toByteArray() : null,
+                                         messageSubscribers,
+                                         persistentSubscriptions);
         } catch(ClassNotFoundException e) {
             throw new IOException("Exception deserializing PersistentActor",e);
+        }
+    }
+
+    private Subscriber materializeSubscriber(ActorRef actorRef, Class<? extends ElasticActor> actorClass, String messageName) {
+        ElasticActor elasticActor = actorSystems.get(null).getActorInstance(actorRef, actorClass);
+        // currently the messageName == messageClassName
+        try {
+            return elasticActor.asSubscriber(Class.forName(messageName));
+        } catch(ClassNotFoundException e) {
+            // did not find the message class, this should not happen but we now return the generic subscriber
+            return elasticActor.asSubscriber(null);
         }
     }
 }

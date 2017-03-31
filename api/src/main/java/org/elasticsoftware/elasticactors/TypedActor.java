@@ -16,16 +16,21 @@
 
 package org.elasticsoftware.elasticactors;
 
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
+import javax.annotation.Nullable;
+import java.util.Collection;
 
 /**
  * @author Joost van de Wijgerd
  */
 public abstract class TypedActor<T> implements ElasticActor<T> {
-    private final Logger logger = LogManager.getLogger(getClass());
+    protected final Logger logger = LogManager.getLogger(getClass());
+    private final DefaultSubscriber defaultSubscriber = new DefaultSubscriber();
 
     @Override
     public void postCreate(ActorRef creator) throws Exception {
@@ -58,12 +63,54 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
         // do nothing by default
     }
 
+    @Override
+    public Subscriber asSubscriber(@Nullable Class messageClass) {
+        return defaultSubscriber;
+    }
+
+    protected class DefaultSubscriber extends TypedSubscriber<T> {
+
+        protected DefaultSubscriber() {
+        }
+
+        @Override
+        public void onSubscribe(Subscription s) {
+            // start the flow 
+            s.request(Long.MAX_VALUE);
+        }
+
+        @Override
+        public void onNext(T message) {
+            // delegate to onReceive
+            try {
+                onReceive(getPublisher(), message);
+            } catch (Exception e) {
+                // wrap it in a runtime exception and let the higher level decide what to do
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void onError(Throwable t) {
+            if(t instanceof PublisherNotFoundException) {
+                logger.error("Publisher does not exist, if you want to handle this case please provide your own TypedSubscriber implementation");
+            } else {
+                logger.error("Unexpected error in TypedActor.DefaultSubscriber", t);
+            }
+        }
+
+        @Override
+        public void onComplete() {
+            // do nothing
+        }
+    }
+
     // Provide internal access to state etc
     protected final ActorRef getSelf() {
         return ActorContextHolder.getSelf();
     }
 
-    protected <T extends ActorState> T getState(Class<T> stateClass) {
+    protected <C extends ActorState> C getState(Class<C> stateClass) {
         return ActorContextHolder.getState(stateClass);
     }
 
@@ -71,8 +118,13 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
         return ActorContextHolder.getSystem();
     }
 
+    protected final Collection<PersistentSubscription> getSubscriptions() {
+        return ActorContextHolder.getSubscriptions();
+    }
+
     protected final void unhandled(Object message) {
         //@todo: implement logic for unhandled messages
     }
+
 
 }

@@ -24,6 +24,11 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
@@ -77,6 +82,16 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     @Override
     public String getKey() {
         return serviceRef.getActorId();
+    }
+
+    @Override
+    public Collection<PersistentSubscription> getSubscriptions() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Map<String, Set<ActorRef>> getSubscribers() {
+        return Collections.emptyMap();
     }
 
     @Override

@@ -26,6 +26,8 @@ import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
 import org.elasticsoftware.elasticactors.cluster.tasks.*;
+import org.elasticsoftware.elasticactors.cluster.tasks.app.HandleMessageTask;
+import org.elasticsoftware.elasticactors.cluster.tasks.app.HandleUndeliverableMessageTask;
 import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
@@ -48,6 +50,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import static org.elasticsoftware.elasticactors.cluster.tasks.ProtocolFactoryFactory.getProtocolFactory;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
@@ -181,23 +184,23 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                         ElasticActor actorInstance = actorSystem.getActorInstance(receiverRef, actor.getActorClass());
                         // execute on it's own thread
                         if (internalMessage.isUndeliverable()) {
-                            actorExecutor.execute(new HandleUndeliverableMessageTask(actorSystem,
-                                    actorInstance,
-                                    receiverRef,
-                                    internalMessage,
-                                    actor,
-                                    persistentActorRepository,
-                                    actorStateUpdateProcessor,
-                                    messageHandlerEventListener));
+                            actorExecutor.execute(getProtocolFactory(internalMessage.getPayloadClass())
+                                    .createHandleUndeliverableMessageTask(actorSystem,
+                                                                          actorInstance,
+                                                                          receiverRef,
+                                                                          internalMessage,
+                                                                          actor,
+                                                                          persistentActorRepository,
+                                                                          messageHandlerEventListener));
                         } else {
-                            actorExecutor.execute(new HandleMessageTask(actorSystem,
-                                    actorInstance,
-                                    receiverRef,
-                                    internalMessage,
-                                    actor,
-                                    persistentActorRepository,
-                                    actorStateUpdateProcessor,
-                                    messageHandlerEventListener));
+                            actorExecutor.execute(getProtocolFactory(internalMessage.getPayloadClass())
+                                    .createHandleMessageTask(actorSystem,
+                                                             actorInstance,
+                                                             receiverRef,
+                                                             internalMessage,
+                                                             actor,
+                                                             persistentActorRepository,
+                                                             messageHandlerEventListener));
                         }
                     }
                 } catch (UncheckedExecutionException e) {

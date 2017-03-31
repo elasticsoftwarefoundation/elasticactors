@@ -24,6 +24,8 @@ import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.tasks.*;
+import org.elasticsoftware.elasticactors.cluster.tasks.app.HandleMessageTask;
+import org.elasticsoftware.elasticactors.cluster.tasks.app.HandleUndeliverableMessageTask;
 import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
@@ -42,6 +44,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.elasticsoftware.elasticactors.cluster.tasks.ProtocolFactoryFactory.getProtocolFactory;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
@@ -146,23 +149,26 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                     PersistentActor<NodeKey> actor = actorCache.getIfPresent(receiverRef);
                     if(actor != null) {
                         // find actor class behind receiver ActorRef
-                        ElasticActor actorInstance = actorSystem.getActorInstance(receiverRef,
-                                actor.getActorClass());
+                        ElasticActor actorInstance = actorSystem.getActorInstance(receiverRef, actor.getActorClass());
                         // execute on it's own thread
                         if(internalMessage.isUndeliverable()) {
-                            actorExecutor.execute(new HandleUndeliverableMessageTask(actorSystem,
-                                                                                     actorInstance,
-                                                                                     receiverRef,
-                                                                                     internalMessage,
-                                                                                     actor,
-                                                                                     messageHandlerEventListener));
+                            actorExecutor.execute(getProtocolFactory(internalMessage.getPayloadClass())
+                                    .createHandleUndeliverableMessageTask(actorSystem,
+                                                                          actorInstance,
+                                                                          receiverRef,
+                                                                          internalMessage,
+                                                                          actor,
+                                                                         null,
+                                                                          messageHandlerEventListener));
                         } else {
-                            actorExecutor.execute(new HandleMessageTask(actorSystem,
-                                                                        actorInstance,
-                                                                        receiverRef,
-                                                                        internalMessage,
-                                                                        actor,
-                                                                        messageHandlerEventListener));
+                            actorExecutor.execute(getProtocolFactory(internalMessage.getPayloadClass())
+                                    .createHandleMessageTask(actorSystem,
+                                                             actorInstance,
+                                                             receiverRef,
+                                                             internalMessage,
+                                                             actor,
+                                                            null,
+                                                             messageHandlerEventListener));
                         }
 
                     } else {
@@ -215,10 +221,16 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                         }
                     } else if(message instanceof DestroyActorMessage) {
                         DestroyActorMessage destroyActorMessage = (DestroyActorMessage) message;
-                        // remove from cache
-                        this.actorCache.invalidate(destroyActorMessage.getActorRef());
-                        // ack message
-                        messageHandlerEventListener.onDone(internalMessage);
+                        PersistentActor<NodeKey> persistentActor = this.actorCache.getIfPresent(destroyActorMessage.getActorRef());
+                        if(persistentActor != null) {
+                            // run the preDestroy and other cleanup
+                            destroyActor(persistentActor, internalMessage, messageHandlerEventListener);
+                            // remove from cache
+                            this.actorCache.invalidate(destroyActorMessage.getActorRef());
+                        } else {
+                            // do nothing and simply ack message
+                            messageHandlerEventListener.onDone(internalMessage);
+                        }
                     } else if(message instanceof ActivateActorMessage) {
                         ActivateActorMessage activateActorMessage = (ActivateActorMessage) message;
                         if(activateActorMessage.getActorType() == ActorType.SERVICE) {
@@ -247,12 +259,10 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     private void createActor(CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         ActorRef ref = actorSystem.tempActorFor(createMessage.getActorId());
         PersistentActor<NodeKey> persistentActor =
-                new PersistentActor<NodeKey>(nodeKey,
-                                             actorSystem,
-                                             actorSystem.getConfiguration().getVersion(),
-                                             ref,
-                                             (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass()),
-                                             createMessage.getInitialState());
+                new PersistentActor<>(nodeKey, actorSystem, actorSystem.getConfiguration().getVersion(), ref,
+                                        createMessage.getAffinityKey(),
+                                       (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass()),
+                                       createMessage.getInitialState());
         actorCache.put(ref,persistentActor);
         // find actor class behind receiver ActorRef
         ElasticActor actorInstance = actorSystem.getActorInstance(ref,persistentActor.getActorClass());
@@ -276,6 +286,21 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
             initializedActors.add(serviceActor);
         }
     }
+
+
+    private void destroyActor(PersistentActor<NodeKey> persistentActor, InternalMessage internalMessage,
+                              MessageHandlerEventListener messageHandlerEventListener) throws Exception {
+            // find actor class behind receiver ActorRef
+            ElasticActor actorInstance = actorSystem.getActorInstance(persistentActor.getSelf(), persistentActor.getActorClass());
+            // call preDestroy
+            actorExecutor.execute(new DestroyActorTask( persistentActor,
+                                                        actorSystem,
+                                                        actorInstance,
+                                                        persistentActor.getSelf(),
+                                                        internalMessage,
+                                                        messageHandlerEventListener));
+    }
+
 
     @Autowired
     public void setActorExecutor(@Qualifier("actorExecutor") ThreadBoundExecutor actorExecutor) {

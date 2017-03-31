@@ -32,8 +32,8 @@ import org.elasticsoftware.elasticactors.cluster.strategies.StartingNodeScaleUpS
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
-import org.elasticsoftware.elasticactors.serialization.internal.SystemDeserializers;
-import org.elasticsoftware.elasticactors.serialization.internal.SystemSerializers;
+import org.elasticsoftware.elasticactors.serialization.SystemDeserializers;
+import org.elasticsoftware.elasticactors.serialization.SystemSerializers;
 import org.elasticsoftware.elasticactors.util.ManifestTools;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -198,6 +198,12 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     public ActorSystem getRemote(String clusterName, String actorSystemName) {
         RemoteActorSystems remoteActorSystems = applicationContext.getBean(RemoteActorSystems.class);
         return remoteActorSystems != null ? remoteActorSystems.get(clusterName,actorSystemName) : null;
+    }
+
+    @Override
+    public ActorSystem getRemote(String actorSystemName) {
+        RemoteActorSystems remoteActorSystems = applicationContext.getBean(RemoteActorSystems.class);
+        return remoteActorSystems != null ? remoteActorSystems.get(actorSystemName) : null;
     }
 
     @Override
