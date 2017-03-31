@@ -28,6 +28,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
@@ -112,7 +113,10 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                             actorStateUpdateProcessor.process(getLifeCycleStep(), null, persistentActor);
                         } else {
                             // it's an incoming message so the messageClass in the internal message is what we need
-                            actorStateUpdateProcessor.process(null, Class.forName(internalMessage.getPayloadClass()), persistentActor);
+                            // to support multiple internal message handling protocols (such as the reactive streams protocol)
+                            // we need to unwrap here to find the actual message
+                            unwrapMessageClass(internalMessage).ifPresent(messageClass ->
+                                    actorStateUpdateProcessor.process(null, messageClass, persistentActor));
                         }
                     }
                 } catch (Exception e) {
@@ -195,6 +199,23 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             } else {
                 return true;
             }
+        }
+    }
+
+    /**
+     * Return the actual message class that is being handled. By default this method will return
+     * {@link InternalMessage#getPayloadClass()} but it can be overridden to support other protocols that wrap the
+     * ultimate message being delivered. If the
+     *
+     * @param internalMessage
+     * @return
+     * @throws ClassNotFoundException
+     */
+    protected Optional<Class> unwrapMessageClass(InternalMessage internalMessage) {
+        try {
+            return Optional.of(Class.forName(internalMessage.getPayloadClass()));
+        } catch (ClassNotFoundException e) {
+            return Optional.empty();
         }
     }
 }

@@ -24,8 +24,14 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.CompletedMessage;
+import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+
+import javax.annotation.Nullable;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Joost van de Wijgerd
@@ -34,17 +40,35 @@ public final class DestroyActorTask extends ActorLifecycleTask {
     private static final Logger logger = LogManager.getLogger(DestroyActorTask.class);
     private final ShardKey shardKey;
 
+    public DestroyActorTask(PersistentActor persistentActor,
+                            InternalActorSystem actorSystem,
+                            ElasticActor receiver,
+                            ActorRef receiverRef,
+                            InternalMessage internalMessage,
+                            MessageHandlerEventListener messageHandlerEventListener) {
+        this(null, null, persistentActor, actorSystem, receiver, receiverRef, internalMessage, messageHandlerEventListener);
+    }
+
+    public DestroyActorTask(ActorStateUpdateProcessor actorStateUpdateProcessor,PersistentActor persistentActor,
+                            InternalActorSystem actorSystem,
+                            ElasticActor receiver,
+                            ActorRef receiverRef,
+                            InternalMessage internalMessage,
+                            MessageHandlerEventListener messageHandlerEventListener) {
+        this(actorStateUpdateProcessor, null,persistentActor,actorSystem,receiver,receiverRef,internalMessage,messageHandlerEventListener);
+    }
+
     public DestroyActorTask(ActorStateUpdateProcessor actorStateUpdateProcessor,
-                            PersistentActorRepository persistentActorRepository,
+                            @Nullable PersistentActorRepository persistentActorRepository,
                             PersistentActor persistentActor,
                             InternalActorSystem actorSystem,
                             ElasticActor receiver,
                             ActorRef receiverRef,
-                            InternalMessage createActorMessage,
+                            InternalMessage internalMessage,
                             MessageHandlerEventListener messageHandlerEventListener) {
-        super(actorStateUpdateProcessor, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef,messageHandlerEventListener, createActorMessage);
-        this.shardKey = (ShardKey) persistentActor.getKey();
-
+        super(actorStateUpdateProcessor, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef,messageHandlerEventListener, internalMessage);
+        // the shardkey is only needed when there is a persistentActorRepository set
+        this.shardKey = (persistentActorRepository != null) ? (ShardKey) persistentActor.getKey() : null;
     }
 
     @Override
@@ -58,8 +82,12 @@ public final class DestroyActorTask extends ActorLifecycleTask {
         try {
             // @todo: figure out the destroyer
             receiver.preDestroy(null);
+            notifyPublishers();
+            notifySubscribers();
             // delete entry here to serialize on state updates
-            persistentActorRepository.delete(shardKey, receiverRef.getActorId());
+            if(persistentActorRepository != null) {
+                persistentActorRepository.delete(shardKey, receiverRef.getActorId());
+            }
         } catch (Exception e) {
             logger.error("Exception calling preDestroy",e);
         }
@@ -76,5 +104,30 @@ public final class DestroyActorTask extends ActorLifecycleTask {
     @Override
     protected ActorLifecycleStep getLifeCycleStep() {
         return ActorLifecycleStep.DESTROY;
+    }
+
+    private void notifySubscribers() {
+        if(persistentActor.getMessageSubscribers() != null) {
+            // make sure to let my subscribers know I will cease to exist
+            try {
+                ((Map<String, Set<MessageSubscriber>>) persistentActor.getMessageSubscribers().asMap())
+                        .forEach((messageName, subscribers) -> subscribers
+                                .forEach(messageSubscriber -> messageSubscriber.getSubscriberRef()
+                                        .tell(new CompletedMessage(messageName))));
+            } catch(Exception e) {
+                logger.error("Unexpected exception while notifying subscribers", e);
+            }
+        }
+
+    }
+
+    private void notifyPublishers() {
+        // we need to tell our publishers to stop publising.. they will send a completed message
+        // that wull fail but this should be no problem
+        try {
+            persistentActor.cancelAllSubscriptions();
+        } catch(Exception e) {
+            logger.error("Unexpected Exception while cancelling subscriptions", e);
+        }
     }
 }

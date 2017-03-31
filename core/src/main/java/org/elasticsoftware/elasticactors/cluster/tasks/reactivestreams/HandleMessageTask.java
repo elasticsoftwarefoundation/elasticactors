@@ -27,6 +27,7 @@ import org.elasticsoftware.elasticactors.messaging.reactivestreams.*;
 import org.elasticsoftware.elasticactors.reactivestreams.InternalPersistentSubscription;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
@@ -55,8 +56,9 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
                       InternalMessage internalMessage,
                       PersistentActor persistentActor,
                       PersistentActorRepository persistentActorRepository,
+                      ActorStateUpdateProcessor actorStateUpdateProcessor,
                       MessageHandlerEventListener messageHandlerEventListener) {
-        super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage);
+        super(actorStateUpdateProcessor,persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage);
     }
 
     // SubscriberContext implementation
@@ -84,6 +86,22 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
     @Override
     public PersistentSubscription getSubscription() {
         return currentSubscription;
+    }
+
+    @Override
+    protected Optional<Class> unwrapMessageClass(InternalMessage internalMessage)  {
+        if(NextMessage.class.getName().equals(internalMessage.getPayloadClass())) {
+            try {
+                NextMessage nextMessage = (NextMessage) internalMessage.getPayload(
+                        actorSystem.getDeserializer(Class.forName(internalMessage.getPayloadClass())));
+                return Optional.of(Class.forName(nextMessage.getMessageName()));
+            } catch(IOException | ClassNotFoundException e) {
+                return Optional.empty();
+            }
+        } else {
+            return Optional.empty();
+        }
+
     }
 
     protected boolean doInActorContext(InternalActorSystem actorSystem,

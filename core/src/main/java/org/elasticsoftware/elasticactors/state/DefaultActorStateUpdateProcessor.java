@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 /**
  * @author Joost van de Wijgerd
  */
-public class DefaultActorStateUpdateProcessor implements ActorStateUpdateProcessor, ThreadBoundEventProcessor<ActorStateUpdateEvent> {
+public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateProcessor, ThreadBoundEventProcessor<ActorStateUpdateEvent> {
     private static final Logger logger = LogManager.getLogger(DefaultActorStateUpdateProcessor.class);
     private final ThreadBoundExecutor<ActorStateUpdateEvent> executor;
     private final List<ActorStateUpdateListener> listeners = new ArrayList<>();

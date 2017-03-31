@@ -200,6 +200,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                                                              internalMessage,
                                                              actor,
                                                              persistentActorRepository,
+                                                             actorStateUpdateProcessor,
                                                              messageHandlerEventListener));
                         }
                     }

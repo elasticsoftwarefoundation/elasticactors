@@ -40,37 +40,17 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
 public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
     private static final Logger log = LogManager.getLogger(HandleUndeliverableMessageTask.class);
 
-    public HandleUndeliverableMessageTask(InternalActorSystem actorSystem,
-                                          ElasticActor receiver,
-                                          ActorRef receiverRef,
-                                          InternalMessage internalMessage,
-                                          PersistentActor persistentActor,
-                                          MessageHandlerEventListener messageHandlerEventListener) {
-        this(actorSystem, receiver, receiverRef, internalMessage, persistentActor, null,
-                null, messageHandlerEventListener);
-    }
 
-    public HandleUndeliverableMessageTask(InternalActorSystem actorSystem,
+    HandleUndeliverableMessageTask(InternalActorSystem actorSystem,
                                           ElasticActor receiver,
                                           ActorRef receiverRef,
                                           InternalMessage internalMessage,
                                           PersistentActor persistentActor,
                                           PersistentActorRepository persistentActorRepository,
                                           MessageHandlerEventListener messageHandlerEventListener) {
-        this(actorSystem, receiver, receiverRef, internalMessage, persistentActor, persistentActorRepository,
-                null, messageHandlerEventListener);
+        super(null, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage);
     }
 
-    public HandleUndeliverableMessageTask(InternalActorSystem actorSystem,
-                                          ElasticActor receiver,
-                                          ActorRef receiverRef,
-                                          InternalMessage internalMessage,
-                                          PersistentActor persistentActor,
-                                          PersistentActorRepository persistentActorRepository,
-                                          ActorStateUpdateProcessor actorStateUpdateProcessor,
-                                          MessageHandlerEventListener messageHandlerEventListener) {
-        super(actorStateUpdateProcessor, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage);
-    }
 
 
     protected boolean doInActorContext(InternalActorSystem actorSystem,

@@ -21,6 +21,7 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 
@@ -34,6 +35,7 @@ public interface ProtocolFactory {
                                                InternalMessage internalMessage,
                                                PersistentActor persistentActor,
                                                PersistentActorRepository persistentActorRepository,
+                                               ActorStateUpdateProcessor actorStateUpdateProcessor,
                                                MessageHandlerEventListener messageHandlerEventListener);
 
     ActorLifecycleTask createHandleUndeliverableMessageTask(InternalActorSystem actorSystem,

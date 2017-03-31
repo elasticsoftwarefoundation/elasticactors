@@ -48,17 +48,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
 public final class HandleMessageTask extends ActorLifecycleTask {
     private static final Logger log = LogManager.getLogger(HandleMessageTask.class);
 
-    public HandleMessageTask(InternalActorSystem actorSystem,
-                             ElasticActor receiver,
-                             ActorRef receiverRef,
-                             InternalMessage internalMessage,
-                             PersistentActor persistentActor,
-                             MessageHandlerEventListener messageHandlerEventListener) {
-        this(actorSystem, receiver, receiverRef, internalMessage, persistentActor, null,
-                null, messageHandlerEventListener);
-    }
-
-    public HandleMessageTask(InternalActorSystem actorSystem,
+    HandleMessageTask(InternalActorSystem actorSystem,
                              ElasticActor receiver,
                              ActorRef receiverRef,
                              InternalMessage internalMessage,

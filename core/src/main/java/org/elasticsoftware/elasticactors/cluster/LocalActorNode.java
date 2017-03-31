@@ -24,8 +24,6 @@ import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.tasks.*;
-import org.elasticsoftware.elasticactors.cluster.tasks.app.HandleMessageTask;
-import org.elasticsoftware.elasticactors.cluster.tasks.app.HandleUndeliverableMessageTask;
 import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
@@ -167,6 +165,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                                                              receiverRef,
                                                              internalMessage,
                                                              actor,
+                                                            null,
                                                             null,
                                                              messageHandlerEventListener));
                         }
