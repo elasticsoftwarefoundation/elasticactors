@@ -24,6 +24,8 @@ import org.reactivestreams.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Joost van de Wijgerd
@@ -122,9 +124,7 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
         return ActorContextHolder.getSubscriptions();
     }
 
-    protected final void unhandled(Object message) {
-        //@todo: implement logic for unhandled messages
+    protected final Map<String, Set<ActorRef>> getSubscribers() {
+        return ActorContextHolder.getSubscribers();
     }
-
-
 }

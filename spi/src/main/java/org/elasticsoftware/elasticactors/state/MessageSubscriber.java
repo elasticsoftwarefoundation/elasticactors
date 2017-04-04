@@ -58,12 +58,15 @@ public final class MessageSubscriber {
         return leases;
     }
 
-    public long decrementAndGet() {
+    public long getAndDecrement() {
         // never go below 0
         if(leases > 0) {
             leases -= 1;
+            return leases+1;
+        } else {
+            return 0;
         }
-        return leases;
+
     }
 
     @Override
