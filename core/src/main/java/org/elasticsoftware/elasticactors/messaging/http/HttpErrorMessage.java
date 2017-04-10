@@ -14,32 +14,24 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.messaging.internal;
+package org.elasticsoftware.elasticactors.messaging.http;
 
 import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
-
-import java.io.Serializable;
-import java.util.UUID;
 
 /**
  * @author Joost van de Wijgerd
  */
 @Message(immutable = true, durable = false, serializationFramework = SystemSerializationFramework.class)
-public final class CancelScheduledMessageMessage implements Serializable {
-    private final UUID messageId;
-    private final long fireTime;
+public final class HttpErrorMessage {
+    private final int statusCode;
 
-    public CancelScheduledMessageMessage(UUID messageId, long fireTime) {
-        this.messageId = messageId;
-        this.fireTime = fireTime;
+    public HttpErrorMessage(int statusCode) {
+        this.statusCode = statusCode;
     }
 
-    public UUID getMessageId() {
-        return messageId;
-    }
-
-    public long getFireTime() {
-        return fireTime;
+    public int getStatusCode() {
+        return statusCode;
     }
 }

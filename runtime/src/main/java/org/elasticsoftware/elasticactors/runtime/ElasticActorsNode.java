@@ -207,6 +207,11 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     }
 
     @Override
+    public HttpService getService(String name) {
+        return null;
+    }
+
+    @Override
     public void registerRebalancingEventListener(RebalancingEventListener eventListener) {
         this.rebalancingEventListeners.add(eventListener);
     }

@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.test;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ActorSystems;
+import org.elasticsoftware.elasticactors.HttpService;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.RebalancingEventListener;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
@@ -57,6 +58,11 @@ public class TestActorSystemsInstance implements ActorSystems,ActorRefFactory {
     @Override
     public void registerRebalancingEventListener(RebalancingEventListener eventListener) {
         // silently ignore
+    }
+
+    @Override
+    public HttpService getService(String name) {
+        return null;
     }
 
     public <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass) {

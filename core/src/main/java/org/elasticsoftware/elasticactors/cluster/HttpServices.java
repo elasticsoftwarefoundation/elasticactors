@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.serialization;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
+package org.elasticsoftware.elasticactors.cluster;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface MessageSerializer<I> extends Serializer<I,ByteBuffer> {
-    @Override
-    ByteBuffer serialize(I object) throws IOException;
-
-    default String getContentType() {
-        return "application/octet-stream";
-    }
+public final class HttpServices {
 }

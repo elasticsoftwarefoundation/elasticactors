@@ -46,7 +46,7 @@ public final class CompletableFutureDelegate<T> extends ActorDelegate<T> {
         } else if (message instanceof Throwable) {
             future.completeExceptionally((Throwable) message);
         } else {
-            future.completeExceptionally(new UnexpectedResponseTypeException("Receiver unexpectedly responsed with a message of type " + message.getClass().getTypeName()));
+            future.completeExceptionally(new UnexpectedResponseTypeException("Receiver unexpectedly responded with a message of type " + message.getClass().getTypeName()));
         }
     }
 }

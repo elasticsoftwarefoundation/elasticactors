@@ -27,4 +27,8 @@ public interface MessageDeserializer<O> extends Deserializer<ByteBuffer,O> {
     O deserialize(ByteBuffer serializedObject) throws IOException;
 
     Class<O> getMessageClass();
+
+    default String getAcceptedContentType() {
+        return "application/octet-stream";
+    }
 }

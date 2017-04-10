@@ -36,4 +36,9 @@ public final class JacksonMessageSerializer<T> implements MessageSerializer<T> {
     public ByteBuffer serialize(T object) throws IOException {
         return ByteBuffer.wrap(objectMapper.writeValueAsBytes(object));
     }
+
+    @Override
+    public String getContentType() {
+        return "application/json";
+    }
 }

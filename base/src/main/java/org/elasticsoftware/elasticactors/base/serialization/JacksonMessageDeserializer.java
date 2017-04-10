@@ -46,4 +46,9 @@ public final class JacksonMessageDeserializer<T> implements MessageDeserializer<
     public Class<T> getMessageClass() {
         return objectClass;
     }
+
+    @Override
+    public String getAcceptedContentType() {
+        return "application/json";
+    }
 }

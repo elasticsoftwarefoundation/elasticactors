@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.serialization;
+package org.elasticsoftware.elasticactors;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletionStage;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface MessageSerializer<I> extends Serializer<I,ByteBuffer> {
-    @Override
-    ByteBuffer serialize(I object) throws IOException;
+public interface EndpointRef {
+    HttpService getService();
 
-    default String getContentType() {
-        return "application/octet-stream";
-    }
+    String getPath();
+
+    Map<String, List<String>> getHeaders();
+
+    <T> CompletionStage<T> call(Object message, Class<T> responseType);
 }

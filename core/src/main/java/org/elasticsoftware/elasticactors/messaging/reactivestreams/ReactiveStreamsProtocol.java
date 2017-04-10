@@ -21,5 +21,5 @@ package org.elasticsoftware.elasticactors.messaging.reactivestreams;
  *
  * @author Joost van de Wijgerd
  */
-public interface ReactiveStreamsProtocol {
+interface ReactiveStreamsProtocol {
 }
