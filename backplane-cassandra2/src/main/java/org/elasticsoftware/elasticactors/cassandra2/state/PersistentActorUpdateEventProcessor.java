@@ -17,6 +17,8 @@
 package org.elasticsoftware.elasticactors.cassandra2.state;
 
 import com.datastax.driver.core.*;
+import com.datastax.driver.core.exceptions.ConnectionException;
+import com.datastax.driver.core.exceptions.TransportException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
@@ -96,7 +98,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
                     boundStatement = deleteStatement.bind(event.getRowKey()[0], event.getRowKey()[1], event.getPersistentActorId());
                 }
                 // execute the statement
-                cassandraSession.execute(boundStatement);
+                executeWithRetry(boundStatement);
             } else {
                 // check the protocol to see if BatchStatements are supported
                 ProtocolVersion protocolVersion = cassandraSession.getCluster().getConfiguration().getProtocolOptions().getProtocolVersion();
@@ -199,6 +201,14 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
             }
         }
         cassandraSession.execute(batchStatement);
+    }
+
+    private void executeWithRetry(BoundStatement statement) {
+        try {
+            cassandraSession.execute(statement);
+        } catch(ConnectionException e) {
+
+        }
     }
 
 }
