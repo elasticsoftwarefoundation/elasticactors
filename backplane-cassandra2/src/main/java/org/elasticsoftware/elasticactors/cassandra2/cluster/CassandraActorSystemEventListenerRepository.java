@@ -24,6 +24,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.cassandra2.util.ExecutionUtils;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEvent;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListener;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRepository;
@@ -34,6 +35,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
+
+import static org.elasticsoftware.elasticactors.cassandra2.util.ExecutionUtils.executeWithRetry;
 
 /**
  * @author Joost van de Wijgerd
@@ -61,17 +64,17 @@ public final class CassandraActorSystemEventListenerRepository implements ActorS
     @Override
     public void create(ShardKey shardKey, ActorSystemEvent event, ActorSystemEventListener listener) {
         byte[] value = ActorSystemEventListenerSerializer.get().serialize(listener);
-        cassandraSession.execute(insertStatement.bind(clusterName, shardKey.toString(), event.name(), listener.getActorId(), ByteBuffer.wrap(value)));
+        executeWithRetry(cassandraSession, insertStatement.bind(clusterName, shardKey.toString(), event.name(), listener.getActorId(), ByteBuffer.wrap(value)), logger);
     }
 
     @Override
     public void delete(ShardKey shardKey, ActorSystemEvent event, ActorRef listenerId) {
-        cassandraSession.execute(deleteStatement.bind(clusterName, shardKey.toString(), event.name(), listenerId.getActorId()));
+        executeWithRetry(cassandraSession, deleteStatement.bind(clusterName, shardKey.toString(), event.name(), listenerId.getActorId()), logger);
     }
 
     @Override
     public List<ActorSystemEventListener> getAll(ShardKey shardKey, ActorSystemEvent event) {
-        ResultSet resultSet = cassandraSession.execute(selectStatement.bind(clusterName, shardKey.toString(), event.name()).setFetchSize(Integer.MAX_VALUE));
+        ResultSet resultSet = executeWithRetry(cassandraSession, selectStatement.bind(clusterName, shardKey.toString(), event.name()).setFetchSize(Integer.MAX_VALUE), logger);
         List<ActorSystemEventListener> resultList = new LinkedList<>();
         for (Row resultRow : resultSet) {
             for (int i = 0; i < resultRow.getColumnDefinitions().size(); i++) {

@@ -23,6 +23,7 @@ import com.datastax.driver.core.Session;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.cassandra2.util.ExecutionUtils;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
@@ -36,6 +37,7 @@ import java.nio.ByteBuffer;
 
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
+import static org.elasticsoftware.elasticactors.cassandra2.util.ExecutionUtils.executeWithRetry;
 
 
 /**
@@ -109,7 +111,7 @@ public final class CassandraPersistentActorRepository implements PersistentActor
         // log a warning when we exceed the readExecutionThreshold
         final long startTime = currentTimeMillis();
         try {
-            ResultSet resultSet = cassandraSession.execute(selectStatement.bind(clusterName, shard.toString(), actorId));
+            ResultSet resultSet = executeWithRetry(cassandraSession, selectStatement.bind(clusterName, shard.toString(), actorId), logger);
             return resultSet.one();
         } finally {
             final long endTime = currentTimeMillis();
