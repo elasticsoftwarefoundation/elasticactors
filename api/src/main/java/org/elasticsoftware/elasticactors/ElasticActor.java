@@ -138,9 +138,13 @@ public interface ElasticActor<T> {
      * Similar to implementing an actor the {@link TypedSubscriber} should not have any state. Instead the
      * {@link TypedSubscriber#getState(Class)} should be used to access the {@link ActorState}
      *
+     * NOTE: calling this method will only work of the implementing class has the {@link Actor} annotation. Otherwise
+     * this method will throw an {@link IllegalStateException}
+     *
      * @param messageClass
      * @param <MT>
-     * @return
+     * @return              A {@link Subscriber} implementation
+     * @throws  IllegalStateException if the implementing class is not annotated with {@link Actor}
      */
     <MT> Subscriber<MT> asSubscriber(Class<MT> messageClass);
 }
