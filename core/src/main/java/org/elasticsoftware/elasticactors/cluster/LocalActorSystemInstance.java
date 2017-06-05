@@ -379,14 +379,10 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
     }
 
     @Override
-    public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
-        MessageDeserializer<T> messageDeserializer = cluster.getSystemMessageDeserializer(messageClass);
+    public <T> MessageDeserializer<T> getDeserializer(String messageType, String messageVersion) {
+        MessageDeserializer<T> messageDeserializer = cluster.getSystemMessageDeserializer(messageType, messageVersion);
         if(messageDeserializer == null) {
-            Message messageAnnotation = messageClass.getAnnotation(Message.class);
-            if(messageAnnotation != null) {
-                SerializationFramework framework = cluster.getSerializationFramework(messageAnnotation.serializationFramework());
-                messageDeserializer = framework.getDeserializer(messageClass);
-            }
+            messageDeserializer = cluster.getMessageDeserializer(messageType, messageVersion);
         }
         return messageDeserializer;
     }

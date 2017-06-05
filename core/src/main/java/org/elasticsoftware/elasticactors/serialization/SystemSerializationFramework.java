@@ -41,8 +41,8 @@ public final class SystemSerializationFramework implements SerializationFramewor
     }
 
     @Override
-    public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
-        return internalActorSystems.getSystemMessageDeserializer(messageClass);
+    public <T> MessageDeserializer<T> getDeserializer(String messageType, String messageVersion) {
+        return internalActorSystems.getSystemMessageDeserializer(messageType, messageVersion);
     }
 
     @Override

@@ -80,13 +80,14 @@ public interface InternalActorSystem extends ActorSystem, ShardAccessor {
     <T> MessageSerializer<T> getSerializer(Class<T> messageClass);
 
     /**
-     * Return the deserializer for the give message type
+     * Return the deserializer for the give message type and version
      *
-     * @param messageClass
+     * @param messageType
+     * @param messageVersion
      * @param <T>
      * @return
      */
-    <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass);
+    <T> MessageDeserializer<T> getDeserializer(String messageType, String messageVersion);
 
     InternalScheduler getInternalScheduler();
 

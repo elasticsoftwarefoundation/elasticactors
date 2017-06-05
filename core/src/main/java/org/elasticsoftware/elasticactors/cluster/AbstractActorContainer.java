@@ -76,7 +76,7 @@ public abstract class AbstractActorContainer implements ActorContainer, MessageH
             if (senderRef != null && senderRef instanceof ActorContainerRef && !internalMessage.isUndeliverable()) {
                 ((ActorContainerRef) senderRef).getActorContainer().undeliverableMessage(internalMessage, receiverRef);
             } else if(internalMessage.isUndeliverable()) {
-                logger.error(format("Receiver for undeliverable message not found: message type '%s' , receiver '%s'", internalMessage.getPayloadClass(), receiverRef.toString()));
+                logger.error(format("Receiver for undeliverable message not found: message type '%s' , receiver '%s'", internalMessage.getPayloadType(), receiverRef.toString()));
             } else {
                 logger.warn("Could not send message undeliverable");
             }

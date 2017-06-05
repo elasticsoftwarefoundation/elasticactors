@@ -33,8 +33,8 @@ public final class TestSerializationFramework implements SerializationFramework 
     }
 
     @Override
-    public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public <T> MessageDeserializer<T> getDeserializer(String messageType, String messageVersion) {
+        return null;
     }
 
     @Override

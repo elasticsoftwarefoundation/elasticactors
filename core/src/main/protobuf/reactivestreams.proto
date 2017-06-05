@@ -21,8 +21,9 @@ message CompletedMessage {
 }
 
 message NextMessage {
-    optional string messageName = 1;
+    optional string messageType = 1;
     optional bytes messageBytes = 2;
+    optional string messageVersion = 3;
 }
 
 message RequestMessage {

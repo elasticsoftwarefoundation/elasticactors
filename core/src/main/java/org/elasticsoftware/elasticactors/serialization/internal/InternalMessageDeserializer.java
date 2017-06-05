@@ -17,20 +17,18 @@
 package org.elasticsoftware.elasticactors.serialization.internal;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.ImmutableInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
-import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
+import org.elasticsoftware.elasticactors.util.MessageDefinition;
+import org.elasticsoftware.elasticactors.util.MessageTools;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import static org.elasticsoftware.elasticactors.messaging.UUIDTools.toUUID;
@@ -63,34 +61,25 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
         } else {
             receivers = ImmutableList.of(singleReceiver);
         }
-        String messageClassString = protobufMessage.getPayloadClass();
+        String messageType = protobufMessage.getPayloadType();
+        String messageVersion = protobufMessage.hasPayloadVersion() ? protobufMessage.getPayloadVersion() : Message.DEFAULT_VERSION;
+        MessageDefinition messageDefinition = MessageTools.getMessageDefinition(messageType, messageVersion);
+
         UUID id = toUUID(protobufMessage.getId().toByteArray());
         boolean durable = (!protobufMessage.hasDurable()) || protobufMessage.getDurable();
         boolean undeliverable = protobufMessage.hasUndeliverable() && protobufMessage.getUndeliverable();
         int timeout = protobufMessage.hasTimeout() ? protobufMessage.getTimeout() : InternalMessage.NO_TIMEOUT;
-        //return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable);
+        //return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageType, durable, undeliverable);
         // optimize immutable message if possible
-
-        Class<?> messageClass = isImmutableMessageClass(messageClassString);
-        if(messageClass == null) {
-            return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable, timeout);
+        if(messageDefinition == null || messageDefinition.isImmutable()) {
+            // @todo: this will fail later in case MessageDefinition is null!
+            return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(),
+                    messageType, messageVersion , durable, undeliverable, timeout);
         } else {
-            Object payloadObject = internalActorSystem.getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
-            return new ImmutableInternalMessage(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), payloadObject, durable, undeliverable, timeout);
+            Object payloadObject = internalActorSystem.getDeserializer(messageType, messageVersion).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
+            return new ImmutableInternalMessage(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(),
+                    payloadObject, messageType, messageVersion, durable, undeliverable, timeout);
         }
     }
 
-    private Class<?> isImmutableMessageClass(String messageClassString) {
-        try {
-            Class<?> messageClass = Class.forName(messageClassString);
-            Message messageAnnotation = messageClass.getAnnotation(Message.class);
-            if(messageAnnotation != null &&  messageAnnotation.immutable()) {
-                return messageClass;
-            } else {
-                return null;
-            }
-        } catch(Exception e) {
-            return null;
-        }
-    }
 }

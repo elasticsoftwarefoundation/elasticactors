@@ -53,9 +53,9 @@ public final class ActorNodeMessageDeserializer implements MessageDeserializer<A
         try {
             Elasticactors.ActorNodeMessage protobufMessage = Elasticactors.ActorNodeMessage.parseFrom(ByteString.copyFrom(serializedObject));
             ActorRef receiverRef = (protobufMessage.hasReceiver()) ? actorRefDeserializer.deserialize(protobufMessage.getReceiver()) : null;
-            String messageClassString = protobufMessage.getPayloadClass();
-            Class<?> messageClass = Class.forName(messageClassString);
-            Object payloadObject = cluster.get(null).getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
+            String messageType = protobufMessage.getPayloadType();
+            String messageVersion = protobufMessage.hasPayloadVersion() ? protobufMessage.getPayloadVersion() : Message.DEFAULT_VERSION;
+            Object payloadObject = cluster.get(null).getDeserializer(messageType, messageVersion).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
             return new ActorNodeMessage(protobufMessage.getNodeId(), receiverRef, payloadObject, protobufMessage.getUndeliverable());
         } catch(Exception e) {
             throw new IOException(e);

@@ -34,7 +34,6 @@ import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
@@ -84,7 +83,7 @@ public final class HandleMessageTask extends ActorLifecycleTask {
             }
         } catch (Exception e) {
             log.error(format("Exception while Deserializing Message class %s in ActorSystem [%s]",
-                    internalMessage.getPayloadClass(), actorSystem.getName()), e);
+                    internalMessage.getPayloadType(), actorSystem.getName()), e);
             return false;
         }
     }
@@ -93,10 +92,11 @@ public final class HandleMessageTask extends ActorLifecycleTask {
         if(persistentActor.getMessageSubscribers() != null) {
             try {
                 // todo consider using ActorRefGroup here
-                if(persistentActor.getMessageSubscribers().containsKey(internalMessage.getPayloadClass())) {
+                if(persistentActor.getMessageSubscribers().containsKey(internalMessage.getPayloadType())) {
                     // copy the bytes from the incoming message, discarding possible changes made in onReceive
-                    NextMessage nextMessage = new NextMessage(internalMessage.getPayloadClass(), getMessageBytes(internalMessage));
-                    ((Set<MessageSubscriber>) persistentActor.getMessageSubscribers().get(internalMessage.getPayloadClass()))
+                    NextMessage nextMessage = new NextMessage(internalMessage.getPayloadType(),
+                            internalMessage.getPayloadVersion(),getMessageBytes(internalMessage));
+                    ((Set<MessageSubscriber>) persistentActor.getMessageSubscribers().get(internalMessage.getPayloadType()))
                             .stream().filter(messageSubscriber -> messageSubscriber.getAndDecrement() > 0)
                             .forEach(messageSubscriber -> messageSubscriber.getSubscriberRef().tell(nextMessage, receiverRef));
                 }

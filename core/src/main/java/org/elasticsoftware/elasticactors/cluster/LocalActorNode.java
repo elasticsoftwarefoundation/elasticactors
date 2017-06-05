@@ -24,8 +24,6 @@ import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.tasks.*;
-import org.elasticsoftware.elasticactors.cluster.tasks.app.HandleMessageTask;
-import org.elasticsoftware.elasticactors.cluster.tasks.app.HandleUndeliverableMessageTask;
 import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
@@ -35,6 +33,8 @@ import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
+import org.elasticsoftware.elasticactors.util.MessageDefinition;
+import org.elasticsoftware.elasticactors.util.MessageTools;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
@@ -45,6 +45,8 @@ import java.util.List;
 import java.util.Set;
 
 import static org.elasticsoftware.elasticactors.cluster.tasks.ProtocolFactoryFactory.getProtocolFactory;
+import static org.elasticsoftware.elasticactors.serialization.SerializationContext.serialize;
+import static org.elasticsoftware.elasticactors.util.MessageTools.getMessageDefinition;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
@@ -98,19 +100,19 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
         if(CreateActorMessage.class.equals(message.getClass()) && ActorType.TEMP.equals(CreateActorMessage.class.cast(message).getType())) {
             messageQueue.offer(new TransientInternalMessage(from, ImmutableList.copyOf(to),message));
         } else {
-            // get the durable flag
-            Message messageAnnotation = message.getClass().getAnnotation(Message.class);
-            final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
-            final boolean immutable = (messageAnnotation != null) && messageAnnotation.immutable();
-            final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-            if(durable) {
+            MessageDefinition messageDefinition = getMessageDefinition(message.getClass());
+            if(messageDefinition.isDurable()) {
                 // durable so it will go over the bus and needs to be serialized
                 MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), true, timeout));
-            } else if(!immutable) {
+                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to),
+                        serialize(messageSerializer, message), messageDefinition.getMessageType(),
+                        messageDefinition.getMessageVersion(), true, messageDefinition.getTimeout()));
+            } else if(!messageDefinition.isImmutable()) {
                 // it's not durable, but it's mutable so we need to serialize here
                 MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), false, timeout));
+                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to),
+                        serialize(messageSerializer, message), messageDefinition.getMessageType(),
+                        messageDefinition.getMessageVersion(), false, messageDefinition.getTimeout()));
             } else {
                 // as the message is immutable we can safely send it as a TransientInternalMessage
                 messageQueue.offer(new TransientInternalMessage(from,ImmutableList.copyOf(to),message));
@@ -124,7 +126,8 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
         InternalMessageImpl undeliverableMessage = new InternalMessageImpl(receiverRef,
                                                                            message.getSender(),
                                                                            message.getPayload(),
-                                                                           message.getPayloadClass(),
+                                                                           message.getPayloadType(),
+                                                                           message.getPayloadVersion(),
                                                                            message.isDurable(),
                                                                            true,
                                                                            message.getTimeout());
@@ -152,7 +155,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                         ElasticActor actorInstance = actorSystem.getActorInstance(receiverRef, actor.getActorClass());
                         // execute on it's own thread
                         if(internalMessage.isUndeliverable()) {
-                            actorExecutor.execute(getProtocolFactory(internalMessage.getPayloadClass())
+                            actorExecutor.execute(getProtocolFactory(internalMessage.getPayloadType())
                                     .createHandleUndeliverableMessageTask(actorSystem,
                                                                           actorInstance,
                                                                           receiverRef,
@@ -161,7 +164,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                                                                          null,
                                                                           messageHandlerEventListener));
                         } else {
-                            actorExecutor.execute(getProtocolFactory(internalMessage.getPayloadClass())
+                            actorExecutor.execute(getProtocolFactory(internalMessage.getPayloadType())
                                     .createHandleMessageTask(actorSystem,
                                                              actorInstance,
                                                              receiverRef,
@@ -204,7 +207,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                     //@todo: let the sender know his message could not be delivered
                     // we ack the message anyway
                     messageHandlerEventListener.onError(internalMessage,e);
-                    logger.error(String.format("Exception while handling InternalMessage for Actor [%s]; senderRef [%s], messageType [%s] ",receiverRef.getActorId(),internalMessage.getSender().toString(), internalMessage.getPayloadClass()),e);
+                    logger.error(String.format("Exception while handling InternalMessage for Actor [%s]; senderRef [%s], messageType [%s] ",receiverRef.getActorId(),internalMessage.getSender().toString(), internalMessage.getPayloadType()),e);
                 }
             } else {
                 // the internalMessage is intended for the shard, this means it's about creating or destroying an actor
@@ -245,7 +248,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                 } catch(Exception e) {
                     // @todo: determine if this is a recoverable error case or just a programming error
                     messageHandlerEventListener.onError(internalMessage,e);
-                    logger.error(String.format("Exception while handling InternalMessage for Shard [%s]; senderRef [%s], messageType [%s]", nodeKey.toString(), internalMessage.getSender().toString(), internalMessage.getPayloadClass()),e);
+                    logger.error(String.format("Exception while handling InternalMessage for Shard [%s]; senderRef [%s], messageType [%s]", nodeKey.toString(), internalMessage.getSender().toString(), internalMessage.getPayloadType()),e);
                 }
 
             }

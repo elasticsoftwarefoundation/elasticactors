@@ -17,7 +17,6 @@
 package org.elasticsoftware.elasticactors.messaging.reactivestreams;
 
 import org.elasticsoftware.elasticactors.serialization.Message;
-import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 
 /**
@@ -25,16 +24,22 @@ import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramew
  */
 @Message(immutable = true, durable = false, serializationFramework = SystemSerializationFramework.class)
 public final class NextMessage implements ReactiveStreamsProtocol {
-    private final String messageName;
+    private final String messageType;
     private final byte[] messageBytes;
+    private final String messageVersion;
 
-    public NextMessage(String messageName, byte[] messageBytes) {
-        this.messageName = messageName;
+    public NextMessage(String messageType, String messageVersion, byte[] messageBytes) {
+        this.messageType = messageType;
         this.messageBytes = messageBytes;
+        this.messageVersion = messageVersion;
     }
 
-    public String getMessageName() {
-        return messageName;
+    public String getMessageType() {
+        return messageType;
+    }
+
+    public String getMessageVersion() {
+        return messageVersion;
     }
 
     public byte[] getMessageBytes() {

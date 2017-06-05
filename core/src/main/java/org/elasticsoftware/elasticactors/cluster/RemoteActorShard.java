@@ -28,8 +28,12 @@ import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
+import org.elasticsoftware.elasticactors.util.MessageDefinition;
+import org.elasticsoftware.elasticactors.util.MessageTools;
 
 import java.util.List;
+
+import static org.elasticsoftware.elasticactors.serialization.SerializationContext.serialize;
 
 /**
  * @author Joost van de Wijgerd
@@ -61,11 +65,10 @@ public final class RemoteActorShard extends AbstractActorContainer implements Ac
 
     public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
         MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-        // get the durable flag
-        Message messageAnnotation = message.getClass().getAnnotation(Message.class);
-        final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
-        final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-        messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable,timeout));
+        MessageDefinition messageDefinition = MessageTools.getMessageDefinition(message.getClass());
+        messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), serialize(messageSerializer,message),
+                messageDefinition.getMessageType(), messageDefinition.getMessageVersion(),
+                messageDefinition.isDurable(),messageDefinition.getTimeout()));
     }
 
     @Override
@@ -74,7 +77,8 @@ public final class RemoteActorShard extends AbstractActorContainer implements Ac
         InternalMessageImpl undeliverableMessage = new InternalMessageImpl(receiverRef,
                                                                            message.getSender(),
                                                                            message.getPayload(),
-                                                                           message.getPayloadClass(),
+                                                                           message.getPayloadType(),
+                                                                           message.getPayloadVersion(),
                                                                            message.isDurable(),
                                                                            true,
                                                                            message.getTimeout());

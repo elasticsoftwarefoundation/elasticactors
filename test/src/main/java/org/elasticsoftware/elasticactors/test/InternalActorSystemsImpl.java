@@ -116,7 +116,19 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
     }
 
     @Override
+    public <T> MessageDeserializer<T> getSystemMessageDeserializer(String messageType, String messageVersion) {
+        return systemDeserializers.get(messageType, messageVersion);
+    }
+
+    @Override
     public SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass) {
         return applicationContext.getBean(frameworkClass);
+    }
+
+    @Override
+    public <T> MessageDeserializer<T> getMessageDeserializer(String messageType, String messageVersion) {
+        return applicationContext.getBeansOfType(SerializationFramework.class).values().stream()
+                .filter(sf -> sf.getDeserializer(messageType, messageVersion) != null)
+                .findFirst().get().getDeserializer(messageType, messageVersion);
     }
 }

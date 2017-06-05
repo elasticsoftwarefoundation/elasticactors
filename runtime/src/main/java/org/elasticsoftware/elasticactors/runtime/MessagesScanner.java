@@ -20,6 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.elasticsoftware.elasticactors.util.MessageTools;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
@@ -61,6 +62,7 @@ public final class MessagesScanner {
             SerializationFramework framework = applicationContext.getBean(messageAnnotation.serializationFramework());
             if(framework != null) {
                 framework.register(messageClass);
+                MessageTools.register(messageClass);
             } else {
                 logger.error(String.format("Could not find framework %s for message class %s",
                                            messageAnnotation.serializationFramework().getSimpleName(),

@@ -32,15 +32,14 @@ import java.io.IOException;
  */
 public final class SerializationTools {
     public static Object deserializeMessage(InternalActorSystem actorSystem, InternalMessage internalMessage) throws Exception {
-        Class<?> messageClass = Class.forName(internalMessage.getPayloadClass());
-        MessageDeserializer<?> deserializer = actorSystem.getDeserializer(messageClass);
+        MessageDeserializer<?> deserializer = actorSystem.getDeserializer(internalMessage.getPayloadType(), internalMessage.getPayloadVersion());
 
         if(deserializer != null) {
             return internalMessage.getPayload(deserializer);
         } else {
             //@todo: throw a more targeted exception
             throw new Exception(String.format("No Deserializer found for Message class %s in ActorSystem [%s]",
-                                              internalMessage.getPayloadClass(),actorSystem.getName()));
+                                              internalMessage.getPayloadType(),actorSystem.getName()));
         }
 
     }

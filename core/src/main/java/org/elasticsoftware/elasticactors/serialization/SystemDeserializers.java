@@ -23,7 +23,9 @@ import org.elasticsoftware.elasticactors.messaging.reactivestreams.*;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.*;
 import org.elasticsoftware.elasticactors.serialization.reactivestreams.*;
+import org.elasticsoftware.elasticactors.util.MessageTools;
 
+import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,26 +33,71 @@ import java.util.Map;
  * @author Joost van de Wijgerd
  */
 public final class SystemDeserializers {
-    private final Map<Class,MessageDeserializer> systemDeserializers = new HashMap<Class,MessageDeserializer>();
+    private final Map<TypeVersionPair,MessageDeserializer> systemDeserializers = new HashMap<>();
 
     public SystemDeserializers(InternalActorSystems cluster,ActorRefFactory actorRefFactory) {
         ActorRefDeserializer actorRefDeserializer = new ActorRefDeserializer(actorRefFactory);
-        systemDeserializers.put(CreateActorMessage.class,new CreateActorMessageDeserializer(cluster));
-        systemDeserializers.put(DestroyActorMessage.class,new DestroyActorMessageDeserializer(actorRefDeserializer));
-        systemDeserializers.put(ActivateActorMessage.class,new ActivateActorMessageDeserializer());
-        systemDeserializers.put(CancelScheduledMessageMessage.class,new CancelScheduledMessageMessageDeserializer());
-        systemDeserializers.put(ActorNodeMessage.class, new ActorNodeMessageDeserializer(actorRefDeserializer, cluster));
+        register(CreateActorMessage.class,new CreateActorMessageDeserializer(cluster));
+        register(DestroyActorMessage.class,new DestroyActorMessageDeserializer(actorRefDeserializer));
+        register(ActivateActorMessage.class,new ActivateActorMessageDeserializer());
+        register(CancelScheduledMessageMessage.class,new CancelScheduledMessageMessageDeserializer());
+        register(ActorNodeMessage.class, new ActorNodeMessageDeserializer(actorRefDeserializer, cluster));
         // reactive streams protocol
-        systemDeserializers.put(CancelMessage.class, new CancelMessageDeserializer(actorRefDeserializer));
-        systemDeserializers.put(CompletedMessage.class, new CompletedMessageDeserializer());
-        systemDeserializers.put(SubscribeMessage.class, new SubscribeMessageDeserializer(actorRefDeserializer));
-        systemDeserializers.put(RequestMessage.class, new RequestMessageDeserializer());
-        systemDeserializers.put(SubscriptionMessage.class, new SubscriptionMessageDeserializer());
-        systemDeserializers.put(NextMessage.class, new NextMessageDeserializer());
+        register(CancelMessage.class, new CancelMessageDeserializer(actorRefDeserializer));
+        register(CompletedMessage.class, new CompletedMessageDeserializer());
+        register(SubscribeMessage.class, new SubscribeMessageDeserializer(actorRefDeserializer));
+        register(RequestMessage.class, new RequestMessageDeserializer());
+        register(SubscriptionMessage.class, new SubscriptionMessageDeserializer());
+        register(NextMessage.class, new NextMessageDeserializer());
 
     }
 
+    private void register(Class<?> messageClass, MessageDeserializer messageDeserializer) {
+        Message messageAnnotation = messageClass.getAnnotation(Message.class);
+        String messageType = messageAnnotation == null ? messageClass.getName() :
+                (messageAnnotation.type().equals(Message.DEFAULT_TYPE) ? messageClass.getName() : messageAnnotation.type());
+        String messageVersion = messageAnnotation == null ? "1" : messageAnnotation.version();
+        systemDeserializers.put(new TypeVersionPair(messageType, messageVersion), messageDeserializer);
+        MessageTools.register(messageClass);
+    }
+
     public <T> MessageDeserializer<T> get(Class<T> messageClass) {
-        return systemDeserializers.get(messageClass);
+        Message messageAnnotation = messageClass.getAnnotation(Message.class);
+        String messageType = messageAnnotation == null ? messageClass.getName() :
+                (messageAnnotation.type().equals(Message.DEFAULT_TYPE) ? messageClass.getName() : messageAnnotation.type());
+        String messageVersion = messageAnnotation == null ? "1" : messageAnnotation.version();
+        return get(messageType, messageVersion);
+    }
+
+    public <T> MessageDeserializer<T> get(String messageType, String messageVersion) {
+        return systemDeserializers.get(new TypeVersionPair(messageType, messageVersion));
+    }
+
+    private static final class TypeVersionPair {
+        private final String type;
+        private final String version;
+
+        TypeVersionPair(String type, String version) {
+            this.type = type;
+            this.version = version;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            TypeVersionPair that = (TypeVersionPair) o;
+
+            if (!type.equals(that.type)) return false;
+            return version.equals(that.version);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = type.hashCode();
+            result = 31 * result + version.hashCode();
+            return result;
+        }
     }
 }

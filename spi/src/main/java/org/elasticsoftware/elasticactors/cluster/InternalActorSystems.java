@@ -31,6 +31,10 @@ public interface InternalActorSystems extends ActorSystems {
 
     <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass);
 
+    <T> MessageDeserializer<T> getSystemMessageDeserializer(String messageType, String messageVersion);
+
+    <T> MessageDeserializer<T> getMessageDeserializer(String messageType, String messageVersion);
+
     SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass);
 
     ActorRef createPersistentActorRef(ActorShard shard, String actorId);

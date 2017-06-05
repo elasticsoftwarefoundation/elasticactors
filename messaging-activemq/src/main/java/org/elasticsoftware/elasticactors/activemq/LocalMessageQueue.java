@@ -345,7 +345,7 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
 
         @Override
         public void onError(InternalMessage message, Throwable exception) {
-            logger.error(format("Error handling transient message, payloadClass [%s]", message.getPayloadClass()),exception);
+            logger.error(format("Error handling transient message, payloadClass [%s]", message.getPayloadType()),exception);
         }
 
         @Override

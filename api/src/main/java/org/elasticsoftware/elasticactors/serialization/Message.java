@@ -26,6 +26,8 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 public @interface Message {
     int NO_TIMEOUT = -1;
+    String DEFAULT_TYPE = "CLASSNAME";
+    String DEFAULT_VERSION = "1";
 
     /**
      * Determines which framework will be used to serialize and deserialize this message
@@ -65,4 +67,9 @@ public @interface Message {
      * @return  the timeout value (in milliseconds) for the message pojo annotation with this annotation
      */
     int timeout() default NO_TIMEOUT;
+
+    String type() default DEFAULT_TYPE;
+
+    String version() default DEFAULT_VERSION;
+
 }

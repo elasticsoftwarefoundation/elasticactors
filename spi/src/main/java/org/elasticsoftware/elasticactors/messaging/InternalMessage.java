@@ -39,7 +39,9 @@ public interface InternalMessage {
 
     ByteBuffer getPayload();
 
-    String getPayloadClass();
+    String getPayloadType();
+
+    String getPayloadVersion();
 
     boolean isDurable();
 

@@ -23,6 +23,8 @@ import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.util.MessageDefinition;
+import org.elasticsoftware.elasticactors.util.MessageTools;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -81,7 +83,8 @@ public final class ActorSystemEventRegistryImpl implements ActorSystemEventListe
     public void generateEvents(ActorShard actorShard, ActorSystemEvent actorSystemEvent) {
         List<ActorSystemEventListener> listeners = eventListenerRepository.getAll(actorShard.getKey(), actorSystemEvent);
         for (ActorSystemEventListener listener : listeners) {
-            MessageDeserializer deserializer = actorSystem.getDeserializer(listener.getMessageClass());
+            MessageDefinition messageDefinition = MessageTools.getMessageDefinition(listener.getMessageClass());
+            MessageDeserializer deserializer = actorSystem.getDeserializer(messageDefinition.getMessageType(), messageDefinition.getMessageVersion());
             if(deserializer != null) {
                 try {
                     Object message = deserializer.deserialize(ByteBuffer.wrap(listener.getMessageBytes()));

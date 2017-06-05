@@ -24,6 +24,8 @@ import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
+import org.elasticsoftware.elasticactors.util.MessageDefinition;
+import org.elasticsoftware.elasticactors.util.MessageTools;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 
 import java.io.IOException;
@@ -43,10 +45,12 @@ public final class ActorNodeMessageSerializer implements MessageSerializer<Actor
     @Override
     public ByteBuffer serialize(ActorNodeMessage actorNodeMessage) throws IOException {
         Object message = actorNodeMessage.getMessage();
+        MessageDefinition messageDefinition = MessageTools.getMessageDefinition(message.getClass());
         Elasticactors.ActorNodeMessage.Builder builder = Elasticactors.ActorNodeMessage.newBuilder();
         builder.setReceiver(ActorRefSerializer.get().serialize(actorNodeMessage.getReceiverRef()));
         builder.setNodeId(actorNodeMessage.getNodeId());
-        builder.setPayloadClass(message.getClass().getName());
+        builder.setPayloadType(messageDefinition.getMessageType());
+        builder.setPayloadVersion(messageDefinition.getMessageVersion());
         MessageSerializer serializer = actorSystems.get(null).getSerializer(message.getClass());
         builder.setPayload(ByteString.copyFrom(serializer.serialize(message)));
         builder.setUndeliverable(actorNodeMessage.isUndeliverable());

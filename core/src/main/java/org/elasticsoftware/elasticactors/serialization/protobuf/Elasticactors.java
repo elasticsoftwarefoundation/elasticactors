@@ -132,20 +132,20 @@ public final class Elasticactors {
     com.google.protobuf.ByteString
         getSenderBytes();
 
-    // optional string payloadClass = 3;
+    // optional string payloadType = 3;
     /**
-     * <code>optional string payloadClass = 3;</code>
+     * <code>optional string payloadType = 3;</code>
      */
-    boolean hasPayloadClass();
+    boolean hasPayloadType();
     /**
-     * <code>optional string payloadClass = 3;</code>
+     * <code>optional string payloadType = 3;</code>
      */
-    java.lang.String getPayloadClass();
+    java.lang.String getPayloadType();
     /**
-     * <code>optional string payloadClass = 3;</code>
+     * <code>optional string payloadType = 3;</code>
      */
     com.google.protobuf.ByteString
-        getPayloadClassBytes();
+        getPayloadTypeBytes();
 
     // optional bytes payload = 4;
     /**
@@ -216,6 +216,21 @@ public final class Elasticactors {
      * <code>optional uint32 timeout = 9;</code>
      */
     int getTimeout();
+
+    // optional string payloadVersion = 10;
+    /**
+     * <code>optional string payloadVersion = 10;</code>
+     */
+    boolean hasPayloadVersion();
+    /**
+     * <code>optional string payloadVersion = 10;</code>
+     */
+    java.lang.String getPayloadVersion();
+    /**
+     * <code>optional string payloadVersion = 10;</code>
+     */
+    com.google.protobuf.ByteString
+        getPayloadVersionBytes();
   }
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.InternalMessage}
@@ -280,7 +295,7 @@ public final class Elasticactors {
             }
             case 26: {
               bitField0_ |= 0x00000004;
-              payloadClass_ = input.readBytes();
+              payloadType_ = input.readBytes();
               break;
             }
             case 34: {
@@ -314,6 +329,11 @@ public final class Elasticactors {
             case 72: {
               bitField0_ |= 0x00000080;
               timeout_ = input.readUInt32();
+              break;
+            }
+            case 82: {
+              bitField0_ |= 0x00000100;
+              payloadVersion_ = input.readBytes();
               break;
             }
           }
@@ -445,20 +465,20 @@ public final class Elasticactors {
       }
     }
 
-    // optional string payloadClass = 3;
-    public static final int PAYLOADCLASS_FIELD_NUMBER = 3;
-    private java.lang.Object payloadClass_;
+    // optional string payloadType = 3;
+    public static final int PAYLOADTYPE_FIELD_NUMBER = 3;
+    private java.lang.Object payloadType_;
     /**
-     * <code>optional string payloadClass = 3;</code>
+     * <code>optional string payloadType = 3;</code>
      */
-    public boolean hasPayloadClass() {
+    public boolean hasPayloadType() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>optional string payloadClass = 3;</code>
+     * <code>optional string payloadType = 3;</code>
      */
-    public java.lang.String getPayloadClass() {
-      java.lang.Object ref = payloadClass_;
+    public java.lang.String getPayloadType() {
+      java.lang.Object ref = payloadType_;
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
@@ -466,22 +486,22 @@ public final class Elasticactors {
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
-          payloadClass_ = s;
+          payloadType_ = s;
         }
         return s;
       }
     }
     /**
-     * <code>optional string payloadClass = 3;</code>
+     * <code>optional string payloadType = 3;</code>
      */
     public com.google.protobuf.ByteString
-        getPayloadClassBytes() {
-      java.lang.Object ref = payloadClass_;
+        getPayloadTypeBytes() {
+      java.lang.Object ref = payloadType_;
       if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        payloadClass_ = b;
+        payloadType_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
@@ -598,16 +618,60 @@ public final class Elasticactors {
       return timeout_;
     }
 
+    // optional string payloadVersion = 10;
+    public static final int PAYLOADVERSION_FIELD_NUMBER = 10;
+    private java.lang.Object payloadVersion_;
+    /**
+     * <code>optional string payloadVersion = 10;</code>
+     */
+    public boolean hasPayloadVersion() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional string payloadVersion = 10;</code>
+     */
+    public java.lang.String getPayloadVersion() {
+      java.lang.Object ref = payloadVersion_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          payloadVersion_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string payloadVersion = 10;</code>
+     */
+    public com.google.protobuf.ByteString
+        getPayloadVersionBytes() {
+      java.lang.Object ref = payloadVersion_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        payloadVersion_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       receiver_ = "";
       sender_ = "";
-      payloadClass_ = "";
+      payloadType_ = "";
       payload_ = com.google.protobuf.ByteString.EMPTY;
       id_ = com.google.protobuf.ByteString.EMPTY;
       durable_ = false;
       undeliverable_ = false;
       receivers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       timeout_ = 0;
+      payloadVersion_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -628,7 +692,7 @@ public final class Elasticactors {
         output.writeBytes(2, getSenderBytes());
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeBytes(3, getPayloadClassBytes());
+        output.writeBytes(3, getPayloadTypeBytes());
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeBytes(4, payload_);
@@ -647,6 +711,9 @@ public final class Elasticactors {
       }
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeUInt32(9, timeout_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeBytes(10, getPayloadVersionBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -667,7 +734,7 @@ public final class Elasticactors {
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(3, getPayloadClassBytes());
+          .computeBytesSize(3, getPayloadTypeBytes());
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
@@ -697,6 +764,10 @@ public final class Elasticactors {
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(9, timeout_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(10, getPayloadVersionBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -818,7 +889,7 @@ public final class Elasticactors {
         bitField0_ = (bitField0_ & ~0x00000001);
         sender_ = "";
         bitField0_ = (bitField0_ & ~0x00000002);
-        payloadClass_ = "";
+        payloadType_ = "";
         bitField0_ = (bitField0_ & ~0x00000004);
         payload_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -832,6 +903,8 @@ public final class Elasticactors {
         bitField0_ = (bitField0_ & ~0x00000080);
         timeout_ = 0;
         bitField0_ = (bitField0_ & ~0x00000100);
+        payloadVersion_ = "";
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
@@ -871,7 +944,7 @@ public final class Elasticactors {
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000004;
         }
-        result.payloadClass_ = payloadClass_;
+        result.payloadType_ = payloadType_;
         if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
           to_bitField0_ |= 0x00000008;
         }
@@ -898,6 +971,10 @@ public final class Elasticactors {
           to_bitField0_ |= 0x00000080;
         }
         result.timeout_ = timeout_;
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.payloadVersion_ = payloadVersion_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -924,9 +1001,9 @@ public final class Elasticactors {
           sender_ = other.sender_;
           onChanged();
         }
-        if (other.hasPayloadClass()) {
+        if (other.hasPayloadType()) {
           bitField0_ |= 0x00000004;
-          payloadClass_ = other.payloadClass_;
+          payloadType_ = other.payloadType_;
           onChanged();
         }
         if (other.hasPayload()) {
@@ -953,6 +1030,11 @@ public final class Elasticactors {
         }
         if (other.hasTimeout()) {
           setTimeout(other.getTimeout());
+        }
+        if (other.hasPayloadVersion()) {
+          bitField0_ |= 0x00000200;
+          payloadVersion_ = other.payloadVersion_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1129,76 +1211,76 @@ public final class Elasticactors {
         return this;
       }
 
-      // optional string payloadClass = 3;
-      private java.lang.Object payloadClass_ = "";
+      // optional string payloadType = 3;
+      private java.lang.Object payloadType_ = "";
       /**
-       * <code>optional string payloadClass = 3;</code>
+       * <code>optional string payloadType = 3;</code>
        */
-      public boolean hasPayloadClass() {
+      public boolean hasPayloadType() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>optional string payloadClass = 3;</code>
+       * <code>optional string payloadType = 3;</code>
        */
-      public java.lang.String getPayloadClass() {
-        java.lang.Object ref = payloadClass_;
+      public java.lang.String getPayloadType() {
+        java.lang.Object ref = payloadType_;
         if (!(ref instanceof java.lang.String)) {
           java.lang.String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
-          payloadClass_ = s;
+          payloadType_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
         }
       }
       /**
-       * <code>optional string payloadClass = 3;</code>
+       * <code>optional string payloadType = 3;</code>
        */
       public com.google.protobuf.ByteString
-          getPayloadClassBytes() {
-        java.lang.Object ref = payloadClass_;
+          getPayloadTypeBytes() {
+        java.lang.Object ref = payloadType_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
-          payloadClass_ = b;
+          payloadType_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
       /**
-       * <code>optional string payloadClass = 3;</code>
+       * <code>optional string payloadType = 3;</code>
        */
-      public Builder setPayloadClass(
+      public Builder setPayloadType(
           java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000004;
-        payloadClass_ = value;
+        payloadType_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional string payloadClass = 3;</code>
+       * <code>optional string payloadType = 3;</code>
        */
-      public Builder clearPayloadClass() {
+      public Builder clearPayloadType() {
         bitField0_ = (bitField0_ & ~0x00000004);
-        payloadClass_ = getDefaultInstance().getPayloadClass();
+        payloadType_ = getDefaultInstance().getPayloadType();
         onChanged();
         return this;
       }
       /**
-       * <code>optional string payloadClass = 3;</code>
+       * <code>optional string payloadType = 3;</code>
        */
-      public Builder setPayloadClassBytes(
+      public Builder setPayloadTypeBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000004;
-        payloadClass_ = value;
+        payloadType_ = value;
         onChanged();
         return this;
       }
@@ -1463,6 +1545,80 @@ public final class Elasticactors {
       public Builder clearTimeout() {
         bitField0_ = (bitField0_ & ~0x00000100);
         timeout_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional string payloadVersion = 10;
+      private java.lang.Object payloadVersion_ = "";
+      /**
+       * <code>optional string payloadVersion = 10;</code>
+       */
+      public boolean hasPayloadVersion() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional string payloadVersion = 10;</code>
+       */
+      public java.lang.String getPayloadVersion() {
+        java.lang.Object ref = payloadVersion_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          payloadVersion_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string payloadVersion = 10;</code>
+       */
+      public com.google.protobuf.ByteString
+          getPayloadVersionBytes() {
+        java.lang.Object ref = payloadVersion_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          payloadVersion_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string payloadVersion = 10;</code>
+       */
+      public Builder setPayloadVersion(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000200;
+        payloadVersion_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string payloadVersion = 10;</code>
+       */
+      public Builder clearPayloadVersion() {
+        bitField0_ = (bitField0_ & ~0x00000200);
+        payloadVersion_ = getDefaultInstance().getPayloadVersion();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string payloadVersion = 10;</code>
+       */
+      public Builder setPayloadVersionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000200;
+        payloadVersion_ = value;
         onChanged();
         return this;
       }
@@ -9753,20 +9909,20 @@ public final class Elasticactors {
     com.google.protobuf.ByteString
         getNodeIdBytes();
 
-    // optional string payloadClass = 3;
+    // optional string payloadType = 3;
     /**
-     * <code>optional string payloadClass = 3;</code>
+     * <code>optional string payloadType = 3;</code>
      */
-    boolean hasPayloadClass();
+    boolean hasPayloadType();
     /**
-     * <code>optional string payloadClass = 3;</code>
+     * <code>optional string payloadType = 3;</code>
      */
-    java.lang.String getPayloadClass();
+    java.lang.String getPayloadType();
     /**
-     * <code>optional string payloadClass = 3;</code>
+     * <code>optional string payloadType = 3;</code>
      */
     com.google.protobuf.ByteString
-        getPayloadClassBytes();
+        getPayloadTypeBytes();
 
     // optional bytes payload = 4;
     /**
@@ -9787,6 +9943,21 @@ public final class Elasticactors {
      * <code>optional bool undeliverable = 5;</code>
      */
     boolean getUndeliverable();
+
+    // optional string payloadVersion = 6;
+    /**
+     * <code>optional string payloadVersion = 6;</code>
+     */
+    boolean hasPayloadVersion();
+    /**
+     * <code>optional string payloadVersion = 6;</code>
+     */
+    java.lang.String getPayloadVersion();
+    /**
+     * <code>optional string payloadVersion = 6;</code>
+     */
+    com.google.protobuf.ByteString
+        getPayloadVersionBytes();
   }
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.ActorNodeMessage}
@@ -9851,7 +10022,7 @@ public final class Elasticactors {
             }
             case 26: {
               bitField0_ |= 0x00000004;
-              payloadClass_ = input.readBytes();
+              payloadType_ = input.readBytes();
               break;
             }
             case 34: {
@@ -9862,6 +10033,11 @@ public final class Elasticactors {
             case 40: {
               bitField0_ |= 0x00000010;
               undeliverable_ = input.readBool();
+              break;
+            }
+            case 50: {
+              bitField0_ |= 0x00000020;
+              payloadVersion_ = input.readBytes();
               break;
             }
           }
@@ -9990,20 +10166,20 @@ public final class Elasticactors {
       }
     }
 
-    // optional string payloadClass = 3;
-    public static final int PAYLOADCLASS_FIELD_NUMBER = 3;
-    private java.lang.Object payloadClass_;
+    // optional string payloadType = 3;
+    public static final int PAYLOADTYPE_FIELD_NUMBER = 3;
+    private java.lang.Object payloadType_;
     /**
-     * <code>optional string payloadClass = 3;</code>
+     * <code>optional string payloadType = 3;</code>
      */
-    public boolean hasPayloadClass() {
+    public boolean hasPayloadType() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>optional string payloadClass = 3;</code>
+     * <code>optional string payloadType = 3;</code>
      */
-    public java.lang.String getPayloadClass() {
-      java.lang.Object ref = payloadClass_;
+    public java.lang.String getPayloadType() {
+      java.lang.Object ref = payloadType_;
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
@@ -10011,22 +10187,22 @@ public final class Elasticactors {
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
-          payloadClass_ = s;
+          payloadType_ = s;
         }
         return s;
       }
     }
     /**
-     * <code>optional string payloadClass = 3;</code>
+     * <code>optional string payloadType = 3;</code>
      */
     public com.google.protobuf.ByteString
-        getPayloadClassBytes() {
-      java.lang.Object ref = payloadClass_;
+        getPayloadTypeBytes() {
+      java.lang.Object ref = payloadType_;
       if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        payloadClass_ = b;
+        payloadType_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
@@ -10065,12 +10241,56 @@ public final class Elasticactors {
       return undeliverable_;
     }
 
+    // optional string payloadVersion = 6;
+    public static final int PAYLOADVERSION_FIELD_NUMBER = 6;
+    private java.lang.Object payloadVersion_;
+    /**
+     * <code>optional string payloadVersion = 6;</code>
+     */
+    public boolean hasPayloadVersion() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional string payloadVersion = 6;</code>
+     */
+    public java.lang.String getPayloadVersion() {
+      java.lang.Object ref = payloadVersion_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          payloadVersion_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string payloadVersion = 6;</code>
+     */
+    public com.google.protobuf.ByteString
+        getPayloadVersionBytes() {
+      java.lang.Object ref = payloadVersion_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        payloadVersion_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       receiver_ = "";
       nodeId_ = "";
-      payloadClass_ = "";
+      payloadType_ = "";
       payload_ = com.google.protobuf.ByteString.EMPTY;
       undeliverable_ = false;
+      payloadVersion_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -10091,13 +10311,16 @@ public final class Elasticactors {
         output.writeBytes(2, getNodeIdBytes());
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeBytes(3, getPayloadClassBytes());
+        output.writeBytes(3, getPayloadTypeBytes());
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeBytes(4, payload_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeBool(5, undeliverable_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeBytes(6, getPayloadVersionBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -10118,7 +10341,7 @@ public final class Elasticactors {
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(3, getPayloadClassBytes());
+          .computeBytesSize(3, getPayloadTypeBytes());
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
@@ -10127,6 +10350,10 @@ public final class Elasticactors {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(5, undeliverable_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(6, getPayloadVersionBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -10248,12 +10475,14 @@ public final class Elasticactors {
         bitField0_ = (bitField0_ & ~0x00000001);
         nodeId_ = "";
         bitField0_ = (bitField0_ & ~0x00000002);
-        payloadClass_ = "";
+        payloadType_ = "";
         bitField0_ = (bitField0_ & ~0x00000004);
         payload_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000008);
         undeliverable_ = false;
         bitField0_ = (bitField0_ & ~0x00000010);
+        payloadVersion_ = "";
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -10293,7 +10522,7 @@ public final class Elasticactors {
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000004;
         }
-        result.payloadClass_ = payloadClass_;
+        result.payloadType_ = payloadType_;
         if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
           to_bitField0_ |= 0x00000008;
         }
@@ -10302,6 +10531,10 @@ public final class Elasticactors {
           to_bitField0_ |= 0x00000010;
         }
         result.undeliverable_ = undeliverable_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.payloadVersion_ = payloadVersion_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -10328,9 +10561,9 @@ public final class Elasticactors {
           nodeId_ = other.nodeId_;
           onChanged();
         }
-        if (other.hasPayloadClass()) {
+        if (other.hasPayloadType()) {
           bitField0_ |= 0x00000004;
-          payloadClass_ = other.payloadClass_;
+          payloadType_ = other.payloadType_;
           onChanged();
         }
         if (other.hasPayload()) {
@@ -10338,6 +10571,11 @@ public final class Elasticactors {
         }
         if (other.hasUndeliverable()) {
           setUndeliverable(other.getUndeliverable());
+        }
+        if (other.hasPayloadVersion()) {
+          bitField0_ |= 0x00000020;
+          payloadVersion_ = other.payloadVersion_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -10514,76 +10752,76 @@ public final class Elasticactors {
         return this;
       }
 
-      // optional string payloadClass = 3;
-      private java.lang.Object payloadClass_ = "";
+      // optional string payloadType = 3;
+      private java.lang.Object payloadType_ = "";
       /**
-       * <code>optional string payloadClass = 3;</code>
+       * <code>optional string payloadType = 3;</code>
        */
-      public boolean hasPayloadClass() {
+      public boolean hasPayloadType() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>optional string payloadClass = 3;</code>
+       * <code>optional string payloadType = 3;</code>
        */
-      public java.lang.String getPayloadClass() {
-        java.lang.Object ref = payloadClass_;
+      public java.lang.String getPayloadType() {
+        java.lang.Object ref = payloadType_;
         if (!(ref instanceof java.lang.String)) {
           java.lang.String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
-          payloadClass_ = s;
+          payloadType_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
         }
       }
       /**
-       * <code>optional string payloadClass = 3;</code>
+       * <code>optional string payloadType = 3;</code>
        */
       public com.google.protobuf.ByteString
-          getPayloadClassBytes() {
-        java.lang.Object ref = payloadClass_;
+          getPayloadTypeBytes() {
+        java.lang.Object ref = payloadType_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
-          payloadClass_ = b;
+          payloadType_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
       /**
-       * <code>optional string payloadClass = 3;</code>
+       * <code>optional string payloadType = 3;</code>
        */
-      public Builder setPayloadClass(
+      public Builder setPayloadType(
           java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000004;
-        payloadClass_ = value;
+        payloadType_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional string payloadClass = 3;</code>
+       * <code>optional string payloadType = 3;</code>
        */
-      public Builder clearPayloadClass() {
+      public Builder clearPayloadType() {
         bitField0_ = (bitField0_ & ~0x00000004);
-        payloadClass_ = getDefaultInstance().getPayloadClass();
+        payloadType_ = getDefaultInstance().getPayloadType();
         onChanged();
         return this;
       }
       /**
-       * <code>optional string payloadClass = 3;</code>
+       * <code>optional string payloadType = 3;</code>
        */
-      public Builder setPayloadClassBytes(
+      public Builder setPayloadTypeBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000004;
-        payloadClass_ = value;
+        payloadType_ = value;
         onChanged();
         return this;
       }
@@ -10653,6 +10891,80 @@ public final class Elasticactors {
       public Builder clearUndeliverable() {
         bitField0_ = (bitField0_ & ~0x00000010);
         undeliverable_ = false;
+        onChanged();
+        return this;
+      }
+
+      // optional string payloadVersion = 6;
+      private java.lang.Object payloadVersion_ = "";
+      /**
+       * <code>optional string payloadVersion = 6;</code>
+       */
+      public boolean hasPayloadVersion() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional string payloadVersion = 6;</code>
+       */
+      public java.lang.String getPayloadVersion() {
+        java.lang.Object ref = payloadVersion_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          payloadVersion_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string payloadVersion = 6;</code>
+       */
+      public com.google.protobuf.ByteString
+          getPayloadVersionBytes() {
+        java.lang.Object ref = payloadVersion_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          payloadVersion_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string payloadVersion = 6;</code>
+       */
+      public Builder setPayloadVersion(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        payloadVersion_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string payloadVersion = 6;</code>
+       */
+      public Builder clearPayloadVersion() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        payloadVersion_ = getDefaultInstance().getPayloadVersion();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string payloadVersion = 6;</code>
+       */
+      public Builder setPayloadVersionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        payloadVersion_ = value;
         onChanged();
         return this;
       }
@@ -10739,45 +11051,46 @@ public final class Elasticactors {
     java.lang.String[] descriptorData = {
       "\n\023elasticactors.proto\0228org.elasticsoftwa" +
       "re.elasticactors.serialization.protobuf\"" +
-      "\262\001\n\017InternalMessage\022\020\n\010receiver\030\001 \001(\t\022\016\n" +
-      "\006sender\030\002 \001(\t\022\024\n\014payloadClass\030\003 \001(\t\022\017\n\007p" +
-      "ayload\030\004 \001(\014\022\n\n\002id\030\005 \001(\014\022\017\n\007durable\030\006 \001(" +
-      "\010\022\025\n\rundeliverable\030\007 \001(\010\022\021\n\treceivers\030\010 " +
-      "\003(\t\022\017\n\007timeout\030\t \001(\r\"y\n\020ScheduledMessage" +
-      "\022\n\n\002id\030\001 \001(\014\022\020\n\010fireTime\030\002 \001(\004\022\020\n\010receiv" +
-      "er\030\003 \001(\t\022\016\n\006sender\030\004 \001(\t\022\024\n\014messageClass" +
-      "\030\005 \001(\t\022\017\n\007message\030\006 \001(\014\"R\n\030ActorSystemEv",
-      "entListener\022\017\n\007actorId\030\001 \001(\t\022\024\n\014messageC" +
-      "lass\030\002 \001(\t\022\017\n\007message\030\003 \001(\014\"\256\002\n\017Persiste" +
-      "ntActor\022\020\n\010actorRef\030\001 \001(\t\022\022\n\nactorClass\030" +
-      "\002 \001(\t\022\032\n\022actorSystemVersion\030\003 \001(\t\022\r\n\005sta" +
-      "te\030\004 \001(\014\022\020\n\010shardKey\030\005 \001(\t\022Y\n\013subscriber" +
-      "s\030\006 \003(\0132D.org.elasticsoftware.elasticact" +
-      "ors.serialization.protobuf.Subscriber\022]\n" +
-      "\rsubscriptions\030\007 \003(\0132F.org.elasticsoftwa" +
-      "re.elasticactors.serialization.protobuf." +
-      "Subscription\"H\n\nSubscriber\022\025\n\rsubscriber",
-      "Ref\030\001 \001(\t\022\023\n\013messageName\030\002 \001(\t\022\016\n\006leases" +
-      "\030\003 \001(\004\"L\n\014Subscription\022\024\n\014publisherRef\030\001" +
-      " \001(\t\022\023\n\013messageName\030\002 \001(\t\022\021\n\tcancelled\030\003" +
-      " \001(\010\"\314\001\n\022CreateActorMessage\022\017\n\007actorId\030\001" +
-      " \001(\t\022\024\n\014initialState\030\002 \001(\014\022\022\n\nactorClass" +
-      "\030\003 \001(\t\022\023\n\013actorSystem\030\004 \001(\t\022Q\n\004type\030\005 \001(" +
-      "\0162C.org.elasticsoftware.elasticactors.se" +
-      "rialization.protobuf.ActorType\022\023\n\013affini" +
-      "tyKey\030\006 \001(\t\"\'\n\023DestroyActorMessage\022\020\n\010ac" +
-      "torRef\030\001 \001(\t\"\217\001\n\024ActivateActorMessage\022\023\n",
-      "\013actorSystem\030\001 \001(\t\022\017\n\007actorId\030\002 \001(\t\022Q\n\004t" +
-      "ype\030\003 \001(\0162C.org.elasticsoftware.elastica" +
-      "ctors.serialization.protobuf.ActorType\"9" +
-      "\n\013WireMessage\022\021\n\tqueueName\030\001 \001(\t\022\027\n\017inte" +
-      "rnalMessage\030\002 \001(\014\"D\n\035CancelScheduledMess" +
-      "ageMessage\022\021\n\tmessageId\030\001 \001(\014\022\020\n\010fireTim" +
-      "e\030\002 \001(\004\"r\n\020ActorNodeMessage\022\020\n\010receiver\030" +
-      "\001 \001(\t\022\016\n\006nodeId\030\002 \001(\t\022\024\n\014payloadClass\030\003 " +
-      "\001(\t\022\017\n\007payload\030\004 \001(\014\022\025\n\rundeliverable\030\005 " +
-      "\001(\010*2\n\tActorType\022\016\n\nPERSISTENT\020\000\022\010\n\004TEMP",
-      "\020\001\022\013\n\007SERVICE\020\002B\002H\001"
+      "\311\001\n\017InternalMessage\022\020\n\010receiver\030\001 \001(\t\022\016\n" +
+      "\006sender\030\002 \001(\t\022\023\n\013payloadType\030\003 \001(\t\022\017\n\007pa" +
+      "yload\030\004 \001(\014\022\n\n\002id\030\005 \001(\014\022\017\n\007durable\030\006 \001(\010" +
+      "\022\025\n\rundeliverable\030\007 \001(\010\022\021\n\treceivers\030\010 \003" +
+      "(\t\022\017\n\007timeout\030\t \001(\r\022\026\n\016payloadVersion\030\n " +
+      "\001(\t\"y\n\020ScheduledMessage\022\n\n\002id\030\001 \001(\014\022\020\n\010f" +
+      "ireTime\030\002 \001(\004\022\020\n\010receiver\030\003 \001(\t\022\016\n\006sende" +
+      "r\030\004 \001(\t\022\024\n\014messageClass\030\005 \001(\t\022\017\n\007message",
+      "\030\006 \001(\014\"R\n\030ActorSystemEventListener\022\017\n\007ac" +
+      "torId\030\001 \001(\t\022\024\n\014messageClass\030\002 \001(\t\022\017\n\007mes" +
+      "sage\030\003 \001(\014\"\256\002\n\017PersistentActor\022\020\n\010actorR" +
+      "ef\030\001 \001(\t\022\022\n\nactorClass\030\002 \001(\t\022\032\n\022actorSys" +
+      "temVersion\030\003 \001(\t\022\r\n\005state\030\004 \001(\014\022\020\n\010shard" +
+      "Key\030\005 \001(\t\022Y\n\013subscribers\030\006 \003(\0132D.org.ela" +
+      "sticsoftware.elasticactors.serialization" +
+      ".protobuf.Subscriber\022]\n\rsubscriptions\030\007 " +
+      "\003(\0132F.org.elasticsoftware.elasticactors." +
+      "serialization.protobuf.Subscription\"H\n\nS",
+      "ubscriber\022\025\n\rsubscriberRef\030\001 \001(\t\022\023\n\013mess" +
+      "ageName\030\002 \001(\t\022\016\n\006leases\030\003 \001(\004\"L\n\014Subscri" +
+      "ption\022\024\n\014publisherRef\030\001 \001(\t\022\023\n\013messageNa" +
+      "me\030\002 \001(\t\022\021\n\tcancelled\030\003 \001(\010\"\314\001\n\022CreateAc" +
+      "torMessage\022\017\n\007actorId\030\001 \001(\t\022\024\n\014initialSt" +
+      "ate\030\002 \001(\014\022\022\n\nactorClass\030\003 \001(\t\022\023\n\013actorSy" +
+      "stem\030\004 \001(\t\022Q\n\004type\030\005 \001(\0162C.org.elasticso" +
+      "ftware.elasticactors.serialization.proto" +
+      "buf.ActorType\022\023\n\013affinityKey\030\006 \001(\t\"\'\n\023De" +
+      "stroyActorMessage\022\020\n\010actorRef\030\001 \001(\t\"\217\001\n\024",
+      "ActivateActorMessage\022\023\n\013actorSystem\030\001 \001(" +
+      "\t\022\017\n\007actorId\030\002 \001(\t\022Q\n\004type\030\003 \001(\0162C.org.e" +
+      "lasticsoftware.elasticactors.serializati" +
+      "on.protobuf.ActorType\"9\n\013WireMessage\022\021\n\t" +
+      "queueName\030\001 \001(\t\022\027\n\017internalMessage\030\002 \001(\014" +
+      "\"D\n\035CancelScheduledMessageMessage\022\021\n\tmes" +
+      "sageId\030\001 \001(\014\022\020\n\010fireTime\030\002 \001(\004\"\211\001\n\020Actor" +
+      "NodeMessage\022\020\n\010receiver\030\001 \001(\t\022\016\n\006nodeId\030" +
+      "\002 \001(\t\022\023\n\013payloadType\030\003 \001(\t\022\017\n\007payload\030\004 " +
+      "\001(\014\022\025\n\rundeliverable\030\005 \001(\010\022\026\n\016payloadVer",
+      "sion\030\006 \001(\t*2\n\tActorType\022\016\n\nPERSISTENT\020\000\022" +
+      "\010\n\004TEMP\020\001\022\013\n\007SERVICE\020\002B\002H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -10789,7 +11102,7 @@ public final class Elasticactors {
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_InternalMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_InternalMessage_descriptor,
-              new java.lang.String[] { "Receiver", "Sender", "PayloadClass", "Payload", "Id", "Durable", "Undeliverable", "Receivers", "Timeout", });
+              new java.lang.String[] { "Receiver", "Sender", "PayloadType", "Payload", "Id", "Durable", "Undeliverable", "Receivers", "Timeout", "PayloadVersion", });
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ScheduledMessage_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ScheduledMessage_fieldAccessorTable = new
@@ -10855,7 +11168,7 @@ public final class Elasticactors {
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ActorNodeMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ActorNodeMessage_descriptor,
-              new java.lang.String[] { "Receiver", "NodeId", "PayloadClass", "Payload", "Undeliverable", });
+              new java.lang.String[] { "Receiver", "NodeId", "PayloadType", "Payload", "Undeliverable", "PayloadVersion", });
           return null;
         }
       };

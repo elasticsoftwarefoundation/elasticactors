@@ -2207,20 +2207,20 @@ public final class Reactivestreams {
   public interface NextMessageOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
-    // optional string messageName = 1;
+    // optional string messageType = 1;
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>optional string messageType = 1;</code>
      */
-    boolean hasMessageName();
+    boolean hasMessageType();
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>optional string messageType = 1;</code>
      */
-    java.lang.String getMessageName();
+    java.lang.String getMessageType();
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>optional string messageType = 1;</code>
      */
     com.google.protobuf.ByteString
-        getMessageNameBytes();
+        getMessageTypeBytes();
 
     // optional bytes messageBytes = 2;
     /**
@@ -2231,6 +2231,21 @@ public final class Reactivestreams {
      * <code>optional bytes messageBytes = 2;</code>
      */
     com.google.protobuf.ByteString getMessageBytes();
+
+    // optional string messageVersion = 3;
+    /**
+     * <code>optional string messageVersion = 3;</code>
+     */
+    boolean hasMessageVersion();
+    /**
+     * <code>optional string messageVersion = 3;</code>
+     */
+    java.lang.String getMessageVersion();
+    /**
+     * <code>optional string messageVersion = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getMessageVersionBytes();
   }
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.NextMessage}
@@ -2285,12 +2300,17 @@ public final class Reactivestreams {
             }
             case 10: {
               bitField0_ |= 0x00000001;
-              messageName_ = input.readBytes();
+              messageType_ = input.readBytes();
               break;
             }
             case 18: {
               bitField0_ |= 0x00000002;
               messageBytes_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              messageVersion_ = input.readBytes();
               break;
             }
           }
@@ -2333,20 +2353,20 @@ public final class Reactivestreams {
     }
 
     private int bitField0_;
-    // optional string messageName = 1;
-    public static final int MESSAGENAME_FIELD_NUMBER = 1;
-    private java.lang.Object messageName_;
+    // optional string messageType = 1;
+    public static final int MESSAGETYPE_FIELD_NUMBER = 1;
+    private java.lang.Object messageType_;
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>optional string messageType = 1;</code>
      */
-    public boolean hasMessageName() {
+    public boolean hasMessageType() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>optional string messageType = 1;</code>
      */
-    public java.lang.String getMessageName() {
-      java.lang.Object ref = messageName_;
+    public java.lang.String getMessageType() {
+      java.lang.Object ref = messageType_;
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
@@ -2354,22 +2374,22 @@ public final class Reactivestreams {
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
-          messageName_ = s;
+          messageType_ = s;
         }
         return s;
       }
     }
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>optional string messageType = 1;</code>
      */
     public com.google.protobuf.ByteString
-        getMessageNameBytes() {
-      java.lang.Object ref = messageName_;
+        getMessageTypeBytes() {
+      java.lang.Object ref = messageType_;
       if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        messageName_ = b;
+        messageType_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
@@ -2392,9 +2412,53 @@ public final class Reactivestreams {
       return messageBytes_;
     }
 
+    // optional string messageVersion = 3;
+    public static final int MESSAGEVERSION_FIELD_NUMBER = 3;
+    private java.lang.Object messageVersion_;
+    /**
+     * <code>optional string messageVersion = 3;</code>
+     */
+    public boolean hasMessageVersion() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional string messageVersion = 3;</code>
+     */
+    public java.lang.String getMessageVersion() {
+      java.lang.Object ref = messageVersion_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          messageVersion_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string messageVersion = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getMessageVersionBytes() {
+      java.lang.Object ref = messageVersion_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        messageVersion_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
-      messageName_ = "";
+      messageType_ = "";
       messageBytes_ = com.google.protobuf.ByteString.EMPTY;
+      messageVersion_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -2409,10 +2473,13 @@ public final class Reactivestreams {
                         throws java.io.IOException {
       getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getMessageNameBytes());
+        output.writeBytes(1, getMessageTypeBytes());
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(2, messageBytes_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, getMessageVersionBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -2425,11 +2492,15 @@ public final class Reactivestreams {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getMessageNameBytes());
+          .computeBytesSize(1, getMessageTypeBytes());
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, messageBytes_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, getMessageVersionBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -2547,10 +2618,12 @@ public final class Reactivestreams {
 
       public Builder clear() {
         super.clear();
-        messageName_ = "";
+        messageType_ = "";
         bitField0_ = (bitField0_ & ~0x00000001);
         messageBytes_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000002);
+        messageVersion_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -2582,11 +2655,15 @@ public final class Reactivestreams {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.messageName_ = messageName_;
+        result.messageType_ = messageType_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
         result.messageBytes_ = messageBytes_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.messageVersion_ = messageVersion_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2603,13 +2680,18 @@ public final class Reactivestreams {
 
       public Builder mergeFrom(org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage other) {
         if (other == org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage.getDefaultInstance()) return this;
-        if (other.hasMessageName()) {
+        if (other.hasMessageType()) {
           bitField0_ |= 0x00000001;
-          messageName_ = other.messageName_;
+          messageType_ = other.messageType_;
           onChanged();
         }
         if (other.hasMessageBytes()) {
           setMessageBytes(other.getMessageBytes());
+        }
+        if (other.hasMessageVersion()) {
+          bitField0_ |= 0x00000004;
+          messageVersion_ = other.messageVersion_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -2638,76 +2720,76 @@ public final class Reactivestreams {
       }
       private int bitField0_;
 
-      // optional string messageName = 1;
-      private java.lang.Object messageName_ = "";
+      // optional string messageType = 1;
+      private java.lang.Object messageType_ = "";
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>optional string messageType = 1;</code>
        */
-      public boolean hasMessageName() {
+      public boolean hasMessageType() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>optional string messageType = 1;</code>
        */
-      public java.lang.String getMessageName() {
-        java.lang.Object ref = messageName_;
+      public java.lang.String getMessageType() {
+        java.lang.Object ref = messageType_;
         if (!(ref instanceof java.lang.String)) {
           java.lang.String s = ((com.google.protobuf.ByteString) ref)
               .toStringUtf8();
-          messageName_ = s;
+          messageType_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
         }
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>optional string messageType = 1;</code>
        */
       public com.google.protobuf.ByteString
-          getMessageNameBytes() {
-        java.lang.Object ref = messageName_;
+          getMessageTypeBytes() {
+        java.lang.Object ref = messageType_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
-          messageName_ = b;
+          messageType_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>optional string messageType = 1;</code>
        */
-      public Builder setMessageName(
+      public Builder setMessageType(
           java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000001;
-        messageName_ = value;
+        messageType_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>optional string messageType = 1;</code>
        */
-      public Builder clearMessageName() {
+      public Builder clearMessageType() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        messageName_ = getDefaultInstance().getMessageName();
+        messageType_ = getDefaultInstance().getMessageType();
         onChanged();
         return this;
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>optional string messageType = 1;</code>
        */
-      public Builder setMessageNameBytes(
+      public Builder setMessageTypeBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000001;
-        messageName_ = value;
+        messageType_ = value;
         onChanged();
         return this;
       }
@@ -2744,6 +2826,80 @@ public final class Reactivestreams {
       public Builder clearMessageBytes() {
         bitField0_ = (bitField0_ & ~0x00000002);
         messageBytes_ = getDefaultInstance().getMessageBytes();
+        onChanged();
+        return this;
+      }
+
+      // optional string messageVersion = 3;
+      private java.lang.Object messageVersion_ = "";
+      /**
+       * <code>optional string messageVersion = 3;</code>
+       */
+      public boolean hasMessageVersion() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional string messageVersion = 3;</code>
+       */
+      public java.lang.String getMessageVersion() {
+        java.lang.Object ref = messageVersion_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          messageVersion_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string messageVersion = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getMessageVersionBytes() {
+        java.lang.Object ref = messageVersion_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          messageVersion_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string messageVersion = 3;</code>
+       */
+      public Builder setMessageVersion(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        messageVersion_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string messageVersion = 3;</code>
+       */
+      public Builder clearMessageVersion() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        messageVersion_ = getDefaultInstance().getMessageVersion();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string messageVersion = 3;</code>
+       */
+      public Builder setMessageVersionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        messageVersion_ = value;
         onChanged();
         return this;
       }
@@ -3357,10 +3513,10 @@ public final class Reactivestreams {
       "nMessage\022\023\n\013messageName\030\001 \001(\t\";\n\rCancelM" +
       "essage\022\025\n\rsubscriberRef\030\001 \001(\t\022\023\n\013message" +
       "Name\030\002 \001(\t\"\'\n\020CompletedMessage\022\023\n\013messag" +
-      "eName\030\001 \001(\t\"8\n\013NextMessage\022\023\n\013messageNam" +
-      "e\030\001 \001(\t\022\024\n\014messageBytes\030\002 \001(\014\"0\n\016Request" +
-      "Message\022\023\n\013messageName\030\001 \001(\t\022\t\n\001n\030\002 \001(\004B",
-      "\002H\001"
+      "eName\030\001 \001(\t\"P\n\013NextMessage\022\023\n\013messageTyp" +
+      "e\030\001 \001(\t\022\024\n\014messageBytes\030\002 \001(\014\022\026\n\016message" +
+      "Version\030\003 \001(\t\"0\n\016RequestMessage\022\023\n\013messa",
+      "geName\030\001 \001(\t\022\t\n\001n\030\002 \001(\004B\002H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -3396,7 +3552,7 @@ public final class Reactivestreams {
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_descriptor,
-              new java.lang.String[] { "MessageName", "MessageBytes", });
+              new java.lang.String[] { "MessageType", "MessageBytes", "MessageVersion", });
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_descriptor =
             getDescriptor().getMessageTypes().get(5);
           internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_fieldAccessorTable = new

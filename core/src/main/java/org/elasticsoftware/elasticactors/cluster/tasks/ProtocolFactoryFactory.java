@@ -26,8 +26,8 @@ public final class ProtocolFactoryFactory {
     private final static ProtocolFactory applicationProtocolFactory = new ApplicationProtocolFactory();
     private final static ProtocolFactory reactiveStreamsProtocolFactory = new ReactiveStreamsProtocolFactory();
 
-    public static ProtocolFactory getProtocolFactory(String messageClass) {
-        if(messageClass.startsWith("org.elasticsoftware.elasticactors.messaging.reactivestreams")) {
+    public static ProtocolFactory getProtocolFactory(String messageType) {
+        if(messageType.startsWith("org.elasticsoftware.elasticactors.messaging.reactivestreams")) {
             return reactiveStreamsProtocolFactory;
         } else {
             return applicationProtocolFactory;

@@ -25,6 +25,8 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.util.MessageDefinition;
+import org.elasticsoftware.elasticactors.util.MessageTools;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ShardedScheduledWorkManager;
 import org.elasticsoftware.elasticactors.util.concurrent.WorkExecutor;
@@ -143,7 +145,8 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
         @Override
         public void execute(final ShardKey shardKey,final ScheduledMessage message) {
             try {
-                final MessageDeserializer messageDeserializer = actorSystem.getDeserializer(message.getMessageClass());
+                MessageDefinition messageDefinition = MessageTools.getMessageDefinition(message.getMessageClass());
+                final MessageDeserializer messageDeserializer = actorSystem.getDeserializer(messageDefinition.getMessageType(), messageDefinition.getMessageVersion());
                 if(messageDeserializer != null) {
                     Object deserializedMessage = messageDeserializer.deserialize(ByteBuffer.wrap(message.getMessageBytes()));
                     // send the message

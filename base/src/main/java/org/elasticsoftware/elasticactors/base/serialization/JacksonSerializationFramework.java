@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 @Named
 public final class JacksonSerializationFramework implements SerializationFramework {
-    private final ConcurrentMap<Class,JacksonMessageDeserializer> deserializers = new ConcurrentHashMap<>();
+    private final ConcurrentMap<TypeVersionPair,JacksonMessageDeserializer> deserializers = new ConcurrentHashMap<>();
     private final JacksonMessageSerializer serializer;
     private final ObjectMapper objectMapper;
     private final JacksonActorStateSerializer actorStateSerializer;
@@ -50,7 +50,8 @@ public final class JacksonSerializationFramework implements SerializationFramewo
         Message messageAnnotation;
         if((messageAnnotation = messageClass.getAnnotation(Message.class)) != null
            && this.getClass().equals(messageAnnotation.serializationFramework()))  {
-            deserializers.putIfAbsent(messageClass,new JacksonMessageDeserializer(messageClass,objectMapper));
+            String messageType = messageAnnotation.type().equals(Message.DEFAULT_TYPE) ? messageClass.getName() : messageAnnotation.type();
+            deserializers.putIfAbsent(new TypeVersionPair(messageType, messageAnnotation.version()), new JacksonMessageDeserializer(messageClass,objectMapper));
         }
     }
 
@@ -60,8 +61,8 @@ public final class JacksonSerializationFramework implements SerializationFramewo
     }
 
     @Override
-    public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
-        return deserializers.get(messageClass);
+    public <T> MessageDeserializer<T> getDeserializer(String messageType, String messageVersion) {
+        return deserializers.get(new TypeVersionPair(messageType, messageVersion));
     }
 
     @Override
@@ -81,5 +82,33 @@ public final class JacksonSerializationFramework implements SerializationFramewo
 
     public ObjectMapper getObjectMapper() {
         return objectMapper;
+    }
+
+    private static final class TypeVersionPair {
+        private final String type;
+        private final String version;
+
+        TypeVersionPair(String type, String version) {
+            this.type = type;
+            this.version = version;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            TypeVersionPair that = (TypeVersionPair) o;
+
+            if (!type.equals(that.type)) return false;
+            return version.equals(that.version);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = type.hashCode();
+            result = 31 * result + version.hashCode();
+            return result;
+        }
     }
 }

@@ -89,7 +89,7 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask imp
             if(message instanceof NextMessage) {
                 NextMessage nextMessage = (NextMessage) message;
                 // the subscriber is gone, need to remove the subscriber reference
-                return persistentActor.removeSubscriber(nextMessage.getMessageName(), new MessageSubscriber(internalMessage.getSender()));
+                return persistentActor.removeSubscriber(nextMessage.getMessageType(), new MessageSubscriber(internalMessage.getSender()));
             } else if(message instanceof CompletedMessage) {
                 // the subscriber was already gone, we can ignore this
                 return false;
@@ -138,7 +138,7 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask imp
             }
         } catch (Exception e) {
             log.error(String.format("Exception while Deserializing Message class %s in ActorSystem [%s]",
-                    internalMessage.getPayloadClass(), actorSystem.getName()), e);
+                    internalMessage.getPayloadType(), actorSystem.getName()), e);
 
         }
         return false;

@@ -109,7 +109,7 @@ public final class LocalMessageQueue implements MessageQueue {
 
         @Override
         public void onError(InternalMessage message, Throwable exception) {
-            logger.error(String.format("Error handling transient message, payloadClass [%s]",message.getPayloadClass()),exception);
+            logger.error(String.format("Error handling transient message, payloadClass [%s]",message.getPayloadType()),exception);
         }
 
         @Override

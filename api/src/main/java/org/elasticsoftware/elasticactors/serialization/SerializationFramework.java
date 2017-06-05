@@ -40,13 +40,14 @@ public interface SerializationFramework {
     <T> MessageSerializer<T> getSerializer(Class<T> messageClass);
 
     /**
-     * Return the correct deserializer for the specified message class
+     * Return the correct deserializer for the specified message type and version
      *
-     * @param messageClass
+     * @param messageType
+     * @param messageVersion
      * @param <T>
      * @return
      */
-    <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass);
+    <T> MessageDeserializer<T> getDeserializer(String messageType, String messageVersion);
 
     /**
      * Return the serializer for the actor state

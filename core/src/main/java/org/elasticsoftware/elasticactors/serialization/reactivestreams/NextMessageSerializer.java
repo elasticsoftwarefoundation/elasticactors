@@ -31,7 +31,8 @@ public final class NextMessageSerializer implements MessageSerializer<NextMessag
     @Override
     public ByteBuffer serialize(NextMessage message) throws IOException {
         Reactivestreams.NextMessage.Builder builder = Reactivestreams.NextMessage.newBuilder();
-        builder.setMessageName(message.getMessageName());
+        builder.setMessageType(message.getMessageType());
+        builder.setMessageVersion(message.getMessageVersion());
         builder.setMessageBytes(ByteString.copyFrom(message.getMessageBytes()));
         return ByteBuffer.wrap(builder.build().toByteArray());
     }

@@ -73,7 +73,7 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
             }
         } catch (Exception e) {
             log.error(String.format("Exception while Deserializing Message class %s in ActorSystem [%s]",
-                    internalMessage.getPayloadClass(), actorSystem.getName()), e);
+                    internalMessage.getPayloadType(), actorSystem.getName()), e);
             return false;
         }
     }

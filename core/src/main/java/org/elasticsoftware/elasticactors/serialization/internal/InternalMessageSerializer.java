@@ -40,7 +40,8 @@ public final class InternalMessageSerializer implements Serializer<InternalMessa
         builder.setPayload(ByteString.copyFrom(internalMessage.getPayload()));
         // rewind the payload to not fuck up the internal message
         internalMessage.getPayload().rewind(); // @todo: this is a bit ugly
-        builder.setPayloadClass(internalMessage.getPayloadClass());
+        builder.setPayloadType(internalMessage.getPayloadType());
+        builder.setPayloadVersion(internalMessage.getPayloadVersion());
         // backwards compatibility for single receiver messages (needed when running mixed clusters < 0.24)
         if(internalMessage.getReceivers().size() == 1) {
             builder.setReceiver(ActorRefSerializer.get().serialize(internalMessage.getReceivers().get(0)));

@@ -22,6 +22,7 @@ import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.*;
+import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
@@ -168,6 +169,6 @@ public class RabbitMQMessagingServiceTest {
 
     private InternalMessage createInternalMessage(String name,int count) {
         ByteBuffer payload = ByteBuffer.wrap(format(PAYLOAD_FORMAT, count, name).getBytes(Charsets.UTF_8));
-        return new InternalMessageImpl(senderRef,receiverRef,payload,String.class.getName(),true);
+        return new InternalMessageImpl(senderRef,receiverRef,payload,String.class.getName(), Message.DEFAULT_VERSION,true);
     }
 }

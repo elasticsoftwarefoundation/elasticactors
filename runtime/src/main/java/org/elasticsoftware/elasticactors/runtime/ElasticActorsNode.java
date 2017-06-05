@@ -96,6 +96,8 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     public void init() throws Exception {
         int maximumSize = environment.getProperty("ea.actorRefCache.maximumSize",Integer.class,10240);
         actorRefCache = CacheBuilder.newBuilder().maximumSize(maximumSize).build();
+        applicationContext.getBeansOfType(SerializationFramework.class).values()
+                .forEach(sf -> serializationFrameworks.put(sf.getClass(), sf));
     }
 
     @PreDestroy
@@ -222,16 +224,28 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     }
 
     @Override
+    public <T> MessageDeserializer<T> getSystemMessageDeserializer(String messageType, String messageVersion) {
+        return systemDeserializers.get(messageType, messageVersion);
+    }
+
+    @Override
+    public <T> MessageDeserializer<T> getMessageDeserializer(String messageType, String messageVersion) {
+        // find the serializer in one of the configured serialization frameworks
+        MessageDeserializer<T> deserializer = null;
+        for (SerializationFramework serializationFramework : serializationFrameworks.values()) {
+            deserializer = serializationFramework.getDeserializer(messageType, messageVersion);
+            if(deserializer != null) {
+                return deserializer;
+            }
+        }
+        return deserializer;
+    }
+
+    @Override
     public SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass) {
         //return applicationContext.getBean(frameworkClass);
         // cache the serialization frameworks for quick lookup (application context lookup is sloooooowwwwww)
-        SerializationFramework serializationFramework = this.serializationFrameworks.get(frameworkClass);
-        if(serializationFramework == null) {
-            serializationFramework = applicationContext.getBean(frameworkClass);
-            // @todo: this is not thread safe and should happen at the initialization stage
-            this.serializationFrameworks.put(frameworkClass,serializationFramework);
-        }
-        return serializationFramework;
+        return this.serializationFrameworks.get(frameworkClass);
     }
 
     @Override

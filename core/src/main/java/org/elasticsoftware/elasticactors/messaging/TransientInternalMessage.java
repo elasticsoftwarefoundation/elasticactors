@@ -18,13 +18,17 @@ package org.elasticsoftware.elasticactors.messaging;
 
 import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.util.MessageTools;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.UUID;
+
+import static org.elasticsoftware.elasticactors.util.MessageTools.getMessageDefinition;
 
 /**
  * @author Joost van de Wijgerd
@@ -79,8 +83,13 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
     }
 
     @Override
-    public String getPayloadClass() {
-        return payload.getClass().getName();
+    public String getPayloadType() {
+        return getMessageDefinition(payload.getClass()).getMessageType();
+    }
+
+    @Override
+    public String getPayloadVersion() {
+        return getMessageDefinition(payload.getClass()).getMessageVersion();
     }
 
     @Override
