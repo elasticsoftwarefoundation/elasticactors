@@ -67,9 +67,10 @@ public class BackplaneConfiguration {
 
     @PostConstruct
     public void initialize() {
-        String cassandraHosts = env.getProperty("ea.cassandra.hosts","localhost:9160");
+        String cassandraHosts = env.getProperty("ea.cassandra.hosts","localhost:9042");
         String cassandraClusterName = env.getProperty("ea.cassandra.cluster","ElasticActorsCluster");
         String cassandraKeyspaceName = env.getProperty("ea.cassandra.keyspace","\"ElasticActors\"");
+        Integer cassandraPort = env.getProperty("ea.cassandra.port", Integer.class, 9042);
 
         Set<String> hostSet = StringUtils.commaDelimitedListToSet(cassandraHosts);
 
@@ -92,6 +93,7 @@ public class BackplaneConfiguration {
         Cluster cassandraCluster =
                 Cluster.builder().withClusterName(cassandraClusterName)
                         .addContactPoints(contactPoints)
+                        .withPort(cassandraPort)
                 .withLoadBalancingPolicy(new RoundRobinPolicy())
                 .withRetryPolicy(new LoggingRetryPolicy(DefaultRetryPolicy.INSTANCE))
                 .withPoolingOptions(poolingOptions)
