@@ -101,6 +101,8 @@ public class BackplaneConfiguration {
                 .withQueryOptions(new QueryOptions().setConsistencyLevel(ConsistencyLevel.QUORUM)).build();
 
         this.cassandraSession = cassandraCluster.connect(cassandraKeyspaceName);
+
+        
     }
 
     @PreDestroy
