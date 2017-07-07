@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.ShardDistributionStrategy;
 import org.elasticsoftware.elasticactors.cluster.messaging.ShardReleasedMessage;
+import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,9 +39,12 @@ public abstract class MultiNodeScaleUpStrategy implements ShardDistributionStrat
     protected final Logger logger = LogManager.getLogger(this.getClass());
     private final LinkedBlockingQueue<ShardReleasedMessage> shardReleasedMessages;
     private final Map<ShardKey,ActorShard> registeredShards = new HashMap<>();
+    private final SchedulerService scheduler;
 
-    public MultiNodeScaleUpStrategy(LinkedBlockingQueue<ShardReleasedMessage> shardReleasedMessages) {
+    public MultiNodeScaleUpStrategy(LinkedBlockingQueue<ShardReleasedMessage> shardReleasedMessages,
+                                    SchedulerService scheduler) {
         this.shardReleasedMessages = shardReleasedMessages;
+        this.scheduler = scheduler;
     }
 
     @Override
@@ -87,6 +91,7 @@ public abstract class MultiNodeScaleUpStrategy implements ShardDistributionStrat
             for (ActorShard actorShard : registeredShards.values()) {
                 try {
                     actorShard.init();
+                    scheduler.registerShard(actorShard.getKey());
                 } catch (Exception e) {
                     logger.error("IMPORTANT: Exception on initializing LocalShard, ElasticActors cluster is unstable. Please check all nodes",e);
                     return false;

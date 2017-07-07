@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.cluster.strategies;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.messaging.ShardReleasedMessage;
+import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -27,8 +28,9 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public final class StartingNodeScaleUpStrategy extends MultiNodeScaleUpStrategy {
 
-    public StartingNodeScaleUpStrategy(LinkedBlockingQueue<ShardReleasedMessage> shardReleasedMessages) {
-        super(shardReleasedMessages);
+    public StartingNodeScaleUpStrategy(LinkedBlockingQueue<ShardReleasedMessage> shardReleasedMessages,
+                                       SchedulerService schedulerService) {
+        super(shardReleasedMessages, schedulerService);
     }
 
     @Override

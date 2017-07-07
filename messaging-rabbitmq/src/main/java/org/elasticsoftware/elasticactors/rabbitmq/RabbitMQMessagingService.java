@@ -249,11 +249,33 @@ public final class RabbitMQMessagingService implements RabbitMQMessagingServiceI
         channel.queueBind(queueName,exchangeName,queueName);
     }
 
+    private void ensureExclusiveConsumer(Channel channel, String queueName) throws Exception {
+        int consumerCount = channel.queueDeclarePassive(queueName).getConsumerCount();
+        if(!(consumerCount == 0)) {
+            // need to wait for the queue to become available
+            logger.warn(format("%s has active consumers.. waiting a maximum of 1 second to establish myself as exclusive consumer", queueName));
+            long waitTime = 0;
+            // spin in 100msec increments
+            do {
+                try {
+                    waitTime += 100;
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+            } while ((consumerCount = channel.queueDeclarePassive(queueName).getConsumerCount()) > 0 && waitTime <= 1000);
+        }
+        if(consumerCount > 0) {
+            throw new QueueNotExclusiveException(queueName);
+        }
+    }
+
     private final class LocalMessageQueueFactory implements MessageQueueFactory {
         @Override
         public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
             final String queueName = format(QUEUE_NAME_FORMAT,elasticActorsCluster,name);
             ensureQueueExists(consumerChannel,queueName);
+            ensureExclusiveConsumer(consumerChannel, queueName);
             LocalMessageQueue messageQueue = new LocalMessageQueue(queueExecutor,
                     RabbitMQMessagingService.this,
                     consumerChannel,

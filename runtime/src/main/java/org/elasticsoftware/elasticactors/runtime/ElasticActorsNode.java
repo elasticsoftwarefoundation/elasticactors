@@ -25,6 +25,7 @@ import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.*;
 import org.elasticsoftware.elasticactors.cluster.messaging.ShardReleasedMessage;
 import org.elasticsoftware.elasticactors.cluster.protobuf.Clustering;
+import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
 import org.elasticsoftware.elasticactors.cluster.strategies.RunningNodeScaleDownStrategy;
 import org.elasticsoftware.elasticactors.cluster.strategies.RunningNodeScaleUpStrategy;
 import org.elasticsoftware.elasticactors.cluster.strategies.SingleNodeScaleUpStrategy;
@@ -73,6 +74,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     @Autowired
     private Environment environment;
     private ClusterService clusterService;
+    private SchedulerService schedulerService;
     private final LinkedBlockingQueue<ShardReleasedMessage> shardReleasedMessages = new LinkedBlockingQueue<>();
     private final AtomicReference<List<PhysicalNode>> currentTopology = new AtomicReference<>(null);
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("CLUSTER_SCHEDULER"));
@@ -90,6 +92,11 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
         this.clusterService = clusterService;
         clusterService.addEventListener(this);
         clusterService.setClusterMessageHandler(this);
+    }
+
+    @Autowired
+    public void setScheduler(SchedulerService scheduler) {
+        this.schedulerService = scheduler;
     }
 
     @PostConstruct
@@ -113,19 +120,19 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
             // scale out, I'm the one that's starting up.. will receive Local Shards..
             if(topology.size() == 1) {
                 // if there is only one node in the list, then I'm the only server
-                shardDistributionStrategy = new SingleNodeScaleUpStrategy();
+                shardDistributionStrategy = new SingleNodeScaleUpStrategy(schedulerService);
             } else {
                 // there are multiple nodes, I will receive shard releases messages
-                shardDistributionStrategy = new StartingNodeScaleUpStrategy(shardReleasedMessages);
+                shardDistributionStrategy = new StartingNodeScaleUpStrategy(shardReleasedMessages, schedulerService);
             }
         } else {
             // we are already running, see if this is a scale up or a scale down
             if(previousTopology.size() < topology.size()) {
                 // scale up
-                shardDistributionStrategy = new RunningNodeScaleUpStrategy(shardReleasedMessages,clusterService);
+                shardDistributionStrategy = new RunningNodeScaleUpStrategy(shardReleasedMessages, clusterService, schedulerService);
             } else if(previousTopology.size() > topology.size()) {
                 // scale down
-                shardDistributionStrategy = new RunningNodeScaleDownStrategy();
+                shardDistributionStrategy = new RunningNodeScaleDownStrategy(schedulerService);
             } else {
                 // topology changed, but same size.. node added at the same time node was removed
                 // new node will use StartingNodeScaleUpStrategy and wait for ShardReleasedMessages
@@ -134,7 +141,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
                 // let MasterNode take over the role of sending ShardReleased messages?
                 // let MasterNode decide on the strategy?
                 // for now treat it as scale down and let the starting node time out
-                shardDistributionStrategy = new RunningNodeScaleDownStrategy();
+                shardDistributionStrategy = new RunningNodeScaleDownStrategy(schedulerService);
             }
         }
         // store the new topology as the current one

@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.cluster.strategies;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ShardDistributionStrategy;
+import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
 
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +27,12 @@ import java.util.concurrent.TimeUnit;
  * @author Joost van de Wijgerd
  */
 public final class SingleNodeScaleUpStrategy implements ShardDistributionStrategy {
+    private final SchedulerService schedulerService;
+
+    public SingleNodeScaleUpStrategy(SchedulerService schedulerService) {
+        this.schedulerService = schedulerService;
+    }
+
     @Override
     public void signalRelease(ActorShard localShard, PhysicalNode nextOwner) {
         // won't happen. as we are the single node in the cluster
@@ -35,6 +42,7 @@ public final class SingleNodeScaleUpStrategy implements ShardDistributionStrateg
     public void registerWaitForRelease(ActorShard localShard, PhysicalNode currentOwner) throws Exception {
         // no need to wait, run init immediately
         localShard.init();
+        schedulerService.registerShard(localShard.getKey());
     }
 
     @Override

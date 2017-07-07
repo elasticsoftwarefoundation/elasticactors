@@ -229,10 +229,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
                         } finally {
                             // add it to the new local shards
                             newLocalShards.add(i);
-                            // initialize
-                            // newShard.init();
-                            // start owning the scheduler shard (this will start sending messages, but everything is blocked so it should be no problem)
-                            scheduler.registerShard(newShard.getKey());
                         }
                     } else {
                         // we own the shard already, no change needed

@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.cluster.strategies;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ShardDistributionStrategy;
+import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
 
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +27,12 @@ import java.util.concurrent.TimeUnit;
  * @author Joost van de Wijgerd
  */
 public final class RunningNodeScaleDownStrategy implements ShardDistributionStrategy {
+    private SchedulerService schedulerService;
+
+    public RunningNodeScaleDownStrategy(SchedulerService schedulerService) {
+        this.schedulerService = schedulerService;
+    }
+
     @Override
     public void signalRelease(ActorShard localShard, PhysicalNode nextOwner) {
         // won't happen. the cluster is scaling down so we'll be taking over shards only
@@ -36,6 +43,7 @@ public final class RunningNodeScaleDownStrategy implements ShardDistributionStra
         // other node possibly crashed, otherwise shutting down
         // @todo: maybe make a distinction between crash and controlled shutdown here
         localShard.init();
+        schedulerService.registerShard(localShard.getKey());
     }
 
     @Override

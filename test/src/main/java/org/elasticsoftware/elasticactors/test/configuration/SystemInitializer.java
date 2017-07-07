@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.test.configuration;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.elasticsoftware.elasticactors.cluster.LocalActorSystemInstance;
+import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
 import org.elasticsoftware.elasticactors.cluster.strategies.SingleNodeScaleUpStrategy;
 
 import javax.annotation.PostConstruct;
@@ -32,18 +33,21 @@ public final class SystemInitializer {
     private final PhysicalNode localNode;
     private final LocalActorSystemInstance localActorSystemInstance;
     private final ClusterService clusterService;
+    private final SchedulerService schedulerService;
 
-    public SystemInitializer(PhysicalNode localNode, LocalActorSystemInstance localActorSystemInstance, ClusterService clusterService) {
+    public SystemInitializer(PhysicalNode localNode, LocalActorSystemInstance localActorSystemInstance,
+                             ClusterService clusterService, SchedulerService schedulerService) {
         this.localNode = localNode;
         this.localActorSystemInstance = localActorSystemInstance;
         this.clusterService = clusterService;
+        this.schedulerService = schedulerService;
     }
 
     @PostConstruct
     public void initialize() throws Exception {
         final List<PhysicalNode> localNodes = Arrays.<PhysicalNode>asList(localNode);
         localActorSystemInstance.updateNodes(localNodes);
-        localActorSystemInstance.distributeShards(localNodes,new SingleNodeScaleUpStrategy());
+        localActorSystemInstance.distributeShards(localNodes,new SingleNodeScaleUpStrategy(schedulerService));
         // signal master elected
         clusterService.reportReady();
     }

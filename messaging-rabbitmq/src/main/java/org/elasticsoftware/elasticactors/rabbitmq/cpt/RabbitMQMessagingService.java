@@ -33,6 +33,7 @@ import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
 import org.elasticsoftware.elasticactors.rabbitmq.ChannelListenerRegistry;
 import org.elasticsoftware.elasticactors.rabbitmq.MessageAcker;
+import org.elasticsoftware.elasticactors.rabbitmq.QueueNotExclusiveException;
 import org.elasticsoftware.elasticactors.rabbitmq.RabbitMQMessagingServiceInterface;
 import org.elasticsoftware.elasticactors.rabbitmq.ack.AsyncMessageAcker;
 import org.elasticsoftware.elasticactors.rabbitmq.ack.BufferingMessageAcker;
@@ -263,6 +264,27 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
         channel.queueBind(queueName,exchangeName,queueName);
     }
 
+    private void ensureExclusiveConsumer(Channel channel, String queueName) throws Exception {
+        int consumerCount = channel.queueDeclarePassive(queueName).getConsumerCount();
+        if(!(consumerCount == 0)) {
+            // need to wait for the queue to become available
+            logger.warn(format("%s has active consumers.. waiting a maximum of 1 second to establish myself as exclusive consumer", queueName));
+            long waitTime = 0;
+            // spin in 100msec increments
+            do {
+                try {
+                    waitTime += 100;
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+            } while ((consumerCount = channel.queueDeclarePassive(queueName).getConsumerCount()) > 0 && waitTime <= 1000);
+        }
+        if(consumerCount > 0) {
+            throw new QueueNotExclusiveException(queueName);
+        }
+    }
+
     private int getBucket(Object key) {
         return Math.abs(key.hashCode()) % queueExecutor.getThreadCount();
     }
@@ -271,6 +293,8 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
         @Override
         public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
             final String queueName = format(QUEUE_NAME_FORMAT,elasticActorsCluster,name);
+            ensureQueueExists(consumerChannel, queueName);
+            ensureExclusiveConsumer(consumerChannel, queueName);
             LocalMessageQueueCreator creator = new LocalMessageQueueCreator(queueName, messageHandler);
             // queueExecutor.execute(creator);
             creator.run();
@@ -331,7 +355,6 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
         public void run() {
             try {
                 Channel producerChannel = producerChannels.get(getBucket(this.queueName));
-                ensureQueueExists(producerChannel, queueName);
                 this.messageQueue = new LocalMessageQueue(queueExecutor,
                         RabbitMQMessagingService.this,
                         consumerChannel,

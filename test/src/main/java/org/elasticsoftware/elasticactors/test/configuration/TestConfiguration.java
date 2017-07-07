@@ -25,6 +25,7 @@ import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.*;
+import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
@@ -77,8 +78,9 @@ public class TestConfiguration {
     }
 
     @Bean(name = "systemInitializer")
-    public SystemInitializer createSystemInitializer(LocalActorSystemInstance localActorSystemInstance, ClusterService clusterService) {
-        return new SystemInitializer(localNode, localActorSystemInstance, clusterService);
+    public SystemInitializer createSystemInitializer(LocalActorSystemInstance localActorSystemInstance,
+                                                     ClusterService clusterService, SchedulerService schedulerService) {
+        return new SystemInitializer(localNode, localActorSystemInstance, clusterService, schedulerService);
 
     }
 
