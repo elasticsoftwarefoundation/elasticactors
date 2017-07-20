@@ -84,6 +84,7 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
     private final ConcurrentMap<Channel,Set<ChannelListener>> channelListenerRegistry = new ConcurrentHashMap<>();
     private final MessageAcker.Type ackType;
     private MessageAcker messageAcker;
+    private final Integer prefetchCount;
 
     public RabbitMQMessagingService(String elasticActorsCluster,
                                     String rabbitmqHosts,
@@ -92,7 +93,8 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
                                     String password,
                                     MessageAcker.Type ackType,
                                     ThreadBoundExecutor queueExecutor,
-                                    InternalMessageDeserializer internalMessageDeserializer) {
+                                    InternalMessageDeserializer internalMessageDeserializer,
+                                    Integer prefetchCount) {
         this.rabbitmqHosts = rabbitmqHosts;
         this.elasticActorsCluster = elasticActorsCluster;
         this.rabbitmqPort = rabbitmqPort;
@@ -102,6 +104,7 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
         this.ackType = ackType;
         this.internalMessageDeserializer = internalMessageDeserializer;
         this.exchangeName = format(EA_EXCHANGE_FORMAT, elasticActorsCluster);
+        this.prefetchCount = prefetchCount;
         this.localMessageQueueFactory = new LocalMessageQueueFactory();
         this.remoteMessageQueueFactory = new RemoteMessageQueueFactory();
         this.remoteActorSystemMessageQueueFactoryFactory = new RemoteActorSystemMessageQueueFactoryFactory();
@@ -131,7 +134,7 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
         clientConnection = Connections.create(connectionOptions,config);
         // create a seperate consumer channel
         consumerChannel = clientConnection.createChannel();
-        consumerChannel.basicQos(0);
+        consumerChannel.basicQos(prefetchCount);
         // prepare the consumer channels
         for (int i = 0; i < queueExecutor.getThreadCount(); i++) {
             producerChannels.add(clientConnection.createChannel());
