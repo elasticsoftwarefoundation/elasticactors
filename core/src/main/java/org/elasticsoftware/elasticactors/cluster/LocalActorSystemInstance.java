@@ -423,6 +423,9 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass) throws Exception {
+        if(actorClass.getAnnotation(Actor.class) == null) {
+            throw new IllegalArgumentException("actorClass has to be annotated with @Actor");
+        }
         return actorOf(actorId, actorClass.getName(), null);
     }
 
@@ -433,7 +436,9 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass,@Nullable ActorState initialState) throws Exception {
-        // @todo: do a sanity check on the actor class here
+        if(actorClass.getAnnotation(Actor.class) == null) {
+            throw new IllegalArgumentException("actorClass has to be annotated with @Actor");
+        }
         return actorOf(actorId, actorClass.getName(), initialState);
     }
 
@@ -451,6 +456,9 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     @Override
     public <T> ActorRef tempActorOf(Class<T> actorClass, ActorState initialState) throws Exception {
+        if(actorClass.getAnnotation(TempActor.class) == null) {
+            throw new IllegalArgumentException("actorClass has to be annotated with @TempActor");
+        }
         // if we have state we need to wrap it
         String actorId = UUID.randomUUID().toString();
         // see if we are being called in the context of another actor (and set the affinity key)
