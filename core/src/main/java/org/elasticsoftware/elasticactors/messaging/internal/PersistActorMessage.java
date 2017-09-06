@@ -14,30 +14,28 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.test.ask;
+package org.elasticsoftware.elasticactors.messaging.internal;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
+import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
+
+import java.io.Serializable;
 
 /**
+ * This tells the Shard to persist the actor
+ *
  * @author Joost van de Wijgerd
  */
-@Message(serializationFramework = JacksonSerializationFramework.class, durable = true)
-public class AskForGreeting {
-    private final Boolean persistOnResponse;
+@Message(immutable = true, durable = false, serializationFramework = SystemSerializationFramework.class)
+public final class PersistActorMessage implements Serializable {
+    private final ActorRef actorRef;
 
-    public AskForGreeting() {
-        this(Boolean.FALSE);
+    public PersistActorMessage(ActorRef actorRef) {
+        this.actorRef = actorRef;
     }
 
-    @JsonCreator
-    public AskForGreeting(@JsonProperty("persistOnResponse") Boolean persistOnResponse) {
-        this.persistOnResponse = persistOnResponse;
-    }
-
-    public Boolean getPersistOnResponse() {
-        return persistOnResponse;
+    public ActorRef getActorRef() {
+        return actorRef;
     }
 }

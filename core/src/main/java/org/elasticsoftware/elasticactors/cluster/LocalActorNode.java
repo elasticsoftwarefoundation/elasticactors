@@ -241,6 +241,9 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                             // ack the message anyway
                             messageHandlerEventListener.onDone(internalMessage);
                         }
+                    } else {
+                        // unknown internal message, just ack it (should not happen)
+                        messageHandlerEventListener.onDone(internalMessage);
                     }
                 } catch(Exception e) {
                     // @todo: determine if this is a recoverable error case or just a programming error
