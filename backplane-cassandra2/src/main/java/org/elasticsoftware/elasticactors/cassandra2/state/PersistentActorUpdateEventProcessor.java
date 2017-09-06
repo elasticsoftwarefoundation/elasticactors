@@ -26,6 +26,7 @@ import java.util.*;
 import static com.datastax.driver.core.BatchStatement.Type.UNLOGGED;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
+import static org.elasticsoftware.elasticactors.cassandra2.util.ExecutionUtils.executeWithRetry;
 
 /**
  * @author Joost van de Wijgerd
@@ -96,7 +97,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
                     boundStatement = deleteStatement.bind(event.getRowKey()[0], event.getRowKey()[1], event.getPersistentActorId());
                 }
                 // execute the statement
-                cassandraSession.execute(boundStatement);
+                executeWithRetry(cassandraSession, boundStatement, logger);
             } else {
                 // check the protocol to see if BatchStatements are supported
                 ProtocolVersion protocolVersion = cassandraSession.getCluster().getConfiguration().getProtocolOptions().getProtocolVersion();
@@ -156,7 +157,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
         batchBuilder.append("APPLY BATCH");
         // @todo: this causes a warning, but doing it without seems to fail with binary values!
         PreparedStatement batchStatement = cassandraSession.prepare(batchBuilder.toString());
-        cassandraSession.execute(batchStatement.bind(arguments.toArray()));
+        executeWithRetry(cassandraSession, batchStatement.bind(arguments.toArray()), logger);
     }
 
     private void executeBatchV1Optimized(List<PersistentActorUpdateEvent> events) {
@@ -181,7 +182,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
             batchStatement = batchStatements.get(batchSize);
         }
         if(batchStatement != null) {
-            cassandraSession.execute(batchStatement.bind(arguments.toArray()));
+            executeWithRetry(cassandraSession, batchStatement.bind(arguments.toArray()), logger);
         } else {
             // fallback to non-optimized version
             executeBatchV1(events);
@@ -198,7 +199,9 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
                 batchStatement.add(deleteStatement.bind(event.getRowKey()[0], event.getRowKey()[1], event.getPersistentActorId()));
             }
         }
-        cassandraSession.execute(batchStatement);
+        executeWithRetry(cassandraSession, batchStatement, logger);
     }
+
+
 
 }

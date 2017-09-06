@@ -131,7 +131,6 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
 
     @Override
     public void initialize() throws Exception {
-        consumerChannel.basicQos(0);
         consumerChannel.basicConsume(queueName,false,this);
     }
 

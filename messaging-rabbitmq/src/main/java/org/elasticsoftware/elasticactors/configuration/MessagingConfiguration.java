@@ -55,26 +55,31 @@ public class MessagingConfiguration {
     public void initialize() {
         String clusterName = env.getRequiredProperty("ea.cluster");
         String rabbitMQHosts = env.getRequiredProperty("ea.rabbitmq.hosts");
+        Integer rabbitmqPort = env.getProperty("ea.rabbitmq.port", Integer.class, 5672);
         String rabbitMQUsername= env.getProperty("ea.rabbitmq.username","guest");
         String rabbitMQPassword = env.getProperty("ea.rabbitmq.password","guest");
         MessageAcker.Type ackType = env.getProperty("ea.rabbitmq.ack",MessageAcker.Type.class, DIRECT);
         String threadModel = env.getProperty("ea.rabbitmq.threadmodel", "sc");
+        Integer prefetchCount = env.getProperty("ea.rabbitmq.prefetchCount", Integer.class, 0);
         if("cpt".equals(threadModel)) {
             messagingService = new org.elasticsoftware.elasticactors.rabbitmq.cpt.RabbitMQMessagingService(clusterName,
                     rabbitMQHosts,
+                    rabbitmqPort,
                     rabbitMQUsername,
                     rabbitMQPassword,
                     ackType,
                     queueExecutor,
-                    new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem));
+                    new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem),
+                    prefetchCount);
         } else {
             messagingService = new RabbitMQMessagingService(clusterName,
                     rabbitMQHosts,
+                    rabbitmqPort,
                     rabbitMQUsername,
                     rabbitMQPassword,
                     ackType,
                     queueExecutor,
-                    new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem));
+                    new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem), prefetchCount);
         }
     }
 

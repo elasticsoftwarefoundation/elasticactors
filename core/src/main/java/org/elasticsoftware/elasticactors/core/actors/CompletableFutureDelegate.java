@@ -16,11 +16,13 @@
 
 package org.elasticsoftware.elasticactors.core.actors;
 
+import org.elasticsoftware.elasticactors.ActorNotFoundException;
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.UnexpectedResponseTypeException;
 
 import java.util.concurrent.CompletableFuture;
+
+import static java.lang.String.format;
 
 /**
  * @author Joost van de Wijgerd
@@ -36,7 +38,7 @@ public final class CompletableFutureDelegate<T> extends ActorDelegate<T> {
 
     @Override
     public void onUndeliverable(ActorRef receiver, Object message) {
-        future.completeExceptionally(new MessageDeliveryException("Unable to deliver message", false));
+        future.completeExceptionally(new ActorNotFoundException(format("Actor with id %s does not exist",receiver.getActorId()), receiver));
     }
 
     @Override
