@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.messaging.http;
+package org.elasticsoftware.elasticactors.http.messages;
 
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;

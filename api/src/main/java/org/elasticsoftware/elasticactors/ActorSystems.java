@@ -69,6 +69,4 @@ public interface ActorSystems {
      * @param eventListener
      */
     void registerRebalancingEventListener(RebalancingEventListener eventListener);
-
-    HttpService getService(String name);
 }

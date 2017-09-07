@@ -14,24 +14,38 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.messaging.http;
+package org.elasticsoftware.elasticactors.http.messages;
 
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 
+import javax.annotation.Nullable;
+
 /**
  * @author Joost van de Wijgerd
  */
 @Message(immutable = true, durable = false, serializationFramework = SystemSerializationFramework.class)
-public final class HttpExceptionMessage {
-    private final Throwable throwable;
+public final class HttpSuccessMessage {
+    private final int responseCode;
+    @Nullable
+    private final Object responseBody;
 
-    public HttpExceptionMessage(Throwable throwable) {
-        this.throwable = throwable;
+    public HttpSuccessMessage(int responseCode) {
+        this(responseCode, null);
     }
 
-    public Throwable getThrowable() {
-        return throwable;
+    public HttpSuccessMessage(int responseCode, @Nullable  Object responseBody) {
+        this.responseCode = responseCode;
+        this.responseBody = responseBody;
+    }
+
+    public int getResponseCode() {
+        return responseCode;
+    }
+
+    @Nullable
+    public Object getResponseBody() {
+        return responseBody;
     }
 }

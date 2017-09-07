@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.core.actors;
+package org.elasticsoftware.elasticactors.http.actors;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.TempActor;
 import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.UnexpectedResponseTypeException;
-import org.elasticsoftware.elasticactors.messaging.http.HttpErrorMessage;
-import org.elasticsoftware.elasticactors.messaging.http.HttpExceptionMessage;
-import org.elasticsoftware.elasticactors.messaging.http.HttpSuccessMessage;
+import org.elasticsoftware.elasticactors.http.messages.HttpErrorMessage;
+import org.elasticsoftware.elasticactors.http.messages.HttpExceptionMessage;
+import org.elasticsoftware.elasticactors.http.messages.HttpSuccessMessage;
 
 import java.util.concurrent.CompletableFuture;
 

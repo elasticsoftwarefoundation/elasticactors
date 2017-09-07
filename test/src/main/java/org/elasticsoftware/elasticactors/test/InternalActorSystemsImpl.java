@@ -101,11 +101,6 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
     }
 
     @Override
-    public HttpService getService(String name) {
-        return null; // @todo: need to implement
-    }
-
-    @Override
     public void registerRebalancingEventListener(RebalancingEventListener eventListener) {
         // not supported (silently ignore)
     }

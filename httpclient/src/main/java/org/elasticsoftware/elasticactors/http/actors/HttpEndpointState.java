@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.core.actors;
+package org.elasticsoftware.elasticactors.http.actors;
 
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;

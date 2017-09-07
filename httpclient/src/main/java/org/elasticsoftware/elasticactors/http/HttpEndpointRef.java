@@ -24,11 +24,11 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.EndpointRef;
 import org.elasticsoftware.elasticactors.HttpService;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
-import org.elasticsoftware.elasticactors.core.actors.CompletableFutureDelegate;
 import org.elasticsoftware.elasticactors.core.actors.ReplyActor;
-import org.elasticsoftware.elasticactors.messaging.http.HttpErrorMessage;
-import org.elasticsoftware.elasticactors.messaging.http.HttpExceptionMessage;
-import org.elasticsoftware.elasticactors.messaging.http.HttpSuccessMessage;
+import org.elasticsoftware.elasticactors.http.actors.HttpResponseDelegate;
+import org.elasticsoftware.elasticactors.http.messages.HttpErrorMessage;
+import org.elasticsoftware.elasticactors.http.messages.HttpExceptionMessage;
+import org.elasticsoftware.elasticactors.http.messages.HttpSuccessMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.springframework.http.HttpHeaders;
 
@@ -100,7 +100,7 @@ public final class HttpEndpointRef implements EndpointRef {
             // the future will need to be completed from the TempActor thread that will run on the same
             // actor thread when this is called from within a actor context
 
-            ActorRef replyRef = actorSystem.tempActorOf(ReplyActor.class, new CompletableFutureDelegate<>(future, responseType));
+            ActorRef replyRef = actorSystem.tempActorOf(ReplyActor.class, new HttpResponseDelegate(future, responseType));
 
             requestBuilder.execute().toCompletableFuture()
                     .exceptionally(throwable -> handleException(throwable, replyRef))
