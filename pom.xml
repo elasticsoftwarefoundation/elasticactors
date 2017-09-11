@@ -31,14 +31,14 @@
         <cassandra.version>3.9</cassandra.version>
         <cassandra.version.md5>40f49dc7dbcd49e2e18e2dead7dd074a</cassandra.version.md5>
         <hectorclient.version>2.0-0</hectorclient.version>
-        <spring.version>5.0.0.RC3</spring.version>
+        <spring.version>5.0.0.RC4</spring.version>
         <aspectj.version>1.8.10</aspectj.version>
         <protobuf.version>2.6.1</protobuf.version>
         <grizzly.version>2.3.22</grizzly.version>
         <log4j.version>2.8.2</log4j.version>
         <!-- the cassandra driver has a hard dependency on this version -->
         <guava.version>19.0</guava.version>
-        <jackson.version>2.9.0.pr4</jackson.version>
+        <jackson.version>2.9.1</jackson.version>
         <shoal.version>1.6.50</shoal.version>
         <slf4j.version>1.7.22</slf4j.version>
         <reflections.version>0.9.10</reflections.version>
