@@ -34,7 +34,9 @@ public interface ProtocolFactory {
                                                InternalMessage internalMessage,
                                                PersistentActor persistentActor,
                                                PersistentActorRepository persistentActorRepository,
-                                               MessageHandlerEventListener messageHandlerEventListener);
+                                               MessageHandlerEventListener messageHandlerEventListener,
+                                               Boolean measure,
+                                               Long serializationWarnThreshold);
 
     ActorLifecycleTask createHandleUndeliverableMessageTask(InternalActorSystem actorSystem,
                                                             ElasticActor receiver,
