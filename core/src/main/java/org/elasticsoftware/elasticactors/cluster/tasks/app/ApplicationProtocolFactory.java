@@ -38,14 +38,13 @@ public final class ApplicationProtocolFactory implements ProtocolFactory {
                                                       PersistentActor persistentActor,
                                                       PersistentActorRepository persistentActorRepository,
                                                       MessageHandlerEventListener messageHandlerEventListener,
-                                                      Boolean measure,
                                                       Long serializationWarnThreshold) {
-        if (measure == null || serializationWarnThreshold == null) {
+        if (serializationWarnThreshold == null) {
             return new HandleMessageTask(actorSystem, receiver, receiverRef, internalMessage, persistentActor,
                     persistentActorRepository, messageHandlerEventListener);
         } else {
             return new HandleMessageTask(actorSystem, receiver, receiverRef, internalMessage, persistentActor,
-                    persistentActorRepository, messageHandlerEventListener, measure, serializationWarnThreshold);
+                    persistentActorRepository, messageHandlerEventListener, serializationWarnThreshold);
         }
     }
 

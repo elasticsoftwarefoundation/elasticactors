@@ -55,8 +55,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                                  ActorRef receiverRef,
                                  MessageHandlerEventListener messageHandlerEventListener,
                                  InternalMessage internalMessage) {
-        // by default, only measure when trace is enabled
-        this(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, log.isTraceEnabled(), Long.MAX_VALUE);
+        this(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, null);
     }
 
     protected ActorLifecycleTask(PersistentActorRepository persistentActorRepository,
@@ -66,7 +65,6 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                                  ActorRef receiverRef,
                                  MessageHandlerEventListener messageHandlerEventListener,
                                  InternalMessage internalMessage,
-                                 Boolean measure,
                                  Long serializationWarnThreshold) {
         this.persistentActorRepository = persistentActorRepository;
         this.receiverRef = receiverRef;
@@ -75,8 +73,8 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         this.receiver = receiver;
         this.messageHandlerEventListener = messageHandlerEventListener;
         this.internalMessage = internalMessage;
-        this.measurement = measure ? new Measurement(System.nanoTime()) : null;
         this.serializationWarnThreshold = serializationWarnThreshold;
+        this.measurement = this.serializationWarnThreshold == null ? null : new Measurement(System.nanoTime());
     }
 
     @Override
@@ -135,10 +133,11 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             }
             // do some trace logging
             if(this.measurement != null) {
-                log.trace(format("(%s) Message of type [%s] with id [%s] for actor [%s] took %d microsecs in queue, %d microsecs to execute, %d microsecs to serialize and %d microsecs to ack (state update %b)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",receiverRef.getActorId(),measurement.getQueueDuration(MICROSECONDS),measurement.getExecutionDuration(MICROSECONDS),measurement.getSerializationDuration(MICROSECONDS),measurement.getAckDuration(MICROSECONDS),measurement.isSerialized()));
+                // @todo: commenting this out for now, as in a real life scenario it would just spam the logs
+                //log.trace(format("(%s) Message of type [%s] with id [%s] for actor [%s] took %d microsecs in queue, %d microsecs to execute, %d microsecs to serialize and %d microsecs to ack (state update %b)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",receiverRef.getActorId(),measurement.getQueueDuration(MICROSECONDS),measurement.getExecutionDuration(MICROSECONDS),measurement.getSerializationDuration(MICROSECONDS),measurement.getAckDuration(MICROSECONDS),measurement.isSerialized()));
 
-                if (this.measurement.getSerializationDuration(TimeUnit.MICROSECONDS) > serializationWarnThreshold) {
-                    log.warn(format("(%s) Message of type [%s] with id [%s] for actor [%s] took %d microsecs to serialize (state update %b)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",receiverRef.getActorId(),measurement.getSerializationDuration(MICROSECONDS),measurement.isSerialized()));
+                if (serializationWarnThreshold != null && this.measurement.getSerializationDuration(TimeUnit.MICROSECONDS) > serializationWarnThreshold) {
+                    log.warn(format("(%s) Message of type [%s] with id [%s] triggered serlalization for actor [%s] which took %d microsecs to complete",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",receiverRef.getActorId(),measurement.getSerializationDuration(MICROSECONDS)));
                 }
             }
         }

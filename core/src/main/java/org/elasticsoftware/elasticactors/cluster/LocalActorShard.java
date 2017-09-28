@@ -68,7 +68,6 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     // the cacheloader instance that is reused to avoid garbage being created on each call
     private final CacheLoader cacheLoader = new CacheLoader();
 
-    private Boolean measure;
     private Long serializationWarnThreshold;
 
     public LocalActorShard(PhysicalNode node,
@@ -85,8 +84,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
 
     @Autowired
     public void setEnvironment(Environment environment) {
-        this.measure = environment.getProperty("ea.measure.shard.message.task", Boolean.class, false);
-        this.serializationWarnThreshold = environment.getProperty("ea.serialization.warn.threshold", Long.class, Long.MAX_VALUE);
+        this.serializationWarnThreshold = environment.getProperty("ea.serialization.warn.threshold", Long.class);
     }
 
     @Override
@@ -206,7 +204,6 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                                                              actor,
                                                              persistentActorRepository,
                                                              messageHandlerEventListener,
-                                                             measure,
                                                              serializationWarnThreshold));
                         }
                     }

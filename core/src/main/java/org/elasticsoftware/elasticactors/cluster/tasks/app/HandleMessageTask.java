@@ -65,9 +65,8 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                              PersistentActor persistentActor,
                              PersistentActorRepository persistentActorRepository,
                              MessageHandlerEventListener messageHandlerEventListener,
-                             Boolean measure,
                              Long serializationWarnThreshold) {
-        super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, measure, serializationWarnThreshold);
+        super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, serializationWarnThreshold);
     }
 
 
