@@ -120,14 +120,18 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
 
     @Override
     public void undeliverableMessage(InternalMessage message, ActorRef receiverRef) throws Exception {
-        // input is the message that cannot be delivered
-        InternalMessageImpl undeliverableMessage = new InternalMessageImpl(receiverRef,
-                                                                           message.getSender(),
-                                                                           message.getPayload(),
-                                                                           message.getPayloadClass(),
-                                                                           message.isDurable(),
-                                                                           true,
-                                                                           message.getTimeout());
+        InternalMessage undeliverableMessage;
+        if (message instanceof TransientInternalMessage) {
+            undeliverableMessage = new TransientInternalMessage(receiverRef, message.getSender(), message.getPayload(null), true);
+        } else {
+            undeliverableMessage = new InternalMessageImpl(receiverRef,
+                    message.getSender(),
+                    message.getPayload(),
+                    message.getPayloadClass(),
+                    message.isDurable(),
+                    true,
+                    message.getTimeout());
+        }
         messageQueue.offer(undeliverableMessage);
     }
 
