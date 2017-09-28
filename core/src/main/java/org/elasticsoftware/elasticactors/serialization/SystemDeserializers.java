@@ -40,6 +40,7 @@ public final class SystemDeserializers {
         systemDeserializers.put(ActivateActorMessage.class,new ActivateActorMessageDeserializer());
         systemDeserializers.put(CancelScheduledMessageMessage.class,new CancelScheduledMessageMessageDeserializer());
         systemDeserializers.put(ActorNodeMessage.class, new ActorNodeMessageDeserializer(actorRefDeserializer, cluster));
+        systemDeserializers.put(PersistActorMessage.class, new PersistActorMessageDeserializer(actorRefDeserializer));
         // reactive streams protocol
         systemDeserializers.put(CancelMessage.class, new CancelMessageDeserializer(actorRefDeserializer));
         systemDeserializers.put(CompletedMessage.class, new CompletedMessageDeserializer());

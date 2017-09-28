@@ -24,6 +24,7 @@ import org.reactivestreams.Subscriber;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
 /**
@@ -65,6 +66,13 @@ public abstract class BaseDisconnectedActorRef implements ActorRef, ActorContain
 
     @Override
     public final <T> CompletableFuture<T> ask(Object message, Class<T> responseType) {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        future.completeExceptionally(new IllegalStateException(getExceptionMessage()));
+        return future;
+    }
+
+    @Override
+    public <T> CompletableFuture<T> ask(Object message, Class<T> responseType, Boolean persistOnResponse) {
         CompletableFuture<T> future = new CompletableFuture<>();
         future.completeExceptionally(new IllegalStateException(getExceptionMessage()));
         return future;

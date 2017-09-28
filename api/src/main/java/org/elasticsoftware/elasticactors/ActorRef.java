@@ -88,6 +88,8 @@ public interface ActorRef {
      */
     <T> CompletionStage<T> ask(Object message, Class<T> responseType);
 
+    <T> CompletionStage<T> ask(Object message, Class<T> responseType, Boolean persistOnResponse);
+
     /**
      * Return whether the Actor is co-located on the same JVM as the caller. There can be significant performance
      * improvements (especially immutable and non-durable {@link org.elasticsoftware.elasticactors.serialization.Message}s

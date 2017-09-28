@@ -100,3 +100,7 @@ message ActorNodeMessage {
     optional bytes payload = 4;
     optional bool undeliverable = 5;
 }
+
+message PersistActorMessage {
+    optional string actorRef = 1;
+}

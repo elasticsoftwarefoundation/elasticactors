@@ -16,10 +16,13 @@
 
 package org.elasticsoftware.elasticactors.core.actors;
 
+import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+
+import javax.annotation.Nullable;
 
 /**
  * @author Joost van de Wijgerd
@@ -27,16 +30,28 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorState<ActorDelegate<T>> {
     private final boolean deleteAfterReceive;
 
+    private final ActorRef callerRef;
+
     protected ActorDelegate() {
         this(true);
     }
 
     protected ActorDelegate(boolean deleteAfterReceive) {
+        this(deleteAfterReceive, null);
+    }
+
+    protected ActorDelegate(boolean deleteAfterReceive, ActorRef callerRef) {
         this.deleteAfterReceive = deleteAfterReceive;
+        this.callerRef = callerRef;
     }
 
     public boolean isDeleteAfterReceive() {
         return deleteAfterReceive;
+    }
+
+    @Nullable
+    public ActorRef getCallerRef() {
+        return callerRef;
     }
 
     @Override

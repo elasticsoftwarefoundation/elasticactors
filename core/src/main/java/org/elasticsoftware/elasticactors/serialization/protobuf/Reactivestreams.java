@@ -8,10 +8,10 @@ public final class Reactivestreams {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
   }
-  public interface SubscribeMessageOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface SubscribeMessageOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.elasticsoftware.elasticactors.serialization.protobuf.SubscribeMessage)
+      com.google.protobuf.MessageOrBuilder {
 
-    // optional string subscriberRef = 1;
     /**
      * <code>optional string subscriberRef = 1;</code>
      */
@@ -26,7 +26,6 @@ public final class Reactivestreams {
     com.google.protobuf.ByteString
         getSubscriberRefBytes();
 
-    // optional string messageName = 2;
     /**
      * <code>optional string messageName = 2;</code>
      */
@@ -45,8 +44,9 @@ public final class Reactivestreams {
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.SubscribeMessage}
    */
   public static final class SubscribeMessage extends
-      com.google.protobuf.GeneratedMessage
-      implements SubscribeMessageOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:org.elasticsoftware.elasticactors.serialization.protobuf.SubscribeMessage)
+      SubscribeMessageOrBuilder {
     // Use SubscribeMessage.newBuilder() to construct.
     private SubscribeMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -93,13 +93,15 @@ public final class Reactivestreams {
               break;
             }
             case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              subscriberRef_ = input.readBytes();
+              subscriberRef_ = bs;
               break;
             }
             case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000002;
-              messageName_ = input.readBytes();
+              messageName_ = bs;
               break;
             }
           }
@@ -142,7 +144,6 @@ public final class Reactivestreams {
     }
 
     private int bitField0_;
-    // optional string subscriberRef = 1;
     public static final int SUBSCRIBERREF_FIELD_NUMBER = 1;
     private java.lang.Object subscriberRef_;
     /**
@@ -185,7 +186,6 @@ public final class Reactivestreams {
       }
     }
 
-    // optional string messageName = 2;
     public static final int MESSAGENAME_FIELD_NUMBER = 2;
     private java.lang.Object messageName_;
     /**
@@ -235,7 +235,8 @@ public final class Reactivestreams {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -349,8 +350,9 @@ public final class Reactivestreams {
      * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.SubscribeMessage}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessageOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:org.elasticsoftware.elasticactors.serialization.protobuf.SubscribeMessage)
+        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_descriptor;
@@ -476,7 +478,6 @@ public final class Reactivestreams {
       }
       private int bitField0_;
 
-      // optional string subscriberRef = 1;
       private java.lang.Object subscriberRef_ = "";
       /**
        * <code>optional string subscriberRef = 1;</code>
@@ -490,9 +491,12 @@ public final class Reactivestreams {
       public java.lang.String getSubscriberRef() {
         java.lang.Object ref = subscriberRef_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          subscriberRef_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            subscriberRef_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -550,7 +554,6 @@ public final class Reactivestreams {
         return this;
       }
 
-      // optional string messageName = 2;
       private java.lang.Object messageName_ = "";
       /**
        * <code>optional string messageName = 2;</code>
@@ -564,9 +567,12 @@ public final class Reactivestreams {
       public java.lang.String getMessageName() {
         java.lang.Object ref = messageName_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          messageName_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            messageName_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -635,10 +641,10 @@ public final class Reactivestreams {
     // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.SubscribeMessage)
   }
 
-  public interface SubscriptionMessageOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface SubscriptionMessageOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.elasticsoftware.elasticactors.serialization.protobuf.SubscriptionMessage)
+      com.google.protobuf.MessageOrBuilder {
 
-    // optional string messageName = 1;
     /**
      * <code>optional string messageName = 1;</code>
      */
@@ -657,8 +663,9 @@ public final class Reactivestreams {
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.SubscriptionMessage}
    */
   public static final class SubscriptionMessage extends
-      com.google.protobuf.GeneratedMessage
-      implements SubscriptionMessageOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:org.elasticsoftware.elasticactors.serialization.protobuf.SubscriptionMessage)
+      SubscriptionMessageOrBuilder {
     // Use SubscriptionMessage.newBuilder() to construct.
     private SubscriptionMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -705,8 +712,9 @@ public final class Reactivestreams {
               break;
             }
             case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              messageName_ = input.readBytes();
+              messageName_ = bs;
               break;
             }
           }
@@ -749,7 +757,6 @@ public final class Reactivestreams {
     }
 
     private int bitField0_;
-    // optional string messageName = 1;
     public static final int MESSAGENAME_FIELD_NUMBER = 1;
     private java.lang.Object messageName_;
     /**
@@ -798,7 +805,8 @@ public final class Reactivestreams {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -905,8 +913,9 @@ public final class Reactivestreams {
      * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.SubscriptionMessage}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessageOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:org.elasticsoftware.elasticactors.serialization.protobuf.SubscriptionMessage)
+        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_descriptor;
@@ -1021,7 +1030,6 @@ public final class Reactivestreams {
       }
       private int bitField0_;
 
-      // optional string messageName = 1;
       private java.lang.Object messageName_ = "";
       /**
        * <code>optional string messageName = 1;</code>
@@ -1035,9 +1043,12 @@ public final class Reactivestreams {
       public java.lang.String getMessageName() {
         java.lang.Object ref = messageName_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          messageName_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            messageName_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -1106,10 +1117,10 @@ public final class Reactivestreams {
     // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.SubscriptionMessage)
   }
 
-  public interface CancelMessageOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface CancelMessageOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.elasticsoftware.elasticactors.serialization.protobuf.CancelMessage)
+      com.google.protobuf.MessageOrBuilder {
 
-    // optional string subscriberRef = 1;
     /**
      * <code>optional string subscriberRef = 1;</code>
      */
@@ -1124,7 +1135,6 @@ public final class Reactivestreams {
     com.google.protobuf.ByteString
         getSubscriberRefBytes();
 
-    // optional string messageName = 2;
     /**
      * <code>optional string messageName = 2;</code>
      */
@@ -1143,8 +1153,9 @@ public final class Reactivestreams {
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.CancelMessage}
    */
   public static final class CancelMessage extends
-      com.google.protobuf.GeneratedMessage
-      implements CancelMessageOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:org.elasticsoftware.elasticactors.serialization.protobuf.CancelMessage)
+      CancelMessageOrBuilder {
     // Use CancelMessage.newBuilder() to construct.
     private CancelMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -1191,13 +1202,15 @@ public final class Reactivestreams {
               break;
             }
             case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              subscriberRef_ = input.readBytes();
+              subscriberRef_ = bs;
               break;
             }
             case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000002;
-              messageName_ = input.readBytes();
+              messageName_ = bs;
               break;
             }
           }
@@ -1240,7 +1253,6 @@ public final class Reactivestreams {
     }
 
     private int bitField0_;
-    // optional string subscriberRef = 1;
     public static final int SUBSCRIBERREF_FIELD_NUMBER = 1;
     private java.lang.Object subscriberRef_;
     /**
@@ -1283,7 +1295,6 @@ public final class Reactivestreams {
       }
     }
 
-    // optional string messageName = 2;
     public static final int MESSAGENAME_FIELD_NUMBER = 2;
     private java.lang.Object messageName_;
     /**
@@ -1333,7 +1344,8 @@ public final class Reactivestreams {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -1447,8 +1459,9 @@ public final class Reactivestreams {
      * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.CancelMessage}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessageOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:org.elasticsoftware.elasticactors.serialization.protobuf.CancelMessage)
+        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_descriptor;
@@ -1574,7 +1587,6 @@ public final class Reactivestreams {
       }
       private int bitField0_;
 
-      // optional string subscriberRef = 1;
       private java.lang.Object subscriberRef_ = "";
       /**
        * <code>optional string subscriberRef = 1;</code>
@@ -1588,9 +1600,12 @@ public final class Reactivestreams {
       public java.lang.String getSubscriberRef() {
         java.lang.Object ref = subscriberRef_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          subscriberRef_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            subscriberRef_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -1648,7 +1663,6 @@ public final class Reactivestreams {
         return this;
       }
 
-      // optional string messageName = 2;
       private java.lang.Object messageName_ = "";
       /**
        * <code>optional string messageName = 2;</code>
@@ -1662,9 +1676,12 @@ public final class Reactivestreams {
       public java.lang.String getMessageName() {
         java.lang.Object ref = messageName_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          messageName_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            messageName_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -1733,10 +1750,10 @@ public final class Reactivestreams {
     // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.CancelMessage)
   }
 
-  public interface CompletedMessageOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface CompletedMessageOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.elasticsoftware.elasticactors.serialization.protobuf.CompletedMessage)
+      com.google.protobuf.MessageOrBuilder {
 
-    // optional string messageName = 1;
     /**
      * <code>optional string messageName = 1;</code>
      */
@@ -1755,8 +1772,9 @@ public final class Reactivestreams {
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.CompletedMessage}
    */
   public static final class CompletedMessage extends
-      com.google.protobuf.GeneratedMessage
-      implements CompletedMessageOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:org.elasticsoftware.elasticactors.serialization.protobuf.CompletedMessage)
+      CompletedMessageOrBuilder {
     // Use CompletedMessage.newBuilder() to construct.
     private CompletedMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -1803,8 +1821,9 @@ public final class Reactivestreams {
               break;
             }
             case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              messageName_ = input.readBytes();
+              messageName_ = bs;
               break;
             }
           }
@@ -1847,7 +1866,6 @@ public final class Reactivestreams {
     }
 
     private int bitField0_;
-    // optional string messageName = 1;
     public static final int MESSAGENAME_FIELD_NUMBER = 1;
     private java.lang.Object messageName_;
     /**
@@ -1896,7 +1914,8 @@ public final class Reactivestreams {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -2003,8 +2022,9 @@ public final class Reactivestreams {
      * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.CompletedMessage}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessageOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:org.elasticsoftware.elasticactors.serialization.protobuf.CompletedMessage)
+        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_descriptor;
@@ -2119,7 +2139,6 @@ public final class Reactivestreams {
       }
       private int bitField0_;
 
-      // optional string messageName = 1;
       private java.lang.Object messageName_ = "";
       /**
        * <code>optional string messageName = 1;</code>
@@ -2133,9 +2152,12 @@ public final class Reactivestreams {
       public java.lang.String getMessageName() {
         java.lang.Object ref = messageName_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          messageName_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            messageName_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -2204,10 +2226,10 @@ public final class Reactivestreams {
     // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.CompletedMessage)
   }
 
-  public interface NextMessageOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface NextMessageOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.elasticsoftware.elasticactors.serialization.protobuf.NextMessage)
+      com.google.protobuf.MessageOrBuilder {
 
-    // optional string messageName = 1;
     /**
      * <code>optional string messageName = 1;</code>
      */
@@ -2222,7 +2244,6 @@ public final class Reactivestreams {
     com.google.protobuf.ByteString
         getMessageNameBytes();
 
-    // optional bytes messageBytes = 2;
     /**
      * <code>optional bytes messageBytes = 2;</code>
      */
@@ -2236,8 +2257,9 @@ public final class Reactivestreams {
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.NextMessage}
    */
   public static final class NextMessage extends
-      com.google.protobuf.GeneratedMessage
-      implements NextMessageOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:org.elasticsoftware.elasticactors.serialization.protobuf.NextMessage)
+      NextMessageOrBuilder {
     // Use NextMessage.newBuilder() to construct.
     private NextMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -2284,8 +2306,9 @@ public final class Reactivestreams {
               break;
             }
             case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              messageName_ = input.readBytes();
+              messageName_ = bs;
               break;
             }
             case 18: {
@@ -2333,7 +2356,6 @@ public final class Reactivestreams {
     }
 
     private int bitField0_;
-    // optional string messageName = 1;
     public static final int MESSAGENAME_FIELD_NUMBER = 1;
     private java.lang.Object messageName_;
     /**
@@ -2376,7 +2398,6 @@ public final class Reactivestreams {
       }
     }
 
-    // optional bytes messageBytes = 2;
     public static final int MESSAGEBYTES_FIELD_NUMBER = 2;
     private com.google.protobuf.ByteString messageBytes_;
     /**
@@ -2399,7 +2420,8 @@ public final class Reactivestreams {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -2513,8 +2535,9 @@ public final class Reactivestreams {
      * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.NextMessage}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessageOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:org.elasticsoftware.elasticactors.serialization.protobuf.NextMessage)
+        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_descriptor;
@@ -2638,7 +2661,6 @@ public final class Reactivestreams {
       }
       private int bitField0_;
 
-      // optional string messageName = 1;
       private java.lang.Object messageName_ = "";
       /**
        * <code>optional string messageName = 1;</code>
@@ -2652,9 +2674,12 @@ public final class Reactivestreams {
       public java.lang.String getMessageName() {
         java.lang.Object ref = messageName_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          messageName_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            messageName_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -2712,7 +2737,6 @@ public final class Reactivestreams {
         return this;
       }
 
-      // optional bytes messageBytes = 2;
       private com.google.protobuf.ByteString messageBytes_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <code>optional bytes messageBytes = 2;</code>
@@ -2759,10 +2783,10 @@ public final class Reactivestreams {
     // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.NextMessage)
   }
 
-  public interface RequestMessageOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface RequestMessageOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.elasticsoftware.elasticactors.serialization.protobuf.RequestMessage)
+      com.google.protobuf.MessageOrBuilder {
 
-    // optional string messageName = 1;
     /**
      * <code>optional string messageName = 1;</code>
      */
@@ -2777,7 +2801,6 @@ public final class Reactivestreams {
     com.google.protobuf.ByteString
         getMessageNameBytes();
 
-    // optional uint64 n = 2;
     /**
      * <code>optional uint64 n = 2;</code>
      */
@@ -2791,8 +2814,9 @@ public final class Reactivestreams {
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.RequestMessage}
    */
   public static final class RequestMessage extends
-      com.google.protobuf.GeneratedMessage
-      implements RequestMessageOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:org.elasticsoftware.elasticactors.serialization.protobuf.RequestMessage)
+      RequestMessageOrBuilder {
     // Use RequestMessage.newBuilder() to construct.
     private RequestMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -2839,8 +2863,9 @@ public final class Reactivestreams {
               break;
             }
             case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              messageName_ = input.readBytes();
+              messageName_ = bs;
               break;
             }
             case 16: {
@@ -2888,7 +2913,6 @@ public final class Reactivestreams {
     }
 
     private int bitField0_;
-    // optional string messageName = 1;
     public static final int MESSAGENAME_FIELD_NUMBER = 1;
     private java.lang.Object messageName_;
     /**
@@ -2931,7 +2955,6 @@ public final class Reactivestreams {
       }
     }
 
-    // optional uint64 n = 2;
     public static final int N_FIELD_NUMBER = 2;
     private long n_;
     /**
@@ -2954,7 +2977,8 @@ public final class Reactivestreams {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -3068,8 +3092,9 @@ public final class Reactivestreams {
      * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.RequestMessage}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessageOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:org.elasticsoftware.elasticactors.serialization.protobuf.RequestMessage)
+        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_descriptor;
@@ -3193,7 +3218,6 @@ public final class Reactivestreams {
       }
       private int bitField0_;
 
-      // optional string messageName = 1;
       private java.lang.Object messageName_ = "";
       /**
        * <code>optional string messageName = 1;</code>
@@ -3207,9 +3231,12 @@ public final class Reactivestreams {
       public java.lang.String getMessageName() {
         java.lang.Object ref = messageName_;
         if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          messageName_ = s;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            messageName_ = s;
+          }
           return s;
         } else {
           return (java.lang.String) ref;
@@ -3267,7 +3294,6 @@ public final class Reactivestreams {
         return this;
       }
 
-      // optional uint64 n = 2;
       private long n_ ;
       /**
        * <code>optional uint64 n = 2;</code>
@@ -3311,32 +3337,32 @@ public final class Reactivestreams {
     // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.RequestMessage)
   }
 
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -3363,53 +3389,53 @@ public final class Reactivestreams {
       "\002H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-        public com.google.protobuf.ExtensionRegistry assignDescriptors(
-            com.google.protobuf.Descriptors.FileDescriptor root) {
-          descriptor = root;
-          internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_descriptor =
-            getDescriptor().getMessageTypes().get(0);
-          internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_descriptor,
-              new java.lang.String[] { "SubscriberRef", "MessageName", });
-          internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_descriptor =
-            getDescriptor().getMessageTypes().get(1);
-          internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_descriptor,
-              new java.lang.String[] { "MessageName", });
-          internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_descriptor =
-            getDescriptor().getMessageTypes().get(2);
-          internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_descriptor,
-              new java.lang.String[] { "SubscriberRef", "MessageName", });
-          internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_descriptor =
-            getDescriptor().getMessageTypes().get(3);
-          internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_descriptor,
-              new java.lang.String[] { "MessageName", });
-          internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_descriptor =
-            getDescriptor().getMessageTypes().get(4);
-          internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_descriptor,
-              new java.lang.String[] { "MessageName", "MessageBytes", });
-          internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_descriptor =
-            getDescriptor().getMessageTypes().get(5);
-          internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_descriptor,
-              new java.lang.String[] { "MessageName", "N", });
-          return null;
-        }
-      };
+        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
+          public com.google.protobuf.ExtensionRegistry assignDescriptors(
+              com.google.protobuf.Descriptors.FileDescriptor root) {
+            descriptor = root;
+            return null;
+          }
+        };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_descriptor =
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_descriptor,
+        new java.lang.String[] { "SubscriberRef", "MessageName", });
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_descriptor,
+        new java.lang.String[] { "MessageName", });
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_descriptor,
+        new java.lang.String[] { "SubscriberRef", "MessageName", });
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_descriptor,
+        new java.lang.String[] { "MessageName", });
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_descriptor =
+      getDescriptor().getMessageTypes().get(4);
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_descriptor,
+        new java.lang.String[] { "MessageName", "MessageBytes", });
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_descriptor =
+      getDescriptor().getMessageTypes().get(5);
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_descriptor,
+        new java.lang.String[] { "MessageName", "N", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

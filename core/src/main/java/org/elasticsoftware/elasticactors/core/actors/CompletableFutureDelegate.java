@@ -31,7 +31,8 @@ public final class CompletableFutureDelegate<T> extends ActorDelegate<T> {
     private final CompletableFuture<T> future;
     private final Class<T> responseType;
 
-    public CompletableFutureDelegate(CompletableFuture<T> future, Class<T> responseType) {
+    public CompletableFutureDelegate(CompletableFuture<T> future, Class<T> responseType, ActorRef callerRef) {
+        super(true, callerRef);
         this.future = future;
         this.responseType = responseType;
     }

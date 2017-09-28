@@ -38,6 +38,7 @@ public final class SystemSerializers {
         systemSerializers.put(ActivateActorMessage.class,new ActivateActorMessageSerializer());
         systemSerializers.put(CancelScheduledMessageMessage.class,new CancelScheduleMessageMessageSerializer());
         systemSerializers.put(ActorNodeMessage.class, new ActorNodeMessageSerializer(cluster));
+        systemSerializers.put(PersistActorMessage.class, new PersistActorMessageSerializer());
         //reactive streams protocol
         systemSerializers.put(CancelMessage.class, new CancelMessageSerializer());
         systemSerializers.put(CompletedMessage.class, new CompletedMessageSerializer());

@@ -25,6 +25,19 @@ import org.elasticsoftware.elasticactors.TypedActor;
  */
 @TempActor(stateClass = ActorDelegate.class)
 public final class ReplyActor<T> extends TypedActor<T> {
+
+    @Override
+    public void postCreate(ActorRef creator) throws Exception {
+        final ActorDelegate delegate = getState(ActorDelegate.class);
+        delegate.postCreate(creator);
+    }
+
+    @Override
+    public void preDestroy(ActorRef destroyer) throws Exception {
+        final ActorDelegate delegate = getState(ActorDelegate.class);
+        delegate.preDestroy(destroyer);
+    }
+
     @Override
     public void onUndeliverable(ActorRef receiver, Object message) throws Exception {
         final ActorDelegate delegate = getState(ActorDelegate.class);
