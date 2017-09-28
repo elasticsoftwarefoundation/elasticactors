@@ -167,8 +167,9 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                                                              receiverRef,
                                                              internalMessage,
                                                              actor,
-                                                            null,
-                                                             messageHandlerEventListener));
+                                                             null,
+                                                             messageHandlerEventListener,
+                                                             null));
                         }
 
                     } else {
