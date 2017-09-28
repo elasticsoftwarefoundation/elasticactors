@@ -28,6 +28,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
@@ -45,6 +46,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
     protected final InternalMessage internalMessage;
     private final MessageHandlerEventListener messageHandlerEventListener;
     private final Measurement measurement;
+    private final Long serializationWarnThreshold;
 
     protected ActorLifecycleTask(PersistentActorRepository persistentActorRepository,
                                  PersistentActor persistentActor,
@@ -53,6 +55,17 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                                  ActorRef receiverRef,
                                  MessageHandlerEventListener messageHandlerEventListener,
                                  InternalMessage internalMessage) {
+        this(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, null);
+    }
+
+    protected ActorLifecycleTask(PersistentActorRepository persistentActorRepository,
+                                 PersistentActor persistentActor,
+                                 InternalActorSystem actorSystem,
+                                 ElasticActor receiver,
+                                 ActorRef receiverRef,
+                                 MessageHandlerEventListener messageHandlerEventListener,
+                                 InternalMessage internalMessage,
+                                 Long serializationWarnThreshold) {
         this.persistentActorRepository = persistentActorRepository;
         this.receiverRef = receiverRef;
         this.persistentActor = persistentActor;
@@ -60,8 +73,8 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         this.receiver = receiver;
         this.messageHandlerEventListener = messageHandlerEventListener;
         this.internalMessage = internalMessage;
-        // only measure when trace is enabled
-        this.measurement = log.isTraceEnabled() ? new Measurement(System.nanoTime()) : null;
+        this.serializationWarnThreshold = serializationWarnThreshold;
+        this.measurement = this.serializationWarnThreshold == null ? null : new Measurement(System.nanoTime());
     }
 
     @Override
@@ -120,7 +133,12 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             }
             // do some trace logging
             if(this.measurement != null) {
-                log.trace(format("(%s) Message of type [%s] with id [%s] for actor [%s] took %d microsecs in queue, %d microsecs to execute, %d microsecs to serialize and %d microsecs to ack (state update %b)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",receiverRef.getActorId(),measurement.getQueueDuration(MICROSECONDS),measurement.getExecutionDuration(MICROSECONDS),measurement.getSerializationDuration(MICROSECONDS),measurement.getAckDuration(MICROSECONDS),measurement.isSerialized()));
+                // @todo: commenting this out for now, as in a real life scenario it would just spam the logs
+                //log.trace(format("(%s) Message of type [%s] with id [%s] for actor [%s] took %d microsecs in queue, %d microsecs to execute, %d microsecs to serialize and %d microsecs to ack (state update %b)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",receiverRef.getActorId(),measurement.getQueueDuration(MICROSECONDS),measurement.getExecutionDuration(MICROSECONDS),measurement.getSerializationDuration(MICROSECONDS),measurement.getAckDuration(MICROSECONDS),measurement.isSerialized()));
+
+                if (serializationWarnThreshold != null && this.measurement.getSerializationDuration(TimeUnit.MICROSECONDS) > serializationWarnThreshold) {
+                    log.warn(format("(%s) Message of type [%s] with id [%s] triggered serlalization for actor [%s] which took %d microsecs to complete",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",receiverRef.getActorId(),measurement.getSerializationDuration(MICROSECONDS)));
+                }
             }
         }
     }

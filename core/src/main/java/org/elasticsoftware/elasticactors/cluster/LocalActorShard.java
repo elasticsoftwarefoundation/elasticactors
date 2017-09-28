@@ -26,8 +26,6 @@ import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
 import org.elasticsoftware.elasticactors.cluster.tasks.*;
-import org.elasticsoftware.elasticactors.cluster.tasks.app.HandleMessageTask;
-import org.elasticsoftware.elasticactors.cluster.tasks.app.HandleUndeliverableMessageTask;
 import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.messaging.internal.*;
 import org.elasticsoftware.elasticactors.serialization.Message;
@@ -40,6 +38,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.env.Environment;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.io.IOException;
@@ -66,6 +65,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     // the cacheloader instance that is reused to avoid garbage being created on each call
     private final CacheLoader cacheLoader = new CacheLoader();
 
+    private Long serializationWarnThreshold;
+
     public LocalActorShard(PhysicalNode node,
                            InternalActorSystem actorSystem,
                            int shard,
@@ -76,6 +77,11 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         this.actorSystem = actorSystem;
         this.actorCacheManager = actorCacheManager;
         this.shardKey = new ShardKey(actorSystem.getName(), shard);
+    }
+
+    @Autowired
+    public void setEnvironment(Environment environment) {
+        this.serializationWarnThreshold = environment.getProperty("ea.serialization.warn.threshold", Long.class);
     }
 
     @Override
@@ -194,7 +200,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                                                              internalMessage,
                                                              actor,
                                                              persistentActorRepository,
-                                                             messageHandlerEventListener));
+                                                             messageHandlerEventListener,
+                                                             serializationWarnThreshold));
                         }
                     }
                 } catch (UncheckedExecutionException e) {
