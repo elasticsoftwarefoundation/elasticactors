@@ -137,7 +137,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                 //log.trace(format("(%s) Message of type [%s] with id [%s] for actor [%s] took %d microsecs in queue, %d microsecs to execute, %d microsecs to serialize and %d microsecs to ack (state update %b)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",receiverRef.getActorId(),measurement.getQueueDuration(MICROSECONDS),measurement.getExecutionDuration(MICROSECONDS),measurement.getSerializationDuration(MICROSECONDS),measurement.getAckDuration(MICROSECONDS),measurement.isSerialized()));
 
                 if (serializationWarnThreshold != null && this.measurement.getSerializationDuration(TimeUnit.MICROSECONDS) > serializationWarnThreshold) {
-                    log.warn(format("(%s) Message of type [%s] with id [%s] triggered serlalization for actor [%s] which took %d microsecs to complete",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",receiverRef.getActorId(),measurement.getSerializationDuration(MICROSECONDS)));
+                    log.warn(format("(%s) Message of type [%s] with id [%s] triggered serialization for actor [%s] which took %d microsecs to complete",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",receiverRef.getActorId(),measurement.getSerializationDuration(MICROSECONDS)));
                 }
             }
         }
