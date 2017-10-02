@@ -88,6 +88,16 @@ public interface ActorRef {
      */
     <T> CompletionStage<T> ask(Object message, Class<T> responseType);
 
+    /**
+     * Send a message to an {@link ElasticActor} and request a response. when {@param persistOnResponse} is {@link Boolean#TRUE}
+     * the calling actor's state (if it's a persistent actor) will be saved.
+     *
+     * @param message
+     * @param responseType
+     * @param persistOnResponse
+     * @param <T>
+     * @return
+     */
     <T> CompletionStage<T> ask(Object message, Class<T> responseType, Boolean persistOnResponse);
 
     /**
