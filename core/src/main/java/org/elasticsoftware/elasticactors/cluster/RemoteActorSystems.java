@@ -85,7 +85,8 @@ public final class RemoteActorSystems {
     }
 
     public ActorSystem get(String actorSystemName) {
-        List<RemoteActorSystemInstance> instances = remoteActorSystems.entrySet().stream().filter(entry -> entry.getValue().getName().equals(actorSystemName))
+        List<RemoteActorSystemInstance> instances = remoteActorSystems.entrySet().stream()
+                .filter(entry -> entry.getValue().getName().equals(actorSystemName))
                 .map(Map.Entry::getValue).collect(Collectors.toList());
         if(!instances.isEmpty()) {
             if(instances.size() > 1) {
