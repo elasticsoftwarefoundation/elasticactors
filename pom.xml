@@ -127,6 +127,7 @@
         <module>test</module>
         <module>backplane-cassandra2</module>
         <module>messaging-activemq</module>
+        <module>cluster-kubernetes</module>
     </modules>
 
     <build>
