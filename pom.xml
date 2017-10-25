@@ -127,6 +127,7 @@
         <module>test</module>
         <module>backplane-cassandra2</module>
         <module>messaging-activemq</module>
+        <module>cqrs-es</module>
     </modules>
 
     <build>
