@@ -52,10 +52,10 @@ public class EventSourcingTest {
 
         waitLatch.await();
 
-        System.out.println(fromIban.toFormattedString() + " : " + fromAccount.ask(new BalanceQuery(), BalanceQueryResponse.class)
+        System.out.println("fromIban : " + fromIban.toFormattedString() + " : " + fromAccount.ask(new BalanceQuery(), BalanceQueryResponse.class)
                 .toCompletableFuture().get().getVirtualBankAccount().getBalance().toPlainString());
 
-        System.out.println(toIban.toFormattedString() + " : " + toAccount.ask(new BalanceQuery(), BalanceQueryResponse.class)
+        System.out.println("toIban : " + toIban.toFormattedString() + " : " + toAccount.ask(new BalanceQuery(), BalanceQueryResponse.class)
                 .toCompletableFuture().get().getVirtualBankAccount().getBalance().toPlainString());
 
 

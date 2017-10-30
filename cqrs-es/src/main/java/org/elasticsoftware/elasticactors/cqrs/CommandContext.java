@@ -8,7 +8,6 @@ import java.util.List;
 public final class CommandContext {
     private final Command command;
     private final List<SourcedEvent> events = new LinkedList<>();
-    private CommandResponse commandResponse;
 
     public CommandContext(Command command) {
         this.command = command;
@@ -26,11 +25,4 @@ public final class CommandContext {
         return events;
     }
 
-    public CommandResponse getCommandResponse() {
-        return commandResponse;
-    }
-
-    public void setCommandResponse(CommandResponse commandResponse) {
-        this.commandResponse = commandResponse;
-    }
 }

@@ -12,7 +12,7 @@
     <artifactId>elasticactors-cqrs-es</artifactId>
     <packaging>jar</packaging>
 
-    <name>Elastic Software Foundation :: ElasticActors :: Command Query Responsibility Separation and Event Sourcing</name>
+    <name>Elastic Software Foundation :: ElasticActors :: CQRS and Event Sourcing</name>
     <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
     <properties>

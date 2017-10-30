@@ -1,7 +1,6 @@
 package org.elasticsoftware.elasticactors.eventsourcing;
 
 import org.elasticsoftware.elasticactors.Actor;
-import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.cqrs.*;
@@ -13,21 +12,24 @@ import org.elasticsoftware.elasticactors.eventsourcing.queries.BalanceQueryRespo
 import org.elasticsoftware.elasticactors.eventsourcing.queries.VirtualBankAccountAdapter;
 
 import java.math.BigDecimal;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 @Actor(stateClass = VirtualBankAccountState.class, serializationFramework = JacksonSerializationFramework.class)
 public class VirtualBankAccountActor extends EventSourcedActor {
     public VirtualBankAccountActor() {
         super(ReadOnlyVirtualBankAccountState.class);
         // register all handlers here
-        registerCommandHandler(TransferCommand.class, (CommandHandler<CommandResponse, TransferCommand, ReadOnlyVirtualBankAccountState>) this::handleTransfer);
-        registerCommandHandler(CreditAccountCommand.class, (CommandHandler<CommandResponse, CreditAccountCommand, ReadOnlyVirtualBankAccountState>) this::handleCreditAccount);
+        registerCommandHandler(TransferCommand.class, (CommandHandler<TransferCommand, ReadOnlyVirtualBankAccountState>) this::handleTransfer);
+        registerCommandHandler(CreditAccountCommand.class, (CommandHandler<CreditAccountCommand, ReadOnlyVirtualBankAccountState>) this::handleCreditAccount);
         registerEventHandler(AccountDebitedEvent.class, (SourcedEventHandler<AccountDebitedEvent, VirtualBankAccountState>) this::debitBalance);
         registerEventHandler(AccountCreditedEvent.class, (SourcedEventHandler<AccountCreditedEvent, VirtualBankAccountState>) this::creditBalance);
         registerQueryHandler(BalanceQuery.class, (QueryHandler<BalanceQueryResponse, BalanceQuery, ReadOnlyVirtualBankAccountState>) this::balanceQuery);
     }
 
     @Override
-    protected CommandResponse doHandleCommand(Command command) {
+    protected Supplier<CommandResponse> doHandleCommand(Command command) {
         return super.doHandleCommand(command);
     }
 
@@ -36,21 +38,23 @@ public class VirtualBankAccountActor extends EventSourcedActor {
         //
     }
 
-    public CommandResponse handleTransfer(TransferCommand command, ReadOnlyVirtualBankAccountState state, ActorSystem actorSystem) {
+    public Supplier<CommandResponse> handleTransfer(TransferCommand command, ReadOnlyVirtualBankAccountState state, Consumer<SourcedEvent> eventConsumer, ActorSystem actorSystem) {
         if(state.getBalance().subtract(command.getAmount()).compareTo(BigDecimal.ZERO) >= 0) {
-            apply(new AccountDebitedEvent(command.getAmount()));
-            actorSystem.actorFor("accounts/"+command.getToAccount())
-                    .ask(new CreditAccountCommand(command.getFromAccount(), command.getToAccount(), command.getAmount()),
-                            TransferCompletedResponse.class);
-            return new TransferCompletedResponse();
+            eventConsumer.accept(new AccountDebitedEvent(command.getAmount()));
+            return () -> {
+                actorSystem.actorFor("accounts/"+command.getToAccount())
+                        .ask(new CreditAccountCommand(command.getFromAccount(), command.getToAccount(), command.getAmount()),
+                                TransferCompletedResponse.class);
+                return new TransferCompletedResponse();
+            };
         } else {
-            return new TransferDeclinedResponse();
+            return TransferDeclinedResponse::new;
         }
     }
 
-    public CommandResponse handleCreditAccount(CreditAccountCommand command, ReadOnlyVirtualBankAccountState state, ActorSystem actorSystem) {
-        apply(new AccountCreditedEvent(command.getAmount()));
-        return new TransferCompletedResponse();
+    public Supplier<CommandResponse> handleCreditAccount(CreditAccountCommand command, ReadOnlyVirtualBankAccountState state, Consumer<SourcedEvent> eventConsumer, ActorSystem actorSystem) {
+        eventConsumer.accept(new AccountCreditedEvent(command.getAmount()));
+        return TransferCompletedResponse::new;
     }
 
 

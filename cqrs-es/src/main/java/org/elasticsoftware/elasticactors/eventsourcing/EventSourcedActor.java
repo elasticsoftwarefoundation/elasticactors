@@ -7,6 +7,8 @@ import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
 
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public abstract class EventSourcedActor extends TypedActor<Object> implements PersistenceAdvisor {
     private final CommandContextHolder commandContextHolder = new CommandContextHolder();
@@ -40,7 +42,7 @@ public abstract class EventSourcedActor extends TypedActor<Object> implements Pe
     public void onReceive(ActorRef sender, Object message) throws Exception {
         // we can only get Commands or Queries here, anything else will be seen as an error
         if(message instanceof Command) {
-            sender.tell(doHandleCommand((Command) message));
+            sender.tell(doHandleCommand((Command) message).get());
         } else if(message instanceof Query) {
             sender.tell(handleQuery((Query) message));
         } else {
@@ -48,20 +50,20 @@ public abstract class EventSourcedActor extends TypedActor<Object> implements Pe
         }
     }
 
-    protected CommandResponse doHandleCommand(Command command) {
+
+    protected Supplier<CommandResponse> doHandleCommand(Command command) {
         // create a new command context
         commandContextHolder.setContext(new CommandContext(command));
-        CommandResponse responseMessage = executeCommand(command);
+        Supplier<CommandResponse> responseMessage = executeCommand(command);
         CommandContext commandContext = commandContextHolder.getAndClearContext();
-        commandContext.setCommandResponse(responseMessage);
         commitCommandContext(commandContext);
         return responseMessage;
     }
 
-    private CommandResponse executeCommand(Command commandMessage) {
+    private Supplier<CommandResponse> executeCommand(Command commandMessage) {
         CommandHandler commandHandler = commandHandlers.get(commandMessage.getClass());
         if(commandHandler != null) {
-            return commandHandler.handle(commandMessage, adaptState(getState(stateClass)), getSystem());
+            return commandHandler.handle(commandMessage, adaptState(getState(stateClass)), (Consumer<SourcedEvent>) this::apply, getSystem());
         } else {
             // TODO: throw an error
             return null;
@@ -70,7 +72,7 @@ public abstract class EventSourcedActor extends TypedActor<Object> implements Pe
 
     protected abstract void commitCommandContext(CommandContext context);
 
-    protected void apply(SourcedEvent event) {
+    private void apply(SourcedEvent event) {
         SourcedEventHandler eventHandler = eventHandlers.get(event.getClass());
         if(eventHandler != null) {
             eventHandler.update(event, getState(stateClass));
@@ -97,7 +99,7 @@ public abstract class EventSourcedActor extends TypedActor<Object> implements Pe
         } else if(message instanceof Command) {
             return true;
         } else {
-            // not sure if we want to allow message of another type, but return true to be on the safe side
+            // not sure if we want to allow messages of another type, but return true to be on the safe side
             return true;
         }
     }
