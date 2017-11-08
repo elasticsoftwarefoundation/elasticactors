@@ -61,6 +61,7 @@ public class MessagingConfiguration {
         MessageAcker.Type ackType = env.getProperty("ea.rabbitmq.ack",MessageAcker.Type.class, DIRECT);
         String threadModel = env.getProperty("ea.rabbitmq.threadmodel", "sc");
         Integer prefetchCount = env.getProperty("ea.rabbitmq.prefetchCount", Integer.class, 0);
+        Integer consumerThreadCount = env.getProperty("ea.rabbitmq.consumerThreadCount", Integer.class, Runtime.getRuntime().availableProcessors() * 2);
         if("cpt".equals(threadModel)) {
             messagingService = new org.elasticsoftware.elasticactors.rabbitmq.cpt.RabbitMQMessagingService(clusterName,
                     rabbitMQHosts,
@@ -70,7 +71,8 @@ public class MessagingConfiguration {
                     ackType,
                     queueExecutor,
                     new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem),
-                    prefetchCount);
+                    prefetchCount,
+                    consumerThreadCount);
         } else {
             messagingService = new RabbitMQMessagingService(clusterName,
                     rabbitMQHosts,
@@ -79,7 +81,9 @@ public class MessagingConfiguration {
                     rabbitMQPassword,
                     ackType,
                     queueExecutor,
-                    new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem), prefetchCount);
+                    new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem),
+                    prefetchCount,
+                    consumerThreadCount);
         }
     }
 

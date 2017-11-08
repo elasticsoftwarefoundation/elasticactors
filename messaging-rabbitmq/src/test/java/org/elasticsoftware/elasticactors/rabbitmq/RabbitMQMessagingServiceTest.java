@@ -86,7 +86,10 @@ public class RabbitMQMessagingServiceTest {
                                                                                  5672, System.getProperty("username","guest"),
                                                                                  System.getProperty("password","guest"),
                                                                                  MessageAcker.Type.DIRECT,
-                                                                                 queueExecutor, new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem), 10);
+                                                                                 queueExecutor,
+                new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem),
+                10,
+                1);
         messagingService.start();
 
         final CountDownLatch waitLatch = new CountDownLatch(NUM_MESSAGES);

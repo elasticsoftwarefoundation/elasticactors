@@ -39,6 +39,7 @@ import org.elasticsoftware.elasticactors.rabbitmq.ack.BufferingMessageAcker;
 import org.elasticsoftware.elasticactors.rabbitmq.ack.DirectMessageAcker;
 import org.elasticsoftware.elasticactors.rabbitmq.ack.WriteBehindMessageAcker;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
+import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.springframework.util.StringUtils;
@@ -50,10 +51,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 import static java.lang.String.format;
@@ -85,6 +83,7 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
     private final MessageAcker.Type ackType;
     private MessageAcker messageAcker;
     private final Integer prefetchCount;
+    private final ExecutorService executor;
 
     public RabbitMQMessagingService(String elasticActorsCluster,
                                     String rabbitmqHosts,
@@ -94,7 +93,8 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
                                     MessageAcker.Type ackType,
                                     ThreadBoundExecutor queueExecutor,
                                     InternalMessageDeserializer internalMessageDeserializer,
-                                    Integer prefetchCount) {
+                                    Integer prefetchCount,
+                                    Integer consumerThreadCount) {
         this.rabbitmqHosts = rabbitmqHosts;
         this.elasticActorsCluster = elasticActorsCluster;
         this.rabbitmqPort = rabbitmqPort;
@@ -109,6 +109,8 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
         this.remoteMessageQueueFactory = new RemoteMessageQueueFactory();
         this.remoteActorSystemMessageQueueFactoryFactory = new RemoteActorSystemMessageQueueFactoryFactory();
         this.producerChannels = new ArrayList<>(queueExecutor.getThreadCount());
+        // threadpool configuration
+        this.executor = Executors.newFixedThreadPool(consumerThreadCount, new DaemonThreadFactory("RABBITMQ-CONSUMER"));
     }
 
     @PostConstruct
@@ -128,7 +130,8 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
                 .withHosts(StringUtils.commaDelimitedListToStringArray(rabbitmqHosts))
                 .withPort(rabbitmqPort)
                 .withUsername(username)
-                .withPassword(password);
+                .withPassword(password)
+                .withConsumerExecutor(executor);
         // create single connection
         //clientConnection = connectionFactory.newConnection(Address.parseAddresses(rabbitmqHosts));
         clientConnection = Connections.create(connectionOptions,config);
@@ -158,7 +161,9 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
         try {
             messageAcker.stop();
             clientConnection.close();
-        } catch (IOException e) {
+            executor.shutdown();
+            executor.awaitTermination(3, TimeUnit.SECONDS);
+        } catch (IOException|InterruptedException e) {
             logger.error("Failed to close all RabbitMQ Client resources",e);
         }
     }
