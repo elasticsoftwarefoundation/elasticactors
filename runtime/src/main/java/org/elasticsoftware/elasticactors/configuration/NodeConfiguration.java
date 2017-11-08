@@ -18,6 +18,9 @@ package org.elasticsoftware.elasticactors.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.lmax.disruptor.BlockingWaitStrategy;
+import com.lmax.disruptor.WaitStrategy;
+import com.lmax.disruptor.dsl.ProducerType;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
@@ -130,7 +133,10 @@ public class NodeConfiguration {
         final int workers = env.getProperty("ea.actorExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
         final Boolean useDisruptor = env.getProperty("ea.actorExecutor.useDisruptor",Boolean.class,Boolean.FALSE);
         if(useDisruptor) {
-            return new org.elasticsoftware.elasticactors.util.concurrent.disruptor.ThreadBoundExecutorImpl(new DaemonThreadFactory("ACTOR-WORKER"),workers);
+            int bufferSize = env.getProperty("ea.actorExecutor.disruptor.bufferSize", Integer.class, 1024);
+            ProducerType producerType = env.getProperty("ea.actorExecutor.disruptor.producerType", ProducerType.class, ProducerType.MULTI);
+            Class<? extends WaitStrategy> waitStrategyClass = env.getProperty("ea.actorExecutor.disruptor.waitStrategyClass", Class.class, BlockingWaitStrategy.class);
+            return new org.elasticsoftware.elasticactors.util.concurrent.disruptor.ThreadBoundExecutorImpl(producerType, waitStrategyClass, bufferSize, new DaemonThreadFactory("ACTOR-WORKER"), workers);
         } else {
             return new ThreadBoundExecutorImpl(new DaemonThreadFactory("ACTOR-WORKER"), workers);
         }
@@ -142,7 +148,10 @@ public class NodeConfiguration {
         final int workers = env.getProperty("ea.queueExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
         final Boolean useDisruptor = env.getProperty("ea.actorExecutor.useDisruptor",Boolean.class,Boolean.FALSE);
         if(useDisruptor) {
-            return new org.elasticsoftware.elasticactors.util.concurrent.disruptor.ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"), workers);
+            int bufferSize = env.getProperty("ea.queueExecutor.disruptor.bufferSize", Integer.class, 1024);
+            ProducerType producerType = env.getProperty("ea.queueExecutor.disruptor.producerType", ProducerType.class, ProducerType.MULTI);
+            Class<? extends WaitStrategy> waitStrategyClass = env.getProperty("ea.queueExecutor.disruptor.waitStrategyClass", Class.class, BlockingWaitStrategy.class);
+            return new org.elasticsoftware.elasticactors.util.concurrent.disruptor.ThreadBoundExecutorImpl(producerType, waitStrategyClass, bufferSize, new DaemonThreadFactory("QUEUE-WORKER"), workers);
         } else {
             return new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"), workers);
         }

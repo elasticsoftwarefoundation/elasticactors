@@ -16,9 +16,12 @@
 
 package org.elasticsoftware.elasticactors.util.concurrent.disruptor;
 
+import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventTranslatorOneArg;
 import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.WaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
@@ -45,10 +48,19 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
     private final ThreadBoundEventTranslator translator = new ThreadBoundEventTranslator();
 
     public ThreadBoundExecutorImpl(ThreadFactory threadFactory, int workers) {
-        this(new ThreadBoundRunnableEventProcessor(), 1024, threadFactory, workers);
+        this(new ThreadBoundRunnableEventProcessor(), ProducerType.MULTI, BlockingWaitStrategy.class, 1024, threadFactory, workers);
     }
 
-    public ThreadBoundExecutorImpl(ThreadBoundEventProcessor eventProcessor, int bufferSize, ThreadFactory threadFactory, int workers) {
+    public ThreadBoundExecutorImpl(ProducerType producerType, Class<? extends WaitStrategy> waitStrategyClass, int bufferSize, ThreadFactory threadFactory, int workers) {
+        this(new ThreadBoundRunnableEventProcessor(), producerType, waitStrategyClass, bufferSize, threadFactory, workers);
+    }
+
+    public ThreadBoundExecutorImpl(ThreadBoundEventProcessor eventProcessor,
+                                   ProducerType producerType,
+                                   Class<? extends WaitStrategy> waitStrategyClass,
+                                   int bufferSize,
+                                   ThreadFactory threadFactory,
+                                   int workers) {
         this.threadFactory = threadFactory;
         this.disruptors = new ArrayList<>(workers);
 
@@ -56,10 +68,15 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
         ThreadBoundEventWrapperFactory eventFactory = new ThreadBoundEventWrapperFactory();
 
         for (int i = 0; i < workers; i++) {
-            Disruptor<ThreadBoundEventWrapper> disruptor = new Disruptor<>(eventFactory,bufferSize,threadFactory);
-            disruptor.handleEventsWith(new ThreadBoundEventHandler(eventProcessor, bufferSize));
-            this.disruptors.add(disruptor);
-            disruptor.start();
+            try {
+                WaitStrategy waitStrategy = waitStrategyClass.newInstance();
+                Disruptor<ThreadBoundEventWrapper> disruptor = new Disruptor<>(eventFactory, bufferSize, threadFactory, producerType, waitStrategy);
+                disruptor.handleEventsWith(new ThreadBoundEventHandler(eventProcessor, bufferSize));
+                this.disruptors.add(disruptor);
+                disruptor.start();
+            } catch(Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
