@@ -2,6 +2,10 @@ package org.elasticsoftware.elasticactors.eventsourcing;
 
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cqrs.*;
+import org.elasticsoftware.elasticactors.cqrs.api.Command;
+import org.elasticsoftware.elasticactors.cqrs.api.CommandResponse;
+import org.elasticsoftware.elasticactors.cqrs.api.Query;
+import org.elasticsoftware.elasticactors.cqrs.api.QueryResponse;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
 

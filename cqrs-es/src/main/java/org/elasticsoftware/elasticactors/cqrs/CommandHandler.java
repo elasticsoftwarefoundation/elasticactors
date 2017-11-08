@@ -1,6 +1,8 @@
 package org.elasticsoftware.elasticactors.cqrs;
 
 import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.cqrs.api.Command;
+import org.elasticsoftware.elasticactors.cqrs.api.CommandResponse;
 import org.elasticsoftware.elasticactors.eventsourcing.SourcedEvent;
 
 import java.util.function.Consumer;

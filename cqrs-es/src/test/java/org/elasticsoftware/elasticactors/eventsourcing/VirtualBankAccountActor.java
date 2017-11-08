@@ -4,6 +4,8 @@ import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.cqrs.*;
+import org.elasticsoftware.elasticactors.cqrs.api.Command;
+import org.elasticsoftware.elasticactors.cqrs.api.CommandResponse;
 import org.elasticsoftware.elasticactors.eventsourcing.commands.*;
 import org.elasticsoftware.elasticactors.eventsourcing.events.AccountCreditedEvent;
 import org.elasticsoftware.elasticactors.eventsourcing.events.AccountDebitedEvent;
@@ -13,7 +15,6 @@ import org.elasticsoftware.elasticactors.eventsourcing.queries.VirtualBankAccoun
 
 import java.math.BigDecimal;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 @Actor(stateClass = VirtualBankAccountState.class, serializationFramework = JacksonSerializationFramework.class)

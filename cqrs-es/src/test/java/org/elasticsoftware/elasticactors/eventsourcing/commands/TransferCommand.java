@@ -3,7 +3,7 @@ package org.elasticsoftware.elasticactors.eventsourcing.commands;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
-import org.elasticsoftware.elasticactors.cqrs.Command;
+import org.elasticsoftware.elasticactors.cqrs.api.Command;
 import org.elasticsoftware.elasticactors.serialization.Message;
 
 import java.math.BigDecimal;
