@@ -39,9 +39,15 @@ public final class ApplicationProtocolFactory implements ProtocolFactory {
                                                       PersistentActor persistentActor,
                                                       PersistentActorRepository persistentActorRepository,
                                                       ActorStateUpdateProcessor actorStateUpdateProcessor,
-                                                      MessageHandlerEventListener messageHandlerEventListener) {
-        return new HandleMessageTask(actorSystem, receiver, receiverRef, internalMessage, persistentActor,
-                persistentActorRepository, actorStateUpdateProcessor, messageHandlerEventListener);
+                                                      MessageHandlerEventListener messageHandlerEventListener,
+                                                      Long serializationWarnThreshold) {
+        if (serializationWarnThreshold == null) {
+            return new HandleMessageTask(actorSystem, receiver, receiverRef, internalMessage, persistentActor,
+                    persistentActorRepository, actorStateUpdateProcessor, messageHandlerEventListener);
+        } else {
+            return new HandleMessageTask(actorSystem, receiver, receiverRef, internalMessage, persistentActor,
+                    persistentActorRepository, actorStateUpdateProcessor, messageHandlerEventListener, serializationWarnThreshold);
+        }
     }
 
     @Override

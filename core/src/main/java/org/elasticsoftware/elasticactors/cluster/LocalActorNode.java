@@ -118,14 +118,18 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
 
     @Override
     public void undeliverableMessage(InternalMessage message, ActorRef receiverRef) throws Exception {
-        // input is the message that cannot be delivered
-        InternalMessageImpl undeliverableMessage = new InternalMessageImpl(receiverRef,
-                                                                           message.getSender(),
-                                                                           message.getPayload(),
-                                                                           message.getPayloadClass(),
-                                                                           message.isDurable(),
-                                                                           true,
-                                                                           message.getTimeout());
+        InternalMessage undeliverableMessage;
+        if (message instanceof TransientInternalMessage) {
+            undeliverableMessage = new TransientInternalMessage(receiverRef, message.getSender(), message.getPayload(null), true);
+        } else {
+            undeliverableMessage = new InternalMessageImpl(receiverRef,
+                    message.getSender(),
+                    message.getPayload(),
+                    message.getPayloadClass(),
+                    message.isDurable(),
+                    true,
+                    message.getTimeout());
+        }
         messageQueue.offer(undeliverableMessage);
     }
 
@@ -165,9 +169,9 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                                                              receiverRef,
                                                              internalMessage,
                                                              actor,
-                                                            null,
-                                                            null,
-                                                             messageHandlerEventListener));
+                                                            null,null,
+                                                             messageHandlerEventListener,
+                                                             null));
                         }
 
                     } else {
@@ -240,6 +244,9 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                             // ack the message anyway
                             messageHandlerEventListener.onDone(internalMessage);
                         }
+                    } else {
+                        // unknown internal message, just ack it (should not happen)
+                        messageHandlerEventListener.onDone(internalMessage);
                     }
                 } catch(Exception e) {
                     // @todo: determine if this is a recoverable error case or just a programming error

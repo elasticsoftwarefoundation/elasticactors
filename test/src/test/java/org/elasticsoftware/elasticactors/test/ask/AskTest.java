@@ -65,6 +65,22 @@ public class AskTest {
         testActorSystem.destroy();
     }
 
+    @Test
+    public void testAskGreetingViaActorWithPersistOnReponse() throws Exception {
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+        ActorRef echo = actorSystem.actorOf("ask", AskForGreetingActor.class);
+
+
+        Greeting response = echo.ask(new AskForGreeting(true), Greeting.class).toCompletableFuture().get();
+
+        assertEquals(response.getWho(), "echo");
+
+        testActorSystem.destroy();
+    }
+
 
     @Test
     public void testAskGreetingAsync() throws Exception {

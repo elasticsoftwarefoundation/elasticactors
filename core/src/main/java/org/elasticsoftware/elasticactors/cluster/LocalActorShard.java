@@ -26,13 +26,8 @@ import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
 import org.elasticsoftware.elasticactors.cluster.tasks.*;
-import org.elasticsoftware.elasticactors.cluster.tasks.app.HandleMessageTask;
-import org.elasticsoftware.elasticactors.cluster.tasks.app.HandleUndeliverableMessageTask;
 import org.elasticsoftware.elasticactors.messaging.*;
-import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
-import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
-import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
-import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.*;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
@@ -44,6 +39,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.env.Environment;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.io.IOException;
@@ -71,6 +67,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     // the cacheloader instance that is reused to avoid garbage being created on each call
     private final CacheLoader cacheLoader = new CacheLoader();
 
+    private Long serializationWarnThreshold;
+
     public LocalActorShard(PhysicalNode node,
                            InternalActorSystem actorSystem,
                            int shard,
@@ -81,6 +79,11 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         this.actorSystem = actorSystem;
         this.actorCacheManager = actorCacheManager;
         this.shardKey = new ShardKey(actorSystem.getName(), shard);
+    }
+
+    @Autowired
+    public void setEnvironment(Environment environment) {
+        this.serializationWarnThreshold = environment.getProperty("ea.serialization.warn.threshold", Long.class);
     }
 
     @Override
@@ -201,7 +204,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                                                              actor,
                                                              persistentActorRepository,
                                                              actorStateUpdateProcessor,
-                                                             messageHandlerEventListener));
+                                                             messageHandlerEventListener,
+                                                             serializationWarnThreshold));
                         }
                     }
                 } catch (UncheckedExecutionException e) {
@@ -228,6 +232,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                 // the internalMessage is intended for the shard, this means it's about creating or destroying an actor
                 // or cancelling a scheduled message which will piggyback on the ActorShard messaging layer
                 // or forwarding a reply for a Temp- or ServiceActor from a remote system
+                // or a request to persist the state of an actor
                 try {
                     Object message = deserializeMessage(actorSystem, internalMessage);
                     // check if the actor exists
@@ -279,6 +284,12 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                             logger.error("undeliverable ActorNodeMessages are currently not supported");
                         }
                         // ack
+                        messageHandlerEventListener.onDone(internalMessage);
+                    } else if(message instanceof PersistActorMessage) {
+                        PersistActorMessage persistMessage = (PersistActorMessage) message;
+                        persistActor(persistMessage, internalMessage, messageHandlerEventListener);
+                    } else {
+                        // unknown internal message, just ack it (should not happen)
                         messageHandlerEventListener.onDone(internalMessage);
                     }
                 } catch (Exception e) {
@@ -354,6 +365,27 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
             // call preDestroy
             actorExecutor.execute(new DestroyActorTask( actorStateUpdateProcessor,
                                                         persistentActorRepository,
+                                                        persistentActor,
+                                                        actorSystem,
+                                                        actorInstance,
+                                                        actorRef,
+                                                        internalMessage,
+                                                        messageHandlerEventListener));
+        } finally {
+            this.cacheLoader.reset();
+        }
+    }
+
+    private void persistActor(PersistActorMessage persistMessage, InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
+        final ActorRef actorRef = persistMessage.getActorRef();
+        this.cacheLoader.initialize(actorRef);
+        try {
+            // need to load it here to know the ActorClass!
+            PersistentActor<ShardKey> persistentActor = actorCache.get(actorRef,cacheLoader);
+            // find actor class behind receiver ActorRef
+            ElasticActor actorInstance = actorSystem.getActorInstance(actorRef,persistentActor.getActorClass());
+            // call preDestroy
+            actorExecutor.execute(new PersistActorTask( persistentActorRepository,
                                                         persistentActor,
                                                         actorSystem,
                                                         actorInstance,

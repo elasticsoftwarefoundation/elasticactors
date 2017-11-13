@@ -16,9 +16,8 @@
 
 package org.elasticsoftware.elasticactors.core.actors;
 
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.TempActor;
-import org.elasticsoftware.elasticactors.TypedActor;
+import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.messaging.internal.PersistActorMessage;
 
 /**
  * @author Joost van de Wijgerd
@@ -38,6 +37,12 @@ public final class ReplyActor<T> extends TypedActor<T> {
     public void onReceive(ActorRef sender, T message) throws Exception {
         final ActorDelegate delegate = getState(ActorDelegate.class);
         delegate.onReceive(sender, message);
+        if(delegate.getCallerRef() != null) {
+            if(delegate.getCallerRef() instanceof ActorContainerRef) {
+                ActorContainer shard = ((ActorContainerRef)delegate.getCallerRef()).getActorContainer();
+                shard.sendMessage(null, shard.getActorRef(), new PersistActorMessage(delegate.getCallerRef()));
+            }
+        }
         if(delegate.isDeleteAfterReceive()) {
             getSystem().stop(getSelf());
         }

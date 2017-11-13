@@ -31,11 +31,11 @@ import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
-import org.elasticsoftware.elasticactors.util.SerializationTools;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
@@ -49,6 +49,8 @@ public final class HandleMessageTask extends ActorLifecycleTask {
     private static final Logger log = LogManager.getLogger(HandleMessageTask.class);
 
     HandleMessageTask(InternalActorSystem actorSystem,
+
+    public HandleMessageTask(InternalActorSystem actorSystem,
                              ElasticActor receiver,
                              ActorRef receiverRef,
                              InternalMessage internalMessage,
@@ -57,6 +59,17 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                              ActorStateUpdateProcessor actorStateUpdateProcessor,
                              MessageHandlerEventListener messageHandlerEventListener) {
         super(actorStateUpdateProcessor, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage);
+    }
+
+    public HandleMessageTask(InternalActorSystem actorSystem,
+                             ElasticActor receiver,
+                             ActorRef receiverRef,
+                             InternalMessage internalMessage,
+                             PersistentActor persistentActor,
+                             PersistentActorRepository persistentActorRepository,
+                             MessageHandlerEventListener messageHandlerEventListener,
+                             Long serializationWarnThreshold) {
+        super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, serializationWarnThreshold);
     }
 
 
@@ -94,12 +107,14 @@ public final class HandleMessageTask extends ActorLifecycleTask {
     private void notifySubscribers(InternalMessage internalMessage) {
         if(persistentActor.getMessageSubscribers() != null) {
             try {
-                // copy the bytes from the incoming message, discarding possible changes made in onReceive
-                NextMessage nextMessage = new NextMessage(internalMessage.getPayloadClass(), getMessageBytes(internalMessage));
                 // todo consider using ActorRefGroup here
-                ((Set<MessageSubscriber>) persistentActor.getMessageSubscribers().get(internalMessage.getPayloadClass()))
-                        .stream().filter(messageSubscriber -> messageSubscriber.decrementAndGet() > 0)
-                        .forEach(s -> s.getSubscriberRef().tell(nextMessage, receiverRef));
+                if(persistentActor.getMessageSubscribers().containsKey(internalMessage.getPayloadClass())) {
+                    // copy the bytes from the incoming message, discarding possible changes made in onReceive
+                    NextMessage nextMessage = new NextMessage(internalMessage.getPayloadClass(), getMessageBytes(internalMessage));
+                    ((Set<MessageSubscriber>) persistentActor.getMessageSubscribers().get(internalMessage.getPayloadClass()))
+                            .stream().filter(messageSubscriber -> messageSubscriber.getAndDecrement() > 0)
+                            .forEach(messageSubscriber -> messageSubscriber.getSubscriberRef().tell(nextMessage, receiverRef));
+                }
             } catch(Exception e) {
                 log.error("Unexpected exception while forwarding message to Subscribers", e);
             }
@@ -111,9 +126,10 @@ public final class HandleMessageTask extends ActorLifecycleTask {
             if(internalMessage.getPayload().hasArray()) {
                 return internalMessage.getPayload().array();
             } else {
-                internalMessage.getPayload().reset();
+                // make sure we are at the start of the payload bytes
+                internalMessage.getPayload().rewind();
                 byte[] messageBytes = new byte[internalMessage.getPayload().remaining()];
-                internalMessage.getPayload().get(messageBytes).reset();
+                internalMessage.getPayload().get(messageBytes);
                 return messageBytes;
             }
         } else {

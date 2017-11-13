@@ -37,6 +37,7 @@ import org.elasticsoftware.elasticactors.rabbitmq.ack.DirectMessageAcker;
 import org.elasticsoftware.elasticactors.rabbitmq.ack.WriteBehindMessageAcker;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -58,6 +59,7 @@ public final class RabbitMQMessagingService implements RabbitMQMessagingServiceI
     private static final Logger logger = LogManager.getLogger(RabbitMQMessagingService.class);
     private final ConnectionFactory connectionFactory = new ConnectionFactory();
     private final String rabbitmqHosts;
+    private final Integer rabbitmqPort;
     private static final String QUEUE_NAME_FORMAT = "%s/%s";
     private final String elasticActorsCluster;
     private static final String EA_EXCHANGE_FORMAT = "ea.%s";
@@ -75,22 +77,26 @@ public final class RabbitMQMessagingService implements RabbitMQMessagingServiceI
     private final ConcurrentMap<Channel,Set<ChannelListener>> channelListenerRegistry = new ConcurrentHashMap<>();
     private final MessageAcker.Type ackType;
     private MessageAcker messageAcker;
+    private final Integer prefetchCount;
 
     public RabbitMQMessagingService(String elasticActorsCluster,
                                     String rabbitmqHosts,
-                                    String username,
+                                    Integer rabbitmqPort, String username,
                                     String password,
                                     MessageAcker.Type ackType,
                                     ThreadBoundExecutor queueExecutor,
-                                    InternalMessageDeserializer internalMessageDeserializer) {
+                                    InternalMessageDeserializer internalMessageDeserializer,
+                                    Integer prefetchCount) {
         this.rabbitmqHosts = rabbitmqHosts;
         this.elasticActorsCluster = elasticActorsCluster;
+        this.rabbitmqPort = rabbitmqPort;
         this.queueExecutor = queueExecutor;
         this.username = username;
         this.password = password;
         this.ackType = ackType;
         this.internalMessageDeserializer = internalMessageDeserializer;
         this.exchangeName = format(EA_EXCHANGE_FORMAT, elasticActorsCluster);
+        this.prefetchCount = prefetchCount;
         this.localMessageQueueFactory = new LocalMessageQueueFactory();
         this.remoteMessageQueueFactory = new RemoteMessageQueueFactory();
         this.remoteActorSystemMessageQueueFactoryFactory = new RemoteActorSystemMessageQueueFactoryFactory();
@@ -109,14 +115,17 @@ public final class RabbitMQMessagingService implements RabbitMQMessagingServiceI
                         .withInterval(Duration.seconds(1)))
                 .withChannelListeners(this);
 
-        ConnectionOptions connectionOptions = new ConnectionOptions(connectionFactory).withAddresses(rabbitmqHosts);
-        connectionOptions.withUsername(username);
-        connectionOptions.withPassword(password);
+        ConnectionOptions connectionOptions = new ConnectionOptions(connectionFactory)
+                .withHosts(StringUtils.commaDelimitedListToStringArray(rabbitmqHosts))
+                .withPort(rabbitmqPort)
+                .withUsername(username)
+                .withPassword(password);
         // create single connection
         //clientConnection = connectionFactory.newConnection(Address.parseAddresses(rabbitmqHosts));
         clientConnection = Connections.create(connectionOptions,config);
         // create a seperate producer and a seperate consumer channel
         consumerChannel = clientConnection.createChannel();
+        consumerChannel.basicQos(prefetchCount);
         producerChannel = clientConnection.createChannel();
         // ensure the exchange is there
         consumerChannel.exchangeDeclare(exchangeName,"direct",true);

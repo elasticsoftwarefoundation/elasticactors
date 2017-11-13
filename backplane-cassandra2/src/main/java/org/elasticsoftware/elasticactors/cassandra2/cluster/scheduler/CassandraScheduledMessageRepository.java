@@ -23,6 +23,7 @@ import com.datastax.driver.core.Session;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.cassandra2.util.ExecutionUtils;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRepository;
@@ -34,6 +35,8 @@ import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static org.elasticsoftware.elasticactors.cassandra2.util.ExecutionUtils.executeWithRetry;
 
 /**
  * @author Joost van de Wijgerd
@@ -58,17 +61,17 @@ public final class CassandraScheduledMessageRepository implements ScheduledMessa
 
     @Override
     public void create(ShardKey shardKey, ScheduledMessage scheduledMessage) {
-        cassandraSession.execute(insertStatement.bind(clusterName, shardKey.toString(), scheduledMessage.getFireTime(TimeUnit.MILLISECONDS), scheduledMessage.getId(), ByteBuffer.wrap(ScheduledMessageSerializer.get().serialize(scheduledMessage))));
+        executeWithRetry(cassandraSession, insertStatement.bind(clusterName, shardKey.toString(), scheduledMessage.getFireTime(TimeUnit.MILLISECONDS), scheduledMessage.getId(), ByteBuffer.wrap(ScheduledMessageSerializer.get().serialize(scheduledMessage))), logger);
     }
 
     @Override
     public void delete(ShardKey shardKey, ScheduledMessageKey scheduledMessageKey) {
-        cassandraSession.execute(deleteStatement.bind(clusterName, shardKey.toString(), scheduledMessageKey.getFireTime(), scheduledMessageKey.getId()));
+        executeWithRetry(cassandraSession, deleteStatement.bind(clusterName, shardKey.toString(), scheduledMessageKey.getFireTime(), scheduledMessageKey.getId()), logger);
     }
 
     @Override
     public List<ScheduledMessage> getAll(ShardKey shardKey) {
-        ResultSet resultSet = cassandraSession.execute(selectStatement.bind(clusterName, shardKey.toString()).setFetchSize(Integer.MAX_VALUE));
+        ResultSet resultSet = executeWithRetry(cassandraSession, selectStatement.bind(clusterName, shardKey.toString()).setFetchSize(Integer.MAX_VALUE), logger);
         List<ScheduledMessage> resultList = new LinkedList<>();
         for (Row resultRow : resultSet) {
             for (int i = 0; i < resultRow.getColumnDefinitions().size(); i++) {

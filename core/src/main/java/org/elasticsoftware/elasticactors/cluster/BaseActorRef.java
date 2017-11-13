@@ -27,6 +27,7 @@ import org.reactivestreams.Publisher;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 import static org.elasticsoftware.elasticactors.cluster.tasks.InternalActorContext.getAsProcessorContext;
 
@@ -47,9 +48,17 @@ public abstract class BaseActorRef implements ActorRef {
     }
 
     public final <T> CompletableFuture<T> ask(Object message, Class<T> responseType) {
+        return ask(message, responseType, Boolean.FALSE);
+    }
+
+
+    @Override
+    public <T> CompletableFuture<T> ask(Object message, Class<T> responseType, Boolean persistOnResponse) {
         final CompletableFuture<T> future = new CompletableFuture<>();
         try {
-            ActorRef replyRef = actorSystem.tempActorOf(ReplyActor.class, new CompletableFutureDelegate<>(future, responseType));
+            ActorRef callerRef = Boolean.TRUE.equals(persistOnResponse) ? ActorContextHolder.getSelf() : null;
+            ActorRef replyRef = actorSystem.tempActorOf(ReplyActor.class,
+                                                        new CompletableFutureDelegate<>(future, responseType, callerRef));
             this.tell(message, replyRef);
         } catch (Exception e) {
             future.completeExceptionally(e);

@@ -17,6 +17,8 @@
 package org.elasticsoftware.elasticactors;
 
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Encapsulates a {@link ThreadLocal} that holds the {@link ActorContext} for the {@link ElasticActor} that
@@ -65,5 +67,9 @@ public class ActorContextHolder {
 
     public static Collection<PersistentSubscription> getSubscriptions() {
         return threadContext.get().getSubscriptions();
+    }
+
+    public static Map<String, Set<ActorRef>> getSubscribers() {
+        return threadContext.get().getSubscribers();
     }
 }

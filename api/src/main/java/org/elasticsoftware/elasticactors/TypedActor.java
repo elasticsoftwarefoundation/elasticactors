@@ -24,6 +24,8 @@ import org.reactivestreams.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Joost van de Wijgerd
@@ -65,7 +67,13 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
 
     @Override
     public Subscriber asSubscriber(@Nullable Class messageClass) {
-        return defaultSubscriber;
+        // as this can be misused, we need to make sure the class that extends the TypedActor is actually annotated
+        // with the Actor annotation, if not this is a programmer error and we'll throw an IllegalStateException
+        if(getClass().getAnnotation(Actor.class) != null) {
+            return defaultSubscriber;
+        } else {
+            throw new IllegalStateException("asSubscriber can only be called on a TypedActor implementation that is annotated with the @Actor annotation");
+        }
     }
 
     protected class DefaultSubscriber extends TypedSubscriber<T> {
@@ -122,9 +130,7 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
         return ActorContextHolder.getSubscriptions();
     }
 
-    protected final void unhandled(Object message) {
-        //@todo: implement logic for unhandled messages
+    protected final Map<String, Set<ActorRef>> getSubscribers() {
+        return ActorContextHolder.getSubscribers();
     }
-
-
 }

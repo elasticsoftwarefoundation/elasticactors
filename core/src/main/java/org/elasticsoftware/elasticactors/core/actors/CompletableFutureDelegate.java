@@ -16,11 +16,13 @@
 
 package org.elasticsoftware.elasticactors.core.actors;
 
+import org.elasticsoftware.elasticactors.ActorNotFoundException;
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.UnexpectedResponseTypeException;
 
 import java.util.concurrent.CompletableFuture;
+
+import static java.lang.String.format;
 
 /**
  * @author Joost van de Wijgerd
@@ -29,14 +31,15 @@ public final class CompletableFutureDelegate<T> extends ActorDelegate<T> {
     private final CompletableFuture<T> future;
     private final Class<T> responseType;
 
-    public CompletableFutureDelegate(CompletableFuture<T> future, Class<T> responseType) {
+    public CompletableFutureDelegate(CompletableFuture<T> future, Class<T> responseType, ActorRef callerRef) {
+        super(true, callerRef);
         this.future = future;
         this.responseType = responseType;
     }
 
     @Override
     public void onUndeliverable(ActorRef receiver, Object message) {
-        future.completeExceptionally(new MessageDeliveryException("Unable to deliver message", false));
+        future.completeExceptionally(new ActorNotFoundException(format("Actor with id %s does not exist",receiver.getActorId()), receiver));
     }
 
     @Override
@@ -46,7 +49,7 @@ public final class CompletableFutureDelegate<T> extends ActorDelegate<T> {
         } else if (message instanceof Throwable) {
             future.completeExceptionally((Throwable) message);
         } else {
-            future.completeExceptionally(new UnexpectedResponseTypeException("Receiver unexpectedly responsed with a message of type " + message.getClass().getTypeName()));
+            future.completeExceptionally(new UnexpectedResponseTypeException("Receiver unexpectedly responded with a message of type " + message.getClass().getTypeName()));
         }
     }
 }

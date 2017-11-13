@@ -32,8 +32,8 @@ public class AskForGreetingActor extends MethodActor {
             ActorRef echo = actorSystem.actorOf("echo", EchoGreetingActor.class);
             System.out.println("Got REQUEST in Thread" + Thread.currentThread().getName());
 
-            echo.ask(new Greeting("echo"), Greeting.class).whenComplete((g, throwable) -> {
-                System.out.println("Got REPLY in Thread" + Thread.currentThread().getName());
+            echo.ask(new Greeting("echo"), Greeting.class, greeting.getPersistOnResponse()).whenComplete((g, throwable) -> {
+                System.out.println("Got REPLY in Thread " + Thread.currentThread().getName());
                 replyActor.tell(g);
             });
         } catch(Exception e) {
