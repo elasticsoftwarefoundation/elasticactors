@@ -26,6 +26,7 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 
@@ -37,14 +38,15 @@ import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 public final class PersistActorTask extends ActorLifecycleTask {
     private static final Logger logger = LogManager.getLogger(PersistActorTask.class);
 
-    public PersistActorTask(PersistentActorRepository persistentActorRepository,
+    public PersistActorTask(ActorStateUpdateProcessor actorStateUpdateProcessor,
+                            PersistentActorRepository persistentActorRepository,
                             PersistentActor persistentActor,
                             InternalActorSystem actorSystem,
                             ElasticActor receiver,
                             ActorRef receiverRef,
                             InternalMessage internalMessage,
                             MessageHandlerEventListener messageHandlerEventListener) {
-        super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage);
+        super(actorStateUpdateProcessor, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, null);
     }
 
     @Override

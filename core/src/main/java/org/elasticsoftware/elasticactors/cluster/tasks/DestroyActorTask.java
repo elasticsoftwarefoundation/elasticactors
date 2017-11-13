@@ -22,6 +22,8 @@ import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.CompletedMessage;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
@@ -36,27 +38,36 @@ import java.util.Set;
  */
 public final class DestroyActorTask extends ActorLifecycleTask {
     private static final Logger logger = LogManager.getLogger(DestroyActorTask.class);
-    private final PersistentActorRepository persistentActorRepository;
     private final ShardKey shardKey;
 
     public DestroyActorTask(PersistentActor persistentActor,
                             InternalActorSystem actorSystem,
                             ElasticActor receiver,
                             ActorRef receiverRef,
-                            InternalMessage createActorMessage,
+                            InternalMessage internalMessage,
                             MessageHandlerEventListener messageHandlerEventListener) {
-        this(null,persistentActor,actorSystem,receiver,receiverRef,createActorMessage,messageHandlerEventListener);
+        this(null, null, persistentActor, actorSystem, receiver, receiverRef, internalMessage, messageHandlerEventListener);
     }
 
-    public DestroyActorTask(@Nullable PersistentActorRepository persistentActorRepository,
+    public DestroyActorTask(ActorStateUpdateProcessor actorStateUpdateProcessor,PersistentActor persistentActor,
+                            InternalActorSystem actorSystem,
+                            ElasticActor receiver,
+                            ActorRef receiverRef,
+                            InternalMessage internalMessage,
+                            MessageHandlerEventListener messageHandlerEventListener) {
+        this(actorStateUpdateProcessor, null,persistentActor,actorSystem,receiver,receiverRef,internalMessage,messageHandlerEventListener);
+    }
+
+    public DestroyActorTask(ActorStateUpdateProcessor actorStateUpdateProcessor,
+                            @Nullable PersistentActorRepository persistentActorRepository,
                             PersistentActor persistentActor,
                             InternalActorSystem actorSystem,
                             ElasticActor receiver,
                             ActorRef receiverRef,
-                            InternalMessage createActorMessage,
+                            InternalMessage internalMessage,
                             MessageHandlerEventListener messageHandlerEventListener) {
-        super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef,messageHandlerEventListener, createActorMessage);
-        this.persistentActorRepository = (persistentActorRepository != null) ? persistentActorRepository : null;
+        super(actorStateUpdateProcessor, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef,messageHandlerEventListener, internalMessage, null);
+        // the shardkey is only needed when there is a persistentActorRepository set
         this.shardKey = (persistentActorRepository != null) ? (ShardKey) persistentActor.getKey() : null;
     }
 
@@ -85,8 +96,14 @@ public final class DestroyActorTask extends ActorLifecycleTask {
     }
 
     @Override
-    protected void executeLifecycleListener(ActorLifecycleListener listener,ActorRef actorRef,ActorState actorState) {
+    protected ActorLifecycleStep executeLifecycleListener(ActorLifecycleListener listener,ActorRef actorRef,ActorState actorState) {
         listener.preDestroy(actorRef,actorState);
+        return ActorLifecycleStep.DESTROY;
+    }
+
+    @Override
+    protected ActorLifecycleStep getLifeCycleStep() {
+        return ActorLifecycleStep.DESTROY;
     }
 
     private void notifySubscribers() {

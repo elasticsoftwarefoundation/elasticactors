@@ -29,6 +29,9 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
+import java.io.IOError;
+import java.io.IOException;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -236,4 +239,9 @@ public final class PersistentActor<K> implements ActorContext, ProcessorContext 
     public HashMultimap<String, MessageSubscriber> getMessageSubscribers() {
         return messageSubscribers;
     }
+    public void serializeState() throws IOException {
+        this.serializedState = actorSystem.getParent().getSerializationFramework(actorState.getSerializationFramework())
+                .getActorStateSerializer(this.actorState).serialize(this.actorState);
+    }
+
 }

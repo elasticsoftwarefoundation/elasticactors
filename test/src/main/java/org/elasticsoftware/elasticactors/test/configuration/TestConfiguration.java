@@ -31,9 +31,14 @@ import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
+import org.elasticsoftware.elasticactors.state.DefaultActorStateUpdateProcessor;
+import org.elasticsoftware.elasticactors.state.NoopActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.test.InternalActorSystemsImpl;
 import org.elasticsoftware.elasticactors.test.cluster.NoopActorSystemEventRegistryService;
 import org.elasticsoftware.elasticactors.test.cluster.SingleNodeClusterService;
+import org.elasticsoftware.elasticactors.test.state.LoggingActorStateUpdateListener;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
@@ -51,6 +56,7 @@ import org.springframework.core.io.ResourceLoader;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.Map;
 
 /**
  * @author Joost van de Wijgerd
@@ -156,6 +162,21 @@ public class TestConfiguration {
     @Bean(name = {"actorSystemEventListenerService"})
     public ActorSystemEventListenerService createActorSystemEventListenerService() {
         return new NoopActorSystemEventRegistryService();
+    }
+
+    @Bean(name = {"actorStateUpdateProcessor"})
+    public ActorStateUpdateProcessor createActorStateUpdateProcessor(ApplicationContext applicationContext) {
+        Map<String, ActorStateUpdateListener> listeners = applicationContext.getBeansOfType(ActorStateUpdateListener.class);
+        if(listeners.isEmpty()) {
+            return new NoopActorStateUpdateProcessor();
+        } else {
+            return new DefaultActorStateUpdateProcessor(listeners.values(), 1, 20);
+        }
+    }
+
+    @Bean(name = {"loggingActorStateUpdateListener"})
+    public LoggingActorStateUpdateListener createLoggingActorStateUpdateListener() {
+        return new LoggingActorStateUpdateListener();
     }
 
     @Bean(name = "systemSerializationFramework")

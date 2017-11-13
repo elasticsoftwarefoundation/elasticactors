@@ -26,6 +26,7 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
@@ -39,12 +40,13 @@ public final class ActivateActorTask extends ActorLifecycleTask {
     private static final Logger logger = LogManager.getLogger(ActivateActorTask.class);
     private final PersistentActor persistentActor;
 
-    public ActivateActorTask(PersistentActorRepository persistentActorRepository,
+    public ActivateActorTask(ActorStateUpdateProcessor actorStateUpdateProcessor,
+                             PersistentActorRepository persistentActorRepository,
                              PersistentActor persistentActor,
                              InternalActorSystem actorSystem,
                              ElasticActor receiver,
                              ActorRef receiverRef) {
-        super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, null, null);
+        super(actorStateUpdateProcessor, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, null, null, null);
         this.persistentActor = persistentActor;
     }
 
@@ -91,7 +93,14 @@ public final class ActivateActorTask extends ActorLifecycleTask {
     }
 
     @Override
-    protected void executeLifecycleListener(ActorLifecycleListener listener,ActorRef actorRef,ActorState actorState) {
+    protected ActorLifecycleStep executeLifecycleListener(ActorLifecycleListener listener,ActorRef actorRef,ActorState actorState) {
         listener.postActivate(actorRef,actorState,persistentActor.getPreviousActorStateVersion());
+        return ActorLifecycleStep.ACTIVATE;
+    }
+
+
+    @Override
+    protected ActorLifecycleStep getLifeCycleStep() {
+        return ActorLifecycleStep.ACTIVATE;
     }
 }

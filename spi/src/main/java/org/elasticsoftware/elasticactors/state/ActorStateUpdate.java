@@ -14,23 +14,30 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.util.concurrent;
+package org.elasticsoftware.elasticactors.state;
+
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ElasticActor;
+
+import javax.annotation.Nullable;
+import java.nio.ByteBuffer;
 
 /**
- * ThreadBoundExecutor
- *
- * <p/>
- * A thread bound executor guarantees that a runnable executed on the executor that has the same key
- * will always be executed by the same thread.
- *
- * @param <T> The type of the key
  * @author Joost van de Wijgerd
  */
-public interface ThreadBoundExecutor<T extends ThreadBoundEvent<?>> {
+public interface ActorStateUpdate {
+    String getVersion();
 
-    void execute(T runnable);
+    @Nullable
+    ActorLifecycleStep getLifecycleStep();
 
-    void shutdown();
+    @Nullable
+    Class getMessageClass();
 
-    int getThreadCount();
+    Class<? extends ElasticActor> getActorClass();
+
+    ActorRef getActorRef();
+
+    @Nullable
+    ByteBuffer getSerializedState();
 }

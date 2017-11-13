@@ -25,6 +25,7 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 
@@ -34,12 +35,13 @@ import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 public final class PassivateActorTask extends ActorLifecycleTask {
     private static final Logger logger = LogManager.getLogger(PassivateActorTask.class);
 
-    public PassivateActorTask(PersistentActorRepository persistentActorRepository,
+    public PassivateActorTask(ActorStateUpdateProcessor actorStateUpdateProcessor,
+                              PersistentActorRepository persistentActorRepository,
                               PersistentActor persistentActor,
                               InternalActorSystem actorSystem,
                               ElasticActor receiver,
                               ActorRef receiverRef) {
-        super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, null, null);
+        super(actorStateUpdateProcessor, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, null, null, null);
     }
 
     @Override
@@ -57,7 +59,13 @@ public final class PassivateActorTask extends ActorLifecycleTask {
     }
 
     @Override
-    protected void executeLifecycleListener(ActorLifecycleListener listener,ActorRef actorRef,ActorState actorState) {
+    protected ActorLifecycleStep executeLifecycleListener(ActorLifecycleListener listener,ActorRef actorRef,ActorState actorState) {
         listener.prePassivate(actorRef,actorState);
+        return ActorLifecycleStep.PASSIVATE;
+    }
+
+    @Override
+    protected ActorLifecycleStep getLifeCycleStep() {
+        return ActorLifecycleStep.PASSIVATE;
     }
 }
