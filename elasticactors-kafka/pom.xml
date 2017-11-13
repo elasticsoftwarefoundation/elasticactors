@@ -22,10 +22,10 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>messaging-kafka</artifactId>
+    <artifactId>elastiactors-kafka</artifactId>
     <packaging>jar</packaging>
 
-    <name>Elastic Software Foundation :: ElasticActors :: Kafka Messaging</name>
+    <name>Elastic Software Foundation :: ElasticActors :: Kafka Implementation</name>
     <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
     <properties>
@@ -45,7 +45,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_2.12</artifactId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-streams</artifactId>
             <version>${kafka.version}</version>
         </dependency>
     </dependencies>
