@@ -48,7 +48,18 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
 public final class HandleMessageTask extends ActorLifecycleTask {
     private static final Logger log = LogManager.getLogger(HandleMessageTask.class);
 
-    HandleMessageTask(InternalActorSystem actorSystem,
+
+    public HandleMessageTask(InternalActorSystem actorSystem,
+                             ElasticActor receiver,
+                             ActorRef receiverRef,
+                             InternalMessage internalMessage,
+                             PersistentActor persistentActor,
+                             PersistentActorRepository persistentActorRepository,
+                             ActorStateUpdateProcessor actorStateUpdateProcessor,
+                             MessageHandlerEventListener messageHandlerEventListener,
+                             Long serializationWarnThreshold) {
+        super(actorStateUpdateProcessor, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, serializationWarnThreshold);
+    }
 
     public HandleMessageTask(InternalActorSystem actorSystem,
                              ElasticActor receiver,
@@ -58,18 +69,7 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                              PersistentActorRepository persistentActorRepository,
                              ActorStateUpdateProcessor actorStateUpdateProcessor,
                              MessageHandlerEventListener messageHandlerEventListener) {
-        super(actorStateUpdateProcessor, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage);
-    }
-
-    public HandleMessageTask(InternalActorSystem actorSystem,
-                             ElasticActor receiver,
-                             ActorRef receiverRef,
-                             InternalMessage internalMessage,
-                             PersistentActor persistentActor,
-                             PersistentActorRepository persistentActorRepository,
-                             MessageHandlerEventListener messageHandlerEventListener,
-                             Long serializationWarnThreshold) {
-        super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, serializationWarnThreshold);
+        super(actorStateUpdateProcessor,persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, null);
     }
 
 

@@ -385,7 +385,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
             // find actor class behind receiver ActorRef
             ElasticActor actorInstance = actorSystem.getActorInstance(actorRef,persistentActor.getActorClass());
             // call preDestroy
-            actorExecutor.execute(new PersistActorTask( persistentActorRepository,
+            actorExecutor.execute(new PersistActorTask( actorStateUpdateProcessor,
+                                                        persistentActorRepository,
                                                         persistentActor,
                                                         actorSystem,
                                                         actorInstance,

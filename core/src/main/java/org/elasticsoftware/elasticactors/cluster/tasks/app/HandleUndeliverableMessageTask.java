@@ -48,7 +48,7 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
                                           PersistentActor persistentActor,
                                           PersistentActorRepository persistentActorRepository,
                                           MessageHandlerEventListener messageHandlerEventListener) {
-        super(null, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage);
+        super(null, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, null);
     }
 
 

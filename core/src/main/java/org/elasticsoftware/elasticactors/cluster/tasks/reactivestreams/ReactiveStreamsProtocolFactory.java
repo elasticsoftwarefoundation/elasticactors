@@ -42,7 +42,7 @@ public final class ReactiveStreamsProtocolFactory implements ProtocolFactory {
                                                       MessageHandlerEventListener messageHandlerEventListener,
                                                       Long serializationWarnThreshold) {
         return new HandleMessageTask(actorSystem, receiver, receiverRef, internalMessage, persistentActor,
-                persistentActorRepository, actorStateUpdateProcessor, messageHandlerEventListener);
+                persistentActorRepository, actorStateUpdateProcessor, messageHandlerEventListener, serializationWarnThreshold);
     }
 
     @Override

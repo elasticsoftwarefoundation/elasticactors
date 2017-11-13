@@ -57,8 +57,9 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
                       PersistentActor persistentActor,
                       PersistentActorRepository persistentActorRepository,
                       ActorStateUpdateProcessor actorStateUpdateProcessor,
-                      MessageHandlerEventListener messageHandlerEventListener) {
-        super(actorStateUpdateProcessor,persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage);
+                      MessageHandlerEventListener messageHandlerEventListener,
+                      Long serializationWarningThreshold) {
+        super(actorStateUpdateProcessor,persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, serializationWarningThreshold);
     }
 
     // SubscriberContext implementation
