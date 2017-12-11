@@ -27,6 +27,7 @@ import org.elasticsoftware.elasticactors.kafka.cluster.ReactiveStreamsProtocol;
 import org.elasticsoftware.elasticactors.kafka.serialization.*;
 import org.elasticsoftware.elasticactors.kafka.state.InMemoryPersistentActorStore;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStore;
+import org.elasticsoftware.elasticactors.kafka.utils.TopicNamesHelper;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.messaging.internal.*;
@@ -47,6 +48,7 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static org.apache.kafka.common.requests.IsolationLevel.READ_COMMITTED;
+import static org.elasticsoftware.elasticactors.kafka.utils.TopicNamesHelper.getNodeMessagesTopic;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 public class KafkaActorThread extends Thread {
@@ -70,6 +72,10 @@ public class KafkaActorThread extends Thread {
     private final NodeActorCacheManager nodeActorCacheManager;
     private final Serializer<PersistentActor<ShardKey>,byte[]> stateSerializer;
     private final Deserializer<byte[],PersistentActor<ShardKey>> stareDeserializer;
+    private final String messagesTopic;
+    private final String scheduledMessagesTopic;
+    private final String actorSystemEventListenersTopic;
+    private final String persistentActorsTopic;
 
     public KafkaActorThread(String clusterName,
                             String bootstrapServers,
@@ -89,6 +95,11 @@ public class KafkaActorThread extends Thread {
         this.nodeActorCacheManager = nodeActorCacheManager;
         this.stateSerializer = stateSerializer;
         this.stareDeserializer = stareDeserializer;
+        // cache for quicker access
+        this.messagesTopic = TopicNamesHelper.getMessagesTopic(internalActorSystem);
+        this.scheduledMessagesTopic = TopicNamesHelper.getScheduledMessagesTopic(internalActorSystem);
+        this.actorSystemEventListenersTopic = TopicNamesHelper.getActorsystemEventListenersTopic(internalActorSystem);
+        this.persistentActorsTopic = TopicNamesHelper.getPersistentActorsTopic(internalActorSystem);
         final Map<String, Object> consumerConfig = new HashMap<>();
         consumerConfig.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "50");
         consumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
@@ -187,7 +198,7 @@ public class KafkaActorThread extends Thread {
     void send(ShardKey shard, InternalMessage internalMessage) {
         runCommand((kafkaConsumer, kafkaProducer) -> {
             ProducerRecord<Object, Object> producerRecord =
-                    new ProducerRecord<>(clusterName, shard.getShardId(), internalMessage.getId(), internalMessage);
+                    new ProducerRecord<>(messagesTopic, shard.getShardId(), internalMessage.getId(), internalMessage);
             kafkaProducer.send(producerRecord, (metadata, exception) -> {
                 // @todo: message sending failed. what to do now?
             });
@@ -197,7 +208,7 @@ public class KafkaActorThread extends Thread {
     void send(NodeKey node, InternalMessage internalMessage) {
         runCommand((kafkaConsumer, kafkaProducer) -> {
             ProducerRecord<Object, Object> producerRecord =
-                    new ProducerRecord<>(generateNodeTopic(node) , internalMessage.getId(), internalMessage);
+                    new ProducerRecord<>(getNodeMessagesTopic(internalActorSystem, node) , internalMessage.getId(), internalMessage);
             kafkaProducer.send(producerRecord, (metadata, exception) -> {
                 // @todo: message sending failed. what to do now?
             });
@@ -335,7 +346,7 @@ public class KafkaActorThread extends Thread {
 
     private void handleInternalMessage(TopicPartition topicPartition, InternalMessage im) {
         // shard message
-        if(topicPartition.topic().equals(clusterName)) {
+        if(topicPartition.topic().equals(messagesTopic)) {
             handleInternalMessage(this.localShards.get(new ShardKey(internalActorSystem.getName(), topicPartition.partition())), im);
         } else {
             // node message
@@ -437,7 +448,7 @@ public class KafkaActorThread extends Thread {
 
     private void doInActorContext(ActorLifecycleFunction handler,
                                   ManagedActorShard managedActorShard,
-                                  PersistentActor persistentActor,
+                                  PersistentActor<ShardKey> persistentActor,
                                   InternalMessage internalMessage) {
         // setup the context
         Exception executionException = null;
@@ -532,7 +543,7 @@ public class KafkaActorThread extends Thread {
                 .map(entry -> new TopicPartition(clusterName, entry.getKey().getShardId())).collect(Collectors.toList());
         if(localActorNode != null) {
             // node topics have only 1 partition (for now)
-            topicPartitions.add(new TopicPartition(generateNodeTopic(localActorNode.actorNode.getKey()), 0));
+            topicPartitions.add(new TopicPartition(getNodeMessagesTopic(internalActorSystem, localActorNode.actorNode.getKey()), 0));
         }
         this.messageConsumer.assign(topicPartitions);
     }
