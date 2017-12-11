@@ -165,7 +165,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
 
     }
 
-    protected final boolean shouldUpdateState(ElasticActor elasticActor,ActorLifecycleStep lifecycleStep) {
+    public static boolean shouldUpdateState(ElasticActor elasticActor,ActorLifecycleStep lifecycleStep) {
         if(PersistenceAdvisor.class.isAssignableFrom(elasticActor.getClass())) {
             return ((PersistenceAdvisor)elasticActor).shouldUpdateState(lifecycleStep);
         } else {
@@ -174,7 +174,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         }
     }
 
-    protected final boolean shouldUpdateState(ElasticActor elasticActor, Object message) {
+    public static boolean shouldUpdateState(ElasticActor elasticActor, Object message) {
         if(PersistenceAdvisor.class.isAssignableFrom(elasticActor.getClass())) {
             return ((PersistenceAdvisor)elasticActor).shouldUpdateState(message);
         } else {

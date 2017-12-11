@@ -26,6 +26,8 @@ import org.elasticsoftware.elasticactors.cluster.messaging.ShardReleasedMessage;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -37,7 +39,7 @@ import static java.lang.String.format;
 public abstract class MultiNodeScaleUpStrategy implements ShardDistributionStrategy {
     protected final Logger logger = LogManager.getLogger(this.getClass());
     private final LinkedBlockingQueue<ShardReleasedMessage> shardReleasedMessages;
-    private final Map<ShardKey,ActorShard> registeredShards = new HashMap<>();
+    private final ConcurrentMap<ShardKey,ActorShard> registeredShards = new ConcurrentHashMap<>();
 
     public MultiNodeScaleUpStrategy(LinkedBlockingQueue<ShardReleasedMessage> shardReleasedMessages) {
         this.shardReleasedMessages = shardReleasedMessages;

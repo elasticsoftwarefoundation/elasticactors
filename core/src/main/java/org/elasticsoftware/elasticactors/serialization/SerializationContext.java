@@ -29,12 +29,7 @@ public final class SerializationContext {
     private static final ThreadLocal<IdentityHashMap<Object,ByteBuffer>> serializationCache = new ThreadLocal<>();
     private static final ThreadLocal<EvictingMap<DeserializationKey,Object>> deserializationCache = new ThreadLocal<>();
     // keypool to avoid too much garbage being generated
-    private static final ThreadLocal<DeserializationKey> keyPool = new ThreadLocal<DeserializationKey>() {
-        @Override
-        protected DeserializationKey initialValue() {
-            return new DeserializationKey(null,null);
-        }
-    };
+    private static final ThreadLocal<DeserializationKey> keyPool = ThreadLocal.withInitial(() -> new DeserializationKey(null,null));
     private static final boolean deserializationCacheEnabled = Boolean.valueOf(System.getProperty("ea.deserializationCache.enabled", "false"));
     private static final boolean serializationCacheEnabled = Boolean.valueOf(System.getProperty("ea.serializationCache.enabled", "false"));
 
@@ -43,10 +38,10 @@ public final class SerializationContext {
     public static void initialize() {
         // only create once per thread
         if(serializationCacheEnabled && serializationCache.get() == null) {
-            serializationCache.set(new IdentityHashMap<Object, ByteBuffer>());
+            serializationCache.set(new IdentityHashMap<>());
         }
         if(deserializationCacheEnabled && deserializationCache.get() == null) {
-            deserializationCache.set(new EvictingMap<DeserializationKey, Object>());
+            deserializationCache.set(new EvictingMap<>());
         }
     }
 
