@@ -2,12 +2,20 @@ package org.elasticsoftware.elasticactors.kafka;
 
 import com.google.common.cache.Cache;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.TreeMultimap;
 import org.apache.kafka.clients.CommonClientConfigs;
-import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.InterruptException;
+import org.apache.kafka.common.errors.SerializationException;
+import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.logging.log4j.LogManager;
@@ -19,6 +27,7 @@ import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.ShardDistributionStrategy;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
 import org.elasticsoftware.elasticactors.kafka.cluster.ActorLifecycleFunction;
@@ -35,10 +44,12 @@ import org.elasticsoftware.elasticactors.serialization.*;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageDeserializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.util.ManifestTools;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -59,6 +70,7 @@ public class KafkaActorThread extends Thread {
     private final KafkaConsumer<UUID, InternalMessage> messageConsumer;
     private final KafkaProducer<Object, Object> producer;
     private final KafkaConsumer<String, byte[]> stateConsumer;
+    private final KafkaConsumer<UUID, ScheduledMessage> scheduledMessagesConsumer;
     private final String clusterName;
     private final InternalActorSystem internalActorSystem;
     private final ActorRefFactory actorRefFactory;
@@ -134,11 +146,15 @@ public class KafkaActorThread extends Thread {
         producerConfig.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, internalActorSystem.getNode().getKey().getNodeId() + "-" + getName() + "-producer");
 
         // @todo: wrap the internal message serializer in a compressing serializer
-        KafkaProducerSerializer serializer = new KafkaProducerSerializer(
+        KafkaProducerSerializer keySerializer = new KafkaProducerSerializer(
                 new KafkaInternalMessageSerializer(InternalMessageSerializer.get()),
                 new KafkaPersistentActorSerializer(stateSerializer));
 
-        producer = new KafkaProducer<>(producerConfig, serializer, serializer);
+        KafkaProducerSerializer valueSerializer = new KafkaProducerSerializer(
+                new KafkaInternalMessageSerializer(InternalMessageSerializer.get()),
+                new KafkaPersistentActorSerializer(stateSerializer));
+
+        producer = new KafkaProducer<>(producerConfig, keySerializer, valueSerializer);
         // this needs to be called once
         producer.initTransactions();
 
@@ -149,12 +165,6 @@ public class KafkaActorThread extends Thread {
         stateConsumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         stateConsumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         stateConsumerConfig.put("internal.leave.group.on.close", false);
-        // MAX_POLL_INTERVAL_MS_CONFIG needs to be large for streams to handle cases when
-        // streams is recovering data from state stores. We may set it to Integer.MAX_VALUE since
-        // the streams code itself catches most exceptions and acts accordingly without needing
-        // this timeout. Note however that deadlocks are not detected (by definition) so we
-        // are losing the ability to detect them by setting this value to large. Hopefully
-        // deadlocks happen very rarely or never.
         stateConsumerConfig.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, Integer.toString(Integer.MAX_VALUE));
         stateConsumerConfig.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, READ_COMMITTED.name().toLowerCase(Locale.ROOT));
         stateConsumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -163,10 +173,28 @@ public class KafkaActorThread extends Thread {
         stateConsumerConfig.put(CommonClientConfigs.CLIENT_ID_CONFIG,internalActorSystem.getNode().getKey().getNodeId() + "-" + getName() + "-state-consumer");
 
         stateConsumer = new KafkaConsumer<>(stateConsumerConfig, new StringDeserializer(), new ByteArrayDeserializer());
+
+        final Map<String, Object> scheduledMessagesConsumerConfig = new HashMap<>();
+        scheduledMessagesConsumerConfig.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "100");
+        scheduledMessagesConsumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        scheduledMessagesConsumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        scheduledMessagesConsumerConfig.put("internal.leave.group.on.close", false);
+        scheduledMessagesConsumerConfig.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, Integer.toString(Integer.MAX_VALUE));
+        scheduledMessagesConsumerConfig.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, READ_COMMITTED.name().toLowerCase(Locale.ROOT));
+        scheduledMessagesConsumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+
+        scheduledMessagesConsumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, clusterName+"-scheduledMessages");
+        scheduledMessagesConsumerConfig.put(CommonClientConfigs.CLIENT_ID_CONFIG,internalActorSystem.getNode().getKey().getNodeId() + "-" + getName() + "-scheduledMessages-consumer");
+
+        KafkaScheduledMessageDeserializer scheduledMessageDeserializer
+                = new KafkaScheduledMessageDeserializer(
+                        new ScheduledMessageDeserializer(new ActorRefDeserializer(actorRefFactory)));
+        scheduledMessagesConsumer = new KafkaConsumer<>(scheduledMessagesConsumerConfig, new UUIDDeserializer(), scheduledMessageDeserializer);
     }
 
     @Override
     public void run() {
+        //@todo: this needs a runLoop()
         // handle commands
         BiConsumer<KafkaConsumer<UUID, InternalMessage>, KafkaProducer<Object, Object>> command = commands.poll();
         if(command != null) {
@@ -175,7 +203,15 @@ public class KafkaActorThread extends Thread {
                 command = commands.poll();
             } while(command != null);
         }
-        // consume
+        // consume messages
+        processMessages();
+        // consume scheduled messages
+        updateScheduledMessages();
+        // see if we need to fire any scheduled messages
+        maybeFireScheduledMessages();
+    }
+
+    private void processMessages() {
         ConsumerRecords<UUID, InternalMessage> consumerRecords = messageConsumer.poll(1);
         if(!consumerRecords.isEmpty()) {
             consumerRecords.partitions().forEach(topicPartition -> consumerRecords.records(topicPartition).forEach(consumerRecord -> {
@@ -192,7 +228,51 @@ public class KafkaActorThread extends Thread {
                 producer.commitTransaction();
             }));
         }
+    }
 
+    private void updateScheduledMessages() {
+        // first see if we have new messages
+        ConsumerRecords<UUID, ScheduledMessage> consumerRecords = scheduledMessagesConsumer.poll(0);
+        if(!consumerRecords.isEmpty()) {
+            consumerRecords.partitions().forEach(topicPartition -> consumerRecords.records(topicPartition).forEach(consumerRecord -> {
+                // @todo: get the shardkey from a topicmap
+                ManagedActorShard managedActorShard = this.localShards.get(new ShardKey(internalActorSystem.getName(), topicPartition.partition()));
+                if(managedActorShard != null) {
+                    managedActorShard.scheduledMessages.put(consumerRecord.value().getFireTime(TimeUnit.MILLISECONDS), consumerRecord.value());
+                }
+            }));
+        }
+    }
+
+    private void maybeFireScheduledMessages() {
+        // @todo: this needs proper error handling
+        // now see if we need to fire a message
+        List<ScheduledMessage> messagesToFire = this.localShards.values().stream()
+                .map(managedActorShard -> managedActorShard.getScheduledMessagesThatShouldFire(System.currentTimeMillis()))
+                .flatMap(List::stream).collect(Collectors.toList());
+        // fire them all within a producer transaction
+        producer.beginTransaction();
+        messagesToFire.forEach(scheduledMessage -> {
+            // send the message (first to the shard so it will be picked up by the normal processMessages for that shard)
+            InternalMessage internalMessage =
+                    new InternalMessageImpl(scheduledMessage.getSender(), scheduledMessage.getReceiver(),
+                            ByteBuffer.wrap(scheduledMessage.getMessageBytes()),
+                            scheduledMessage.getMessageClass().getName(), false);
+            // find out which shard to send it to (this has to be and ActorShard)
+            ShardKey destinationKey = ((ActorShard)((ActorContainerRef)scheduledMessage.getReceiver()).getActorContainer()).getKey();
+            // and send it
+            producer.send(new ProducerRecord<>(messagesTopic, destinationKey.getShardId(), internalMessage.getId(), internalMessage));
+            // remove it from the scheduled messages topic (by setting value to null)
+            ShardKey sourceKey = ((ActorShard)((ActorContainerRef)scheduledMessage.getSender()).getActorContainer()).getKey();
+            producer.send(new ProducerRecord<>(scheduledMessagesTopic, sourceKey.getShardId(), scheduledMessage.getId(), null));
+        });
+        // commit the transaction
+        producer.commitTransaction();
+        // now we need to remove them from the managedActorShards as well
+        messagesToFire.forEach(scheduledMessage -> {
+            ShardKey sourceKey = ((ActorShard)((ActorContainerRef)scheduledMessage.getSender()).getActorContainer()).getKey();
+            this.localShards.get(sourceKey).scheduledMessages.remove(scheduledMessage.getFireTime(TimeUnit.MILLISECONDS), scheduledMessage);
+        });
     }
 
     void send(ShardKey shard, InternalMessage internalMessage) {
@@ -212,6 +292,21 @@ public class KafkaActorThread extends Thread {
             kafkaProducer.send(producerRecord, (metadata, exception) -> {
                 // @todo: message sending failed. what to do now?
             });
+        });
+    }
+
+    void schedule(ShardKey shard, ScheduledMessage scheduledMessage) {
+        runCommand((kafkaConsumer, kafkaProducer) -> {
+            ProducerRecord<Object, Object> producerRecord =
+                    new ProducerRecord<>(scheduledMessagesTopic, shard.getShardId(), scheduledMessage.getId(), scheduledMessage);
+            kafkaProducer.send(producerRecord, (metadata, exception) -> {
+                if(metadata != null) {
+                    // send confirmed
+                } else {
+                    // @todo: message sending failed. what to do now?
+                }
+            });
+            // it will be added to the scheduler later as the message will be sent back to us through the topic
         });
     }
 
@@ -300,16 +395,26 @@ public class KafkaActorThread extends Thread {
     CompletionStage<Integer> performRebalance() {
         final CompletableFuture<Integer> completableFuture = new CompletableFuture<>();
         runCommand((kafkaConsumer, kafkaProducer) -> {
+            List<ManagedActorShard> newManagedShards = new LinkedList<>();
             try {
                 // we need to process the new shards and start owning them
                 this.newLocalShards.forEach(shardKey -> {
-                    // we need to initialize the state stores
-                    PersistentActorStore actorStore = initializeStateStore(shardKey);
-                    // start owning the scheduler shard (this will start sending messages)
-                    scheduler.registerShard(shardKey);
+                    // we need to create the state store
+                    PersistentActorStore actorStore = createStateStore(shardKey);
                     // promote to local shard
-                    localShards.put(shardKey, new ManagedActorShard(managedShards.get(shardKey), actorStore));
+                    ManagedActorShard managedActorShard = new ManagedActorShard(managedShards.get(shardKey), actorStore);
+                    localShards.put(shardKey, managedActorShard);
+                    // we need to do initialization after the assignment
+                    newManagedShards.add(managedActorShard);
                 });
+                // clear the newLocalShards for the next rebalance op
+                this.newLocalShards.clear();
+                // assign all the correct partitions
+                assignPartitions();
+                // now we need to initialize the state stores for all new shards
+                initializeStateStores(newManagedShards);
+                initializeScheduledMessages(newManagedShards);
+                // @todo: initialize actorsystem event listeners here
                 // and signal success
                 completableFuture.complete(newLocalShards.size());
             } catch(Exception e) {
@@ -317,14 +422,88 @@ public class KafkaActorThread extends Thread {
                 // @todo: this should signal some kind of fatal exception
                 completableFuture.completeExceptionally(e);
             } finally {
-                // clear the newLocalShards for the next rebalance op
-                this.newLocalShards.clear();
-                // @todo: do we need to run with the shards that we know on error?
-                assignPartitions();
             }
 
         });
         return completableFuture;
+    }
+
+    private void assignPartitions() {
+        // assign the message partitions
+        List<TopicPartition> messagePartitions = this.localShards.entrySet().stream()
+                .map(entry -> new TopicPartition(messagesTopic, entry.getKey().getShardId())).collect(Collectors.toList());
+        if(localActorNode != null) {
+            // node topics have only 1 partition (for now)
+            messagePartitions.add(new TopicPartition(getNodeMessagesTopic(internalActorSystem, localActorNode.actorNode.getKey()), 0));
+        }
+        this.messageConsumer.assign(messagePartitions);
+        // also need to assign the state partitions
+        List<TopicPartition> statePartitions = this.localShards.entrySet().stream()
+                .map(entry -> new TopicPartition(persistentActorsTopic, entry.getKey().getShardId())).collect(Collectors.toList());
+        this.stateConsumer.assign(statePartitions);
+        // and the scheduled messages
+        List<TopicPartition> scheduledMessagesPartitions = this.localShards.entrySet().stream()
+                .map(entry -> new TopicPartition(scheduledMessagesTopic, entry.getKey().getShardId())).collect(Collectors.toList());
+        this.scheduledMessagesConsumer.assign(scheduledMessagesPartitions);
+        // @todo: also need to assign ActorSystemEvents
+    }
+
+    private PersistentActorStore createStateStore(ShardKey shardKey) {
+        // @todo: the statestore implementation should become configurable
+        return new InMemoryPersistentActorStore(stareDeserializer);
+    }
+
+    private void initializeStateStores(List<ManagedActorShard> managedActorShards) {
+        // loop over the state consumer until nothing is left
+        // seek to the beginning for the new actor shards
+        Map<TopicPartition, ManagedActorShard> topicPartitions = managedActorShards.stream()
+                .collect(Collectors.toMap(managedActorShard -> new TopicPartition(persistentActorsTopic, managedActorShard.getKey().getShardId()), managedActorShard -> managedActorShard));
+        stateConsumer.seekToBeginning(topicPartitions.keySet());
+        // this is to optimize the lookup in the poll loop
+        Map<Integer, ManagedActorShard> partitionsToShards = managedActorShards.stream()
+                .collect(Collectors.toMap(managedActorShard -> managedActorShard.getKey().getShardId(), managedActorShard -> managedActorShard));
+        // and poll till you can't poll no more
+        ConsumerRecords<String, byte[]> stateRecords = null;
+        do {
+            try {
+                stateRecords = stateConsumer.poll(0);
+                // distribute the data to the stores
+                stateRecords.iterator().forEachRemaining(consumerRecord ->
+                        partitionsToShards.get(consumerRecord.partition()).actorStore.put(consumerRecord.key(), consumerRecord.value()));
+            } catch(WakeupException | InterruptException e) {
+                // @todo: find out how to handle this
+            } catch(KafkaException e) {
+                // @todo: this is an unrecoverable error
+            }
+        } while(stateRecords != null && !stateRecords.isEmpty());
+    }
+
+    private void initializeScheduledMessages(List<ManagedActorShard> managedActorShards) {
+        // seek to the beginning for the new actor shards
+        Map<TopicPartition, ManagedActorShard> topicPartitions = managedActorShards.stream()
+                .collect(Collectors.toMap(managedActorShard -> new TopicPartition(scheduledMessagesTopic, managedActorShard.getKey().getShardId()), managedActorShard -> managedActorShard));
+        scheduledMessagesConsumer.seekToBeginning(topicPartitions.keySet());
+        // this is to optimize the lookup in the poll loop
+        Map<Integer, ManagedActorShard> partitionsToShards = managedActorShards.stream()
+                .collect(Collectors.toMap(managedActorShard -> managedActorShard.getKey().getShardId(), managedActorShard -> managedActorShard));
+        // and poll till you can't poll no more
+        ConsumerRecords<UUID, ScheduledMessage> scheduleMessageRecords = null;
+        do {
+            try {
+                scheduleMessageRecords = scheduledMessagesConsumer.poll(0);
+                // distribute the data to the scheduledMessages maps
+                scheduleMessageRecords.iterator().forEachRemaining(consumerRecord ->
+                        partitionsToShards.get(consumerRecord.partition())
+                                .scheduledMessages.put(consumerRecord.value().getFireTime(TimeUnit.MILLISECONDS),
+                                                       consumerRecord.value()));
+            } catch(WakeupException | InterruptException e) {
+                // @todo: find out how to handle this
+            } catch(KafkaException e) {
+                // @todo: this is an unrecoverable error
+            }
+        } while(scheduleMessageRecords != null && !scheduleMessageRecords.isEmpty());
+        // make sure we commit here so that we don't get replays later when we poll for more messages
+        scheduledMessagesConsumer.commitSync();
     }
 
     void createTempActor(CreateActorMessage createActorMessage) {
@@ -521,7 +700,16 @@ public class KafkaActorThread extends Thread {
     }
 
     private void persistActor(ManagedActorShard managedActorShard, PersistentActor<ShardKey> persistentActor) {
-        // @todo: write the actor state to the backing store here
+        // write to the producer (this will be within the current transaction)
+        try {
+            byte[] serializedActor = stateSerializer.serialize(persistentActor);
+            producer.send(new ProducerRecord<>(persistentActorsTopic, managedActorShard.getKey().getShardId(), serializedActor));
+            // also update the state store (in case persistentActor instance gets evicted)
+            managedActorShard.actorStore.put(persistentActor.getSelf().getActorId(), serializedActor);
+        } catch(IOException e) {
+            // throw the same exception that would have been thrown by the Kafka serializer
+            throw new SerializationException(String.format("Exception while serializing state for actor %s", persistentActor.getSelf().getActorId()), e);
+        }
     }
 
     private InternalMessage createInternalMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws IOException {
@@ -538,37 +726,25 @@ public class KafkaActorThread extends Thread {
         return new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message),message.getClass().getName(),durable, timeout);
     }
 
-    private void assignPartitions() {
-        List<TopicPartition> topicPartitions = this.localShards.entrySet().stream()
-                .map(entry -> new TopicPartition(clusterName, entry.getKey().getShardId())).collect(Collectors.toList());
-        if(localActorNode != null) {
-            // node topics have only 1 partition (for now)
-            topicPartitions.add(new TopicPartition(getNodeMessagesTopic(internalActorSystem, localActorNode.actorNode.getKey()), 0));
-        }
-        this.messageConsumer.assign(topicPartitions);
-    }
 
-    private PersistentActorStore initializeStateStore(ShardKey shardKey) {
-        // @todo: load the state here
-        return new InMemoryPersistentActorStore(stareDeserializer);
-    }
-
-
-    private String generateNodeTopic(NodeKey node) {
-        return format("%s.nodes.%s", clusterName, node.getNodeId());
-    }
 
 
     private final class ManagedActorShard implements EvictionListener<PersistentActor<ShardKey>> {
         private final KafkaActorShard actorShard;
         private final Cache<ActorRef,PersistentActor<ShardKey>> actorCache;
         private final PersistentActorStore actorStore;
+        private final TreeMultimap<Long, ScheduledMessage> scheduledMessages;
 
         public ManagedActorShard(KafkaActorShard actorShard,
                                  PersistentActorStore actorStore) {
             this.actorShard = actorShard;
             this.actorCache = shardActorCacheManager.create(actorShard.getKey(), this);
             this.actorStore = actorStore;
+            this.scheduledMessages = TreeMultimap.create(Comparator.naturalOrder(), Comparator.naturalOrder());
+        }
+
+        public ShardKey getKey() {
+            return actorShard.getKey();
         }
 
         @Override
@@ -605,6 +781,12 @@ public class KafkaActorThread extends Thread {
 
         public boolean actorExists(ActorRef actorRef) {
             return actorStore.containsKey(actorRef.getActorId());
+        }
+
+        public List<ScheduledMessage> getScheduledMessagesThatShouldFire(long now) {
+            return this.scheduledMessages.values().stream()
+                    .filter(scheduledMessage -> scheduledMessage.getFireTime(TimeUnit.MILLISECONDS) < now)
+                    .collect(Collectors.toList());
         }
 
     }

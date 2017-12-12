@@ -23,7 +23,6 @@ import org.elasticsoftware.elasticactors.serialization.Deserializer;
 
 import java.io.DataInput;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 /**
  * @author Joost van de Wijgerd

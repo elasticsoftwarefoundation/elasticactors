@@ -3,7 +3,9 @@ package org.elasticsoftware.elasticactors.kafka.serialization;
 import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageSerializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 
 import java.util.Map;
@@ -16,6 +18,7 @@ public final class KafkaProducerSerializer implements Serializer<Object> {
     private final StringSerializer stringSerializer = new StringSerializer();
     private final KafkaInternalMessageSerializer internalMessageSerializer;
     private final KafkaPersistentActorSerializer persistentActorSerializer;
+    private boolean isKey = false;
 
     public KafkaProducerSerializer(KafkaInternalMessageSerializer internalMessageSerializer,
                                    KafkaPersistentActorSerializer persistentActorSerializer) {
@@ -25,21 +28,31 @@ public final class KafkaProducerSerializer implements Serializer<Object> {
 
     @Override
     public void configure(Map<String, ?> configs, boolean isKey) {
-        // don't care if it's a key or a value
+        this.isKey = isKey;
     }
 
     @Override
     public byte[] serialize(String topic, Object data) {
-        if(data instanceof UUID) {
-            return uuidSerializer.serialize(topic, (UUID) data);
-        } else if(data instanceof String) {
-            return stringSerializer.serialize(topic, (String) data);
-        } else if(data instanceof PersistentActor) {
-            return persistentActorSerializer.serialize(topic, (PersistentActor<ShardKey>) data);
-        } else if(data instanceof InternalMessage) {
-            return internalMessageSerializer.serialize(topic, (InternalMessage) data);
+        if(isKey) {
+            if (data instanceof UUID) {
+                return uuidSerializer.serialize(topic, (UUID) data);
+            } else if (data instanceof String) {
+                return stringSerializer.serialize(topic, (String) data);
+            } else {
+                throw new IllegalArgumentException(format("Key of type %s is not supported by this Serializer", data.getClass().getName()));
+            }
         } else {
-            throw new IllegalArgumentException(format("data of type %s is not supported by this Serializer", data.getClass().getName()));
+            if (data instanceof InternalMessage) {
+                return internalMessageSerializer.serialize(topic, (InternalMessage) data);
+            } else if (data instanceof byte[]) {
+                return (byte[]) data;
+            } else if(data instanceof ScheduledMessage) {
+                return ScheduledMessageSerializer.get().serialize((ScheduledMessage) data);
+            } else if (data instanceof PersistentActor) {
+                return persistentActorSerializer.serialize(topic, (PersistentActor<ShardKey>) data);
+            } else {
+                throw new IllegalArgumentException(format("Value of type %s is not supported by this Serializer", data.getClass().getName()));
+            }
         }
     }
 

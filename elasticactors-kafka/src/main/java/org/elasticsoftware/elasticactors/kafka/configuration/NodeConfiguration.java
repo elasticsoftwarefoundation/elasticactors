@@ -23,12 +23,8 @@ import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramew
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorSerializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
-import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;

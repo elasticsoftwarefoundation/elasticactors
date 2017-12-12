@@ -11,6 +11,7 @@ import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.*;
 import org.elasticsoftware.elasticactors.cluster.scheduler.InternalScheduler;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
+import org.elasticsoftware.elasticactors.kafka.scheduler.KafkaTopicScheduler;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
@@ -44,7 +45,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private final AtomicBoolean stable = new AtomicBoolean(false);
     private final ConcurrentMap<Class, ElasticActor> actorInstances = new ConcurrentHashMap<>();
-    private final SchedulerService schedulerService;
+    private final KafkaTopicScheduler schedulerService;
     private final HashFunction hashFunction = Hashing.murmur3_32();
 
     public KafkaActorSystemInstance(ElasticActorsNode node,
@@ -56,7 +57,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
                                     NodeActorCacheManager nodeActorCacheManager,
                                     Serializer<PersistentActor<ShardKey>,byte[]> stateSerializer,
                                     Deserializer<byte[],PersistentActor<ShardKey>> stareDeserializer) {
-        this.schedulerService = null;
+        this.schedulerService = new KafkaTopicScheduler(this);
         this.localNode = node;
         this.cluster = node;
         this.configuration = configuration;
@@ -242,7 +243,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
 
     @Override
     public Scheduler getScheduler() {
-        return null;
+        return schedulerService;
     }
 
     @Override

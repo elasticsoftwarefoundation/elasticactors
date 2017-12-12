@@ -21,7 +21,6 @@ import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.runtime.ScannerHelper;
-import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;

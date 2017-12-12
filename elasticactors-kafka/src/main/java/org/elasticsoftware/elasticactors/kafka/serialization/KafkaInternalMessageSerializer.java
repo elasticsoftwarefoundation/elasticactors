@@ -3,7 +3,6 @@ package org.elasticsoftware.elasticactors.kafka.serialization;
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Serializer;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
 
 import java.io.IOException;
 import java.util.Map;

@@ -7,6 +7,7 @@ import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.ActorShardRef;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.serialization.Message;
@@ -79,6 +80,11 @@ public final class KafkaActorShard implements ActorShard {
         // the calling thread can be a KafkaActorThread (meaning this is called as a side effect of handling another message)
         // or it is called from another thread in which case it is not part of an existing transaction
         actorThread.send(key, internalMessage);
+    }
+
+    public void schedule(ScheduledMessage scheduledMessage) {
+        // forward this to the ActorThread
+        actorThread.schedule(key, scheduledMessage);
     }
 
     @Override

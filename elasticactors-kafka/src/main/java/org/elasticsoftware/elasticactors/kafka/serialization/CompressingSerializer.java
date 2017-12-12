@@ -23,7 +23,6 @@ import net.jpountz.lz4.LZ4Factory;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 /**
  * @author Joost van de Wijgerd
