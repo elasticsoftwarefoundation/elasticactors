@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.List;
 
 public final class KafkaActorNode implements ActorNode {
-
     private final NodeKey key;
     private final PhysicalNode node;
     private final KafkaActorThread actorThread;
@@ -33,7 +32,7 @@ public final class KafkaActorNode implements ActorNode {
         this.actorSystem = actorSystem;
         // if we are local, we need to ensure the actorThread will add our Topic
         if(node.isLocal()) {
-            actorThread.assign(this);
+            actorThread.assign(this, true);
         }
     }
 
@@ -57,9 +56,17 @@ public final class KafkaActorNode implements ActorNode {
         sendMessage(sender, ImmutableList.of(receiver), message);
     }
 
+    public void sendMessage(ActorRef sender, ActorRef receiver, int partition, Object message) throws Exception {
+        sendMessage(sender, ImmutableList.of(receiver), partition, message);
+    }
+
     @Override
     public void sendMessage(ActorRef sender, List<? extends ActorRef> receivers, Object message) throws Exception {
         offerInternalMessage(createInternalMessage(sender, receivers, message));
+    }
+
+    void sendMessage(ActorRef sender, List<? extends ActorRef> receivers, int partition, Object message) throws Exception {
+        offerInternalMessage(partition, createInternalMessage(sender, receivers, message));
     }
 
     @Override
@@ -78,7 +85,12 @@ public final class KafkaActorNode implements ActorNode {
     public void offerInternalMessage(InternalMessage internalMessage) {
         // the calling thread can be a KafkaActorThread (meaning this is called as a side effect of handling another message)
         // or it is called from another thread in which case it is not part of an existing transaction
-        actorThread.send(key, internalMessage);
+        // when the partition is not specified we use partition 0 as the default
+        actorThread.send(key, 0, internalMessage);
+    }
+
+    void offerInternalMessage(int partition, InternalMessage internalMessage) {
+        actorThread.send(key, partition, internalMessage);
     }
 
     @Override
@@ -91,13 +103,12 @@ public final class KafkaActorNode implements ActorNode {
 
     }
 
-    /**
-     * This is a special case, a TempActor can only be created locally and should not create a message on the cluster topic
-     *
-     * @param createActorMessage
-     */
-    void createTempActor(CreateActorMessage createActorMessage) {
-        this.actorThread.createTempActor(createActorMessage);
+    KafkaActorThread getActorThread() {
+        return actorThread;
+    }
+
+    void initializeServiceActors() {
+        this.actorThread.initializeServiceActors();
     }
 
     private InternalMessage createInternalMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws IOException {

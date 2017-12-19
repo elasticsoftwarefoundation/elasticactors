@@ -1,0 +1,91 @@
+/*
+ * Copyright 2013 - 2017 The Original Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.elasticsoftware.elasticactors.kafka.cluster;
+
+import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.cluster.BaseActorRef;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.kafka.KafkaActorNode;
+
+/**
+ * {@link ActorRef} that references an actor in the local cluster. This is a special Kafka specific implementation that
+ * knows about the node topic partition (= KafkaActorThread) that runs the TempActor
+ *
+ * @author  Joost van de Wijgerd
+ */
+public final class LocalClusterPartitionedActorNodeRef extends BaseActorRef implements ActorContainerRef {
+    private final KafkaActorNode node;
+    private final int partition;
+
+    public LocalClusterPartitionedActorNodeRef(InternalActorSystem actorSystem, String clusterName, KafkaActorNode node, int partition) {
+        this(actorSystem, clusterName, node, partition, null);
+    }
+
+    public LocalClusterPartitionedActorNodeRef(InternalActorSystem actorSystem, String clusterName, KafkaActorNode node, int partition, String actorId) {
+        super(actorSystem, clusterName, actorId, generateRefSpec(clusterName, node, partition, actorId));
+        this.node = node;
+        this.partition = partition;
+    }
+
+    public static String generateRefSpec(String clusterName, ActorNode node, int partition, String actorId) {
+        if(actorId != null) {
+            return String.format("actor://%s/%s/nodes/%s/%d/%s",
+                    clusterName,node.getKey().getActorSystemName(),
+                    node.getKey().getNodeId(), partition, actorId);
+        } else {
+            return String.format("actor://%s/%s/nodes/%s/%d",
+                    clusterName,node.getKey().getActorSystemName(),
+                    node.getKey().getNodeId(), partition);
+        }
+    }
+
+    @Override
+    public String getActorPath() {
+        return String.format("%s/nodes/%s/%d",node.getKey().getActorSystemName(),node.getKey().getNodeId(), partition);
+    }
+
+    @Override
+    public void tell(Object message, ActorRef sender) {
+        try {
+            node.sendMessage(sender,this, partition, message);
+        } catch(MessageDeliveryException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new MessageDeliveryException("Unexpected Exception while sending message",e , false);
+        }
+    }
+
+    @Override
+    public void tell(Object message) {
+        final ActorRef self = ActorContextHolder.getSelf();
+        if(self != null) {
+            tell(message,self);
+        } else {
+            throw new IllegalStateException("Cannot determine ActorRef(self) Only use this method while inside an ElasticActor Lifecycle or on(Message) method!");
+        }
+    }
+
+    @Override
+    public boolean isLocal() {
+        return node.isLocal();
+    }
+
+    @Override
+    public ActorContainer getActorContainer() {
+        return node;
+    }
+}

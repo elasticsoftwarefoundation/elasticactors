@@ -18,7 +18,6 @@ package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.*;
 
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static java.lang.String.format;
@@ -26,13 +25,15 @@ import static java.lang.String.format;
 /**
  * @author Joost van de Wijgerd
  */
-public final class ActorRefTools {
+public class ActorRefTools {
     private static final String EXCEPTION_FORMAT = "Invalid ActorRef, required spec: [actor://<cluster>/<actorSystem>/[shards|nodes|services]/<shardId>/<actorId (optional)>, actual spec: [%s]";
+    private final InternalActorSystems actorSystems;
 
-    private ActorRefTools() {
+    public ActorRefTools(InternalActorSystems actorSystems) {
+        this.actorSystems = actorSystems;
     }
 
-    public static ActorRef parse(String refSpec, InternalActorSystems actorSystems) {
+    public final ActorRef parse(String refSpec) {
         // refSpec should look like: actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId>
         if (refSpec.startsWith("actor://")) {
             int actorSeparatorIndex = 8;
@@ -52,9 +53,9 @@ public final class ActorRefTools {
 
             String clusterName = components[0];
             if (actorSystems.getClusterName().equals(clusterName)) {
-                return handleLocalActorSystemReference(refSpec, components, actorId, actorSystems);
+                return handleLocalActorSystemReference(refSpec, components, actorId);
             } else {
-                return handleRemoteActorSystemReference(refSpec, components, actorId, actorSystems);
+                return handleRemoteActorSystemReference(refSpec, components, actorId);
             }
 
 
@@ -64,69 +65,103 @@ public final class ActorRefTools {
 
     }
 
-    private static ActorRef handleLocalActorSystemReference(String refSpec, String[] components, String actorId, InternalActorSystems actorSystems) {
-        String clusterName = components[0];
+    private ActorRef handleLocalActorSystemReference(String refSpec, String[] components, String actorId) {
         String actorSystemName = components[1];
         InternalActorSystem actorSystem = actorSystems.get(actorSystemName);
         if (actorSystem == null) {
             throw new IllegalArgumentException(format("Unknown ActorSystem: %s", actorSystemName));
         }
         if ("shards".equals(components[2])) {
-            int shardId = Integer.parseInt(components[3]);
-            if (shardId >= actorSystem.getConfiguration().getNumberOfShards()) {
-                throw new IllegalArgumentException(format("Unknown shard %d for ActorSystem %s. Available shards: %d", shardId, actorSystemName, actorSystem.getConfiguration().getNumberOfShards()));
-            }
-            return actorSystems.createPersistentActorRef(actorSystem.getShard(format("%s/shards/%d", actorSystemName, shardId)),actorId);
+            return handleShard(components, actorId);
         } else if ("nodes".equals(components[2])) {
-            //return new LocalClusterActorNodeRef(clusterName, actorSystem.getNode(components[3]), actorId);
-            final ActorNode node = actorSystem.getNode(components[3]);
-            if(node != null) {
-                return actorSystems.createTempActorRef(node,actorId);
-            } else {
-                // this node is currently down, send a disconnected ref
-                return new DisconnectedActorNodeRef(clusterName,actorSystemName,components[3],actorId);
-            }
+            return handleNode(components, actorId);
         } else if ("services".equals(components[2])) {
-            //return new ServiceActorRef(clusterName, actorSystem.getNode(), (actorId == null) ? components[3] : format("%s/%s", components[3], actorId));
-            // backwards compatibility check
-            ActorNode node = actorSystem.getNode(components[3]);
-            if(node == null) {
-                return new DisconnectedServiceActorRef(clusterName,actorSystemName,components[3],actorId);
-            } else {
-                return actorSystems.createServiceActorRef(node, actorId);
-            }
+            return handleService(components, actorId);
         } else {
             throw new IllegalArgumentException(format(EXCEPTION_FORMAT, refSpec));
         }
     }
 
-    private static ActorRef handleRemoteActorSystemReference(String refSpec, String[] components, String actorId, InternalActorSystems actorSystems) {
+    protected ActorRef handleShard(String[] components, String actorId) {
+        String actorSystemName = components[1];
+        InternalActorSystem actorSystem = actorSystems.get(actorSystemName);
+        int shardId = Integer.parseInt(components[3]);
+        if (shardId >= actorSystem.getConfiguration().getNumberOfShards()) {
+            throw new IllegalArgumentException(format("Unknown shard %d for ActorSystem %s. Available shards: %d", shardId, actorSystemName, actorSystem.getConfiguration().getNumberOfShards()));
+        }
+        return actorSystems.createPersistentActorRef(actorSystem.getShard(format("%s/shards/%d", actorSystemName, shardId)),actorId);
+    }
+
+    protected ActorRef handleNode(String[] components, String actorId) {
+        String clusterName = components[0];
+        String actorSystemName = components[1];
+        InternalActorSystem actorSystem = actorSystems.get(actorSystemName);
+        final ActorNode node = actorSystem.getNode(components[3]);
+        if(node != null) {
+            return actorSystems.createTempActorRef(node, actorId);
+        } else {
+            // this node is currently down, send a disconnected ref
+            return new DisconnectedActorNodeRef(clusterName,actorSystemName,components[3], actorId);
+        }
+    }
+
+    protected ActorRef handleService(String[] components, String actorId) {
+        String clusterName = components[0];
+        String actorSystemName = components[1];
+        InternalActorSystem actorSystem = actorSystems.get(actorSystemName);
+        ActorNode node = actorSystem.getNode(components[3]);
+        if(node == null) {
+            return new DisconnectedServiceActorRef(clusterName,actorSystemName,components[3],actorId);
+        } else {
+            return actorSystems.createServiceActorRef(node, actorId);
+        }
+    }
+
+    private ActorRef handleRemoteActorSystemReference(String refSpec, String[] components, String actorId) {
         String clusterName = components[0];
         String actorSystemName = components[1];
         if ("shards".equals(components[2])) {
-            ActorSystem remoteActorSystem = actorSystems.getRemote(clusterName, actorSystemName);
-            int shardId = Integer.parseInt(components[3]);
-            if (remoteActorSystem == null) {
-                // return a disconnected actor ref that throws exception on tell() so that the deserialization never fails
-                // even when the remote actor cannot be reached
-                return new DisconnectedRemoteActorShardRef(clusterName,actorSystemName,actorId,shardId);
-            }
-            return new ActorShardRef(clusterName, ((ShardAccessor) remoteActorSystem).getShard(format("%s/shards/%d", actorSystemName, shardId)), actorId, actorSystems.get(null));
+            return handleRemoteShard(components, actorId);
         } else if ("nodes".equals(components[2])) {
-            ActorSystem remoteActorSystem = actorSystems.getRemote(clusterName, actorSystemName);
-            if(remoteActorSystem == null) {
-                return new DisconnectedRemoteActorNodeRef(clusterName, actorSystemName, components[3], actorId);
-            } else {
-                // get a random shard to use as a hub
-                int randomShardId = ThreadLocalRandom.current().nextInt(((ShardAccessor) remoteActorSystem).getNumberOfShards());
-                ActorShard actorShard = ((ShardAccessor) remoteActorSystem).getShard(randomShardId);
-                return new RemoteClusterActorNodeRef(actorSystems.get(null), clusterName, actorShard, components[3], actorId);
-            }
+            return handleRemoteNode(components, actorId);
         } else if ("services".equals(components[2])) {
-            return new DisconnectedServiceActorRef(clusterName, actorSystemName, components[3], actorId);
+            return handleRemoteService(components, actorId);
         } else {
             throw new IllegalArgumentException(format(EXCEPTION_FORMAT, refSpec));
         }
+    }
+
+    protected ActorRef handleRemoteShard(String[] components, String actorId) {
+        String clusterName = components[0];
+        String actorSystemName = components[1];
+        ActorSystem remoteActorSystem = actorSystems.getRemote(clusterName, actorSystemName);
+        int shardId = Integer.parseInt(components[3]);
+        if (remoteActorSystem == null) {
+            // return a disconnected actor ref that throws exception on tell() so that the deserialization never fails
+            // even when the remote actor cannot be reached
+            return new DisconnectedRemoteActorShardRef(clusterName,actorSystemName,actorId,shardId);
+        }
+        return new ActorShardRef(clusterName, ((ShardAccessor) remoteActorSystem).getShard(format("%s/shards/%d", actorSystemName, shardId)), actorId, actorSystems.get(null));
+    }
+
+    protected ActorRef handleRemoteNode(String[] components, String actorId) {
+        String clusterName = components[0];
+        String actorSystemName = components[1];
+        ActorSystem remoteActorSystem = actorSystems.getRemote(clusterName, actorSystemName);
+        if(remoteActorSystem == null) {
+            return new DisconnectedRemoteActorNodeRef(clusterName, actorSystemName, components[3], actorId);
+        } else {
+            // get a random shard to use as a hub
+            int randomShardId = ThreadLocalRandom.current().nextInt(((ShardAccessor) remoteActorSystem).getNumberOfShards());
+            ActorShard actorShard = ((ShardAccessor) remoteActorSystem).getShard(randomShardId);
+            return new RemoteClusterActorNodeRef(actorSystems.get(null), clusterName, actorShard, components[3], actorId);
+        }
+    }
+
+    protected ActorRef handleRemoteService(String[] components, String actorId) {
+        String clusterName = components[0];
+        String actorSystemName = components[1];
+        return new DisconnectedServiceActorRef(clusterName, actorSystemName, components[3], actorId);
     }
 
     public static boolean isService(ActorRef ref) {

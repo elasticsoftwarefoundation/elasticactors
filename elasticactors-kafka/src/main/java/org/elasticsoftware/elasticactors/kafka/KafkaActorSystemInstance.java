@@ -1,6 +1,8 @@
 package org.elasticsoftware.elasticactors.kafka;
 
 import com.google.common.base.Charsets;
+import com.google.common.cache.Cache;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import org.apache.logging.log4j.LogManager;
@@ -10,17 +12,23 @@ import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.*;
 import org.elasticsoftware.elasticactors.cluster.scheduler.InternalScheduler;
-import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
+import org.elasticsoftware.elasticactors.kafka.cluster.KafkaInternalActorSystems;
+import org.elasticsoftware.elasticactors.kafka.cluster.LocalClusterPartitionedActorNodeRef;
 import org.elasticsoftware.elasticactors.kafka.scheduler.KafkaTopicScheduler;
-import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
+import org.elasticsoftware.elasticactors.kafka.utils.TopicHelper;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
 import org.elasticsoftware.elasticactors.serialization.*;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 
 import javax.annotation.Nullable;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,11 +39,11 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 
-public final class KafkaActorSystemInstance implements InternalActorSystem, ShardDistributor {
+public final class KafkaActorSystemInstance implements InternalActorSystem, ShardDistributor, ActorSystemEventListenerRegistry {
     private static final Logger logger = LogManager.getLogger(KafkaActorSystemInstance.class);
     private final InternalActorSystemConfiguration configuration;
     private final NodeSelectorFactory nodeSelectorFactory;
-    private final InternalActorSystems cluster;
+    private final KafkaInternalActorSystems cluster;
     private final PhysicalNode localNode;
     private final ActorRefFactory actorRefFactory;
     private final KafkaActorThread[] shardThreads;
@@ -47,33 +55,63 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
     private final ConcurrentMap<Class, ElasticActor> actorInstances = new ConcurrentHashMap<>();
     private final KafkaTopicScheduler schedulerService;
     private final HashFunction hashFunction = Hashing.murmur3_32();
+    private final ActorLifecycleListenerRegistry actorLifecycleListenerRegistry;
 
     public KafkaActorSystemInstance(ElasticActorsNode node,
                                     InternalActorSystemConfiguration configuration,
                                     NodeSelectorFactory nodeSelectorFactory,
                                     Integer numberOfShardThreads,
                                     String bootstrapServers,
+                                    Cache<String,ActorRef> actorRefCache,
                                     ShardActorCacheManager shardActorCacheManager,
                                     NodeActorCacheManager nodeActorCacheManager,
-                                    Serializer<PersistentActor<ShardKey>,byte[]> stateSerializer,
-                                    Deserializer<byte[],PersistentActor<ShardKey>> stareDeserializer) {
+                                    Serializer<PersistentActor<ShardKey>, byte[]> stateSerializer,
+                                    Deserializer<byte[], PersistentActor<ShardKey>> stateDeserializer,
+                                    ActorLifecycleListenerRegistry actorLifecycleListenerRegistry) {
+        this.actorLifecycleListenerRegistry = actorLifecycleListenerRegistry;
         this.schedulerService = new KafkaTopicScheduler(this);
         this.localNode = node;
-        this.cluster = node;
+        // we need a wrapper around the default implementation that adds the partition for the node topics
+        this.cluster = new KafkaInternalActorSystems(node, actorRefCache);
         this.configuration = configuration;
         this.nodeSelectorFactory = nodeSelectorFactory;
-        this.actorRefFactory = node;
+        this.actorRefFactory = cluster;
         this.actorShards = new KafkaActorShard[configuration.getNumberOfShards()];
         this.shardThreads = new KafkaActorThread[numberOfShardThreads];
+        // make sure all the topics exist and are properly configured before staring the system
+        try {
+            TopicHelper.ensureTopicsExists(bootstrapServers, node.getId(), numberOfShardThreads, this);
+        } catch(Exception e) {
+            throw new RuntimeException("FATAL Exception on ensureTopicsExist", e);
+        }
         for(int i = 0 ; i < numberOfShardThreads ; i++) {
-            this.shardThreads[i] = new KafkaActorThread(cluster.getClusterName(), bootstrapServers, this, actorRefFactory, shardActorCacheManager, nodeActorCacheManager, stateSerializer, stareDeserializer);
+            this.shardThreads[i] = new KafkaActorThread(cluster.getClusterName(), bootstrapServers, this,
+                    actorRefFactory, shardActorCacheManager, nodeActorCacheManager, stateSerializer, stateDeserializer);
         }
         for(int i = 0 ; i < configuration.getNumberOfShards() ; i++) {
-            this.actorShards[i] = new KafkaActorShard(new ShardKey(configuration.getName(), i), this.shardThreads[i % numberOfShardThreads], this);
+            this.actorShards[i] = new KafkaActorShard(new ShardKey(configuration.getName(), i),
+                    this.shardThreads[i % numberOfShardThreads], this);
         }
-        // add the local node
+        // add the local node to the first shard as primary
         this.localActorNode = new KafkaActorNode(localNode, this.shardThreads[0], this);
         this.activeNodes.add(localActorNode);
+        // each KafkaActorThread will have a copy of the ManagedActorNode but only one will be responsible for the polling the node topic
+        for (int i = 1; i < shardThreads.length; i++) {
+            shardThreads[i].assign(localActorNode, false);
+        }
+    }
+
+    @PostConstruct
+    public void init() {
+        // @todo: start the shard threads here
+        for (KafkaActorThread shardThread : shardThreads) {
+            shardThread.start();
+        }
+    }
+
+    @PreDestroy
+    public void destroy() {
+
     }
 
     @Override
@@ -83,17 +121,29 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
 
     @Override
     public ActorSystemEventListenerRegistry getEventListenerRegistry() {
-        return null;
+        return this;
     }
 
     @Override
     public ActorRefGroup groupOf(Collection<ActorRef> members) throws IllegalArgumentException {
-        return null;
+        // all members have to be persistent actor refs
+        for (ActorRef member : members) {
+            if(!(member instanceof ActorShardRef)) {
+                throw new IllegalArgumentException("Only Persistent Actors (annotated with @Actor) of the same ElasticActors cluster are allowed to form a group");
+            }
+        }
+        // build the map
+        ImmutableListMultimap.Builder<ActorShardRef, ActorRef> memberMap = ImmutableListMultimap.builder();
+        for (ActorRef member : members) {
+            memberMap.put((ActorShardRef)((ActorShardRef)member).getActorContainer().getActorRef(), member);
+        }
+
+        return new LocalActorRefGroup(memberMap.build());
     }
 
     @Override
     public ActorRef tempActorFor(String actorId) {
-        return null;
+        throw new UnsupportedOperationException("KafkaActorSystemInstance does not support tempActorFor logic because node partition cannot be determined");
     }
 
     @Override
@@ -160,7 +210,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
 
     @Override
     public InternalScheduler getInternalScheduler() {
-        return schedulerService;
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -213,8 +263,6 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         }
         String actorId = UUID.randomUUID().toString();
         // see if we are being called in the context of another actor (and set the affinity key)
-        // @todo: the affinitykey approach will not work like this, it means this should be executed in another
-        // @todo: shardThread than the one that is polling the node topic
         String affinityKey = ActorContextHolder.hasActorContext() ? ActorContextHolder.getSelf().getActorId() : null;
         CreateActorMessage createActorMessage = new CreateActorMessage(getName(),
                 actorClass.getName(),
@@ -222,23 +270,34 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
                 initialState,
                 ActorType.TEMP,
                 affinityKey);
-        this.localActorNode.createTempActor(createActorMessage);
-        return cluster.createTempActorRef(localActorNode, actorId);
+        // create this actor on the correct thread (using affinity if that is set)
+        KafkaActorThread actorThread = (affinityKey != null) ? shardFor(affinityKey).getActorThread() : shardFor(actorId).getActorThread();
+        actorThread.createTempActor(createActorMessage);
+        // we need to produce messages on the correct topic partition so the right ActorShard will handle it
+        return cluster.createTempActorRef(localActorNode, actorThread.getNodeTopicPartitionId(), actorId);
     }
 
     @Override
     public ActorRef actorFor(String actorId) {
-        return null;
+        // determine shard
+        final ActorShard shard = shardFor(actorId);
+        // return actor ref
+        return cluster.createPersistentActorRef(shard, actorId);
     }
 
     @Override
     public ActorRef serviceActorFor(String actorId) {
-        return null;
+        return cluster.createServiceActorRef(this.localActorNode, actorId);
     }
 
     @Override
     public ActorRef serviceActorFor(String nodeId, String actorId) {
-        return null;
+        final ActorNode node = getNode(nodeId);
+        if(node != null) {
+            return cluster.createServiceActorRef(node, actorId);
+        } else {
+            throw new IllegalArgumentException(format("Unknown node [%s]",nodeId));
+        }
     }
 
     @Override
@@ -253,12 +312,15 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
 
     @Override
     public void stop(ActorRef actorRef) throws Exception {
-
+        // set sender if we have any in the current context
+        ActorRef sender = ActorContextHolder.getSelf();
+        ActorContainer handlingContainer = ((ActorContainerRef) actorRef).getActorContainer();
+        handlingContainer.sendMessage(sender, handlingContainer.getActorRef(), new DestroyActorMessage(actorRef));
     }
 
     @Override
     public List<ActorLifecycleListener<?>> getActorLifecycleListeners(Class<? extends ElasticActor> actorClass) {
-        return null;
+        return actorLifecycleListenerRegistry.getListeners(actorClass);
     }
 
     @Override
@@ -355,7 +417,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         }
 
         // now we have released all local shards, wait for the new local shards to become available
-        if(!strategy.waitForReleasedShards(10, TimeUnit.SECONDS)) {
+        if(!strategy.waitForReleasedShards(60, TimeUnit.SECONDS)) {
             // timeout while waiting for the shards
             stable = false;
         }
@@ -390,15 +452,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         // should be allowed to send messages to shards
         if(initializing) {
             // initialize the services
-            Set<String> serviceActors = configuration.getServices();
-            if (serviceActors != null && !serviceActors.isEmpty()) {
-                // initialize the service actors in the context
-                KafkaActorNode localNode = activeNodes.get(0);
-                for (String elasticActorEntry : serviceActors) {
-                    localNode.sendMessage(null, localNode.getActorRef(),
-                            new ActivateActorMessage(getName(), elasticActorEntry, ActorType.SERVICE));
-                }
-            }
+            localActorNode.initializeServiceActors();
         }
         // print out the shard distribution here
         Map<String, Long> collect = shardDistribution.entrySet().stream().map(entry -> entry.getKey().getId()).collect(groupingBy(Function.identity(), counting()));
@@ -407,11 +461,31 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         for (Map.Entry<String, Long> entry : sortedNodes.entrySet()) {
             logger.info(format("\t%s has %d shards assigned", entry.getKey(), entry.getValue()));
         }
-        // now we need to generate the events for the new local shards (if any)
-        // @todo: this needs to be done in the ActorThread
-        // logger.info(format("Generating ACTOR_SHARD_INITIALIZED events for %d new shards",newLocalShards));
-        // for (Integer newLocalShard : newLocalShards) {
-        //     this.actorSystemEventListenerService.generateEvents(shardAdapters[newLocalShard], ACTOR_SHARD_INITIALIZED);
-        // }
+    }
+
+    @Override
+    public void register(ActorRef receiver, ActorSystemEvent event, Object message) throws IOException {
+        if(!(receiver instanceof ActorShardRef)) {
+            throw new IllegalArgumentException("ActorRef must be referencing a Persistent Actor (i.e. annotated with @Actor)");
+        }
+        // get the underlying KafkaActorShard
+        KafkaActorShard actorShard = (KafkaActorShard) ((ActorShardRef) receiver).getActorContainer();
+        // store the reference
+        MessageSerializer serializer = getSerializer(message.getClass());
+        ByteBuffer serializedMessage = serializer.serialize(message);
+        byte[] serializedBytes = new byte[serializedMessage.remaining()];
+        serializedMessage.get(serializedBytes);
+        actorShard.getActorThread().register(actorShard.getKey(), event,
+                new ActorSystemEventListenerImpl(receiver.getActorId(),message.getClass(),serializedBytes));
+    }
+
+    @Override
+    public void deregister(ActorRef receiver, ActorSystemEvent event) {
+        if(!(receiver instanceof ActorShardRef)) {
+            throw new IllegalArgumentException("ActorRef must be referencing a Persistent Actor (i.e. annotated with @Actor)");
+        }
+        // get the underlying KafkaActorShard
+        KafkaActorShard actorShard = (KafkaActorShard) ((ActorShardRef) receiver).getActorContainer();
+        actorShard.getActorThread().deregister(actorShard.getKey(), event, receiver);
     }
 }

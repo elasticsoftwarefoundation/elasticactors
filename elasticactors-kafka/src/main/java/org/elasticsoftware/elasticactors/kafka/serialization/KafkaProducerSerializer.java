@@ -3,8 +3,10 @@ package org.elasticsoftware.elasticactors.kafka.serialization;
 import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListener;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.serialization.internal.ActorSystemEventListenerSerializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageSerializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 
@@ -48,6 +50,8 @@ public final class KafkaProducerSerializer implements Serializer<Object> {
                 return (byte[]) data;
             } else if(data instanceof ScheduledMessage) {
                 return ScheduledMessageSerializer.get().serialize((ScheduledMessage) data);
+            } else if(data instanceof ActorSystemEventListener) {
+                return ActorSystemEventListenerSerializer.get().serialize((ActorSystemEventListener) data);
             } else if (data instanceof PersistentActor) {
                 return persistentActorSerializer.serialize(topic, (PersistentActor<ShardKey>) data);
             } else {

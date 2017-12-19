@@ -13,6 +13,7 @@ import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -89,10 +90,9 @@ public final class ApplicationProtocol {
                                          InternalMessage internalMessage) {
         try {
             receiver.prePassivate();
+            executeLifecycleListeners(actorSystem, persistentActor, (a, p) -> a.prePassivate(p.getSelf(), p.getState()));
         } catch (Exception e) {
             logger.error("Exception calling prePassivate",e);
-        } finally {
-            executeLifecycleListeners(actorSystem, persistentActor, (a, p) -> a.prePassivate(p.getSelf(), p.getState()));
         }
         // check persistence config (if any) -> by default return false
         return shouldUpdateState(receiver,ActorLifecycleStep.PASSIVATE);
@@ -102,19 +102,17 @@ public final class ApplicationProtocol {
                                       PersistentActor persistentActor,
                                       ElasticActor receiver,
                                       ActorRef receiverRef,
-                                      InternalMessage internalMessage) {
+                                      @Nullable InternalMessage internalMessage) {
         if(logger.isDebugEnabled()) {
             logger.debug(String.format("Creating Actor for ref [%s] of type [%s]",receiverRef.toString(), receiver.getClass().getName()));
         }
         try {
             // the creator is the sender of the internalMessage
-            receiver.postCreate(internalMessage.getSender());
+            receiver.postCreate(internalMessage == null ? null : internalMessage.getSender());
+            executeLifecycleListeners(actorSystem, persistentActor, (a, p) -> a.postCreate(p.getSelf(), p.getState()));
             // no previousversion as this is new
             receiver.postActivate(null);
-            executeLifecycleListeners(actorSystem, persistentActor, (a, p) -> {
-                a.postCreate(p.getSelf(), p.getState());
-                a.postActivate(p.getSelf(), p.getState(),null);
-            });
+            executeLifecycleListeners(actorSystem, persistentActor, (a, p) -> a.postActivate(p.getSelf(), p.getState(),null));
 
         } catch (Exception e) {
             logger.error("Exception calling postCreate",e);
@@ -135,6 +133,7 @@ public final class ApplicationProtocol {
             receiver.preDestroy(null);
             notifyPublishers(persistentActor);
             notifySubscribers(persistentActor, internalMessage, receiverRef, actorSystem);
+            executeLifecycleListeners(actorSystem, persistentActor, (a, p) -> a.preDestroy(p.getSelf(), p.getState()));
         } catch (Exception e) {
             logger.error("Exception calling preDestroy",e);
         }

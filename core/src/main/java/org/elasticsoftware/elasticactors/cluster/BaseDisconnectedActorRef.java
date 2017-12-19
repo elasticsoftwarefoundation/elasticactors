@@ -36,7 +36,7 @@ public abstract class BaseDisconnectedActorRef implements ActorRef, ActorContain
     protected final String refSpec;
     protected final String actorSystemName;
 
-    BaseDisconnectedActorRef(@Nullable String actorId, String clusterName, String refSpec, String actorSystemName) {
+    public BaseDisconnectedActorRef(@Nullable String actorId, String clusterName, String refSpec, String actorSystemName) {
         this.actorId = actorId;
         this.clusterName = clusterName;
         this.refSpec = refSpec;

@@ -2,6 +2,10 @@ package org.elasticsoftware.elasticactors.kafka.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import org.elasticsoftware.elasticactors.ActorLifecycleListenerRegistry;
+import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
@@ -13,6 +17,7 @@ import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
 import org.elasticsoftware.elasticactors.kafka.KafkaActorSystemInstance;
 import org.elasticsoftware.elasticactors.kafka.serialization.CompressingSerializer;
 import org.elasticsoftware.elasticactors.kafka.serialization.DecompressingDeserializer;
+import org.elasticsoftware.elasticactors.kafka.utils.TopicHelper;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
@@ -42,6 +47,7 @@ public class NodeConfiguration {
     private final NodeSelectorFactory nodeSelectorFactory = new HashingNodeSelectorFactory();
     private ElasticActorsNode node;
     private InternalActorSystemConfiguration configuration;
+    private Cache<String,ActorRef> actorRefCache;
 
     @PostConstruct
     public void init() throws IOException {
@@ -53,7 +59,9 @@ public class NodeConfiguration {
         String nodeId = env.getRequiredProperty("ea.node.id");
         InetAddress nodeAddress = InetAddress.getByName(env.getRequiredProperty("ea.node.address"));
         String clusterName = env.getRequiredProperty("ea.cluster");
-        node = new ElasticActorsNode(clusterName, nodeId, nodeAddress, configuration);
+        int maximumSize = env.getProperty("ea.actorRefCache.maximumSize",Integer.class,10240);
+        actorRefCache = CacheBuilder.newBuilder().maximumSize(maximumSize).build();
+        node = new ElasticActorsNode(clusterName, nodeId, nodeAddress, configuration, actorRefCache);
     }
 
 
@@ -110,14 +118,19 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"internalActorSystem"})
-    public InternalActorSystem createLocalActorSystemInstance(ShardActorCacheManager shardActorCacheManager, NodeActorCacheManager nodeActorCacheManager) {
+    public InternalActorSystem createLocalActorSystemInstance(ShardActorCacheManager shardActorCacheManager,
+                                                              NodeActorCacheManager nodeActorCacheManager,
+                                                              ActorLifecycleListenerRegistry actorLifecycleListenerRegistry) {
         final int workers = env.getProperty("ea.shardThreads.workerCount",Integer.class,Runtime.getRuntime().availableProcessors());
         final String bootstrapServers = env.getRequiredProperty("ea.kafka.bootstrapServers");
         final Integer compressionThreshold = env.getProperty("ea.persistentActorRepository.compressionThreshold",Integer.class, 512);
         Serializer<PersistentActor<ShardKey>,byte[]> serializer = new CompressingSerializer<>(new PersistentActorSerializer(node),compressionThreshold);
         Deserializer<byte[],PersistentActor<ShardKey>> deserializer = new DecompressingDeserializer<>(new PersistentActorDeserializer(node, node));
+        // NOTE: the node topic will be created with ea.shardThreads.workerCount number of partitions, changing this
+        // value will require you to update the topic or face serious issues otherwise
         return new KafkaActorSystemInstance(node, configuration, nodeSelectorFactory, workers, bootstrapServers,
-                shardActorCacheManager, nodeActorCacheManager, serializer, deserializer);
+                actorRefCache, shardActorCacheManager, nodeActorCacheManager, serializer, deserializer,
+                actorLifecycleListenerRegistry);
     }
 
     @Bean(name = {"remoteActorSystems"})

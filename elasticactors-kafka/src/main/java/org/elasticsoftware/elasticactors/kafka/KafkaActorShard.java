@@ -87,6 +87,10 @@ public final class KafkaActorShard implements ActorShard {
         actorThread.schedule(key, scheduledMessage);
     }
 
+    KafkaActorThread getActorThread() {
+        return actorThread;
+    }
+
     @Override
     public void init() throws Exception {
 

@@ -61,12 +61,12 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     private final String nodeId;
     private final InetAddress nodeAddress;
     private final SystemSerializers systemSerializers = new SystemSerializers(this);
-    private final SystemDeserializers systemDeserializers = new SystemDeserializers(this,this);
+    private final SystemDeserializers systemDeserializers;
     private final InternalActorSystemConfiguration configuration;
     private final CountDownLatch waitLatch = new CountDownLatch(1);
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private final Cache<Class<? extends ElasticActor>,String> actorStateVersionCache = CacheBuilder.newBuilder().maximumSize(1024).build();
-    private Cache<String,ActorRef> actorRefCache;
+    private final Cache<String,ActorRef> actorRefCache;
     private final Map<Class<? extends SerializationFramework>,SerializationFramework> serializationFrameworks = new HashMap<>();
     @Autowired
     private ApplicationContext applicationContext;
@@ -77,12 +77,35 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     private final AtomicReference<List<PhysicalNode>> currentTopology = new AtomicReference<>(null);
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("CLUSTER_SCHEDULER"));
     private final List<RebalancingEventListener> rebalancingEventListeners = new CopyOnWriteArrayList<>();
+    private final ActorRefTools actorRefTools;
 
-    public ElasticActorsNode(String clusterName, String nodeId, InetAddress nodeAddress, InternalActorSystemConfiguration configuration) {
+    public ElasticActorsNode(String clusterName,
+                             String nodeId,
+                             InetAddress nodeAddress,
+                             InternalActorSystemConfiguration configuration,
+                             Cache<String,ActorRef> actorRefCache) {
         this.clusterName = clusterName;
         this.nodeId = nodeId;
         this.nodeAddress = nodeAddress;
         this.configuration = configuration;
+        this.systemDeserializers = new SystemDeserializers(this,this);
+        this.actorRefCache = actorRefCache;
+        this.actorRefTools = new ActorRefTools(this);
+    }
+
+    public ElasticActorsNode(String clusterName,
+                             String nodeId,
+                             InetAddress nodeAddress,
+                             InternalActorSystemConfiguration configuration,
+                             Cache<String,ActorRef> actorRefCache,
+                             ActorRefFactory actorRefFactory) {
+        this.clusterName = clusterName;
+        this.nodeId = nodeId;
+        this.nodeAddress = nodeAddress;
+        this.configuration = configuration;
+        this.systemDeserializers = new SystemDeserializers(this, actorRefFactory);
+        this.actorRefCache = actorRefCache;
+        this.actorRefTools = new ActorRefTools(this);
     }
 
     @Autowired
@@ -94,8 +117,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
 
     @PostConstruct
     public void init() throws Exception {
-        int maximumSize = environment.getProperty("ea.actorRefCache.maximumSize",Integer.class,10240);
-        actorRefCache = CacheBuilder.newBuilder().maximumSize(maximumSize).build();
+
     }
 
     @PreDestroy
@@ -178,7 +200,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     public ActorRef create(final String refSpec) {
         ActorRef actorRef = actorRefCache.getIfPresent(refSpec);
         if(actorRef == null) {
-            actorRef = ActorRefTools.parse(refSpec, this);
+            actorRef = actorRefTools.parse(refSpec);
             actorRefCache.put(refSpec,actorRef);
         }
         return actorRef;

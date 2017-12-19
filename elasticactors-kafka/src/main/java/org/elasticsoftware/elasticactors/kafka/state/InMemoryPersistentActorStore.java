@@ -9,17 +9,29 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class InMemoryPersistentActorStore implements PersistentActorStore {
+    private final ShardKey shardKey;
     private final Map<String, byte[]> backingMap;
     private final Deserializer<byte[], PersistentActor<ShardKey>> deserializer;
 
-    public InMemoryPersistentActorStore(Deserializer<byte[], PersistentActor<ShardKey>> deserializer) {
+    public InMemoryPersistentActorStore(ShardKey shardKey, Deserializer<byte[], PersistentActor<ShardKey>> deserializer) {
+        this.shardKey = shardKey;
         this.deserializer = deserializer;
         this.backingMap = new HashMap<>();
     }
 
     @Override
+    public ShardKey getShardKey() {
+        return shardKey;
+    }
+
+    @Override
     public void put(String actorId, byte[] persistentActorBytes) {
         backingMap.put(actorId, persistentActorBytes);
+    }
+
+    @Override
+    public void remove(String actorId) {
+        backingMap.remove(actorId);
     }
 
     @Override
@@ -33,10 +45,7 @@ public final class InMemoryPersistentActorStore implements PersistentActorStore 
         try {
             return persistentActorBytes != null ? deserializer.deserialize(persistentActorBytes) : null;
         } catch(IOException e) {
-            // @todo: log an error
             throw new RuntimeException(e);
         }
     }
-
-
 }

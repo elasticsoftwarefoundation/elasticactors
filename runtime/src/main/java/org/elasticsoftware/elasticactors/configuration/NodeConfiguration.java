@@ -18,6 +18,9 @@ package org.elasticsoftware.elasticactors.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
@@ -68,7 +71,9 @@ public class NodeConfiguration {
         String nodeId = env.getRequiredProperty("ea.node.id");
         InetAddress nodeAddress = InetAddress.getByName(env.getRequiredProperty("ea.node.address"));
         String clusterName = env.getRequiredProperty("ea.cluster");
-        node = new ElasticActorsNode(clusterName, nodeId, nodeAddress, configuration);
+        int maximumSize = env.getProperty("ea.actorRefCache.maximumSize",Integer.class,10240);
+        Cache<String,ActorRef> actorRefCache = CacheBuilder.newBuilder().maximumSize(maximumSize).build();
+        node = new ElasticActorsNode(clusterName, nodeId, nodeAddress, configuration, actorRefCache);
     }
 
 

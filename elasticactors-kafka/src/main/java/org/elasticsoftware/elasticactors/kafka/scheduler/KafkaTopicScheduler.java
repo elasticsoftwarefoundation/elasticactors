@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 
-public final class KafkaTopicScheduler implements Scheduler, InternalScheduler {
+public final class KafkaTopicScheduler implements Scheduler {
     private final InternalActorSystem actorSystem;
 
     public KafkaTopicScheduler(InternalActorSystem internalActorSystem) {
@@ -50,8 +50,4 @@ public final class KafkaTopicScheduler implements Scheduler, InternalScheduler {
         throw new IllegalArgumentException(format("sender ref: %s needs to be a non-temp, non-service, locally sharded actor ref",(sender == null) ? "null" : sender.toString()));
     }
 
-    @Override
-    public void cancel(ShardKey shardKey, ScheduledMessageKey messageKey) {
-
-    }
 }

@@ -32,8 +32,8 @@ public final class TopicNamesHelper {
         return format(MESSAGES, internalActorSystem.getParent().getClusterName(), internalActorSystem.getName());
     }
 
-    public static String getNodeMessagesTopic(InternalActorSystem internalActorSystem, NodeKey node) {
-        return format(NODE_MESSAGES, internalActorSystem.getParent().getClusterName(), internalActorSystem.getName(), node.getNodeId());
+    public static String getNodeMessagesTopic(InternalActorSystem internalActorSystem, String nodeId) {
+        return format(NODE_MESSAGES, internalActorSystem.getParent().getClusterName(), internalActorSystem.getName(), nodeId);
     }
 
 }
