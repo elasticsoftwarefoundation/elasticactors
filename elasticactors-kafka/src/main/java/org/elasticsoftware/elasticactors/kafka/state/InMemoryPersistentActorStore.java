@@ -48,4 +48,9 @@ public final class InMemoryPersistentActorStore implements PersistentActorStore 
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public int count() {
+        return backingMap.size();
+    }
 }

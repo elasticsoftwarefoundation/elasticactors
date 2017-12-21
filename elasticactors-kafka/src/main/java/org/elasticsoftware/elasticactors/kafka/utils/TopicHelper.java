@@ -107,5 +107,7 @@ public final class TopicHelper {
             CreateTopicsResult result = adminClient.createTopics(Lists.newArrayList(topic));
             result.all().get(); // @todo: see if we didn't get an exception
         }
+
+        adminClient.close();
     }
 }

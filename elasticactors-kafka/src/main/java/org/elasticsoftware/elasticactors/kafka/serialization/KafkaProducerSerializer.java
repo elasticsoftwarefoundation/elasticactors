@@ -35,28 +35,24 @@ public final class KafkaProducerSerializer implements Serializer<Object> {
 
     @Override
     public byte[] serialize(String topic, Object data) {
-        if(isKey) {
-            if (data instanceof UUID) {
-                return uuidSerializer.serialize(topic, (UUID) data);
-            } else if (data instanceof String) {
-                return stringSerializer.serialize(topic, (String) data);
-            } else {
-                throw new IllegalArgumentException(format("Key of type %s is not supported by this Serializer", data.getClass().getName()));
-            }
+        if (data instanceof UUID) {
+            return uuidSerializer.serialize(topic, (UUID) data);
+        } else if (data instanceof String) {
+            return stringSerializer.serialize(topic, (String) data);
+        } /*else {
+            throw new IllegalArgumentException(format("Key of type %s is not supported by this Serializer", data.getClass().getName()));
+        } */else if (data instanceof InternalMessage) {
+            return internalMessageSerializer.serialize(topic, (InternalMessage) data);
+        } else if (data instanceof byte[]) {
+            return (byte[]) data;
+        } else if(data instanceof ScheduledMessage) {
+            return ScheduledMessageSerializer.get().serialize((ScheduledMessage) data);
+        } else if(data instanceof ActorSystemEventListener) {
+            return ActorSystemEventListenerSerializer.get().serialize((ActorSystemEventListener) data);
+        } else if (data instanceof PersistentActor) {
+            return persistentActorSerializer.serialize(topic, (PersistentActor<ShardKey>) data);
         } else {
-            if (data instanceof InternalMessage) {
-                return internalMessageSerializer.serialize(topic, (InternalMessage) data);
-            } else if (data instanceof byte[]) {
-                return (byte[]) data;
-            } else if(data instanceof ScheduledMessage) {
-                return ScheduledMessageSerializer.get().serialize((ScheduledMessage) data);
-            } else if(data instanceof ActorSystemEventListener) {
-                return ActorSystemEventListenerSerializer.get().serialize((ActorSystemEventListener) data);
-            } else if (data instanceof PersistentActor) {
-                return persistentActorSerializer.serialize(topic, (PersistentActor<ShardKey>) data);
-            } else {
-                throw new IllegalArgumentException(format("Value of type %s is not supported by this Serializer", data.getClass().getName()));
-            }
+            throw new IllegalArgumentException(format("Keys nor Values of type %s are supported by this Serializer", data.getClass().getName()));
         }
     }
 

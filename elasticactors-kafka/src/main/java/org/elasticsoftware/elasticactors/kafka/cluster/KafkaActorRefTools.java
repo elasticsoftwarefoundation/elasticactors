@@ -14,12 +14,15 @@ public class KafkaActorRefTools extends ActorRefTools {
     }
 
     @Override
-    protected ActorRef handleNode(String[] components, String actorId) {
+    protected ActorRef handleNode(String[] components, String partitionAndActorId) {
+        // actorId is actually <partition>/actorId
         String clusterName = components[0];
         String actorSystemName = components[1];
+        int actorSeparator = partitionAndActorId.indexOf('/');
+        int partition = Integer.parseInt(partitionAndActorId.substring(0, actorSeparator));
+        String actorId = partitionAndActorId.substring(actorSeparator+1);
         InternalActorSystem actorSystem = actorSystems.get(actorSystemName);
         final KafkaActorNode node = (KafkaActorNode) actorSystem.getNode(components[3]);
-        final Integer partition = Integer.parseInt(components[4]);
         if(node != null) {
             return actorSystems.createTempActorRef(node, partition, actorId);
         } else {

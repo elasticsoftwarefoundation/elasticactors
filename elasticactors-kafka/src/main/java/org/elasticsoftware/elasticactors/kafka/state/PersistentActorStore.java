@@ -15,4 +15,6 @@ public interface PersistentActorStore {
     void remove(String actorId);
 
     default void destroy() {}
+
+    int count();
 }

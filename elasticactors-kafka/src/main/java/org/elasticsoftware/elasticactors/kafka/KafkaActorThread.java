@@ -106,8 +106,8 @@ public final class KafkaActorThread extends Thread {
                             Serializer<PersistentActor<ShardKey>, byte[]> stateSerializer,
                             Deserializer<byte[], PersistentActor<ShardKey>> stateDeserializer) {
         super("KafkaActorThread-"+THREAD_ID_SEQUENCE.getAndIncrement());
-        // this is the node partition that this thread will be listening on
-        this.nodeTopicPartitionId = THREAD_ID_SEQUENCE.get();
+        // this is the node partition that this thread will be listening on (-1 because it was already incremented)
+        this.nodeTopicPartitionId = THREAD_ID_SEQUENCE.get() -1;
         this.clusterName = clusterName;
         this.internalActorSystem = internalActorSystem;
         this.shardActorCacheManager = shardActorCacheManager;
@@ -352,9 +352,17 @@ public final class KafkaActorThread extends Thread {
         ProducerRecord<Object, Object> producerRecord =
                 new ProducerRecord<>(messagesTopic, shard.getShardId(), internalMessage.getId(), internalMessage);
         KafkaProducer<Object, Object> transactionalProducer = KafkaTransactionContext.getProducer();
+        doSend(producerRecord, transactionalProducer);
+    }
+
+    private void doSend(ProducerRecord<Object, Object> producerRecord, KafkaProducer<Object, Object> transactionalProducer) {
         if(transactionalProducer == null) {
             // no transaction so hand over to the current thread
-            runCommand((kafkaConsumer, kafkaProducer) -> kafkaProducer.send(producerRecord, loggingCallback));
+            runCommand((kafkaConsumer, kafkaProducer) -> {
+                kafkaProducer.beginTransaction();
+                kafkaProducer.send(producerRecord, loggingCallback);
+                kafkaProducer.commitTransaction();
+            });
         } else {
             transactionalProducer.send(producerRecord, loggingCallback);
         }
@@ -364,25 +372,14 @@ public final class KafkaActorThread extends Thread {
         ProducerRecord<Object, Object> producerRecord =
                 new ProducerRecord<>(getNodeMessagesTopic(internalActorSystem, node.getNodeId()), partition, internalMessage.getId(), internalMessage);
         KafkaProducer<Object, Object> transactionalProducer = KafkaTransactionContext.getProducer();
-        if(transactionalProducer == null) {
-            runCommand((kafkaConsumer, kafkaProducer) -> kafkaProducer.send(producerRecord, loggingCallback));
-        } else {
-            transactionalProducer.send(producerRecord, loggingCallback);
-        }
+        doSend(producerRecord, transactionalProducer);
     }
 
     void schedule(ShardKey shard, ScheduledMessage scheduledMessage) {
         ProducerRecord<Object, Object> producerRecord =
                 new ProducerRecord<>(scheduledMessagesTopic, shard.getShardId(), scheduledMessage.getId(), scheduledMessage);
         KafkaProducer<Object, Object> transactionalProducer = KafkaTransactionContext.getProducer();
-        if(transactionalProducer == null) {
-            runCommand((kafkaConsumer, kafkaProducer) -> {
-                kafkaProducer.send(producerRecord, loggingCallback);
-                // it will be added to the scheduler later as the message will be sent back to us through the topic
-            });
-        } else {
-            transactionalProducer.send(producerRecord, loggingCallback);
-        }
+        doSend(producerRecord, transactionalProducer);
     }
 
     void register(ShardKey shard, ActorSystemEvent event, ActorSystemEventListener listener) {
@@ -390,11 +387,7 @@ public final class KafkaActorThread extends Thread {
             new ProducerRecord<>(actorSystemEventListenersTopic, shard.getShardId(),
                     format("%s:%s", event.name(), listener.getActorId()), listener);
         KafkaProducer<Object, Object> transactionalProducer = KafkaTransactionContext.getProducer();
-        if(transactionalProducer == null) {
-            runCommand((kafkaConsumer, kafkaProducer) -> kafkaProducer.send(producerRecord, loggingCallback));
-        } else {
-            transactionalProducer.send(producerRecord, loggingCallback);
-        }
+        doSend(producerRecord, transactionalProducer);
     }
 
     void deregister(ShardKey shard, ActorSystemEvent event, ActorRef listener) {
@@ -402,11 +395,7 @@ public final class KafkaActorThread extends Thread {
                 new ProducerRecord<>(actorSystemEventListenersTopic, shard.getShardId(),
                         format("%s:%s", event.name(), listener.getActorId()), null);
         KafkaProducer<Object, Object> transactionalProducer = KafkaTransactionContext.getProducer();
-        if(transactionalProducer == null) {
-            runCommand((kafkaConsumer, kafkaProducer) -> kafkaProducer.send(producerRecord, loggingCallback));
-        } else {
-            transactionalProducer.send(producerRecord, loggingCallback);
-        }
+        doSend(producerRecord, transactionalProducer);
     }
 
     void assign(KafkaActorNode node, boolean primary) {
@@ -570,17 +559,17 @@ public final class KafkaActorThread extends Thread {
     private void initializeStateStores(List<ManagedActorShard> managedActorShards) {
         // loop over the state consumer until nothing is left
         // seek to the beginning for the new actor shards
-        Map<TopicPartition, ManagedActorShard> topicPartitions = managedActorShards.stream()
-                .collect(Collectors.toMap(managedActorShard -> new TopicPartition(persistentActorsTopic, managedActorShard.getKey().getShardId()), managedActorShard -> managedActorShard));
-        stateConsumer.seekToBeginning(topicPartitions.keySet());
+        // stateConsumer.seekToBeginning(Collections.emptyList());
         // this is to optimize the lookup in the poll loop
         Map<Integer, ManagedActorShard> partitionsToShards = managedActorShards.stream()
                 .collect(Collectors.toMap(managedActorShard -> managedActorShard.getKey().getShardId(), managedActorShard -> managedActorShard));
         // and poll till you can't poll no more
         ConsumerRecords<String, byte[]> stateRecords = null;
+        int totalCount = 0;
         do {
             try {
-                stateRecords = stateConsumer.poll(0);
+                stateRecords = stateConsumer.poll(100);
+                totalCount += stateRecords.count();
                 // distribute the data to the stores
                 stateRecords.iterator().forEachRemaining(consumerRecord -> {
                     // value can be null (if actor was stopped and state deleted
@@ -594,6 +583,8 @@ public final class KafkaActorThread extends Thread {
                 // @todo: this is an unrecoverable error
             }
         } while(stateRecords != null && !stateRecords.isEmpty());
+        int uniques =managedActorShards.stream().mapToInt(value -> value.actorStore.count()).sum();
+        logger.info(format("Loaded %d unique persistent actors from %d entries", uniques, totalCount));
     }
 
     private void initializeScheduledMessages(List<ManagedActorShard> managedActorShards) {
@@ -808,10 +799,8 @@ public final class KafkaActorThread extends Thread {
                 if (!managedActorContainer.containsKey(createActorMessage.getActorId())) {
                     createActor(managedActorContainer, createActorMessage, internalMessage);
                 } else {
-                    // we need to activate the actor since we need to run the postActivate logic
-                    PersistentActor<ShardKey> persistentActor =
-                            managedActorContainer.getPersistentActor(internalActorSystem.actorFor(createActorMessage.getActorId()));
-                    doInActorContext(ApplicationProtocol::activateActor, managedActorContainer, persistentActor, internalMessage);
+                    // we need to load the actor since we need to run the postActivate logic
+                    managedActorContainer.getPersistentActor(internalActorSystem.actorFor(createActorMessage.getActorId()));
                 }
             } else if (message instanceof DestroyActorMessage) {
                 DestroyActorMessage destroyActorMessage = (DestroyActorMessage) message;
@@ -1014,10 +1003,12 @@ public final class KafkaActorThread extends Thread {
                     doInActorContext(ApplicationProtocol::activateActor, this, persistentActor, null);
                     actorCache.put(actorRef, persistentActor);
                     return persistentActor;
+                } else {
+                    return null;
                 }
+            } else {
+                return persistentActor;
             }
-            // actor doesn't exist.. simply return null to signal that fact
-            return null;
         }
 
         public boolean actorExists(ActorRef actorRef) {
@@ -1039,8 +1030,9 @@ public final class KafkaActorThread extends Thread {
                 // we don't wait for the state to be committed here as we could immediately get a message for this actor
                 // @todo: this will lead to inconsistent state when the underlying transaction fails
                 this.actorStore.put(persistentActor.getSelf().getActorId(), serializedActor);
-                producer.send(new ProducerRecord<>(persistentActorsTopic, this.getKey().getShardId(),
-                        persistentActor.getSelf().getActorId(), serializedActor));
+                ProducerRecord<Object,Object> producerRecord = new ProducerRecord<>(persistentActorsTopic, this.getKey().getShardId(),
+                        persistentActor.getSelf().getActorId(), serializedActor);
+                doSend(producerRecord, KafkaTransactionContext.getProducer());
             } catch(IOException e) {
                 // throw the same exception that would have been thrown by the Kafka serializer
                 throw new SerializationException(format("Exception while serializing state for actor %s", persistentActor.getSelf().getActorId()), e);
@@ -1052,8 +1044,9 @@ public final class KafkaActorThread extends Thread {
             this.actorStore.remove(persistentActor.getSelf().getActorId());
             // and from the underlying topic
             // @todo: this will lead to inconsistent state when the transaction fails
-            producer.send(new ProducerRecord<>(persistentActorsTopic, this.getKey().getShardId(),
-                    persistentActor.getSelf().getActorId(), null));
+            ProducerRecord<Object,Object> producerRecord = new ProducerRecord<>(persistentActorsTopic, this.getKey().getShardId(),
+                    persistentActor.getSelf().getActorId(), null);
+            doSend(producerRecord, KafkaTransactionContext.getProducer());
         }
 
         @Override
