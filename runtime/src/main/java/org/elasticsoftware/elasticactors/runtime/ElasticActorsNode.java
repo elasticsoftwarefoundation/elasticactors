@@ -327,12 +327,13 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
         public void run() {
             if(initialized.compareAndSet(false,true)) {
                 // load the remote actorsystems (if any)
-                RemoteActorSystems remoteActorSystems = applicationContext.getBean(RemoteActorSystems.class);
-                try {
-                    remoteActorSystems.init();
-                } catch (Exception e) {
-                    logger.error("IMPORTANT: Initializing Remote ActorSystems failed, ElasticActors cluster is unstable. Please check all nodes",e);
-                }
+                applicationContext.getBeansOfType(RemoteActorSystems.class).forEach((s, remoteActorSystems) -> {
+                    try {
+                        remoteActorSystems.init();
+                    } catch (Exception e) {
+                        logger.error("IMPORTANT: Initializing Remote ActorSystems failed, ElasticActors cluster is unstable. Please check all nodes",e);
+                    }
+                });
             }
             // call the pre methods on the RebalancingEventListeners
             for (RebalancingEventListener rebalancingEventListener : rebalancingEventListeners) {

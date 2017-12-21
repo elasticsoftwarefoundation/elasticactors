@@ -23,25 +23,22 @@ import org.elasticsoftware.elasticactors.reactivestreams.ProcessorContext;
 /**
  * @author Joost van de Wijgerd
  */
-public final class InternalActorContext extends ActorContextHolder {
+final class InternalActorContext extends ActorContextHolder {
 
     private InternalActorContext() {
         super();
     }
 
-    protected static ActorContext setContext(ActorContext context) {
+    static ActorContext setContext(ActorContext context) {
         final ActorContext currentContext = threadContext.get();
         threadContext.set(context);
         return currentContext;
     }
 
-    protected static ActorContext getAndClearContext() {
+    static ActorContext getAndClearContext() {
         ActorContext state = threadContext.get();
         threadContext.set(null);
         return state;
     }
 
-    public static ProcessorContext getAsProcessorContext() {
-        return (ProcessorContext) threadContext.get();
-    }
 }

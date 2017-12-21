@@ -2,7 +2,6 @@ package org.elasticsoftware.elasticactors.kafka.utils;
 
 import com.google.common.collect.Lists;
 import org.apache.kafka.clients.admin.*;
-import org.elasticsoftware.elasticactors.NodeKey;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 
 import java.util.HashMap;
@@ -21,6 +20,7 @@ public final class TopicHelper {
         //"bootstrap.servers"
         Map<String, Object> adminClientConfig = new HashMap<>();
         adminClientConfig.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        adminClientConfig.put(AdminClientConfig.CLIENT_ID_CONFIG, nodeId + "-adminClient");
         AdminClient adminClient = AdminClient.create(adminClientConfig);
 
         // ensure all the topics are created

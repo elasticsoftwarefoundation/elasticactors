@@ -12,6 +12,8 @@ import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.*;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRefFactory;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRefTools;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ShardedScheduler;
 import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
 import org.elasticsoftware.elasticactors.kafka.KafkaActorSystemInstance;
@@ -22,6 +24,7 @@ import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
+import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
@@ -76,11 +79,12 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"objectMapper"})
-    public ObjectMapper createObjectMapper(ShardedScheduler schedulerService) {
+    public ObjectMapper createObjectMapper() {
         String basePackages = env.getProperty("ea.scan.packages",String.class,"");
         Boolean useAfterburner = env.getProperty("ea.base.useAfterburner",Boolean.class,Boolean.FALSE);
+        ScheduledMessageRefFactory scheduledMessageRefFactory = refSpec -> ScheduledMessageRefTools.parse(refSpec, node);
         // @todo: fix version
-        ObjectMapperBuilder builder = new ObjectMapperBuilder(node,schedulerService,"1.0.0",basePackages);
+        ObjectMapperBuilder builder = new ObjectMapperBuilder(node,scheduledMessageRefFactory,"1.0.0",basePackages);
         builder.setUseAfterBurner(useAfterburner);
         return builder.build();
     }
@@ -131,22 +135,6 @@ public class NodeConfiguration {
         return new KafkaActorSystemInstance(node, configuration, nodeSelectorFactory, workers, bootstrapServers,
                 actorRefCache, shardActorCacheManager, nodeActorCacheManager, serializer, deserializer,
                 actorLifecycleListenerRegistry);
-    }
-
-    @Bean(name = {"remoteActorSystems"})
-    public RemoteActorSystems createRemoteActorSystems() {
-        return new RemoteActorSystems(configuration,node);
-    }
-
-    @Bean(name = {"scheduler"})
-    public ShardedScheduler createScheduler() {
-        //@todo: maybe configure scheduler here with number of workers
-        return new ShardedScheduler();
-    }
-
-    @Bean(name = {"actorSystemEventListenerService"})
-    public ActorSystemEventListenerService createActorSystemEventListenerService() {
-        return new ActorSystemEventRegistryImpl();
     }
 
     @Bean(name = {"internalActorSystemHealthCheck"})

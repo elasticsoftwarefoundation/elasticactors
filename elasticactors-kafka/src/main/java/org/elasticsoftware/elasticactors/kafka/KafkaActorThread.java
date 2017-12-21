@@ -2,6 +2,7 @@ package org.elasticsoftware.elasticactors.kafka;
 
 import com.google.common.cache.Cache;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -97,6 +98,7 @@ public final class KafkaActorThread extends Thread {
 
     public KafkaActorThread(String clusterName,
                             String bootstrapServers,
+                            String nodeId,
                             InternalActorSystem internalActorSystem,
                             ActorRefFactory actorRefFactory,
                             ShardActorCacheManager shardActorCacheManager,
@@ -133,7 +135,7 @@ public final class KafkaActorThread extends Thread {
         consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 
         consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, clusterName);
-        consumerConfig.put(CommonClientConfigs.CLIENT_ID_CONFIG,internalActorSystem.getNode().getKey().getNodeId() + "-" + getName() + "-consumer");
+        consumerConfig.put(CommonClientConfigs.CLIENT_ID_CONFIG, nodeId + "-" + getName() + "-consumer");
 
         InternalMessageDeserializer internalMessageDeserializer = new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem);
         messageConsumer = new KafkaConsumer<>(consumerConfig, new UUIDDeserializer(), new KafkaInternalMessageDeserializer(internalMessageDeserializer));
@@ -147,8 +149,8 @@ public final class KafkaActorThread extends Thread {
 
         producerConfig.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         // add client id with stream client id prefix
-        producerConfig.put(CommonClientConfigs.CLIENT_ID_CONFIG, internalActorSystem.getNode().getKey().getNodeId() + "-" + getName() + "-producer");
-        producerConfig.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, internalActorSystem.getNode().getKey().getNodeId() + "-" + getName() + "-producer");
+        producerConfig.put(CommonClientConfigs.CLIENT_ID_CONFIG, nodeId + "-" + getName() + "-producer");
+        producerConfig.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, nodeId + "-" + getName() + "-producer");
 
         // @todo: wrap the internal message serializer in a compressing serializer
         KafkaProducerSerializer keySerializer = new KafkaProducerSerializer(
@@ -175,7 +177,7 @@ public final class KafkaActorThread extends Thread {
         stateConsumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 
         stateConsumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, clusterName+"-state");
-        stateConsumerConfig.put(CommonClientConfigs.CLIENT_ID_CONFIG,internalActorSystem.getNode().getKey().getNodeId() + "-" + getName() + "-state-consumer");
+        stateConsumerConfig.put(CommonClientConfigs.CLIENT_ID_CONFIG, nodeId + "-" + getName() + "-state-consumer");
 
         stateConsumer = new KafkaConsumer<>(stateConsumerConfig, new StringDeserializer(), new ByteArrayDeserializer());
 
@@ -189,7 +191,7 @@ public final class KafkaActorThread extends Thread {
         scheduledMessagesConsumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 
         scheduledMessagesConsumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, clusterName+"-scheduledMessages");
-        scheduledMessagesConsumerConfig.put(CommonClientConfigs.CLIENT_ID_CONFIG,internalActorSystem.getNode().getKey().getNodeId() + "-" + getName() + "-scheduledMessages-consumer");
+        scheduledMessagesConsumerConfig.put(CommonClientConfigs.CLIENT_ID_CONFIG,nodeId + "-" + getName() + "-scheduledMessages-consumer");
 
         KafkaScheduledMessageDeserializer scheduledMessageDeserializer
                 = new KafkaScheduledMessageDeserializer(
@@ -206,7 +208,7 @@ public final class KafkaActorThread extends Thread {
         actorSystemEventListenersConsumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 
         actorSystemEventListenersConsumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, clusterName+"-actorSystemEventListeners");
-        actorSystemEventListenersConsumerConfig.put(CommonClientConfigs.CLIENT_ID_CONFIG,internalActorSystem.getNode().getKey().getNodeId() + "-" + getName() + "-actorSystemEventListeners-consumer");
+        actorSystemEventListenersConsumerConfig.put(CommonClientConfigs.CLIENT_ID_CONFIG, nodeId + "-" + getName() + "-actorSystemEventListeners-consumer");
 
         actorSystemEventListenersConsumer = new KafkaConsumer<>(actorSystemEventListenersConsumerConfig, new StringDeserializer(),
                 new KafkaActorSystemEventListenerDeserializer());
@@ -235,6 +237,11 @@ public final class KafkaActorThread extends Thread {
                 maybeFireScheduledMessages();
             }
         }
+        // cleanup resources
+        producer.close();
+        stateConsumer.close();
+        actorSystemEventListenersConsumer.close();
+        scheduledMessagesConsumer.close();
     }
 
     private BiConsumer<KafkaConsumer<UUID, InternalMessage>, KafkaProducer<Object, Object>> pollOrWait() {
@@ -407,7 +414,11 @@ public final class KafkaActorThread extends Thread {
         runCommand((kafkaConsumer, kafkaProducer) -> this.managedShards.put(actorShard.getKey(), actorShard));
     }
 
-    CompletionStage<Boolean> prepareRebalance(Map<PhysicalNode, ShardKey> shardDistribution,
+    void stopRunning() {
+        runCommand((kafkaConsumer, kafkaProducer) -> this.RUNNING = false);
+    }
+
+    CompletionStage<Boolean> prepareRebalance(Multimap<PhysicalNode, ShardKey> shardDistribution,
                                               ShardDistributionStrategy distributionStrategy) {
         final CompletableFuture<Boolean> completableFuture = new CompletableFuture<>();
         runCommand((kafkaConsumer, kafkaProducer) -> {
@@ -416,61 +427,62 @@ public final class KafkaActorThread extends Thread {
             // switch state to rebalancing
             this.state = KafkaActorSystemState.REBALANCING;
             // filter only on shards the are managed by this thread
-            shardDistribution.entrySet().stream().filter(entry -> managedShards.keySet().contains(entry.getValue()))
-                    .forEach(entry -> {
-                        // find the actorShard
-                        KafkaActorShard actorShard = managedShards.get(entry.getValue());
-                        // more convenient names
-                        ShardKey shardKey = entry.getValue();
-                        PhysicalNode node = entry.getKey();
-                        // see if the assigned node is the local node
-                        if(node.isLocal()) {
-                            if(actorShard.getOwningNode() == null || !actorShard.getOwningNode().equals(node)) {
-                                String owningNodeId = actorShard.getOwningNode() != null ? actorShard.getOwningNode().getId() : "<No Node>";
-                                logger.info(format("I will own %s", shardKey.toString()));
-                                try {
-                                    // register with the strategy to wait for shard to be released
-                                    distributionStrategy.registerWaitForRelease(actorShard, node);
-                                } catch(Exception e) {
-                                    logger.error(format("IMPORTANT: waiting on release of shard %s from node %s failed,  ElasticActors cluster is unstable. Please check all nodes", shardKey, owningNodeId), e);
-                                    // signal this back later
-                                    stable.set(false);
-                                } finally {
-                                    // register the new owner
-                                    actorShard.setOwningNode(node);
-                                    // register as a new local shard (i.e. to start consuming later)
-                                    this.newLocalShards.add(shardKey);
-                                    // in the performRebalance step this shard will be promoted to a managed shard
-                                }
-                            } else {
-                                // we own the shard already, no change needed
-                                logger.info(format("I already own %s", shardKey.toString()));
-                            }
-                        } else {
-                            // the shard will be managed by another node
-                            if (actorShard.getOwningNode() == null || actorShard.getOwningNode().isLocal()) {
-                                logger.info(format("%s will own %s", node, shardKey));
-                                try {
-                                    // destroy the current local shard instance
-                                    if (actorShard.getOwningNode() != null) {
-                                        // register the new node
+            shardDistribution.asMap().entrySet()
+                    .forEach(entry -> entry.getValue().forEach(shardKey -> {
+                        // find the actorShard (will be null if not managed by this instance)
+                        KafkaActorShard actorShard = managedShards.get(shardKey);
+                        if(actorShard != null) {
+                            // more convenient names
+                            PhysicalNode node = entry.getKey();
+                            // see if the assigned node is the local node
+                            if (node.isLocal()) {
+                                if (actorShard.getOwningNode() == null || !actorShard.getOwningNode().equals(node)) {
+                                    String owningNodeId = actorShard.getOwningNode() != null ? actorShard.getOwningNode().getId() : "<No Node>";
+                                    logger.info(format("I will own %s", shardKey.toString()));
+                                    try {
+                                        // register with the strategy to wait for shard to be released
+                                        distributionStrategy.registerWaitForRelease(actorShard, node);
+                                    } catch (Exception e) {
+                                        logger.error(format("IMPORTANT: waiting on release of shard %s from node %s failed,  ElasticActors cluster is unstable. Please check all nodes", shardKey, owningNodeId), e);
+                                        // signal this back later
+                                        stable.set(false);
+                                    } finally {
+                                        // register the new owner
                                         actorShard.setOwningNode(node);
-                                        // and remove from the managed local shards
-                                        this.localShards.remove(shardKey).destroy();
-                                        // now we can release the shard to the other node
-                                        distributionStrategy.signalRelease(actorShard, node);
+                                        // register as a new local shard (i.e. to start consuming later)
+                                        this.newLocalShards.add(shardKey);
+                                        // in the performRebalance step this shard will be promoted to a managed shard
                                     }
-                                } catch(Exception e) {
-                                    logger.error(format("IMPORTANT: signalling release of shard %s to node %s failed, ElasticActors cluster is unstable. Please check all nodes", shardKey, node), e);
-                                    // signal this back later
-                                    stable.set(false);
+                                } else {
+                                    // we own the shard already, no change needed
+                                    logger.info(format("I already own %s", shardKey.toString()));
                                 }
                             } else {
-                                // shard was already remote
-                                logger.info(format("%s will own %s", node, shardKey));
+                                // the shard will be managed by another node
+                                if (actorShard.getOwningNode() == null || actorShard.getOwningNode().isLocal()) {
+                                    logger.info(format("%s will own %s", node, shardKey));
+                                    try {
+                                        // destroy the current local shard instance
+                                        if (actorShard.getOwningNode() != null) {
+                                            // register the new node
+                                            actorShard.setOwningNode(node);
+                                            // and remove from the managed local shards
+                                            this.localShards.remove(shardKey).destroy();
+                                            // now we can release the shard to the other node
+                                            distributionStrategy.signalRelease(actorShard, node);
+                                        }
+                                    } catch (Exception e) {
+                                        logger.error(format("IMPORTANT: signalling release of shard %s to node %s failed, ElasticActors cluster is unstable. Please check all nodes", shardKey, node), e);
+                                        // signal this back later
+                                        stable.set(false);
+                                    }
+                                } else {
+                                    // shard was already remote
+                                    logger.info(format("%s will own %s", node, shardKey));
+                                }
                             }
                         }
-                    });
+                    }));
             // we are done, signal back to stable flag
             completableFuture.complete(stable.get());
             // we stay in the rebalancing state as we need to perform the rebalance

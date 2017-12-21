@@ -4,9 +4,7 @@ import com.google.common.cache.Cache;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.*;
 import org.elasticsoftware.elasticactors.kafka.KafkaActorNode;
-import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.*;
 
 import javax.annotation.Nullable;
 
@@ -14,6 +12,8 @@ public final class KafkaInternalActorSystems implements InternalActorSystems, Ac
     private final InternalActorSystems delegate;
     private final Cache<String,ActorRef> actorRefCache;
     private final KafkaActorRefTools actorRefTools;
+    private final SystemSerializers systemSerializers = new SystemSerializers(this);
+    private final SystemDeserializers systemDeserializers = new SystemDeserializers(this, this);
 
     public KafkaInternalActorSystems(InternalActorSystems delegate, Cache<String, ActorRef> actorRefCache) {
         this.delegate = delegate;
@@ -33,12 +33,12 @@ public final class KafkaInternalActorSystems implements InternalActorSystems, Ac
 
     @Override
     public ActorSystem getRemote(String clusterName, @Nullable String actorSystemName) {
-        return delegate.getRemote(clusterName, actorSystemName);
+        throw new UnsupportedOperationException("Remote ActorSystems are currently not supported for Kafka based implementation");
     }
 
     @Override
     public ActorSystem getRemote(String actorSystemName) {
-        return delegate.getRemote(actorSystemName);
+        throw new UnsupportedOperationException("Remote ActorSystems are currently not supported for Kafka based implementation");
     }
 
     @Override
@@ -48,12 +48,12 @@ public final class KafkaInternalActorSystems implements InternalActorSystems, Ac
 
     @Override
     public <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass) {
-        return delegate.getSystemMessageSerializer(messageClass);
+        return systemSerializers.get(messageClass);
     }
 
     @Override
     public <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass) {
-        return delegate.getSystemMessageDeserializer(messageClass);
+        return systemDeserializers.get(messageClass);
     }
 
     @Override

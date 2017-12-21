@@ -2,7 +2,9 @@ package org.elasticsoftware.elasticactors.kafka;
 
 import com.google.common.base.Charsets;
 import com.google.common.cache.Cache;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import org.apache.logging.log4j.LogManager;
@@ -84,18 +86,20 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         } catch(Exception e) {
             throw new RuntimeException("FATAL Exception on ensureTopicsExist", e);
         }
+
         for(int i = 0 ; i < numberOfShardThreads ; i++) {
-            this.shardThreads[i] = new KafkaActorThread(cluster.getClusterName(), bootstrapServers, this,
-                    actorRefFactory, shardActorCacheManager, nodeActorCacheManager, stateSerializer, stateDeserializer);
+            this.shardThreads[i] = new KafkaActorThread(cluster.getClusterName(), bootstrapServers, localNode.getId(),
+                    this, actorRefFactory, shardActorCacheManager, nodeActorCacheManager, stateSerializer, stateDeserializer);
         }
         for(int i = 0 ; i < configuration.getNumberOfShards() ; i++) {
             this.actorShards[i] = new KafkaActorShard(new ShardKey(configuration.getName(), i),
                     this.shardThreads[i % numberOfShardThreads], this);
         }
+
         // add the local node to the first shard as primary
         this.localActorNode = new KafkaActorNode(localNode, this.shardThreads[0], this);
         this.activeNodes.add(localActorNode);
-        // each KafkaActorThread will have a copy of the ManagedActorNode but only one will be responsible for the polling the node topic
+        // each KafkaActorThread will have a copy of the ManagedActorNode - all managing one partition
         for (int i = 1; i < shardThreads.length; i++) {
             shardThreads[i].assign(localActorNode, false);
         }
@@ -111,7 +115,9 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
 
     @PreDestroy
     public void destroy() {
-
+        for (KafkaActorThread shardThread : shardThreads) {
+            shardThread.stopRunning();
+        }
     }
 
     @Override
@@ -384,7 +390,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
 
         NodeSelector nodeSelector = nodeSelectorFactory.create(nodes);
 
-        Map<PhysicalNode, ShardKey> shardDistribution = new HashMap<>();
+        Multimap<PhysicalNode, ShardKey> shardDistribution = HashMultimap.create();
 
         // assume we are stable until the resharding process tells us otherwise
         boolean stable = true;
@@ -455,11 +461,10 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
             localActorNode.initializeServiceActors();
         }
         // print out the shard distribution here
-        Map<String, Long> collect = shardDistribution.entrySet().stream().map(entry -> entry.getKey().getId()).collect(groupingBy(Function.identity(), counting()));
-        SortedMap<String, Long> sortedNodes = new TreeMap<>(collect);
+
         logger.info("Cluster shard mapping summary:");
-        for (Map.Entry<String, Long> entry : sortedNodes.entrySet()) {
-            logger.info(format("\t%s has %d shards assigned", entry.getKey(), entry.getValue()));
+        for (Map.Entry<PhysicalNode, Collection<ShardKey>> entry : shardDistribution.asMap().entrySet()) {
+            logger.info(format("\t%s has %d shards assigned", entry.getKey(), entry.getValue().size()));
         }
     }
 
