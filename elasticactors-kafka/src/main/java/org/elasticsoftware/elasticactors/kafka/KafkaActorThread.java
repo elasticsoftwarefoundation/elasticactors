@@ -218,30 +218,36 @@ public final class KafkaActorThread extends Thread {
     public void run() {
         // @todo: this loop needs proper error handling
         BiConsumer<KafkaConsumer<UUID, InternalMessage>, KafkaProducer<Object, Object>> command;
-        while(RUNNING) {
-            command = pollOrWait();
-            if (command != null) {
-                do {
-                    command.accept(messageConsumer, producer);
-                    // @todo: this could starve the other jobs in this loop as there is no stop condition
-                    command = pollOrWait();
-                } while (command != null);
+        try {
+            while (RUNNING) {
+                command = pollOrWait();
+                if (command != null) {
+                    do {
+                        command.accept(messageConsumer, producer);
+                        // @todo: this could starve the other jobs in this loop as there is no stop condition
+                        command = pollOrWait();
+                    } while (command != null);
+                }
+                // a command could have changed RUNNING or switched to REBALANCING
+                if (RUNNING && state == KafkaActorSystemState.ACTIVE) {
+                    // consume messages
+                    processMessages();
+                    // consume scheduled messages
+                    updateScheduledMessages();
+                    // see if we need to fire any scheduled messages
+                    maybeFireScheduledMessages();
+                }
             }
-            // a command could have changed RUNNING or switched to REBALANCING
-            if(RUNNING && state == KafkaActorSystemState.ACTIVE) {
-                // consume messages
-                processMessages();
-                // consume scheduled messages
-                updateScheduledMessages();
-                // see if we need to fire any scheduled messages
-                maybeFireScheduledMessages();
-            }
+        } catch(Exception e) {
+            // @todo: we need to kill our instance somehow.. otherwise the cluster is fucked
+            logger.error("FATAL: Exception in KafkaActorThread runLoop", e);
+        } finally {
+            // cleanup resources
+            producer.close();
+            stateConsumer.close();
+            actorSystemEventListenersConsumer.close();
+            scheduledMessagesConsumer.close();
         }
-        // cleanup resources
-        producer.close();
-        stateConsumer.close();
-        actorSystemEventListenersConsumer.close();
-        scheduledMessagesConsumer.close();
     }
 
     private BiConsumer<KafkaConsumer<UUID, InternalMessage>, KafkaProducer<Object, Object>> pollOrWait() {
