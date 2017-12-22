@@ -20,6 +20,9 @@ import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.BaseActorRef;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.kafka.KafkaActorNode;
+import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+
+import java.util.List;
 
 /**
  * {@link ActorRef} that references an actor in the local cluster. This is a special Kafka specific implementation that
@@ -86,6 +89,47 @@ public final class LocalClusterPartitionedActorNodeRef extends BaseActorRef impl
 
     @Override
     public ActorContainer getActorContainer() {
-        return node;
+        return new ActorContainerWrapper();
+    }
+
+    /**
+     * We need this class in order to return the proper ActorRef (with the partition)
+     *
+     */
+    private final class ActorContainerWrapper implements ActorContainer {
+        @Override
+        public ActorRef getActorRef() {
+            return new LocalClusterPartitionedActorNodeRef(actorSystem, clusterName, node, partition);
+        }
+
+        @Override
+        public void sendMessage(ActorRef sender, ActorRef receiver, Object message) throws Exception {
+            node.sendMessage(sender, receiver, partition, message);
+        }
+
+        @Override
+        public void sendMessage(ActorRef sender, List<? extends ActorRef> receiver, Object message) throws Exception {
+            node.sendMessage(sender, receiver, partition, message);
+        }
+
+        @Override
+        public void undeliverableMessage(InternalMessage undeliverableMessage, ActorRef receiverRef) throws Exception {
+            node.undeliverableMessage(undeliverableMessage, receiverRef);
+        }
+
+        @Override
+        public void offerInternalMessage(InternalMessage message) {
+            node.offerInternalMessage(partition, message);
+        }
+
+        @Override
+        public void init() throws Exception {
+            // noop
+        }
+
+        @Override
+        public void destroy() {
+            // noop
+        }
     }
 }

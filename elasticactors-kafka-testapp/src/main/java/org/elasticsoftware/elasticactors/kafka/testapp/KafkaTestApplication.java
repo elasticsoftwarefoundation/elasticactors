@@ -75,6 +75,9 @@ public class KafkaTestApplication {
 
             System.out.println("first account balance: "+accountAdapter.getBalance());
 
+            accountAdapter = secondAccountRef.ask(new BalanceQuery(), VirtualCashAccountAdapter.class).toCompletableFuture().get();
+            System.out.println("second account balance: "+accountAdapter.getBalance());
+
             try {
                 waitLatch.await();
             } catch (InterruptedException e) {

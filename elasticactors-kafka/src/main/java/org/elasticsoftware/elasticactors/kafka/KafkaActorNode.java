@@ -65,7 +65,7 @@ public final class KafkaActorNode implements ActorNode {
         offerInternalMessage(createInternalMessage(sender, receivers, message));
     }
 
-    void sendMessage(ActorRef sender, List<? extends ActorRef> receivers, int partition, Object message) throws Exception {
+    public void sendMessage(ActorRef sender, List<? extends ActorRef> receivers, int partition, Object message) throws Exception {
         offerInternalMessage(partition, createInternalMessage(sender, receivers, message));
     }
 
@@ -89,7 +89,7 @@ public final class KafkaActorNode implements ActorNode {
         actorThread.send(key, 0, internalMessage);
     }
 
-    void offerInternalMessage(int partition, InternalMessage internalMessage) {
+    public void offerInternalMessage(int partition, InternalMessage internalMessage) {
         actorThread.send(key, partition, internalMessage);
     }
 

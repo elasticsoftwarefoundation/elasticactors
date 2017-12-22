@@ -18,9 +18,9 @@ public class KafkaActorRefTools extends ActorRefTools {
         // actorId is actually <partition>/actorId
         String clusterName = components[0];
         String actorSystemName = components[1];
-        int actorSeparator = partitionAndActorId.indexOf('/');
-        int partition = Integer.parseInt(partitionAndActorId.substring(0, actorSeparator));
-        String actorId = partitionAndActorId.substring(actorSeparator+1);
+        int actorSeparator = partitionAndActorId.indexOf('/'); // can also be just the partition!
+        int partition = actorSeparator != -1 ? Integer.parseInt(partitionAndActorId.substring(0, actorSeparator)) : Integer.parseInt(partitionAndActorId);
+        String actorId = actorSeparator != -1 ? partitionAndActorId.substring(actorSeparator+1) : null;
         InternalActorSystem actorSystem = actorSystems.get(actorSystemName);
         final KafkaActorNode node = (KafkaActorNode) actorSystem.getNode(components[3]);
         if(node != null) {

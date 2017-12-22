@@ -28,6 +28,7 @@ import org.elasticsoftware.elasticactors.cluster.*;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.kafka.cluster.ActorLifecycleFunction;
 import org.elasticsoftware.elasticactors.kafka.cluster.ApplicationProtocol;
+import org.elasticsoftware.elasticactors.kafka.cluster.LocalClusterPartitionedActorNodeRef;
 import org.elasticsoftware.elasticactors.kafka.cluster.ReactiveStreamsProtocol;
 import org.elasticsoftware.elasticactors.kafka.serialization.*;
 import org.elasticsoftware.elasticactors.kafka.state.InMemoryPersistentActorStore;
@@ -589,9 +590,7 @@ public final class KafkaActorThread extends Thread {
 
     private void initializeScheduledMessages(List<ManagedActorShard> managedActorShards) {
         // seek to the beginning for the new actor shards
-        Map<TopicPartition, ManagedActorShard> topicPartitions = managedActorShards.stream()
-                .collect(Collectors.toMap(managedActorShard -> new TopicPartition(scheduledMessagesTopic, managedActorShard.getKey().getShardId()), managedActorShard -> managedActorShard));
-        scheduledMessagesConsumer.seekToBeginning(topicPartitions.keySet());
+        scheduledMessagesConsumer.seekToBeginning(Collections.emptySet());
         // this is to optimize the lookup in the poll loop
         Map<Integer, ManagedActorShard> partitionsToShards = managedActorShards.stream()
                 .collect(Collectors.toMap(managedActorShard -> managedActorShard.getKey().getShardId(), managedActorShard -> managedActorShard));
@@ -599,7 +598,7 @@ public final class KafkaActorThread extends Thread {
         ConsumerRecords<UUID, ScheduledMessage> scheduleMessageRecords = null;
         do {
             try {
-                scheduleMessageRecords = scheduledMessagesConsumer.poll(0);
+                scheduleMessageRecords = scheduledMessagesConsumer.poll(100);
                 // distribute the data to the scheduledMessages maps
                 scheduleMessageRecords.iterator().forEachRemaining(consumerRecord -> {
                     // value can be null if the scheduled message was deleted
@@ -621,9 +620,7 @@ public final class KafkaActorThread extends Thread {
 
     private void initializeAndRunActorSystemEventListeners(List<ManagedActorShard> managedActorShards) {
         // seek to the beginning for the new actor shards
-        Map<TopicPartition, ManagedActorShard> topicPartitions = managedActorShards.stream()
-                .collect(Collectors.toMap(managedActorShard -> new TopicPartition(actorSystemEventListenersTopic, managedActorShard.getKey().getShardId()), managedActorShard -> managedActorShard));
-        actorSystemEventListenersConsumer.seekToBeginning(topicPartitions.keySet());
+        actorSystemEventListenersConsumer.seekToBeginning(Collections.emptySet());
         // this is to optimize the lookup in the poll loop
         Map<Integer, ManagedActorShard> partitionsToShards = managedActorShards.stream()
                 .collect(Collectors.toMap(managedActorShard -> managedActorShard.getKey().getShardId(), managedActorShard -> managedActorShard));
@@ -632,7 +629,7 @@ public final class KafkaActorThread extends Thread {
         do {
             try {
                 // @todo: potentially just send these as messages
-                consumerRecords = actorSystemEventListenersConsumer.poll(0);
+                consumerRecords = actorSystemEventListenersConsumer.poll(100);
                 // run the logic for each actor
                 consumerRecords.iterator().forEachRemaining(consumerRecord -> {
                     ActorSystemEventListener eventListener = consumerRecord.value();
@@ -675,10 +672,10 @@ public final class KafkaActorThread extends Thread {
         return nodeTopicPartitionId;
     }
 
-    void createTempActor(CreateActorMessage createMessage) {
+    void createTempActor(ActorRef ref, CreateActorMessage createMessage) {
         runCommand((kafkaConsumer, kafkaProducer) -> {
             try {
-                createActor(localActorNode, createMessage, null);
+                createActor(localActorNode, createMessage, ref, null);
             } catch(Exception e) {
                 logger.error("Exception while creating TempActor", e);
             }
@@ -797,7 +794,8 @@ public final class KafkaActorThread extends Thread {
             if (message instanceof CreateActorMessage) {
                 CreateActorMessage createActorMessage = (CreateActorMessage) message;
                 if (!managedActorContainer.containsKey(createActorMessage.getActorId())) {
-                    createActor(managedActorContainer, createActorMessage, internalMessage);
+                    ActorRef ref = internalActorSystem.actorFor(createActorMessage.getActorId());
+                    createActor(managedActorContainer, createActorMessage, ref, internalMessage);
                 } else {
                     // we need to load the actor since we need to run the postActivate logic
                     managedActorContainer.getPersistentActor(internalActorSystem.actorFor(createActorMessage.getActorId()));
@@ -885,8 +883,10 @@ public final class KafkaActorThread extends Thread {
         }
     }
 
-    private void createActor(ManagedActorContainer managedActorContainer, CreateActorMessage createMessage, InternalMessage internalMessage) throws ClassNotFoundException {
-        ActorRef ref = internalActorSystem.actorFor(createMessage.getActorId());
+    private void createActor(ManagedActorContainer managedActorContainer,
+                             CreateActorMessage createMessage,
+                             ActorRef ref,
+                             InternalMessage internalMessage) throws ClassNotFoundException {
         final Class<? extends ElasticActor> actorClass = (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass());
         final String actorStateVersion = ManifestTools.extractActorStateVersion(actorClass);
         PersistentActor<?> persistentActor =
@@ -957,7 +957,7 @@ public final class KafkaActorThread extends Thread {
         final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
         return new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message),message.getClass().getName(),durable, timeout);
     }
-    
+
     private final class ManagedActorShard implements EvictionListener<PersistentActor<ShardKey>>, ManagedActorContainer<ShardKey> {
         private final KafkaActorShard actorShard;
         private final Cache<ActorRef,PersistentActor<ShardKey>> actorCache;
@@ -1093,7 +1093,8 @@ public final class KafkaActorThread extends Thread {
 
         @Override
         public void deleteActor(PersistentActor<NodeKey> persistentActor) {
-            // noop
+            // remove from cache
+            actorCache.invalidate(persistentActor.getSelf());
         }
 
         @Override
