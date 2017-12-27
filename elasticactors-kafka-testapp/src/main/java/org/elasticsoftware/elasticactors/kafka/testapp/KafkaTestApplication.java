@@ -7,14 +7,11 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.elasticsoftware.elasticactors.kafka.testapp.actors.VirtualCashAccountActor;
 import org.elasticsoftware.elasticactors.kafka.testapp.configuration.ContainerConfiguration;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.BalanceQuery;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.CreditAccountEvent;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.VirtualCashAccountAdapter;
+import org.elasticsoftware.elasticactors.kafka.testapp.messages.*;
 import org.elasticsoftware.elasticactors.kafka.testapp.state.VirtualCashAccountState;
 import org.elasticsoftware.elasticactors.spring.AnnotationConfigApplicationContext;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 public class KafkaTestApplication {
@@ -77,6 +74,8 @@ public class KafkaTestApplication {
 
             accountAdapter = secondAccountRef.ask(new BalanceQuery(), VirtualCashAccountAdapter.class).toCompletableFuture().get();
             System.out.println("second account balance: "+accountAdapter.getBalance());
+
+            secondAccountRef.tell(new ScheduleDebitCommand(new DebitAccountEvent(new BigDecimal("100.00"))), null);
 
             try {
                 waitLatch.await();

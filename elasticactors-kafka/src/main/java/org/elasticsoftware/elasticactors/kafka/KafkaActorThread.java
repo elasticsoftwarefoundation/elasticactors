@@ -28,7 +28,6 @@ import org.elasticsoftware.elasticactors.cluster.*;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.kafka.cluster.ActorLifecycleFunction;
 import org.elasticsoftware.elasticactors.kafka.cluster.ApplicationProtocol;
-import org.elasticsoftware.elasticactors.kafka.cluster.LocalClusterPartitionedActorNodeRef;
 import org.elasticsoftware.elasticactors.kafka.cluster.ReactiveStreamsProtocol;
 import org.elasticsoftware.elasticactors.kafka.serialization.*;
 import org.elasticsoftware.elasticactors.kafka.state.InMemoryPersistentActorStore;
@@ -268,34 +267,63 @@ public final class KafkaActorThread extends Thread {
     }
 
     private void processMessages() {
-        ConsumerRecords<UUID, InternalMessage> consumerRecords = messageConsumer.poll(1);
-        if(!consumerRecords.isEmpty()) {
-            consumerRecords.partitions().forEach(topicPartition -> consumerRecords.records(topicPartition).forEach(consumerRecord -> {
-                // start a new transaction for each message
-                producer.beginTransaction();
-                try {
-                    // set this producer in the transactional context
-                    KafkaTransactionContext.setTransactionalProducer(producer);
-                    // handle the InternalMessage here
-                    handleInternalMessage(topicPartition, consumerRecord.value());
-                    // mark the message as read
-                    Map<TopicPartition, OffsetAndMetadata> offset = new HashMap<>();
-                    offset.put(topicPartition, new OffsetAndMetadata(consumerRecord.offset() + 1));
-                    // commit the offset
-                    producer.sendOffsetsToTransaction(offset, clusterName);
-                    // commit the transaction
-                    producer.commitTransaction();
-                } catch(ProducerFencedException e) {
-                    // this means another node thinks it's owning the ActorShard as well
-                } catch(KafkaException e) {
-                    // exception could be recoverable or not
-                } catch(Throwable t) {
-                    // catch all
-                } finally {
-                    // clear the transaction context
-                    KafkaTransactionContext.clear();
+        try {
+            ConsumerRecords<UUID, InternalMessage> consumerRecords = messageConsumer.poll(1);
+            if (!consumerRecords.isEmpty()) {
+                if(logger.isDebugEnabled()) {
+                    logger.debug(format("messageConsumer has %d records to process", consumerRecords.count()));
                 }
-            }));
+                consumerRecords.partitions().forEach(topicPartition -> consumerRecords.records(topicPartition).forEach(consumerRecord -> {
+                    try {
+                        if(logger.isDebugEnabled()) {
+                            logger.debug(format("handling InternalMessage(sender:%s, receiver:%s, type:%s)  with offset %d from topicPartition(%s)",
+                                    consumerRecord.value().getSender(), consumerRecord.value().getReceivers().get(0),
+                                    consumerRecord.value().getPayloadClass(), consumerRecord.offset(),
+                                    topicPartition.toString()));
+                        }
+                        // start a new transaction for each message
+                        producer.beginTransaction();
+                        try {
+                            // set this producer in the transactional context
+                            KafkaTransactionContext.setTransactionalProducer(producer);
+                            // handle the InternalMessage here
+                            handleInternalMessage(topicPartition, consumerRecord.value());
+                            // mark the message as read
+                            Map<TopicPartition, OffsetAndMetadata> offset = new HashMap<>();
+                            offset.put(topicPartition, new OffsetAndMetadata(consumerRecord.offset() + 1));
+                            // commit the offset
+                            producer.sendOffsetsToTransaction(offset, clusterName);
+                            // commit the transaction
+                            producer.commitTransaction();
+                        } catch (WakeupException | InterruptException e) {
+                            logger.warn("Recoverable exception while handling InternalMessage", e);
+                            // @todo: find out how to handle this
+                        } catch (KafkaException e) {
+                            logger.error("FATAL: Unrecoverable exception while handling InternalMessage", e);
+                            // @todo: this is an unrecoverable error
+                        } catch (Throwable t) {
+                            logger.error("Unexpected exception while handling InternalMessage", t);
+                        } finally {
+                            // clear the transaction context
+                            KafkaTransactionContext.clear();
+                        }
+                    } catch(ProducerFencedException e) {
+                        logger.error("FATAL: ProducerFenced while committing transaction, another Node seems to be handling the same shards", e);
+                    } catch(KafkaException e) {
+                        logger.error("FATAL: Unrecoverable exception while committing producer transaction", e);
+                        // @todo: this is an unrecoverable error
+                    } catch(Throwable t) {
+                        logger.error("Unexpected exception while handling InternalMessage", t);
+                    }
+                }));
+            }
+        } catch(WakeupException | InterruptException e) {
+            logger.warn("Recoverable exception while polling for Messages", e);
+        } catch(KafkaException e) {
+            logger.error("FATAL: Unrecoverable exception while polling for Messages", e);
+            // @todo: this is an unrecoverable error
+        } catch(Throwable t) {
+            logger.error("Unexpected exception while polling for Messages", t);
         }
     }
 
@@ -305,11 +333,14 @@ public final class KafkaActorThread extends Thread {
         if(!consumerRecords.isEmpty()) {
             consumerRecords.partitions().forEach(topicPartition -> consumerRecords.records(topicPartition).forEach(consumerRecord -> {
                 // can be null (for deleted messages)
-                if(consumerRecord.value() != null) {
-                    // @todo: get the shardkey from a topicmap
-                    ManagedActorShard managedActorShard = this.localShards.get(new ShardKey(internalActorSystem.getName(), topicPartition.partition()));
-                    if (managedActorShard != null) {
+                // @todo: get the shardkey from a topicmap
+                ManagedActorShard managedActorShard = this.localShards.get(new ShardKey(internalActorSystem.getName(), topicPartition.partition()));
+                if (managedActorShard != null) {
+                    if(consumerRecord.value() != null) {
                         managedActorShard.scheduledMessages.put(consumerRecord.value().getFireTime(TimeUnit.MILLISECONDS), consumerRecord.value());
+                    } else {
+                        // for removed scheduledmessages we only have the id, we will have to search
+                        managedActorShard.scheduledMessages.entries().removeIf(entry -> entry.getValue().getId().equals(consumerRecord.key()));
                     }
                 }
             }));
@@ -560,6 +591,7 @@ public final class KafkaActorThread extends Thread {
     private void initializeStateStores(List<ManagedActorShard> managedActorShards) {
         // loop over the state consumer until nothing is left
         // seek to the beginning for the new actor shards
+        // we don't need to do this if we don't commit anything (autocommit is off for the stateConsumer)
         // stateConsumer.seekToBeginning(Collections.emptyList());
         // this is to optimize the lookup in the poll loop
         Map<Integer, ManagedActorShard> partitionsToShards = managedActorShards.stream()
@@ -579,12 +611,16 @@ public final class KafkaActorThread extends Thread {
                     }
                 });
             } catch(WakeupException | InterruptException e) {
+                logger.warn("Recoverable exception while polling PersistentActors state", e);
                 // @todo: find out how to handle this
             } catch(KafkaException e) {
+                logger.error("FATAL: Unrecoverable exception while polling PersistentActors state", e);
                 // @todo: this is an unrecoverable error
+            } catch(Throwable t) {
+                logger.error("Unexpected exception while populating PersistentActorStores", t);
             }
         } while(stateRecords != null && !stateRecords.isEmpty());
-        int uniques =managedActorShards.stream().mapToInt(value -> value.actorStore.count()).sum();
+        int uniques = managedActorShards.stream().mapToInt(value -> value.actorStore.count()).sum();
         logger.info(format("Loaded %d unique persistent actors from %d entries", uniques, totalCount));
     }
 
@@ -606,16 +642,30 @@ public final class KafkaActorThread extends Thread {
                         partitionsToShards.get(consumerRecord.partition())
                                 .scheduledMessages.put(consumerRecord.value().getFireTime(TimeUnit.MILLISECONDS),
                                 consumerRecord.value());
+                    } else {
+                        // could be that we need to remove one that was already added
+                        partitionsToShards.get(consumerRecord.partition()).scheduledMessages.entries()
+                                .removeIf(entry -> entry.getValue().getId().equals(consumerRecord.key()));
                     }
                 });
             } catch(WakeupException | InterruptException e) {
+                logger.warn("Recoverable exception while polling ScheduledMessages state", e);
                 // @todo: find out how to handle this
             } catch(KafkaException e) {
+                logger.error("FATAL: Unrecoverable exception while polling ScheduledMessages state", e);
                 // @todo: this is an unrecoverable error
+            } catch(Throwable t) {
+                logger.error("Unexpected exception while populating ScheduledMessage", t);
             }
         } while(scheduleMessageRecords != null && !scheduleMessageRecords.isEmpty());
         // make sure we commit here so that we don't get replays later when we poll for more messages
-        scheduledMessagesConsumer.commitSync();
+        try {
+            scheduledMessagesConsumer.commitSync();
+        } catch(WakeupException | InterruptException e) {
+            logger.warn("Recoverable exception calling commitSync on scheduledMessagesConsumer", e);
+        } catch(KafkaException e) {
+            logger.error("FATAL: Unrecoverable exception calling commitSync on scheduledMessagesConsumer", e);
+        }
     }
 
     private void initializeAndRunActorSystemEventListeners(List<ManagedActorShard> managedActorShards) {
@@ -649,19 +699,22 @@ public final class KafkaActorThread extends Thread {
                             doInActorContext(ApplicationProtocol::handleMessage, managedActorShard, persistentActor, internalMessage);
                             producer.commitTransaction();
                         } catch(ProducerFencedException e) {
-                            // this means another node thinks it's owning the ActorShard as well
+                            logger.error("FATAL: ProducerFenced while committing transaction, another Node seems to be handling the same shards", e);
                         } catch(KafkaException e) {
-                            // exception could be recoverable or not
+                            logger.error("FATAL: Unrecoverable exception while comitting producer transaction", e);
+                            // @todo: this is an unrecoverable error
                         } catch(Throwable t) {
-                            // catch all
+                            logger.error("Unexpected exception while generating ActorSystemEventListener message", t);
                         } finally {
                             KafkaTransactionContext.clear();
                         }
                     }
                 });
             } catch(WakeupException | InterruptException e) {
+                logger.warn("Recoverable exception while polling ActorSystemEventListeners state", e);
                 // @todo: find out how to handle this
             } catch(KafkaException e) {
+                logger.error("FATAL: Unrecoverable exception while polling ActorSystemEventListeners state", e);
                 // @todo: this is an unrecoverable error
             }
         } while(consumerRecords != null && !consumerRecords.isEmpty());
@@ -924,24 +977,7 @@ public final class KafkaActorThread extends Thread {
                 new ProducerRecord<>(scheduledMessagesTopic, managedActorShard.getKey().getShardId(),
                         cancelMessage.getMessageId(), null);
         // update the stored state (this will run in the current transaction)
-        producer.send(producerRecord, (metadata, exception) -> {
-            if(metadata != null) {
-                // we need to run this on the proper thread, not sure which thread will do the callback but most likely
-                // not the KafkaActorThread
-                runCommand((kafkaConsumer, kafkaProducer) -> {
-                    // remove from the ManagedShard as well
-                    ScheduledMessage scheduledMessage = managedActorShard.scheduledMessages.get(cancelMessage.getFireTime())
-                            .stream().filter(sm -> sm.getId().equals(cancelMessage.getMessageId()))
-                            .findFirst().orElse(null);
-                    if(scheduledMessage != null) {
-                        managedActorShard.scheduledMessages.remove(cancelMessage.getFireTime(), scheduledMessage);
-                    }
-                });
-            } else {
-                // @todo: log an error here
-            }
-        });
-
+        doSend(producerRecord, KafkaTransactionContext.getProducer());
     }
 
     private InternalMessage createInternalMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws IOException {

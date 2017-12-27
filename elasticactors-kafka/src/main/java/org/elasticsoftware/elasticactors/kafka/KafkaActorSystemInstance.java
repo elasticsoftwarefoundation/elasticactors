@@ -280,7 +280,6 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         KafkaActorThread actorThread = (affinityKey != null) ? shardFor(affinityKey).getActorThread() : shardFor(actorId).getActorThread();
         ActorRef tempActorRef = cluster.createTempActorRef(localActorNode, actorThread.getNodeTopicPartitionId(), actorId);
         actorThread.createTempActor(tempActorRef, createActorMessage);
-        // we need to produce messages on the correct topic partition so the right ActorShard will handle it
         return tempActorRef;
     }
 

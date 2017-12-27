@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN"  monitorInterval="30">
-<Appenders>
-<Console name="STDOUT" target="SYSTEM_OUT">
-<PatternLayout pattern="%d %5p [%t] - %m%n"/>
-</Console>
+<Configuration status="WARN" monitorInterval="30">
+    <Appenders>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d %5p [%t] - %m%n"/>
+        </Console>
 
-</Appenders>
-<Loggers>
-<Root level="error">
-<AppenderRef ref="STDOUT"/>
-
-</Root>
-<Logger name="org.elasticsoftware.elasticactors.kafka" level="INFO"/>
-<Logger name="org.elasticsoftware.elasticactors" level="ERROR"/>
-<Logger name="com.getbux.containers" level="INFO"/>
-<Logger name="org.springframework" level="INFO"/>
-</Loggers>
+    </Appenders>
+    <Loggers>
+        <Root level="error">
+            <AppenderRef ref="STDOUT"/>
+        </Root>
+        <Logger name="org.elasticsoftware.elasticactors.kafka" level="INFO"/>
+        <Logger name="org.elasticsoftware.elasticactors.kafka.KafkaActorThread" level="DEBUG"/>
+        <Logger name="org.elasticsoftware.elasticactors" level="ERROR"/>
+        <Logger name="com.getbux.containers" level="INFO"/>
+        <Logger name="org.springframework" level="INFO"/>
+    </Loggers>
 </Configuration>

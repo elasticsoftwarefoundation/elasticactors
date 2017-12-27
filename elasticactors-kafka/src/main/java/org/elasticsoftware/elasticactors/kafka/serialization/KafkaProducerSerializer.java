@@ -20,7 +20,6 @@ public final class KafkaProducerSerializer implements Serializer<Object> {
     private final StringSerializer stringSerializer = new StringSerializer();
     private final KafkaInternalMessageSerializer internalMessageSerializer;
     private final KafkaPersistentActorSerializer persistentActorSerializer;
-    private boolean isKey = false;
 
     public KafkaProducerSerializer(KafkaInternalMessageSerializer internalMessageSerializer,
                                    KafkaPersistentActorSerializer persistentActorSerializer) {
@@ -30,12 +29,13 @@ public final class KafkaProducerSerializer implements Serializer<Object> {
 
     @Override
     public void configure(Map<String, ?> configs, boolean isKey) {
-        this.isKey = isKey;
     }
 
     @Override
     public byte[] serialize(String topic, Object data) {
-        if (data instanceof UUID) {
+        if(data == null) {
+            return null;
+        } else if (data instanceof UUID) {
             return uuidSerializer.serialize(topic, (UUID) data);
         } else if (data instanceof String) {
             return stringSerializer.serialize(topic, (String) data);

@@ -2,18 +2,17 @@ package org.elasticsoftware.elasticactors.kafka.testapp.actors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.Actor;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.MessageHandler;
-import org.elasticsoftware.elasticactors.MethodActor;
+import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEvent;
 import org.elasticsoftware.elasticactors.kafka.testapp.messages.*;
 import org.elasticsoftware.elasticactors.kafka.testapp.state.VirtualCashAccountState;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 
+import java.util.concurrent.TimeUnit;
+
 @Actor(serializationFramework = JacksonSerializationFramework.class, stateClass = VirtualCashAccountState.class)
-@PersistenceConfig(excluded = {BalanceQuery.class}, persistOn = {})
+@PersistenceConfig(excluded = {BalanceQuery.class, ScheduleDebitCommand.class}, persistOn = {})
 public class VirtualCashAccountActor extends MethodActor {
     private static final Logger logger  = LogManager.getLogger(VirtualCashAccountActor.class);
 
@@ -50,7 +49,7 @@ public class VirtualCashAccountActor extends MethodActor {
      */
     @MessageHandler
     public void handle(DebitAccountEvent event, VirtualCashAccountState state) {
-        System.out.println(String.format("Account %s debited with %s %s", state.getId(), event.getAmount().toPlainString(), state.getCurrency()));
+        logger.info(String.format("Account %s debited with %s %s", state.getId(), event.getAmount().toPlainString(), state.getCurrency()));
         state.setBalance(state.getBalance().subtract(event.getAmount()));
     }
 
@@ -63,5 +62,11 @@ public class VirtualCashAccountActor extends MethodActor {
     @MessageHandler
     public void handle(ActivateAccountCommand command, VirtualCashAccountState state) {
         logger.info(state.getId()+" received ActivateAccountCommand");
+    }
+
+    @MessageHandler
+    public void handle(ScheduleDebitCommand command, ActorSystem actorSystem) {
+        logger.info("Scheduling message of type "+command.getMessage().getClass().getSimpleName()+" to run in 10 seconds");
+        actorSystem.getScheduler().scheduleOnce(getSelf(), command.getMessage(), getSelf(), 10, TimeUnit.SECONDS);
     }
 }
