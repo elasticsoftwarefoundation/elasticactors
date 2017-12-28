@@ -30,6 +30,7 @@ import org.elasticsoftware.elasticactors.kafka.cluster.ActorLifecycleFunction;
 import org.elasticsoftware.elasticactors.kafka.cluster.ApplicationProtocol;
 import org.elasticsoftware.elasticactors.kafka.cluster.ReactiveStreamsProtocol;
 import org.elasticsoftware.elasticactors.kafka.serialization.*;
+import org.elasticsoftware.elasticactors.kafka.state.ChronicleMapPersistentActorStore;
 import org.elasticsoftware.elasticactors.kafka.state.InMemoryPersistentActorStore;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStore;
 import org.elasticsoftware.elasticactors.kafka.utils.TopicNamesHelper;
@@ -586,6 +587,13 @@ public final class KafkaActorThread extends Thread {
     private PersistentActorStore createStateStore(ShardKey shardKey) {
         // @todo: the statestore implementation should become configurable
         return new InMemoryPersistentActorStore(shardKey, stateDeserializer);
+        /*
+        try {
+            return new ChronicleMapPersistentActorStore(shardKey, stateDeserializer);
+        } catch(IOException e) {
+            logger.warn("IOException while creating ChronicleMapPersistenActorSteore, falling back to InMemoryPersistentActorStore", e);
+            return new InMemoryPersistentActorStore(shardKey, stateDeserializer);
+        }*/
     }
 
     private void initializeStateStores(List<ManagedActorShard> managedActorShards) {
@@ -596,6 +604,12 @@ public final class KafkaActorThread extends Thread {
         // this is to optimize the lookup in the poll loop
         Map<Integer, ManagedActorShard> partitionsToShards = managedActorShards.stream()
                 .collect(Collectors.toMap(managedActorShard -> managedActorShard.getKey().getShardId(), managedActorShard -> managedActorShard));
+        // find the right position to start reading from
+        partitionsToShards.forEach((key, value) -> {
+            if(value.actorStore.getOffset() >= 0) {
+                stateConsumer.seek(new TopicPartition(persistentActorsTopic, value.getKey().getShardId()), value.actorStore.getOffset()+1);
+            }
+        });
         // and poll till you can't poll no more
         ConsumerRecords<String, byte[]> stateRecords = null;
         int totalCount = 0;
@@ -607,7 +621,7 @@ public final class KafkaActorThread extends Thread {
                 stateRecords.iterator().forEachRemaining(consumerRecord -> {
                     // value can be null (if actor was stopped and state deleted
                     if(consumerRecord.value() != null) {
-                        partitionsToShards.get(consumerRecord.partition()).actorStore.put(consumerRecord.key(), consumerRecord.value());
+                        partitionsToShards.get(consumerRecord.partition()).actorStore.put(consumerRecord.key(), consumerRecord.value(), consumerRecord.offset());
                     }
                 });
             } catch(WakeupException | InterruptException e) {
@@ -1062,13 +1076,31 @@ public final class KafkaActorThread extends Thread {
             // write to the producer (this will be within the current transaction)
             try {
                 byte[] serializedActor = stateSerializer.serialize(persistentActor);
-                // update the state store
-                // we don't wait for the state to be committed here as we could immediately get a message for this actor
-                // @todo: this will lead to inconsistent state when the underlying transaction fails
-                this.actorStore.put(persistentActor.getSelf().getActorId(), serializedActor);
                 ProducerRecord<Object,Object> producerRecord = new ProducerRecord<>(persistentActorsTopic, this.getKey().getShardId(),
                         persistentActor.getSelf().getActorId(), serializedActor);
-                doSend(producerRecord, KafkaTransactionContext.getProducer());
+                // this will always be within a transaction
+                producer.send(producerRecord, (metadata, exception) -> {
+                    if(metadata != null) {
+                        if(metadata.hasOffset()) {
+                            logger.info("PersistentActorState updated, new offset -> "+metadata.offset());
+                            if(this.actorStore.isConcurrent()) {
+                                this.actorStore.put(persistentActor.getSelf().getActorId(), serializedActor, metadata.offset());
+                            } else {
+                                // need to update on the KafkaActorThread
+                                runCommand((kafkaConsumer, kafkaProducer) -> {
+                                    this.actorStore.put(persistentActor.getSelf().getActorId(), serializedActor, metadata.offset());
+                                });
+                            }
+                        } else {
+                            logger.info("PersistentActorState updated, no offset found");
+                            // update without updating the offset
+                            this.actorStore.put(persistentActor.getSelf().getActorId(), serializedActor);
+                        }
+                    } else {
+                        logger.error("Exception while sending message to KafkaProducer", exception);
+                    }
+                });
+                //doSend(producerRecord, KafkaTransactionContext.getProducer());
             } catch(IOException e) {
                 // throw the same exception that would have been thrown by the Kafka serializer
                 throw new SerializationException(format("Exception while serializing state for actor %s", persistentActor.getSelf().getActorId()), e);

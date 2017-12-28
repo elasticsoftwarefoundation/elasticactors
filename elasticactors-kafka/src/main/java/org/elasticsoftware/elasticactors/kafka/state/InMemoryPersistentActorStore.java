@@ -30,6 +30,11 @@ public final class InMemoryPersistentActorStore implements PersistentActorStore 
     }
 
     @Override
+    public void put(String actorId, byte[] persistentActorBytes, long offset) {
+        backingMap.put(actorId, persistentActorBytes);
+    }
+
+    @Override
     public void remove(String actorId) {
         backingMap.remove(actorId);
     }
