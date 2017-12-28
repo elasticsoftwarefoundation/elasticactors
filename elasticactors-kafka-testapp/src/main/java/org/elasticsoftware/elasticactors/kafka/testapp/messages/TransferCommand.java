@@ -10,20 +10,31 @@ import java.math.BigDecimal;
 @Message(serializationFramework = JacksonSerializationFramework.class, immutable = true)
 public class TransferCommand {
     private final BigDecimal amount;
+    private final String currency;
     private final String fromAccount;
     private final String toAccount;
+    private final String transactionId;
 
     @JsonCreator
     public TransferCommand(@JsonProperty("amount") BigDecimal amount,
+                           @JsonProperty("currency") String currency,
                            @JsonProperty("fromAccount") String fromAccount,
-                           @JsonProperty("toAccount") String toAccount) {
+                           @JsonProperty("toAccount") String toAccount,
+                           @JsonProperty("transactionId") String transactionId) {
+
         this.amount = amount;
+        this.currency = currency;
         this.fromAccount = fromAccount;
         this.toAccount = toAccount;
+        this.transactionId = transactionId;
     }
 
     public BigDecimal getAmount() {
         return amount;
+    }
+
+    public String getCurrency() {
+        return currency;
     }
 
     public String getFromAccount() {
@@ -32,5 +43,9 @@ public class TransferCommand {
 
     public String getToAccount() {
         return toAccount;
+    }
+
+    public String getTransactionId() {
+        return transactionId;
     }
 }
