@@ -32,11 +32,16 @@ import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
+import org.elasticsoftware.elasticactors.state.DefaultActorStateUpdateProcessor;
+import org.elasticsoftware.elasticactors.state.NoopActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.env.Environment;
@@ -46,6 +51,7 @@ import org.springframework.core.io.ResourceLoader;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.Map;
 
 /**
  * @author Joost van de Wijgerd
@@ -177,5 +183,17 @@ public class NodeConfiguration {
     @Bean(name = {"internalActorSystemHealthCheck"})
     public InternalActorSystemHealthCheck createHealthCheck(InternalActorSystem internalActorSystem) {
         return new InternalActorSystemHealthCheck(internalActorSystem);
+    }
+
+    @Bean(name = {"actorStateUpdateProcessor"})
+    public ActorStateUpdateProcessor createActorStateUpdateProcessor(ApplicationContext applicationContext) {
+        Map<String, ActorStateUpdateListener> listeners = applicationContext.getBeansOfType(ActorStateUpdateListener.class);
+        if(listeners.isEmpty()) {
+            return new NoopActorStateUpdateProcessor();
+        } else {
+            final int workers = env.getProperty("ea.actorStateUpdateProcessor.workerCount",Integer.class,1);
+            final int maxBatchSize = env.getProperty("ea.actorStateUpdateProcessor.maxBatchSize",Integer.class,20);
+            return new DefaultActorStateUpdateProcessor(listeners.values(), workers, maxBatchSize);
+        }
     }
 }

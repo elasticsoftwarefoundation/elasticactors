@@ -129,6 +129,7 @@
         <module>backplane-cassandra2</module>
         <module>messaging-activemq</module>
         <module>elasticactors-kafka-testapp</module>
+        <module>indexing-elasticsearch</module>
     </modules>
 
     <build>

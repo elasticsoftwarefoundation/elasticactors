@@ -28,6 +28,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
@@ -46,19 +47,11 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
     protected final InternalMessage internalMessage;
     private final MessageHandlerEventListener messageHandlerEventListener;
     private final Measurement measurement;
+    private final ActorStateUpdateProcessor actorStateUpdateProcessor;
     private final Long serializationWarnThreshold;
 
-    protected ActorLifecycleTask(PersistentActorRepository persistentActorRepository,
-                                 PersistentActor persistentActor,
-                                 InternalActorSystem actorSystem,
-                                 ElasticActor receiver,
-                                 ActorRef receiverRef,
-                                 MessageHandlerEventListener messageHandlerEventListener,
-                                 InternalMessage internalMessage) {
-        this(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, null);
-    }
-
-    protected ActorLifecycleTask(PersistentActorRepository persistentActorRepository,
+    protected ActorLifecycleTask(ActorStateUpdateProcessor actorStateUpdateProcessor,
+                                 PersistentActorRepository persistentActorRepository,
                                  PersistentActor persistentActor,
                                  InternalActorSystem actorSystem,
                                  ElasticActor receiver,
@@ -66,6 +59,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                                  MessageHandlerEventListener messageHandlerEventListener,
                                  InternalMessage internalMessage,
                                  Long serializationWarnThreshold) {
+        this.actorStateUpdateProcessor = actorStateUpdateProcessor;
         this.persistentActorRepository = persistentActorRepository;
         this.receiverRef = receiverRef;
         this.persistentActor = persistentActor;
@@ -111,10 +105,28 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             // check if we have state now that needs to be written to the persistent actor store
             if (persistentActorRepository != null && persistentActor.getState() != null && shouldUpdateState) {
                 try {
+                    // generate the serialized state
+                    persistentActor.serializeState();
                     persistentActorRepository.updateAsync((ShardKey) persistentActor.getKey(), persistentActor,
                                                           internalMessage, messageHandlerEventListener);
+                    // if we have a configured actor state update processor, then use it
+                    if(actorStateUpdateProcessor != null) {
+                        // this is either a lifecycle step or an incoming message
+                        if(getLifeCycleStep() != null) {
+                            actorStateUpdateProcessor.process(getLifeCycleStep(), null, persistentActor);
+                        } else {
+                            // it's an incoming message so the messageClass in the internal message is what we need
+                            // to support multiple internal message handling protocols (such as the reactive streams protocol)
+                            // we need to unwrap here to find the actual message
+                            unwrapMessageClass(internalMessage).ifPresent(messageClass ->
+                                    actorStateUpdateProcessor.process(null, messageClass, persistentActor));
+                        }
+                    }
                 } catch (Exception e) {
                     log.error(format("Exception while serializing ActorState for actor [%s]", receiverRef.getActorId()), e);
+                } finally {
+                    // always ensure we release the memory of the serialized state
+                     persistentActor.setSerializedState(null);
                 }
                 // measure the serialization time
                 if(this.measurement != null) {
@@ -161,8 +173,12 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         }
     }
 
-    protected void executeLifecycleListener(ActorLifecycleListener listener,ActorRef actorRef,ActorState actorState) {
+    protected ActorLifecycleStep executeLifecycleListener(ActorLifecycleListener listener,ActorRef actorRef,ActorState actorState) {
+        return null;
+    }
 
+    protected ActorLifecycleStep getLifeCycleStep() {
+        return null;
     }
 
     public static boolean shouldUpdateState(ElasticActor elasticActor,ActorLifecycleStep lifecycleStep) {
@@ -191,6 +207,23 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             } else {
                 return true;
             }
+        }
+    }
+
+    /**
+     * Return the actual message class that is being handled. By default this method will return
+     * {@link InternalMessage#getPayloadClass()} but it can be overridden to support other protocols that wrap the
+     * ultimate message being delivered. If the
+     *
+     * @param internalMessage
+     * @return
+     * @throws ClassNotFoundException
+     */
+    protected Optional<Class> unwrapMessageClass(InternalMessage internalMessage) {
+        try {
+            return Optional.of(Class.forName(internalMessage.getPayloadClass()));
+        } catch (ClassNotFoundException e) {
+            return Optional.empty();
         }
     }
 }

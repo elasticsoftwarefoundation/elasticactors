@@ -138,11 +138,7 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                     definition = new HandlerMethodDefinition(instance, method, messageHandlerAnnotation.order());
 
                 }
-                List<HandlerMethodDefinition> definitions = handlerCache.get(definition.messageClass);
-                if(definitions == null) {
-                    definitions = new LinkedList<>();
-                    handlerCache.put(definition.messageClass,definitions);
-                }
+                List<HandlerMethodDefinition> definitions = handlerCache.computeIfAbsent(definition.messageClass, k -> new LinkedList<>());
                 definitions.add(definition);
             }
         }
