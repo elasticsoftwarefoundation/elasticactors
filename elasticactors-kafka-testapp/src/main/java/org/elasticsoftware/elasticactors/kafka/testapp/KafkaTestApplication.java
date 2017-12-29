@@ -76,7 +76,7 @@ public class KafkaTestApplication {
             accountAdapter = secondAccountRef.ask(new BalanceQuery(), VirtualCashAccountAdapter.class).toCompletableFuture().get();
             logger.info("second account balance: "+accountAdapter.getBalance());
 
-            //secondAccountRef.tell(new ScheduleDebitCommand(new DebitAccountEvent(new BigDecimal("100.00"))), null);
+            secondAccountRef.tell(new ScheduleDebitCommand(new DebitAccountEvent(new BigDecimal("100.00"))), null);
 
             accountAdapter = firstAccountRef.ask(new TransferCommand(new BigDecimal("50.00"), "EUR",
                             firstAccountId, secondAccountId, UUID.randomUUID().toString()),

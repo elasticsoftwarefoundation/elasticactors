@@ -5,7 +5,7 @@ import org.elasticsoftware.elasticactors.cluster.ActorRefTools;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.kafka.KafkaActorNode;
 
-public class KafkaActorRefTools extends ActorRefTools {
+public final class KafkaActorRefTools extends ActorRefTools {
     private final KafkaInternalActorSystems actorSystems;
 
     public KafkaActorRefTools(KafkaInternalActorSystems actorSystems) {
