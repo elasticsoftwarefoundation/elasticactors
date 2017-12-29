@@ -12,6 +12,7 @@ import org.elasticsoftware.elasticactors.kafka.testapp.state.VirtualCashAccountS
 import org.elasticsoftware.elasticactors.spring.AnnotationConfigApplicationContext;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 public class KafkaTestApplication {
@@ -70,12 +71,18 @@ public class KafkaTestApplication {
             // check the balance
             VirtualCashAccountAdapter accountAdapter = firstAccountRef.ask(new BalanceQuery(), VirtualCashAccountAdapter.class).toCompletableFuture().get();
 
-            System.out.println("first account balance: "+accountAdapter.getBalance());
+            logger.info("first account balance: "+accountAdapter.getBalance());
 
             accountAdapter = secondAccountRef.ask(new BalanceQuery(), VirtualCashAccountAdapter.class).toCompletableFuture().get();
-            System.out.println("second account balance: "+accountAdapter.getBalance());
+            logger.info("second account balance: "+accountAdapter.getBalance());
 
-            secondAccountRef.tell(new ScheduleDebitCommand(new DebitAccountEvent(new BigDecimal("100.00"))), null);
+            //secondAccountRef.tell(new ScheduleDebitCommand(new DebitAccountEvent(new BigDecimal("100.00"))), null);
+
+            accountAdapter = firstAccountRef.ask(new TransferCommand(new BigDecimal("50.00"), "EUR",
+                            firstAccountId, secondAccountId, UUID.randomUUID().toString()),
+                    VirtualCashAccountAdapter.class).toCompletableFuture().get();
+
+            logger.info("first account balance: "+accountAdapter.getBalance());
 
             try {
                 waitLatch.await();

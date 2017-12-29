@@ -15,8 +15,8 @@ import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.*;
 import org.elasticsoftware.elasticactors.cluster.scheduler.InternalScheduler;
 import org.elasticsoftware.elasticactors.kafka.cluster.KafkaInternalActorSystems;
-import org.elasticsoftware.elasticactors.kafka.cluster.LocalClusterPartitionedActorNodeRef;
 import org.elasticsoftware.elasticactors.kafka.scheduler.KafkaTopicScheduler;
+import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory;
 import org.elasticsoftware.elasticactors.kafka.utils.TopicHelper;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
@@ -34,11 +34,9 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 
 public final class KafkaActorSystemInstance implements InternalActorSystem, ShardDistributor, ActorSystemEventListenerRegistry {
@@ -69,7 +67,8 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
                                     NodeActorCacheManager nodeActorCacheManager,
                                     Serializer<PersistentActor<ShardKey>, byte[]> stateSerializer,
                                     Deserializer<byte[], PersistentActor<ShardKey>> stateDeserializer,
-                                    ActorLifecycleListenerRegistry actorLifecycleListenerRegistry) {
+                                    ActorLifecycleListenerRegistry actorLifecycleListenerRegistry,
+                                    PersistentActorStoreFactory persistentActorStoreFactory) {
         this.actorLifecycleListenerRegistry = actorLifecycleListenerRegistry;
         this.schedulerService = new KafkaTopicScheduler(this);
         this.localNode = node;
@@ -89,7 +88,8 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
 
         for(int i = 0 ; i < numberOfShardThreads ; i++) {
             this.shardThreads[i] = new KafkaActorThread(cluster.getClusterName(), bootstrapServers, localNode.getId(),
-                    this, actorRefFactory, shardActorCacheManager, nodeActorCacheManager, stateSerializer, stateDeserializer);
+                    this, actorRefFactory, shardActorCacheManager, nodeActorCacheManager, stateSerializer,
+                    stateDeserializer, persistentActorStoreFactory);
         }
         for(int i = 0 ; i < configuration.getNumberOfShards() ; i++) {
             this.actorShards[i] = new KafkaActorShard(new ShardKey(configuration.getName(), i),

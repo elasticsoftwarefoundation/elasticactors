@@ -12,15 +12,13 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.*;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.errors.InterruptException;
-import org.apache.kafka.common.errors.ProducerFencedException;
-import org.apache.kafka.common.errors.SerializationException;
-import org.apache.kafka.common.errors.WakeupException;
+import org.apache.kafka.common.errors.*;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.base.util.Charsets;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
@@ -33,6 +31,7 @@ import org.elasticsoftware.elasticactors.kafka.serialization.*;
 import org.elasticsoftware.elasticactors.kafka.state.ChronicleMapPersistentActorStore;
 import org.elasticsoftware.elasticactors.kafka.state.InMemoryPersistentActorStore;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStore;
+import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory;
 import org.elasticsoftware.elasticactors.kafka.utils.TopicNamesHelper;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
@@ -81,6 +80,7 @@ public final class KafkaActorThread extends Thread {
     private final NodeActorCacheManager nodeActorCacheManager;
     private final Serializer<PersistentActor<ShardKey>,byte[]> stateSerializer;
     private final Deserializer<byte[],PersistentActor<ShardKey>> stateDeserializer;
+    private final PersistentActorStoreFactory persistentActorStoreFactory;
     private final String messagesTopic;
     private final String scheduledMessagesTopic;
     private final String actorSystemEventListenersTopic;
@@ -105,8 +105,10 @@ public final class KafkaActorThread extends Thread {
                             ShardActorCacheManager shardActorCacheManager,
                             NodeActorCacheManager nodeActorCacheManager,
                             Serializer<PersistentActor<ShardKey>, byte[]> stateSerializer,
-                            Deserializer<byte[], PersistentActor<ShardKey>> stateDeserializer) {
+                            Deserializer<byte[], PersistentActor<ShardKey>> stateDeserializer,
+                            PersistentActorStoreFactory persistentActorStoreFactory) {
         super("KafkaActorThread-"+THREAD_ID_SEQUENCE.getAndIncrement());
+        this.persistentActorStoreFactory = persistentActorStoreFactory;
         // this is the node partition that this thread will be listening on (-1 because it was already incremented)
         this.nodeTopicPartitionId = THREAD_ID_SEQUENCE.get() -1;
         this.clusterName = clusterName;
@@ -217,7 +219,6 @@ public final class KafkaActorThread extends Thread {
 
     @Override
     public void run() {
-        // @todo: this loop needs proper error handling
         BiConsumer<KafkaConsumer<UUID, InternalMessage>, KafkaProducer<Object, Object>> command;
         try {
             while (RUNNING) {
@@ -258,7 +259,7 @@ public final class KafkaActorThread extends Thread {
         } else {
             // while we are not active we are only handling commands, so it doesn't make sense to go into a spin loop
             try {
-                return commands.poll(10, TimeUnit.SECONDS);
+                return commands.poll(1, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 // noop
             }
@@ -329,22 +330,31 @@ public final class KafkaActorThread extends Thread {
     }
 
     private void updateScheduledMessages() {
-        // first see if we have new messages
-        ConsumerRecords<UUID, ScheduledMessage> consumerRecords = scheduledMessagesConsumer.poll(0);
-        if(!consumerRecords.isEmpty()) {
-            consumerRecords.partitions().forEach(topicPartition -> consumerRecords.records(topicPartition).forEach(consumerRecord -> {
-                // can be null (for deleted messages)
-                // @todo: get the shardkey from a topicmap
-                ManagedActorShard managedActorShard = this.localShards.get(new ShardKey(internalActorSystem.getName(), topicPartition.partition()));
-                if (managedActorShard != null) {
-                    if(consumerRecord.value() != null) {
-                        managedActorShard.scheduledMessages.put(consumerRecord.value().getFireTime(TimeUnit.MILLISECONDS), consumerRecord.value());
-                    } else {
-                        // for removed scheduledmessages we only have the id, we will have to search
-                        managedActorShard.scheduledMessages.entries().removeIf(entry -> entry.getValue().getId().equals(consumerRecord.key()));
+        try {
+            // first see if we have new messages
+            ConsumerRecords<UUID, ScheduledMessage> consumerRecords = scheduledMessagesConsumer.poll(0);
+            if (!consumerRecords.isEmpty()) {
+                consumerRecords.partitions().forEach(topicPartition -> consumerRecords.records(topicPartition).forEach(consumerRecord -> {
+                    // can be null (for deleted messages)
+                    // @todo: get the shardkey from a topicmap
+                    ManagedActorShard managedActorShard = this.localShards.get(new ShardKey(internalActorSystem.getName(), topicPartition.partition()));
+                    if (managedActorShard != null) {
+                        if (consumerRecord.value() != null) {
+                            managedActorShard.scheduledMessages.put(consumerRecord.value().getFireTime(TimeUnit.MILLISECONDS), consumerRecord.value());
+                        } else {
+                            // for removed scheduledmessages we only have the id, we will have to search
+                            managedActorShard.scheduledMessages.entries().removeIf(entry -> entry.getValue().getId().equals(consumerRecord.key()));
+                        }
                     }
-                }
-            }));
+                }));
+            }
+        } catch(WakeupException | InterruptException e) {
+            logger.warn("Recoverable exception while polling for ScheduledMessages", e);
+        } catch(KafkaException e) {
+            logger.error("FATAL: Unrecoverable exception while polling for ScheduledMessages", e);
+            // @todo: this is an unrecoverable error
+        } catch(Throwable t) {
+            logger.error("Unexpected exception while polling for ScheduledMessages", t);
         }
     }
 
@@ -356,45 +366,68 @@ public final class KafkaActorThread extends Thread {
                 .flatMap(List::stream).collect(Collectors.toList());
         if(!messagesToFire.isEmpty()) {
             // fire them all within a producer transaction
-            producer.beginTransaction();
-            messagesToFire.forEach(scheduledMessage -> {
-                // send the message (first to the shard so it will be picked up by the normal processMessages for that shard)
-                InternalMessage internalMessage =
-                        new InternalMessageImpl(scheduledMessage.getSender(), scheduledMessage.getReceiver(),
-                                ByteBuffer.wrap(scheduledMessage.getMessageBytes()),
-                                scheduledMessage.getMessageClass().getName(), false);
-                // find out which shard to send it to (this has to be and ActorShard)
-                ShardKey destinationKey = ((ActorShard) ((ActorContainerRef) scheduledMessage.getReceiver()).getActorContainer()).getKey();
-                // and send it
-                producer.send(new ProducerRecord<>(messagesTopic, destinationKey.getShardId(), internalMessage.getId(), internalMessage));
-                // remove it from the scheduled messages topic (by setting value to null)
-                ShardKey sourceKey = ((ActorShard) ((ActorContainerRef) scheduledMessage.getSender()).getActorContainer()).getKey();
-                producer.send(new ProducerRecord<>(scheduledMessagesTopic, sourceKey.getShardId(), scheduledMessage.getId(), null));
-            });
-            // commit the transaction
-            producer.commitTransaction();
-            // now we need to remove them from the managedActorShards as well
-            messagesToFire.forEach(scheduledMessage -> {
-                ShardKey sourceKey = ((ActorShard) ((ActorContainerRef) scheduledMessage.getSender()).getActorContainer()).getKey();
-                this.localShards.get(sourceKey).scheduledMessages.remove(scheduledMessage.getFireTime(TimeUnit.MILLISECONDS), scheduledMessage);
-            });
+            try {
+                producer.beginTransaction();
+                messagesToFire.forEach(scheduledMessage -> {
+                    // send the message (first to the shard so it will be picked up by the normal processMessages for that shard)
+                    InternalMessage internalMessage =
+                            new InternalMessageImpl(scheduledMessage.getSender(), scheduledMessage.getReceiver(),
+                                    ByteBuffer.wrap(scheduledMessage.getMessageBytes()),
+                                    scheduledMessage.getMessageClass().getName(), false);
+                    // find out which shard to send it to (this has to be and ActorShard)
+                    ShardKey destinationKey = ((ActorShard) ((ActorContainerRef) scheduledMessage.getReceiver()).getActorContainer()).getKey();
+                    // and send it
+                    producer.send(new ProducerRecord<>(messagesTopic, destinationKey.getShardId(), internalMessage.getId(), internalMessage));
+                    // remove it from the scheduled messages topic (by setting value to null)
+                    ShardKey sourceKey = ((ActorShard) ((ActorContainerRef) scheduledMessage.getSender()).getActorContainer()).getKey();
+                    producer.send(new ProducerRecord<>(scheduledMessagesTopic, sourceKey.getShardId(), scheduledMessage.getId(), null));
+                });
+                // commit the transaction
+                producer.commitTransaction();
+                // now we need to remove them from the managedActorShards as well
+                messagesToFire.forEach(scheduledMessage -> {
+                    ShardKey sourceKey = ((ActorShard) ((ActorContainerRef) scheduledMessage.getSender()).getActorContainer()).getKey();
+                    this.localShards.get(sourceKey).scheduledMessages.remove(scheduledMessage.getFireTime(TimeUnit.MILLISECONDS), scheduledMessage);
+                });
+            } catch(RetriableException e) {
+                logger.warn("Recoverable exception while sending ScheduledMessages", e);
+            } catch(ProducerFencedException e) {
+                logger.error("FATAL: ProducerFenced while committing transaction, another Node seems to be handling the same shards", e);
+                // @todo: this is an unrecoverable error
+            } catch(KafkaException e) {
+                logger.error("FATAL: Unrecoverable exception while committing producer transaction", e);
+                // @todo: this is an unrecoverable error
+            } catch(Throwable t) {
+                logger.error("Unexpected exception while processing ScheduledMessages", t);
+            }
         }
     }
 
     void send(ShardKey shard, InternalMessage internalMessage) {
         ProducerRecord<Object, Object> producerRecord =
                 new ProducerRecord<>(messagesTopic, shard.getShardId(), internalMessage.getId(), internalMessage);
-        KafkaProducer<Object, Object> transactionalProducer = KafkaTransactionContext.getProducer();
-        doSend(producerRecord, transactionalProducer);
+        doSend(producerRecord, KafkaTransactionContext.getProducer());
     }
 
     private void doSend(ProducerRecord<Object, Object> producerRecord, KafkaProducer<Object, Object> transactionalProducer) {
         if(transactionalProducer == null) {
-            // no transaction so hand over to the current thread
+            // no transaction so hand over to the current thread (and send in it's own transaction)
             runCommand((kafkaConsumer, kafkaProducer) -> {
-                kafkaProducer.beginTransaction();
-                kafkaProducer.send(producerRecord, loggingCallback);
-                kafkaProducer.commitTransaction();
+                try {
+                    kafkaProducer.beginTransaction();
+                    kafkaProducer.send(producerRecord, loggingCallback);
+                    kafkaProducer.commitTransaction();
+                } catch(RetriableException e) {
+                    logger.warn("Recoverable exception while sending ProducerRecord", e);
+                } catch(ProducerFencedException e) {
+                    logger.error("FATAL: ProducerFenced while committing transaction, another Node seems to be handling the same shards", e);
+                    // @todo: this is an unrecoverable error
+                } catch(KafkaException e) {
+                    logger.error("FATAL: Unrecoverable exception while committing producer transaction", e);
+                    // @todo: this is an unrecoverable error
+                } catch(Throwable t) {
+                    logger.error("Unexpected exception while sending ProducerRecord", t);
+                }
             });
         } else {
             transactionalProducer.send(producerRecord, loggingCallback);
@@ -404,31 +437,27 @@ public final class KafkaActorThread extends Thread {
     void send(NodeKey node, int partition, InternalMessage internalMessage) {
         ProducerRecord<Object, Object> producerRecord =
                 new ProducerRecord<>(getNodeMessagesTopic(internalActorSystem, node.getNodeId()), partition, internalMessage.getId(), internalMessage);
-        KafkaProducer<Object, Object> transactionalProducer = KafkaTransactionContext.getProducer();
-        doSend(producerRecord, transactionalProducer);
+        doSend(producerRecord, KafkaTransactionContext.getProducer());
     }
 
     void schedule(ShardKey shard, ScheduledMessage scheduledMessage) {
         ProducerRecord<Object, Object> producerRecord =
                 new ProducerRecord<>(scheduledMessagesTopic, shard.getShardId(), scheduledMessage.getId(), scheduledMessage);
-        KafkaProducer<Object, Object> transactionalProducer = KafkaTransactionContext.getProducer();
-        doSend(producerRecord, transactionalProducer);
+        doSend(producerRecord, KafkaTransactionContext.getProducer());
     }
 
     void register(ShardKey shard, ActorSystemEvent event, ActorSystemEventListener listener) {
         ProducerRecord<Object, Object> producerRecord =
             new ProducerRecord<>(actorSystemEventListenersTopic, shard.getShardId(),
                     format("%s:%s", event.name(), listener.getActorId()), listener);
-        KafkaProducer<Object, Object> transactionalProducer = KafkaTransactionContext.getProducer();
-        doSend(producerRecord, transactionalProducer);
+        doSend(producerRecord, KafkaTransactionContext.getProducer());
     }
 
     void deregister(ShardKey shard, ActorSystemEvent event, ActorRef listener) {
         ProducerRecord<Object, Object> producerRecord =
                 new ProducerRecord<>(actorSystemEventListenersTopic, shard.getShardId(),
                         format("%s:%s", event.name(), listener.getActorId()), null);
-        KafkaProducer<Object, Object> transactionalProducer = KafkaTransactionContext.getProducer();
-        doSend(producerRecord, transactionalProducer);
+        doSend(producerRecord, KafkaTransactionContext.getProducer());
     }
 
     void assign(KafkaActorNode node, boolean primary) {
@@ -586,14 +615,13 @@ public final class KafkaActorThread extends Thread {
 
     private PersistentActorStore createStateStore(ShardKey shardKey) {
         // @todo: the statestore implementation should become configurable
-        return new InMemoryPersistentActorStore(shardKey, stateDeserializer);
-        /*
+        //return new InMemoryPersistentActorStore(shardKey, stateDeserializer);
         try {
             return new ChronicleMapPersistentActorStore(shardKey, stateDeserializer);
         } catch(IOException e) {
-            logger.warn("IOException while creating ChronicleMapPersistenActorSteore, falling back to InMemoryPersistentActorStore", e);
+            logger.warn("IOException while creating ChronicleMapPersistenActorStore, falling back to InMemoryPersistentActorStore", e);
             return new InMemoryPersistentActorStore(shardKey, stateDeserializer);
-        }*/
+        }
     }
 
     private void initializeStateStores(List<ManagedActorShard> managedActorShards) {
@@ -961,7 +989,7 @@ public final class KafkaActorThread extends Thread {
                         createMessage.getAffinityKey(), actorClass, createMessage.getInitialState());
         // add it to the actorCache
         managedActorContainer.getActorCache().put(ref, persistentActor);
-        // persist it tot the actor store (if any)
+        // persist it to the actor store (if any)
         managedActorContainer.persistActor(persistentActor);
 
         doInActorContext(ApplicationProtocol::createActor, managedActorContainer, persistentActor, internalMessage);
@@ -1076,13 +1104,17 @@ public final class KafkaActorThread extends Thread {
             // write to the producer (this will be within the current transaction)
             try {
                 byte[] serializedActor = stateSerializer.serialize(persistentActor);
+                if(logger.isDebugEnabled()) {
+                    logger.debug(format("Serializing PersistentActor: keySize=%d, valueSize=%d",
+                            persistentActor.getSelf().getActorId().getBytes(Charsets.UTF_8).length,
+                            serializedActor.length));
+                }
                 ProducerRecord<Object,Object> producerRecord = new ProducerRecord<>(persistentActorsTopic, this.getKey().getShardId(),
                         persistentActor.getSelf().getActorId(), serializedActor);
                 // this will always be within a transaction
                 producer.send(producerRecord, (metadata, exception) -> {
                     if(metadata != null) {
                         if(metadata.hasOffset()) {
-                            logger.info("PersistentActorState updated, new offset -> "+metadata.offset());
                             if(this.actorStore.isConcurrent()) {
                                 this.actorStore.put(persistentActor.getSelf().getActorId(), serializedActor, metadata.offset());
                             } else {
@@ -1092,7 +1124,6 @@ public final class KafkaActorThread extends Thread {
                                 });
                             }
                         } else {
-                            logger.info("PersistentActorState updated, no offset found");
                             // update without updating the offset
                             this.actorStore.put(persistentActor.getSelf().getActorId(), serializedActor);
                         }
@@ -1100,7 +1131,6 @@ public final class KafkaActorThread extends Thread {
                         logger.error("Exception while sending message to KafkaProducer", exception);
                     }
                 });
-                //doSend(producerRecord, KafkaTransactionContext.getProducer());
             } catch(IOException e) {
                 // throw the same exception that would have been thrown by the Kafka serializer
                 throw new SerializationException(format("Exception while serializing state for actor %s", persistentActor.getSelf().getActorId()), e);

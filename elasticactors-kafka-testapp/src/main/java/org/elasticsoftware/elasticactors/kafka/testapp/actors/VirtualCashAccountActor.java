@@ -69,4 +69,22 @@ public class VirtualCashAccountActor extends MethodActor {
         logger.info("Scheduling message of type "+command.getMessage().getClass().getSimpleName()+" to run in 10 seconds");
         actorSystem.getScheduler().scheduleOnce(getSelf(), command.getMessage(), getSelf(), 10, TimeUnit.SECONDS);
     }
+
+    @MessageHandler
+    public void handle(TransferCommand command, VirtualCashAccountState state, ActorSystem actorSystem, ActorRef replyRef) {
+        logger.info(String.format("Transfer %s %s from %s to %s", command.getAmount().toPlainString(),
+                command.getCurrency(), command.getFromAccount(), command.getToAccount()));
+        // so some sanity checking
+        if(command.getFromAccount().equals(state.getId())) {
+            // we need to debit this account (if we have enough money)
+            handle(new DebitAccountEvent(command.getAmount()), state);
+            // and the tell the other side to do a credit
+            actorSystem.actorFor("accounts/"+command.getToAccount()).tell(command);
+            // send our balance back
+            replyRef.tell(new VirtualCashAccountAdapter(state.getBalance(), state.getCurrency()));
+        } else {
+            // we need to credit this account
+            handle(new CreditAccountEvent(command.getAmount()), state);
+        }
+    }
 }

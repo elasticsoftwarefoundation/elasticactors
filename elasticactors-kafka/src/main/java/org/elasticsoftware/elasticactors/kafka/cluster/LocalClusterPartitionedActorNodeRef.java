@@ -33,6 +33,7 @@ import java.util.List;
 public final class LocalClusterPartitionedActorNodeRef extends BaseActorRef implements ActorContainerRef {
     private final KafkaActorNode node;
     private final int partition;
+    private final ActorContainerWrapper actorContainer;
 
     public LocalClusterPartitionedActorNodeRef(InternalActorSystem actorSystem, String clusterName, KafkaActorNode node, int partition) {
         this(actorSystem, clusterName, node, partition, null);
@@ -42,6 +43,7 @@ public final class LocalClusterPartitionedActorNodeRef extends BaseActorRef impl
         super(actorSystem, clusterName, actorId, generateRefSpec(clusterName, node, partition, actorId));
         this.node = node;
         this.partition = partition;
+        this.actorContainer = new ActorContainerWrapper();
     }
 
     public static String generateRefSpec(String clusterName, ActorNode node, int partition, String actorId) {
@@ -89,7 +91,7 @@ public final class LocalClusterPartitionedActorNodeRef extends BaseActorRef impl
 
     @Override
     public ActorContainer getActorContainer() {
-        return new ActorContainerWrapper();
+        return actorContainer;
     }
 
     /**

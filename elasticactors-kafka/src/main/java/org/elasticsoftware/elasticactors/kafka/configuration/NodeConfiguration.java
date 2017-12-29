@@ -19,6 +19,8 @@ import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
 import org.elasticsoftware.elasticactors.kafka.KafkaActorSystemInstance;
 import org.elasticsoftware.elasticactors.kafka.serialization.CompressingSerializer;
 import org.elasticsoftware.elasticactors.kafka.serialization.DecompressingDeserializer;
+import org.elasticsoftware.elasticactors.kafka.state.ChronicleMapPersistentActorStoreFactory;
+import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory;
 import org.elasticsoftware.elasticactors.kafka.utils.TopicHelper;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
@@ -124,7 +126,8 @@ public class NodeConfiguration {
     @Bean(name = {"internalActorSystem"})
     public InternalActorSystem createLocalActorSystemInstance(ShardActorCacheManager shardActorCacheManager,
                                                               NodeActorCacheManager nodeActorCacheManager,
-                                                              ActorLifecycleListenerRegistry actorLifecycleListenerRegistry) {
+                                                              ActorLifecycleListenerRegistry actorLifecycleListenerRegistry,
+                                                              PersistentActorStoreFactory persistentActorStoreFactory) {
         final int workers = env.getProperty("ea.shardThreads.workerCount",Integer.class,Runtime.getRuntime().availableProcessors());
         final String bootstrapServers = env.getRequiredProperty("ea.kafka.bootstrapServers");
         final Integer compressionThreshold = env.getProperty("ea.persistentActorRepository.compressionThreshold",Integer.class, 512);
@@ -134,11 +137,17 @@ public class NodeConfiguration {
         // value will require you to update the topic or face serious issues otherwise
         return new KafkaActorSystemInstance(node, configuration, nodeSelectorFactory, workers, bootstrapServers,
                 actorRefCache, shardActorCacheManager, nodeActorCacheManager, serializer, deserializer,
-                actorLifecycleListenerRegistry);
+                actorLifecycleListenerRegistry, persistentActorStoreFactory);
     }
 
     @Bean(name = {"internalActorSystemHealthCheck"})
     public InternalActorSystemHealthCheck createHealthCheck(InternalActorSystem internalActorSystem) {
         return new InternalActorSystemHealthCheck(internalActorSystem);
+    }
+
+    @Bean(name = {"persistentActorStoreFactory"})
+    public PersistentActorStoreFactory createPersistentActorStoreFactory() {
+        // @todo: this requires configuration
+        return new ChronicleMapPersistentActorStoreFactory();
     }
 }
