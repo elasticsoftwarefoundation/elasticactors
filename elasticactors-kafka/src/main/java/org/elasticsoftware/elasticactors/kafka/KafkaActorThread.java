@@ -61,6 +61,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
 public final class KafkaActorThread extends Thread {
     private static final Logger logger = LogManager.getLogger(KafkaActorSystemInstance.class);
     private static final AtomicInteger THREAD_ID_SEQUENCE = new AtomicInteger(0);
+    private static final long DEFAULT_OFFSET_INCREASE = 2l;
     // this instance acts as a tombstone for stopped actors
     private static final PersistentActor<ShardKey> TOMBSTONE =
             new PersistentActor<>(null,null,null,null,null,null);
@@ -566,12 +567,14 @@ public final class KafkaActorThread extends Thread {
                 this.newLocalShards.clear();
                 // assign all the correct partitions
                 assignPartitions();
-                // now we need to initialize the state stores for all new shards
-                initializeStateStores(newManagedShards);
-                // and the scheduled messages
-                initializeScheduledMessages(newManagedShards);
-                // and run any actorsystem event listeners
-                initializeAndRunActorSystemEventListeners(newManagedShards);
+                if(!newManagedShards.isEmpty()) {
+                    // now we need to initialize the state stores for all new shards
+                    initializeStateStores(newManagedShards);
+                    // and the scheduled messages
+                    initializeScheduledMessages(newManagedShards);
+                    // and run any actorsystem event listeners
+                    initializeAndRunActorSystemEventListeners(newManagedShards);
+                }
                 // switch the state to ACTIVE
                 this.state = KafkaActorSystemState.ACTIVE;
                 // and signal success
@@ -618,32 +621,56 @@ public final class KafkaActorThread extends Thread {
     }
 
     private void initializeStateStores(List<ManagedActorShard> managedActorShards) {
+        // in the case of a scale out there are no new managed shards
+        if(managedActorShards.isEmpty()) {
+            return;
+        }
         // loop over the state consumer until nothing is left
         // seek to the beginning for the new actor shards
         // we don't need to do this if we don't commit anything (autocommit is off for the stateConsumer)
-        // stateConsumer.seekToBeginning(Collections.emptyList());
+        List<TopicPartition> topicPartitions = managedActorShards.stream()
+                .map(managedActorShard -> new TopicPartition(persistentActorsTopic, managedActorShard.getKey().getShardId()))
+                .collect(Collectors.toList());
+        // seek to the end for all (the ones we already own)
+        stateConsumer.seekToEnd(stateConsumer.assignment());
+        // and then to the beginning for the new ones only
+        stateConsumer.seekToBeginning(topicPartitions);
         // this is to optimize the lookup in the poll loop
         Map<Integer, ManagedActorShard> partitionsToShards = managedActorShards.stream()
                 .collect(Collectors.toMap(managedActorShard -> managedActorShard.getKey().getShardId(), managedActorShard -> managedActorShard));
+        // we need to be sure to read the topics fully. stopping to early will cause loss of state!
+        // topic is always the same so we just index on the partition here
+        final Map<Integer, Long> endOffsets = stateConsumer.endOffsets(topicPartitions).entrySet()
+                .stream().filter(e -> e.getValue() > 0).collect(Collectors.toMap(e -> e.getKey().partition(), Map.Entry::getValue));
         // find the right position to start reading from
         partitionsToShards.forEach((key, value) -> {
             if(value.actorStore.getOffset() >= 0) {
                 stateConsumer.seek(new TopicPartition(persistentActorsTopic, value.getKey().getShardId()), value.actorStore.getOffset()+1);
+                // see if we are at the end of the partition already
+                Long endOffset = endOffsets.get(value.getKey().getShardId());
+                if(endOffset != null && (endOffset - DEFAULT_OFFSET_INCREASE) == value.actorStore.getOffset()) {
+                    endOffsets.remove(value.getKey().getShardId());
+                }
             }
         });
+
         // and poll till you can't poll no more
         ConsumerRecords<String, byte[]> stateRecords = null;
         int totalCount = 0;
         do {
             try {
-                // @todo: if we somehow miss the fist poll we will overwrite state, this is why we wait so long here
-                stateRecords = stateConsumer.poll(1000);
+                stateRecords = stateConsumer.poll(10);
                 totalCount += stateRecords.count();
                 // distribute the data to the stores
                 stateRecords.iterator().forEachRemaining(consumerRecord -> {
                     // value can be null (if actor was stopped and state deleted
                     if(consumerRecord.value() != null) {
                         partitionsToShards.get(consumerRecord.partition()).actorStore.put(consumerRecord.key(), consumerRecord.value(), consumerRecord.offset());
+                    }
+                    // see if we still have seen (at least) everything for this partition
+                    Long endOffset = endOffsets.get(consumerRecord.partition());
+                    if(endOffset != null && (endOffset - DEFAULT_OFFSET_INCREASE) == consumerRecord.offset()) {
+                        endOffsets.remove(consumerRecord.partition());
                     }
                 });
             } catch(WakeupException | InterruptException e) {
@@ -655,22 +682,32 @@ public final class KafkaActorThread extends Thread {
             } catch(Throwable t) {
                 logger.error("Unexpected exception while populating PersistentActorStores", t);
             }
-        } while(stateRecords != null && !stateRecords.isEmpty());
+        } while((stateRecords != null && !stateRecords.isEmpty()) || !endOffsets.isEmpty());
         int uniques = managedActorShards.stream().mapToInt(value -> value.actorStore.count()).sum();
         logger.info(format("Loaded %d unique persistent actors from %d entries", uniques, totalCount));
     }
 
     private void initializeScheduledMessages(List<ManagedActorShard> managedActorShards) {
+        // on scale out the managed actorshards can be empty
+        if(managedActorShards.isEmpty()) {
+            return;
+        }
+        List<TopicPartition> topicPartitions = managedActorShards.stream()
+                .map(managedActorShard -> new TopicPartition(scheduledMessagesTopic, managedActorShard.getKey().getShardId()))
+                .collect(Collectors.toList());
         // seek to the beginning for the new actor shards
-        scheduledMessagesConsumer.seekToBeginning(Collections.emptySet());
+        scheduledMessagesConsumer.seekToBeginning(topicPartitions);
         // this is to optimize the lookup in the poll loop
         Map<Integer, ManagedActorShard> partitionsToShards = managedActorShards.stream()
                 .collect(Collectors.toMap(managedActorShard -> managedActorShard.getKey().getShardId(), managedActorShard -> managedActorShard));
+        // see if we have any messages at all
+        final Map<Integer, Long> endOffsets = scheduledMessagesConsumer.endOffsets(topicPartitions).entrySet()
+                .stream().filter(e -> e.getValue() > 0).collect(Collectors.toMap(e -> e.getKey().partition(), Map.Entry::getValue));
         // and poll till you can't poll no more
         ConsumerRecords<UUID, ScheduledMessage> scheduleMessageRecords = null;
         do {
             try {
-                scheduleMessageRecords = scheduledMessagesConsumer.poll(1000);
+                scheduleMessageRecords = scheduledMessagesConsumer.poll(10);
                 // distribute the data to the scheduledMessages maps
                 scheduleMessageRecords.iterator().forEachRemaining(consumerRecord -> {
                     // value can be null if the scheduled message was deleted
@@ -683,6 +720,11 @@ public final class KafkaActorThread extends Thread {
                         partitionsToShards.get(consumerRecord.partition()).scheduledMessages.entries()
                                 .removeIf(entry -> entry.getValue().getId().equals(consumerRecord.key()));
                     }
+                    // see if we still have seen (at least) everything for this partition
+                    Long endOffset = endOffsets.get(consumerRecord.partition());
+                    if(endOffset != null && (endOffset - DEFAULT_OFFSET_INCREASE) == consumerRecord.offset()) {
+                        endOffsets.remove(consumerRecord.partition());
+                    }
                 });
             } catch(WakeupException | InterruptException e) {
                 logger.warn("Recoverable exception while polling ScheduledMessages state", e);
@@ -693,7 +735,8 @@ public final class KafkaActorThread extends Thread {
             } catch(Throwable t) {
                 logger.error("Unexpected exception while populating ScheduledMessage", t);
             }
-        } while(scheduleMessageRecords != null && !scheduleMessageRecords.isEmpty());
+        } while((scheduleMessageRecords != null && !scheduleMessageRecords.isEmpty()) || !endOffsets.isEmpty());
+        //} while(scheduleMessageRecords != null && !scheduleMessageRecords.isEmpty());
         // make sure we commit here so that we don't get replays later when we poll for more messages
         try {
             scheduledMessagesConsumer.commitSync();
@@ -705,17 +748,30 @@ public final class KafkaActorThread extends Thread {
     }
 
     private void initializeAndRunActorSystemEventListeners(List<ManagedActorShard> managedActorShards) {
+        // sanity check
+        if(managedActorShards.isEmpty()) {
+            return;
+        }
+        List<TopicPartition> topicPartitions = managedActorShards.stream()
+                .map(managedActorShard -> new TopicPartition(actorSystemEventListenersTopic, managedActorShard.getKey().getShardId()))
+                .collect(Collectors.toList());
         // seek to the beginning for the new actor shards
-        actorSystemEventListenersConsumer.seekToBeginning(Collections.emptySet());
+        actorSystemEventListenersConsumer.seekToBeginning(topicPartitions);
         // this is to optimize the lookup in the poll loop
         Map<Integer, ManagedActorShard> partitionsToShards = managedActorShards.stream()
                 .collect(Collectors.toMap(managedActorShard -> managedActorShard.getKey().getShardId(), managedActorShard -> managedActorShard));
+        // see if we have any messages so we don't miss any
+        // @todo: this will contain the minimum amount of messages to handle (can be more)
+        final Map<Integer, Long> endOffsets = actorSystemEventListenersConsumer
+                .endOffsets(topicPartitions).entrySet()
+                .stream().filter(e -> e.getValue() > 0)
+                .collect(Collectors.toMap(e -> e.getKey().partition(), Map.Entry::getValue));
         // and poll till you can't poll no more
         ConsumerRecords<String, ActorSystemEventListener> consumerRecords = null;
         do {
             try {
                 // @todo: potentially just send these as messages
-                consumerRecords = actorSystemEventListenersConsumer.poll(1000);
+                consumerRecords = actorSystemEventListenersConsumer.poll(10);
                 // run the logic for each actor
                 consumerRecords.iterator().forEachRemaining(consumerRecord -> {
                     ActorSystemEventListener eventListener = consumerRecord.value();
@@ -745,6 +801,11 @@ public final class KafkaActorThread extends Thread {
                             KafkaTransactionContext.clear();
                         }
                     }
+                    // see if we still have seen (at least) everything for this partition
+                    Long endOffset = endOffsets.get(consumerRecord.partition());
+                    if(endOffset != null && (endOffset - DEFAULT_OFFSET_INCREASE) == consumerRecord.offset()) {
+                        endOffsets.remove(consumerRecord.partition());
+                    }
                 });
             } catch(WakeupException | InterruptException e) {
                 logger.warn("Recoverable exception while polling ActorSystemEventListeners state", e);
@@ -753,7 +814,7 @@ public final class KafkaActorThread extends Thread {
                 logger.error("FATAL: Unrecoverable exception while polling ActorSystemEventListeners state", e);
                 // @todo: this is an unrecoverable error
             }
-        } while(consumerRecords != null && !consumerRecords.isEmpty());
+        } while((consumerRecords != null && !consumerRecords.isEmpty()) || !endOffsets.isEmpty());
 
     }
 

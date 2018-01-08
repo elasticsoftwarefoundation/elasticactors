@@ -4,6 +4,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.PhysicalNode;
+import org.elasticsoftware.elasticactors.cluster.ClusterEventListener;
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.elasticsoftware.elasticactors.kafka.testapp.actors.VirtualCashAccountActor;
 import org.elasticsoftware.elasticactors.kafka.testapp.configuration.ContainerConfiguration;
@@ -12,6 +14,7 @@ import org.elasticsoftware.elasticactors.kafka.testapp.state.VirtualCashAccountS
 import org.elasticsoftware.elasticactors.spring.AnnotationConfigApplicationContext;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
@@ -53,6 +56,9 @@ public class KafkaTestApplication {
             final CountDownLatch waitLatch = new CountDownLatch(1);
 
             Runtime.getRuntime().addShutdownHook(new Thread(waitLatch::countDown));
+
+            // wait a bit to let the ActorSystem initialize
+            Thread.sleep(5000);
 
             ActorSystem actorSystem = context.getBean(ActorSystem.class);
             //String firstAccountId = UUID.randomUUID().toString();
