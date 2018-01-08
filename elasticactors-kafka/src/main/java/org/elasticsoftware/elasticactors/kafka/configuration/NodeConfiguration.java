@@ -20,6 +20,7 @@ import org.elasticsoftware.elasticactors.kafka.KafkaActorSystemInstance;
 import org.elasticsoftware.elasticactors.kafka.serialization.CompressingSerializer;
 import org.elasticsoftware.elasticactors.kafka.serialization.DecompressingDeserializer;
 import org.elasticsoftware.elasticactors.kafka.state.ChronicleMapPersistentActorStoreFactory;
+import org.elasticsoftware.elasticactors.kafka.state.InMemoryPeristentActorStoreFactory;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory;
 import org.elasticsoftware.elasticactors.kafka.utils.TopicHelper;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
@@ -146,8 +147,13 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"persistentActorStoreFactory"})
-    public PersistentActorStoreFactory createPersistentActorStoreFactory() {
-        // @todo: this requires configuration
-        return new ChronicleMapPersistentActorStoreFactory();
+    public PersistentActorStoreFactory createPersistentActorStoreFactory() throws Exception {
+        String className = env.getProperty("ea.kafka.persistentActorStore.factoryClass", String.class, "InMemoryPeristentActorStoreFactory");
+        // if it is a simple classname then we need to append the default package
+        if(!className.contains(".")) {
+            return (PersistentActorStoreFactory) Class.forName("org.elasticsoftware.elasticactors.kafka.state."+className).newInstance();
+        } else {
+            return (PersistentActorStoreFactory) Class.forName(className).newInstance();
+        }
     }
 }

@@ -17,15 +17,24 @@ public final class ChronicleMapPersistentActorStore implements PersistentActorSt
     private static final String OFFSET_KEY = "____OFFSET___";
     private long offset = -1L;
 
-    public ChronicleMapPersistentActorStore(ShardKey shardKey,
-                                            Deserializer<byte[], PersistentActor<ShardKey>> deserializer) throws IOException {
+    ChronicleMapPersistentActorStore(ShardKey shardKey,
+                                     Deserializer<byte[], PersistentActor<ShardKey>> deserializer) throws IOException {
+        this(shardKey, deserializer, System.getProperty("java.io.tmpdir"), 42d, 512d, 1048576L);
+    }
+
+    ChronicleMapPersistentActorStore(ShardKey shardKey,
+                                     Deserializer<byte[], PersistentActor<ShardKey>> deserializer,
+                                     String dataDirectory,
+                                     double averageKeySize,
+                                     double averageValueSize,
+                                     long maxEntries) throws IOException {
         this.shardKey = shardKey;
         this.deserializer = deserializer;
-        File backingFile = new File(System.getProperty("java.io.tmpdir")+"/"+shardKey.getActorSystemName()+"-"+shardKey.getShardId()+".cmp");
+        File backingFile = new File(dataDirectory+"/"+shardKey.getActorSystemName()+"-"+shardKey.getShardId()+".cmp");
         backingMap = ChronicleMap.of(String.class, byte[].class)
-                .averageKeySize(42d)
-                .averageValueSize(512d)
-                .entries(100000L)
+                .averageKeySize(averageKeySize)
+                .averageValueSize(averageValueSize)
+                .entries(maxEntries)
                 .createOrRecoverPersistedTo(backingFile, false);
         // see if we can recover the offset
         byte[] offsetBytes = backingMap.get(OFFSET_KEY);

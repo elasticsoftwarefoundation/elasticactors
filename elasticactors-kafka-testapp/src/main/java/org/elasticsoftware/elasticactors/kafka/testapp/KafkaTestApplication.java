@@ -71,10 +71,10 @@ public class KafkaTestApplication {
             // check the balance
             VirtualCashAccountAdapter accountAdapter = firstAccountRef.ask(new BalanceQuery(), VirtualCashAccountAdapter.class).toCompletableFuture().get();
 
-            logger.info("first account balance: "+accountAdapter.getBalance());
+            logger.info(firstAccountId+ " account balance: "+accountAdapter.getBalance());
 
             accountAdapter = secondAccountRef.ask(new BalanceQuery(), VirtualCashAccountAdapter.class).toCompletableFuture().get();
-            logger.info("second account balance: "+accountAdapter.getBalance());
+            logger.info(secondAccountId+" account balance: "+accountAdapter.getBalance());
 
             secondAccountRef.tell(new ScheduleDebitCommand(new DebitAccountEvent(new BigDecimal("100.00"))), null);
 
@@ -82,7 +82,7 @@ public class KafkaTestApplication {
                             firstAccountId, secondAccountId, UUID.randomUUID().toString()),
                     VirtualCashAccountAdapter.class).toCompletableFuture().get();
 
-            logger.info("first account balance: "+accountAdapter.getBalance());
+            logger.info(firstAccountId+" account balance: "+accountAdapter.getBalance());
 
             try {
                 waitLatch.await();

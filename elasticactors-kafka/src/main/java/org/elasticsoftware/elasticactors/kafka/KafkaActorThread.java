@@ -614,14 +614,7 @@ public final class KafkaActorThread extends Thread {
     }
 
     private PersistentActorStore createStateStore(ShardKey shardKey) {
-        // @todo: the statestore implementation should become configurable
-        //return new InMemoryPersistentActorStore(shardKey, stateDeserializer);
-        try {
-            return new ChronicleMapPersistentActorStore(shardKey, stateDeserializer);
-        } catch(IOException e) {
-            logger.warn("IOException while creating ChronicleMapPersistenActorStore, falling back to InMemoryPersistentActorStore", e);
-            return new InMemoryPersistentActorStore(shardKey, stateDeserializer);
-        }
+        return persistentActorStoreFactory.create(shardKey, stateDeserializer);
     }
 
     private void initializeStateStores(List<ManagedActorShard> managedActorShards) {
@@ -643,7 +636,8 @@ public final class KafkaActorThread extends Thread {
         int totalCount = 0;
         do {
             try {
-                stateRecords = stateConsumer.poll(100);
+                // @todo: if we somehow miss the fist poll we will overwrite state, this is why we wait so long here
+                stateRecords = stateConsumer.poll(1000);
                 totalCount += stateRecords.count();
                 // distribute the data to the stores
                 stateRecords.iterator().forEachRemaining(consumerRecord -> {
@@ -676,7 +670,7 @@ public final class KafkaActorThread extends Thread {
         ConsumerRecords<UUID, ScheduledMessage> scheduleMessageRecords = null;
         do {
             try {
-                scheduleMessageRecords = scheduledMessagesConsumer.poll(100);
+                scheduleMessageRecords = scheduledMessagesConsumer.poll(1000);
                 // distribute the data to the scheduledMessages maps
                 scheduleMessageRecords.iterator().forEachRemaining(consumerRecord -> {
                     // value can be null if the scheduled message was deleted
@@ -721,7 +715,7 @@ public final class KafkaActorThread extends Thread {
         do {
             try {
                 // @todo: potentially just send these as messages
-                consumerRecords = actorSystemEventListenersConsumer.poll(100);
+                consumerRecords = actorSystemEventListenersConsumer.poll(1000);
                 // run the logic for each actor
                 consumerRecords.iterator().forEachRemaining(consumerRecord -> {
                     ActorSystemEventListener eventListener = consumerRecord.value();
