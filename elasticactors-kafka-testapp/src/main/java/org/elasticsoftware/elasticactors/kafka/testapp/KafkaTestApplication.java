@@ -58,7 +58,9 @@ public class KafkaTestApplication {
             Runtime.getRuntime().addShutdownHook(new Thread(waitLatch::countDown));
 
             // wait a bit to let the ActorSystem initialize
+            logger.info("Waiting 5 seconds for the ActorSystem cluster to stabilize...");
             Thread.sleep(5000);
+            logger.info("Starting test");
 
             ActorSystem actorSystem = context.getBean(ActorSystem.class);
             //String firstAccountId = UUID.randomUUID().toString();

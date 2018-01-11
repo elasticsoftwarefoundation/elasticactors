@@ -54,11 +54,6 @@
             <version>${kafka.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-streams</artifactId>
-            <version>${kafka.version}</version>
-        </dependency>
-        <dependency>
             <groupId>net.openhft</groupId>
             <artifactId>chronicle-map</artifactId>
             <version>${chronicle-map.version}</version>
