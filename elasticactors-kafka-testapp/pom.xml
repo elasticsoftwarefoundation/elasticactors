@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>elasticactors-parent</artifactId>
+        <groupId>org.elasticsoftware.elasticactors</groupId>
+        <version>0.31.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>elasticactors-kafka-testapp</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Elastic Software Foundation :: ElasticActors :: Kafka Test Application</name>
+    <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
+
+    <properties>
+
+    </properties>
+
+    <dependencies>
+    <dependency>
+        <groupId>org.elasticsoftware.elasticactors</groupId>
+        <artifactId>elasticactors-kafka</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    </dependencies>
+
+
+</project>
