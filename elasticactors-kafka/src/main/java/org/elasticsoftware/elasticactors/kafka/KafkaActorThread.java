@@ -145,7 +145,7 @@ public final class KafkaActorThread extends Thread {
         messageConsumer = new KafkaConsumer<>(consumerConfig, new UUIDDeserializer(), new KafkaInternalMessageDeserializer(internalMessageDeserializer));
 
         final Map<String, Object> producerConfig = new HashMap<>();
-        producerConfig.put(ProducerConfig.LINGER_MS_CONFIG, "100");
+        producerConfig.put(ProducerConfig.LINGER_MS_CONFIG, "10");
         producerConfig.put(ProducerConfig.RETRIES_CONFIG, Integer.MAX_VALUE);
         producerConfig.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
         producerConfig.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, 1);
