@@ -39,9 +39,10 @@ import static java.lang.String.format;
 public final class RemoteActorSystems {
     private static final Logger logger = LogManager.getLogger(RemoteActorSystems.class);
     private final Map<String,RemoteActorSystemInstance> remoteActorSystems = new HashMap<>();
-    private MessageQueueFactoryFactory remoteActorSystemMessageQueueFactoryFactory;
 
-    public RemoteActorSystems(InternalActorSystemConfiguration configuration, InternalActorSystems cluster) {
+    public RemoteActorSystems(InternalActorSystemConfiguration configuration,
+                              InternalActorSystems cluster,
+                              @Qualifier("remoteActorSystemMessageQueueFactoryFactory") MessageQueueFactoryFactory remoteActorSystemMessageQueueFactoryFactory) {
         // create but don't initialize the remote systems (this needs to happen on the rebalancing thread)
         configuration.getRemoteConfigurations().forEach(remoteConfiguration ->
                 remoteActorSystems.put(remoteConfiguration.getClusterName(),
@@ -65,11 +66,6 @@ public final class RemoteActorSystems {
     @PreDestroy
     public void destroy() {
         remoteActorSystems.forEach((s, remoteActorSystemInstance) -> remoteActorSystemInstance.destroy());
-    }
-
-    @Autowired
-    public void setRemoteActorSystemMessageQueueFactoryFactory(@Qualifier("remoteActorSystemMessageQueueFactoryFactory") MessageQueueFactoryFactory remoteActorSystemMessageQueueFactoryFactory) {
-        this.remoteActorSystemMessageQueueFactoryFactory = remoteActorSystemMessageQueueFactoryFactory;
     }
 
     public ActorSystem get(String clusterName,String actorSystemName) {
