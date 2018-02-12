@@ -61,7 +61,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
 public final class KafkaActorThread extends Thread {
     private static final Logger logger = LogManager.getLogger(KafkaActorSystemInstance.class);
     private static final AtomicInteger THREAD_ID_SEQUENCE = new AtomicInteger(0);
-    private static final long DEFAULT_OFFSET_INCREASE = 2l;
+    private static final long DEFAULT_OFFSET_INCREASE = 2L;
     // this instance acts as a tombstone for stopped actors
     private static final PersistentActor<ShardKey> TOMBSTONE =
             new PersistentActor<>(null,null,null,null,null,null);
