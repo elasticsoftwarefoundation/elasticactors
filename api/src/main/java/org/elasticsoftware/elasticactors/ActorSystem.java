@@ -74,7 +74,6 @@ public interface ActorSystem {
      *
      * @param actorId           the actorId of the actor to create
      * @param actorClassName    the type class name of the actor. Needs to be annotated with {@link Actor}
-     * @param <T>               generic type info
      * @return                  the {@link ActorRef} pointing to the newly created actor
      * @throws Exception        when something unexpected happens
      */
@@ -114,11 +113,12 @@ public interface ActorSystem {
      * @param actorId           the actorId of the actor to create
      * @param actorClassName    the type class name of the actor. Needs to be annotated with {@link Actor}
      * @param initialState      the initial state, should be of type {@link org.elasticsoftware.elasticactors.Actor#stateClass()}
-     * @param <T>               generic type info
      * @return                  the {@link ActorRef} pointing to the newly created actor
      * @throws Exception        when something unexpected happens
      */
     ActorRef actorOf(String actorId, String actorClassName, ActorState initialState) throws Exception;
+
+    ActorRef actorOf(String actorId, String actorClassName, ActorState initialState, ActorRef creatorRef) throws Exception;
 
     /**
      * Create a Temporary Actor with the given initial {@link ActorState}. A Temp Actor is an {@link ElasticActor}

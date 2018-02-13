@@ -446,11 +446,15 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
 
     @Override
     public ActorRef actorOf(String actorId, String actorClassName, ActorState initialState) throws Exception {
+        return actorOf(actorId, actorClassName, initialState, ActorContextHolder.getSelf());
+    }
+
+    @Override
+    public ActorRef actorOf(String actorId, String actorClassName, ActorState initialState, ActorRef creator) throws Exception {
         // determine shard
         final ActorShard shard = shardFor(actorId);
         // send CreateActorMessage to shard
         CreateActorMessage createActorMessage = new CreateActorMessage(getName(), actorClassName, actorId, initialState);
-        ActorRef creator = ActorContextHolder.getSelf();
         shard.sendMessage(creator, shard.getActorRef(), createActorMessage);
         // create actor ref
         return cluster.createPersistentActorRef(shard, actorId);
