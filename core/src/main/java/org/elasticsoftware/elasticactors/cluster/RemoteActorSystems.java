@@ -39,40 +39,33 @@ import static java.lang.String.format;
 public final class RemoteActorSystems {
     private static final Logger logger = LogManager.getLogger(RemoteActorSystems.class);
     private final Map<String,RemoteActorSystemInstance> remoteActorSystems = new HashMap<>();
-    private final InternalActorSystemConfiguration configuration;
-    private final InternalActorSystems cluster;
-    private MessageQueueFactoryFactory remoteActorSystemMessageQueueFactoryFactory;
 
-    public RemoteActorSystems(InternalActorSystemConfiguration configuration, InternalActorSystems cluster) {
-        this.configuration = configuration;
-        this.cluster = cluster;
+    public RemoteActorSystems(InternalActorSystemConfiguration configuration,
+                              InternalActorSystems cluster,
+                              @Qualifier("remoteActorSystemMessageQueueFactoryFactory") MessageQueueFactoryFactory remoteActorSystemMessageQueueFactoryFactory) {
+        // create but don't initialize the remote systems (this needs to happen on the rebalancing thread)
+        configuration.getRemoteConfigurations().forEach(remoteConfiguration ->
+                remoteActorSystems.put(remoteConfiguration.getClusterName(),
+                        new RemoteActorSystemInstance(remoteConfiguration,cluster,
+                                remoteActorSystemMessageQueueFactoryFactory.create(remoteConfiguration.getClusterName()))));
     }
 
 
     public void init() throws Exception {
         // initialize the remote systems
-        for (RemoteActorSystemConfiguration remoteConfiguration : configuration.getRemoteConfigurations()) {
-            RemoteActorSystemInstance remoteInstance = new RemoteActorSystemInstance(remoteConfiguration,cluster,remoteActorSystemMessageQueueFactoryFactory.create(remoteConfiguration.getClusterName()));
-            remoteActorSystems.put(remoteConfiguration.getClusterName(),remoteInstance);
-            remoteInstance.init();
-            logger.info(format("Added Remote ActorSystem [%s] with %d shards on Cluster [%s]",remoteInstance.getName(),remoteConfiguration.getNumberOfShards(),remoteConfiguration.getClusterName()));
-        }
+        remoteActorSystems.forEach((key, value) -> {
+            try {
+                value.init();
+                logger.info(format("Added Remote ActorSystem [%s] with %d shards on Cluster [%s]", value.getName(), value.getNumberOfShards(), key));
+            } catch(Exception e) {
+                logger.error("Exception while initializing Remote ActorSystem [%s]", e);
+            }
+        });
     }
 
     @PreDestroy
     public void destroy() {
-        for (RemoteActorSystemInstance remoteActorSystemInstance : remoteActorSystems.values()) {
-            try {
-                remoteActorSystemInstance.destroy();
-            } catch(Exception e) {
-                // ignore
-            }
-        }
-    }
-
-    @Autowired
-    public void setRemoteActorSystemMessageQueueFactoryFactory(@Qualifier("remoteActorSystemMessageQueueFactoryFactory") MessageQueueFactoryFactory remoteActorSystemMessageQueueFactoryFactory) {
-        this.remoteActorSystemMessageQueueFactoryFactory = remoteActorSystemMessageQueueFactoryFactory;
+        remoteActorSystems.forEach((s, remoteActorSystemInstance) -> remoteActorSystemInstance.destroy());
     }
 
     public ActorSystem get(String clusterName,String actorSystemName) {

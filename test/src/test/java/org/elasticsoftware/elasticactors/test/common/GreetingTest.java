@@ -20,6 +20,7 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.base.actors.ActorDelegate;
 import org.elasticsoftware.elasticactors.base.actors.ReplyActor;
+import org.elasticsoftware.elasticactors.base.state.StringState;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.testng.annotations.Test;
 
@@ -41,7 +42,7 @@ public class GreetingTest {
         testActorSystem.initialize();
 
         ActorSystem actorSystem = testActorSystem.getActorSystem();
-        ActorRef greeter = actorSystem.actorOf("greeter",GreetingActor.class);
+        ActorRef greeter = actorSystem.actorOf("greeter",GreetingActor.class,new StringState("Hello World"));
 
         //ScheduledMessageRef messageRef = actorSystem.getScheduler().scheduleOnce(null,new Greeting("Delayed Message"),greeter,2, TimeUnit.SECONDS);
 

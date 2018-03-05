@@ -25,6 +25,7 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 
@@ -39,15 +40,17 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
 public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
     private static final Logger log = LogManager.getLogger(HandleUndeliverableMessageTask.class);
 
-    public HandleUndeliverableMessageTask(InternalActorSystem actorSystem,
+
+    HandleUndeliverableMessageTask(InternalActorSystem actorSystem,
                                           ElasticActor receiver,
                                           ActorRef receiverRef,
                                           InternalMessage internalMessage,
                                           PersistentActor persistentActor,
                                           PersistentActorRepository persistentActorRepository,
                                           MessageHandlerEventListener messageHandlerEventListener) {
-        super(persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage);
+        super(null, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, null);
     }
+
 
 
     protected boolean doInActorContext(InternalActorSystem actorSystem,

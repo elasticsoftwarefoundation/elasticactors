@@ -41,6 +41,7 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
     private final ApplicationContext applicationContext;
     private final ClusterService clusterService;
     private final PhysicalNode localNode;
+    private final ActorRefTools actorRefTools;
 
     public InternalActorSystemsImpl(ApplicationContext applicationContext,
                                     ClusterService clusterService,
@@ -48,6 +49,7 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
         this.applicationContext = applicationContext;
         this.clusterService = clusterService;
         this.localNode = localNode;
+        this.actorRefTools = new ActorRefTools(this);
     }
 
     @PreDestroy
@@ -57,7 +59,7 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
 
     @Override
     public ActorRef create(String refSpec) {
-        return ActorRefTools.parse(refSpec, this);
+        return actorRefTools.parse(refSpec);
     }
 
     @Override

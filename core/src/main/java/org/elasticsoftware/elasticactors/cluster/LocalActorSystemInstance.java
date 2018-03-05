@@ -60,7 +60,7 @@ import static org.elasticsoftware.elasticactors.cluster.ActorSystemEvent.ACTOR_S
 /**
  * @author Joost van de Wijgerd
  */
-public final class LocalActorSystemInstance implements InternalActorSystem {
+public final class LocalActorSystemInstance implements InternalActorSystem, ShardDistributor {
     private static final Logger logger = LogManager.getLogger(LocalActorSystemInstance.class);
     private final InternalActorSystemConfiguration configuration;
     private final ActorShard[] shards;
@@ -127,6 +127,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
         */
     }
 
+    @Override
     public void updateNodes(List<PhysicalNode> nodes) throws Exception {
         // first see if we need to remove nodes
         // make a map
@@ -175,7 +176,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
      *
      * @param nodes
      */
-    public void distributeShards(List<PhysicalNode> nodes,ShardDistributionStrategy strategy) throws Exception {
+    @Override
+    public void distributeShards(List<PhysicalNode> nodes, ShardDistributionStrategy strategy) throws Exception {
         final boolean initializing = initialized.compareAndSet(false, true);
         // see if this was the first time, if so we need to initialize the ActorSystem
         if (initializing) {
@@ -444,11 +446,15 @@ public final class LocalActorSystemInstance implements InternalActorSystem {
 
     @Override
     public ActorRef actorOf(String actorId, String actorClassName, ActorState initialState) throws Exception {
+        return actorOf(actorId, actorClassName, initialState, ActorContextHolder.getSelf());
+    }
+
+    @Override
+    public ActorRef actorOf(String actorId, String actorClassName, ActorState initialState, ActorRef creator) throws Exception {
         // determine shard
         final ActorShard shard = shardFor(actorId);
         // send CreateActorMessage to shard
         CreateActorMessage createActorMessage = new CreateActorMessage(getName(), actorClassName, actorId, initialState);
-        ActorRef creator = ActorContextHolder.getSelf();
         shard.sendMessage(creator, shard.getActorRef(), createActorMessage);
         // create actor ref
         return cluster.createPersistentActorRef(shard, actorId);

@@ -26,6 +26,8 @@ import org.elasticsoftware.elasticactors.util.SerializationTools;
 
 import java.io.IOException;
 
+import static org.elasticsoftware.elasticactors.util.SerializationTools.serializeActorState;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -66,6 +68,8 @@ public final class PersistentActorSerializer implements Serializer<PersistentAct
     }
 
     private byte[] getSerializedState(PersistentActor<ShardKey> persistentActor) throws IOException {
-        return SerializationTools.serializeActorState(actorSystems,persistentActor.getActorClass(),persistentActor.getState());
+        // if the state was already serialized, assume it's the most recent to avoid duplicate serialization
+        return persistentActor.getSerializedState() != null ? persistentActor.getSerializedState() :
+                serializeActorState(actorSystems,persistentActor.getActorClass(),persistentActor.getState());
     }
 }

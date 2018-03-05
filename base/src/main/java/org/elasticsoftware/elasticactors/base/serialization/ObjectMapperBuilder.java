@@ -84,7 +84,7 @@ public class ObjectMapperBuilder {
                 basePackages.add(props.getProperty("basePackage"));
             }
         } catch(IOException e) {
-            logger.warn(String.format("Failed to load elasticactors.properties"),e);
+            logger.warn("Failed to load elasticactors.properties", e);
         }
 
         // add other base packages
@@ -131,7 +131,7 @@ public class ObjectMapperBuilder {
         for (Class<? extends JsonSerializer> customSerializer : customSerializers) {
             Class<?> objectClass = TypeResolver.resolveRawArgument(JsonSerializer.class,customSerializer);
             try {
-                jacksonModule.addSerializer(objectClass,customSerializer.newInstance());
+                jacksonModule.addSerializer(objectClass, customSerializer.newInstance());
             } catch(Exception e) {
                 logger.warn(String.format("Failed to create Custom Jackson Serializer: %s",customSerializer.getName()),e);
             }

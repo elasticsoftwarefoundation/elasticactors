@@ -18,6 +18,9 @@ package org.elasticsoftware.elasticactors.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
@@ -25,15 +28,22 @@ import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.*;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ShardedScheduler;
 import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
+import org.elasticsoftware.elasticactors.state.DefaultActorStateUpdateProcessor;
+import org.elasticsoftware.elasticactors.state.NoopActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.env.Environment;
@@ -43,6 +53,7 @@ import org.springframework.core.io.ResourceLoader;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.Map;
 
 /**
  * @author Joost van de Wijgerd
@@ -68,7 +79,9 @@ public class NodeConfiguration {
         String nodeId = env.getRequiredProperty("ea.node.id");
         InetAddress nodeAddress = InetAddress.getByName(env.getRequiredProperty("ea.node.address"));
         String clusterName = env.getRequiredProperty("ea.cluster");
-        node = new ElasticActorsNode(clusterName, nodeId, nodeAddress, configuration);
+        int maximumSize = env.getProperty("ea.actorRefCache.maximumSize",Integer.class,10240);
+        Cache<String,ActorRef> actorRefCache = CacheBuilder.newBuilder().maximumSize(maximumSize).build();
+        node = new ElasticActorsNode(clusterName, nodeId, nodeAddress, configuration, actorRefCache);
     }
 
 
@@ -154,8 +167,8 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"remoteActorSystems"})
-    public RemoteActorSystems createRemoteActorSystems() {
-        return new RemoteActorSystems(configuration,node);
+    public RemoteActorSystems createRemoteActorSystems(@Qualifier("remoteActorSystemMessageQueueFactoryFactory") MessageQueueFactoryFactory remoteActorSystemMessageQueueFactoryFactory) {
+        return new RemoteActorSystems(configuration, node, remoteActorSystemMessageQueueFactoryFactory);
     }
 
     @Bean(name = {"scheduler"})
@@ -172,5 +185,17 @@ public class NodeConfiguration {
     @Bean(name = {"internalActorSystemHealthCheck"})
     public InternalActorSystemHealthCheck createHealthCheck(InternalActorSystem internalActorSystem) {
         return new InternalActorSystemHealthCheck(internalActorSystem);
+    }
+
+    @Bean(name = {"actorStateUpdateProcessor"})
+    public ActorStateUpdateProcessor createActorStateUpdateProcessor(ApplicationContext applicationContext) {
+        Map<String, ActorStateUpdateListener> listeners = applicationContext.getBeansOfType(ActorStateUpdateListener.class);
+        if(listeners.isEmpty()) {
+            return new NoopActorStateUpdateProcessor();
+        } else {
+            final int workers = env.getProperty("ea.actorStateUpdateProcessor.workerCount",Integer.class,1);
+            final int maxBatchSize = env.getProperty("ea.actorStateUpdateProcessor.maxBatchSize",Integer.class,20);
+            return new DefaultActorStateUpdateProcessor(listeners.values(), workers, maxBatchSize);
+        }
     }
 }

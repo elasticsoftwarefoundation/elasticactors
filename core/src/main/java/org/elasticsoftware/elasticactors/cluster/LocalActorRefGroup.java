@@ -32,7 +32,7 @@ import static org.elasticsoftware.elasticactors.ActorContextHolder.getSelf;
 public final class LocalActorRefGroup implements ActorRefGroup {
     private final ImmutableListMultimap<ActorShardRef, ActorRef> members;
 
-    protected LocalActorRefGroup(ImmutableListMultimap<ActorShardRef, ActorRef> members) {
+    public LocalActorRefGroup(ImmutableListMultimap<ActorShardRef, ActorRef> members) {
         this.members = members;
     }
 
