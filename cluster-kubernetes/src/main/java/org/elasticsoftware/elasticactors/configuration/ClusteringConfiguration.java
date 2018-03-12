@@ -12,6 +12,9 @@ public class ClusteringConfiguration {
 
     @Bean(name= "clusterService")
     public ClusterService createClusterService() {
-        return new KubernetesClusterService("");
+        String namespace = env.getProperty("ea.cluster.kubernetes.namespace", "default");
+        String name = env.getRequiredProperty("ea.cluster.kubernetes.statefulsetName");
+        String nodeId = env.getRequiredProperty("ea.node.id");
+        return new KubernetesClusterService(namespace, name, nodeId);
     }
 }

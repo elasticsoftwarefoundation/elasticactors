@@ -5,7 +5,7 @@
     <parent>
         <artifactId>elasticactors-parent</artifactId>
         <groupId>org.elasticsoftware.elasticactors</groupId>
-        <version>0.30.1-SNAPSHOT</version>
+        <version>1.1.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -26,18 +26,14 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.elasticsoftware.elasticactors</groupId>
-            <artifactId>elasticactors-core</artifactId>
-            <version>${project.version}</version>
-        </dependency><dependency>
-        <groupId>io.fabric8</groupId>
-        <artifactId>kubernetes-client</artifactId>
-        <version>3.0.0</version>
-    </dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-client</artifactId>
+            <version>${kubernetes-client.version}</version>
+        </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.module</groupId>
-            <artifactId>jackson-module-jaxb-annotations</artifactId>
-            <version>${jackson.version}</version>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
         </dependency>
     </dependencies>
 

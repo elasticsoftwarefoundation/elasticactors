@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.cluster;
+package org.elasticsoftware.elasticactors.kubernetes.cluster;
 
 import org.elasticsoftware.elasticactors.PhysicalNode;
 
@@ -57,17 +57,14 @@ public final class PhysicalNodeImpl implements PhysicalNode {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
 
-        PhysicalNodeImpl that = (PhysicalNodeImpl) o;
+        PhysicalNode that = (PhysicalNode) o;
 
-        if (!id.equals(that.id)) return false;
-
-        return true;
+        return getId().equals(that.getId());
     }
 
     @Override
     public int hashCode() {
-        return id.hashCode();
+        return getId().hashCode();
     }
 }
