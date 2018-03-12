@@ -26,5 +26,7 @@ import java.util.List;
 public interface ClusterEventListener {
     void onTopologyChanged(List<PhysicalNode> topology) throws Exception;
 
-    void onMasterElected(PhysicalNode masterNode) throws Exception;
+    default void onMasterElected(PhysicalNode masterNode) throws Exception {
+
+    }
 }

@@ -31,7 +31,7 @@
         <cassandra.version>3.9</cassandra.version>
         <cassandra.version.md5>40f49dc7dbcd49e2e18e2dead7dd074a</cassandra.version.md5>
         <hectorclient.version>2.0-0</hectorclient.version>
-        <spring.version>5.0.2.RELEASE</spring.version>
+        <spring.version>5.0.4.RELEASE</spring.version>
         <aspectj.version>1.8.10</aspectj.version>
         <protobuf.version>2.6.1</protobuf.version>
         <grizzly.version>2.3.22</grizzly.version>
@@ -54,6 +54,7 @@
         <disruptor.version>3.3.6</disruptor.version>
         <chronicle-map.version>3.14.4</chronicle-map.version>
         <elasticsearch.version>5.2.1</elasticsearch.version>
+        <kubernetes-client.version>3.1.8</kubernetes-client.version>
         <!-- testing -->
         <testng-version>6.10</testng-version>
         <mockito.version>1.9.5</mockito.version>
@@ -131,6 +132,7 @@
         <module>messaging-activemq</module>
         <module>elasticactors-kafka-testapp</module>
         <module>indexing-elasticsearch</module>
+        <module>cluster-kubernetes</module>
     </modules>
 
     <build>
