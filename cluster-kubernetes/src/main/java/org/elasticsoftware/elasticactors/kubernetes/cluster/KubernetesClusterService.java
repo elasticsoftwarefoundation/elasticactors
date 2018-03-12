@@ -22,12 +22,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import static java.lang.String.format;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
-public class KubernetesClusterService implements ClusterService {
+public final class KubernetesClusterService implements ClusterService {
     private static final Logger logger = LogManager.getLogger(KubernetesClusterService.class);
     private KubernetesClient client;
     private final String namespace;
     private final String name;
     private final String nodeId;
+    private final String masterNodeId;
     private final Queue<ClusterEventListener> eventListeners = new ConcurrentLinkedQueue<>();
     private final AtomicReference<StatefulSet> currentState = new AtomicReference<>(null);
     private final AtomicReference<Status> currentStatus = new AtomicReference<>(Status.STABLE);
@@ -39,6 +40,7 @@ public class KubernetesClusterService implements ClusterService {
         this.namespace = namespace;
         this.name = name;
         this.nodeId = nodeId;
+        this.masterNodeId = format("%s-0", name);
     }
 
     @PostConstruct
@@ -73,6 +75,16 @@ public class KubernetesClusterService implements ClusterService {
 
         // send out the first update
         signalTopologyChange(statefulSet);
+
+        // and send out the master to be the 0 ordinal pod (i.e. <name>-0)
+        PhysicalNodeImpl masterNode = new PhysicalNodeImpl(masterNodeId, null, nodeId.equals(masterNodeId));
+        this.eventListeners.forEach(clusterEventListener -> {
+            try {
+                clusterEventListener.onMasterElected(masterNode);
+            } catch (Exception e) {
+                logger.error("Unexpected exception while calling clusterEventListener.onMasterElected", e);
+            }
+        });
     }
 
     private void signalTopologyChange(StatefulSet statefulSet) {
