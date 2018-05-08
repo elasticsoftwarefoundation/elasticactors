@@ -290,6 +290,17 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     }
 
     @Override
+    public ActorRef createClientActorRef(ClientNode clientNode, String actorSystemName, String actorId) {
+        final String refSpec = RemoteClientActorRef.generateRefSpec(clusterName, actorSystemName, clientNode.getNodeId(), actorId);
+        ActorRef ref = actorRefCache.getIfPresent(refSpec);
+        if(ref == null) {
+            ref = new RemoteClientActorRef(get(null), clusterName, actorSystemName, clientNode, actorId);
+            actorRefCache.put(refSpec, ref);
+        }
+        return ref;
+    }
+
+    @Override
     public String getActorStateVersion(Class<? extends ElasticActor> actorClass) {
         String version = actorStateVersionCache.getIfPresent(actorClass);
         if(version == null) {

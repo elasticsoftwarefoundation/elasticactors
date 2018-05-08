@@ -26,7 +26,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public class ActorRefTools {
-    private static final String EXCEPTION_FORMAT = "Invalid ActorRef, required spec: [actor://<cluster>/<actorSystem>/[shards|nodes|services]/<shardId>/<actorId (optional)>, actual spec: [%s]";
+    private static final String EXCEPTION_FORMAT = "Invalid ActorRef, required spec: [actor://<cluster>/<actorSystem>/[shards|nodes|services|clients]/<shardId>/<actorId (optional)>, actual spec: [%s]";
     private final InternalActorSystems actorSystems;
 
     public ActorRefTools(InternalActorSystems actorSystems) {
@@ -77,6 +77,8 @@ public class ActorRefTools {
             return handleNode(components, actorId);
         } else if ("services".equals(components[2])) {
             return handleService(components, actorId);
+        } else if ("clients".equals(components[2])) {
+            return handleClient(components, actorId);
         } else {
             throw new IllegalArgumentException(format(EXCEPTION_FORMAT, refSpec));
         }
@@ -115,6 +117,14 @@ public class ActorRefTools {
         } else {
             return actorSystems.createServiceActorRef(node, actorId);
         }
+    }
+
+    protected ActorRef handleClient(String[] components, String actorId) {
+        String clusterName = components[0];
+        String actorSystemName = components[1];
+        InternalActorSystem actorSystem = actorSystems.get(actorSystemName);
+        ClientNode node = actorSystem.getClientNode(components[3]);
+        return actorSystems.createClientActorRef(node, actorSystemName, actorId);
     }
 
     private ActorRef handleRemoteActorSystemReference(String refSpec, String[] components, String actorId) {

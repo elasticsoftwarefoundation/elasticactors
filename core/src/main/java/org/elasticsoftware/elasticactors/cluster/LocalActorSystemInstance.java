@@ -79,6 +79,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private final ConcurrentMap<String, ActorNode> activeNodes = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, ActorNodeAdapter> activeNodeAdapters = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, ClientNode> clientNodes = new ConcurrentHashMap<>();
     private final ActorNodeAdapter localNodeAdapter;
     private final HashFunction hashFunction = Hashing.murmur3_32();
     private final AtomicBoolean stable = new AtomicBoolean(false);
@@ -334,6 +335,19 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     @Override
     public ActorNode getNode(String nodeId) {
         return activeNodeAdapters.get(nodeId);
+    }
+
+    @Override
+    public ClientNode getClientNode(String nodeId) {
+        return clientNodes.computeIfAbsent(nodeId, s -> {
+            ClientNode clientNode = new RemoteClientNode(nodeId, this, remoteMessageQueueFactory);
+            try {
+                clientNode.init();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            return null;
+        });
     }
 
     @Override

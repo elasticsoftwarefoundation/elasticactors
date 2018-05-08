@@ -55,7 +55,7 @@ public abstract class AbstractActorContainer implements ActorContainer, MessageH
     }
 
     @Override
-    public final ActorRef getActorRef() {
+    public ActorRef getActorRef() {
         return myRef;
     }
 

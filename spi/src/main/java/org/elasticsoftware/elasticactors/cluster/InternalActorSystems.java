@@ -39,5 +39,9 @@ public interface InternalActorSystems extends ActorSystems {
 
     ActorRef createServiceActorRef(ActorNode node, String actorId);
 
+    default ActorRef createClientActorRef(ClientNode clientNode, String actorSystemName, String actorId) {
+        throw new UnsupportedOperationException("Not Implemented");
+    }
+
     String getActorStateVersion(Class<? extends ElasticActor> actorClass);
 }

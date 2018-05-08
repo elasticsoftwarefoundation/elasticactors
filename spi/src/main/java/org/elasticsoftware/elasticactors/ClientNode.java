@@ -14,17 +14,11 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.messaging;
-
-import org.elasticsoftware.elasticactors.PhysicalNode;
+package org.elasticsoftware.elasticactors;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface MessageHandler {
-    default PhysicalNode getPhysicalNode() {
-        return null;
-    }
-
-    void handleMessage(InternalMessage message,MessageHandlerEventListener messageHandlerEventListener);
+public interface ClientNode extends ActorContainer {
+    String getNodeId();
 }

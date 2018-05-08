@@ -63,6 +63,10 @@ public interface InternalActorSystem extends ActorSystem, ShardAccessor {
      */
     ActorNode getNode(String nodeId);
 
+    default ClientNode getClientNode(String nodeId) {
+        return null;
+    }
+
     /**
      * Returns the local {@link ActorNode}
      *
