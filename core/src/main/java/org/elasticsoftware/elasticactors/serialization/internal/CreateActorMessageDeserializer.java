@@ -43,23 +43,24 @@ public final class CreateActorMessageDeserializer implements MessageDeserializer
     public CreateActorMessage deserialize(ByteBuffer serializedObject) throws IOException {
         Elasticactors.CreateActorMessage protobufMessage = Elasticactors.CreateActorMessage.parseFrom(ByteString.copyFrom(serializedObject));
         return new CreateActorMessage(protobufMessage.getActorSystem(),
-                                      protobufMessage.getActorClass(),
-                                      protobufMessage.getActorId(),
-                                      protobufMessage.hasInitialState()
-                                              ? deserializeState(protobufMessage.getActorClass(),
-                                                                 protobufMessage.getInitialState().toByteArray())
-                                              : null,
-                                      protobufMessage.hasType()
-                                              ? ActorType.values()[protobufMessage.getType().getNumber()]
-                                              : ActorType.PERSISTENT,
-                                      protobufMessage.getAffinityKey());
+                protobufMessage.getActorClass(),
+                protobufMessage.getActorId(),
+                protobufMessage.getInitialState() != null &&
+                        !protobufMessage.getInitialState().isEmpty()
+                        ? deserializeState(protobufMessage.getActorClass(),
+                        protobufMessage.getInitialState().toByteArray())
+                        : null,
+                protobufMessage.getType() != null
+                        ? ActorType.values()[protobufMessage.getType().getNumber()]
+                        : ActorType.PERSISTENT,
+                protobufMessage.getAffinityKey());
     }
 
-    private ActorState deserializeState(String actorClass,byte[] serializedState) throws IOException {
+    private ActorState deserializeState(String actorClass, byte[] serializedState) throws IOException {
         try {
             return SerializationTools.deserializeActorState(actorSystems,
-                                                    (Class<? extends ElasticActor>) Class.forName(actorClass),
-                                                    serializedState);
+                    (Class<? extends ElasticActor>) Class.forName(actorClass),
+                    serializedState);
         } catch (ClassNotFoundException e) {
             throw new IOException(e);
         }
