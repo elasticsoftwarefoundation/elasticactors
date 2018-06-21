@@ -1,6 +1,8 @@
 package org.elasticsoftware.elasticactors;
 
 public interface ActorSystemClient {
+    String getClusterName();
+
     /**
      * The name of this {@link ActorSystem}. The name is unique within the same cluster
      *
