@@ -1,32 +1,35 @@
+syntax = "proto3";
+
 package org.elasticsoftware.elasticactors.serialization.protobuf;
+
 
 option optimize_for = SPEED;
 
 message SubscribeMessage {
-    optional string subscriberRef = 1;
-    optional string messageName = 2;
+    string subscriberRef = 1;
+    string messageName = 2;
 }
 
 message SubscriptionMessage {
-    optional string messageName = 1;
+    string messageName = 1;
 }
 
 message CancelMessage {
-    optional string subscriberRef = 1;
-    optional string messageName = 2;
+    string subscriberRef = 1;
+    string messageName = 2;
 }
 
 message CompletedMessage {
-    optional string messageName = 1;
+    string messageName = 1;
 }
 
 message NextMessage {
-    optional string messageName = 1;
-    optional bytes messageBytes = 2;
+    string messageName = 1;
+    bytes messageBytes = 2;
 }
 
 message RequestMessage {
-    optional string messageName = 1;
-    optional uint64 n = 2;
+    string messageName = 1;
+    uint64 n = 2;
 }
 

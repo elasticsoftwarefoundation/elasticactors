@@ -40,7 +40,7 @@ public final class ScheduledMessageDeserializer implements Deserializer<byte[],S
     public ScheduledMessage deserialize(byte[] serializedObject) throws IOException {
         try {
             Elasticactors.ScheduledMessage protobufMessage = Elasticactors.ScheduledMessage.parseFrom(serializedObject);
-            ActorRef sender = (protobufMessage.hasSender()) ? actorRefDeserializer.deserialize(protobufMessage.getSender()) : null;
+            ActorRef sender = protobufMessage.getSender() != null && !protobufMessage.getSender().isEmpty() ? actorRefDeserializer.deserialize(protobufMessage.getSender()) : null;
             ActorRef receiver = actorRefDeserializer.deserialize(protobufMessage.getReceiver());
             Class messageClass = Class.forName(protobufMessage.getMessageClass());
             byte[] messageBytes = protobufMessage.getMessage().toByteArray();

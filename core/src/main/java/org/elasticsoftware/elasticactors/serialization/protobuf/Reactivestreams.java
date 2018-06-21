@@ -6,36 +6,34 @@ package org.elasticsoftware.elasticactors.serialization.protobuf;
 public final class Reactivestreams {
   private Reactivestreams() {}
   public static void registerAllExtensions(
+      com.google.protobuf.ExtensionRegistryLite registry) {
+  }
+
+  public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
+    registerAllExtensions(
+        (com.google.protobuf.ExtensionRegistryLite) registry);
   }
   public interface SubscribeMessageOrBuilder extends
       // @@protoc_insertion_point(interface_extends:org.elasticsoftware.elasticactors.serialization.protobuf.SubscribeMessage)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional string subscriberRef = 1;</code>
+     * <code>string subscriberRef = 1;</code>
      */
-    boolean hasSubscriberRef();
+    String getSubscriberRef();
     /**
-     * <code>optional string subscriberRef = 1;</code>
-     */
-    java.lang.String getSubscriberRef();
-    /**
-     * <code>optional string subscriberRef = 1;</code>
+     * <code>string subscriberRef = 1;</code>
      */
     com.google.protobuf.ByteString
         getSubscriberRefBytes();
 
     /**
-     * <code>optional string messageName = 2;</code>
+     * <code>string messageName = 2;</code>
      */
-    boolean hasMessageName();
+    String getMessageName();
     /**
-     * <code>optional string messageName = 2;</code>
-     */
-    java.lang.String getMessageName();
-    /**
-     * <code>optional string messageName = 2;</code>
+     * <code>string messageName = 2;</code>
      */
     com.google.protobuf.ByteString
         getMessageNameBytes();
@@ -43,37 +41,33 @@ public final class Reactivestreams {
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.SubscribeMessage}
    */
-  public static final class SubscribeMessage extends
-      com.google.protobuf.GeneratedMessage implements
+  public  static final class SubscribeMessage extends
+      com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:org.elasticsoftware.elasticactors.serialization.protobuf.SubscribeMessage)
       SubscribeMessageOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use SubscribeMessage.newBuilder() to construct.
-    private SubscribeMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+    private SubscribeMessage(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
-      this.unknownFields = builder.getUnknownFields();
     }
-    private SubscribeMessage(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-    private static final SubscribeMessage defaultInstance;
-    public static SubscribeMessage getDefaultInstance() {
-      return defaultInstance;
+    private SubscribeMessage() {
+      subscriberRef_ = "";
+      messageName_ = "";
     }
 
-    public SubscribeMessage getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-
-    private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
+    @Override
     public final com.google.protobuf.UnknownFieldSet
-        getUnknownFields() {
+    getUnknownFields() {
       return this.unknownFields;
     }
     private SubscribeMessage(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
+      this();
+      if (extensionRegistry == null) {
+        throw new NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -86,22 +80,22 @@ public final class Reactivestreams {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownFieldProto3(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
             }
             case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x00000001;
-              subscriberRef_ = bs;
+              String s = input.readStringRequireUtf8();
+
+              subscriberRef_ = s;
               break;
             }
             case 18: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x00000002;
-              messageName_ = bs;
+              String s = input.readStringRequireUtf8();
+
+              messageName_ = s;
               break;
             }
           }
@@ -110,7 +104,7 @@ public final class Reactivestreams {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
+            e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -118,67 +112,43 @@ public final class Reactivestreams {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_descriptor;
+      return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_fieldAccessorTable
+      return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage.class, org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage.Builder.class);
+              SubscribeMessage.class, Builder.class);
     }
 
-    public static com.google.protobuf.Parser<SubscribeMessage> PARSER =
-        new com.google.protobuf.AbstractParser<SubscribeMessage>() {
-      public SubscribeMessage parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SubscribeMessage(input, extensionRegistry);
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<SubscribeMessage> getParserForType() {
-      return PARSER;
-    }
-
-    private int bitField0_;
     public static final int SUBSCRIBERREF_FIELD_NUMBER = 1;
-    private java.lang.Object subscriberRef_;
+    private volatile Object subscriberRef_;
     /**
-     * <code>optional string subscriberRef = 1;</code>
+     * <code>string subscriberRef = 1;</code>
      */
-    public boolean hasSubscriberRef() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>optional string subscriberRef = 1;</code>
-     */
-    public java.lang.String getSubscriberRef() {
-      java.lang.Object ref = subscriberRef_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getSubscriberRef() {
+      Object ref = subscriberRef_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          subscriberRef_ = s;
-        }
+        String s = bs.toStringUtf8();
+        subscriberRef_ = s;
         return s;
       }
     }
     /**
-     * <code>optional string subscriberRef = 1;</code>
+     * <code>string subscriberRef = 1;</code>
      */
     public com.google.protobuf.ByteString
         getSubscriberRefBytes() {
-      java.lang.Object ref = subscriberRef_;
-      if (ref instanceof java.lang.String) {
+      Object ref = subscriberRef_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         subscriberRef_ = b;
         return b;
       } else {
@@ -187,40 +157,32 @@ public final class Reactivestreams {
     }
 
     public static final int MESSAGENAME_FIELD_NUMBER = 2;
-    private java.lang.Object messageName_;
+    private volatile Object messageName_;
     /**
-     * <code>optional string messageName = 2;</code>
+     * <code>string messageName = 2;</code>
      */
-    public boolean hasMessageName() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>optional string messageName = 2;</code>
-     */
-    public java.lang.String getMessageName() {
-      java.lang.Object ref = messageName_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getMessageName() {
+      Object ref = messageName_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          messageName_ = s;
-        }
+        String s = bs.toStringUtf8();
+        messageName_ = s;
         return s;
       }
     }
     /**
-     * <code>optional string messageName = 2;</code>
+     * <code>string messageName = 2;</code>
      */
     public com.google.protobuf.ByteString
         getMessageNameBytes() {
-      java.lang.Object ref = messageName_;
-      if (ref instanceof java.lang.String) {
+      Object ref = messageName_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         messageName_ = b;
         return b;
       } else {
@@ -228,10 +190,6 @@ public final class Reactivestreams {
       }
     }
 
-    private void initFields() {
-      subscriberRef_ = "";
-      messageName_ = "";
-    }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -244,105 +202,151 @@ public final class Reactivestreams {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getSubscriberRefBytes());
+      if (!getSubscriberRefBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, subscriberRef_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, getMessageNameBytes());
+      if (!getMessageNameBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, messageName_);
       }
-      getUnknownFields().writeTo(output);
+      unknownFields.writeTo(output);
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getSubscriberRefBytes());
+      if (!getSubscriberRefBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, subscriberRef_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, getMessageNameBytes());
+      if (!getMessageNameBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, messageName_);
       }
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
+    @Override
+    public boolean equals(final Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof SubscribeMessage)) {
+        return super.equals(obj);
+      }
+      SubscribeMessage other = (SubscribeMessage) obj;
+
+      boolean result = true;
+      result = result && getSubscriberRef()
+          .equals(other.getSubscriberRef());
+      result = result && getMessageName()
+          .equals(other.getMessageName());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
     }
 
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage parseFrom(
+    @Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + SUBSCRIBERREF_FIELD_NUMBER;
+      hash = (53 * hash) + getSubscriberRef().hashCode();
+      hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
+      hash = (53 * hash) + getMessageName().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static SubscribeMessage parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static SubscribeMessage parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static SubscribeMessage parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage parseFrom(
+    public static SubscribeMessage parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage parseFrom(byte[] data)
+    public static SubscribeMessage parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage parseFrom(
+    public static SubscribeMessage parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage parseFrom(java.io.InputStream input)
+    public static SubscribeMessage parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage parseFrom(
+    public static SubscribeMessage parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage parseDelimitedFrom(java.io.InputStream input)
+    public static SubscribeMessage parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage parseDelimitedFrom(
+    public static SubscribeMessage parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage parseFrom(
+    public static SubscribeMessage parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage parseFrom(
+    public static SubscribeMessage parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage prototype) {
-      return newBuilder().mergeFrom(prototype);
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
     }
-    public Builder toBuilder() { return newBuilder(this); }
+    public static Builder newBuilder(SubscribeMessage prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
 
-    @java.lang.Override
+    @Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -350,19 +354,19 @@ public final class Reactivestreams {
      * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.SubscribeMessage}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:org.elasticsoftware.elasticactors.serialization.protobuf.SubscribeMessage)
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessageOrBuilder {
+        SubscribeMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_descriptor;
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_fieldAccessorTable
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage.class, org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage.Builder.class);
+                SubscribeMessage.class, Builder.class);
       }
 
       // Construct using org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage.newBuilder()
@@ -371,87 +375,96 @@ public final class Reactivestreams {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
         }
       }
-      private static Builder create() {
-        return new Builder();
-      }
-
       public Builder clear() {
         super.clear();
         subscriberRef_ = "";
-        bitField0_ = (bitField0_ & ~0x00000001);
-        messageName_ = "";
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
 
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
+        messageName_ = "";
+
+        return this;
       }
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_descriptor;
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_descriptor;
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage getDefaultInstanceForType() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage.getDefaultInstance();
+      public SubscribeMessage getDefaultInstanceForType() {
+        return SubscribeMessage.getDefaultInstance();
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage build() {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage result = buildPartial();
+      public SubscribeMessage build() {
+        SubscribeMessage result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage buildPartial() {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage result = new org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
+      public SubscribeMessage buildPartial() {
+        SubscribeMessage result = new SubscribeMessage(this);
         result.subscriberRef_ = subscriberRef_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
         result.messageName_ = messageName_;
-        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
 
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage) {
-          return mergeFrom((org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage)other);
+        if (other instanceof SubscribeMessage) {
+          return mergeFrom((SubscribeMessage)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage other) {
-        if (other == org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage.getDefaultInstance()) return this;
-        if (other.hasSubscriberRef()) {
-          bitField0_ |= 0x00000001;
+      public Builder mergeFrom(SubscribeMessage other) {
+        if (other == SubscribeMessage.getDefaultInstance()) return this;
+        if (!other.getSubscriberRef().isEmpty()) {
           subscriberRef_ = other.subscriberRef_;
           onChanged();
         }
-        if (other.hasMessageName()) {
-          bitField0_ |= 0x00000002;
+        if (!other.getMessageName().isEmpty()) {
           messageName_ = other.messageName_;
           onChanged();
         }
-        this.mergeUnknownFields(other.getUnknownFields());
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
         return this;
       }
 
@@ -463,12 +476,12 @@ public final class Reactivestreams {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage parsedMessage = null;
+        SubscribeMessage parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscribeMessage) e.getUnfinishedMessage();
-          throw e;
+          parsedMessage = (SubscribeMessage) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -476,42 +489,33 @@ public final class Reactivestreams {
         }
         return this;
       }
-      private int bitField0_;
 
-      private java.lang.Object subscriberRef_ = "";
+      private Object subscriberRef_ = "";
       /**
-       * <code>optional string subscriberRef = 1;</code>
+       * <code>string subscriberRef = 1;</code>
        */
-      public boolean hasSubscriberRef() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>optional string subscriberRef = 1;</code>
-       */
-      public java.lang.String getSubscriberRef() {
-        java.lang.Object ref = subscriberRef_;
-        if (!(ref instanceof java.lang.String)) {
+      public String getSubscriberRef() {
+        Object ref = subscriberRef_;
+        if (!(ref instanceof String)) {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            subscriberRef_ = s;
-          }
+          String s = bs.toStringUtf8();
+          subscriberRef_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
-       * <code>optional string subscriberRef = 1;</code>
+       * <code>string subscriberRef = 1;</code>
        */
       public com.google.protobuf.ByteString
           getSubscriberRefBytes() {
-        java.lang.Object ref = subscriberRef_;
+        Object ref = subscriberRef_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           subscriberRef_ = b;
           return b;
         } else {
@@ -519,75 +523,68 @@ public final class Reactivestreams {
         }
       }
       /**
-       * <code>optional string subscriberRef = 1;</code>
+       * <code>string subscriberRef = 1;</code>
        */
       public Builder setSubscriberRef(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  
         subscriberRef_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional string subscriberRef = 1;</code>
+       * <code>string subscriberRef = 1;</code>
        */
       public Builder clearSubscriberRef() {
-        bitField0_ = (bitField0_ & ~0x00000001);
+        
         subscriberRef_ = getDefaultInstance().getSubscriberRef();
         onChanged();
         return this;
       }
       /**
-       * <code>optional string subscriberRef = 1;</code>
+       * <code>string subscriberRef = 1;</code>
        */
       public Builder setSubscriberRefBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  checkByteStringIsUtf8(value);
+        
         subscriberRef_ = value;
         onChanged();
         return this;
       }
 
-      private java.lang.Object messageName_ = "";
+      private Object messageName_ = "";
       /**
-       * <code>optional string messageName = 2;</code>
+       * <code>string messageName = 2;</code>
        */
-      public boolean hasMessageName() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>optional string messageName = 2;</code>
-       */
-      public java.lang.String getMessageName() {
-        java.lang.Object ref = messageName_;
-        if (!(ref instanceof java.lang.String)) {
+      public String getMessageName() {
+        Object ref = messageName_;
+        if (!(ref instanceof String)) {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            messageName_ = s;
-          }
+          String s = bs.toStringUtf8();
+          messageName_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
-       * <code>optional string messageName = 2;</code>
+       * <code>string messageName = 2;</code>
        */
       public com.google.protobuf.ByteString
           getMessageNameBytes() {
-        java.lang.Object ref = messageName_;
+        Object ref = messageName_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           messageName_ = b;
           return b;
         } else {
@@ -595,50 +592,88 @@ public final class Reactivestreams {
         }
       }
       /**
-       * <code>optional string messageName = 2;</code>
+       * <code>string messageName = 2;</code>
        */
       public Builder setMessageName(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000002;
+  
         messageName_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional string messageName = 2;</code>
+       * <code>string messageName = 2;</code>
        */
       public Builder clearMessageName() {
-        bitField0_ = (bitField0_ & ~0x00000002);
+        
         messageName_ = getDefaultInstance().getMessageName();
         onChanged();
         return this;
       }
       /**
-       * <code>optional string messageName = 2;</code>
+       * <code>string messageName = 2;</code>
        */
       public Builder setMessageNameBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000002;
+  checkByteStringIsUtf8(value);
+        
         messageName_ = value;
         onChanged();
         return this;
       }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFieldsProto3(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
 
       // @@protoc_insertion_point(builder_scope:org.elasticsoftware.elasticactors.serialization.protobuf.SubscribeMessage)
     }
 
+    // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.SubscribeMessage)
+    private static final SubscribeMessage DEFAULT_INSTANCE;
     static {
-      defaultInstance = new SubscribeMessage(true);
-      defaultInstance.initFields();
+      DEFAULT_INSTANCE = new SubscribeMessage();
     }
 
-    // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.SubscribeMessage)
+    public static SubscribeMessage getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<SubscribeMessage>
+        PARSER = new com.google.protobuf.AbstractParser<SubscribeMessage>() {
+      public SubscribeMessage parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new SubscribeMessage(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<SubscribeMessage> parser() {
+      return PARSER;
+    }
+
+    @Override
+    public com.google.protobuf.Parser<SubscribeMessage> getParserForType() {
+      return PARSER;
+    }
+
+    public SubscribeMessage getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
   }
 
   public interface SubscriptionMessageOrBuilder extends
@@ -646,15 +681,11 @@ public final class Reactivestreams {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>string messageName = 1;</code>
      */
-    boolean hasMessageName();
+    String getMessageName();
     /**
-     * <code>optional string messageName = 1;</code>
-     */
-    java.lang.String getMessageName();
-    /**
-     * <code>optional string messageName = 1;</code>
+     * <code>string messageName = 1;</code>
      */
     com.google.protobuf.ByteString
         getMessageNameBytes();
@@ -662,37 +693,32 @@ public final class Reactivestreams {
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.SubscriptionMessage}
    */
-  public static final class SubscriptionMessage extends
-      com.google.protobuf.GeneratedMessage implements
+  public  static final class SubscriptionMessage extends
+      com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:org.elasticsoftware.elasticactors.serialization.protobuf.SubscriptionMessage)
       SubscriptionMessageOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use SubscriptionMessage.newBuilder() to construct.
-    private SubscriptionMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+    private SubscriptionMessage(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
-      this.unknownFields = builder.getUnknownFields();
     }
-    private SubscriptionMessage(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-    private static final SubscriptionMessage defaultInstance;
-    public static SubscriptionMessage getDefaultInstance() {
-      return defaultInstance;
+    private SubscriptionMessage() {
+      messageName_ = "";
     }
 
-    public SubscriptionMessage getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-
-    private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
+    @Override
     public final com.google.protobuf.UnknownFieldSet
-        getUnknownFields() {
+    getUnknownFields() {
       return this.unknownFields;
     }
     private SubscriptionMessage(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
+      this();
+      if (extensionRegistry == null) {
+        throw new NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -705,16 +731,16 @@ public final class Reactivestreams {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownFieldProto3(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
             }
             case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x00000001;
-              messageName_ = bs;
+              String s = input.readStringRequireUtf8();
+
+              messageName_ = s;
               break;
             }
           }
@@ -723,7 +749,7 @@ public final class Reactivestreams {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
+            e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -731,67 +757,43 @@ public final class Reactivestreams {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_descriptor;
+      return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_fieldAccessorTable
+      return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage.class, org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage.Builder.class);
+              SubscriptionMessage.class, Builder.class);
     }
 
-    public static com.google.protobuf.Parser<SubscriptionMessage> PARSER =
-        new com.google.protobuf.AbstractParser<SubscriptionMessage>() {
-      public SubscriptionMessage parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SubscriptionMessage(input, extensionRegistry);
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<SubscriptionMessage> getParserForType() {
-      return PARSER;
-    }
-
-    private int bitField0_;
     public static final int MESSAGENAME_FIELD_NUMBER = 1;
-    private java.lang.Object messageName_;
+    private volatile Object messageName_;
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>string messageName = 1;</code>
      */
-    public boolean hasMessageName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>optional string messageName = 1;</code>
-     */
-    public java.lang.String getMessageName() {
-      java.lang.Object ref = messageName_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getMessageName() {
+      Object ref = messageName_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          messageName_ = s;
-        }
+        String s = bs.toStringUtf8();
+        messageName_ = s;
         return s;
       }
     }
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>string messageName = 1;</code>
      */
     public com.google.protobuf.ByteString
         getMessageNameBytes() {
-      java.lang.Object ref = messageName_;
-      if (ref instanceof java.lang.String) {
+      Object ref = messageName_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         messageName_ = b;
         return b;
       } else {
@@ -799,9 +801,6 @@ public final class Reactivestreams {
       }
     }
 
-    private void initFields() {
-      messageName_ = "";
-    }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -814,98 +813,141 @@ public final class Reactivestreams {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getMessageNameBytes());
+      if (!getMessageNameBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, messageName_);
       }
-      getUnknownFields().writeTo(output);
+      unknownFields.writeTo(output);
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getMessageNameBytes());
+      if (!getMessageNameBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, messageName_);
       }
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
+    @Override
+    public boolean equals(final Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof SubscriptionMessage)) {
+        return super.equals(obj);
+      }
+      SubscriptionMessage other = (SubscriptionMessage) obj;
+
+      boolean result = true;
+      result = result && getMessageName()
+          .equals(other.getMessageName());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
     }
 
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage parseFrom(
+    @Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
+      hash = (53 * hash) + getMessageName().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static SubscriptionMessage parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static SubscriptionMessage parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static SubscriptionMessage parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage parseFrom(
+    public static SubscriptionMessage parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage parseFrom(byte[] data)
+    public static SubscriptionMessage parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage parseFrom(
+    public static SubscriptionMessage parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage parseFrom(java.io.InputStream input)
+    public static SubscriptionMessage parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage parseFrom(
+    public static SubscriptionMessage parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage parseDelimitedFrom(java.io.InputStream input)
+    public static SubscriptionMessage parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage parseDelimitedFrom(
+    public static SubscriptionMessage parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage parseFrom(
+    public static SubscriptionMessage parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage parseFrom(
+    public static SubscriptionMessage parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage prototype) {
-      return newBuilder().mergeFrom(prototype);
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
     }
-    public Builder toBuilder() { return newBuilder(this); }
+    public static Builder newBuilder(SubscriptionMessage prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
 
-    @java.lang.Override
+    @Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -913,19 +955,19 @@ public final class Reactivestreams {
      * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.SubscriptionMessage}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:org.elasticsoftware.elasticactors.serialization.protobuf.SubscriptionMessage)
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessageOrBuilder {
+        SubscriptionMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_descriptor;
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_fieldAccessorTable
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage.class, org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage.Builder.class);
+                SubscriptionMessage.class, Builder.class);
       }
 
       // Construct using org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage.newBuilder()
@@ -934,76 +976,89 @@ public final class Reactivestreams {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
         }
       }
-      private static Builder create() {
-        return new Builder();
-      }
-
       public Builder clear() {
         super.clear();
         messageName_ = "";
-        bitField0_ = (bitField0_ & ~0x00000001);
-        return this;
-      }
 
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
+        return this;
       }
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_descriptor;
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_descriptor;
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage getDefaultInstanceForType() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage.getDefaultInstance();
+      public SubscriptionMessage getDefaultInstanceForType() {
+        return SubscriptionMessage.getDefaultInstance();
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage build() {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage result = buildPartial();
+      public SubscriptionMessage build() {
+        SubscriptionMessage result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage buildPartial() {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage result = new org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
+      public SubscriptionMessage buildPartial() {
+        SubscriptionMessage result = new SubscriptionMessage(this);
         result.messageName_ = messageName_;
-        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
 
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage) {
-          return mergeFrom((org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage)other);
+        if (other instanceof SubscriptionMessage) {
+          return mergeFrom((SubscriptionMessage)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage other) {
-        if (other == org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage.getDefaultInstance()) return this;
-        if (other.hasMessageName()) {
-          bitField0_ |= 0x00000001;
+      public Builder mergeFrom(SubscriptionMessage other) {
+        if (other == SubscriptionMessage.getDefaultInstance()) return this;
+        if (!other.getMessageName().isEmpty()) {
           messageName_ = other.messageName_;
           onChanged();
         }
-        this.mergeUnknownFields(other.getUnknownFields());
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
         return this;
       }
 
@@ -1015,12 +1070,12 @@ public final class Reactivestreams {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage parsedMessage = null;
+        SubscriptionMessage parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.SubscriptionMessage) e.getUnfinishedMessage();
-          throw e;
+          parsedMessage = (SubscriptionMessage) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -1028,42 +1083,33 @@ public final class Reactivestreams {
         }
         return this;
       }
-      private int bitField0_;
 
-      private java.lang.Object messageName_ = "";
+      private Object messageName_ = "";
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
-      public boolean hasMessageName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>optional string messageName = 1;</code>
-       */
-      public java.lang.String getMessageName() {
-        java.lang.Object ref = messageName_;
-        if (!(ref instanceof java.lang.String)) {
+      public String getMessageName() {
+        Object ref = messageName_;
+        if (!(ref instanceof String)) {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            messageName_ = s;
-          }
+          String s = bs.toStringUtf8();
+          messageName_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
       public com.google.protobuf.ByteString
           getMessageNameBytes() {
-        java.lang.Object ref = messageName_;
+        Object ref = messageName_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           messageName_ = b;
           return b;
         } else {
@@ -1071,50 +1117,88 @@ public final class Reactivestreams {
         }
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
       public Builder setMessageName(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  
         messageName_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
       public Builder clearMessageName() {
-        bitField0_ = (bitField0_ & ~0x00000001);
+        
         messageName_ = getDefaultInstance().getMessageName();
         onChanged();
         return this;
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
       public Builder setMessageNameBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  checkByteStringIsUtf8(value);
+        
         messageName_ = value;
         onChanged();
         return this;
       }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFieldsProto3(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
 
       // @@protoc_insertion_point(builder_scope:org.elasticsoftware.elasticactors.serialization.protobuf.SubscriptionMessage)
     }
 
+    // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.SubscriptionMessage)
+    private static final SubscriptionMessage DEFAULT_INSTANCE;
     static {
-      defaultInstance = new SubscriptionMessage(true);
-      defaultInstance.initFields();
+      DEFAULT_INSTANCE = new SubscriptionMessage();
     }
 
-    // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.SubscriptionMessage)
+    public static SubscriptionMessage getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<SubscriptionMessage>
+        PARSER = new com.google.protobuf.AbstractParser<SubscriptionMessage>() {
+      public SubscriptionMessage parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new SubscriptionMessage(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<SubscriptionMessage> parser() {
+      return PARSER;
+    }
+
+    @Override
+    public com.google.protobuf.Parser<SubscriptionMessage> getParserForType() {
+      return PARSER;
+    }
+
+    public SubscriptionMessage getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
   }
 
   public interface CancelMessageOrBuilder extends
@@ -1122,29 +1206,21 @@ public final class Reactivestreams {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional string subscriberRef = 1;</code>
+     * <code>string subscriberRef = 1;</code>
      */
-    boolean hasSubscriberRef();
+    String getSubscriberRef();
     /**
-     * <code>optional string subscriberRef = 1;</code>
-     */
-    java.lang.String getSubscriberRef();
-    /**
-     * <code>optional string subscriberRef = 1;</code>
+     * <code>string subscriberRef = 1;</code>
      */
     com.google.protobuf.ByteString
         getSubscriberRefBytes();
 
     /**
-     * <code>optional string messageName = 2;</code>
+     * <code>string messageName = 2;</code>
      */
-    boolean hasMessageName();
+    String getMessageName();
     /**
-     * <code>optional string messageName = 2;</code>
-     */
-    java.lang.String getMessageName();
-    /**
-     * <code>optional string messageName = 2;</code>
+     * <code>string messageName = 2;</code>
      */
     com.google.protobuf.ByteString
         getMessageNameBytes();
@@ -1152,37 +1228,33 @@ public final class Reactivestreams {
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.CancelMessage}
    */
-  public static final class CancelMessage extends
-      com.google.protobuf.GeneratedMessage implements
+  public  static final class CancelMessage extends
+      com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:org.elasticsoftware.elasticactors.serialization.protobuf.CancelMessage)
       CancelMessageOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use CancelMessage.newBuilder() to construct.
-    private CancelMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+    private CancelMessage(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
-      this.unknownFields = builder.getUnknownFields();
     }
-    private CancelMessage(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-    private static final CancelMessage defaultInstance;
-    public static CancelMessage getDefaultInstance() {
-      return defaultInstance;
+    private CancelMessage() {
+      subscriberRef_ = "";
+      messageName_ = "";
     }
 
-    public CancelMessage getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-
-    private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
+    @Override
     public final com.google.protobuf.UnknownFieldSet
-        getUnknownFields() {
+    getUnknownFields() {
       return this.unknownFields;
     }
     private CancelMessage(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
+      this();
+      if (extensionRegistry == null) {
+        throw new NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1195,22 +1267,22 @@ public final class Reactivestreams {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownFieldProto3(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
             }
             case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x00000001;
-              subscriberRef_ = bs;
+              String s = input.readStringRequireUtf8();
+
+              subscriberRef_ = s;
               break;
             }
             case 18: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x00000002;
-              messageName_ = bs;
+              String s = input.readStringRequireUtf8();
+
+              messageName_ = s;
               break;
             }
           }
@@ -1219,7 +1291,7 @@ public final class Reactivestreams {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
+            e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -1227,67 +1299,43 @@ public final class Reactivestreams {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_descriptor;
+      return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_fieldAccessorTable
+      return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage.class, org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage.Builder.class);
+              CancelMessage.class, Builder.class);
     }
 
-    public static com.google.protobuf.Parser<CancelMessage> PARSER =
-        new com.google.protobuf.AbstractParser<CancelMessage>() {
-      public CancelMessage parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CancelMessage(input, extensionRegistry);
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<CancelMessage> getParserForType() {
-      return PARSER;
-    }
-
-    private int bitField0_;
     public static final int SUBSCRIBERREF_FIELD_NUMBER = 1;
-    private java.lang.Object subscriberRef_;
+    private volatile Object subscriberRef_;
     /**
-     * <code>optional string subscriberRef = 1;</code>
+     * <code>string subscriberRef = 1;</code>
      */
-    public boolean hasSubscriberRef() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>optional string subscriberRef = 1;</code>
-     */
-    public java.lang.String getSubscriberRef() {
-      java.lang.Object ref = subscriberRef_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getSubscriberRef() {
+      Object ref = subscriberRef_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          subscriberRef_ = s;
-        }
+        String s = bs.toStringUtf8();
+        subscriberRef_ = s;
         return s;
       }
     }
     /**
-     * <code>optional string subscriberRef = 1;</code>
+     * <code>string subscriberRef = 1;</code>
      */
     public com.google.protobuf.ByteString
         getSubscriberRefBytes() {
-      java.lang.Object ref = subscriberRef_;
-      if (ref instanceof java.lang.String) {
+      Object ref = subscriberRef_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         subscriberRef_ = b;
         return b;
       } else {
@@ -1296,40 +1344,32 @@ public final class Reactivestreams {
     }
 
     public static final int MESSAGENAME_FIELD_NUMBER = 2;
-    private java.lang.Object messageName_;
+    private volatile Object messageName_;
     /**
-     * <code>optional string messageName = 2;</code>
+     * <code>string messageName = 2;</code>
      */
-    public boolean hasMessageName() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>optional string messageName = 2;</code>
-     */
-    public java.lang.String getMessageName() {
-      java.lang.Object ref = messageName_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getMessageName() {
+      Object ref = messageName_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          messageName_ = s;
-        }
+        String s = bs.toStringUtf8();
+        messageName_ = s;
         return s;
       }
     }
     /**
-     * <code>optional string messageName = 2;</code>
+     * <code>string messageName = 2;</code>
      */
     public com.google.protobuf.ByteString
         getMessageNameBytes() {
-      java.lang.Object ref = messageName_;
-      if (ref instanceof java.lang.String) {
+      Object ref = messageName_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         messageName_ = b;
         return b;
       } else {
@@ -1337,10 +1377,6 @@ public final class Reactivestreams {
       }
     }
 
-    private void initFields() {
-      subscriberRef_ = "";
-      messageName_ = "";
-    }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -1353,105 +1389,151 @@ public final class Reactivestreams {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getSubscriberRefBytes());
+      if (!getSubscriberRefBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, subscriberRef_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, getMessageNameBytes());
+      if (!getMessageNameBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, messageName_);
       }
-      getUnknownFields().writeTo(output);
+      unknownFields.writeTo(output);
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getSubscriberRefBytes());
+      if (!getSubscriberRefBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, subscriberRef_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, getMessageNameBytes());
+      if (!getMessageNameBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, messageName_);
       }
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
+    @Override
+    public boolean equals(final Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof CancelMessage)) {
+        return super.equals(obj);
+      }
+      CancelMessage other = (CancelMessage) obj;
+
+      boolean result = true;
+      result = result && getSubscriberRef()
+          .equals(other.getSubscriberRef());
+      result = result && getMessageName()
+          .equals(other.getMessageName());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
     }
 
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage parseFrom(
+    @Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + SUBSCRIBERREF_FIELD_NUMBER;
+      hash = (53 * hash) + getSubscriberRef().hashCode();
+      hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
+      hash = (53 * hash) + getMessageName().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static CancelMessage parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static CancelMessage parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static CancelMessage parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage parseFrom(
+    public static CancelMessage parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage parseFrom(byte[] data)
+    public static CancelMessage parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage parseFrom(
+    public static CancelMessage parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage parseFrom(java.io.InputStream input)
+    public static CancelMessage parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage parseFrom(
+    public static CancelMessage parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage parseDelimitedFrom(java.io.InputStream input)
+    public static CancelMessage parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage parseDelimitedFrom(
+    public static CancelMessage parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage parseFrom(
+    public static CancelMessage parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage parseFrom(
+    public static CancelMessage parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage prototype) {
-      return newBuilder().mergeFrom(prototype);
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
     }
-    public Builder toBuilder() { return newBuilder(this); }
+    public static Builder newBuilder(CancelMessage prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
 
-    @java.lang.Override
+    @Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -1459,19 +1541,19 @@ public final class Reactivestreams {
      * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.CancelMessage}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:org.elasticsoftware.elasticactors.serialization.protobuf.CancelMessage)
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessageOrBuilder {
+        CancelMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_descriptor;
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_fieldAccessorTable
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage.class, org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage.Builder.class);
+                CancelMessage.class, Builder.class);
       }
 
       // Construct using org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage.newBuilder()
@@ -1480,87 +1562,96 @@ public final class Reactivestreams {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
         }
       }
-      private static Builder create() {
-        return new Builder();
-      }
-
       public Builder clear() {
         super.clear();
         subscriberRef_ = "";
-        bitField0_ = (bitField0_ & ~0x00000001);
-        messageName_ = "";
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
 
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
+        messageName_ = "";
+
+        return this;
       }
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_descriptor;
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_descriptor;
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage getDefaultInstanceForType() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage.getDefaultInstance();
+      public CancelMessage getDefaultInstanceForType() {
+        return CancelMessage.getDefaultInstance();
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage build() {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage result = buildPartial();
+      public CancelMessage build() {
+        CancelMessage result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage buildPartial() {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage result = new org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
+      public CancelMessage buildPartial() {
+        CancelMessage result = new CancelMessage(this);
         result.subscriberRef_ = subscriberRef_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
         result.messageName_ = messageName_;
-        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
 
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage) {
-          return mergeFrom((org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage)other);
+        if (other instanceof CancelMessage) {
+          return mergeFrom((CancelMessage)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage other) {
-        if (other == org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage.getDefaultInstance()) return this;
-        if (other.hasSubscriberRef()) {
-          bitField0_ |= 0x00000001;
+      public Builder mergeFrom(CancelMessage other) {
+        if (other == CancelMessage.getDefaultInstance()) return this;
+        if (!other.getSubscriberRef().isEmpty()) {
           subscriberRef_ = other.subscriberRef_;
           onChanged();
         }
-        if (other.hasMessageName()) {
-          bitField0_ |= 0x00000002;
+        if (!other.getMessageName().isEmpty()) {
           messageName_ = other.messageName_;
           onChanged();
         }
-        this.mergeUnknownFields(other.getUnknownFields());
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
         return this;
       }
 
@@ -1572,12 +1663,12 @@ public final class Reactivestreams {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage parsedMessage = null;
+        CancelMessage parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CancelMessage) e.getUnfinishedMessage();
-          throw e;
+          parsedMessage = (CancelMessage) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -1585,42 +1676,33 @@ public final class Reactivestreams {
         }
         return this;
       }
-      private int bitField0_;
 
-      private java.lang.Object subscriberRef_ = "";
+      private Object subscriberRef_ = "";
       /**
-       * <code>optional string subscriberRef = 1;</code>
+       * <code>string subscriberRef = 1;</code>
        */
-      public boolean hasSubscriberRef() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>optional string subscriberRef = 1;</code>
-       */
-      public java.lang.String getSubscriberRef() {
-        java.lang.Object ref = subscriberRef_;
-        if (!(ref instanceof java.lang.String)) {
+      public String getSubscriberRef() {
+        Object ref = subscriberRef_;
+        if (!(ref instanceof String)) {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            subscriberRef_ = s;
-          }
+          String s = bs.toStringUtf8();
+          subscriberRef_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
-       * <code>optional string subscriberRef = 1;</code>
+       * <code>string subscriberRef = 1;</code>
        */
       public com.google.protobuf.ByteString
           getSubscriberRefBytes() {
-        java.lang.Object ref = subscriberRef_;
+        Object ref = subscriberRef_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           subscriberRef_ = b;
           return b;
         } else {
@@ -1628,75 +1710,68 @@ public final class Reactivestreams {
         }
       }
       /**
-       * <code>optional string subscriberRef = 1;</code>
+       * <code>string subscriberRef = 1;</code>
        */
       public Builder setSubscriberRef(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  
         subscriberRef_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional string subscriberRef = 1;</code>
+       * <code>string subscriberRef = 1;</code>
        */
       public Builder clearSubscriberRef() {
-        bitField0_ = (bitField0_ & ~0x00000001);
+        
         subscriberRef_ = getDefaultInstance().getSubscriberRef();
         onChanged();
         return this;
       }
       /**
-       * <code>optional string subscriberRef = 1;</code>
+       * <code>string subscriberRef = 1;</code>
        */
       public Builder setSubscriberRefBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  checkByteStringIsUtf8(value);
+        
         subscriberRef_ = value;
         onChanged();
         return this;
       }
 
-      private java.lang.Object messageName_ = "";
+      private Object messageName_ = "";
       /**
-       * <code>optional string messageName = 2;</code>
+       * <code>string messageName = 2;</code>
        */
-      public boolean hasMessageName() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>optional string messageName = 2;</code>
-       */
-      public java.lang.String getMessageName() {
-        java.lang.Object ref = messageName_;
-        if (!(ref instanceof java.lang.String)) {
+      public String getMessageName() {
+        Object ref = messageName_;
+        if (!(ref instanceof String)) {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            messageName_ = s;
-          }
+          String s = bs.toStringUtf8();
+          messageName_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
-       * <code>optional string messageName = 2;</code>
+       * <code>string messageName = 2;</code>
        */
       public com.google.protobuf.ByteString
           getMessageNameBytes() {
-        java.lang.Object ref = messageName_;
+        Object ref = messageName_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           messageName_ = b;
           return b;
         } else {
@@ -1704,50 +1779,88 @@ public final class Reactivestreams {
         }
       }
       /**
-       * <code>optional string messageName = 2;</code>
+       * <code>string messageName = 2;</code>
        */
       public Builder setMessageName(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000002;
+  
         messageName_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional string messageName = 2;</code>
+       * <code>string messageName = 2;</code>
        */
       public Builder clearMessageName() {
-        bitField0_ = (bitField0_ & ~0x00000002);
+        
         messageName_ = getDefaultInstance().getMessageName();
         onChanged();
         return this;
       }
       /**
-       * <code>optional string messageName = 2;</code>
+       * <code>string messageName = 2;</code>
        */
       public Builder setMessageNameBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000002;
+  checkByteStringIsUtf8(value);
+        
         messageName_ = value;
         onChanged();
         return this;
       }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFieldsProto3(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
 
       // @@protoc_insertion_point(builder_scope:org.elasticsoftware.elasticactors.serialization.protobuf.CancelMessage)
     }
 
+    // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.CancelMessage)
+    private static final CancelMessage DEFAULT_INSTANCE;
     static {
-      defaultInstance = new CancelMessage(true);
-      defaultInstance.initFields();
+      DEFAULT_INSTANCE = new CancelMessage();
     }
 
-    // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.CancelMessage)
+    public static CancelMessage getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<CancelMessage>
+        PARSER = new com.google.protobuf.AbstractParser<CancelMessage>() {
+      public CancelMessage parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new CancelMessage(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<CancelMessage> parser() {
+      return PARSER;
+    }
+
+    @Override
+    public com.google.protobuf.Parser<CancelMessage> getParserForType() {
+      return PARSER;
+    }
+
+    public CancelMessage getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
   }
 
   public interface CompletedMessageOrBuilder extends
@@ -1755,15 +1868,11 @@ public final class Reactivestreams {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>string messageName = 1;</code>
      */
-    boolean hasMessageName();
+    String getMessageName();
     /**
-     * <code>optional string messageName = 1;</code>
-     */
-    java.lang.String getMessageName();
-    /**
-     * <code>optional string messageName = 1;</code>
+     * <code>string messageName = 1;</code>
      */
     com.google.protobuf.ByteString
         getMessageNameBytes();
@@ -1771,37 +1880,32 @@ public final class Reactivestreams {
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.CompletedMessage}
    */
-  public static final class CompletedMessage extends
-      com.google.protobuf.GeneratedMessage implements
+  public  static final class CompletedMessage extends
+      com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:org.elasticsoftware.elasticactors.serialization.protobuf.CompletedMessage)
       CompletedMessageOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use CompletedMessage.newBuilder() to construct.
-    private CompletedMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+    private CompletedMessage(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
-      this.unknownFields = builder.getUnknownFields();
     }
-    private CompletedMessage(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-    private static final CompletedMessage defaultInstance;
-    public static CompletedMessage getDefaultInstance() {
-      return defaultInstance;
+    private CompletedMessage() {
+      messageName_ = "";
     }
 
-    public CompletedMessage getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-
-    private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
+    @Override
     public final com.google.protobuf.UnknownFieldSet
-        getUnknownFields() {
+    getUnknownFields() {
       return this.unknownFields;
     }
     private CompletedMessage(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
+      this();
+      if (extensionRegistry == null) {
+        throw new NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1814,16 +1918,16 @@ public final class Reactivestreams {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownFieldProto3(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
             }
             case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x00000001;
-              messageName_ = bs;
+              String s = input.readStringRequireUtf8();
+
+              messageName_ = s;
               break;
             }
           }
@@ -1832,7 +1936,7 @@ public final class Reactivestreams {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
+            e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -1840,67 +1944,43 @@ public final class Reactivestreams {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_descriptor;
+      return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_fieldAccessorTable
+      return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage.class, org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage.Builder.class);
+              CompletedMessage.class, Builder.class);
     }
 
-    public static com.google.protobuf.Parser<CompletedMessage> PARSER =
-        new com.google.protobuf.AbstractParser<CompletedMessage>() {
-      public CompletedMessage parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CompletedMessage(input, extensionRegistry);
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<CompletedMessage> getParserForType() {
-      return PARSER;
-    }
-
-    private int bitField0_;
     public static final int MESSAGENAME_FIELD_NUMBER = 1;
-    private java.lang.Object messageName_;
+    private volatile Object messageName_;
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>string messageName = 1;</code>
      */
-    public boolean hasMessageName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>optional string messageName = 1;</code>
-     */
-    public java.lang.String getMessageName() {
-      java.lang.Object ref = messageName_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getMessageName() {
+      Object ref = messageName_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          messageName_ = s;
-        }
+        String s = bs.toStringUtf8();
+        messageName_ = s;
         return s;
       }
     }
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>string messageName = 1;</code>
      */
     public com.google.protobuf.ByteString
         getMessageNameBytes() {
-      java.lang.Object ref = messageName_;
-      if (ref instanceof java.lang.String) {
+      Object ref = messageName_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         messageName_ = b;
         return b;
       } else {
@@ -1908,9 +1988,6 @@ public final class Reactivestreams {
       }
     }
 
-    private void initFields() {
-      messageName_ = "";
-    }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -1923,98 +2000,141 @@ public final class Reactivestreams {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getMessageNameBytes());
+      if (!getMessageNameBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, messageName_);
       }
-      getUnknownFields().writeTo(output);
+      unknownFields.writeTo(output);
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getMessageNameBytes());
+      if (!getMessageNameBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, messageName_);
       }
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
+    @Override
+    public boolean equals(final Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof CompletedMessage)) {
+        return super.equals(obj);
+      }
+      CompletedMessage other = (CompletedMessage) obj;
+
+      boolean result = true;
+      result = result && getMessageName()
+          .equals(other.getMessageName());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
     }
 
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage parseFrom(
+    @Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
+      hash = (53 * hash) + getMessageName().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static CompletedMessage parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static CompletedMessage parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static CompletedMessage parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage parseFrom(
+    public static CompletedMessage parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage parseFrom(byte[] data)
+    public static CompletedMessage parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage parseFrom(
+    public static CompletedMessage parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage parseFrom(java.io.InputStream input)
+    public static CompletedMessage parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage parseFrom(
+    public static CompletedMessage parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage parseDelimitedFrom(java.io.InputStream input)
+    public static CompletedMessage parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage parseDelimitedFrom(
+    public static CompletedMessage parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage parseFrom(
+    public static CompletedMessage parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage parseFrom(
+    public static CompletedMessage parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage prototype) {
-      return newBuilder().mergeFrom(prototype);
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
     }
-    public Builder toBuilder() { return newBuilder(this); }
+    public static Builder newBuilder(CompletedMessage prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
 
-    @java.lang.Override
+    @Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -2022,19 +2142,19 @@ public final class Reactivestreams {
      * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.CompletedMessage}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:org.elasticsoftware.elasticactors.serialization.protobuf.CompletedMessage)
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessageOrBuilder {
+        CompletedMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_descriptor;
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_fieldAccessorTable
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage.class, org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage.Builder.class);
+                CompletedMessage.class, Builder.class);
       }
 
       // Construct using org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage.newBuilder()
@@ -2043,76 +2163,89 @@ public final class Reactivestreams {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
         }
       }
-      private static Builder create() {
-        return new Builder();
-      }
-
       public Builder clear() {
         super.clear();
         messageName_ = "";
-        bitField0_ = (bitField0_ & ~0x00000001);
-        return this;
-      }
 
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
+        return this;
       }
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_descriptor;
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_descriptor;
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage getDefaultInstanceForType() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage.getDefaultInstance();
+      public CompletedMessage getDefaultInstanceForType() {
+        return CompletedMessage.getDefaultInstance();
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage build() {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage result = buildPartial();
+      public CompletedMessage build() {
+        CompletedMessage result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage buildPartial() {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage result = new org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
+      public CompletedMessage buildPartial() {
+        CompletedMessage result = new CompletedMessage(this);
         result.messageName_ = messageName_;
-        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
 
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage) {
-          return mergeFrom((org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage)other);
+        if (other instanceof CompletedMessage) {
+          return mergeFrom((CompletedMessage)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage other) {
-        if (other == org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage.getDefaultInstance()) return this;
-        if (other.hasMessageName()) {
-          bitField0_ |= 0x00000001;
+      public Builder mergeFrom(CompletedMessage other) {
+        if (other == CompletedMessage.getDefaultInstance()) return this;
+        if (!other.getMessageName().isEmpty()) {
           messageName_ = other.messageName_;
           onChanged();
         }
-        this.mergeUnknownFields(other.getUnknownFields());
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
         return this;
       }
 
@@ -2124,12 +2257,12 @@ public final class Reactivestreams {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage parsedMessage = null;
+        CompletedMessage parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.CompletedMessage) e.getUnfinishedMessage();
-          throw e;
+          parsedMessage = (CompletedMessage) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -2137,42 +2270,33 @@ public final class Reactivestreams {
         }
         return this;
       }
-      private int bitField0_;
 
-      private java.lang.Object messageName_ = "";
+      private Object messageName_ = "";
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
-      public boolean hasMessageName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>optional string messageName = 1;</code>
-       */
-      public java.lang.String getMessageName() {
-        java.lang.Object ref = messageName_;
-        if (!(ref instanceof java.lang.String)) {
+      public String getMessageName() {
+        Object ref = messageName_;
+        if (!(ref instanceof String)) {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            messageName_ = s;
-          }
+          String s = bs.toStringUtf8();
+          messageName_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
       public com.google.protobuf.ByteString
           getMessageNameBytes() {
-        java.lang.Object ref = messageName_;
+        Object ref = messageName_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           messageName_ = b;
           return b;
         } else {
@@ -2180,50 +2304,88 @@ public final class Reactivestreams {
         }
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
       public Builder setMessageName(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  
         messageName_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
       public Builder clearMessageName() {
-        bitField0_ = (bitField0_ & ~0x00000001);
+        
         messageName_ = getDefaultInstance().getMessageName();
         onChanged();
         return this;
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
       public Builder setMessageNameBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  checkByteStringIsUtf8(value);
+        
         messageName_ = value;
         onChanged();
         return this;
       }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFieldsProto3(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
 
       // @@protoc_insertion_point(builder_scope:org.elasticsoftware.elasticactors.serialization.protobuf.CompletedMessage)
     }
 
+    // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.CompletedMessage)
+    private static final CompletedMessage DEFAULT_INSTANCE;
     static {
-      defaultInstance = new CompletedMessage(true);
-      defaultInstance.initFields();
+      DEFAULT_INSTANCE = new CompletedMessage();
     }
 
-    // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.CompletedMessage)
+    public static CompletedMessage getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<CompletedMessage>
+        PARSER = new com.google.protobuf.AbstractParser<CompletedMessage>() {
+      public CompletedMessage parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new CompletedMessage(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<CompletedMessage> parser() {
+      return PARSER;
+    }
+
+    @Override
+    public com.google.protobuf.Parser<CompletedMessage> getParserForType() {
+      return PARSER;
+    }
+
+    public CompletedMessage getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
   }
 
   public interface NextMessageOrBuilder extends
@@ -2231,62 +2393,50 @@ public final class Reactivestreams {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>string messageName = 1;</code>
      */
-    boolean hasMessageName();
+    String getMessageName();
     /**
-     * <code>optional string messageName = 1;</code>
-     */
-    java.lang.String getMessageName();
-    /**
-     * <code>optional string messageName = 1;</code>
+     * <code>string messageName = 1;</code>
      */
     com.google.protobuf.ByteString
         getMessageNameBytes();
 
     /**
-     * <code>optional bytes messageBytes = 2;</code>
-     */
-    boolean hasMessageBytes();
-    /**
-     * <code>optional bytes messageBytes = 2;</code>
+     * <code>bytes messageBytes = 2;</code>
      */
     com.google.protobuf.ByteString getMessageBytes();
   }
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.NextMessage}
    */
-  public static final class NextMessage extends
-      com.google.protobuf.GeneratedMessage implements
+  public  static final class NextMessage extends
+      com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:org.elasticsoftware.elasticactors.serialization.protobuf.NextMessage)
       NextMessageOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use NextMessage.newBuilder() to construct.
-    private NextMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+    private NextMessage(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
-      this.unknownFields = builder.getUnknownFields();
     }
-    private NextMessage(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-    private static final NextMessage defaultInstance;
-    public static NextMessage getDefaultInstance() {
-      return defaultInstance;
+    private NextMessage() {
+      messageName_ = "";
+      messageBytes_ = com.google.protobuf.ByteString.EMPTY;
     }
 
-    public NextMessage getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-
-    private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
+    @Override
     public final com.google.protobuf.UnknownFieldSet
-        getUnknownFields() {
+    getUnknownFields() {
       return this.unknownFields;
     }
     private NextMessage(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
+      this();
+      if (extensionRegistry == null) {
+        throw new NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2299,20 +2449,20 @@ public final class Reactivestreams {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownFieldProto3(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
             }
             case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x00000001;
-              messageName_ = bs;
+              String s = input.readStringRequireUtf8();
+
+              messageName_ = s;
               break;
             }
             case 18: {
-              bitField0_ |= 0x00000002;
+
               messageBytes_ = input.readBytes();
               break;
             }
@@ -2322,7 +2472,7 @@ public final class Reactivestreams {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
+            e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -2330,67 +2480,43 @@ public final class Reactivestreams {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_descriptor;
+      return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_fieldAccessorTable
+      return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage.class, org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage.Builder.class);
+              NextMessage.class, Builder.class);
     }
 
-    public static com.google.protobuf.Parser<NextMessage> PARSER =
-        new com.google.protobuf.AbstractParser<NextMessage>() {
-      public NextMessage parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new NextMessage(input, extensionRegistry);
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<NextMessage> getParserForType() {
-      return PARSER;
-    }
-
-    private int bitField0_;
     public static final int MESSAGENAME_FIELD_NUMBER = 1;
-    private java.lang.Object messageName_;
+    private volatile Object messageName_;
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>string messageName = 1;</code>
      */
-    public boolean hasMessageName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>optional string messageName = 1;</code>
-     */
-    public java.lang.String getMessageName() {
-      java.lang.Object ref = messageName_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getMessageName() {
+      Object ref = messageName_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          messageName_ = s;
-        }
+        String s = bs.toStringUtf8();
+        messageName_ = s;
         return s;
       }
     }
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>string messageName = 1;</code>
      */
     public com.google.protobuf.ByteString
         getMessageNameBytes() {
-      java.lang.Object ref = messageName_;
-      if (ref instanceof java.lang.String) {
+      Object ref = messageName_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         messageName_ = b;
         return b;
       } else {
@@ -2401,22 +2527,12 @@ public final class Reactivestreams {
     public static final int MESSAGEBYTES_FIELD_NUMBER = 2;
     private com.google.protobuf.ByteString messageBytes_;
     /**
-     * <code>optional bytes messageBytes = 2;</code>
-     */
-    public boolean hasMessageBytes() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>optional bytes messageBytes = 2;</code>
+     * <code>bytes messageBytes = 2;</code>
      */
     public com.google.protobuf.ByteString getMessageBytes() {
       return messageBytes_;
     }
 
-    private void initFields() {
-      messageName_ = "";
-      messageBytes_ = com.google.protobuf.ByteString.EMPTY;
-    }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -2429,105 +2545,152 @@ public final class Reactivestreams {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getMessageNameBytes());
+      if (!getMessageNameBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, messageName_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (!messageBytes_.isEmpty()) {
         output.writeBytes(2, messageBytes_);
       }
-      getUnknownFields().writeTo(output);
+      unknownFields.writeTo(output);
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getMessageNameBytes());
+      if (!getMessageNameBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, messageName_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (!messageBytes_.isEmpty()) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, messageBytes_);
       }
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
+    @Override
+    public boolean equals(final Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof NextMessage)) {
+        return super.equals(obj);
+      }
+      NextMessage other = (NextMessage) obj;
+
+      boolean result = true;
+      result = result && getMessageName()
+          .equals(other.getMessageName());
+      result = result && getMessageBytes()
+          .equals(other.getMessageBytes());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
     }
 
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage parseFrom(
+    @Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
+      hash = (53 * hash) + getMessageName().hashCode();
+      hash = (37 * hash) + MESSAGEBYTES_FIELD_NUMBER;
+      hash = (53 * hash) + getMessageBytes().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static NextMessage parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static NextMessage parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static NextMessage parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage parseFrom(
+    public static NextMessage parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage parseFrom(byte[] data)
+    public static NextMessage parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage parseFrom(
+    public static NextMessage parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage parseFrom(java.io.InputStream input)
+    public static NextMessage parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage parseFrom(
+    public static NextMessage parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage parseDelimitedFrom(java.io.InputStream input)
+    public static NextMessage parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage parseDelimitedFrom(
+    public static NextMessage parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage parseFrom(
+    public static NextMessage parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage parseFrom(
+    public static NextMessage parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage prototype) {
-      return newBuilder().mergeFrom(prototype);
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
     }
-    public Builder toBuilder() { return newBuilder(this); }
+    public static Builder newBuilder(NextMessage prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
 
-    @java.lang.Override
+    @Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -2535,19 +2698,19 @@ public final class Reactivestreams {
      * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.NextMessage}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:org.elasticsoftware.elasticactors.serialization.protobuf.NextMessage)
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessageOrBuilder {
+        NextMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_descriptor;
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_fieldAccessorTable
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage.class, org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage.Builder.class);
+                NextMessage.class, Builder.class);
       }
 
       // Construct using org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage.newBuilder()
@@ -2556,85 +2719,95 @@ public final class Reactivestreams {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
         }
       }
-      private static Builder create() {
-        return new Builder();
-      }
-
       public Builder clear() {
         super.clear();
         messageName_ = "";
-        bitField0_ = (bitField0_ & ~0x00000001);
-        messageBytes_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
 
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
+        messageBytes_ = com.google.protobuf.ByteString.EMPTY;
+
+        return this;
       }
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_descriptor;
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_descriptor;
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage getDefaultInstanceForType() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage.getDefaultInstance();
+      public NextMessage getDefaultInstanceForType() {
+        return NextMessage.getDefaultInstance();
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage build() {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage result = buildPartial();
+      public NextMessage build() {
+        NextMessage result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage buildPartial() {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage result = new org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
+      public NextMessage buildPartial() {
+        NextMessage result = new NextMessage(this);
         result.messageName_ = messageName_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
         result.messageBytes_ = messageBytes_;
-        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
 
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage) {
-          return mergeFrom((org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage)other);
+        if (other instanceof NextMessage) {
+          return mergeFrom((NextMessage)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage other) {
-        if (other == org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage.getDefaultInstance()) return this;
-        if (other.hasMessageName()) {
-          bitField0_ |= 0x00000001;
+      public Builder mergeFrom(NextMessage other) {
+        if (other == NextMessage.getDefaultInstance()) return this;
+        if (!other.getMessageName().isEmpty()) {
           messageName_ = other.messageName_;
           onChanged();
         }
-        if (other.hasMessageBytes()) {
+        if (other.getMessageBytes() != com.google.protobuf.ByteString.EMPTY) {
           setMessageBytes(other.getMessageBytes());
         }
-        this.mergeUnknownFields(other.getUnknownFields());
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
         return this;
       }
 
@@ -2646,12 +2819,12 @@ public final class Reactivestreams {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage parsedMessage = null;
+        NextMessage parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.NextMessage) e.getUnfinishedMessage();
-          throw e;
+          parsedMessage = (NextMessage) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -2659,42 +2832,33 @@ public final class Reactivestreams {
         }
         return this;
       }
-      private int bitField0_;
 
-      private java.lang.Object messageName_ = "";
+      private Object messageName_ = "";
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
-      public boolean hasMessageName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>optional string messageName = 1;</code>
-       */
-      public java.lang.String getMessageName() {
-        java.lang.Object ref = messageName_;
-        if (!(ref instanceof java.lang.String)) {
+      public String getMessageName() {
+        Object ref = messageName_;
+        if (!(ref instanceof String)) {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            messageName_ = s;
-          }
+          String s = bs.toStringUtf8();
+          messageName_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
       public com.google.protobuf.ByteString
           getMessageNameBytes() {
-        java.lang.Object ref = messageName_;
+        Object ref = messageName_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           messageName_ = b;
           return b;
         } else {
@@ -2702,36 +2866,37 @@ public final class Reactivestreams {
         }
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
       public Builder setMessageName(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  
         messageName_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
       public Builder clearMessageName() {
-        bitField0_ = (bitField0_ & ~0x00000001);
+        
         messageName_ = getDefaultInstance().getMessageName();
         onChanged();
         return this;
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
       public Builder setMessageNameBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  checkByteStringIsUtf8(value);
+        
         messageName_ = value;
         onChanged();
         return this;
@@ -2739,48 +2904,79 @@ public final class Reactivestreams {
 
       private com.google.protobuf.ByteString messageBytes_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>optional bytes messageBytes = 2;</code>
-       */
-      public boolean hasMessageBytes() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>optional bytes messageBytes = 2;</code>
+       * <code>bytes messageBytes = 2;</code>
        */
       public com.google.protobuf.ByteString getMessageBytes() {
         return messageBytes_;
       }
       /**
-       * <code>optional bytes messageBytes = 2;</code>
+       * <code>bytes messageBytes = 2;</code>
        */
       public Builder setMessageBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000002;
+  
         messageBytes_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional bytes messageBytes = 2;</code>
+       * <code>bytes messageBytes = 2;</code>
        */
       public Builder clearMessageBytes() {
-        bitField0_ = (bitField0_ & ~0x00000002);
+        
         messageBytes_ = getDefaultInstance().getMessageBytes();
         onChanged();
         return this;
       }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFieldsProto3(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
 
       // @@protoc_insertion_point(builder_scope:org.elasticsoftware.elasticactors.serialization.protobuf.NextMessage)
     }
 
+    // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.NextMessage)
+    private static final NextMessage DEFAULT_INSTANCE;
     static {
-      defaultInstance = new NextMessage(true);
-      defaultInstance.initFields();
+      DEFAULT_INSTANCE = new NextMessage();
     }
 
-    // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.NextMessage)
+    public static NextMessage getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<NextMessage>
+        PARSER = new com.google.protobuf.AbstractParser<NextMessage>() {
+      public NextMessage parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new NextMessage(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<NextMessage> parser() {
+      return PARSER;
+    }
+
+    @Override
+    public com.google.protobuf.Parser<NextMessage> getParserForType() {
+      return PARSER;
+    }
+
+    public NextMessage getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
   }
 
   public interface RequestMessageOrBuilder extends
@@ -2788,62 +2984,50 @@ public final class Reactivestreams {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>string messageName = 1;</code>
      */
-    boolean hasMessageName();
+    String getMessageName();
     /**
-     * <code>optional string messageName = 1;</code>
-     */
-    java.lang.String getMessageName();
-    /**
-     * <code>optional string messageName = 1;</code>
+     * <code>string messageName = 1;</code>
      */
     com.google.protobuf.ByteString
         getMessageNameBytes();
 
     /**
-     * <code>optional uint64 n = 2;</code>
-     */
-    boolean hasN();
-    /**
-     * <code>optional uint64 n = 2;</code>
+     * <code>uint64 n = 2;</code>
      */
     long getN();
   }
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.RequestMessage}
    */
-  public static final class RequestMessage extends
-      com.google.protobuf.GeneratedMessage implements
+  public  static final class RequestMessage extends
+      com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:org.elasticsoftware.elasticactors.serialization.protobuf.RequestMessage)
       RequestMessageOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use RequestMessage.newBuilder() to construct.
-    private RequestMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+    private RequestMessage(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
-      this.unknownFields = builder.getUnknownFields();
     }
-    private RequestMessage(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-    private static final RequestMessage defaultInstance;
-    public static RequestMessage getDefaultInstance() {
-      return defaultInstance;
+    private RequestMessage() {
+      messageName_ = "";
+      n_ = 0L;
     }
 
-    public RequestMessage getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-
-    private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
+    @Override
     public final com.google.protobuf.UnknownFieldSet
-        getUnknownFields() {
+    getUnknownFields() {
       return this.unknownFields;
     }
     private RequestMessage(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
+      this();
+      if (extensionRegistry == null) {
+        throw new NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2856,20 +3040,20 @@ public final class Reactivestreams {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownFieldProto3(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
             }
             case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x00000001;
-              messageName_ = bs;
+              String s = input.readStringRequireUtf8();
+
+              messageName_ = s;
               break;
             }
             case 16: {
-              bitField0_ |= 0x00000002;
+
               n_ = input.readUInt64();
               break;
             }
@@ -2879,7 +3063,7 @@ public final class Reactivestreams {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
+            e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -2887,67 +3071,43 @@ public final class Reactivestreams {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_descriptor;
+      return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_fieldAccessorTable
+      return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage.class, org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage.Builder.class);
+              RequestMessage.class, Builder.class);
     }
 
-    public static com.google.protobuf.Parser<RequestMessage> PARSER =
-        new com.google.protobuf.AbstractParser<RequestMessage>() {
-      public RequestMessage parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new RequestMessage(input, extensionRegistry);
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<RequestMessage> getParserForType() {
-      return PARSER;
-    }
-
-    private int bitField0_;
     public static final int MESSAGENAME_FIELD_NUMBER = 1;
-    private java.lang.Object messageName_;
+    private volatile Object messageName_;
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>string messageName = 1;</code>
      */
-    public boolean hasMessageName() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>optional string messageName = 1;</code>
-     */
-    public java.lang.String getMessageName() {
-      java.lang.Object ref = messageName_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
+    public String getMessageName() {
+      Object ref = messageName_;
+      if (ref instanceof String) {
+        return (String) ref;
       } else {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          messageName_ = s;
-        }
+        String s = bs.toStringUtf8();
+        messageName_ = s;
         return s;
       }
     }
     /**
-     * <code>optional string messageName = 1;</code>
+     * <code>string messageName = 1;</code>
      */
     public com.google.protobuf.ByteString
         getMessageNameBytes() {
-      java.lang.Object ref = messageName_;
-      if (ref instanceof java.lang.String) {
+      Object ref = messageName_;
+      if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+                (String) ref);
         messageName_ = b;
         return b;
       } else {
@@ -2958,22 +3118,12 @@ public final class Reactivestreams {
     public static final int N_FIELD_NUMBER = 2;
     private long n_;
     /**
-     * <code>optional uint64 n = 2;</code>
-     */
-    public boolean hasN() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>optional uint64 n = 2;</code>
+     * <code>uint64 n = 2;</code>
      */
     public long getN() {
       return n_;
     }
 
-    private void initFields() {
-      messageName_ = "";
-      n_ = 0L;
-    }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -2986,105 +3136,153 @@ public final class Reactivestreams {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      getSerializedSize();
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getMessageNameBytes());
+      if (!getMessageNameBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, messageName_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (n_ != 0L) {
         output.writeUInt64(2, n_);
       }
-      getUnknownFields().writeTo(output);
+      unknownFields.writeTo(output);
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getMessageNameBytes());
+      if (!getMessageNameBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, messageName_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (n_ != 0L) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(2, n_);
       }
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
+    @Override
+    public boolean equals(final Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof RequestMessage)) {
+        return super.equals(obj);
+      }
+      RequestMessage other = (RequestMessage) obj;
+
+      boolean result = true;
+      result = result && getMessageName()
+          .equals(other.getMessageName());
+      result = result && (getN()
+          == other.getN());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
     }
 
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage parseFrom(
+    @Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
+      hash = (53 * hash) + getMessageName().hashCode();
+      hash = (37 * hash) + N_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getN());
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static RequestMessage parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static RequestMessage parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static RequestMessage parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage parseFrom(
+    public static RequestMessage parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage parseFrom(byte[] data)
+    public static RequestMessage parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage parseFrom(
+    public static RequestMessage parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage parseFrom(java.io.InputStream input)
+    public static RequestMessage parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage parseFrom(
+    public static RequestMessage parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage parseDelimitedFrom(java.io.InputStream input)
+    public static RequestMessage parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage parseDelimitedFrom(
+    public static RequestMessage parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage parseFrom(
+    public static RequestMessage parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return PARSER.parseFrom(input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage parseFrom(
+    public static RequestMessage parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage prototype) {
-      return newBuilder().mergeFrom(prototype);
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
     }
-    public Builder toBuilder() { return newBuilder(this); }
+    public static Builder newBuilder(RequestMessage prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
 
-    @java.lang.Override
+    @Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -3092,19 +3290,19 @@ public final class Reactivestreams {
      * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.RequestMessage}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:org.elasticsoftware.elasticactors.serialization.protobuf.RequestMessage)
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessageOrBuilder {
+        RequestMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_descriptor;
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_descriptor;
       }
 
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_fieldAccessorTable
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage.class, org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage.Builder.class);
+                RequestMessage.class, Builder.class);
       }
 
       // Construct using org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage.newBuilder()
@@ -3113,85 +3311,95 @@ public final class Reactivestreams {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+          BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
         }
       }
-      private static Builder create() {
-        return new Builder();
-      }
-
       public Builder clear() {
         super.clear();
         messageName_ = "";
-        bitField0_ = (bitField0_ & ~0x00000001);
-        n_ = 0L;
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
 
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
+        n_ = 0L;
+
+        return this;
       }
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_descriptor;
+        return Reactivestreams.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_descriptor;
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage getDefaultInstanceForType() {
-        return org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage.getDefaultInstance();
+      public RequestMessage getDefaultInstanceForType() {
+        return RequestMessage.getDefaultInstance();
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage build() {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage result = buildPartial();
+      public RequestMessage build() {
+        RequestMessage result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage buildPartial() {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage result = new org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
+      public RequestMessage buildPartial() {
+        RequestMessage result = new RequestMessage(this);
         result.messageName_ = messageName_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
         result.n_ = n_;
-        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
 
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage) {
-          return mergeFrom((org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage)other);
+        if (other instanceof RequestMessage) {
+          return mergeFrom((RequestMessage)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage other) {
-        if (other == org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage.getDefaultInstance()) return this;
-        if (other.hasMessageName()) {
-          bitField0_ |= 0x00000001;
+      public Builder mergeFrom(RequestMessage other) {
+        if (other == RequestMessage.getDefaultInstance()) return this;
+        if (!other.getMessageName().isEmpty()) {
           messageName_ = other.messageName_;
           onChanged();
         }
-        if (other.hasN()) {
+        if (other.getN() != 0L) {
           setN(other.getN());
         }
-        this.mergeUnknownFields(other.getUnknownFields());
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
         return this;
       }
 
@@ -3203,12 +3411,12 @@ public final class Reactivestreams {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage parsedMessage = null;
+        RequestMessage parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams.RequestMessage) e.getUnfinishedMessage();
-          throw e;
+          parsedMessage = (RequestMessage) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -3216,42 +3424,33 @@ public final class Reactivestreams {
         }
         return this;
       }
-      private int bitField0_;
 
-      private java.lang.Object messageName_ = "";
+      private Object messageName_ = "";
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
-      public boolean hasMessageName() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>optional string messageName = 1;</code>
-       */
-      public java.lang.String getMessageName() {
-        java.lang.Object ref = messageName_;
-        if (!(ref instanceof java.lang.String)) {
+      public String getMessageName() {
+        Object ref = messageName_;
+        if (!(ref instanceof String)) {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            messageName_ = s;
-          }
+          String s = bs.toStringUtf8();
+          messageName_ = s;
           return s;
         } else {
-          return (java.lang.String) ref;
+          return (String) ref;
         }
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
       public com.google.protobuf.ByteString
           getMessageNameBytes() {
-        java.lang.Object ref = messageName_;
+        Object ref = messageName_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+                  (String) ref);
           messageName_ = b;
           return b;
         } else {
@@ -3259,36 +3458,37 @@ public final class Reactivestreams {
         }
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
       public Builder setMessageName(
-          java.lang.String value) {
+          String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  
         messageName_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
       public Builder clearMessageName() {
-        bitField0_ = (bitField0_ & ~0x00000001);
+        
         messageName_ = getDefaultInstance().getMessageName();
         onChanged();
         return this;
       }
       /**
-       * <code>optional string messageName = 1;</code>
+       * <code>string messageName = 1;</code>
        */
       public Builder setMessageNameBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000001;
+  checkByteStringIsUtf8(value);
+        
         messageName_ = value;
         onChanged();
         return this;
@@ -3296,86 +3496,117 @@ public final class Reactivestreams {
 
       private long n_ ;
       /**
-       * <code>optional uint64 n = 2;</code>
-       */
-      public boolean hasN() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>optional uint64 n = 2;</code>
+       * <code>uint64 n = 2;</code>
        */
       public long getN() {
         return n_;
       }
       /**
-       * <code>optional uint64 n = 2;</code>
+       * <code>uint64 n = 2;</code>
        */
       public Builder setN(long value) {
-        bitField0_ |= 0x00000002;
+        
         n_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional uint64 n = 2;</code>
+       * <code>uint64 n = 2;</code>
        */
       public Builder clearN() {
-        bitField0_ = (bitField0_ & ~0x00000002);
+        
         n_ = 0L;
         onChanged();
         return this;
       }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFieldsProto3(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
 
       // @@protoc_insertion_point(builder_scope:org.elasticsoftware.elasticactors.serialization.protobuf.RequestMessage)
     }
 
+    // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.RequestMessage)
+    private static final RequestMessage DEFAULT_INSTANCE;
     static {
-      defaultInstance = new RequestMessage(true);
-      defaultInstance.initFields();
+      DEFAULT_INSTANCE = new RequestMessage();
     }
 
-    // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.RequestMessage)
+    public static RequestMessage getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<RequestMessage>
+        PARSER = new com.google.protobuf.AbstractParser<RequestMessage>() {
+      public RequestMessage parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new RequestMessage(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<RequestMessage> parser() {
+      return PARSER;
+    }
+
+    @Override
+    public com.google.protobuf.Parser<RequestMessage> getParserForType() {
+      return PARSER;
+    }
+
+    public RequestMessage getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
     return descriptor;
   }
-  private static com.google.protobuf.Descriptors.FileDescriptor
+  private static  com.google.protobuf.Descriptors.FileDescriptor
       descriptor;
   static {
-    java.lang.String[] descriptorData = {
+    String[] descriptorData = {
       "\n\025reactivestreams.proto\0228org.elasticsoft" +
       "ware.elasticactors.serialization.protobu" +
       "f\">\n\020SubscribeMessage\022\025\n\rsubscriberRef\030\001" +
@@ -3385,8 +3616,8 @@ public final class Reactivestreams {
       "Name\030\002 \001(\t\"\'\n\020CompletedMessage\022\023\n\013messag" +
       "eName\030\001 \001(\t\"8\n\013NextMessage\022\023\n\013messageNam" +
       "e\030\001 \001(\t\022\024\n\014messageBytes\030\002 \001(\014\"0\n\016Request" +
-      "Message\022\023\n\013messageName\030\001 \001(\t\022\t\n\001n\030\002 \001(\004B",
-      "\002H\001"
+      "Message\022\023\n\013messageName\030\001 \001(\t\022\t\n\001n\030\002 \001(\004B" +
+      "\002H\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -3403,39 +3634,39 @@ public final class Reactivestreams {
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscribeMessage_descriptor,
-        new java.lang.String[] { "SubscriberRef", "MessageName", });
+        new String[] { "SubscriberRef", "MessageName", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_SubscriptionMessage_descriptor,
-        new java.lang.String[] { "MessageName", });
+        new String[] { "MessageName", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelMessage_descriptor,
-        new java.lang.String[] { "SubscriberRef", "MessageName", });
+        new String[] { "SubscriberRef", "MessageName", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CompletedMessage_descriptor,
-        new java.lang.String[] { "MessageName", });
+        new String[] { "MessageName", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_NextMessage_descriptor,
-        new java.lang.String[] { "MessageName", "MessageBytes", });
+        new String[] { "MessageName", "MessageBytes", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_descriptor =
       getDescriptor().getMessageTypes().get(5);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RequestMessage_descriptor,
-        new java.lang.String[] { "MessageName", "N", });
+        new String[] { "MessageName", "N", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

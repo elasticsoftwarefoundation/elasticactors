@@ -40,7 +40,7 @@ public final class ActivateActorMessageDeserializer implements MessageDeserializ
         Elasticactors.ActivateActorMessage protobufMessage = Elasticactors.ActivateActorMessage.parseFrom(ByteString.copyFrom(serializedObject));
         return new ActivateActorMessage(protobufMessage.getActorSystem(),
                                         protobufMessage.getActorId(),
-                                        protobufMessage.hasType()
+                                        protobufMessage.getType() != null
                                               ? ActorType.values()[protobufMessage.getType().getNumber()]
                                               : ActorType.PERSISTENT);
     }

@@ -125,6 +125,16 @@
     </dependencies>
     <build>
         <plugins>
+            <!-- To use this plugin you have to install protobuf compiler locally and run `mvn protobuf:compile` -->
+            <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>0.5.1</version>
+                <configuration>
+                    <protoSourceRoot>src/main/protobuf</protoSourceRoot>
+                </configuration>
+                <extensions>true</extensions>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>aspectj-maven-plugin</artifactId>

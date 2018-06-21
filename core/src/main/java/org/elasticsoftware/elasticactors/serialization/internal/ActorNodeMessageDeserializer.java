@@ -52,7 +52,7 @@ public final class ActorNodeMessageDeserializer implements MessageDeserializer<A
     public ActorNodeMessage deserialize(ByteBuffer serializedObject) throws IOException {
         try {
             Elasticactors.ActorNodeMessage protobufMessage = Elasticactors.ActorNodeMessage.parseFrom(ByteString.copyFrom(serializedObject));
-            ActorRef receiverRef = (protobufMessage.hasReceiver()) ? actorRefDeserializer.deserialize(protobufMessage.getReceiver()) : null;
+            ActorRef receiverRef = protobufMessage.getReceiver()!=null && !protobufMessage.getReceiver().isEmpty() ? actorRefDeserializer.deserialize(protobufMessage.getReceiver()) : null;
             String messageClassString = protobufMessage.getPayloadClass();
             Class<?> messageClass = Class.forName(messageClassString);
             Object payloadObject = cluster.get(null).getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
