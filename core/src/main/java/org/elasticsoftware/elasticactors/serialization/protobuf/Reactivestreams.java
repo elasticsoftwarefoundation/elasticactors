@@ -19,21 +19,29 @@ public final class Reactivestreams {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>string subscriberRef = 1;</code>
+     * <code>optional string subscriberRef = 1;</code>
+     */
+    boolean hasSubscriberRef();
+    /**
+     * <code>optional string subscriberRef = 1;</code>
      */
     String getSubscriberRef();
     /**
-     * <code>string subscriberRef = 1;</code>
+     * <code>optional string subscriberRef = 1;</code>
      */
     com.google.protobuf.ByteString
         getSubscriberRefBytes();
 
     /**
-     * <code>string messageName = 2;</code>
+     * <code>optional string messageName = 2;</code>
+     */
+    boolean hasMessageName();
+    /**
+     * <code>optional string messageName = 2;</code>
      */
     String getMessageName();
     /**
-     * <code>string messageName = 2;</code>
+     * <code>optional string messageName = 2;</code>
      */
     com.google.protobuf.ByteString
         getMessageNameBytes();
@@ -80,22 +88,22 @@ public final class Reactivestreams {
               done = true;
               break;
             default: {
-              if (!parseUnknownFieldProto3(
+              if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
             }
             case 10: {
-              String s = input.readStringRequireUtf8();
-
-              subscriberRef_ = s;
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              subscriberRef_ = bs;
               break;
             }
             case 18: {
-              String s = input.readStringRequireUtf8();
-
-              messageName_ = s;
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000002;
+              messageName_ = bs;
               break;
             }
           }
@@ -122,10 +130,17 @@ public final class Reactivestreams {
               SubscribeMessage.class, Builder.class);
     }
 
+    private int bitField0_;
     public static final int SUBSCRIBERREF_FIELD_NUMBER = 1;
     private volatile Object subscriberRef_;
     /**
-     * <code>string subscriberRef = 1;</code>
+     * <code>optional string subscriberRef = 1;</code>
+     */
+    public boolean hasSubscriberRef() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string subscriberRef = 1;</code>
      */
     public String getSubscriberRef() {
       Object ref = subscriberRef_;
@@ -135,12 +150,14 @@ public final class Reactivestreams {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         String s = bs.toStringUtf8();
-        subscriberRef_ = s;
+        if (bs.isValidUtf8()) {
+          subscriberRef_ = s;
+        }
         return s;
       }
     }
     /**
-     * <code>string subscriberRef = 1;</code>
+     * <code>optional string subscriberRef = 1;</code>
      */
     public com.google.protobuf.ByteString
         getSubscriberRefBytes() {
@@ -159,7 +176,13 @@ public final class Reactivestreams {
     public static final int MESSAGENAME_FIELD_NUMBER = 2;
     private volatile Object messageName_;
     /**
-     * <code>string messageName = 2;</code>
+     * <code>optional string messageName = 2;</code>
+     */
+    public boolean hasMessageName() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string messageName = 2;</code>
      */
     public String getMessageName() {
       Object ref = messageName_;
@@ -169,12 +192,14 @@ public final class Reactivestreams {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         String s = bs.toStringUtf8();
-        messageName_ = s;
+        if (bs.isValidUtf8()) {
+          messageName_ = s;
+        }
         return s;
       }
     }
     /**
-     * <code>string messageName = 2;</code>
+     * <code>optional string messageName = 2;</code>
      */
     public com.google.protobuf.ByteString
         getMessageNameBytes() {
@@ -202,10 +227,10 @@ public final class Reactivestreams {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (!getSubscriberRefBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, subscriberRef_);
       }
-      if (!getMessageNameBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, messageName_);
       }
       unknownFields.writeTo(output);
@@ -216,10 +241,10 @@ public final class Reactivestreams {
       if (size != -1) return size;
 
       size = 0;
-      if (!getSubscriberRefBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, subscriberRef_);
       }
-      if (!getMessageNameBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, messageName_);
       }
       size += unknownFields.getSerializedSize();
@@ -238,10 +263,16 @@ public final class Reactivestreams {
       SubscribeMessage other = (SubscribeMessage) obj;
 
       boolean result = true;
-      result = result && getSubscriberRef()
-          .equals(other.getSubscriberRef());
-      result = result && getMessageName()
-          .equals(other.getMessageName());
+      result = result && (hasSubscriberRef() == other.hasSubscriberRef());
+      if (hasSubscriberRef()) {
+        result = result && getSubscriberRef()
+            .equals(other.getSubscriberRef());
+      }
+      result = result && (hasMessageName() == other.hasMessageName());
+      if (hasMessageName()) {
+        result = result && getMessageName()
+            .equals(other.getMessageName());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -253,10 +284,14 @@ public final class Reactivestreams {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      hash = (37 * hash) + SUBSCRIBERREF_FIELD_NUMBER;
-      hash = (53 * hash) + getSubscriberRef().hashCode();
-      hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
-      hash = (53 * hash) + getMessageName().hashCode();
+      if (hasSubscriberRef()) {
+        hash = (37 * hash) + SUBSCRIBERREF_FIELD_NUMBER;
+        hash = (53 * hash) + getSubscriberRef().hashCode();
+      }
+      if (hasMessageName()) {
+        hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
+        hash = (53 * hash) + getMessageName().hashCode();
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -387,9 +422,9 @@ public final class Reactivestreams {
       public Builder clear() {
         super.clear();
         subscriberRef_ = "";
-
+        bitField0_ = (bitField0_ & ~0x00000001);
         messageName_ = "";
-
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
@@ -412,8 +447,17 @@ public final class Reactivestreams {
 
       public SubscribeMessage buildPartial() {
         SubscribeMessage result = new SubscribeMessage(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
         result.subscriberRef_ = subscriberRef_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
         result.messageName_ = messageName_;
+        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -455,11 +499,13 @@ public final class Reactivestreams {
 
       public Builder mergeFrom(SubscribeMessage other) {
         if (other == SubscribeMessage.getDefaultInstance()) return this;
-        if (!other.getSubscriberRef().isEmpty()) {
+        if (other.hasSubscriberRef()) {
+          bitField0_ |= 0x00000001;
           subscriberRef_ = other.subscriberRef_;
           onChanged();
         }
-        if (!other.getMessageName().isEmpty()) {
+        if (other.hasMessageName()) {
+          bitField0_ |= 0x00000002;
           messageName_ = other.messageName_;
           onChanged();
         }
@@ -489,10 +535,17 @@ public final class Reactivestreams {
         }
         return this;
       }
+      private int bitField0_;
 
       private Object subscriberRef_ = "";
       /**
-       * <code>string subscriberRef = 1;</code>
+       * <code>optional string subscriberRef = 1;</code>
+       */
+      public boolean hasSubscriberRef() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string subscriberRef = 1;</code>
        */
       public String getSubscriberRef() {
         Object ref = subscriberRef_;
@@ -500,14 +553,16 @@ public final class Reactivestreams {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           String s = bs.toStringUtf8();
-          subscriberRef_ = s;
+          if (bs.isValidUtf8()) {
+            subscriberRef_ = s;
+          }
           return s;
         } else {
           return (String) ref;
         }
       }
       /**
-       * <code>string subscriberRef = 1;</code>
+       * <code>optional string subscriberRef = 1;</code>
        */
       public com.google.protobuf.ByteString
           getSubscriberRefBytes() {
@@ -523,37 +578,36 @@ public final class Reactivestreams {
         }
       }
       /**
-       * <code>string subscriberRef = 1;</code>
+       * <code>optional string subscriberRef = 1;</code>
        */
       public Builder setSubscriberRef(
           String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  bitField0_ |= 0x00000001;
         subscriberRef_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>string subscriberRef = 1;</code>
+       * <code>optional string subscriberRef = 1;</code>
        */
       public Builder clearSubscriberRef() {
-        
+        bitField0_ = (bitField0_ & ~0x00000001);
         subscriberRef_ = getDefaultInstance().getSubscriberRef();
         onChanged();
         return this;
       }
       /**
-       * <code>string subscriberRef = 1;</code>
+       * <code>optional string subscriberRef = 1;</code>
        */
       public Builder setSubscriberRefBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  checkByteStringIsUtf8(value);
-        
+  bitField0_ |= 0x00000001;
         subscriberRef_ = value;
         onChanged();
         return this;
@@ -561,7 +615,13 @@ public final class Reactivestreams {
 
       private Object messageName_ = "";
       /**
-       * <code>string messageName = 2;</code>
+       * <code>optional string messageName = 2;</code>
+       */
+      public boolean hasMessageName() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string messageName = 2;</code>
        */
       public String getMessageName() {
         Object ref = messageName_;
@@ -569,14 +629,16 @@ public final class Reactivestreams {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           String s = bs.toStringUtf8();
-          messageName_ = s;
+          if (bs.isValidUtf8()) {
+            messageName_ = s;
+          }
           return s;
         } else {
           return (String) ref;
         }
       }
       /**
-       * <code>string messageName = 2;</code>
+       * <code>optional string messageName = 2;</code>
        */
       public com.google.protobuf.ByteString
           getMessageNameBytes() {
@@ -592,44 +654,43 @@ public final class Reactivestreams {
         }
       }
       /**
-       * <code>string messageName = 2;</code>
+       * <code>optional string messageName = 2;</code>
        */
       public Builder setMessageName(
           String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  bitField0_ |= 0x00000002;
         messageName_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>string messageName = 2;</code>
+       * <code>optional string messageName = 2;</code>
        */
       public Builder clearMessageName() {
-        
+        bitField0_ = (bitField0_ & ~0x00000002);
         messageName_ = getDefaultInstance().getMessageName();
         onChanged();
         return this;
       }
       /**
-       * <code>string messageName = 2;</code>
+       * <code>optional string messageName = 2;</code>
        */
       public Builder setMessageNameBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  checkByteStringIsUtf8(value);
-        
+  bitField0_ |= 0x00000002;
         messageName_ = value;
         onChanged();
         return this;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFieldsProto3(unknownFields);
+        return super.setUnknownFields(unknownFields);
       }
 
       public final Builder mergeUnknownFields(
@@ -651,7 +712,7 @@ public final class Reactivestreams {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<SubscribeMessage>
+    @Deprecated public static final com.google.protobuf.Parser<SubscribeMessage>
         PARSER = new com.google.protobuf.AbstractParser<SubscribeMessage>() {
       public SubscribeMessage parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
@@ -681,11 +742,15 @@ public final class Reactivestreams {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>string messageName = 1;</code>
+     * <code>optional string messageName = 1;</code>
+     */
+    boolean hasMessageName();
+    /**
+     * <code>optional string messageName = 1;</code>
      */
     String getMessageName();
     /**
-     * <code>string messageName = 1;</code>
+     * <code>optional string messageName = 1;</code>
      */
     com.google.protobuf.ByteString
         getMessageNameBytes();
@@ -731,16 +796,16 @@ public final class Reactivestreams {
               done = true;
               break;
             default: {
-              if (!parseUnknownFieldProto3(
+              if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
             }
             case 10: {
-              String s = input.readStringRequireUtf8();
-
-              messageName_ = s;
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              messageName_ = bs;
               break;
             }
           }
@@ -767,10 +832,17 @@ public final class Reactivestreams {
               SubscriptionMessage.class, Builder.class);
     }
 
+    private int bitField0_;
     public static final int MESSAGENAME_FIELD_NUMBER = 1;
     private volatile Object messageName_;
     /**
-     * <code>string messageName = 1;</code>
+     * <code>optional string messageName = 1;</code>
+     */
+    public boolean hasMessageName() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string messageName = 1;</code>
      */
     public String getMessageName() {
       Object ref = messageName_;
@@ -780,12 +852,14 @@ public final class Reactivestreams {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         String s = bs.toStringUtf8();
-        messageName_ = s;
+        if (bs.isValidUtf8()) {
+          messageName_ = s;
+        }
         return s;
       }
     }
     /**
-     * <code>string messageName = 1;</code>
+     * <code>optional string messageName = 1;</code>
      */
     public com.google.protobuf.ByteString
         getMessageNameBytes() {
@@ -813,7 +887,7 @@ public final class Reactivestreams {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (!getMessageNameBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, messageName_);
       }
       unknownFields.writeTo(output);
@@ -824,7 +898,7 @@ public final class Reactivestreams {
       if (size != -1) return size;
 
       size = 0;
-      if (!getMessageNameBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, messageName_);
       }
       size += unknownFields.getSerializedSize();
@@ -843,8 +917,11 @@ public final class Reactivestreams {
       SubscriptionMessage other = (SubscriptionMessage) obj;
 
       boolean result = true;
-      result = result && getMessageName()
-          .equals(other.getMessageName());
+      result = result && (hasMessageName() == other.hasMessageName());
+      if (hasMessageName()) {
+        result = result && getMessageName()
+            .equals(other.getMessageName());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -856,8 +933,10 @@ public final class Reactivestreams {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
-      hash = (53 * hash) + getMessageName().hashCode();
+      if (hasMessageName()) {
+        hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
+        hash = (53 * hash) + getMessageName().hashCode();
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -988,7 +1067,7 @@ public final class Reactivestreams {
       public Builder clear() {
         super.clear();
         messageName_ = "";
-
+        bitField0_ = (bitField0_ & ~0x00000001);
         return this;
       }
 
@@ -1011,7 +1090,13 @@ public final class Reactivestreams {
 
       public SubscriptionMessage buildPartial() {
         SubscriptionMessage result = new SubscriptionMessage(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
         result.messageName_ = messageName_;
+        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -1053,7 +1138,8 @@ public final class Reactivestreams {
 
       public Builder mergeFrom(SubscriptionMessage other) {
         if (other == SubscriptionMessage.getDefaultInstance()) return this;
-        if (!other.getMessageName().isEmpty()) {
+        if (other.hasMessageName()) {
+          bitField0_ |= 0x00000001;
           messageName_ = other.messageName_;
           onChanged();
         }
@@ -1083,10 +1169,17 @@ public final class Reactivestreams {
         }
         return this;
       }
+      private int bitField0_;
 
       private Object messageName_ = "";
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
+       */
+      public boolean hasMessageName() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string messageName = 1;</code>
        */
       public String getMessageName() {
         Object ref = messageName_;
@@ -1094,14 +1187,16 @@ public final class Reactivestreams {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           String s = bs.toStringUtf8();
-          messageName_ = s;
+          if (bs.isValidUtf8()) {
+            messageName_ = s;
+          }
           return s;
         } else {
           return (String) ref;
         }
       }
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
        */
       public com.google.protobuf.ByteString
           getMessageNameBytes() {
@@ -1117,44 +1212,43 @@ public final class Reactivestreams {
         }
       }
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
        */
       public Builder setMessageName(
           String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  bitField0_ |= 0x00000001;
         messageName_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
        */
       public Builder clearMessageName() {
-        
+        bitField0_ = (bitField0_ & ~0x00000001);
         messageName_ = getDefaultInstance().getMessageName();
         onChanged();
         return this;
       }
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
        */
       public Builder setMessageNameBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  checkByteStringIsUtf8(value);
-        
+  bitField0_ |= 0x00000001;
         messageName_ = value;
         onChanged();
         return this;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFieldsProto3(unknownFields);
+        return super.setUnknownFields(unknownFields);
       }
 
       public final Builder mergeUnknownFields(
@@ -1176,7 +1270,7 @@ public final class Reactivestreams {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<SubscriptionMessage>
+    @Deprecated public static final com.google.protobuf.Parser<SubscriptionMessage>
         PARSER = new com.google.protobuf.AbstractParser<SubscriptionMessage>() {
       public SubscriptionMessage parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
@@ -1206,21 +1300,29 @@ public final class Reactivestreams {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>string subscriberRef = 1;</code>
+     * <code>optional string subscriberRef = 1;</code>
+     */
+    boolean hasSubscriberRef();
+    /**
+     * <code>optional string subscriberRef = 1;</code>
      */
     String getSubscriberRef();
     /**
-     * <code>string subscriberRef = 1;</code>
+     * <code>optional string subscriberRef = 1;</code>
      */
     com.google.protobuf.ByteString
         getSubscriberRefBytes();
 
     /**
-     * <code>string messageName = 2;</code>
+     * <code>optional string messageName = 2;</code>
+     */
+    boolean hasMessageName();
+    /**
+     * <code>optional string messageName = 2;</code>
      */
     String getMessageName();
     /**
-     * <code>string messageName = 2;</code>
+     * <code>optional string messageName = 2;</code>
      */
     com.google.protobuf.ByteString
         getMessageNameBytes();
@@ -1267,22 +1369,22 @@ public final class Reactivestreams {
               done = true;
               break;
             default: {
-              if (!parseUnknownFieldProto3(
+              if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
             }
             case 10: {
-              String s = input.readStringRequireUtf8();
-
-              subscriberRef_ = s;
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              subscriberRef_ = bs;
               break;
             }
             case 18: {
-              String s = input.readStringRequireUtf8();
-
-              messageName_ = s;
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000002;
+              messageName_ = bs;
               break;
             }
           }
@@ -1309,10 +1411,17 @@ public final class Reactivestreams {
               CancelMessage.class, Builder.class);
     }
 
+    private int bitField0_;
     public static final int SUBSCRIBERREF_FIELD_NUMBER = 1;
     private volatile Object subscriberRef_;
     /**
-     * <code>string subscriberRef = 1;</code>
+     * <code>optional string subscriberRef = 1;</code>
+     */
+    public boolean hasSubscriberRef() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string subscriberRef = 1;</code>
      */
     public String getSubscriberRef() {
       Object ref = subscriberRef_;
@@ -1322,12 +1431,14 @@ public final class Reactivestreams {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         String s = bs.toStringUtf8();
-        subscriberRef_ = s;
+        if (bs.isValidUtf8()) {
+          subscriberRef_ = s;
+        }
         return s;
       }
     }
     /**
-     * <code>string subscriberRef = 1;</code>
+     * <code>optional string subscriberRef = 1;</code>
      */
     public com.google.protobuf.ByteString
         getSubscriberRefBytes() {
@@ -1346,7 +1457,13 @@ public final class Reactivestreams {
     public static final int MESSAGENAME_FIELD_NUMBER = 2;
     private volatile Object messageName_;
     /**
-     * <code>string messageName = 2;</code>
+     * <code>optional string messageName = 2;</code>
+     */
+    public boolean hasMessageName() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string messageName = 2;</code>
      */
     public String getMessageName() {
       Object ref = messageName_;
@@ -1356,12 +1473,14 @@ public final class Reactivestreams {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         String s = bs.toStringUtf8();
-        messageName_ = s;
+        if (bs.isValidUtf8()) {
+          messageName_ = s;
+        }
         return s;
       }
     }
     /**
-     * <code>string messageName = 2;</code>
+     * <code>optional string messageName = 2;</code>
      */
     public com.google.protobuf.ByteString
         getMessageNameBytes() {
@@ -1389,10 +1508,10 @@ public final class Reactivestreams {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (!getSubscriberRefBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, subscriberRef_);
       }
-      if (!getMessageNameBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, messageName_);
       }
       unknownFields.writeTo(output);
@@ -1403,10 +1522,10 @@ public final class Reactivestreams {
       if (size != -1) return size;
 
       size = 0;
-      if (!getSubscriberRefBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, subscriberRef_);
       }
-      if (!getMessageNameBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, messageName_);
       }
       size += unknownFields.getSerializedSize();
@@ -1425,10 +1544,16 @@ public final class Reactivestreams {
       CancelMessage other = (CancelMessage) obj;
 
       boolean result = true;
-      result = result && getSubscriberRef()
-          .equals(other.getSubscriberRef());
-      result = result && getMessageName()
-          .equals(other.getMessageName());
+      result = result && (hasSubscriberRef() == other.hasSubscriberRef());
+      if (hasSubscriberRef()) {
+        result = result && getSubscriberRef()
+            .equals(other.getSubscriberRef());
+      }
+      result = result && (hasMessageName() == other.hasMessageName());
+      if (hasMessageName()) {
+        result = result && getMessageName()
+            .equals(other.getMessageName());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -1440,10 +1565,14 @@ public final class Reactivestreams {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      hash = (37 * hash) + SUBSCRIBERREF_FIELD_NUMBER;
-      hash = (53 * hash) + getSubscriberRef().hashCode();
-      hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
-      hash = (53 * hash) + getMessageName().hashCode();
+      if (hasSubscriberRef()) {
+        hash = (37 * hash) + SUBSCRIBERREF_FIELD_NUMBER;
+        hash = (53 * hash) + getSubscriberRef().hashCode();
+      }
+      if (hasMessageName()) {
+        hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
+        hash = (53 * hash) + getMessageName().hashCode();
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1574,9 +1703,9 @@ public final class Reactivestreams {
       public Builder clear() {
         super.clear();
         subscriberRef_ = "";
-
+        bitField0_ = (bitField0_ & ~0x00000001);
         messageName_ = "";
-
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
@@ -1599,8 +1728,17 @@ public final class Reactivestreams {
 
       public CancelMessage buildPartial() {
         CancelMessage result = new CancelMessage(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
         result.subscriberRef_ = subscriberRef_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
         result.messageName_ = messageName_;
+        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -1642,11 +1780,13 @@ public final class Reactivestreams {
 
       public Builder mergeFrom(CancelMessage other) {
         if (other == CancelMessage.getDefaultInstance()) return this;
-        if (!other.getSubscriberRef().isEmpty()) {
+        if (other.hasSubscriberRef()) {
+          bitField0_ |= 0x00000001;
           subscriberRef_ = other.subscriberRef_;
           onChanged();
         }
-        if (!other.getMessageName().isEmpty()) {
+        if (other.hasMessageName()) {
+          bitField0_ |= 0x00000002;
           messageName_ = other.messageName_;
           onChanged();
         }
@@ -1676,10 +1816,17 @@ public final class Reactivestreams {
         }
         return this;
       }
+      private int bitField0_;
 
       private Object subscriberRef_ = "";
       /**
-       * <code>string subscriberRef = 1;</code>
+       * <code>optional string subscriberRef = 1;</code>
+       */
+      public boolean hasSubscriberRef() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string subscriberRef = 1;</code>
        */
       public String getSubscriberRef() {
         Object ref = subscriberRef_;
@@ -1687,14 +1834,16 @@ public final class Reactivestreams {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           String s = bs.toStringUtf8();
-          subscriberRef_ = s;
+          if (bs.isValidUtf8()) {
+            subscriberRef_ = s;
+          }
           return s;
         } else {
           return (String) ref;
         }
       }
       /**
-       * <code>string subscriberRef = 1;</code>
+       * <code>optional string subscriberRef = 1;</code>
        */
       public com.google.protobuf.ByteString
           getSubscriberRefBytes() {
@@ -1710,37 +1859,36 @@ public final class Reactivestreams {
         }
       }
       /**
-       * <code>string subscriberRef = 1;</code>
+       * <code>optional string subscriberRef = 1;</code>
        */
       public Builder setSubscriberRef(
           String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  bitField0_ |= 0x00000001;
         subscriberRef_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>string subscriberRef = 1;</code>
+       * <code>optional string subscriberRef = 1;</code>
        */
       public Builder clearSubscriberRef() {
-        
+        bitField0_ = (bitField0_ & ~0x00000001);
         subscriberRef_ = getDefaultInstance().getSubscriberRef();
         onChanged();
         return this;
       }
       /**
-       * <code>string subscriberRef = 1;</code>
+       * <code>optional string subscriberRef = 1;</code>
        */
       public Builder setSubscriberRefBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  checkByteStringIsUtf8(value);
-        
+  bitField0_ |= 0x00000001;
         subscriberRef_ = value;
         onChanged();
         return this;
@@ -1748,7 +1896,13 @@ public final class Reactivestreams {
 
       private Object messageName_ = "";
       /**
-       * <code>string messageName = 2;</code>
+       * <code>optional string messageName = 2;</code>
+       */
+      public boolean hasMessageName() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string messageName = 2;</code>
        */
       public String getMessageName() {
         Object ref = messageName_;
@@ -1756,14 +1910,16 @@ public final class Reactivestreams {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           String s = bs.toStringUtf8();
-          messageName_ = s;
+          if (bs.isValidUtf8()) {
+            messageName_ = s;
+          }
           return s;
         } else {
           return (String) ref;
         }
       }
       /**
-       * <code>string messageName = 2;</code>
+       * <code>optional string messageName = 2;</code>
        */
       public com.google.protobuf.ByteString
           getMessageNameBytes() {
@@ -1779,44 +1935,43 @@ public final class Reactivestreams {
         }
       }
       /**
-       * <code>string messageName = 2;</code>
+       * <code>optional string messageName = 2;</code>
        */
       public Builder setMessageName(
           String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  bitField0_ |= 0x00000002;
         messageName_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>string messageName = 2;</code>
+       * <code>optional string messageName = 2;</code>
        */
       public Builder clearMessageName() {
-        
+        bitField0_ = (bitField0_ & ~0x00000002);
         messageName_ = getDefaultInstance().getMessageName();
         onChanged();
         return this;
       }
       /**
-       * <code>string messageName = 2;</code>
+       * <code>optional string messageName = 2;</code>
        */
       public Builder setMessageNameBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  checkByteStringIsUtf8(value);
-        
+  bitField0_ |= 0x00000002;
         messageName_ = value;
         onChanged();
         return this;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFieldsProto3(unknownFields);
+        return super.setUnknownFields(unknownFields);
       }
 
       public final Builder mergeUnknownFields(
@@ -1838,7 +1993,7 @@ public final class Reactivestreams {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<CancelMessage>
+    @Deprecated public static final com.google.protobuf.Parser<CancelMessage>
         PARSER = new com.google.protobuf.AbstractParser<CancelMessage>() {
       public CancelMessage parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
@@ -1868,11 +2023,15 @@ public final class Reactivestreams {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>string messageName = 1;</code>
+     * <code>optional string messageName = 1;</code>
+     */
+    boolean hasMessageName();
+    /**
+     * <code>optional string messageName = 1;</code>
      */
     String getMessageName();
     /**
-     * <code>string messageName = 1;</code>
+     * <code>optional string messageName = 1;</code>
      */
     com.google.protobuf.ByteString
         getMessageNameBytes();
@@ -1918,16 +2077,16 @@ public final class Reactivestreams {
               done = true;
               break;
             default: {
-              if (!parseUnknownFieldProto3(
+              if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
             }
             case 10: {
-              String s = input.readStringRequireUtf8();
-
-              messageName_ = s;
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              messageName_ = bs;
               break;
             }
           }
@@ -1954,10 +2113,17 @@ public final class Reactivestreams {
               CompletedMessage.class, Builder.class);
     }
 
+    private int bitField0_;
     public static final int MESSAGENAME_FIELD_NUMBER = 1;
     private volatile Object messageName_;
     /**
-     * <code>string messageName = 1;</code>
+     * <code>optional string messageName = 1;</code>
+     */
+    public boolean hasMessageName() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string messageName = 1;</code>
      */
     public String getMessageName() {
       Object ref = messageName_;
@@ -1967,12 +2133,14 @@ public final class Reactivestreams {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         String s = bs.toStringUtf8();
-        messageName_ = s;
+        if (bs.isValidUtf8()) {
+          messageName_ = s;
+        }
         return s;
       }
     }
     /**
-     * <code>string messageName = 1;</code>
+     * <code>optional string messageName = 1;</code>
      */
     public com.google.protobuf.ByteString
         getMessageNameBytes() {
@@ -2000,7 +2168,7 @@ public final class Reactivestreams {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (!getMessageNameBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, messageName_);
       }
       unknownFields.writeTo(output);
@@ -2011,7 +2179,7 @@ public final class Reactivestreams {
       if (size != -1) return size;
 
       size = 0;
-      if (!getMessageNameBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, messageName_);
       }
       size += unknownFields.getSerializedSize();
@@ -2030,8 +2198,11 @@ public final class Reactivestreams {
       CompletedMessage other = (CompletedMessage) obj;
 
       boolean result = true;
-      result = result && getMessageName()
-          .equals(other.getMessageName());
+      result = result && (hasMessageName() == other.hasMessageName());
+      if (hasMessageName()) {
+        result = result && getMessageName()
+            .equals(other.getMessageName());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -2043,8 +2214,10 @@ public final class Reactivestreams {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
-      hash = (53 * hash) + getMessageName().hashCode();
+      if (hasMessageName()) {
+        hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
+        hash = (53 * hash) + getMessageName().hashCode();
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -2175,7 +2348,7 @@ public final class Reactivestreams {
       public Builder clear() {
         super.clear();
         messageName_ = "";
-
+        bitField0_ = (bitField0_ & ~0x00000001);
         return this;
       }
 
@@ -2198,7 +2371,13 @@ public final class Reactivestreams {
 
       public CompletedMessage buildPartial() {
         CompletedMessage result = new CompletedMessage(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
         result.messageName_ = messageName_;
+        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -2240,7 +2419,8 @@ public final class Reactivestreams {
 
       public Builder mergeFrom(CompletedMessage other) {
         if (other == CompletedMessage.getDefaultInstance()) return this;
-        if (!other.getMessageName().isEmpty()) {
+        if (other.hasMessageName()) {
+          bitField0_ |= 0x00000001;
           messageName_ = other.messageName_;
           onChanged();
         }
@@ -2270,10 +2450,17 @@ public final class Reactivestreams {
         }
         return this;
       }
+      private int bitField0_;
 
       private Object messageName_ = "";
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
+       */
+      public boolean hasMessageName() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string messageName = 1;</code>
        */
       public String getMessageName() {
         Object ref = messageName_;
@@ -2281,14 +2468,16 @@ public final class Reactivestreams {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           String s = bs.toStringUtf8();
-          messageName_ = s;
+          if (bs.isValidUtf8()) {
+            messageName_ = s;
+          }
           return s;
         } else {
           return (String) ref;
         }
       }
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
        */
       public com.google.protobuf.ByteString
           getMessageNameBytes() {
@@ -2304,44 +2493,43 @@ public final class Reactivestreams {
         }
       }
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
        */
       public Builder setMessageName(
           String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  bitField0_ |= 0x00000001;
         messageName_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
        */
       public Builder clearMessageName() {
-        
+        bitField0_ = (bitField0_ & ~0x00000001);
         messageName_ = getDefaultInstance().getMessageName();
         onChanged();
         return this;
       }
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
        */
       public Builder setMessageNameBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  checkByteStringIsUtf8(value);
-        
+  bitField0_ |= 0x00000001;
         messageName_ = value;
         onChanged();
         return this;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFieldsProto3(unknownFields);
+        return super.setUnknownFields(unknownFields);
       }
 
       public final Builder mergeUnknownFields(
@@ -2363,7 +2551,7 @@ public final class Reactivestreams {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<CompletedMessage>
+    @Deprecated public static final com.google.protobuf.Parser<CompletedMessage>
         PARSER = new com.google.protobuf.AbstractParser<CompletedMessage>() {
       public CompletedMessage parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
@@ -2393,17 +2581,25 @@ public final class Reactivestreams {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>string messageName = 1;</code>
+     * <code>optional string messageName = 1;</code>
+     */
+    boolean hasMessageName();
+    /**
+     * <code>optional string messageName = 1;</code>
      */
     String getMessageName();
     /**
-     * <code>string messageName = 1;</code>
+     * <code>optional string messageName = 1;</code>
      */
     com.google.protobuf.ByteString
         getMessageNameBytes();
 
     /**
-     * <code>bytes messageBytes = 2;</code>
+     * <code>optional bytes messageBytes = 2;</code>
+     */
+    boolean hasMessageBytes();
+    /**
+     * <code>optional bytes messageBytes = 2;</code>
      */
     com.google.protobuf.ByteString getMessageBytes();
   }
@@ -2449,20 +2645,20 @@ public final class Reactivestreams {
               done = true;
               break;
             default: {
-              if (!parseUnknownFieldProto3(
+              if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
             }
             case 10: {
-              String s = input.readStringRequireUtf8();
-
-              messageName_ = s;
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              messageName_ = bs;
               break;
             }
             case 18: {
-
+              bitField0_ |= 0x00000002;
               messageBytes_ = input.readBytes();
               break;
             }
@@ -2490,10 +2686,17 @@ public final class Reactivestreams {
               NextMessage.class, Builder.class);
     }
 
+    private int bitField0_;
     public static final int MESSAGENAME_FIELD_NUMBER = 1;
     private volatile Object messageName_;
     /**
-     * <code>string messageName = 1;</code>
+     * <code>optional string messageName = 1;</code>
+     */
+    public boolean hasMessageName() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string messageName = 1;</code>
      */
     public String getMessageName() {
       Object ref = messageName_;
@@ -2503,12 +2706,14 @@ public final class Reactivestreams {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         String s = bs.toStringUtf8();
-        messageName_ = s;
+        if (bs.isValidUtf8()) {
+          messageName_ = s;
+        }
         return s;
       }
     }
     /**
-     * <code>string messageName = 1;</code>
+     * <code>optional string messageName = 1;</code>
      */
     public com.google.protobuf.ByteString
         getMessageNameBytes() {
@@ -2527,7 +2732,13 @@ public final class Reactivestreams {
     public static final int MESSAGEBYTES_FIELD_NUMBER = 2;
     private com.google.protobuf.ByteString messageBytes_;
     /**
-     * <code>bytes messageBytes = 2;</code>
+     * <code>optional bytes messageBytes = 2;</code>
+     */
+    public boolean hasMessageBytes() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional bytes messageBytes = 2;</code>
      */
     public com.google.protobuf.ByteString getMessageBytes() {
       return messageBytes_;
@@ -2545,10 +2756,10 @@ public final class Reactivestreams {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (!getMessageNameBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, messageName_);
       }
-      if (!messageBytes_.isEmpty()) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(2, messageBytes_);
       }
       unknownFields.writeTo(output);
@@ -2559,10 +2770,10 @@ public final class Reactivestreams {
       if (size != -1) return size;
 
       size = 0;
-      if (!getMessageNameBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, messageName_);
       }
-      if (!messageBytes_.isEmpty()) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, messageBytes_);
       }
@@ -2582,10 +2793,16 @@ public final class Reactivestreams {
       NextMessage other = (NextMessage) obj;
 
       boolean result = true;
-      result = result && getMessageName()
-          .equals(other.getMessageName());
-      result = result && getMessageBytes()
-          .equals(other.getMessageBytes());
+      result = result && (hasMessageName() == other.hasMessageName());
+      if (hasMessageName()) {
+        result = result && getMessageName()
+            .equals(other.getMessageName());
+      }
+      result = result && (hasMessageBytes() == other.hasMessageBytes());
+      if (hasMessageBytes()) {
+        result = result && getMessageBytes()
+            .equals(other.getMessageBytes());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -2597,10 +2814,14 @@ public final class Reactivestreams {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
-      hash = (53 * hash) + getMessageName().hashCode();
-      hash = (37 * hash) + MESSAGEBYTES_FIELD_NUMBER;
-      hash = (53 * hash) + getMessageBytes().hashCode();
+      if (hasMessageName()) {
+        hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
+        hash = (53 * hash) + getMessageName().hashCode();
+      }
+      if (hasMessageBytes()) {
+        hash = (37 * hash) + MESSAGEBYTES_FIELD_NUMBER;
+        hash = (53 * hash) + getMessageBytes().hashCode();
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -2731,9 +2952,9 @@ public final class Reactivestreams {
       public Builder clear() {
         super.clear();
         messageName_ = "";
-
+        bitField0_ = (bitField0_ & ~0x00000001);
         messageBytes_ = com.google.protobuf.ByteString.EMPTY;
-
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
@@ -2756,8 +2977,17 @@ public final class Reactivestreams {
 
       public NextMessage buildPartial() {
         NextMessage result = new NextMessage(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
         result.messageName_ = messageName_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
         result.messageBytes_ = messageBytes_;
+        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -2799,11 +3029,12 @@ public final class Reactivestreams {
 
       public Builder mergeFrom(NextMessage other) {
         if (other == NextMessage.getDefaultInstance()) return this;
-        if (!other.getMessageName().isEmpty()) {
+        if (other.hasMessageName()) {
+          bitField0_ |= 0x00000001;
           messageName_ = other.messageName_;
           onChanged();
         }
-        if (other.getMessageBytes() != com.google.protobuf.ByteString.EMPTY) {
+        if (other.hasMessageBytes()) {
           setMessageBytes(other.getMessageBytes());
         }
         this.mergeUnknownFields(other.unknownFields);
@@ -2832,10 +3063,17 @@ public final class Reactivestreams {
         }
         return this;
       }
+      private int bitField0_;
 
       private Object messageName_ = "";
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
+       */
+      public boolean hasMessageName() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string messageName = 1;</code>
        */
       public String getMessageName() {
         Object ref = messageName_;
@@ -2843,14 +3081,16 @@ public final class Reactivestreams {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           String s = bs.toStringUtf8();
-          messageName_ = s;
+          if (bs.isValidUtf8()) {
+            messageName_ = s;
+          }
           return s;
         } else {
           return (String) ref;
         }
       }
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
        */
       public com.google.protobuf.ByteString
           getMessageNameBytes() {
@@ -2866,37 +3106,36 @@ public final class Reactivestreams {
         }
       }
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
        */
       public Builder setMessageName(
           String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  bitField0_ |= 0x00000001;
         messageName_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
        */
       public Builder clearMessageName() {
-        
+        bitField0_ = (bitField0_ & ~0x00000001);
         messageName_ = getDefaultInstance().getMessageName();
         onChanged();
         return this;
       }
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
        */
       public Builder setMessageNameBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  checkByteStringIsUtf8(value);
-        
+  bitField0_ |= 0x00000001;
         messageName_ = value;
         onChanged();
         return this;
@@ -2904,35 +3143,41 @@ public final class Reactivestreams {
 
       private com.google.protobuf.ByteString messageBytes_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>bytes messageBytes = 2;</code>
+       * <code>optional bytes messageBytes = 2;</code>
+       */
+      public boolean hasMessageBytes() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional bytes messageBytes = 2;</code>
        */
       public com.google.protobuf.ByteString getMessageBytes() {
         return messageBytes_;
       }
       /**
-       * <code>bytes messageBytes = 2;</code>
+       * <code>optional bytes messageBytes = 2;</code>
        */
       public Builder setMessageBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  bitField0_ |= 0x00000002;
         messageBytes_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>bytes messageBytes = 2;</code>
+       * <code>optional bytes messageBytes = 2;</code>
        */
       public Builder clearMessageBytes() {
-        
+        bitField0_ = (bitField0_ & ~0x00000002);
         messageBytes_ = getDefaultInstance().getMessageBytes();
         onChanged();
         return this;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFieldsProto3(unknownFields);
+        return super.setUnknownFields(unknownFields);
       }
 
       public final Builder mergeUnknownFields(
@@ -2954,7 +3199,7 @@ public final class Reactivestreams {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<NextMessage>
+    @Deprecated public static final com.google.protobuf.Parser<NextMessage>
         PARSER = new com.google.protobuf.AbstractParser<NextMessage>() {
       public NextMessage parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
@@ -2984,17 +3229,25 @@ public final class Reactivestreams {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>string messageName = 1;</code>
+     * <code>optional string messageName = 1;</code>
+     */
+    boolean hasMessageName();
+    /**
+     * <code>optional string messageName = 1;</code>
      */
     String getMessageName();
     /**
-     * <code>string messageName = 1;</code>
+     * <code>optional string messageName = 1;</code>
      */
     com.google.protobuf.ByteString
         getMessageNameBytes();
 
     /**
-     * <code>uint64 n = 2;</code>
+     * <code>optional uint64 n = 2;</code>
+     */
+    boolean hasN();
+    /**
+     * <code>optional uint64 n = 2;</code>
      */
     long getN();
   }
@@ -3040,20 +3293,20 @@ public final class Reactivestreams {
               done = true;
               break;
             default: {
-              if (!parseUnknownFieldProto3(
+              if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
             }
             case 10: {
-              String s = input.readStringRequireUtf8();
-
-              messageName_ = s;
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              messageName_ = bs;
               break;
             }
             case 16: {
-
+              bitField0_ |= 0x00000002;
               n_ = input.readUInt64();
               break;
             }
@@ -3081,10 +3334,17 @@ public final class Reactivestreams {
               RequestMessage.class, Builder.class);
     }
 
+    private int bitField0_;
     public static final int MESSAGENAME_FIELD_NUMBER = 1;
     private volatile Object messageName_;
     /**
-     * <code>string messageName = 1;</code>
+     * <code>optional string messageName = 1;</code>
+     */
+    public boolean hasMessageName() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string messageName = 1;</code>
      */
     public String getMessageName() {
       Object ref = messageName_;
@@ -3094,12 +3354,14 @@ public final class Reactivestreams {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         String s = bs.toStringUtf8();
-        messageName_ = s;
+        if (bs.isValidUtf8()) {
+          messageName_ = s;
+        }
         return s;
       }
     }
     /**
-     * <code>string messageName = 1;</code>
+     * <code>optional string messageName = 1;</code>
      */
     public com.google.protobuf.ByteString
         getMessageNameBytes() {
@@ -3118,7 +3380,13 @@ public final class Reactivestreams {
     public static final int N_FIELD_NUMBER = 2;
     private long n_;
     /**
-     * <code>uint64 n = 2;</code>
+     * <code>optional uint64 n = 2;</code>
+     */
+    public boolean hasN() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional uint64 n = 2;</code>
      */
     public long getN() {
       return n_;
@@ -3136,10 +3404,10 @@ public final class Reactivestreams {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (!getMessageNameBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, messageName_);
       }
-      if (n_ != 0L) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeUInt64(2, n_);
       }
       unknownFields.writeTo(output);
@@ -3150,10 +3418,10 @@ public final class Reactivestreams {
       if (size != -1) return size;
 
       size = 0;
-      if (!getMessageNameBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, messageName_);
       }
-      if (n_ != 0L) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(2, n_);
       }
@@ -3173,10 +3441,16 @@ public final class Reactivestreams {
       RequestMessage other = (RequestMessage) obj;
 
       boolean result = true;
-      result = result && getMessageName()
-          .equals(other.getMessageName());
-      result = result && (getN()
-          == other.getN());
+      result = result && (hasMessageName() == other.hasMessageName());
+      if (hasMessageName()) {
+        result = result && getMessageName()
+            .equals(other.getMessageName());
+      }
+      result = result && (hasN() == other.hasN());
+      if (hasN()) {
+        result = result && (getN()
+            == other.getN());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -3188,11 +3462,15 @@ public final class Reactivestreams {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
-      hash = (53 * hash) + getMessageName().hashCode();
-      hash = (37 * hash) + N_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-          getN());
+      if (hasMessageName()) {
+        hash = (37 * hash) + MESSAGENAME_FIELD_NUMBER;
+        hash = (53 * hash) + getMessageName().hashCode();
+      }
+      if (hasN()) {
+        hash = (37 * hash) + N_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getN());
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -3323,9 +3601,9 @@ public final class Reactivestreams {
       public Builder clear() {
         super.clear();
         messageName_ = "";
-
+        bitField0_ = (bitField0_ & ~0x00000001);
         n_ = 0L;
-
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
@@ -3348,8 +3626,17 @@ public final class Reactivestreams {
 
       public RequestMessage buildPartial() {
         RequestMessage result = new RequestMessage(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
         result.messageName_ = messageName_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
         result.n_ = n_;
+        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -3391,11 +3678,12 @@ public final class Reactivestreams {
 
       public Builder mergeFrom(RequestMessage other) {
         if (other == RequestMessage.getDefaultInstance()) return this;
-        if (!other.getMessageName().isEmpty()) {
+        if (other.hasMessageName()) {
+          bitField0_ |= 0x00000001;
           messageName_ = other.messageName_;
           onChanged();
         }
-        if (other.getN() != 0L) {
+        if (other.hasN()) {
           setN(other.getN());
         }
         this.mergeUnknownFields(other.unknownFields);
@@ -3424,10 +3712,17 @@ public final class Reactivestreams {
         }
         return this;
       }
+      private int bitField0_;
 
       private Object messageName_ = "";
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
+       */
+      public boolean hasMessageName() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string messageName = 1;</code>
        */
       public String getMessageName() {
         Object ref = messageName_;
@@ -3435,14 +3730,16 @@ public final class Reactivestreams {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           String s = bs.toStringUtf8();
-          messageName_ = s;
+          if (bs.isValidUtf8()) {
+            messageName_ = s;
+          }
           return s;
         } else {
           return (String) ref;
         }
       }
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
        */
       public com.google.protobuf.ByteString
           getMessageNameBytes() {
@@ -3458,37 +3755,36 @@ public final class Reactivestreams {
         }
       }
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
        */
       public Builder setMessageName(
           String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  bitField0_ |= 0x00000001;
         messageName_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
        */
       public Builder clearMessageName() {
-        
+        bitField0_ = (bitField0_ & ~0x00000001);
         messageName_ = getDefaultInstance().getMessageName();
         onChanged();
         return this;
       }
       /**
-       * <code>string messageName = 1;</code>
+       * <code>optional string messageName = 1;</code>
        */
       public Builder setMessageNameBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  checkByteStringIsUtf8(value);
-        
+  bitField0_ |= 0x00000001;
         messageName_ = value;
         onChanged();
         return this;
@@ -3496,32 +3792,38 @@ public final class Reactivestreams {
 
       private long n_ ;
       /**
-       * <code>uint64 n = 2;</code>
+       * <code>optional uint64 n = 2;</code>
+       */
+      public boolean hasN() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional uint64 n = 2;</code>
        */
       public long getN() {
         return n_;
       }
       /**
-       * <code>uint64 n = 2;</code>
+       * <code>optional uint64 n = 2;</code>
        */
       public Builder setN(long value) {
-        
+        bitField0_ |= 0x00000002;
         n_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>uint64 n = 2;</code>
+       * <code>optional uint64 n = 2;</code>
        */
       public Builder clearN() {
-        
+        bitField0_ = (bitField0_ & ~0x00000002);
         n_ = 0L;
         onChanged();
         return this;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFieldsProto3(unknownFields);
+        return super.setUnknownFields(unknownFields);
       }
 
       public final Builder mergeUnknownFields(
@@ -3543,7 +3845,7 @@ public final class Reactivestreams {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<RequestMessage>
+    @Deprecated public static final com.google.protobuf.Parser<RequestMessage>
         PARSER = new com.google.protobuf.AbstractParser<RequestMessage>() {
       public RequestMessage parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
@@ -3617,7 +3919,7 @@ public final class Reactivestreams {
       "eName\030\001 \001(\t\"8\n\013NextMessage\022\023\n\013messageNam" +
       "e\030\001 \001(\t\022\024\n\014messageBytes\030\002 \001(\014\"0\n\016Request" +
       "Message\022\023\n\013messageName\030\001 \001(\t\022\t\n\001n\030\002 \001(\004B" +
-      "\002H\001b\006proto3"
+      "\002H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
