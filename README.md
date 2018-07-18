@@ -69,8 +69,8 @@ public class GreetingActor extends TypedActor<Greeting> {
 TestActorSystem testActorSystem = new TestActorSystem();
 testActorSystem.initialize();
 
-ActorSystem actorSystem = testActorSystem.getActorSystem();
-ActorRef greeter = actorSystem.actorOf("greeter",GreetingActor.class);
+ActorSystem serializationRegistry = testActorSystem.getActorSystem();
+ActorRef greeter = serializationRegistry.actorOf("greeter",GreetingActor.class);
 greeter.tell(new Greeting("Joost van de Wijgerd"),null);
 
 testActorSystem.destroy();

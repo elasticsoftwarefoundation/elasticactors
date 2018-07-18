@@ -259,7 +259,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
                             stable = false;
                         } finally {
                             // create a new remote shard and swap it
-                            RemoteActorShard newShard = new RemoteActorShard(node, this, i, shardAdapters[i].myRef, remoteMessageQueueFactory);
+                            RemoteActorShard newShard = new RemoteActorShard(node, getName(), this, i, shardAdapters[i].myRef, remoteMessageQueueFactory);
                             shards[i] = newShard;
                             // initialize
                             newShard.init();

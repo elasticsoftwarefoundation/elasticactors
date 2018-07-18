@@ -24,14 +24,12 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 /**
  * @author Joost van de Wijgerd
  */
-public interface InternalActorSystems extends ActorSystems {
+public interface InternalActorSystems extends ActorSystems, SerializationFrameworkRegistry {
     InternalActorSystem get(String name);
 
     <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass);
 
     <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass);
-
-    SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass);
 
     ActorRef createPersistentActorRef(ActorShard shard, String actorId);
 

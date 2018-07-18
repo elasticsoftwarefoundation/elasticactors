@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.serialization.internal;
 
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.SerializationFrameworkRegistry;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.testng.annotations.Test;
@@ -34,11 +35,11 @@ import static org.testng.Assert.assertNotNull;
 public class CreateActorMessageSerializationTest {
     @Test
     public void testSerialization() throws IOException {
-        InternalActorSystems internalActorSystems = mock(InternalActorSystems.class);
-        CreateActorMessageSerializer serializer = new CreateActorMessageSerializer(internalActorSystems);
+        SerializationFrameworkRegistry serializationFrameworkRegistry = mock(InternalActorSystems.class);
+        CreateActorMessageSerializer serializer = new CreateActorMessageSerializer(serializationFrameworkRegistry);
 
         ByteBuffer serializedForm = serializer.serialize(new CreateActorMessage("LocalNode","testClass","listener",null));
-        CreateActorMessageDeserializer deserializer = new CreateActorMessageDeserializer(internalActorSystems);
+        CreateActorMessageDeserializer deserializer = new CreateActorMessageDeserializer(serializationFrameworkRegistry);
 
         CreateActorMessage deserializedMessage = deserializer.deserialize(serializedForm);
         assertNotNull(deserializedMessage);

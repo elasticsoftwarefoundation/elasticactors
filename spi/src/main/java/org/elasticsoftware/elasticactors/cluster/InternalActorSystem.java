@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * @author Joost van de Wijgerd
  */
-public interface InternalActorSystem extends ActorSystem, ShardAccessor {
+public interface InternalActorSystem extends ActorSystem, ShardAccessor, SerializationRegistry {
 
     InternalActorSystemConfiguration getConfiguration();
 
@@ -73,24 +73,6 @@ public interface InternalActorSystem extends ActorSystem, ShardAccessor {
      * @return
      */
     ActorNode getNode();
-
-    /**
-     * Return the serializer for the given message type
-     *
-     * @param messageClass
-     * @param <T>
-     * @return
-     */
-    <T> MessageSerializer<T> getSerializer(Class<T> messageClass);
-
-    /**
-     * Return the deserializer for the give message type
-     *
-     * @param messageClass
-     * @param <T>
-     * @return
-     */
-    <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass);
 
     InternalScheduler getInternalScheduler();
 

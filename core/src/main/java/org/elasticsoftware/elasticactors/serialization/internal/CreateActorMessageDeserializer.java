@@ -19,7 +19,7 @@ package org.elasticsoftware.elasticactors.serialization.internal;
 import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
-import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.SerializationFrameworkRegistry;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
@@ -33,9 +33,9 @@ import java.nio.ByteBuffer;
  * @author Joost van de Wijgerd
  */
 public final class CreateActorMessageDeserializer implements MessageDeserializer<CreateActorMessage> {
-    private final InternalActorSystems actorSystems;
+    private final SerializationFrameworkRegistry actorSystems;
 
-    public CreateActorMessageDeserializer(InternalActorSystems actorSystems) {
+    public CreateActorMessageDeserializer(SerializationFrameworkRegistry actorSystems) {
         this.actorSystems = actorSystems;
     }
 

@@ -18,6 +18,8 @@ package org.elasticsoftware.elasticactors.serialization;
 
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.SerializationFrameworkRegistry;
+import org.elasticsoftware.elasticactors.cluster.SerializationRegistry;
 import org.elasticsoftware.elasticactors.messaging.internal.*;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.*;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
@@ -33,13 +35,15 @@ import java.util.Map;
 public final class SystemDeserializers {
     private final Map<Class,MessageDeserializer> systemDeserializers = new HashMap<Class,MessageDeserializer>();
 
-    public SystemDeserializers(InternalActorSystems cluster,ActorRefFactory actorRefFactory) {
+    public SystemDeserializers(SerializationFrameworkRegistry serializationFrameworkRegistry,
+                               SerializationRegistry serializationRegistry,
+                               ActorRefFactory actorRefFactory) {
         ActorRefDeserializer actorRefDeserializer = new ActorRefDeserializer(actorRefFactory);
-        systemDeserializers.put(CreateActorMessage.class,new CreateActorMessageDeserializer(cluster));
+        systemDeserializers.put(CreateActorMessage.class,new CreateActorMessageDeserializer(serializationFrameworkRegistry));
         systemDeserializers.put(DestroyActorMessage.class,new DestroyActorMessageDeserializer(actorRefDeserializer));
         systemDeserializers.put(ActivateActorMessage.class,new ActivateActorMessageDeserializer());
         systemDeserializers.put(CancelScheduledMessageMessage.class,new CancelScheduledMessageMessageDeserializer());
-        systemDeserializers.put(ActorNodeMessage.class, new ActorNodeMessageDeserializer(actorRefDeserializer, cluster));
+        systemDeserializers.put(ActorNodeMessage.class, new ActorNodeMessageDeserializer(actorRefDeserializer, serializationRegistry));
         systemDeserializers.put(PersistActorMessage.class, new PersistActorMessageDeserializer(actorRefDeserializer));
         // reactive streams protocol
         systemDeserializers.put(CancelMessage.class, new CancelMessageDeserializer(actorRefDeserializer));

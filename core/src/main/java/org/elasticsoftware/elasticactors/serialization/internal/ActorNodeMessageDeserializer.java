@@ -16,36 +16,26 @@
 
 package org.elasticsoftware.elasticactors.serialization.internal;
 
-import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
-import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
-import org.elasticsoftware.elasticactors.messaging.ImmutableInternalMessage;
-import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
+import org.elasticsoftware.elasticactors.cluster.SerializationRegistry;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
-import org.elasticsoftware.elasticactors.serialization.Deserializer;
-import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.UUID;
-
-import static org.elasticsoftware.elasticactors.messaging.UUIDTools.toUUID;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class ActorNodeMessageDeserializer implements MessageDeserializer<ActorNodeMessage> {
     private final ActorRefDeserializer actorRefDeserializer;
-    private final InternalActorSystems cluster;
+    private final SerializationRegistry serializationRegistry;
 
-    public ActorNodeMessageDeserializer(ActorRefDeserializer actorRefDeserializer, InternalActorSystems cluster) {
+    public ActorNodeMessageDeserializer(ActorRefDeserializer actorRefDeserializer, SerializationRegistry serializationRegistry) {
         this.actorRefDeserializer = actorRefDeserializer;
-        this.cluster = cluster;
+        this.serializationRegistry = serializationRegistry;
     }
 
     @Override
@@ -55,7 +45,7 @@ public final class ActorNodeMessageDeserializer implements MessageDeserializer<A
             ActorRef receiverRef = protobufMessage.getReceiver()!=null && !protobufMessage.getReceiver().isEmpty() ? actorRefDeserializer.deserialize(protobufMessage.getReceiver()) : null;
             String messageClassString = protobufMessage.getPayloadClass();
             Class<?> messageClass = Class.forName(messageClassString);
-            Object payloadObject = cluster.get(null).getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
+            Object payloadObject = serializationRegistry.getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
             return new ActorNodeMessage(protobufMessage.getNodeId(), receiverRef, payloadObject, protobufMessage.getUndeliverable());
         } catch(Exception e) {
             throw new IOException(e);

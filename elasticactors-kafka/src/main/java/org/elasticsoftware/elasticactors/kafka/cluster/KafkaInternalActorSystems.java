@@ -13,12 +13,13 @@ public final class KafkaInternalActorSystems implements InternalActorSystems, Ac
     private final Cache<String,ActorRef> actorRefCache;
     private final KafkaActorRefTools actorRefTools;
     private final SystemSerializers systemSerializers = new SystemSerializers(this);
-    private final SystemDeserializers systemDeserializers = new SystemDeserializers(this, this);
+    private final SystemDeserializers systemDeserializers;
 
     public KafkaInternalActorSystems(InternalActorSystems delegate, Cache<String, ActorRef> actorRefCache) {
         this.delegate = delegate;
         this.actorRefCache = actorRefCache;
         this.actorRefTools = new KafkaActorRefTools(this);
+        this.systemDeserializers = new SystemDeserializers(this, delegate.get(null), this);
     }
 
     @Override

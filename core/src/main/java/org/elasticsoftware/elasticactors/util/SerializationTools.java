@@ -20,7 +20,7 @@ import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
-import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.SerializationFrameworkRegistry;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
@@ -45,7 +45,7 @@ public final class SerializationTools {
 
     }
 
-    public static ActorState deserializeActorState(InternalActorSystems actorSystems, Class<? extends ElasticActor> actorClass, byte[] serializedState) throws IOException {
+    public static ActorState deserializeActorState(SerializationFrameworkRegistry actorSystems, Class<? extends ElasticActor> actorClass, byte[] serializedState) throws IOException {
         Actor actorAnnotation = actorClass.getAnnotation(Actor.class);
         if(actorAnnotation != null) {
             SerializationFramework framework = actorSystems.getSerializationFramework(actorAnnotation.serializationFramework());
@@ -56,7 +56,7 @@ public final class SerializationTools {
         }
     }
 
-    public static byte[] serializeActorState(InternalActorSystems actorSystems, Class<? extends ElasticActor> actorClass,ActorState actorState) throws IOException {
+    public static byte[] serializeActorState(SerializationFrameworkRegistry actorSystems, Class<? extends ElasticActor> actorClass, ActorState actorState) throws IOException {
         Actor actorAnnotation = actorClass.getAnnotation(Actor.class);
         if(actorAnnotation != null) {
             SerializationFramework framework = actorSystems.getSerializationFramework(actorAnnotation.serializationFramework());
@@ -67,12 +67,12 @@ public final class SerializationTools {
         }
     }
 
-    public static byte[] serializeActorState(InternalActorSystems actorSystems, ActorState actorState) throws IOException {
+    public static byte[] serializeActorState(SerializationFrameworkRegistry actorSystems, ActorState actorState) throws IOException {
         SerializationFramework framework = actorSystems.getSerializationFramework(actorState.getSerializationFramework());
         return framework.getActorStateSerializer(actorState).serialize(actorState);
     }
 
-    public static SerializationFramework getSerializationFramework(InternalActorSystems actorSystems, Class<? extends ElasticActor> actorClass) {
+    public static SerializationFramework getSerializationFramework(SerializationFrameworkRegistry actorSystems, Class<? extends ElasticActor> actorClass) {
         Actor actorAnnotation = actorClass.getAnnotation(Actor.class);
         if(actorAnnotation != null) {
             return actorSystems.getSerializationFramework(actorAnnotation.serializationFramework());
