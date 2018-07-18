@@ -50,10 +50,10 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
     @Override
     public InternalMessage deserialize(byte[] serializedObject) throws IOException {
         Elasticactors.InternalMessage protobufMessage = Elasticactors.InternalMessage.parseFrom(serializedObject);
-        ActorRef sender = (protobufMessage.hasSender()) ? actorRefDeserializer.deserialize(protobufMessage.getSender()) : null;
+        ActorRef sender = (protobufMessage.getSender() != null && !protobufMessage.getSender().isEmpty()) ? actorRefDeserializer.deserialize(protobufMessage.getSender()) : null;
         // there is either a receiver or a list of receivers
         ImmutableList<ActorRef> receivers;
-        ActorRef singleReceiver = (protobufMessage.hasReceiver()) ? actorRefDeserializer.deserialize(protobufMessage.getReceiver()) : null;
+        ActorRef singleReceiver = (protobufMessage.getReceiver() != null && !protobufMessage.getReceiver().isEmpty()) ? actorRefDeserializer.deserialize(protobufMessage.getReceiver()) : null;
         if(singleReceiver == null) {
             ImmutableList.Builder<ActorRef> listBuilder = ImmutableList.builder();
             for (String receiver : protobufMessage.getReceiversList()) {
@@ -65,9 +65,9 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
         }
         String messageClassString = protobufMessage.getPayloadClass();
         UUID id = toUUID(protobufMessage.getId().toByteArray());
-        boolean durable = (!protobufMessage.hasDurable()) || protobufMessage.getDurable();
-        boolean undeliverable = protobufMessage.hasUndeliverable() && protobufMessage.getUndeliverable();
-        int timeout = protobufMessage.hasTimeout() ? protobufMessage.getTimeout() : InternalMessage.NO_TIMEOUT;
+        boolean durable = protobufMessage.getDurable();
+        boolean undeliverable = protobufMessage.getUndeliverable();
+        int timeout = protobufMessage.getTimeout() != 0 ? protobufMessage.getTimeout() : InternalMessage.NO_TIMEOUT;
         //return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable);
         // optimize immutable message if possible
 
