@@ -1,4 +1,4 @@
-syntax = "proto3";
+syntax = "proto2";
 
 package org.elasticsoftware.elasticactors.cluster.protobuf;
 
@@ -12,11 +12,11 @@ option optimize_for = SPEED;
 //        used in this protocol buffer, not even by deleted fields).
 
 message ClusterMessage {
-    ShardReleased shardReleased = 1;
-    int64 viewId = 2;
+    optional ShardReleased shardReleased = 1;
+    optional int64 viewId = 2;
 }
 
 message ShardReleased {
-    int32 shardId = 1;
-    string actorSystem = 2;
+    optional int32 shardId = 1;
+    optional string actorSystem = 2;
 }
