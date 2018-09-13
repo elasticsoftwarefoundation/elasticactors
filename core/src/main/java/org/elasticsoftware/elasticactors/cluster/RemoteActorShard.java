@@ -36,17 +36,17 @@ import java.util.List;
  */
 
 public final class RemoteActorShard extends AbstractActorContainer implements ActorShard {
-    private final SerializationRegistry serializationRegistry;
+    private final MessageSerializationRegistry messageSerializationRegistry;
     private final ShardKey shardKey;
 
     public RemoteActorShard(PhysicalNode remoteNode,
                             String actorSystemName,
-                            SerializationRegistry serializationRegistry,
+                            MessageSerializationRegistry messageSerializationRegistry,
                             int vNodeKey,
                             ActorRef myRef,
                             MessageQueueFactory messageQueueFactory) {
         super(messageQueueFactory,myRef,remoteNode);
-        this.serializationRegistry = serializationRegistry;
+        this.messageSerializationRegistry = messageSerializationRegistry;
         this.shardKey = new ShardKey(actorSystemName, vNodeKey);
     }
 
@@ -61,7 +61,7 @@ public final class RemoteActorShard extends AbstractActorContainer implements Ac
     }
 
     public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
-        MessageSerializer messageSerializer = serializationRegistry.getSerializer(message.getClass());
+        MessageSerializer messageSerializer = messageSerializationRegistry.getSerializer(message.getClass());
         // get the durable flag
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();

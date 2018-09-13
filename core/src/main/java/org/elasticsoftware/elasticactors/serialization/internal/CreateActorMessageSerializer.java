@@ -31,10 +31,10 @@ import java.nio.ByteBuffer;
  * @author Joost van de Wijgerd
  */
 public final class CreateActorMessageSerializer implements MessageSerializer<CreateActorMessage> {
-    //private final InternalActorSystems actorSystems;
+    private final SerializationFrameworkRegistry serializationFrameworkRegistry;
 
-    public CreateActorMessageSerializer(SerializationFrameworkRegistry actorSystems) {
-        this.actorSystems = actorSystems;
+    public CreateActorMessageSerializer(SerializationFrameworkRegistry serializationFrameworkRegistry) {
+        this.serializationFrameworkRegistry = serializationFrameworkRegistry;
     }
 
 
@@ -56,7 +56,7 @@ public final class CreateActorMessageSerializer implements MessageSerializer<Cre
     }
 
     private byte[] serializeState(String actorClass,ActorState state) throws IOException {
-        return SerializationTools.serializeActorState(actorSystems, state);
+        return SerializationTools.serializeActorState(serializationFrameworkRegistry, state);
         /**
          * to support creating actors on remote actor systems (without having to link all the code) we are now
          * using the SerializationFramework as it is specified in the ActorState implementation instead of on the

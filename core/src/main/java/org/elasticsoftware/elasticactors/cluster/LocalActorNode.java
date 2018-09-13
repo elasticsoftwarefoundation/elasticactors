@@ -17,11 +17,9 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import com.google.common.cache.Cache;
-import com.google.common.collect.ImmutableList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.*;
-import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.tasks.*;
 import org.elasticsoftware.elasticactors.messaging.*;
@@ -29,9 +27,6 @@ import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
-import org.elasticsoftware.elasticactors.serialization.Message;
-import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +34,6 @@ import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static org.elasticsoftware.elasticactors.cluster.tasks.ProtocolFactoryFactory.getProtocolFactory;
@@ -49,13 +43,12 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  * @author Joost van de Wijgerd
  */
 @Configurable
-public final class LocalActorNode extends AbstractActorContainer implements ActorNode, EvictionListener<PersistentActor<NodeKey>> {
+public final class LocalActorNode extends AbstractActorNode {
     private static final Logger logger = LogManager.getLogger(LocalActorNode.class);
     private final InternalActorSystem actorSystem;
-    private final NodeKey nodeKey;
-    private ThreadBoundExecutor actorExecutor;
     private final NodeActorCacheManager actorCacheManager;
-    private Cache<ActorRef,PersistentActor<NodeKey>> actorCache;
+    protected Cache<ActorRef, PersistentActor<NodeKey>> actorCache;
+    private ThreadBoundExecutor actorExecutor;
     private final Set<ElasticActor> initializedActors = new HashSet<>();
 
     public LocalActorNode(PhysicalNode node,
@@ -63,74 +56,8 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                           ActorRef myRef,
                           MessageQueueFactory messageQueueFactory,
                           NodeActorCacheManager actorCacheManager) {
-        super(messageQueueFactory, myRef, node);
+        super(messageQueueFactory, myRef, node, actorCacheManager, actorSystem.getName(), actorSystem);
         this.actorSystem = actorSystem;
-        this.actorCacheManager = actorCacheManager;
-        this.nodeKey = new NodeKey(actorSystem.getName(), node.getId());
-    }
-
-    @Override
-    public void init() throws Exception {
-        this.actorCache = actorCacheManager.create(nodeKey,this);
-        super.init();
-    }
-
-    @Override
-    public void destroy() {
-        actorCacheManager.destroy(actorCache);
-        super.destroy();
-    }
-
-    @Override
-    public void onEvicted(PersistentActor<NodeKey> value) {
-        // @todo: a temporary actor that gets evicted is actually being destroyed
-    }
-
-    @Override
-    public NodeKey getKey() {
-        return nodeKey;
-    }
-
-    public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
-        // we need some special handling for the CreateActorMessage in case of Temp Actor
-        if(CreateActorMessage.class.equals(message.getClass()) && ActorType.TEMP.equals(CreateActorMessage.class.cast(message).getType())) {
-            messageQueue.offer(new TransientInternalMessage(from, ImmutableList.copyOf(to),message));
-        } else {
-            // get the durable flag
-            Message messageAnnotation = message.getClass().getAnnotation(Message.class);
-            final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
-            final boolean immutable = (messageAnnotation != null) && messageAnnotation.immutable();
-            final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-            if(durable) {
-                // durable so it will go over the bus and needs to be serialized
-                MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), true, timeout));
-            } else if(!immutable) {
-                // it's not durable, but it's mutable so we need to serialize here
-                MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), false, timeout));
-            } else {
-                // as the message is immutable we can safely send it as a TransientInternalMessage
-                messageQueue.offer(new TransientInternalMessage(from,ImmutableList.copyOf(to),message));
-            }
-        }
-    }
-
-    @Override
-    public void undeliverableMessage(InternalMessage message, ActorRef receiverRef) throws Exception {
-        InternalMessage undeliverableMessage;
-        if (message instanceof TransientInternalMessage) {
-            undeliverableMessage = new TransientInternalMessage(receiverRef, message.getSender(), message.getPayload(null), true);
-        } else {
-            undeliverableMessage = new InternalMessageImpl(receiverRef,
-                    message.getSender(),
-                    message.getPayload(),
-                    message.getPayloadClass(),
-                    message.isDurable(),
-                    true,
-                    message.getTimeout());
-        }
-        messageQueue.offer(undeliverableMessage);
     }
 
     @Override
@@ -251,7 +178,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                 } catch(Exception e) {
                     // @todo: determine if this is a recoverable error case or just a programming error
                     messageHandlerEventListener.onError(internalMessage,e);
-                    logger.error(String.format("Exception while handling InternalMessage for Shard [%s]; senderRef [%s], messageType [%s]", nodeKey.toString(), internalMessage.getSender().toString(), internalMessage.getPayloadClass()),e);
+                    logger.error(String.format("Exception while handling InternalMessage for Shard [%s]; senderRef [%s], messageType [%s]", getKey().toString(), internalMessage.getSender().toString(), internalMessage.getPayloadClass()),e);
                 }
 
             }
@@ -265,7 +192,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     private void createActor(CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         ActorRef ref = actorSystem.tempActorFor(createMessage.getActorId());
         PersistentActor<NodeKey> persistentActor =
-                new PersistentActor<>(nodeKey, actorSystem, actorSystem.getConfiguration().getVersion(), ref,
+                new PersistentActor<>(getKey(), actorSystem, actorSystem.getConfiguration().getVersion(), ref,
                                         createMessage.getAffinityKey(),
                                        (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass()),
                                        createMessage.getInitialState());
@@ -314,8 +241,15 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     }
 
     @Override
-    public boolean isLocal() {
-        return true;
+    public void init() throws Exception {
+        this.actorCache = actorCacheManager.create(nodeKey,this);
+        super.init();
+    }
+
+    @Override
+    public void destroy() {
+        actorCacheManager.destroy(actorCache);
+        super.destroy();
     }
 }
 

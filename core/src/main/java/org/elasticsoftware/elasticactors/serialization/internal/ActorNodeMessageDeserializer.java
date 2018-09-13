@@ -18,7 +18,7 @@ package org.elasticsoftware.elasticactors.serialization.internal;
 
 import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.cluster.SerializationRegistry;
+import org.elasticsoftware.elasticactors.cluster.MessageSerializationRegistry;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
@@ -31,11 +31,11 @@ import java.nio.ByteBuffer;
  */
 public final class ActorNodeMessageDeserializer implements MessageDeserializer<ActorNodeMessage> {
     private final ActorRefDeserializer actorRefDeserializer;
-    private final SerializationRegistry serializationRegistry;
+    private final MessageSerializationRegistry messageSerializationRegistry;
 
-    public ActorNodeMessageDeserializer(ActorRefDeserializer actorRefDeserializer, SerializationRegistry serializationRegistry) {
+    public ActorNodeMessageDeserializer(ActorRefDeserializer actorRefDeserializer, MessageSerializationRegistry messageSerializationRegistry) {
         this.actorRefDeserializer = actorRefDeserializer;
-        this.serializationRegistry = serializationRegistry;
+        this.messageSerializationRegistry = messageSerializationRegistry;
     }
 
     @Override
@@ -45,7 +45,7 @@ public final class ActorNodeMessageDeserializer implements MessageDeserializer<A
             ActorRef receiverRef = protobufMessage.getReceiver()!=null && !protobufMessage.getReceiver().isEmpty() ? actorRefDeserializer.deserialize(protobufMessage.getReceiver()) : null;
             String messageClassString = protobufMessage.getPayloadClass();
             Class<?> messageClass = Class.forName(messageClassString);
-            Object payloadObject = serializationRegistry.getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
+            Object payloadObject = messageSerializationRegistry.getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
             return new ActorNodeMessage(protobufMessage.getNodeId(), receiverRef, payloadObject, protobufMessage.getUndeliverable());
         } catch(Exception e) {
             throw new IOException(e);

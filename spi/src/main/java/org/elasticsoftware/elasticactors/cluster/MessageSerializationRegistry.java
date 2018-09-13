@@ -3,7 +3,7 @@ package org.elasticsoftware.elasticactors.cluster;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 
-public interface SerializationRegistry {
+public interface MessageSerializationRegistry {
     /**
      * Return the serializer for the given message type
      *

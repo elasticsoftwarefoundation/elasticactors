@@ -20,6 +20,7 @@ import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.MessageSerializationRegistry;
 import org.elasticsoftware.elasticactors.cluster.SerializationFrameworkRegistry;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
@@ -31,6 +32,19 @@ import java.io.IOException;
  * @author Joost van de Wijgerd
  */
 public final class SerializationTools {
+
+    public static Object deserializeMessage(MessageSerializationRegistry messageSerializationRegistry, InternalMessage internalMessage) throws Exception {
+        Class<?> messageClass = Class.forName(internalMessage.getPayloadClass());
+        MessageDeserializer<?> deserializer = messageSerializationRegistry.getDeserializer(messageClass);
+
+        if(deserializer != null) {
+            return internalMessage.getPayload(deserializer);
+        } else {
+            //@todo: throw a more targeted exception
+            throw new Exception(String.format("No Deserializer found for Message class %s", internalMessage.getPayloadClass()));
+        }
+    }
+
     public static Object deserializeMessage(InternalActorSystem actorSystem, InternalMessage internalMessage) throws Exception {
         Class<?> messageClass = Class.forName(internalMessage.getPayloadClass());
         MessageDeserializer<?> deserializer = actorSystem.getDeserializer(messageClass);
@@ -42,7 +56,6 @@ public final class SerializationTools {
             throw new Exception(String.format("No Deserializer found for Message class %s in ActorSystem [%s]",
                                               internalMessage.getPayloadClass(),actorSystem.getName()));
         }
-
     }
 
     public static ActorState deserializeActorState(SerializationFrameworkRegistry actorSystems, Class<? extends ElasticActor> actorClass, byte[] serializedState) throws IOException {

@@ -20,6 +20,8 @@ import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.MessageSerializationRegistry;
+import org.elasticsoftware.elasticactors.cluster.SerializationFrameworkRegistry;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
@@ -33,12 +35,11 @@ import java.nio.ByteBuffer;
  * @author Joost van de Wijgerd
  */
 public final class ActorNodeMessageSerializer implements MessageSerializer<ActorNodeMessage> {
-    private final InternalActorSystems actorSystems;
+    private final MessageSerializationRegistry messageSerializationRegistry;
 
-    public ActorNodeMessageSerializer(InternalActorSystems actorSystems) {
-        this.actorSystems = actorSystems;
+    public ActorNodeMessageSerializer(MessageSerializationRegistry messageSerializationRegistry) {
+        this.messageSerializationRegistry = messageSerializationRegistry;
     }
-
 
     @Override
     public ByteBuffer serialize(ActorNodeMessage actorNodeMessage) throws IOException {
@@ -47,19 +48,9 @@ public final class ActorNodeMessageSerializer implements MessageSerializer<Actor
         builder.setReceiver(ActorRefSerializer.get().serialize(actorNodeMessage.getReceiverRef()));
         builder.setNodeId(actorNodeMessage.getNodeId());
         builder.setPayloadClass(message.getClass().getName());
-        MessageSerializer serializer = actorSystems.get(null).getSerializer(message.getClass());
+        MessageSerializer serializer = messageSerializationRegistry.getSerializer(message.getClass());
         builder.setPayload(ByteString.copyFrom(serializer.serialize(message)));
         builder.setUndeliverable(actorNodeMessage.isUndeliverable());
         return ByteBuffer.wrap(builder.build().toByteArray());
-    }
-
-    private byte[] serializeState(String actorClass,ActorState state) throws IOException {
-        try {
-            return SerializationTools.serializeActorState(actorSystems,
-                                                          (Class<? extends ElasticActor>) Class.forName(actorClass),
-                                                          state);
-        } catch (ClassNotFoundException e) {
-            throw new IOException(e);
-        }
     }
 }

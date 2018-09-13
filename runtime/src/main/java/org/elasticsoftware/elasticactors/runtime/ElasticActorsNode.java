@@ -60,9 +60,8 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     private final String clusterName;
     private final String nodeId;
     private final InetAddress nodeAddress;
-    private final SystemSerializers systemSerializers = new SystemSerializers(this);
+    private final SystemSerializers systemSerializers;
     private final SystemDeserializers systemDeserializers;
-    private final InternalActorSystemConfiguration configuration;
     private final CountDownLatch waitLatch = new CountDownLatch(1);
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private final Cache<Class<? extends ElasticActor>,String> actorStateVersionCache = CacheBuilder.newBuilder().maximumSize(1024).build();
@@ -70,8 +69,6 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     private final Map<Class<? extends SerializationFramework>,SerializationFramework> serializationFrameworks = new HashMap<>();
     @Autowired
     private ApplicationContext applicationContext;
-    @Autowired
-    private Environment environment;
     private ClusterService clusterService;
     private final LinkedBlockingQueue<ShardReleasedMessage> shardReleasedMessages = new LinkedBlockingQueue<>();
     private final AtomicReference<List<PhysicalNode>> currentTopology = new AtomicReference<>(null);
@@ -87,8 +84,8 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
         this.clusterName = clusterName;
         this.nodeId = nodeId;
         this.nodeAddress = nodeAddress;
-        this.configuration = configuration;
-        this.systemDeserializers = new SystemDeserializers(this,this);
+        this.systemDeserializers = new SystemDeserializers(this, get(null),this);
+        this.systemSerializers = new SystemSerializers(this, get(null));
         this.actorRefCache = actorRefCache;
         this.actorRefTools = new ActorRefTools(this);
     }
@@ -102,8 +99,8 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
         this.clusterName = clusterName;
         this.nodeId = nodeId;
         this.nodeAddress = nodeAddress;
-        this.configuration = configuration;
-        this.systemDeserializers = new SystemDeserializers(this, actorRefFactory);
+        this.systemDeserializers = new SystemDeserializers(this, get(null), actorRefFactory);
+        this.systemSerializers = new SystemSerializers(this, get(null));
         this.actorRefCache = actorRefCache;
         this.actorRefTools = new ActorRefTools(this);
     }

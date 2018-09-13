@@ -1,5 +1,7 @@
 package org.elasticsoftware.elasticactors;
 
+import javax.annotation.Nullable;
+
 public interface ActorSystemClient {
     String getClusterName();
 
@@ -11,47 +13,20 @@ public interface ActorSystemClient {
     String getName();
 
     /**
-     * Create a new {@link ElasticActor} of the given type. There will be no state passed (null). This is
-     * an asynchronous method that could potentially fail. However the {@link ActorRef} is fully functional
-     * and can be used to send messages immediately. All messages are handled on the same thread and will be
-     * executed in order from the perspective of the receiving {@link ElasticActor}<br/>
-     * This is a idempotent method, when an actor with the same actorId already exists, the method will silently
-     * succeed. However the {@link ActorState} will NOT be overwritten.
+     * Create a Temporary Actor with the given initial {@link ActorState}. A Temp Actor is an {@link ElasticActor}
+     * instance that is annotated with {@link TempActor}. Temporary Actors are located on the Local ElasticActors
+     * node only and will not survive a restart of the Node. Temporary Actors are most commonly used to bridge between
+     * two systems, for instance within a Controller. It will implement a Reply Address.<br/>
+     * A Temporary Actor will get and actorId assigned by the Runtime. The resulting {@link ActorRef} can be stored however
+     * due to the ephemeral nature of the Temporary Actor this is not advisable.
      *
-     * This method takes the name of the actor class as a parameter. This is mainly handy in the case where actors need
-     * to be created on a remote ActorSystem. There is no strong type checking on the actor class and also no exception
-     * will be thrown if the class doesn't exist on the remote end.
-     *
-     * When you are dealing with local actors, always prefer the stronger typed version of this method
-     *
-     * @param actorId           the actorId of the actor to create
-     * @param actorClassName    the type class name of the actor. Needs to be annotated with {@link Actor}
-     * @return                  the {@link ActorRef} pointing to the newly created actor
-     * @throws Exception        when something unexpected happens
+     * @param actorClass    the type class of the actor. Needs to be annotated with {@link TempActor}
+     * @param initialState  the initial state, should be of type {@link org.elasticsoftware.elasticactors.TempActor#stateClass()}
+     * @param <T>           generic type info
+     * @throws Exception    when something unexpected happens
+     * @return              the {@link ActorRef} pointing to the newly created actor
      */
-    ActorRef actorOf(String actorId, String actorClassName) throws Exception;
-
-    /**
-     * Create a new {@link ElasticActor} of the given type with the given initial {@link ActorState}. This is
-     * an asynchronous method that could potentially fail. However the {@link ActorRef} is fully functional
-     * and can be used to send messages immediately. All messages are handled on the same thread and will be
-     * executed in order from the perspective of the receiving {@link ElasticActor}<br/>
-     * This is a idempotent method, when an actor with the same actorId already exists, the method will silently
-     * succeed. However the {@link ActorState} will NOT be overwritten.
-     *
-     * This method takes the name of the actor class as a parameter. This is mainly handy in the case where actors need
-     * to be created on a remote ActorSystem. There is no strong type checking on the actor class and also no exception
-     * will be thrown if the class doesn't exist on the remote end.
-     *
-     * When you are dealing with local actors, always prefer the stronger typed version of this method
-     *
-     * @param actorId           the actorId of the actor to create
-     * @param actorClassName    the type class name of the actor. Needs to be annotated with {@link Actor}
-     * @param initialState      the initial state, should be of type {@link org.elasticsoftware.elasticactors.Actor#stateClass()}
-     * @return                  the {@link ActorRef} pointing to the newly created actor
-     * @throws Exception        when something unexpected happens
-     */
-    ActorRef actorOf(String actorId, String actorClassName, ActorState initialState) throws Exception;
+    <T> ActorRef tempActorOf(Class<T> actorClass,@Nullable ActorState initialState) throws Exception;
 
     /**
      * Return an {@link ActorRef} to a (Standard) Actor. There is no guarantee that the Actor actually exists. If you need
@@ -66,13 +41,4 @@ public interface ActorSystemClient {
      */
     ActorRef actorFor(String actorId);
 
-    /**
-     * Stop (destroy) the Actor that behind the {@link ActorRef}. Cannot be used with Service Actors. This is a
-     * irreversible operation. The state will be destroyed and the {@link org.elasticsoftware.elasticactors.ActorRef#getActorId()}
-     * will be deleted from the registry.
-     *
-     * @param actorRef          the {@link ActorRef} to destroy
-     * @throws Exception        when something unexpected happens
-     */
-    void stop(ActorRef actorRef) throws Exception;
 }

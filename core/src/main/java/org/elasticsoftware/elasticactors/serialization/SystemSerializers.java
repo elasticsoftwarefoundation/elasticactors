@@ -17,6 +17,8 @@
 package org.elasticsoftware.elasticactors.serialization;
 
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.MessageSerializationRegistry;
+import org.elasticsoftware.elasticactors.cluster.SerializationFrameworkRegistry;
 import org.elasticsoftware.elasticactors.messaging.internal.*;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.*;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
@@ -32,12 +34,13 @@ import java.util.Map;
 public final class SystemSerializers {
     private final Map<Class,MessageSerializer> systemSerializers = new HashMap<Class,MessageSerializer>();
 
-    public SystemSerializers(InternalActorSystems cluster) {
-        systemSerializers.put(CreateActorMessage.class,new CreateActorMessageSerializer(cluster));
+    public SystemSerializers(SerializationFrameworkRegistry serializationFrameworkRegistry,
+                             MessageSerializationRegistry messageSerializationRegistry) {
+        systemSerializers.put(CreateActorMessage.class,new CreateActorMessageSerializer(serializationFrameworkRegistry));
         systemSerializers.put(DestroyActorMessage.class,new DestroyActorMessageSerializer());
         systemSerializers.put(ActivateActorMessage.class,new ActivateActorMessageSerializer());
         systemSerializers.put(CancelScheduledMessageMessage.class,new CancelScheduleMessageMessageSerializer());
-        systemSerializers.put(ActorNodeMessage.class, new ActorNodeMessageSerializer(cluster));
+        systemSerializers.put(ActorNodeMessage.class, new ActorNodeMessageSerializer(messageSerializationRegistry));
         systemSerializers.put(PersistActorMessage.class, new PersistActorMessageSerializer());
         //reactive streams protocol
         systemSerializers.put(CancelMessage.class, new CancelMessageSerializer());

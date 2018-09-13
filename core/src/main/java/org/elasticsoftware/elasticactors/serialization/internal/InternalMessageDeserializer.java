@@ -18,7 +18,7 @@ package org.elasticsoftware.elasticactors.serialization.internal;
 
 import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.cluster.SerializationRegistry;
+import org.elasticsoftware.elasticactors.cluster.MessageSerializationRegistry;
 import org.elasticsoftware.elasticactors.messaging.ImmutableInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
@@ -36,11 +36,11 @@ import static org.elasticsoftware.elasticactors.messaging.UUIDTools.toUUID;
  */
 public final class InternalMessageDeserializer implements Deserializer<byte[],InternalMessage> {
     private final ActorRefDeserializer actorRefDeserializer;
-    private final SerializationRegistry serializationRegistry;
+    private final MessageSerializationRegistry messageSerializationRegistry;
 
-    public InternalMessageDeserializer(ActorRefDeserializer actorRefDeserializer, SerializationRegistry serializationRegistry) {
+    public InternalMessageDeserializer(ActorRefDeserializer actorRefDeserializer, MessageSerializationRegistry messageSerializationRegistry) {
         this.actorRefDeserializer = actorRefDeserializer;
-        this.serializationRegistry = serializationRegistry;
+        this.messageSerializationRegistry = messageSerializationRegistry;
     }
 
     @Override
@@ -71,7 +71,7 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
         if(messageClass == null) {
             return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable, timeout);
         } else {
-            Object payloadObject = serializationRegistry.getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
+            Object payloadObject = messageSerializationRegistry.getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
             return new ImmutableInternalMessage(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), payloadObject, durable, undeliverable, timeout);
         }
     }

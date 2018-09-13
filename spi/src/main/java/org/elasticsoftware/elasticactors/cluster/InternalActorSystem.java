@@ -18,15 +18,13 @@ package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.scheduler.InternalScheduler;
-import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 
 import java.util.List;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface InternalActorSystem extends ActorSystem, ShardAccessor, SerializationRegistry {
+public interface InternalActorSystem extends ActorSystem, ShardAccessor, MessageSerializationRegistry {
 
     InternalActorSystemConfiguration getConfiguration();
 
