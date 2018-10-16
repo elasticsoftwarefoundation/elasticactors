@@ -40,21 +40,13 @@ public class UUIDToolsTest {
         // warm it up
         for (int i = 0; i < 1000; i++) {
             UUIDTools.createTimeBasedUUID();
-            UUIDTools.createTimeBasedUUIDOld();
         }
-        // now time old
+        // now time
         long startTime = System.nanoTime();
-        for (int i = 0; i < 10000; i++) {
-            UUIDTools.createTimeBasedUUIDOld();
-        }
-        long runningTime = System.nanoTime() - startTime;
-        System.out.println("Old implementation took "+runningTime/10000+" nanos per invocation");
-        // now time old
-        startTime = System.nanoTime();
         for (int i = 0; i < 10000; i++) {
             UUIDTools.createTimeBasedUUID();
         }
-        runningTime = System.nanoTime() - startTime;
+        long runningTime = System.nanoTime() - startTime;
         //
         System.out.println("New implementation took "+runningTime/10000+" nanos per invocation");
     }

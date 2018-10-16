@@ -69,18 +69,8 @@ public class TestConfiguration {
     private Environment env;
     @Autowired
     private ResourceLoader resourceLoader;
-    private InternalActorSystemConfiguration configuration;
     private final NodeSelectorFactory nodeSelectorFactory = new HashingNodeSelectorFactory();
     private final PhysicalNode localNode = new PhysicalNodeImpl(UUIDTools.createRandomUUID().toString(), InetAddress.getLoopbackAddress(), true);
-
-    @PostConstruct
-    public void init() throws IOException {
-        // get the yaml resource
-        Resource configResource = resourceLoader.getResource(env.getProperty("ea.node.config.location","classpath:ea-test.yaml"));
-        // yaml mapper
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-        configuration = objectMapper.readValue(configResource.getInputStream(), DefaultConfiguration.class);
-    }
 
     @Bean(name = "systemInitializer")
     public SystemInitializer createSystemInitializer(LocalActorSystemInstance localActorSystemInstance, ClusterService clusterService) {
@@ -89,7 +79,7 @@ public class TestConfiguration {
     }
 
     @DependsOn("configuration") @Bean(name = {"internalActorSystem"})
-    public LocalActorSystemInstance createLocalActorSystemInstance(InternalActorSystems internalActorSystems) {
+    public LocalActorSystemInstance createLocalActorSystemInstance(InternalActorSystems internalActorSystems, InternalActorSystemConfiguration configuration) {
         return new LocalActorSystemInstance(localNode,internalActorSystems,configuration,nodeSelectorFactory);
     }
 
@@ -100,8 +90,12 @@ public class TestConfiguration {
     }
 
     @Bean(name = {"configuration"})
-    public ActorSystemConfiguration getConfiguration() {
-        return configuration;
+    public ActorSystemConfiguration getConfiguration() throws IOException {
+        // get the yaml resource
+        Resource configResource = resourceLoader.getResource(env.getProperty("ea.node.config.location","classpath:ea-test.yaml"));
+        // yaml mapper
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        return objectMapper.readValue(configResource.getInputStream(), DefaultConfiguration.class);
     }
 
     @Bean(name = {"objectMapper"})
