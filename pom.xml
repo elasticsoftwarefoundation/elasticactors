@@ -31,14 +31,14 @@
         <cassandra.version>3.9</cassandra.version>
         <cassandra.version.md5>40f49dc7dbcd49e2e18e2dead7dd074a</cassandra.version.md5>
         <hectorclient.version>2.0-0</hectorclient.version>
-        <spring.version>5.0.8.RELEASE</spring.version>
-        <aspectj.version>1.8.10</aspectj.version>
+        <spring.version>5.1.1.RELEASE</spring.version>
+        <aspectj.version>1.9.1</aspectj.version>
         <protobuf.version>3.5.1</protobuf.version>
         <grizzly.version>2.3.22</grizzly.version>
         <log4j.version>2.8.2</log4j.version>
         <!-- the cassandra driver has a hard dependency on this version -->
         <guava.version>19.0</guava.version>
-        <jackson.version>2.9.6</jackson.version>
+        <jackson.version>2.9.7</jackson.version>
         <shoal.version>1.6.50</shoal.version>
         <slf4j.version>1.7.22</slf4j.version>
         <reflections.version>0.9.10</reflections.version>
@@ -54,7 +54,7 @@
         <disruptor.version>3.3.6</disruptor.version>
         <chronicle-map.version>3.14.4</chronicle-map.version>
         <elasticsearch.version>5.2.1</elasticsearch.version>
-        <kubernetes-client.version>3.1.12</kubernetes-client.version>
+        <kubernetes-client.version>4.0.5</kubernetes-client.version>
         <!-- testing -->
         <testng-version>6.10</testng-version>
         <mockito.version>1.9.5</mockito.version>
