@@ -16,10 +16,7 @@
 
 package org.elasticsoftware.elasticactors.rabbitmq;
 
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.AlreadyClosedException;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.MessageProperties;
+import com.rabbitmq.client.*;
 import net.jodah.lyra.event.DefaultChannelListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,7 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * @author Joost van de Wijgerd
  */
-public final class RemoteMessageQueue extends DefaultChannelListener implements MessageQueue {
+public final class RemoteMessageQueue implements MessageQueue, RecoveryListener {
     private final Logger logger;
     private final Channel producerChannel;
     private final String exchangeName;
@@ -108,7 +105,7 @@ public final class RemoteMessageQueue extends DefaultChannelListener implements 
     }
 
     @Override
-    public void onRecovery(Channel channel) {
+    public void handleRecovery(Recoverable recoverable) {
         // reset the recovery flag
         if(this.recovering.compareAndSet(true,false)) {
             logger.info("RabbitMQ Channel recovered");
@@ -116,8 +113,7 @@ public final class RemoteMessageQueue extends DefaultChannelListener implements 
     }
 
     @Override
-    public void onRecoveryFailure(Channel channel, Throwable failure) {
-        // log an error
-        logger.error("RabbitMQ Channel recovery failed");
+    public void handleRecoveryStarted(Recoverable recoverable) {
+
     }
 }

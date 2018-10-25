@@ -17,13 +17,13 @@
 package org.elasticsoftware.elasticactors.rabbitmq;
 
 import com.rabbitmq.client.Channel;
-import net.jodah.lyra.event.ChannelListener;
+import com.rabbitmq.client.RecoveryListener;
 
 /**
  * @author Joost van de Wijgerd
  */
 public interface ChannelListenerRegistry {
-    void addChannelListener(Channel channel,ChannelListener channelListener);
+    void addChannelListener(Channel channel, RecoveryListener channelListener);
 
-    void removeChannelListener(Channel channel, ChannelListener channelListener);
+    void removeChannelListener(Channel channel, RecoveryListener channelListener);
 }

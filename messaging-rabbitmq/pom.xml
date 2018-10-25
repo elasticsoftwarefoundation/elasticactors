@@ -48,10 +48,5 @@
           <artifactId>amqp-client</artifactId>
           <version>${rabbitmq.version}</version>
         </dependency>
-        <dependency>
-            <groupId>net.jodah</groupId>
-            <artifactId>lyra</artifactId>
-            <version>${lyra.version}</version>
-        </dependency>
     </dependencies>
 </project>

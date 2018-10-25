@@ -39,7 +39,7 @@ import static java.lang.String.format;
 /**
  * @author Joost van de Wijgerd
  */
-public final class LocalMessageQueue extends DefaultConsumer implements MessageQueue, ChannelListener {
+public final class LocalMessageQueue extends DefaultConsumer implements MessageQueue, RecoveryListener {
     private static final Logger logger = LogManager.getLogger(LocalMessageQueue.class);
     private final Channel consumerChannel;
     private final Channel producerChannel;
@@ -73,6 +73,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
         this.internalMessageDeserializer = internalMessageDeserializer;
         this.messageAcker = messageAcker;
         this.channelListenerRegistry = channelListenerRegistry;
+        ((RecoverableChannel) this.producerChannel).addRecoveryListener(this);
         this.channelListenerRegistry.addChannelListener(this.producerChannel,this);
     }
 
@@ -182,27 +183,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
     }
 
     @Override
-    public void onCreate(Channel channel) {
-        // ignore
-    }
-
-    @Override
-    public void onCreateFailure(Throwable failure) {
-        // ignore
-    }
-
-    @Override
-    public void onRecovery(Channel channel) {
-
-    }
-
-    @Override
-    public void onRecoveryStarted(Channel channel) {
-
-    }
-
-    @Override
-    public void onRecoveryCompleted(Channel channel) {
+    public void handleRecovery(Recoverable recoverable) {
         // reset the recovery flag
         if(this.recovering.compareAndSet(true,false)) {
             logger.info("RabbitMQ Channel recovered");
@@ -210,9 +191,8 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
     }
 
     @Override
-    public void onRecoveryFailure(Channel channel, Throwable failure) {
-        // log an error
-        logger.error("RabbitMQ Channel recovery failed");
+    public void handleRecoveryStarted(Recoverable recoverable) {
+
     }
 
     private static final class RabbitMQMessageHandler implements ThreadBoundRunnable<String> {

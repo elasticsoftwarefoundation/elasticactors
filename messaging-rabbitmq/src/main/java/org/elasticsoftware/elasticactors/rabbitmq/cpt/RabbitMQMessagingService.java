@@ -62,7 +62,7 @@ import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.*;
 /**
  * @author Joost van de Wijgerd
  */
-public final class RabbitMQMessagingService implements ChannelListenerRegistry, RabbitMQMessagingServiceInterface, ChannelListener {
+public final class RabbitMQMessagingService implements ChannelListenerRegistry, RabbitMQMessagingServiceInterface, RecoveryListener {
     private static final Logger logger = LogManager.getLogger(RabbitMQMessagingService.class);
     private final ConnectionFactory connectionFactory = new ConnectionFactory();
     private final String rabbitmqHosts;
@@ -81,7 +81,7 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
     private final String username;
     private final String password;
     private final InternalMessageDeserializer internalMessageDeserializer;
-    private final ConcurrentMap<Channel,Set<ChannelListener>> channelListenerRegistry = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Channel,Set<RecoveryListener>> channelListenerRegistry = new ConcurrentHashMap<>();
     private final MessageAcker.Type ackType;
     private MessageAcker messageAcker;
     private final Integer prefetchCount;
@@ -117,21 +117,16 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
         connectionFactory.setConnectionTimeout(1000);
         // seconds
         connectionFactory.setRequestedHeartbeat(4);
-        // lyra reconnect logic
-        Config config = new Config()
-                .withRecoveryPolicy(new RecoveryPolicy()
-                        .withMaxAttempts(-1)
-                        .withInterval(Duration.seconds(1)))
-                .withChannelListeners(this);
 
-        ConnectionOptions connectionOptions = new ConnectionOptions(connectionFactory)
-                .withHosts(StringUtils.commaDelimitedListToStringArray(rabbitmqHosts))
-                .withPort(rabbitmqPort)
-                .withUsername(username)
-                .withPassword(password);
+        connectionFactory.setAutomaticRecoveryEnabled(true);
+        connectionFactory.setUsername(username);
+        connectionFactory.setPassword(password);
+        connectionFactory.setPort(rabbitmqPort);
+
+        connectionFactory.setNetworkRecoveryInterval(1000);
+
         // create single connection
-        //clientConnection = connectionFactory.newConnection(Address.parseAddresses(rabbitmqHosts));
-        clientConnection = Connections.create(connectionOptions,config);
+        clientConnection = connectionFactory.newConnection(Address.parseAddresses(rabbitmqHosts));
         // create a seperate consumer channel
         consumerChannel = clientConnection.createChannel();
         consumerChannel.basicQos(prefetchCount);
@@ -184,10 +179,10 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
     }
 
     @Override
-    public void addChannelListener(final Channel channel,final ChannelListener channelListener) {
-        Set<ChannelListener> listeners = this.channelListenerRegistry.get(channel);
+    public void addChannelListener(final Channel channel,final RecoveryListener channelListener) {
+        Set<RecoveryListener> listeners = this.channelListenerRegistry.get(channel);
         if(listeners == null) {
-            listeners = Collections.newSetFromMap(new ConcurrentHashMap<ChannelListener, Boolean>());
+            listeners = Collections.newSetFromMap(new ConcurrentHashMap<>());
             if(this.channelListenerRegistry.putIfAbsent(channel,listeners) != null) {
                 // was already created
                 listeners = this.channelListenerRegistry.get(channel);
@@ -197,22 +192,13 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
     }
 
     @Override
-    public void removeChannelListener(final Channel channel,final ChannelListener channelListener) {
-        final Set<ChannelListener> listeners = this.channelListenerRegistry.get(channel);
+    public void removeChannelListener(final Channel channel,final RecoveryListener channelListener) {
+        final Set<RecoveryListener> listeners = this.channelListenerRegistry.get(channel);
         if(listeners != null) {
             listeners.remove(channelListener);
         }
     }
 
-    @Override
-    public void onCreate(final Channel channel) {
-        propagateChannelEvent(channel, c -> c.onCreate(channel), "onCreate");
-    }
-
-    @Override
-    public void onCreateFailure(final Throwable failure) {
-        logger.error("Channel creation failed, reason: " + System.lineSeparator() + Throwables.getStackTraceAsString(failure));
-    }
 
     @Override
     public void onRecoveryStarted(final Channel channel) {
