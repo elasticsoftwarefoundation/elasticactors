@@ -16,7 +16,8 @@
 
 package org.elasticsoftware.elasticactors.messaging;
 
-import com.eaio.uuid.UUIDGen;
+import com.fasterxml.uuid.Generators;
+import com.fasterxml.uuid.impl.TimeBasedGenerator;
 
 import java.util.Comparator;
 import java.util.UUID;
@@ -25,6 +26,7 @@ import java.util.UUID;
  * @author Joost van de Wijgerd
  */
 public final class UUIDTools {
+    private static final TimeBasedGenerator generator = Generators.timeBasedGenerator();
 
     private UUIDTools() {}
 
@@ -66,13 +68,7 @@ public final class UUIDTools {
     }
 
     public static UUID createTimeBasedUUID() {
-        return new java.util.UUID(UUIDGen.newTime(),com.eaio.uuid.UUIDGen.getClockSeqAndNode());
-    }
-
-    // not fast enough!
-    @Deprecated
-    public static UUID createTimeBasedUUIDOld() {
-        return java.util.UUID.fromString(new com.eaio.uuid.UUID(UUIDGen.newTime(), com.eaio.uuid.UUIDGen.getClockSeqAndNode()).toString());
+        return generator.generate();
     }
 
     public static UUID createRandomUUID() {

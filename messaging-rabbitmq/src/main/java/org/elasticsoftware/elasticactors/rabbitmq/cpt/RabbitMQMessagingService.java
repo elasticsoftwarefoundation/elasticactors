@@ -117,6 +117,9 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
         connectionFactory.setConnectionTimeout(1000);
         // seconds
         connectionFactory.setRequestedHeartbeat(4);
+        // turn off recovery as we are using Lyra
+        connectionFactory.setAutomaticRecoveryEnabled(false);
+        connectionFactory.setTopologyRecoveryEnabled(false);
         // lyra reconnect logic
         Config config = new Config()
                 .withRecoveryPolicy(new RecoveryPolicy()

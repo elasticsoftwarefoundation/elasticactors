@@ -1,4 +1,4 @@
-syntax = "proto3";
+syntax = "proto2";
 
 package org.elasticsoftware.elasticactors.serialization.protobuf;
 
@@ -13,52 +13,52 @@ option optimize_for = SPEED;
 //        used in this protocol buffer, not even by deleted fields).
 
 message InternalMessage {
-    string receiver = 1;
-    string sender = 2;
-    string payloadClass = 3;
-    bytes payload = 4;
-    bytes id = 5;
-    bool durable = 6;
-    bool undeliverable = 7;
+    optional string receiver = 1;
+    optional string sender = 2;
+    optional string payloadClass = 3;
+    optional bytes payload = 4;
+    optional bytes id = 5;
+    optional bool durable = 6;
+    optional bool undeliverable = 7;
     repeated string receivers = 8;
-    uint32 timeout = 9;
+    optional uint32 timeout = 9;
 }
 
 message ScheduledMessage {
-    bytes id = 1;
-    uint64 fireTime = 2;
-    string receiver = 3;
-    string sender = 4;
-    string messageClass = 5;
-    bytes message = 6;
+    optional bytes id = 1;
+    optional uint64 fireTime = 2;
+    optional string receiver = 3;
+    optional string sender = 4;
+    optional string messageClass = 5;
+    optional bytes message = 6;
 }
 
 message ActorSystemEventListener {
-    string actorId = 1;
-    string messageClass = 2;
-    bytes message = 3;
+    optional string actorId = 1;
+    optional string messageClass = 2;
+    optional bytes message = 3;
 }
 
 message PersistentActor {
-    string actorRef = 1;
-    string actorClass = 2;
-    string actorSystemVersion = 3;
-    bytes state = 4;
-    string shardKey = 5;
+    optional string actorRef = 1;
+    optional string actorClass = 2;
+    optional string actorSystemVersion = 3;
+    optional bytes state = 4;
+    optional string shardKey = 5;
     repeated Subscriber subscribers = 6;
     repeated Subscription subscriptions = 7;
 }
 
 message Subscriber {
-    string subscriberRef = 1;
-    string messageName = 2;
-    uint64 leases = 3;
+    optional string subscriberRef = 1;
+    optional string messageName = 2;
+    optional uint64 leases = 3;
 }
 
 message Subscription {
-    string publisherRef = 1;
-    string messageName = 2;
-    bool cancelled = 3;
+    optional string publisherRef = 1;
+    optional string messageName = 2;
+    optional bool cancelled = 3;
 }
 
 enum ActorType {
@@ -68,42 +68,42 @@ enum ActorType {
 }
 
 message CreateActorMessage {
-    string actorId = 1;
-    bytes initialState = 2;
-    string actorClass = 3;
-    string actorSystem = 4;
-    ActorType type = 5;
-    string affinityKey = 6;
+    optional string actorId = 1;
+    optional bytes initialState = 2;
+    optional string actorClass = 3;
+    optional string actorSystem = 4;
+    optional ActorType type = 5;
+    optional string affinityKey = 6;
 }
 
 message DestroyActorMessage {
-    string actorRef = 1;
+    optional string actorRef = 1;
 }
 
 message ActivateActorMessage {
-    string actorSystem = 1;
-    string actorId = 2;
-    ActorType type = 3;
+    optional string actorSystem = 1;
+    optional string actorId = 2;
+    optional ActorType type = 3;
 }
 
 message WireMessage {
-    string queueName = 1;
-    bytes internalMessage = 2;
+    optional string queueName = 1;
+    optional bytes internalMessage = 2;
 }
 
 message CancelScheduledMessageMessage {
-    bytes messageId = 1;
-    uint64 fireTime = 2;
+    optional bytes messageId = 1;
+    optional uint64 fireTime = 2;
 }
 
 message ActorNodeMessage {
-    string receiver = 1;
-    string nodeId = 2;
-    string payloadClass = 3;
-    bytes payload = 4;
-    bool undeliverable = 5;
+    optional string receiver = 1;
+    optional string nodeId = 2;
+    optional string payloadClass = 3;
+    optional bytes payload = 4;
+    optional bool undeliverable = 5;
 }
 
 message PersistActorMessage {
-    string actorRef = 1;
+    optional string actorRef = 1;
 }

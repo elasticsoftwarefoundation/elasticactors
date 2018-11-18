@@ -19,20 +19,24 @@ public final class Clustering {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>.org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
      */
     boolean hasShardReleased();
     /**
-     * <code>.org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
      */
-    org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased getShardReleased();
+    ShardReleased getShardReleased();
     /**
-     * <code>.org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
      */
-    org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleasedOrBuilder getShardReleasedOrBuilder();
+    ShardReleasedOrBuilder getShardReleasedOrBuilder();
 
     /**
-     * <code>int64 viewId = 2;</code>
+     * <code>optional int64 viewId = 2;</code>
+     */
+    boolean hasViewId();
+    /**
+     * <code>optional int64 viewId = 2;</code>
      */
     long getViewId();
   }
@@ -77,27 +81,27 @@ public final class Clustering {
               done = true;
               break;
             default: {
-              if (!parseUnknownFieldProto3(
+              if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
             }
             case 10: {
-              org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased.Builder subBuilder = null;
-              if (shardReleased_ != null) {
+              ShardReleased.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = shardReleased_.toBuilder();
               }
-              shardReleased_ = input.readMessage(org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased.parser(), extensionRegistry);
+              shardReleased_ = input.readMessage(ShardReleased.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(shardReleased_);
                 shardReleased_ = subBuilder.buildPartial();
               }
-
+              bitField0_ |= 0x00000001;
               break;
             }
             case 16: {
-
+              bitField0_ |= 0x00000002;
               viewId_ = input.readInt64();
               break;
             }
@@ -115,41 +119,48 @@ public final class Clustering {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ClusterMessage_descriptor;
+      return Clustering.internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ClusterMessage_descriptor;
     }
 
     protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ClusterMessage_fieldAccessorTable
+      return Clustering.internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ClusterMessage_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage.class, org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage.Builder.class);
+              ClusterMessage.class, Builder.class);
     }
 
+    private int bitField0_;
     public static final int SHARDRELEASED_FIELD_NUMBER = 1;
-    private org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased shardReleased_;
+    private ShardReleased shardReleased_;
     /**
-     * <code>.org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
      */
     public boolean hasShardReleased() {
-      return shardReleased_ != null;
+      return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>.org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
      */
-    public org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased getShardReleased() {
-      return shardReleased_ == null ? org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased.getDefaultInstance() : shardReleased_;
+    public ShardReleased getShardReleased() {
+      return shardReleased_ == null ? ShardReleased.getDefaultInstance() : shardReleased_;
     }
     /**
-     * <code>.org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
      */
-    public org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleasedOrBuilder getShardReleasedOrBuilder() {
-      return getShardReleased();
+    public ShardReleasedOrBuilder getShardReleasedOrBuilder() {
+      return shardReleased_ == null ? ShardReleased.getDefaultInstance() : shardReleased_;
     }
 
     public static final int VIEWID_FIELD_NUMBER = 2;
     private long viewId_;
     /**
-     * <code>int64 viewId = 2;</code>
+     * <code>optional int64 viewId = 2;</code>
+     */
+    public boolean hasViewId() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional int64 viewId = 2;</code>
      */
     public long getViewId() {
       return viewId_;
@@ -167,10 +178,10 @@ public final class Clustering {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (shardReleased_ != null) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeMessage(1, getShardReleased());
       }
-      if (viewId_ != 0L) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeInt64(2, viewId_);
       }
       unknownFields.writeTo(output);
@@ -181,11 +192,11 @@ public final class Clustering {
       if (size != -1) return size;
 
       size = 0;
-      if (shardReleased_ != null) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getShardReleased());
       }
-      if (viewId_ != 0L) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(2, viewId_);
       }
@@ -199,10 +210,10 @@ public final class Clustering {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage)) {
+      if (!(obj instanceof ClusterMessage)) {
         return super.equals(obj);
       }
-      org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage other = (org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage) obj;
+      ClusterMessage other = (ClusterMessage) obj;
 
       boolean result = true;
       result = result && (hasShardReleased() == other.hasShardReleased());
@@ -210,8 +221,11 @@ public final class Clustering {
         result = result && getShardReleased()
             .equals(other.getShardReleased());
       }
-      result = result && (getViewId()
-          == other.getViewId());
+      result = result && (hasViewId() == other.hasViewId());
+      if (hasViewId()) {
+        result = result && (getViewId()
+            == other.getViewId());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -227,77 +241,79 @@ public final class Clustering {
         hash = (37 * hash) + SHARDRELEASED_FIELD_NUMBER;
         hash = (53 * hash) + getShardReleased().hashCode();
       }
-      hash = (37 * hash) + VIEWID_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-          getViewId());
+      if (hasViewId()) {
+        hash = (37 * hash) + VIEWID_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getViewId());
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
     }
 
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage parseFrom(
+    public static ClusterMessage parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage parseFrom(
+    public static ClusterMessage parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage parseFrom(
+    public static ClusterMessage parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage parseFrom(
+    public static ClusterMessage parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage parseFrom(byte[] data)
+    public static ClusterMessage parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage parseFrom(
+    public static ClusterMessage parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage parseFrom(java.io.InputStream input)
+    public static ClusterMessage parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage parseFrom(
+    public static ClusterMessage parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage parseDelimitedFrom(java.io.InputStream input)
+    public static ClusterMessage parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage parseDelimitedFrom(
+    public static ClusterMessage parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage parseFrom(
+    public static ClusterMessage parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage parseFrom(
+    public static ClusterMessage parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -309,7 +325,7 @@ public final class Clustering {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage prototype) {
+    public static Builder newBuilder(ClusterMessage prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() {
@@ -329,17 +345,17 @@ public final class Clustering {
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:org.elasticsoftware.elasticactors.cluster.protobuf.ClusterMessage)
-        org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessageOrBuilder {
+        ClusterMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ClusterMessage_descriptor;
+        return Clustering.internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ClusterMessage_descriptor;
       }
 
       protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ClusterMessage_fieldAccessorTable
+        return Clustering.internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ClusterMessage_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage.class, org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage.Builder.class);
+                ClusterMessage.class, Builder.class);
       }
 
       // Construct using org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage.newBuilder()
@@ -355,6 +371,7 @@ public final class Clustering {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
+          getShardReleasedFieldBuilder();
         }
       }
       public Builder clear() {
@@ -362,39 +379,48 @@ public final class Clustering {
         if (shardReleasedBuilder_ == null) {
           shardReleased_ = null;
         } else {
-          shardReleased_ = null;
-          shardReleasedBuilder_ = null;
+          shardReleasedBuilder_.clear();
         }
+        bitField0_ = (bitField0_ & ~0x00000001);
         viewId_ = 0L;
-
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ClusterMessage_descriptor;
+        return Clustering.internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ClusterMessage_descriptor;
       }
 
-      public org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage getDefaultInstanceForType() {
-        return getDefaultInstance();
+      public ClusterMessage getDefaultInstanceForType() {
+        return ClusterMessage.getDefaultInstance();
       }
 
-      public org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage build() {
-        org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage result = buildPartial();
+      public ClusterMessage build() {
+        ClusterMessage result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage buildPartial() {
-        org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage result = new org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage(this);
+      public ClusterMessage buildPartial() {
+        ClusterMessage result = new ClusterMessage(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
         if (shardReleasedBuilder_ == null) {
           result.shardReleased_ = shardReleased_;
         } else {
           result.shardReleased_ = shardReleasedBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
         result.viewId_ = viewId_;
+        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -426,20 +452,20 @@ public final class Clustering {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage) {
-          return mergeFrom((org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage)other);
+        if (other instanceof ClusterMessage) {
+          return mergeFrom((ClusterMessage)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage other) {
-        if (other == getDefaultInstance()) return this;
+      public Builder mergeFrom(ClusterMessage other) {
+        if (other == ClusterMessage.getDefaultInstance()) return this;
         if (other.hasShardReleased()) {
           mergeShardReleased(other.getShardReleased());
         }
-        if (other.getViewId() != 0L) {
+        if (other.hasViewId()) {
           setViewId(other.getViewId());
         }
         this.mergeUnknownFields(other.unknownFields);
@@ -455,11 +481,11 @@ public final class Clustering {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage parsedMessage = null;
+        ClusterMessage parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage) e.getUnfinishedMessage();
+          parsedMessage = (ClusterMessage) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -468,30 +494,31 @@ public final class Clustering {
         }
         return this;
       }
+      private int bitField0_;
 
-      private org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased shardReleased_ = null;
+      private ShardReleased shardReleased_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased, org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased.Builder, org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleasedOrBuilder> shardReleasedBuilder_;
+          ShardReleased, ShardReleased.Builder, ShardReleasedOrBuilder> shardReleasedBuilder_;
       /**
-       * <code>.org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
+       * <code>optional .org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
        */
       public boolean hasShardReleased() {
-        return shardReleasedBuilder_ != null || shardReleased_ != null;
+        return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>.org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
+       * <code>optional .org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
        */
-      public org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased getShardReleased() {
+      public ShardReleased getShardReleased() {
         if (shardReleasedBuilder_ == null) {
-          return shardReleased_ == null ? org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased.getDefaultInstance() : shardReleased_;
+          return shardReleased_ == null ? ShardReleased.getDefaultInstance() : shardReleased_;
         } else {
           return shardReleasedBuilder_.getMessage();
         }
       }
       /**
-       * <code>.org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
+       * <code>optional .org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
        */
-      public Builder setShardReleased(org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased value) {
+      public Builder setShardReleased(ShardReleased value) {
         if (shardReleasedBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -501,31 +528,33 @@ public final class Clustering {
         } else {
           shardReleasedBuilder_.setMessage(value);
         }
-
+        bitField0_ |= 0x00000001;
         return this;
       }
       /**
-       * <code>.org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
+       * <code>optional .org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
        */
       public Builder setShardReleased(
-          org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased.Builder builderForValue) {
+          ShardReleased.Builder builderForValue) {
         if (shardReleasedBuilder_ == null) {
           shardReleased_ = builderForValue.build();
           onChanged();
         } else {
           shardReleasedBuilder_.setMessage(builderForValue.build());
         }
-
+        bitField0_ |= 0x00000001;
         return this;
       }
       /**
-       * <code>.org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
+       * <code>optional .org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
        */
-      public Builder mergeShardReleased(org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased value) {
+      public Builder mergeShardReleased(ShardReleased value) {
         if (shardReleasedBuilder_ == null) {
-          if (shardReleased_ != null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+              shardReleased_ != null &&
+              shardReleased_ != ShardReleased.getDefaultInstance()) {
             shardReleased_ =
-              org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased.newBuilder(shardReleased_).mergeFrom(value).buildPartial();
+              ShardReleased.newBuilder(shardReleased_).mergeFrom(value).buildPartial();
           } else {
             shardReleased_ = value;
           }
@@ -533,51 +562,50 @@ public final class Clustering {
         } else {
           shardReleasedBuilder_.mergeFrom(value);
         }
-
+        bitField0_ |= 0x00000001;
         return this;
       }
       /**
-       * <code>.org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
+       * <code>optional .org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
        */
       public Builder clearShardReleased() {
         if (shardReleasedBuilder_ == null) {
           shardReleased_ = null;
           onChanged();
         } else {
-          shardReleased_ = null;
-          shardReleasedBuilder_ = null;
+          shardReleasedBuilder_.clear();
         }
-
+        bitField0_ = (bitField0_ & ~0x00000001);
         return this;
       }
       /**
-       * <code>.org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
+       * <code>optional .org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
        */
-      public org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased.Builder getShardReleasedBuilder() {
-        
+      public ShardReleased.Builder getShardReleasedBuilder() {
+        bitField0_ |= 0x00000001;
         onChanged();
         return getShardReleasedFieldBuilder().getBuilder();
       }
       /**
-       * <code>.org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
+       * <code>optional .org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
        */
-      public org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleasedOrBuilder getShardReleasedOrBuilder() {
+      public ShardReleasedOrBuilder getShardReleasedOrBuilder() {
         if (shardReleasedBuilder_ != null) {
           return shardReleasedBuilder_.getMessageOrBuilder();
         } else {
           return shardReleased_ == null ?
-              org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased.getDefaultInstance() : shardReleased_;
+              ShardReleased.getDefaultInstance() : shardReleased_;
         }
       }
       /**
-       * <code>.org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
+       * <code>optional .org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased shardReleased = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased, org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased.Builder, org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleasedOrBuilder> 
+          ShardReleased, ShardReleased.Builder, ShardReleasedOrBuilder>
           getShardReleasedFieldBuilder() {
         if (shardReleasedBuilder_ == null) {
           shardReleasedBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased, org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased.Builder, org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleasedOrBuilder>(
+              ShardReleased, ShardReleased.Builder, ShardReleasedOrBuilder>(
                   getShardReleased(),
                   getParentForChildren(),
                   isClean());
@@ -588,32 +616,38 @@ public final class Clustering {
 
       private long viewId_ ;
       /**
-       * <code>int64 viewId = 2;</code>
+       * <code>optional int64 viewId = 2;</code>
+       */
+      public boolean hasViewId() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional int64 viewId = 2;</code>
        */
       public long getViewId() {
         return viewId_;
       }
       /**
-       * <code>int64 viewId = 2;</code>
+       * <code>optional int64 viewId = 2;</code>
        */
       public Builder setViewId(long value) {
-        
+        bitField0_ |= 0x00000002;
         viewId_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>int64 viewId = 2;</code>
+       * <code>optional int64 viewId = 2;</code>
        */
       public Builder clearViewId() {
-        
+        bitField0_ = (bitField0_ & ~0x00000002);
         viewId_ = 0L;
         onChanged();
         return this;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFieldsProto3(unknownFields);
+        return super.setUnknownFields(unknownFields);
       }
 
       public final Builder mergeUnknownFields(
@@ -626,16 +660,16 @@ public final class Clustering {
     }
 
     // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.cluster.protobuf.ClusterMessage)
-    private static final org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage DEFAULT_INSTANCE;
+    private static final ClusterMessage DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage();
+      DEFAULT_INSTANCE = new ClusterMessage();
     }
 
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage getDefaultInstance() {
+    public static ClusterMessage getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<ClusterMessage>
+    @Deprecated public static final com.google.protobuf.Parser<ClusterMessage>
         PARSER = new com.google.protobuf.AbstractParser<ClusterMessage>() {
       public ClusterMessage parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
@@ -654,7 +688,7 @@ public final class Clustering {
       return PARSER;
     }
 
-    public org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ClusterMessage getDefaultInstanceForType() {
+    public ClusterMessage getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -665,16 +699,24 @@ public final class Clustering {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>int32 shardId = 1;</code>
+     * <code>optional int32 shardId = 1;</code>
+     */
+    boolean hasShardId();
+    /**
+     * <code>optional int32 shardId = 1;</code>
      */
     int getShardId();
 
     /**
-     * <code>string actorSystem = 2;</code>
+     * <code>optional string actorSystem = 2;</code>
+     */
+    boolean hasActorSystem();
+    /**
+     * <code>optional string actorSystem = 2;</code>
      */
     String getActorSystem();
     /**
-     * <code>string actorSystem = 2;</code>
+     * <code>optional string actorSystem = 2;</code>
      */
     com.google.protobuf.ByteString
         getActorSystemBytes();
@@ -721,21 +763,21 @@ public final class Clustering {
               done = true;
               break;
             default: {
-              if (!parseUnknownFieldProto3(
+              if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
             }
             case 8: {
-
+              bitField0_ |= 0x00000001;
               shardId_ = input.readInt32();
               break;
             }
             case 18: {
-              String s = input.readStringRequireUtf8();
-
-              actorSystem_ = s;
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000002;
+              actorSystem_ = bs;
               break;
             }
           }
@@ -752,20 +794,27 @@ public final class Clustering {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ShardReleased_descriptor;
+      return Clustering.internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ShardReleased_descriptor;
     }
 
     protected FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ShardReleased_fieldAccessorTable
+      return Clustering.internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ShardReleased_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased.class, org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased.Builder.class);
+              ShardReleased.class, Builder.class);
     }
 
+    private int bitField0_;
     public static final int SHARDID_FIELD_NUMBER = 1;
     private int shardId_;
     /**
-     * <code>int32 shardId = 1;</code>
+     * <code>optional int32 shardId = 1;</code>
+     */
+    public boolean hasShardId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional int32 shardId = 1;</code>
      */
     public int getShardId() {
       return shardId_;
@@ -774,7 +823,13 @@ public final class Clustering {
     public static final int ACTORSYSTEM_FIELD_NUMBER = 2;
     private volatile Object actorSystem_;
     /**
-     * <code>string actorSystem = 2;</code>
+     * <code>optional string actorSystem = 2;</code>
+     */
+    public boolean hasActorSystem() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string actorSystem = 2;</code>
      */
     public String getActorSystem() {
       Object ref = actorSystem_;
@@ -784,12 +839,14 @@ public final class Clustering {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         String s = bs.toStringUtf8();
-        actorSystem_ = s;
+        if (bs.isValidUtf8()) {
+          actorSystem_ = s;
+        }
         return s;
       }
     }
     /**
-     * <code>string actorSystem = 2;</code>
+     * <code>optional string actorSystem = 2;</code>
      */
     public com.google.protobuf.ByteString
         getActorSystemBytes() {
@@ -817,10 +874,10 @@ public final class Clustering {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (shardId_ != 0) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeInt32(1, shardId_);
       }
-      if (!getActorSystemBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, actorSystem_);
       }
       unknownFields.writeTo(output);
@@ -831,11 +888,11 @@ public final class Clustering {
       if (size != -1) return size;
 
       size = 0;
-      if (shardId_ != 0) {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(1, shardId_);
       }
-      if (!getActorSystemBytes().isEmpty()) {
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, actorSystem_);
       }
       size += unknownFields.getSerializedSize();
@@ -848,16 +905,22 @@ public final class Clustering {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased)) {
+      if (!(obj instanceof ShardReleased)) {
         return super.equals(obj);
       }
-      org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased other = (org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased) obj;
+      ShardReleased other = (ShardReleased) obj;
 
       boolean result = true;
-      result = result && (getShardId()
-          == other.getShardId());
-      result = result && getActorSystem()
-          .equals(other.getActorSystem());
+      result = result && (hasShardId() == other.hasShardId());
+      if (hasShardId()) {
+        result = result && (getShardId()
+            == other.getShardId());
+      }
+      result = result && (hasActorSystem() == other.hasActorSystem());
+      if (hasActorSystem()) {
+        result = result && getActorSystem()
+            .equals(other.getActorSystem());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -869,78 +932,82 @@ public final class Clustering {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      hash = (37 * hash) + SHARDID_FIELD_NUMBER;
-      hash = (53 * hash) + getShardId();
-      hash = (37 * hash) + ACTORSYSTEM_FIELD_NUMBER;
-      hash = (53 * hash) + getActorSystem().hashCode();
+      if (hasShardId()) {
+        hash = (37 * hash) + SHARDID_FIELD_NUMBER;
+        hash = (53 * hash) + getShardId();
+      }
+      if (hasActorSystem()) {
+        hash = (37 * hash) + ACTORSYSTEM_FIELD_NUMBER;
+        hash = (53 * hash) + getActorSystem().hashCode();
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
     }
 
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased parseFrom(
+    public static ShardReleased parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased parseFrom(
+    public static ShardReleased parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased parseFrom(
+    public static ShardReleased parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased parseFrom(
+    public static ShardReleased parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased parseFrom(byte[] data)
+    public static ShardReleased parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased parseFrom(
+    public static ShardReleased parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased parseFrom(java.io.InputStream input)
+    public static ShardReleased parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased parseFrom(
+    public static ShardReleased parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased parseDelimitedFrom(java.io.InputStream input)
+    public static ShardReleased parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased parseDelimitedFrom(
+    public static ShardReleased parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased parseFrom(
+    public static ShardReleased parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased parseFrom(
+    public static ShardReleased parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -952,7 +1019,7 @@ public final class Clustering {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased prototype) {
+    public static Builder newBuilder(ShardReleased prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() {
@@ -972,17 +1039,17 @@ public final class Clustering {
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased)
-        org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleasedOrBuilder {
+        ShardReleasedOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ShardReleased_descriptor;
+        return Clustering.internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ShardReleased_descriptor;
       }
 
       protected FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ShardReleased_fieldAccessorTable
+        return Clustering.internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ShardReleased_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased.class, org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased.Builder.class);
+                ShardReleased.class, Builder.class);
       }
 
       // Construct using org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased.newBuilder()
@@ -1003,33 +1070,42 @@ public final class Clustering {
       public Builder clear() {
         super.clear();
         shardId_ = 0;
-
+        bitField0_ = (bitField0_ & ~0x00000001);
         actorSystem_ = "";
-
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ShardReleased_descriptor;
+        return Clustering.internal_static_org_elasticsoftware_elasticactors_cluster_protobuf_ShardReleased_descriptor;
       }
 
-      public org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased getDefaultInstanceForType() {
-        return getDefaultInstance();
+      public ShardReleased getDefaultInstanceForType() {
+        return ShardReleased.getDefaultInstance();
       }
 
-      public org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased build() {
-        org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased result = buildPartial();
+      public ShardReleased build() {
+        ShardReleased result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased buildPartial() {
-        org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased result = new org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased(this);
+      public ShardReleased buildPartial() {
+        ShardReleased result = new ShardReleased(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
         result.shardId_ = shardId_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
         result.actorSystem_ = actorSystem_;
+        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -1061,20 +1137,21 @@ public final class Clustering {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased) {
-          return mergeFrom((org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased)other);
+        if (other instanceof ShardReleased) {
+          return mergeFrom((ShardReleased)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased other) {
-        if (other == getDefaultInstance()) return this;
-        if (other.getShardId() != 0) {
+      public Builder mergeFrom(ShardReleased other) {
+        if (other == ShardReleased.getDefaultInstance()) return this;
+        if (other.hasShardId()) {
           setShardId(other.getShardId());
         }
-        if (!other.getActorSystem().isEmpty()) {
+        if (other.hasActorSystem()) {
+          bitField0_ |= 0x00000002;
           actorSystem_ = other.actorSystem_;
           onChanged();
         }
@@ -1091,11 +1168,11 @@ public final class Clustering {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased parsedMessage = null;
+        ShardReleased parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased) e.getUnfinishedMessage();
+          parsedMessage = (ShardReleased) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -1104,28 +1181,35 @@ public final class Clustering {
         }
         return this;
       }
+      private int bitField0_;
 
       private int shardId_ ;
       /**
-       * <code>int32 shardId = 1;</code>
+       * <code>optional int32 shardId = 1;</code>
+       */
+      public boolean hasShardId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional int32 shardId = 1;</code>
        */
       public int getShardId() {
         return shardId_;
       }
       /**
-       * <code>int32 shardId = 1;</code>
+       * <code>optional int32 shardId = 1;</code>
        */
       public Builder setShardId(int value) {
-        
+        bitField0_ |= 0x00000001;
         shardId_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>int32 shardId = 1;</code>
+       * <code>optional int32 shardId = 1;</code>
        */
       public Builder clearShardId() {
-        
+        bitField0_ = (bitField0_ & ~0x00000001);
         shardId_ = 0;
         onChanged();
         return this;
@@ -1133,7 +1217,13 @@ public final class Clustering {
 
       private Object actorSystem_ = "";
       /**
-       * <code>string actorSystem = 2;</code>
+       * <code>optional string actorSystem = 2;</code>
+       */
+      public boolean hasActorSystem() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string actorSystem = 2;</code>
        */
       public String getActorSystem() {
         Object ref = actorSystem_;
@@ -1141,14 +1231,16 @@ public final class Clustering {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           String s = bs.toStringUtf8();
-          actorSystem_ = s;
+          if (bs.isValidUtf8()) {
+            actorSystem_ = s;
+          }
           return s;
         } else {
           return (String) ref;
         }
       }
       /**
-       * <code>string actorSystem = 2;</code>
+       * <code>optional string actorSystem = 2;</code>
        */
       public com.google.protobuf.ByteString
           getActorSystemBytes() {
@@ -1164,44 +1256,43 @@ public final class Clustering {
         }
       }
       /**
-       * <code>string actorSystem = 2;</code>
+       * <code>optional string actorSystem = 2;</code>
        */
       public Builder setActorSystem(
           String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  bitField0_ |= 0x00000002;
         actorSystem_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>string actorSystem = 2;</code>
+       * <code>optional string actorSystem = 2;</code>
        */
       public Builder clearActorSystem() {
-        
+        bitField0_ = (bitField0_ & ~0x00000002);
         actorSystem_ = getDefaultInstance().getActorSystem();
         onChanged();
         return this;
       }
       /**
-       * <code>string actorSystem = 2;</code>
+       * <code>optional string actorSystem = 2;</code>
        */
       public Builder setActorSystemBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  checkByteStringIsUtf8(value);
-        
+  bitField0_ |= 0x00000002;
         actorSystem_ = value;
         onChanged();
         return this;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFieldsProto3(unknownFields);
+        return super.setUnknownFields(unknownFields);
       }
 
       public final Builder mergeUnknownFields(
@@ -1214,16 +1305,16 @@ public final class Clustering {
     }
 
     // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.cluster.protobuf.ShardReleased)
-    private static final org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased DEFAULT_INSTANCE;
+    private static final ShardReleased DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased();
+      DEFAULT_INSTANCE = new ShardReleased();
     }
 
-    public static org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased getDefaultInstance() {
+    public static ShardReleased getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<ShardReleased>
+    @Deprecated public static final com.google.protobuf.Parser<ShardReleased>
         PARSER = new com.google.protobuf.AbstractParser<ShardReleased>() {
       public ShardReleased parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
@@ -1242,7 +1333,7 @@ public final class Clustering {
       return PARSER;
     }
 
-    public org.elasticsoftware.elasticactors.cluster.protobuf.Clustering.ShardReleased getDefaultInstanceForType() {
+    public ShardReleased getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -1273,7 +1364,7 @@ public final class Clustering {
       "asticsoftware.elasticactors.cluster.prot" +
       "obuf.ShardReleased\022\016\n\006viewId\030\002 \001(\003\"5\n\rSh" +
       "ardReleased\022\017\n\007shardId\030\001 \001(\005\022\023\n\013actorSys" +
-      "tem\030\002 \001(\tB\002H\001b\006proto3"
+      "tem\030\002 \001(\tB\002H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
