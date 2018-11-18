@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.client;
+package org.elasticsoftware.elasticactors.client.common;
 
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.*;

@@ -26,7 +26,7 @@ public interface ActorSystemClient {
      * @throws Exception    when something unexpected happens
      * @return              the {@link ActorRef} pointing to the newly created actor
      */
-    <T> ActorRef tempActorOf(Class<T> actorClass,@Nullable ActorState initialState) throws Exception;
+    <T extends ElasticActor> ActorRef tempActorOf(Class<T> actorClass,@Nullable ActorState initialState) throws Exception;
 
     /**
      * Return an {@link ActorRef} to a (Standard) Actor. There is no guarantee that the Actor actually exists. If you need
@@ -40,5 +40,15 @@ public interface ActorSystemClient {
      * @return          the {@link ActorRef} to the Actor (not guaranteed to exist!)
      */
     ActorRef actorFor(String actorId);
+
+    /**
+     * Can only be used to stop actors that have been created by this client (so only {@link ActorRef}s created by
+     * {@link #tempActorOf(Class, ActorState)}.
+     *
+     * @param actorRef          the {@link ActorRef} to destroy
+     * @throws Exception        when something unexpected happens
+     */
+    void stop(ActorRef actorRef) throws Exception;
+
 
 }

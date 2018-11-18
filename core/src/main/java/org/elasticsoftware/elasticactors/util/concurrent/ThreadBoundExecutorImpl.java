@@ -76,7 +76,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
     }
 
     private int getBucket(Object key) {
-        return Math.abs(key.hashCode()) % queues.size();
+        return queues.size() == 1 ? 1 : Math.abs(key.hashCode()) % queues.size();
     }
 
     public void shutdown() {

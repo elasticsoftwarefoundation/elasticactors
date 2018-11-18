@@ -143,6 +143,7 @@
         <module>elasticactors-kafka-testapp</module>
         <module>indexing-elasticsearch</module>
         <module>cluster-kubernetes</module>
+        <module>client-rabbitmq</module>
     </modules>
 
     <build>

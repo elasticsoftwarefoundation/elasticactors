@@ -103,7 +103,7 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
     }
 
     @Override
-    public <T> ActorRef tempActorOf(Class<T> actorClass, ActorState initialState) throws Exception {
+    public <T extends ElasticActor> ActorRef tempActorOf(Class<T> actorClass, ActorState initialState) throws Exception {
         throw new UnsupportedOperationException("Temporary Actors are not supported for Remote ActorSystem instances");
     }
 

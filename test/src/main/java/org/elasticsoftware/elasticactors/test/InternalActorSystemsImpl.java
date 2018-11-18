@@ -19,11 +19,7 @@ package org.elasticsoftware.elasticactors.test;
 import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.*;
 import org.elasticsoftware.elasticactors.cluster.strategies.SingleNodeScaleUpStrategy;
-import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
-import org.elasticsoftware.elasticactors.serialization.SystemDeserializers;
-import org.elasticsoftware.elasticactors.serialization.SystemSerializers;
+import org.elasticsoftware.elasticactors.serialization.*;
 import org.elasticsoftware.elasticactors.util.ManifestTools;
 import org.springframework.context.ApplicationContext;
 
@@ -35,9 +31,9 @@ import java.util.List;
 /**
  * @author Joost van de Wijgerd
  */
-public final class InternalActorSystemsImpl implements InternalActorSystems, ActorRefFactory {
-    private final SystemSerializers systemSerializers = new SystemSerializers(this);
-    private final SystemDeserializers systemDeserializers = new SystemDeserializers(this,this);
+public final class InternalActorSystemsImpl implements InternalActorSystems, ActorRefFactory, MessageSerializationRegistry {
+    private final SystemSerializers systemSerializers = new SystemSerializers(this, this);
+    private final SystemDeserializers systemDeserializers = new SystemDeserializers(this,this, this);
     private final ApplicationContext applicationContext;
     private final ClusterService clusterService;
     private final PhysicalNode localNode;
@@ -75,6 +71,11 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
     @Override
     public ActorRef createServiceActorRef(ActorNode node, String actorId) {
         return new ServiceActorRef(get(null), getClusterName(), node, actorId);
+    }
+
+    @Override
+    public ActorRef createClientActorRef(ClientNode clientNode, String actorSystemName, String actorId) {
+        return null;
     }
 
     @Override
@@ -120,5 +121,31 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
     @Override
     public SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass) {
         return applicationContext.getBean(frameworkClass);
+    }
+
+    @Override
+    public <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
+        MessageSerializer<T> messageSerializer = getSystemMessageSerializer(messageClass);
+        if(messageSerializer == null) {
+            Message messageAnnotation = messageClass.getAnnotation(Message.class);
+            if(messageAnnotation != null) {
+                SerializationFramework framework = getSerializationFramework(messageAnnotation.serializationFramework());
+                messageSerializer = framework.getSerializer(messageClass);
+            }
+        }
+        return messageSerializer;
+    }
+
+    @Override
+    public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
+        MessageDeserializer<T> messageDeserializer = getSystemMessageDeserializer(messageClass);
+        if(messageDeserializer == null) {
+            Message messageAnnotation = messageClass.getAnnotation(Message.class);
+            if(messageAnnotation != null) {
+                SerializationFramework framework = getSerializationFramework(messageAnnotation.serializationFramework());
+                messageDeserializer = framework.getDeserializer(messageClass);
+            }
+        }
+        return messageDeserializer;
     }
 }

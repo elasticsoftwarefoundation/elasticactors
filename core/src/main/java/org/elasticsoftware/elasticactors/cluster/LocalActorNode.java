@@ -56,7 +56,8 @@ public final class LocalActorNode extends AbstractActorNode {
                           ActorRef myRef,
                           MessageQueueFactory messageQueueFactory,
                           NodeActorCacheManager actorCacheManager) {
-        super(messageQueueFactory, myRef, node, actorCacheManager, actorSystem.getName(), actorSystem);
+        super(messageQueueFactory, myRef, node, actorSystem.getName(), actorSystem);
+        this.actorCacheManager = actorCacheManager;
         this.actorSystem = actorSystem;
     }
 
@@ -242,7 +243,7 @@ public final class LocalActorNode extends AbstractActorNode {
 
     @Override
     public void init() throws Exception {
-        this.actorCache = actorCacheManager.create(nodeKey,this);
+        this.actorCache = actorCacheManager.create(getKey(),this);
         super.init();
     }
 

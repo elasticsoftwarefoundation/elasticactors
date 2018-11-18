@@ -475,7 +475,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     }
 
     @Override
-    public <T> ActorRef tempActorOf(Class<T> actorClass, ActorState initialState) throws Exception {
+    public <T extends ElasticActor> ActorRef tempActorOf(Class<T> actorClass, ActorState initialState) throws Exception {
         if(actorClass.getAnnotation(TempActor.class) == null) {
             throw new IllegalArgumentException("actorClass has to be annotated with @TempActor");
         }

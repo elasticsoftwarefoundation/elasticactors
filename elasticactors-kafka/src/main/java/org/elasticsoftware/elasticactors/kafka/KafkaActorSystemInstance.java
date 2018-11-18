@@ -73,7 +73,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         this.schedulerService = new KafkaTopicScheduler(this);
         this.localNode = node;
         // we need a wrapper around the default implementation that adds the partition for the node topics
-        this.cluster = new KafkaInternalActorSystems(node, actorRefCache);
+        this.cluster = new KafkaInternalActorSystems(node, actorRefCache, this);
         this.configuration = configuration;
         this.nodeSelectorFactory = nodeSelectorFactory;
         this.actorRefFactory = cluster;
@@ -267,7 +267,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
 
 
     @Override
-    public <T> ActorRef tempActorOf(Class<T> actorClass, @Nullable ActorState initialState) throws Exception {
+    public <T extends ElasticActor> ActorRef tempActorOf(Class<T> actorClass, @Nullable ActorState initialState) throws Exception {
         if(actorClass.getAnnotation(TempActor.class) == null) {
             throw new IllegalArgumentException("actorClass has to be annotated with @TempActor");
         }

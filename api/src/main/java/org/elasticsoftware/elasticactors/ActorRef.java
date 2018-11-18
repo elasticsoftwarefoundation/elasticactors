@@ -30,6 +30,7 @@ import java.util.concurrent.CompletionStage;
  * (Normal) Actors: actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId><br/>
  * Service Actors: actor://<cluster>/<actorSystem>/nodes/<nodeId>/<serviceId><br/>
  * Temporary Actors: actor://<cluster>/<actorSystem>/nodes/<nodeId>/<actorId><br/>
+ * Temporary Client Actors: actor://<cluster>/<actorSystem>/clients/<nodeId>/<actorId></br>
  *
  *
  * @see     {@link ActorSystem#actorFor(String)}
