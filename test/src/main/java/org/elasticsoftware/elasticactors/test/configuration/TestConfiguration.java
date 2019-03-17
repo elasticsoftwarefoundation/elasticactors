@@ -174,7 +174,7 @@ public class TestConfiguration {
     }
 
     @Bean(name = "systemSerializationFramework")
-    public SystemSerializationFramework createSystemSerializationFramework(InternalActorSystems internalActorSystems) {
-        return new SystemSerializationFramework(internalActorSystems);
+    public SystemSerializationFramework createSystemSerializationFramework(InternalActorSystemsImpl internalActorSystems) {
+        return new SystemSerializationFramework(internalActorSystems, internalActorSystems, internalActorSystems);
     }
 }

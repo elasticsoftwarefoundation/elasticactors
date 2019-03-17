@@ -18,16 +18,23 @@ package org.elasticsoftware.elasticactors.serialization;
 
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.MessageSerializationRegistry;
+import org.elasticsoftware.elasticactors.cluster.SerializationFrameworkRegistry;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class SystemSerializationFramework implements SerializationFramework {
-    private final InternalActorSystems internalActorSystems;
+    private final SystemSerializers systemSerializers;
+    private final SystemDeserializers systemDeserializers;
 
-    public SystemSerializationFramework(InternalActorSystems internalActorSystems) {
-        this.internalActorSystems = internalActorSystems;
+    public SystemSerializationFramework(SerializationFrameworkRegistry serializationFrameworkRegistry,
+                                        MessageSerializationRegistry messageSerializationRegistry,
+                                        ActorRefFactory actorRefFactory) {
+        this.systemSerializers = new SystemSerializers(serializationFrameworkRegistry, messageSerializationRegistry);
+        this.systemDeserializers = new SystemDeserializers(serializationFrameworkRegistry,messageSerializationRegistry, actorRefFactory);
     }
 
     @Override
@@ -37,12 +44,12 @@ public final class SystemSerializationFramework implements SerializationFramewor
 
     @Override
     public <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
-        return internalActorSystems.getSystemMessageSerializer(messageClass);
+        return systemSerializers.get(messageClass);
     }
 
     @Override
     public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
-        return internalActorSystems.getSystemMessageDeserializer(messageClass);
+        return systemDeserializers.get(messageClass);
     }
 
     @Override

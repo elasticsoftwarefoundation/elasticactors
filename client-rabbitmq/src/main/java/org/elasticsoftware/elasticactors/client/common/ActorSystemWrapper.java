@@ -76,7 +76,7 @@ public final class ActorSystemWrapper implements ActorSystem {
 
     @Override
     public void stop(ActorRef actorRef) throws Exception {
-        throw new UnsupportedOperationException("Stopping an Actor from an ActorSystemClient is not supported");
+        delegate.stop(actorRef);
     }
 
     @Override

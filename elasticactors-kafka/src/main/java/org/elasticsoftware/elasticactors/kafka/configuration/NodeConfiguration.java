@@ -93,8 +93,8 @@ public class NodeConfiguration {
     }
 
     @Bean(name = "systemSerializationFramework")
-    public SystemSerializationFramework createSystemSerializationFramework(InternalActorSystems internalActorSystems) {
-        return new SystemSerializationFramework(internalActorSystems);
+    public SystemSerializationFramework createSystemSerializationFramework(ElasticActorsNode node, InternalActorSystems internalActorSystems) {
+        return  new SystemSerializationFramework(internalActorSystems, internalActorSystems.get(null), node);
     }
 
     @Bean(name = {"messagesScanner"})

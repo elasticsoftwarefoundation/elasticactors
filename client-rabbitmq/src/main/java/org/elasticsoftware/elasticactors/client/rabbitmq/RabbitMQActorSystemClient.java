@@ -56,7 +56,7 @@ public final class RabbitMQActorSystemClient implements ActorSystemClient, Actor
     private final String clientQueue;
     private final InternalMessageDeserializer internalMessageDeserializer;
     private final ThreadBoundExecutor producerExecutor = new ThreadBoundExecutorImpl(new DaemonThreadFactory("RabbitMQActorSystemClient-Producer"), 1);
-    private final ThreadBoundExecutor consumerExecutor = new ThreadBoundExecutorImpl(new DaemonThreadFactory("RabbitMQActorSystemClient-Producer"), 1);
+    private final ThreadBoundExecutor consumerExecutor = new ThreadBoundExecutorImpl(new DaemonThreadFactory("RabbitMQActorSystemClient-Consumer"), 1);
     private final Map<String, ClientActor> localActors = new HashMap<>();
     private final ActorSystem actorSystem = new ActorSystemWrapper(this);
     private final SystemSerializers systemSerializers;
