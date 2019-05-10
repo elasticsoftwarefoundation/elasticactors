@@ -156,7 +156,7 @@ public final class Indexer implements ActorStateUpdateListener {
 
             client.prepareIndex(indexName, indexConfig.typeName(), update.getActorRef().getActorId())
                     .setOpType(IndexRequest.OpType.INDEX)
-                    .setSource(actorState)
+                    .setSource(update.getActorRef().getActorId(), actorState)
                     .execute(new ActionListener<IndexResponse>() {
                         @Override
                         public void onResponse(IndexResponse indexResponse) {
