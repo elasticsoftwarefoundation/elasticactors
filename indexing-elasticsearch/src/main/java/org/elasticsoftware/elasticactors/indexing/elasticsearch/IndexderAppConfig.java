@@ -21,7 +21,7 @@ import org.apache.logging.log4j.Logger;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.elasticsoftware.elasticactors.indexing.elasticsearch.indexer.Indexer;
 import org.springframework.beans.factory.BeanCreationException;
@@ -64,7 +64,7 @@ public class IndexderAppConfig {
 
         for (String elasticsearchHost : elasticsearchHosts) {
             try {
-                client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(elasticsearchHost), elasticsearchPort));
+                client.addTransportAddress(new TransportAddress(InetAddress.getByName(elasticsearchHost), elasticsearchPort));
             } catch (UnknownHostException e) {
                 throw new BeanCreationException("Could not add elasticsearch host <" + elasticsearchHost + "> to client configuration. Aborting", e);
             }
