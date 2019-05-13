@@ -16,8 +16,17 @@
 
 package org.elasticsoftware.elasticactors.cache;
 
-import com.google.common.cache.*;
-import com.google.common.collect.*;
+import com.google.common.cache.AbstractCache;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheStats;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -44,6 +53,7 @@ public class CacheManager<K,V> {
         if(evictionListener != null) {
             evictionListeners.put(cacheKey,evictionListener);
         }
+        backingCache.invalidateAll(segmentIndex.removeAll(cacheKey));
         return new SegmentedCache(cacheKey);
     }
 
