@@ -21,13 +21,31 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorNode;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorShard;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.PhysicalNode;
+import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
-import org.elasticsoftware.elasticactors.cluster.tasks.*;
-import org.elasticsoftware.elasticactors.messaging.*;
-import org.elasticsoftware.elasticactors.messaging.internal.*;
+import org.elasticsoftware.elasticactors.cluster.tasks.ActivateActorTask;
+import org.elasticsoftware.elasticactors.cluster.tasks.CreateActorTask;
+import org.elasticsoftware.elasticactors.cluster.tasks.DestroyActorTask;
+import org.elasticsoftware.elasticactors.cluster.tasks.PassivateActorTask;
+import org.elasticsoftware.elasticactors.cluster.tasks.PersistActorTask;
+import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
+import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.messaging.MultiMessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.messaging.TransientInternalMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.PersistActorMessage;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
@@ -96,8 +114,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
 
     @Override
     public void destroy() {
-        actorCacheManager.destroy(actorCache);
         super.destroy();
+        actorCacheManager.destroy(actorCache);
     }
 
     @Override
