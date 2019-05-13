@@ -50,10 +50,11 @@ public class CacheManager<K,V> {
     }
 
     public final Cache<K,V> create(Object cacheKey,EvictionListener<V> evictionListener) {
+        // make sure any leftovers from a previous create / destroy are all gone
+        backingCache.invalidateAll(segmentIndex.removeAll(cacheKey));
         if(evictionListener != null) {
             evictionListeners.put(cacheKey,evictionListener);
         }
-        backingCache.invalidateAll(segmentIndex.removeAll(cacheKey));
         return new SegmentedCache(cacheKey);
     }
 

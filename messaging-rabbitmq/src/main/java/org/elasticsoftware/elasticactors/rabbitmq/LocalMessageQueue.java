@@ -141,7 +141,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
             destroyLatch.await(4, TimeUnit.SECONDS);
         } catch (IOException e) {
             logger.error("IOException while cancelling consumer",e);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException ignored) {
             // ignore
         } finally {
             this.channelListenerRegistry.removeChannelListener(this.producerChannel,this);

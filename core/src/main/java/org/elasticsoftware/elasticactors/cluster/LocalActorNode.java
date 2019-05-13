@@ -77,8 +77,8 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
 
     @Override
     public void destroy() {
-        actorCacheManager.destroy(actorCache);
         super.destroy();
+        actorCacheManager.destroy(actorCache);
     }
 
     @Override
