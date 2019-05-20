@@ -1,23 +1,32 @@
 /*
- * Copyright 2013 - 2017 The Original Authors
+ *   Copyright 2013 - 2019 The Original Authors
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 
 package org.elasticsoftware.elasticactors.cache;
 
-import com.google.common.cache.*;
-import com.google.common.collect.*;
+import com.google.common.cache.AbstractCache;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheStats;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -41,6 +50,8 @@ public class CacheManager<K,V> {
     }
 
     public final Cache<K,V> create(Object cacheKey,EvictionListener<V> evictionListener) {
+        // make sure any leftovers from a previous create / destroy are all gone
+        backingCache.invalidateAll(segmentIndex.removeAll(cacheKey));
         if(evictionListener != null) {
             evictionListeners.put(cacheKey,evictionListener);
         }
