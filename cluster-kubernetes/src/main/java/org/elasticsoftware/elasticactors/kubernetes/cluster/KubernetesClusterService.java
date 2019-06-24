@@ -131,10 +131,9 @@ public final class KubernetesClusterService implements ClusterService {
         this.eventListeners.remove(eventListener);
     }
 
-
     @Override
     public void sendMessage(String memberToken, byte[] message) throws Exception {
-        // @todo: how do I get a message to the other server?
+        // do nothing
     }
 
     @Override
