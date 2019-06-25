@@ -36,8 +36,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static java.lang.String.format;
+import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 public final class KubernetesClusterService implements ClusterService, KubernetesStateMachineListener {
     private static final Logger logger = LogManager.getLogger(KubernetesClusterService.class);
@@ -54,7 +56,10 @@ public final class KubernetesClusterService implements ClusterService, Kubernete
         this.name = name;
         this.nodeId = nodeId;
         this.masterNodeId = format("%s-0", name);
-        this.kubernetesStateMachine = new KubernetesStateMachine(new TaskScheduler(timeoutSeconds));
+
+        ScheduledExecutorService scheduledExecutorService =
+                newSingleThreadScheduledExecutor(new DaemonThreadFactory("KUBERNETES_CLUSTERSERVICE_SCHEDULER"));
+        this.kubernetesStateMachine = new KubernetesStateMachine(new TaskScheduler(scheduledExecutorService, timeoutSeconds));
         this.kubernetesStateMachine.addListener(this);
     }
 

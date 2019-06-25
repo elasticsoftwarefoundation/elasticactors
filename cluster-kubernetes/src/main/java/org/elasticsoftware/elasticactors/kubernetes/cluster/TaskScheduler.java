@@ -9,20 +9,19 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.String.format;
-import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 public class TaskScheduler {
 
     private static final Logger logger = LogManager.getLogger(TaskScheduler.class);
 
-    private final AtomicReference<ScheduledFuture> scheduledTask;
+    private final ScheduledExecutorService scheduledExecutorService;
     private final Integer timeoutSeconds;
 
-    private final ScheduledExecutorService scheduledExecutorService =
-            newSingleThreadScheduledExecutor(new DaemonThreadFactory("KUBERNETES_CLUSTERSERVICE_SCHEDULER"));
+    private final AtomicReference<ScheduledFuture> scheduledTask;
 
-    public TaskScheduler(Integer timeoutSeconds) {
+    public TaskScheduler(ScheduledExecutorService scheduledExecutorService, Integer timeoutSeconds) {
         this.scheduledTask = new AtomicReference<>();
+        this.scheduledExecutorService = scheduledExecutorService;
         this.timeoutSeconds = timeoutSeconds;
     }
 
