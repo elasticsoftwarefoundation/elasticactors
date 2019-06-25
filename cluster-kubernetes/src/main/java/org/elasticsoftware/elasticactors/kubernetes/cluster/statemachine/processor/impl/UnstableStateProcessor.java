@@ -1,0 +1,34 @@
+package org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.processor.impl;
+
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import org.elasticsoftware.elasticactors.kubernetes.cluster.TaskScheduler;
+import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesStateMachineData;
+import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.processor.AbstractTaskSchedulingStateProcessor;
+
+public class UnstableStateProcessor extends AbstractTaskSchedulingStateProcessor {
+
+    public UnstableStateProcessor(KubernetesStateMachineData kubernetesStateMachineData, TaskScheduler taskScheduler) {
+        super(kubernetesStateMachineData, taskScheduler);
+    }
+
+    @Override
+    public boolean process(StatefulSet resource) {
+
+        int desiredReplicas = resource.getSpec().getReplicas();
+        int actualReplicas = resource.getStatus().getReplicas();
+        int readyReplicas = getInt(resource.getStatus().getReadyReplicas());
+        int currentDesiredReplicas = kubernetesStateMachineData.getLatestStableState().get().getSpec().getReplicas();
+
+        // we need to somehow get out of this UNSTABLE state
+        // spec and status should all be the same
+        if (desiredReplicas == currentDesiredReplicas
+                && desiredReplicas == actualReplicas
+                && desiredReplicas == readyReplicas) {
+            logger.info("Switching back to STABLE state");
+            switchToStableState(resource);
+        }
+
+        return false;
+    }
+
+}

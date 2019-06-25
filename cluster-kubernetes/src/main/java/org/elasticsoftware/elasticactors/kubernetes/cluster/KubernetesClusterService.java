@@ -28,6 +28,7 @@ import org.elasticsoftware.elasticactors.cluster.ClusterEventListener;
 import org.elasticsoftware.elasticactors.cluster.ClusterMessageHandler;
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesStateMachine;
+import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesStateMachineListener;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -38,7 +39,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static java.lang.String.format;
 
-public final class KubernetesClusterService implements ClusterService {
+public final class KubernetesClusterService implements ClusterService, KubernetesStateMachineListener {
     private static final Logger logger = LogManager.getLogger(KubernetesClusterService.class);
     private KubernetesClient client;
     private final String namespace;
@@ -53,11 +54,13 @@ public final class KubernetesClusterService implements ClusterService {
         this.name = name;
         this.nodeId = nodeId;
         this.masterNodeId = format("%s-0", name);
-        this.kubernetesStateMachine = new KubernetesStateMachine(timeoutSeconds, this::signalTopologyChange);
+        this.kubernetesStateMachine = new KubernetesStateMachine(new TaskScheduler(timeoutSeconds));
+        this.kubernetesStateMachine.addListener(this);
     }
 
     @PostConstruct
     public void init() {
+        kubernetesStateMachine.addListener(this);
         try {
             client = new DefaultKubernetesClient();
         } catch(KubernetesClientException e) {
@@ -80,13 +83,11 @@ public final class KubernetesClusterService implements ClusterService {
             throw new IllegalStateException(format("StatefulSet %s not found in namespace %s", name, namespace));
         }
 
+        // send out the first update
         kubernetesStateMachine.processStateUpdate(statefulSet);
 
         // subscribe to updates
         client.apps().statefulSets().inNamespace(namespace).withName(name).watch(watcher);
-
-        // send out the first update
-        signalTopologyChange(statefulSet.getSpec().getReplicas());
 
         // and send out the master to be the 0 ordinal pod (i.e. <name>-0)
         PhysicalNodeImpl masterNode = new PhysicalNodeImpl(masterNodeId, null, nodeId.equals(masterNodeId));
@@ -99,7 +100,9 @@ public final class KubernetesClusterService implements ClusterService {
         });
     }
 
-    private void signalTopologyChange(int totalReplicas) {
+    @Override
+    public void onTopologyChange(int totalReplicas) {
+        logger.info(format("Signalling Cluster Topology change to %d nodes", totalReplicas));
         List<PhysicalNode> nodeList = new ArrayList<>(totalReplicas);
         for (int i = 0; i < totalReplicas; i++) {
             String id = format("%s-%d", name, i);
