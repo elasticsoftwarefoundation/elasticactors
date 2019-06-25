@@ -7,6 +7,9 @@ import org.mockito.Mockito;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesClusterState.SCALING_DOWN;
 import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesClusterState.SCALING_UP;
 import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesClusterState.STABLE;
@@ -40,6 +43,16 @@ public class StableStateProcessorTest {
     @Test
     public void testProcess_shouldNotDoAnything() {
         assertFalse(processor.process(resourceWith(2, 2, 2)));
+
+        assertEquals(data.getCurrentState().get(), STABLE);
+        assertEquals(data.getCurrentTopology().get(), 2);
+        assertEquals(data.getLatestStableState().get(), originalStableState);
+        then(listener).should(never()).onTopologyChange(anyInt());
+    }
+
+    @Test
+    public void testProcess_shouldNotDoAnything_rollingUpdate() {
+        assertFalse(processor.process(resourceWith(2, 2, 1)));
 
         assertEquals(data.getCurrentState().get(), STABLE);
         assertEquals(data.getCurrentTopology().get(), 2);
