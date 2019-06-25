@@ -28,7 +28,7 @@ public class StableStateProcessor extends AbstractStateProcessor {
             return true;
         } else {
             logger.info(format("Cluster topology changed from %d to %d replicas -> setting status to SCALING_UP", currentDesiredReplicas, desiredReplicas));
-            // we are scaling down the cluster
+            // we are scaling up the cluster
             kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.SCALING_UP);
             return true;
         }
