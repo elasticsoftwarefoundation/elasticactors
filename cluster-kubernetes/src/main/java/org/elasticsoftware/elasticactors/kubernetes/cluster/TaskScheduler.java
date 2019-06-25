@@ -28,9 +28,8 @@ public class TaskScheduler {
 
     private void replaceCurrentTask(ScheduledFuture<?> newTask) {
         ScheduledFuture<?> previous = scheduledTask.getAndSet(newTask);
-        if (previous != null && !previous.isDone()) {
+        if (previous != null && previous.cancel(false)) {
             logger.info("Cancelling previously scheduled task");
-            previous.cancel(false);
         }
     }
 
