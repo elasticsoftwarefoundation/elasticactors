@@ -338,4 +338,24 @@ public class KubernetesStateMachineTest {
         assertEquals(stateMachineData.getLatestStableState().get(), secondScaleUp.get(secondScaleUp.size() - 1));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
     }
+
+    @Test
+    public void shouldScaleUpAndUpAgainSuccessfully_newNode() {
+
+        List<StatefulSet> firstScaleUp = scale(3, 5);
+        firstScaleUp.subList(2, firstScaleUp.size() - 1).forEach(stateMachine::processStateUpdate);
+
+        assertNotNull(scheduledTimeoutTask.get());
+        assertEquals(stateMachineData.getCurrentTopology().get(), 5);
+        assertEquals(stateMachineData.getLatestStableState().get(), firstScaleUp.get(2));
+        assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_UP_STARTED);
+
+        List<StatefulSet> secondScaleUp = scale(5, 7);
+        secondScaleUp.forEach(stateMachine::processStateUpdate);
+
+        assertNull(scheduledTimeoutTask.get());
+        assertEquals(stateMachineData.getCurrentTopology().get(), 7);
+        assertEquals(stateMachineData.getLatestStableState().get(), secondScaleUp.get(secondScaleUp.size() - 1));
+        assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
+    }
 }
