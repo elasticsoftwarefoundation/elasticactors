@@ -6,12 +6,14 @@ import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.Kuberne
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesStateMachineListener;
 import org.mockito.Mockito;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesClusterState.SCALING_DOWN;
+import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesClusterState.SCALING_UP;
 import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesClusterState.SCALING_UP_STARTED;
 import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesClusterState.STABLE;
 import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.StateMachineTestUtil.initialize;
@@ -47,15 +49,8 @@ public class ScalingUpStartedStateProcessorTest {
     @Test
     public void testProcess_shouldSwitchToStable() {
         StatefulSet newStableState = resourceWith(4, 4, 4);
-        List<StatefulSet> resources = Arrays.asList(
-                resourceWith(4, 2, 2),
-                resourceWith(4, 3, 2),
-                resourceWith(4, 3, 3),
-                resourceWith(4, 4, 3),
-                newStableState
-        );
 
-        resources.forEach(r -> assertFalse(processor.process(r)));
+        assertFalse(processor.process(newStableState));
 
         assertEquals(data.getCurrentState().get(), STABLE);
         assertEquals(data.getCurrentTopology().get(), 4);
@@ -68,15 +63,8 @@ public class ScalingUpStartedStateProcessorTest {
     @Test
     public void testProcess_shouldSwitchToStable_cancelledScaleUp() {
         StatefulSet newStableState = resourceWith(3, 3, 3);
-        List<StatefulSet> resources = Arrays.asList(
-                resourceWith(4, 2, 2),
-                resourceWith(4, 3, 2),
-                resourceWith(4, 3, 3),
-                resourceWith(4, 3, 2),
-                newStableState
-        );
 
-        resources.forEach(r -> assertFalse(processor.process(r)));
+        assertFalse(processor.process(newStableState));
 
         assertEquals(data.getCurrentState().get(), STABLE);
         assertEquals(data.getCurrentTopology().get(), 3);
@@ -87,38 +75,28 @@ public class ScalingUpStartedStateProcessorTest {
     }
 
     @Test
-    public void testProcess_shouldSwitchToStable_scaleUpModified() {
-        StatefulSet newStableState = resourceWith(5, 5, 5);
-        List<StatefulSet> resources = Arrays.asList(
-                resourceWith(4, 2, 2),
-                resourceWith(4, 3, 2),
-                resourceWith(4, 3, 3),
-                resourceWith(4, 3, 2),
-                resourceWith(5, 3, 3),
-                resourceWith(5, 4, 3),
-                resourceWith(5, 4, 4),
-                resourceWith(5, 5, 4),
-                newStableState
-        );
+    public void testProcess_shouldSwitchToScaleUp() {
+        assertTrue(processor.process(resourceWith(5, 4, 3)));
 
-        resources.forEach(r -> assertFalse(processor.process(r)));
-
-        assertEquals(data.getCurrentState().get(), STABLE);
-        assertEquals(data.getCurrentTopology().get(), 5);
-        assertEquals(data.getLatestStableState().get(), newStableState);
-        then(listener).should().onTopologyChange(5);
-        then(taskScheduler).should().cancelScheduledTask();
-        then(taskScheduler).should().scheduleTask(any(), eq(2), any());
+        assertEquals(data.getCurrentState().get(), SCALING_UP);
+        assertEquals(data.getCurrentTopology().get(), 4);
+        assertEquals(data.getLatestStableState().get(), originalStableState);
+        then(listener).should(never()).onTopologyChange(anyInt());
+        then(taskScheduler).should(never()).cancelScheduledTask();
+        then(taskScheduler).should(never()).scheduleTask(any(), any(), any());
     }
 
-    @Test
-    public void testProcess_shouldNotSwitchToStable_scaleUpFailed() {
-        List<StatefulSet> resources = Arrays.asList(
-                resourceWith(3, 2, 2),
-                resourceWith(3, 3, 2)
-        );
+    @DataProvider(name = "unstableStates")
+    public Object[][] getUnstableStates() {
+        return new Object[][]{
+                {resourceWith(3, 2, 2)},
+                {resourceWith(3, 3, 2)}
+        };
+    }
 
-        resources.forEach(r -> assertFalse(processor.process(r)));
+    @Test(dataProvider = "unstableStates")
+    public void testProcess_shouldNotSwitchToStable_scaleUpFailed(StatefulSet resource) {
+        assertFalse(processor.process(resource));
 
         assertEquals(data.getCurrentState().get(), SCALING_UP_STARTED);
         assertEquals(data.getCurrentTopology().get(), 4);
@@ -130,13 +108,13 @@ public class ScalingUpStartedStateProcessorTest {
 
     @Test
     public void testProcess_shouldSwitchToScaleDown() {
-        assertFalse(processor.process(resourceWith(1, 2, 2)));
+        assertTrue(processor.process(resourceWith(1, 2, 2)));
 
         assertEquals(data.getCurrentState().get(), SCALING_DOWN);
         assertEquals(data.getCurrentTopology().get(), 4);
         assertEquals(data.getLatestStableState().get(), originalStableState);
         then(listener).should(never()).onTopologyChange(anyInt());
-        then(taskScheduler).should(never()).cancelScheduledTask();
+        then(taskScheduler).should().cancelScheduledTask();
         then(taskScheduler).should(never()).scheduleTask(any(), any(), any());
     }
 

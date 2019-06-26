@@ -14,6 +14,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 public class UninitializedStateProcessorTest {
 
@@ -32,7 +33,7 @@ public class UninitializedStateProcessorTest {
     @Test
     public void testProcess() {
         StatefulSet newStableState = resourceWith(2, 2, 2);
-        assertFalse(processor.process(newStableState));
+        assertTrue(processor.process(newStableState));
 
         assertEquals(data.getCurrentState().get(), STABLE);
         assertEquals(data.getCurrentTopology().get(), 2);

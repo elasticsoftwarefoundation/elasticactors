@@ -32,4 +32,16 @@ public abstract class AbstractStateProcessor implements StateProcessor {
             kubernetesStateMachineData.getStateMachineListeners().forEach(l -> l.onTopologyChange(totalReplicas));
         }
     }
+
+    protected int getReadyReplicas(StatefulSet resource) {
+        return getInt(resource.getStatus().getReadyReplicas());
+    }
+
+    protected int getActualReplicas(StatefulSet resource) {
+        return resource.getStatus().getReplicas();
+    }
+
+    protected int getDesiredReplicas(StatefulSet resource) {
+        return resource.getSpec().getReplicas();
+    }
 }

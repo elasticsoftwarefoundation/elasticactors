@@ -15,9 +15,9 @@ public class UninitializedStateProcessor extends AbstractStateProcessor {
     @Override
     public boolean process(StatefulSet resource) {
         logger.info(format("Initialized Cluster State: spec.replicas=%d, status.replicas=%d, status.readyReplicas=%d",
-                resource.getSpec().getReplicas(), resource.getStatus().getReplicas(), resource.getStatus().getReadyReplicas()));
+                getDesiredReplicas(resource), getActualReplicas(resource), getReadyReplicas(resource)));
         switchToStableState(resource);
-        return false;
+        return true;
     }
 
 }

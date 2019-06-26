@@ -10,6 +10,7 @@ import static java.lang.String.format;
 public abstract class AbstractTaskSchedulingStateProcessor extends AbstractStateProcessor {
 
     private final TaskScheduler taskScheduler;
+
     private final static String TASK_NAME = "SCALE_UP_TIMEOUT_TASK";
 
     public AbstractTaskSchedulingStateProcessor(KubernetesStateMachineData kubernetesStateMachineData, TaskScheduler taskScheduler) {
@@ -19,13 +20,18 @@ public abstract class AbstractTaskSchedulingStateProcessor extends AbstractState
 
     @Override
     protected void switchToStableState(StatefulSet resource) {
-        taskScheduler.cancelScheduledTask();
+        cancelScheduledTimeoutTask();
         super.switchToStableState(resource);
+    }
+
+    protected void cancelScheduledTimeoutTask() {
+        taskScheduler.cancelScheduledTask();
     }
 
     protected void scheduleTimeoutTask(int desiredReplicas, int baseReplicas) {
         taskScheduler.scheduleTask(() -> {
-            final int stableReplicas = kubernetesStateMachineData.getLatestStableState().get().getSpec().getReplicas();
+            final int stableReplicas =
+                    getDesiredReplicas(kubernetesStateMachineData.getLatestStableState().get());
             logger.error(format("Scaling up to %d nodes failed. Reverting to previous stable state with %d nodes -> setting status to UNSTABLE", desiredReplicas, stableReplicas));
             kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.UNSTABLE);
             // change the topology back to the old state

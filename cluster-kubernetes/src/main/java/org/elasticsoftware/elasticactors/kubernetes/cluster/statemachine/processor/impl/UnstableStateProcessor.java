@@ -14,10 +14,10 @@ public class UnstableStateProcessor extends AbstractTaskSchedulingStateProcessor
     @Override
     public boolean process(StatefulSet resource) {
 
-        int desiredReplicas = resource.getSpec().getReplicas();
-        int actualReplicas = resource.getStatus().getReplicas();
-        int readyReplicas = getInt(resource.getStatus().getReadyReplicas());
-        int currentDesiredReplicas = kubernetesStateMachineData.getLatestStableState().get().getSpec().getReplicas();
+        int desiredReplicas = getDesiredReplicas(resource);
+        int actualReplicas = getActualReplicas(resource);
+        int readyReplicas = getReadyReplicas(resource);
+        int currentDesiredReplicas = getDesiredReplicas(kubernetesStateMachineData.getLatestStableState().get());
 
         // we need to somehow get out of this UNSTABLE state
         // spec and status should all be the same

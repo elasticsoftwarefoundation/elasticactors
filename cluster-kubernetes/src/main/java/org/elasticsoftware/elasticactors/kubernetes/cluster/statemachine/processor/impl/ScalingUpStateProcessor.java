@@ -17,13 +17,15 @@ public class ScalingUpStateProcessor extends AbstractTaskSchedulingStateProcesso
     @Override
     public boolean process(StatefulSet resource) {
 
-        int desiredReplicas = resource.getSpec().getReplicas();
-        int actualReplicas = resource.getStatus().getReplicas();
-        int currentDesiredReplicas = kubernetesStateMachineData.getLatestStableState().get().getSpec().getReplicas();
+        int desiredReplicas = getDesiredReplicas(resource);
+        int actualReplicas = getActualReplicas(resource);
+        int readyReplicas = getReadyReplicas(resource);
+        int currentDesiredReplicas = getDesiredReplicas(kubernetesStateMachineData.getLatestStableState().get());
+        int currentActualReplicas = getActualReplicas(kubernetesStateMachineData.getLatestStableState().get());
 
         // with scaling up it can happen that there are no more resources and the cluster will scale down
         // again without anything actually happening so we need to check here with the current state again
-        if (desiredReplicas == currentDesiredReplicas) {
+        if (desiredReplicas == currentDesiredReplicas && desiredReplicas == actualReplicas && desiredReplicas == readyReplicas) {
             logger.info("Scaling up cancelled. Reverting back to STABLE status");
             switchToStableState(resource);
         }
@@ -31,14 +33,15 @@ public class ScalingUpStateProcessor extends AbstractTaskSchedulingStateProcesso
         else if (desiredReplicas < currentDesiredReplicas) {
             logger.info("Scaling up cancelled. Scale down detected. Switching to SCALING_DOWN status");
             kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.SCALING_DOWN);
+            return true;
         }
         // don't wait for the other node to be ready but shed partitions immediately
-        else if (actualReplicas > kubernetesStateMachineData.getCurrentTopology().get()) {
+        else if (actualReplicas > currentDesiredReplicas || actualReplicas > currentActualReplicas) {
             logger.info(format("Starting scale up to %d nodes -> setting status to SCALING_UP_STARTED", desiredReplicas));
             kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.SCALING_UP_STARTED);
             onTopologyChange(desiredReplicas);
             // we need to set a timeout to receive the ready message
-            scheduleTimeoutTask(desiredReplicas, currentDesiredReplicas);
+            scheduleTimeoutTask(desiredReplicas, readyReplicas);
         }
 
         return false;

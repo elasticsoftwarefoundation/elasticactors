@@ -2,6 +2,7 @@ package org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.proces
 
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.TaskScheduler;
+import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesClusterState;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesStateMachineData;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.processor.AbstractTaskSchedulingStateProcessor;
 
@@ -16,14 +17,19 @@ public class ScalingDownStateProcessor extends AbstractTaskSchedulingStateProces
     @Override
     public boolean process(StatefulSet resource) {
 
-        int desiredReplicas = resource.getSpec().getReplicas();
-        int actualReplicas = resource.getStatus().getReplicas();
-        int readyReplicas = getInt(resource.getStatus().getReadyReplicas());
+        int desiredReplicas = getDesiredReplicas(resource);
+        int actualReplicas = getActualReplicas(resource);
+        int readyReplicas = getReadyReplicas(resource);
+        int currentDesiredReplicas = getDesiredReplicas(kubernetesStateMachineData.getLatestStableState().get());
 
         // spec and status should all be the same
         if (desiredReplicas == actualReplicas && desiredReplicas == readyReplicas) {
             logger.info(format("Successfully scaled down to %d nodes -> setting status to STABLE", desiredReplicas));
             switchToStableState(resource);
+        } else if (desiredReplicas > currentDesiredReplicas) {
+            logger.info("Scaling down cancelled. Scale up detected. Switching to SCALING_UP status");
+            kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.SCALING_UP);
+            return true;
         }
 
         return false;

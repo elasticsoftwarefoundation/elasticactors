@@ -14,7 +14,6 @@ import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.process
 
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.lang.String.format;
 
@@ -23,21 +22,18 @@ public class KubernetesStateMachine {
     private static final Logger logger = LogManager.getLogger(KubernetesStateMachine.class);
 
     private final Map<KubernetesClusterState, StateProcessor> stateProcessorMap = new EnumMap<>(KubernetesClusterState.class);
-    private final AtomicBoolean initialized = new AtomicBoolean();
 
     private final KubernetesStateMachineData kubernetesStateMachineData = new KubernetesStateMachineData();
+    private UninitializedStateProcessor uninitializedStateProcessor = new UninitializedStateProcessor(kubernetesStateMachineData);
 
     public void processStateUpdate(StatefulSet resource) {
         logger.info(format("Received Cluster State Update: spec.replicas=%d, status.replicas=%d, status.readyReplicas=%d",
                 resource.getSpec().getReplicas(), resource.getStatus().getReplicas(), resource.getStatus().getReadyReplicas()));
-        if(!initialized.getAndSet(true)) {
-            new UninitializedStateProcessor(kubernetesStateMachineData).process(resource);
-        } else {
-            boolean reprocess;
-            do {
-                reprocess = stateProcessorMap.get(kubernetesStateMachineData.getCurrentState().get()).process(resource);
-            } while (reprocess);
-        }
+        boolean reprocess;
+        do {
+            KubernetesClusterState clusterState = kubernetesStateMachineData.getCurrentState().get();
+            reprocess = stateProcessorMap.getOrDefault(clusterState, uninitializedStateProcessor).process(resource);
+        } while (reprocess);
     }
 
     public KubernetesStateMachine(TaskScheduler taskScheduler) {

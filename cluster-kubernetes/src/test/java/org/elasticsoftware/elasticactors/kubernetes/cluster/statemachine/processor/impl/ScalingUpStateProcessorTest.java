@@ -21,6 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 public class ScalingUpStateProcessorTest {
 
@@ -55,7 +56,7 @@ public class ScalingUpStateProcessorTest {
 
     @Test
     public void testProcess_shouldSwitchToScalingDown() {
-        assertFalse(processor.process(resourceWith(1, 1, 1)));
+        assertTrue(processor.process(resourceWith(1, 1, 1)));
 
         assertEquals(data.getCurrentState().get(), SCALING_DOWN);
         assertEquals(data.getCurrentTopology().get(), 2);

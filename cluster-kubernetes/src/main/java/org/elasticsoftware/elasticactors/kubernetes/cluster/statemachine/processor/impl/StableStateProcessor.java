@@ -16,17 +16,18 @@ public class StableStateProcessor extends AbstractStateProcessor {
     @Override
     public boolean process(StatefulSet resource) {
 
-        int desiredReplicas = resource.getSpec().getReplicas();
-        int currentDesiredReplicas = kubernetesStateMachineData.getLatestStableState().get().getSpec().getReplicas();
+        int desiredReplicas = getDesiredReplicas(resource);
+        int actualReplicas = getActualReplicas(resource);
+        int currentDesiredReplicas = getDesiredReplicas(kubernetesStateMachineData.getLatestStableState().get());
 
-        if (desiredReplicas == currentDesiredReplicas) {
+        if (desiredReplicas == currentDesiredReplicas && desiredReplicas == actualReplicas) {
             logger.info("Cluster topology remains unchanged");
         } else if (desiredReplicas < currentDesiredReplicas) {
             logger.info(format("Cluster topology changed from %d to %d replicas -> setting status to SCALING_DOWN", currentDesiredReplicas, desiredReplicas));
             // we are scaling down the cluster
             kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.SCALING_DOWN);
             return true;
-        } else {
+        } else if (desiredReplicas > currentDesiredReplicas || desiredReplicas > actualReplicas) {
             logger.info(format("Cluster topology changed from %d to %d replicas -> setting status to SCALING_UP", currentDesiredReplicas, desiredReplicas));
             // we are scaling up the cluster
             kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.SCALING_UP);

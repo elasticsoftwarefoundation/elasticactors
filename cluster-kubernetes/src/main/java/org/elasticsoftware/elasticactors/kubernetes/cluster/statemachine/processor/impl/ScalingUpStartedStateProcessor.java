@@ -17,10 +17,10 @@ public class ScalingUpStartedStateProcessor extends AbstractTaskSchedulingStateP
     @Override
     public boolean process(StatefulSet resource) {
 
-        int desiredReplicas = resource.getSpec().getReplicas();
-        int actualReplicas = resource.getStatus().getReplicas();
-        int readyReplicas = getInt(resource.getStatus().getReadyReplicas());
-        int currentDesiredReplicas = kubernetesStateMachineData.getLatestStableState().get().getSpec().getReplicas();
+        int desiredReplicas = getDesiredReplicas(resource);
+        int actualReplicas = getActualReplicas(resource);
+        int readyReplicas = getReadyReplicas(resource);
+        int currentDesiredReplicas = getDesiredReplicas(kubernetesStateMachineData.getLatestStableState().get());
 
         if(desiredReplicas == actualReplicas && desiredReplicas == readyReplicas) {
             logger.info(format("Successfully scaled up to %d nodes -> setting status to STABLE", desiredReplicas));
@@ -28,11 +28,12 @@ public class ScalingUpStartedStateProcessor extends AbstractTaskSchedulingStateP
         } else if (desiredReplicas < currentDesiredReplicas) {
             logger.info("Scaling up cancelled. Scale down detected. Switching to SCALING_DOWN status");
             kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.SCALING_DOWN);
+            cancelScheduledTimeoutTask();
+            return true;
         } else if(desiredReplicas > kubernetesStateMachineData.getCurrentTopology().get()) {
-            logger.info(format("New scale up to %d nodes detected -> signalling new topology change", desiredReplicas));
-            onTopologyChange(desiredReplicas);
-            // we need to set a timeout to receive the ready message
-            scheduleTimeoutTask(desiredReplicas, readyReplicas);
+            logger.info(format("New scale up to %d nodes detected. Switching to SCALING_UP status", desiredReplicas));
+            kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.SCALING_UP);
+            return true;
         }
 
         return false;
