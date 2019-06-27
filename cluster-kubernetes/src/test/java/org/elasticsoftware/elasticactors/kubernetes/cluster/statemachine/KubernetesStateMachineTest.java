@@ -3,7 +3,6 @@ package org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.TaskScheduler;
 import org.springframework.util.ReflectionUtils;
-import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -17,7 +16,6 @@ import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.
 import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.StateMachineTestUtil.scale;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.util.ReflectionUtils.findField;
@@ -25,6 +23,8 @@ import static org.springframework.util.ReflectionUtils.getField;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
+
+import static java.util.stream.Collectors.toList;
 
 public class KubernetesStateMachineTest {
 
@@ -358,4 +358,67 @@ public class KubernetesStateMachineTest {
         assertEquals(stateMachineData.getLatestStableState().get(), secondScaleUp.get(secondScaleUp.size() - 1));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
     }
+
+    @Test
+    public void shouldScaleUpAndUpReduceScaleUp_newNode() {
+
+        List<StatefulSet> firstScaleUp = scale(3, 8).stream()
+                .filter(s -> s.getStatus().getReplicas() < 7)
+                .collect(toList());
+        firstScaleUp.forEach(stateMachine::processStateUpdate);
+
+        assertNotNull(scheduledTimeoutTask.get());
+        assertEquals(stateMachineData.getCurrentTopology().get(), 8);
+        assertEquals(stateMachineData.getLatestStableState().get(), firstScaleUp.get(0));
+        assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_UP_STARTED);
+
+        List<StatefulSet> secondScaleUp = scale(5, 7);
+
+        stateMachine.processStateUpdate(secondScaleUp.get(0));
+
+        assertNotNull(scheduledTimeoutTask.get());
+        assertEquals(stateMachineData.getCurrentTopology().get(), 8);
+        assertEquals(stateMachineData.getLatestStableState().get(), firstScaleUp.get(0));
+        assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_UP_STARTED);
+
+        secondScaleUp.subList(1, secondScaleUp.size()).forEach(stateMachine::processStateUpdate);
+
+        assertNull(scheduledTimeoutTask.get());
+        assertEquals(stateMachineData.getCurrentTopology().get(), 7);
+        assertEquals(stateMachineData.getLatestStableState().get(), secondScaleUp.get(secondScaleUp.size() - 1));
+        assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
+    }
+
+    @Test
+    public void shouldScaleDownAndUpReduceScaleDown() {
+        originalStable = resourceWith(7, 7, 7);
+        stateMachine.processStateUpdate(originalStable);
+
+        List<StatefulSet> firstScaleDown = scale(7, 2).stream()
+                .filter(s -> s.getStatus().getReplicas() > 5)
+                .collect(toList());
+        firstScaleDown.forEach(stateMachine::processStateUpdate);
+
+        assertNull(scheduledTimeoutTask.get());
+        assertEquals(stateMachineData.getCurrentTopology().get(), 7);
+        assertEquals(stateMachineData.getLatestStableState().get(), originalStable);
+        assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_DOWN);
+
+        List<StatefulSet> secondScaleDown = scale(5, 3);
+
+        stateMachine.processStateUpdate(secondScaleDown.get(0));
+
+        assertNull(scheduledTimeoutTask.get());
+        assertEquals(stateMachineData.getCurrentTopology().get(), 7);
+        assertEquals(stateMachineData.getLatestStableState().get(), originalStable);
+        assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_DOWN);
+
+        secondScaleDown.subList(1, secondScaleDown.size()).forEach(stateMachine::processStateUpdate);
+
+        assertNull(scheduledTimeoutTask.get());
+        assertEquals(stateMachineData.getCurrentTopology().get(), 3);
+        assertEquals(stateMachineData.getLatestStableState().get(), secondScaleDown.get(secondScaleDown.size() - 1));
+        assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
+    }
+
 }

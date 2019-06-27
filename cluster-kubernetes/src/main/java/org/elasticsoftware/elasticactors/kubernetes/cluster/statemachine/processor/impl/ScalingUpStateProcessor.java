@@ -30,7 +30,7 @@ public class ScalingUpStateProcessor extends AbstractTaskSchedulingStateProcesso
             switchToStableState(resource);
         }
         // it could also be smaller, in that case we are actually scaling down
-        else if (desiredReplicas < currentDesiredReplicas) {
+        else if (desiredReplicas < currentDesiredReplicas && desiredReplicas < actualReplicas) {
             logger.info("Scaling up cancelled. Scale down detected. Switching to SCALING_DOWN status");
             kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.SCALING_DOWN);
             return true;

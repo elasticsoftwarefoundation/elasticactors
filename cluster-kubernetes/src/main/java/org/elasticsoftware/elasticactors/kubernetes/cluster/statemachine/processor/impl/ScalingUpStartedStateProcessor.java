@@ -25,7 +25,7 @@ public class ScalingUpStartedStateProcessor extends AbstractTaskSchedulingStateP
         if(desiredReplicas == actualReplicas && desiredReplicas == readyReplicas) {
             logger.info(format("Successfully scaled up to %d nodes -> setting status to STABLE", desiredReplicas));
             switchToStableState(resource);
-        } else if (desiredReplicas < currentDesiredReplicas) {
+        } else if (desiredReplicas < currentDesiredReplicas && desiredReplicas < actualReplicas) {
             logger.info("Scaling up cancelled. Scale down detected. Switching to SCALING_DOWN status");
             kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.SCALING_DOWN);
             cancelScheduledTimeoutTask();
