@@ -57,10 +57,11 @@ public final class PhysicalNodeImpl implements PhysicalNode {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
+        if (!(o instanceof PhysicalNode)) return false;
 
         PhysicalNode that = (PhysicalNode) o;
 
-        return getId().equals(that.getId());
+        return id.equals(that.getId());
     }
 
     @Override

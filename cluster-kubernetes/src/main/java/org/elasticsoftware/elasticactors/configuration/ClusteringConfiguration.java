@@ -30,7 +30,8 @@ public class ClusteringConfiguration {
     public ClusterService createClusterService() {
         String namespace = env.getProperty("ea.cluster.kubernetes.namespace", "default");
         String name = env.getRequiredProperty("ea.cluster.kubernetes.statefulsetName");
+        Integer timeoutSeconds = env.getProperty("ea.cluster.kubernetes.timeoutSeconds", Integer.class, 60);
         String nodeId = env.getRequiredProperty("ea.node.id");
-        return new KubernetesClusterService(namespace, name, nodeId);
+        return new KubernetesClusterService(namespace, name, nodeId, timeoutSeconds);
     }
 }
