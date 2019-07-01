@@ -10,7 +10,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 public class SingleThreadKubernetesStateMachine extends AbstractKubernetesStateMachine {
 
-    private final ExecutorService executorService = newSingleThreadExecutor();
+    private final ExecutorService executorService = newSingleThreadExecutor(r -> new Thread(r, "KUBERNETES_CLUSTERSERVICE_STATE_MACHINE"));
 
     public SingleThreadKubernetesStateMachine(TaskScheduler taskScheduler) {
         super(taskScheduler);
