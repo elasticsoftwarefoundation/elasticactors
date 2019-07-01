@@ -19,13 +19,10 @@ public class UnstableStateProcessor extends AbstractTaskSchedulingStateProcessor
         int desiredReplicas = getDesiredReplicas(resource);
         int actualReplicas = getActualReplicas(resource);
         int readyReplicas = getReadyReplicas(resource);
-        int currentDesiredReplicas = getDesiredReplicas(kubernetesStateMachineData.getLatestStableState().get());
 
         // we need to somehow get out of this UNSTABLE state
         // spec and status should all be the same
-        if (desiredReplicas == currentDesiredReplicas
-                && desiredReplicas == actualReplicas
-                && desiredReplicas == readyReplicas) {
+        if (desiredReplicas == actualReplicas && desiredReplicas == readyReplicas) {
             logger.info(format("Switching back to STABLE state with %d replicas", desiredReplicas));
             switchToStableState(resource);
         }
