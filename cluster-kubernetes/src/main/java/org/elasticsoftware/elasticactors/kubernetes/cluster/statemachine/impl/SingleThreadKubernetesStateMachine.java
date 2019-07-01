@@ -1,6 +1,7 @@
 package org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.impl;
 
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import org.elasticsoftware.elasticactors.kubernetes.cluster.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.TaskScheduler;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.AbstractKubernetesStateMachine;
 
@@ -10,7 +11,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 public class SingleThreadKubernetesStateMachine extends AbstractKubernetesStateMachine {
 
-    private final ExecutorService executorService = newSingleThreadExecutor(r -> new Thread(r, "KUBERNETES_CLUSTERSERVICE_STATE_MACHINE"));
+    private final ExecutorService executorService = newSingleThreadExecutor(new DaemonThreadFactory("KUBERNETES_CLUSTERSERVICE_STATE_MACHINE"));
 
     public SingleThreadKubernetesStateMachine(TaskScheduler taskScheduler) {
         super(taskScheduler);
