@@ -1,6 +1,7 @@
-package org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine;
+package org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data;
 
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesStateMachineListener;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;

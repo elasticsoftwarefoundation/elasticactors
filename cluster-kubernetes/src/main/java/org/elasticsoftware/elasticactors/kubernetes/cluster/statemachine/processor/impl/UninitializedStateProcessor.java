@@ -1,7 +1,7 @@
 package org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.processor.impl;
 
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesStateMachineData;
+import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesStateMachineData;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.processor.AbstractStateProcessor;
 
 import static java.lang.String.format;

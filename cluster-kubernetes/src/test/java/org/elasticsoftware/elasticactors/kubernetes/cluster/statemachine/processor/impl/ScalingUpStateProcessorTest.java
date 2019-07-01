@@ -2,17 +2,17 @@ package org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.proces
 
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.TaskScheduler;
-import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesStateMachineData;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesStateMachineListener;
+import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesStateMachineData;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesClusterState.SCALING_DOWN;
-import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesClusterState.SCALING_UP;
-import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesClusterState.SCALING_UP_STARTED;
-import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesClusterState.STABLE;
 import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.StateMachineTestUtil.initialize;
 import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.StateMachineTestUtil.resourceWith;
+import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesClusterState.SCALING_DOWN;
+import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesClusterState.SCALING_UP;
+import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesClusterState.SCALING_UP_STARTED;
+import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesClusterState.STABLE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -42,6 +42,32 @@ public class ScalingUpStateProcessorTest {
     }
 
     @Test
+    public void testProcess_shouldSwitchToStable_delayedProcessing_scaledDown() {
+        StatefulSet newStableState = resourceWith(1, 1, 1);
+        assertFalse(processor.process(newStableState));
+
+        assertEquals(data.getCurrentState().get(), STABLE);
+        assertEquals(data.getCurrentTopology().get(), 1);
+        assertEquals(data.getLatestStableState().get(), newStableState);
+        then(listener).should().onTopologyChange(1);
+        then(taskScheduler).should().cancelScheduledTask();
+        then(taskScheduler).should(never()).scheduleTask(any(), any(), any());
+    }
+
+    @Test
+    public void testProcess_shouldSwitchToStable_delayedProcessing_scaledUp() {
+        StatefulSet newStableState = resourceWith(3, 3, 3);
+        assertFalse(processor.process(newStableState));
+
+        assertEquals(data.getCurrentState().get(), STABLE);
+        assertEquals(data.getCurrentTopology().get(), 3);
+        assertEquals(data.getLatestStableState().get(), newStableState);
+        then(listener).should().onTopologyChange(3);
+        then(taskScheduler).should().cancelScheduledTask();
+        then(taskScheduler).should(never()).scheduleTask(any(), any(), any());
+    }
+
+    @Test
     public void testProcess_shouldSwitchToStable_scaleUpCancelled() {
         StatefulSet newStableState = resourceWith(2, 2, 2);
         assertFalse(processor.process(newStableState));
@@ -56,7 +82,7 @@ public class ScalingUpStateProcessorTest {
 
     @Test
     public void testProcess_shouldSwitchToScalingDown() {
-        assertTrue(processor.process(resourceWith(1, 1, 1)));
+        assertTrue(processor.process(resourceWith(1, 2, 2)));
 
         assertEquals(data.getCurrentState().get(), SCALING_DOWN);
         assertEquals(data.getCurrentTopology().get(), 2);

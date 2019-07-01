@@ -1,21 +1,16 @@
 package org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.processor.impl;
 
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesStateMachineData;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesStateMachineListener;
-import org.mockito.Mockito;
+import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesStateMachineData;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.Arrays;
-import java.util.List;
-
-import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesClusterState.SCALING_DOWN;
-import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesClusterState.SCALING_UP;
-import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesClusterState.STABLE;
 import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.StateMachineTestUtil.initialize;
 import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.StateMachineTestUtil.resourceWith;
-import static org.mockito.ArgumentMatchers.any;
+import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesClusterState.SCALING_DOWN;
+import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesClusterState.SCALING_UP;
+import static org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesClusterState.STABLE;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -48,6 +43,17 @@ public class StableStateProcessorTest {
         assertEquals(data.getCurrentTopology().get(), 2);
         assertEquals(data.getLatestStableState().get(), originalStableState);
         then(listener).should(never()).onTopologyChange(anyInt());
+    }
+
+    @Test
+    public void testProcess_shouldSignalNewStable() {
+        StatefulSet newStableState = resourceWith(4, 4, 4);
+        assertFalse(processor.process(newStableState));
+
+        assertEquals(data.getCurrentState().get(), STABLE);
+        assertEquals(data.getCurrentTopology().get(), 4);
+        assertEquals(data.getLatestStableState().get(), newStableState);
+        then(listener).should().onTopologyChange(4);
     }
 
     @Test

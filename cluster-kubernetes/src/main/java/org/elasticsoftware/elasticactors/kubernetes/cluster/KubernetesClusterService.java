@@ -29,6 +29,7 @@ import org.elasticsoftware.elasticactors.cluster.ClusterMessageHandler;
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesStateMachine;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesStateMachineListener;
+import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.impl.SingleThreadKubernetesStateMachine;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -59,7 +60,7 @@ public final class KubernetesClusterService implements ClusterService, Kubernete
 
         ScheduledExecutorService scheduledExecutorService =
                 newSingleThreadScheduledExecutor(new DaemonThreadFactory("KUBERNETES_CLUSTERSERVICE_SCHEDULER"));
-        this.kubernetesStateMachine = new KubernetesStateMachine(new TaskScheduler(scheduledExecutorService, timeoutSeconds));
+        this.kubernetesStateMachine = new SingleThreadKubernetesStateMachine(new TaskScheduler(scheduledExecutorService, timeoutSeconds));
         this.kubernetesStateMachine.addListener(this);
     }
 
@@ -84,12 +85,12 @@ public final class KubernetesClusterService implements ClusterService, Kubernete
     public void reportReady() throws Exception {
         StatefulSet statefulSet = client.apps().statefulSets().inNamespace(namespace).withName(name).get();
 
-        if(statefulSet == null) {
+        if (statefulSet == null) {
             throw new IllegalStateException(format("StatefulSet %s not found in namespace %s", name, namespace));
         }
 
         // send out the first update
-        kubernetesStateMachine.processStateUpdate(statefulSet);
+        kubernetesStateMachine.handleStateUpdate(statefulSet);
 
         // subscribe to updates
         client.apps().statefulSets().inNamespace(namespace).withName(name).watch(watcher);
@@ -153,7 +154,7 @@ public final class KubernetesClusterService implements ClusterService, Kubernete
         @Override
         public void eventReceived(Action action, StatefulSet resource) {
             if (Action.MODIFIED.equals(action)) {
-                kubernetesStateMachine.processStateUpdate(resource);
+                kubernetesStateMachine.handleStateUpdate(resource);
             }
         }
 
