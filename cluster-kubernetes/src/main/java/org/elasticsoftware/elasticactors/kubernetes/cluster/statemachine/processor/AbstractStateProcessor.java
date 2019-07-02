@@ -23,7 +23,7 @@ public abstract class AbstractStateProcessor implements StateProcessor {
     protected void switchToStableState(StatefulSet resource) {
         kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.STABLE);
         kubernetesStateMachineData.getLatestStableState().set(resource);
-        onTopologyChange(resource.getSpec().getReplicas());
+        onTopologyChange(getDesiredReplicas(resource));
     }
 
     protected void onTopologyChange(int totalReplicas) {

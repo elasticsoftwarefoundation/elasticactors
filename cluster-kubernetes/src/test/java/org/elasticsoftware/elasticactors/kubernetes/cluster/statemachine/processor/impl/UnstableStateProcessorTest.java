@@ -41,7 +41,7 @@ public class UnstableStateProcessorTest {
     @DataProvider(name = "unstableStates")
     public Object[][] getUnstableStates() {
         return new Object[][] {
-                {resourceWith(1, 1, 1)},
+                //{resourceWith(1, 1, 1)}, This is a table state
                 {resourceWith(1, 1, 2)},
                 {resourceWith(1, 1, 3)},
                 {resourceWith(1, 2, 1)},
@@ -66,8 +66,8 @@ public class UnstableStateProcessorTest {
                 {resourceWith(3, 2, 2)},
                 {resourceWith(3, 2, 3)},
                 {resourceWith(3, 3, 1)},
-                {resourceWith(3, 3, 2)},
-                {resourceWith(3, 3, 3)}
+                {resourceWith(3, 3, 2)}
+                //{resourceWith(3, 3, 3)} This is also a stable state
         };
     }
 
@@ -92,6 +92,32 @@ public class UnstableStateProcessorTest {
         assertEquals(data.getCurrentTopology().get(), 2);
         assertEquals(data.getLatestStableState().get(), newStableState);
         then(listener).should(never()).onTopologyChange(anyInt());
+        then(taskScheduler).should().cancelScheduledTask();
+        then(taskScheduler).should(never()).scheduleTask(any(), any(), any());
+    }
+
+    @Test
+    public void testProcess_shouldSwitchToNewStable_scaleDown_delayedProcessing() {
+        StatefulSet newStableState = resourceWith(1, 1, 1);
+        assertFalse(processor.process(newStableState));
+
+        assertEquals(data.getCurrentState().get(), STABLE);
+        assertEquals(data.getCurrentTopology().get(), 1);
+        assertEquals(data.getLatestStableState().get(), newStableState);
+        then(listener).should().onTopologyChange(1);
+        then(taskScheduler).should().cancelScheduledTask();
+        then(taskScheduler).should(never()).scheduleTask(any(), any(), any());
+    }
+
+    @Test
+    public void testProcess_shouldSwitchToNewStable_scaleUp_delayedProcessing() {
+        StatefulSet newStableState = resourceWith(3, 3, 3);
+        assertFalse(processor.process(newStableState));
+
+        assertEquals(data.getCurrentState().get(), STABLE);
+        assertEquals(data.getCurrentTopology().get(), 3);
+        assertEquals(data.getLatestStableState().get(), newStableState);
+        then(listener).should().onTopologyChange(3);
         then(taskScheduler).should().cancelScheduledTask();
         then(taskScheduler).should(never()).scheduleTask(any(), any(), any());
     }

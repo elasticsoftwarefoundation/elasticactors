@@ -19,7 +19,6 @@ public class SingleThreadKubernetesStateMachine extends AbstractKubernetesStateM
 
     @Override
     public void handleStateUpdate(StatefulSet resource) {
-        logger.info("Received state update. Submitting processing task to the Single Thread Executor Service");
         executorService.submit(() -> processStateUpdate(resource));
     }
 }

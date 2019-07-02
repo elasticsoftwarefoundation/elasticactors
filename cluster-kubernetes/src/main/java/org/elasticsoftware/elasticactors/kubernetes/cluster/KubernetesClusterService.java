@@ -66,7 +66,6 @@ public final class KubernetesClusterService implements ClusterService, Kubernete
 
     @PostConstruct
     public void init() {
-        kubernetesStateMachine.addListener(this);
         try {
             client = new DefaultKubernetesClient();
         } catch(KubernetesClientException e) {
