@@ -23,13 +23,15 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
  * @author Joost van de Wijgerd
  */
 public interface InternalMessage {
-    public static final int NO_TIMEOUT = -1;
+
+    int NO_TIMEOUT = -1;
 
     UUID getId();
 
@@ -52,4 +54,8 @@ public interface InternalMessage {
     InternalMessage copyOf();
 
     int getTimeout();
+
+    @Nullable
+    Map<String, String> getTraceData();
+
 }

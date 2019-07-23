@@ -18,17 +18,28 @@ package org.elasticsoftware.elasticactors.cluster.tasks;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorLifecycleListener;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
-import org.elasticsoftware.elasticactors.state.*;
+import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
+import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
+import org.elasticsoftware.elasticactors.state.PersistenceConfig;
+import org.elasticsoftware.elasticactors.state.PersistentActor;
+import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.tracing.TraceHelper;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
@@ -78,6 +89,10 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
 
     @Override
     public final void run() {
+        TraceHelper.run(this::runTask, internalMessage, getClass().getSimpleName());
+    }
+
+    private void runTask() {
         // measure start of the execution
         if(this.measurement != null) {
             this.measurement.setExecutionStart(System.nanoTime());
@@ -93,6 +108,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         } catch (Exception e) {
             log.error("Exception in doInActorContext",e);
             executionException = e;
+            TraceHelper.onError(e);
         } finally {
             // reset the serialization context
             SerializationContext.reset();
@@ -118,12 +134,15 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                             // it's an incoming message so the messageClass in the internal message is what we need
                             // to support multiple internal message handling protocols (such as the reactive streams protocol)
                             // we need to unwrap here to find the actual message
-                            unwrapMessageClass(internalMessage).ifPresent(messageClass ->
-                                    actorStateUpdateProcessor.process(null, messageClass, persistentActor));
+                            Class<?> unwrappedMessageClass = unwrapMessageClass(internalMessage);
+                            if (unwrappedMessageClass != null) {
+                                actorStateUpdateProcessor.process(null, unwrappedMessageClass, persistentActor);
+                            }
                         }
                     }
                 } catch (Exception e) {
                     log.error(format("Exception while serializing ActorState for actor [%s]", receiverRef.getActorId()), e);
+                    TraceHelper.onError(e);
                 } finally {
                     // always ensure we release the memory of the serialized state
                      persistentActor.setSerializedState(null);
@@ -217,13 +236,13 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
      *
      * @param internalMessage
      * @return
-     * @throws ClassNotFoundException
      */
-    protected Optional<Class> unwrapMessageClass(InternalMessage internalMessage) {
+    @Nullable
+    protected Class<?> unwrapMessageClass(@Nonnull InternalMessage internalMessage) {
         try {
-            return Optional.of(Class.forName(internalMessage.getPayloadClass()));
+            return Class.forName(internalMessage.getPayloadClass());
         } catch (ClassNotFoundException e) {
-            return Optional.empty();
+            return null;
         }
     }
 }

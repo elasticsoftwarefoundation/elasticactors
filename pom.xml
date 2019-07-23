@@ -63,6 +63,7 @@
         <!-- java 11+ -->
         <java.version>11</java.version>
         <javax-annotation-api.version>1.3.2</javax-annotation-api.version>
+        <brave.version>5.6.11</brave.version>
     </properties>
 
     <scm>
@@ -144,6 +145,8 @@
         <module>elasticactors-kafka-testapp</module>
         <module>indexing-elasticsearch</module>
         <module>cluster-kubernetes</module>
+        <module>tracing-noop</module>
+        <module>tracing-brave</module>
     </modules>
 
     <build>

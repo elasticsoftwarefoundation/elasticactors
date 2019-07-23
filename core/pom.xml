@@ -43,6 +43,11 @@
             <artifactId>elasticactors-api</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <artifactId>elasticactors-tracing-noop</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
         	<groupId>com.google.guava</groupId>
@@ -120,7 +125,6 @@
             <artifactId>disruptor</artifactId>
             <version>${disruptor.version}</version>
         </dependency>
-
 
     </dependencies>
     <build>

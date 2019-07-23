@@ -18,10 +18,16 @@ package org.elasticsoftware.elasticactors.cluster.tasks;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorContext;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.tracing.TraceHelper;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import java.util.Collection;
@@ -29,9 +35,10 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
+
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
-import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
  * @author Joost van de Wijgerd
@@ -95,7 +102,11 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     }
 
     @Override
-    public void run() {
+    public final void run() {
+        TraceHelper.run(this::runTask, internalMessage, getClass().getSimpleName());
+    }
+
+    private void runTask() {
         // measure start of the execution
         if(this.measurement != null) {
             this.measurement.setExecutionStart(System.nanoTime());
@@ -109,6 +120,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
             // @todo: send an error message to the sender
             logger.error(String.format("Exception while handling message for service [%s]",serviceRef.toString()),e);
             executionException = e;
+            TraceHelper.onError(e);
         } finally {
             InternalActorContext.getAndClearContext();
         }
