@@ -16,18 +16,22 @@
 
 package org.elasticsoftware.elasticactors.cluster.tasks;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorLifecycleListener;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.CompletedMessage;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
-import org.elasticsoftware.elasticactors.messaging.reactivestreams.CompletedMessage;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -37,7 +41,7 @@ import java.util.Set;
  * @author Joost van de Wijgerd
  */
 public final class DestroyActorTask extends ActorLifecycleTask {
-    private static final Logger logger = LogManager.getLogger(DestroyActorTask.class);
+    private static final Logger logger = LoggerFactory.getLogger(DestroyActorTask.class);
     private final ShardKey shardKey;
 
     public DestroyActorTask(PersistentActor persistentActor,
@@ -77,7 +81,7 @@ public final class DestroyActorTask extends ActorLifecycleTask {
                                        ActorRef receiverRef,
                                        InternalMessage internalMessage) {
         if(logger.isDebugEnabled()) {
-            logger.debug(String.format("Destroying Actor for ref [%s] of type [%s]",receiverRef.toString(),receiver.getClass().getName()));
+            logger.debug("Destroying Actor for ref [{}] of type [{}]",receiverRef,receiver.getClass().getName());
         }
         try {
             // @todo: figure out the destroyer
@@ -85,7 +89,7 @@ public final class DestroyActorTask extends ActorLifecycleTask {
             notifyPublishers();
             notifySubscribers();
             // delete entry here to serialize on state updates
-            if(persistentActorRepository != null) {
+            if (persistentActorRepository != null) {
                 persistentActorRepository.delete(shardKey, receiverRef.getActorId());
             }
         } catch (Exception e) {

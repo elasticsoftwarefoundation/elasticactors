@@ -19,15 +19,17 @@ package org.elasticsoftware.elasticactors.cluster;
 import org.elasticsoftware.elasticactors.ActorContextHolder;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.TypedSubscriber;
-import org.elasticsoftware.elasticactors.core.actors.*;
-import org.elasticsoftware.elasticactors.messaging.reactivestreams.*;
+import org.elasticsoftware.elasticactors.core.actors.CompletableFutureDelegate;
+import org.elasticsoftware.elasticactors.core.actors.ReplyActor;
+import org.elasticsoftware.elasticactors.core.actors.SubscriberActor;
+import org.elasticsoftware.elasticactors.core.actors.SubscriberState;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.SubscribeMessage;
 import org.elasticsoftware.elasticactors.reactivestreams.PersistentSubscriptionImpl;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.reactivestreams.Publisher;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 import static org.elasticsoftware.elasticactors.cluster.tasks.InternalActorContext.getAsProcessorContext;
 
@@ -47,6 +49,7 @@ public abstract class BaseActorRef implements ActorRef {
         this.refSpec = refSpec;
     }
 
+    @Override
     public final <T> CompletableFuture<T> ask(Object message, Class<T> responseType) {
         return ask(message, responseType, Boolean.FALSE);
     }

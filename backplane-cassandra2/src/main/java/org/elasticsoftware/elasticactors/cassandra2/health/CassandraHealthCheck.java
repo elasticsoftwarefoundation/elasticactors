@@ -17,9 +17,7 @@
 package org.elasticsoftware.elasticactors.cassandra2.health;
 
 import com.datastax.driver.core.Host;
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
 import org.elasticsoftware.elasticactors.health.HealthCheck;
 import org.elasticsoftware.elasticactors.health.HealthCheckResult;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +49,7 @@ public class CassandraHealthCheck implements HealthCheck {
      *
      * @return
      */
+    @Override
     public HealthCheckResult check() {
         if (cassandraSession.isClosed()) {
             return unhealthy("Cassandra Session appears to be closed");

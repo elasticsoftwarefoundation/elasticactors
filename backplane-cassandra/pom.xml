@@ -14,10 +14,12 @@
   ~   limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>elasticactors-parent</artifactId>
         <groupId>org.elasticsoftware.elasticactors</groupId>
+        <artifactId>elasticactors-parent</artifactId>
         <version>1.8.2-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -36,61 +38,45 @@
         <dependency>
             <groupId>org.lz4</groupId>
             <artifactId>lz4-java</artifactId>
-            <version>${lz4.version}</version>
         </dependency>
         <dependency>
             <groupId>org.elasticsoftware.elasticactors</groupId>
             <artifactId>elasticactors-spi</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.elasticsoftware.elasticactors</groupId>
             <artifactId>elasticactors-core</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.hectorclient</groupId>
             <artifactId>hector-core</artifactId>
-            <version>${hectorclient.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>properties-maven-plugin</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.cassandra</groupId>
-                    <artifactId>cassandra-all</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.cassandra</groupId>
-                    <artifactId>cassandra-thrift</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.cassandra</groupId>
             <artifactId>cassandra-thrift</artifactId>
-            <version>${cassandra.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.servlet</groupId>
-                    <artifactId>servlet-api</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-beans</artifactId>
-            <version>${spring.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

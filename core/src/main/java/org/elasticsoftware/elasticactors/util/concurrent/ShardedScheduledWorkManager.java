@@ -16,15 +16,22 @@
 
 package org.elasticsoftware.elasticactors.util.concurrent;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -37,7 +44,7 @@ import static java.lang.String.format;
  * @param <T>   The Scheduled Object that will be passed to {@link WorkExecutor#execute(Object, Object)} after the delay has expired
  */
 public final class ShardedScheduledWorkManager<K,T extends Delayed> {
-    private static final Logger LOGGER = LogManager.getLogger(ShardedScheduledWorkManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(ShardedScheduledWorkManager.class);
     public static final long MAX_AWAIT_MILLIS = 60000L;
 
     private final ExecutorService executor;
@@ -70,7 +77,7 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
 
     @PreDestroy
     public void destroy() {
-        LOGGER.info("calling ShardedScheduledWorkManager.destroy()");
+        logger.info("calling ShardedScheduledWorkManager.destroy()");
         stop = true;
         try {
             for (Future<?> f : futures) {
@@ -81,12 +88,12 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
             }
             delayQueues.clear();
         } catch (Exception e) {
-            LOGGER.error("Error on destroy", e);
+            logger.error("Error on destroy", e);
         }
     }
 
     public void registerShard(K shard) {
-        delayQueues.putIfAbsent(shard,new DelayQueue<T>());
+        delayQueues.putIfAbsent(shard, new DelayQueue<>());
     }
 
     public void unregisterShard(K shard) {
@@ -144,17 +151,15 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
         public void run() {
             try {
                 while (!stop) {
-                    T work = null;
                     long waitTimeMillis = MAX_AWAIT_MILLIS;
-
                     for (Map.Entry<K, DelayQueue<T>> delayQueueEntry : delayQueues.entrySet()) {
                         final DelayQueue<T> delayQueue = delayQueueEntry.getValue();
-                        work = delayQueue.poll();
+                        T work = delayQueue.poll();
                         if(work != null) {
                             try {
                                 workExecutor.execute(delayQueueEntry.getKey(),work);
                             } catch(Throwable e) {
-                                LOGGER.error("Exception while executing work!", e);
+                                logger.error("Exception while executing work!", e);
                             }
                         } else {
                             // peek the head
@@ -179,15 +184,9 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
 
                 }
             } finally {
-                infoMessage("Worker thread stopped");
+                logger.info("Worker thread stopped");
             }
         }
 
-        private void infoMessage(String messageFormat, Object... args) {
-            if (LOGGER.isInfoEnabled()) {
-                String formattedMessage = format(messageFormat, args);
-                LOGGER.info(formattedMessage);
-            }
-        }
     }
 }

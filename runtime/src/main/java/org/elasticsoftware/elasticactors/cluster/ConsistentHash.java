@@ -17,8 +17,8 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import com.google.common.hash.HashFunction;
-import org.elasticsoftware.elasticactors.base.util.Charsets;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -41,13 +41,13 @@ public final class ConsistentHash<T> {
 
     public void add(T node) {
         for (int i = 0; i < numberOfReplicas; i++) {
-            circle.put(hashFunction.hashString(node.toString() + i, Charsets.UTF_8).asLong(), node);
+            circle.put(hashFunction.hashString(node.toString() + i, StandardCharsets.UTF_8).asLong(), node);
         }
     }
 
     public void remove(T node) {
         for (int i = 0; i < numberOfReplicas; i++) {
-            circle.remove(hashFunction.hashString(node.toString() + i, Charsets.UTF_8).asLong());
+            circle.remove(hashFunction.hashString(node.toString() + i, StandardCharsets.UTF_8).asLong());
         }
     }
 
@@ -55,7 +55,7 @@ public final class ConsistentHash<T> {
         if (circle.isEmpty()) {
             return null;
         }
-        long hash = hashFunction.hashString(key, Charsets.UTF_8).asLong();
+        long hash = hashFunction.hashString(key, StandardCharsets.UTF_8).asLong();
         if (!circle.containsKey(hash)) {
             SortedMap<Long, T> tailMap = circle.tailMap(hash);
             hash = tailMap.isEmpty() ? circle.firstKey() : tailMap.firstKey();

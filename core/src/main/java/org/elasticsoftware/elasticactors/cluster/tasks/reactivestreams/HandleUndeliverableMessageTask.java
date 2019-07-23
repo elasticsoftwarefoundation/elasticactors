@@ -16,22 +16,32 @@
 
 package org.elasticsoftware.elasticactors.cluster.tasks.reactivestreams;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.PersistentSubscription;
+import org.elasticsoftware.elasticactors.PublisherNotFoundException;
+import org.elasticsoftware.elasticactors.SubscriberContext;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
-import org.elasticsoftware.elasticactors.messaging.reactivestreams.*;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.CancelMessage;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.CompletedMessage;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.RequestMessage;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.SubscribeMessage;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.SubscriptionMessage;
 import org.elasticsoftware.elasticactors.reactivestreams.InternalPersistentSubscription;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-import static java.lang.String.format;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
@@ -40,7 +50,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  * @author Joost van de Wijged
  */
 public final class HandleUndeliverableMessageTask extends ActorLifecycleTask implements SubscriberContext {
-    private static final Logger log = LogManager.getLogger(HandleUndeliverableMessageTask.class);
+    private static final Logger log = LoggerFactory.getLogger(HandleUndeliverableMessageTask.class);
     private InternalPersistentSubscription currentSubscription;
 
     public HandleUndeliverableMessageTask(InternalActorSystem actorSystem,
@@ -80,6 +90,7 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask imp
         return currentSubscription;
     }
 
+    @Override
     protected boolean doInActorContext(InternalActorSystem actorSystem,
                                        ElasticActor receiver,
                                        ActorRef receiverRef,
@@ -116,14 +127,14 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask imp
                     currentSubscription = persistentSubscription.get();
                     InternalSubscriberContext.setContext(this);
                     try {
-                        currentSubscription.getSubscriber().onError(
-                                new PublisherNotFoundException(String.format("Actor[%s] does not exist",
-                                        internalMessage.getSender().toString()), internalMessage.getSender()));
+                        currentSubscription.getSubscriber().onError(new PublisherNotFoundException(
+                                String.format("Actor[%s] does not exist", internalMessage.getSender()),
+                                internalMessage.getSender()));
                     } catch(Exception e) {
-                        log.error(format("Unexpected Exception while calling onError on Subscriber with type %s of Actor %s",
+                        log.error("Unexpected Exception while calling onError on Subscriber with type {} of Actor {}",
                                 currentSubscription.getSubscriber() != null ?
                                         currentSubscription.getSubscriber().getClass().getSimpleName() : null,
-                                receiverRef), e);
+                                receiverRef, e);
                     } finally {
                         InternalSubscriberContext.getAndClearContext();
                     }
@@ -137,9 +148,8 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask imp
                 return persistentActor.removeSubscriber(subscriptionMessage.getMessageName(), new MessageSubscriber(internalMessage.getSender()));
             }
         } catch (Exception e) {
-            log.error(String.format("Exception while Deserializing Message class %s in ActorSystem [%s]",
-                    internalMessage.getPayloadClass(), actorSystem.getName()), e);
-
+            log.error("Exception while Deserializing Message class {} in ActorSystem [{}]",
+                    internalMessage.getPayloadClass(), actorSystem.getName(), e);
         }
         return false;
     }

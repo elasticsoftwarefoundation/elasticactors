@@ -16,10 +16,12 @@
 
 package org.elasticsoftware.elasticactors.cluster.scheduler;
 
-import com.google.common.base.Charsets;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorContainer;
+import org.elasticsoftware.elasticactors.ActorContainerRef;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorShard;
+import org.elasticsoftware.elasticactors.MessageDeliveryException;
+import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
@@ -29,12 +31,15 @@ import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ShardedScheduledWorkManager;
 import org.elasticsoftware.elasticactors.util.concurrent.WorkExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.WorkExecutorFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,7 +52,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public final class ShardedScheduler implements SchedulerService,WorkExecutorFactory,ScheduledMessageRefFactory {
-    private static final Logger logger = LogManager.getLogger(ShardedScheduler.class);
+    private static final Logger logger = LoggerFactory.getLogger(ShardedScheduler.class);
     private ShardedScheduledWorkManager<ShardKey,ScheduledMessage> workManager;
     private ScheduledMessageRepository scheduledMessageRepository;
     private InternalActorSystem actorSystem;
@@ -82,7 +87,7 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
         // fetch block from repository
         // @todo: for now we'll fetch all, this obviously has memory issues
         List<ScheduledMessage> scheduledMessages = scheduledMessageRepository.getAll(shardKey);
-        workManager.schedule(shardKey,scheduledMessages.toArray(new ScheduledMessage[scheduledMessages.size()]));
+        workManager.schedule(shardKey,scheduledMessages.toArray(new ScheduledMessage[0]));
     }
 
     @Override
@@ -150,7 +155,7 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
                     final ActorRef receiverRef = message.getReceiver();
                     receiverRef.tell(deserializedMessage,message.getSender());
                 } else {
-                    logger.error(format("Could not find Deserializer for ScheduledMessage of type [%s]",message.getMessageClass().getName()));
+                    logger.error("Could not find Deserializer for ScheduledMessage of type [{}]",message.getMessageClass().getName());
                 }
             } catch(MessageDeliveryException e) {
                 // see if it's a recoverable exception
@@ -168,8 +173,8 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
                 }
             } catch(IOException e) {
                 // try to figure out what is wrong with the bytes
-                String jsonMessage = new String(message.getMessageBytes(), Charsets.UTF_8);
-                logger.error(format("IOException while deserializing ScheduledMessage contents [%s] of message class [%s]",jsonMessage,message.getMessageClass().getName()),e);
+                String jsonMessage = new String(message.getMessageBytes(), StandardCharsets.UTF_8);
+                logger.error("IOException while deserializing ScheduledMessage contents [{}] of message class [{}]",jsonMessage,message.getMessageClass().getName(),e);
             } catch(Exception e) {
                 logger.error("Caught unexpected Exception while exexuting ScheduledMessage",e);
             } finally {

@@ -19,8 +19,7 @@ package org.elasticsoftware.elasticactors.cassandra.serialization;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 
 import java.io.IOException;
-
-import static com.google.common.base.Charsets.UTF_8;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author Joost van de Wijgerd
@@ -28,6 +27,6 @@ import static com.google.common.base.Charsets.UTF_8;
 public final class StringDeserializer implements Deserializer<byte[],String> {
     @Override
     public String deserialize(byte[] serializedObject) throws IOException {
-        return new String(serializedObject, UTF_8);
+        return new String(serializedObject, StandardCharsets.UTF_8);
     }
 }

@@ -16,13 +16,13 @@
 
 package org.elasticsoftware.elasticactors.runtime;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.PostConstruct;
@@ -38,7 +38,7 @@ import java.util.Set;
  */
 @Named
 public final class MessagesScanner {
-    private static final Logger logger = LogManager.getLogger(MessagesScanner.class);
+    private static final Logger logger = LoggerFactory.getLogger(MessagesScanner.class);
     @Inject
     private ApplicationContext applicationContext;
 
@@ -59,13 +59,7 @@ public final class MessagesScanner {
             Message messageAnnotation = messageClass.getAnnotation(Message.class);
             // get the serialization framework
             SerializationFramework framework = applicationContext.getBean(messageAnnotation.serializationFramework());
-            if(framework != null) {
-                framework.register(messageClass);
-            } else {
-                logger.error(String.format("Could not find framework %s for message class %s",
-                                           messageAnnotation.serializationFramework().getSimpleName(),
-                                           messageClass.getName()));
-            }
+            framework.register(messageClass);
         }
     }
 }

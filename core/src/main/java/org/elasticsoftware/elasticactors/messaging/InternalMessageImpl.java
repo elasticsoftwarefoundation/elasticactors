@@ -22,11 +22,9 @@ import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
-import java.util.List;
 import java.util.UUID;
 
 /**

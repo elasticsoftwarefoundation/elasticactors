@@ -16,14 +16,14 @@
 
 package org.elasticsoftware.elasticactors.test.messaging;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Joost van de Wijgerd
@@ -39,7 +39,7 @@ public final class LocalMessageQueue implements MessageQueue {
         this.queueExecutor = queueExecutor;
         this.queueName = queueName;
         this.messageHandler = messageHandler;
-        this.logger = LogManager.getLogger(String.format("Producer[%s]",queueName));
+        this.logger = LoggerFactory.getLogger(String.format("Producer[%s]",queueName));
     }
 
     @Override
@@ -109,7 +109,7 @@ public final class LocalMessageQueue implements MessageQueue {
 
         @Override
         public void onError(InternalMessage message, Throwable exception) {
-            logger.error(String.format("Error handling transient message, payloadClass [%s]",message.getPayloadClass()),exception);
+            logger.error("Error handling transient message, payloadClass [{}]",message.getPayloadClass(),exception);
         }
 
         @Override

@@ -16,29 +16,37 @@
 
 package org.elasticsoftware.elasticactors.cluster.tasks;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorLifecycleListener;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
-import org.elasticsoftware.elasticactors.state.*;
+import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
+import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
+import org.elasticsoftware.elasticactors.state.PersistenceConfig;
+import org.elasticsoftware.elasticactors.state.PersistentActor;
+import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 /**
  * @author Joost van de Wijgerd
  */
 public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> {
-    private static final Logger log = LogManager.getLogger(ActorLifecycleTask.class);
+    private static final Logger log = LoggerFactory.getLogger(ActorLifecycleTask.class);
     protected final ActorRef receiverRef;
     protected final ElasticActor receiver;
     protected final InternalActorSystem actorSystem;
@@ -123,7 +131,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                         }
                     }
                 } catch (Exception e) {
-                    log.error(format("Exception while serializing ActorState for actor [%s]", receiverRef.getActorId()), e);
+                    log.error("Exception while serializing ActorState for actor [{}]", receiverRef.getActorId(), e);
                 } finally {
                     // always ensure we release the memory of the serialized state
                      persistentActor.setSerializedState(null);
@@ -146,10 +154,10 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             // do some trace logging
             if(this.measurement != null) {
                 // @todo: commenting this out for now, as in a real life scenario it would just spam the logs
-                //log.trace(format("(%s) Message of type [%s] with id [%s] for actor [%s] took %d microsecs in queue, %d microsecs to execute, %d microsecs to serialize and %d microsecs to ack (state update %b)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",receiverRef.getActorId(),measurement.getQueueDuration(MICROSECONDS),measurement.getExecutionDuration(MICROSECONDS),measurement.getSerializationDuration(MICROSECONDS),measurement.getAckDuration(MICROSECONDS),measurement.isSerialized()));
+                //log.trace("({}) Message of type [{}] with id [{}] for actor [{}] took {} microsecs in queue, {} microsecs to execute, {} microsecs to serialize and {} microsecs to ack (state update {})",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId() : "null",receiverRef.getActorId(),measurement.getQueueDuration(MICROSECONDS),measurement.getExecutionDuration(MICROSECONDS),measurement.getSerializationDuration(MICROSECONDS),measurement.getAckDuration(MICROSECONDS),measurement.isSerialized());
 
                 if (serializationWarnThreshold != null && this.measurement.getSerializationDuration(TimeUnit.MICROSECONDS) > serializationWarnThreshold) {
-                    log.warn(format("(%s) Message of type [%s] with id [%s] triggered serialization for actor [%s] which took %d microsecs to complete",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",receiverRef.getActorId(),measurement.getSerializationDuration(MICROSECONDS)));
+                    log.warn("({}) Message of type [{}] with id [{}] triggered serialization for actor [{}] which took {} microsecs to complete",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId() : "null",receiverRef.getActorId(),measurement.getSerializationDuration(MICROSECONDS));
                 }
             }
         }

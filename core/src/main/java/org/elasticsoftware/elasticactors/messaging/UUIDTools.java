@@ -92,19 +92,15 @@ public final class UUIDTools {
 
     public static Comparator<UUID> getTimeBasedComparator() {
         if (timeBasedComparator == null) {
-            timeBasedComparator = new Comparator<UUID>() {
-
-                @Override
-                public int compare(UUID o1, UUID o2) {
-                    long time1 = o1.timestamp();
-                    long time2 = o2.timestamp();
-                    if (time1 == time2) return 0;
-                    //In case time1 and time2 are both positive we only do (time1 < time2)
-                    //In case time1 is negative and time2 not, we reverse the comparison with (^time1 < 0)
-                    //In case time1 is negative and time2 is too, we reverse the comparison twice.
-                    boolean smaller = (time1 < time2) ^ (time1 < 0) ^ (time2 < 0);
-                    return smaller ? -1 : 1;
-                }
+            timeBasedComparator = (o1, o2) -> {
+                long time1 = o1.timestamp();
+                long time2 = o2.timestamp();
+                if (time1 == time2) return 0;
+                //In case time1 and time2 are both positive we only do (time1 < time2)
+                //In case time1 is negative and time2 not, we reverse the comparison with (^time1 < 0)
+                //In case time1 is negative and time2 is too, we reverse the comparison twice.
+                boolean smaller = (time1 < time2) ^ (time1 < 0) ^ (time2 < 0);
+                return smaller ? -1 : 1;
             };
         }
         return timeBasedComparator;

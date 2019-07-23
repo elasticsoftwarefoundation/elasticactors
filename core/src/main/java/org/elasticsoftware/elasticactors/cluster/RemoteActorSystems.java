@@ -16,13 +16,11 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
-import org.elasticsoftware.elasticactors.RemoteActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import javax.annotation.PreDestroy;
@@ -31,13 +29,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static java.lang.String.format;
-
 /**
  * @author Joost van de Wijgerd
  */
 public final class RemoteActorSystems {
-    private static final Logger logger = LogManager.getLogger(RemoteActorSystems.class);
+    private static final Logger logger = LoggerFactory.getLogger(RemoteActorSystems.class);
     private final Map<String,RemoteActorSystemInstance> remoteActorSystems = new HashMap<>();
 
     public RemoteActorSystems(InternalActorSystemConfiguration configuration,
@@ -56,9 +52,9 @@ public final class RemoteActorSystems {
         remoteActorSystems.forEach((key, value) -> {
             try {
                 value.init();
-                logger.info(format("Added Remote ActorSystem [%s] with %d shards on Cluster [%s]", value.getName(), value.getNumberOfShards(), key));
+                logger.info("Added Remote ActorSystem [{}] with {} shards on Cluster [{}]", value.getName(), value.getNumberOfShards(), key);
             } catch(Exception e) {
-                logger.error("Exception while initializing Remote ActorSystem [%s]", e);
+                logger.error("Exception while initializing Remote ActorSystem [{}]", value.getName(), e);
             }
         });
     }
@@ -78,9 +74,9 @@ public final class RemoteActorSystems {
     }
 
     public ActorSystem get(String actorSystemName) {
-        List<RemoteActorSystemInstance> instances = remoteActorSystems.entrySet().stream()
-                .filter(entry -> entry.getValue().getName().equals(actorSystemName))
-                .map(Map.Entry::getValue).collect(Collectors.toList());
+        List<RemoteActorSystemInstance> instances = remoteActorSystems.values().stream()
+                .filter(remoteActorSystemInstance -> remoteActorSystemInstance.getName().equals(actorSystemName))
+                .collect(Collectors.toList());
         if(!instances.isEmpty()) {
             if(instances.size() > 1) {
                 // cannot determine which one to use,

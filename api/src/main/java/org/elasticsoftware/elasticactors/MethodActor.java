@@ -16,19 +16,18 @@
 
 package org.elasticsoftware.elasticactors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 import org.elasticsoftware.elasticactors.state.PersistenceConfigHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -41,8 +40,8 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public abstract class MethodActor extends TypedActor<Object> implements PersistenceAdvisor {
-    private static final Logger logger = LogManager.getLogger(MethodActor.class);
-    private static final MessageHandlerOrderComparator ORDER_COMPARATOR = new MessageHandlerOrderComparator();
+    private static final Logger logger = LoggerFactory.getLogger(MethodActor.class);
+    private static final Comparator<HandlerMethodDefinition> ORDER_COMPARATOR = Comparator.comparing(m -> m.order);
     private final Map<Class<?>,List<HandlerMethodDefinition>> handlerCache = new HashMap<>();
     @Nullable private final Class<? extends ActorState> stateClass;
 
@@ -61,7 +60,7 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
             }
             // see if we have a MessageHandlersRegistry
             Class<? extends MessageHandlersRegistry> registryClass = otherHandlers.registryClass();
-            if(registryClass != null && !(MessageHandlers.NoopMessageHandlersRegistry.class.equals(registryClass))) {
+            if(!MessageHandlers.NoopMessageHandlersRegistry.class.equals(registryClass)) {
                 // try to instantiate the registry
                 try {
                     MessageHandlersRegistry registry = registryClass.newInstance();
@@ -73,7 +72,7 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                         }
                     }
                 } catch(Exception e) {
-                    logger.error(format("Exception while instantiating MessageHandlersRegistry of type [%s]",registryClass.getName()),e);
+                    logger.error("Exception while instantiating MessageHandlersRegistry of type [{}]",registryClass.getName(),e);
                 }
             }
         }
@@ -119,7 +118,7 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
 
     private void orderHandlerCache() {
         for (List<HandlerMethodDefinition> definitions : handlerCache.values()) {
-            Collections.sort(definitions,ORDER_COMPARATOR);
+            definitions.sort(ORDER_COMPARATOR);
         }
     }
 
@@ -173,11 +172,11 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                     final Throwable cause = e.getCause();
                     if(Exception.class.isAssignableFrom(cause.getClass())) {
                         // throw (Exception) cause;
-                        logger.error(format("Unexpected Exception in handlerMethod '%s' for actor [%s]", definition.handlerMethod.toString(), getSelf()), cause);
+                        logger.error("Unexpected Exception in handlerMethod '{}' for actor [{}]", definition.handlerMethod, getSelf(), cause);
                     } else {
                         // this is some system error, don't swallow it but just rethrow the Invocation Target Exception
                         // throw e;
-                        logger.error(format("Unexpected InvocationTargetException in handlerMethod '%s' for actor [%s]", definition.handlerMethod.toString(), getSelf()), e);
+                        logger.error("Unexpected InvocationTargetException in handlerMethod '{}' for actor [{}]", definition.handlerMethod, getSelf(), e);
                     }
                 }
             }
@@ -190,7 +189,7 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
 
     }
 
-    private static enum ParameterType {
+    private enum ParameterType {
         MESSAGE,
         SENDER_REF,
         STATE,
@@ -259,15 +258,6 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
 
             }
             return arguments;
-        }
-    }
-
-    private static final class MessageHandlerOrderComparator implements Comparator<HandlerMethodDefinition> {
-        @Override
-        public int compare(HandlerMethodDefinition o1, HandlerMethodDefinition o2) {
-            int i1 = o1.order;
-            int i2 = o2.order;
-            return (i1 < i2) ? -1 : (i1 > i2) ? 1 : 0;
         }
     }
 }

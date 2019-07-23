@@ -16,11 +16,11 @@
 
 package org.elasticsoftware.elasticactors.util;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.util.jar.Attributes;
@@ -32,7 +32,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public final class ManifestTools {
-    private static final Logger logger = LogManager.getLogger(ManifestTools.class);
+    private static final Logger logger = LoggerFactory.getLogger(ManifestTools.class);
     public static final String UNKNOWN_VERSION = "UNKNOWN";
 
     private ManifestTools() {}
@@ -63,14 +63,14 @@ public final class ManifestTools {
                 Manifest manifest = new Manifest(new URL(manifestPath).openStream());
                 Attributes attr = manifest.getMainAttributes();
                 String value = attr.getValue("Implementation-Version");
-                logger.debug(format("stateClass [%s] has version [%s]",className,(value != null) ? value : UNKNOWN_VERSION));
+                logger.debug("stateClass [{}] has version [{}]",className,(value != null) ? value : UNKNOWN_VERSION);
                 return (value != null) ? value : UNKNOWN_VERSION;
             } catch(Exception e) {
-                logger.warn(format("Cannot find Manifest for stateClass [%s] setting version to %s",stateClass.getName(),UNKNOWN_VERSION));
+                logger.warn("Cannot find Manifest for stateClass [{}] setting version to {}",stateClass.getName(),UNKNOWN_VERSION);
                 return UNKNOWN_VERSION;
             }
         } else {
-            logger.warn(format("Unable to determine version for stateClass [%s], cannot load class resource?",stateClass.getName()));
+            logger.warn("Unable to determine version for stateClass [{}], cannot load class resource?",stateClass.getName());
             return UNKNOWN_VERSION;
         }
     }

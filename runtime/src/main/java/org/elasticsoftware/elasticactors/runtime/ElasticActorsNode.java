@@ -19,10 +19,27 @@ package org.elasticsoftware.elasticactors.runtime;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.*;
-import org.elasticsoftware.elasticactors.cluster.*;
+import org.elasticsoftware.elasticactors.ActorNode;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorShard;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.PhysicalNode;
+import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
+import org.elasticsoftware.elasticactors.cluster.ActorRefTools;
+import org.elasticsoftware.elasticactors.cluster.ActorShardRef;
+import org.elasticsoftware.elasticactors.cluster.ClusterEventListener;
+import org.elasticsoftware.elasticactors.cluster.ClusterMessageHandler;
+import org.elasticsoftware.elasticactors.cluster.ClusterService;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.LocalClusterActorNodeRef;
+import org.elasticsoftware.elasticactors.cluster.RebalancingEventListener;
+import org.elasticsoftware.elasticactors.cluster.RemoteActorSystems;
+import org.elasticsoftware.elasticactors.cluster.ServiceActorRef;
+import org.elasticsoftware.elasticactors.cluster.ShardDistributionStrategy;
+import org.elasticsoftware.elasticactors.cluster.ShardDistributor;
 import org.elasticsoftware.elasticactors.cluster.messaging.ShardReleasedMessage;
 import org.elasticsoftware.elasticactors.cluster.protobuf.Clustering;
 import org.elasticsoftware.elasticactors.cluster.strategies.RunningNodeScaleDownStrategy;
@@ -36,6 +53,8 @@ import org.elasticsoftware.elasticactors.serialization.SystemDeserializers;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializers;
 import org.elasticsoftware.elasticactors.util.ManifestTools;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
@@ -46,17 +65,19 @@ import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static java.lang.String.format;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class ElasticActorsNode implements PhysicalNode, InternalActorSystems, ActorRefFactory, ClusterEventListener, ClusterMessageHandler {
-    private static final Logger logger = LogManager.getLogger(ElasticActorsNode.class);
+    private static final Logger logger = LoggerFactory.getLogger(ElasticActorsNode.class);
     private final String clusterName;
     private final String nodeId;
     private final InetAddress nodeAddress;
@@ -344,22 +365,22 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
                         rebalancingEventListener.preScaleUp();
                     }
                 } catch(Exception e) {
-                    logger.warn(format("Exception while calling RebalancingEventListener preScaleUp/Down [%s]",rebalancingEventListener.getClass().getName()),e);
+                    logger.warn("Exception while calling RebalancingEventListener preScaleUp/Down [{}]",rebalancingEventListener.getClass().getName(),e);
                 }
             }
             ShardDistributor distributor = applicationContext.getBean(ShardDistributor.class);
             InternalActorSystem instance = applicationContext.getBean(InternalActorSystem.class);
-            logger.info(format("Updating %d nodes for ActorSystem[%s]", clusterNodes.size(), instance.getName()));
+            logger.info("Updating {} nodes for ActorSystem[{}]", clusterNodes.size(), instance.getName());
             try {
                 distributor.updateNodes(clusterNodes);
             } catch (Exception e) {
-                logger.error(format("IMPORTANT: ActorSystem[%s] failed to update nodes, ElasticActors cluster is unstable. Please check all nodes", instance.getName()), e);
+                logger.error("IMPORTANT: ActorSystem[{}] failed to update nodes, ElasticActors cluster is unstable. Please check all nodes", instance.getName(), e);
             }
-            logger.info(format("Rebalancing %d shards for ActorSystem[%s] using %s", instance.getNumberOfShards(), instance.getName(), shardDistributionStrategy.getClass().getSimpleName()));
+            logger.info("Rebalancing {} shards for ActorSystem[{}] using {}", instance.getNumberOfShards(), instance.getName(), shardDistributionStrategy.getClass().getSimpleName());
             try {
                 distributor.distributeShards(clusterNodes,shardDistributionStrategy);
             } catch (Exception e) {
-                logger.error(format("IMPORTANT: ActorSystem[%s] failed to (re-)distribute shards,ElasticActors cluster is unstable. Please check all nodes", instance.getName()), e);
+                logger.error("IMPORTANT: ActorSystem[{}] failed to (re-)distribute shards,ElasticActors cluster is unstable. Please check all nodes", instance.getName(), e);
             }
             // call the post methods on the RebalancingEventListeners
             for (RebalancingEventListener rebalancingEventListener : rebalancingEventListeners) {
@@ -370,7 +391,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
                         rebalancingEventListener.postScaleUp();
                     }
                 } catch(Exception e) {
-                    logger.warn(format("Exception while calling RebalancingEventListener postScaleUp/Down [%s]",rebalancingEventListener.getClass().getName()),e);
+                    logger.warn("Exception while calling RebalancingEventListener postScaleUp/Down [{}]",rebalancingEventListener.getClass().getName(),e);
                 }
             }
         }

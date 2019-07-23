@@ -18,12 +18,17 @@ package org.elasticsoftware.elasticactors.runtime;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorLifecycleListener;
+import org.elasticsoftware.elasticactors.ActorLifecycleListenerRegistry;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.MessageHandlersRegistry;
+import org.elasticsoftware.elasticactors.MethodActor;
+import org.elasticsoftware.elasticactors.PluggableMessageHandlers;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.PostConstruct;
@@ -39,13 +44,14 @@ import java.util.Set;
  */
 @Named
 public final class PluggableMessageHandlersScanner implements MessageHandlersRegistry, ActorLifecycleListenerRegistry {
-    private static final Logger logger = LogManager.getLogger(PluggableMessageHandlersScanner.class);
+    private static final Logger logger = LoggerFactory.getLogger(PluggableMessageHandlersScanner.class);
     @Inject
     private ApplicationContext applicationContext;
     private final ListMultimap<Class<? extends MethodActor>,Class<?>> registry = LinkedListMultimap.create();
     private final ListMultimap<Class<? extends ElasticActor>,ActorLifecycleListener<?>> lifecycleListeners = LinkedListMultimap.create();
 
 
+    @Override
     @PostConstruct
     public void init() {
         String[] basePackages = ScannerHelper.findBasePackagesOnClasspath(applicationContext.getClassLoader());

@@ -27,6 +27,6 @@ import java.util.List;
 public final class LoggingActorStateUpdateListener implements ActorStateUpdateListener {
     @Override
     public void onUpdate(List<? extends ActorStateUpdate> updates) {
-        updates.stream().forEach(update -> System.out.println(String.format("Got an ActorStateUpdate for actorId: %s", update.getActorRef().getActorId())));
+        updates.forEach(update -> System.out.println(String.format("Got an ActorStateUpdate for actorId: %s", update.getActorRef().getActorId())));
     }
 }

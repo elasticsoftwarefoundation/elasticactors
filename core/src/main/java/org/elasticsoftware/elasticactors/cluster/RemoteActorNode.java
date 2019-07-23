@@ -53,6 +53,7 @@ public final class RemoteActorNode extends AbstractActorContainer implements Act
         return nodeKey;
     }
 
+    @Override
     public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
         MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
         // get the durable flag

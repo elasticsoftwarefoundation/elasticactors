@@ -19,7 +19,6 @@ package org.elasticsoftware.elasticactors.messaging;
 import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
 
 import java.io.IOException;

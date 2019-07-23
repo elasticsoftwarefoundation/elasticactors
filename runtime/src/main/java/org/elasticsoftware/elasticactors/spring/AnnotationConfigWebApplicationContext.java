@@ -86,9 +86,9 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 
     private ScopeMetadataResolver scopeMetadataResolver;
 
-    private final Set<Class<?>> annotatedClasses = new LinkedHashSet<Class<?>>();
+    private final Set<Class<?>> annotatedClasses = new LinkedHashSet<>();
 
-    private final Set<String> basePackages = new LinkedHashSet<String>();
+    private final Set<String> basePackages = new LinkedHashSet<>();
 
     private final Set<TypeFilter> includeFilters = new LinkedHashSet<>();
 
@@ -216,7 +216,7 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
                 logger.info("Registering annotated classes: [" +
                         StringUtils.collectionToCommaDelimitedString(this.annotatedClasses) + "]");
             }
-            reader.register(this.annotatedClasses.toArray(new Class<?>[this.annotatedClasses.size()]));
+            reader.register(this.annotatedClasses.toArray(new Class<?>[0]));
         }
 
         if (!this.basePackages.isEmpty()) {
@@ -227,7 +227,7 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
             for (TypeFilter typeFilter : includeFilters) {
                 scanner.addIncludeFilter(typeFilter);
             }
-            scanner.scan(this.basePackages.toArray(new String[this.basePackages.size()]));
+            scanner.scan(this.basePackages.toArray(new String[0]));
         }
 
         String[] configLocations = getConfigLocations();

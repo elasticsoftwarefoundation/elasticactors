@@ -16,8 +16,6 @@
 
 package org.elasticsoftware.elasticactors.cluster.tasks.app;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
@@ -25,11 +23,11 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
-import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static java.lang.String.format;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
@@ -38,7 +36,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  * @author Joost van de Wijged
  */
 public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
-    private static final Logger log = LogManager.getLogger(HandleUndeliverableMessageTask.class);
+    private static final Logger log = LoggerFactory.getLogger(HandleUndeliverableMessageTask.class);
 
 
     HandleUndeliverableMessageTask(InternalActorSystem actorSystem,
@@ -53,6 +51,7 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
 
 
 
+    @Override
     protected boolean doInActorContext(InternalActorSystem actorSystem,
                                        ElasticActor receiver,
                                        ActorRef receiverRef,
@@ -61,22 +60,22 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
             Object message = deserializeMessage(actorSystem, internalMessage);
             try {
                 receiver.onUndeliverable(internalMessage.getSender(), message);
-                return shouldUpdateState(receiver,message);
+                return shouldUpdateState(receiver, message);
             } catch(MessageDeliveryException e) {
                 // see if it is a recoverable exception
                 if(!e.isRecoverable()) {
-                    log.error(format("Unrecoverable MessageDeliveryException while handling message for actor [%s]", receiverRef.toString()), e);
+                    log.error("Unrecoverable MessageDeliveryException while handling message for actor [{}]", receiverRef, e);
                 }
                 // message cannot be sent but state should be updated as the received message did most likely change
                 // the state
                 return shouldUpdateState(receiver, message);
             } catch (Exception e) {
-                log.error(String.format("Exception while handling undeliverable message for actor [%s]", receiverRef.toString()), e);
+                log.error("Exception while handling undeliverable message for actor [{}]", receiverRef, e);
                 return false;
             }
         } catch (Exception e) {
-            log.error(String.format("Exception while Deserializing Message class %s in ActorSystem [%s]",
-                    internalMessage.getPayloadClass(), actorSystem.getName()), e);
+            log.error("Exception while Deserializing Message class {} in ActorSystem [{}]",
+                    internalMessage.getPayloadClass(), actorSystem.getName(), e);
             return false;
         }
     }

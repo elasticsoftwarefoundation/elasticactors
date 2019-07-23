@@ -19,8 +19,6 @@ package org.elasticsoftware.elasticactors.cluster;
 import com.google.common.cache.Cache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorNode;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
@@ -54,6 +52,8 @@ import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.elasticsoftware.elasticactors.util.ManifestTools;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -72,7 +72,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  */
 @Configurable
 public final class LocalActorShard extends AbstractActorContainer implements ActorShard, EvictionListener<PersistentActor<ShardKey>> {
-    private static final Logger logger = LogManager.getLogger(LocalActorShard.class);
+    private static final Logger logger = LoggerFactory.getLogger(LocalActorShard.class);
     // this instance acts as a tombstone for stopped actors
     private static final PersistentActor<ShardKey> TOMBSTONE = new PersistentActor<>(null,null,null,null,null,null);
     private final InternalActorSystem actorSystem;
@@ -138,6 +138,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         }
     }
 
+    @Override
     public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
         InternalMessage internalMessage = createInternalMessage(from, to, message);
         if (internalMessage != null) messageQueue.offer(internalMessage);
@@ -146,8 +147,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     private InternalMessage createInternalMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws IOException {
         MessageSerializer<Object> messageSerializer = (MessageSerializer<Object>) actorSystem.getSerializer(message.getClass());
         if(messageSerializer == null) {
-            logger.error(String.format("No message serializer found for class: %s. NOT sending message",
-                    message.getClass().getSimpleName()));
+            logger.error("No message serializer found for class: {}. NOT sending message",
+                    message.getClass().getSimpleName());
             return null;
         }
         // get the durable flag
@@ -235,13 +236,13 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                         }
                     } else {
                         messageHandlerEventListener.onError(internalMessage, e.getCause());
-                        logger.error(String.format("Exception while handling InternalMessage for Actor [%s]; senderRef [%s], messageType [%s]", receiverRef.getActorId(), internalMessage.getSender(), internalMessage.getPayloadClass()), e.getCause());
+                        logger.error("Exception while handling InternalMessage for Actor [{}]; senderRef [{}], messageType [{}]", receiverRef.getActorId(), internalMessage.getSender(), internalMessage.getPayloadClass(), e.getCause());
                     }
                 } catch (Exception e) {
                     //@todo: let the sender know his message could not be delivered
                     // we ack the message anyway
                     messageHandlerEventListener.onError(internalMessage, e);
-                    logger.error(String.format("Exception while handling InternalMessage for Actor [%s]; senderRef [%s], messageType [%s]", receiverRef.getActorId(), internalMessage.getSender(), internalMessage.getPayloadClass()), e.getCause());
+                    logger.error("Exception while handling InternalMessage for Actor [{}]; senderRef [{}], messageType [{}]", receiverRef.getActorId(), internalMessage.getSender(), internalMessage.getPayloadClass(), e.getCause());
                 } finally {
                     // ensure the cacheLoader is reset
                     this.cacheLoader.reset();
@@ -293,9 +294,9 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                                 }
                             } else {
                                 // @todo: we currently don't handle message undeliverable for ActorNodeMessages
-                                logger.error(String.format("ActorNode with id [%s] is not reachable, discarding message of type [%s] from [%s] for [%s]",
+                                logger.error("ActorNode with id [{}] is not reachable, discarding message of type [{}] from [{}] for [{}]",
                                         actorNodeMessage.getNodeId(), actorNodeMessage.getMessage().getClass().getName(), internalMessage.getSender(),
-                                        actorNodeMessage.getReceiverRef()));
+                                        actorNodeMessage.getReceiverRef());
                             }
                         } else {
                             // @todo: we currently don't handle message undeliverable for ActorNodeMessages
@@ -313,7 +314,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                 } catch (Exception e) {
                     // @todo: determine if this is a recoverable error case or just a programming error
                     messageHandlerEventListener.onError(internalMessage, e);
-                    logger.error(String.format("Exception while handling InternalMessage for Shard [%s]; senderRef [%s], messageType [%s]", shardKey.toString(), internalMessage.getSender().toString(), internalMessage.getPayloadClass()), e);
+                    logger.error("Exception while handling InternalMessage for Shard [{}]; senderRef [{}], messageType [{}]", shardKey, internalMessage.getSender(), internalMessage.getPayloadClass(), e);
                 }
 
             }

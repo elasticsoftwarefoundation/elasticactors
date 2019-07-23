@@ -16,18 +16,22 @@
 
 package org.elasticsoftware.elasticactors.runtime;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class ScannerHelper {
-    private static final Logger logger = LogManager.getLogger(ScannerHelper.class);
+    private static final Logger logger = LoggerFactory.getLogger(ScannerHelper.class);
     public static final String RESOURCE_NAME = "META-INF/elasticactors.properties";
 
     public static String[] findBasePackagesOnClasspath(String... defaultPackages) {
@@ -36,9 +40,8 @@ public final class ScannerHelper {
 
     public static String[] findBasePackagesOnClasspath(ClassLoader classLoader,String... defaultPackages) {
         // scan everything for META-INF/elasticactors.properties
-        Set<String> basePackages = new HashSet<>();
         // add the core configuration package
-        basePackages.addAll(Arrays.asList(defaultPackages));
+        Set<String> basePackages = new HashSet<>(Arrays.asList(defaultPackages));
 
         try {
             Enumeration<URL> resources = classLoader.getResources(RESOURCE_NAME);
@@ -49,8 +52,8 @@ public final class ScannerHelper {
                 basePackages.add(props.getProperty("basePackage"));
             }
         } catch(IOException e) {
-            logger.warn(String.format("Failed to load elasticactors.properties"),e);
+            logger.warn("Failed to load elasticactors.properties",e);
         }
-        return basePackages.toArray(new String[basePackages.size()]);
+        return basePackages.toArray(new String[0]);
     }
 }

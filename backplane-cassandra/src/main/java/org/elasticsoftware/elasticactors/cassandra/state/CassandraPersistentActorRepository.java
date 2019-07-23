@@ -22,8 +22,6 @@ import me.prettyprint.hector.api.beans.Composite;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.exceptions.HPoolRecoverableException;
 import me.prettyprint.hector.api.exceptions.HTimedOutException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
@@ -32,10 +30,11 @@ import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 
 
@@ -43,7 +42,7 @@ import static java.lang.System.currentTimeMillis;
  * @author Joost van de Wijgerd
  */
 public final class CassandraPersistentActorRepository implements PersistentActorRepository {
-    private static final Logger logger = LogManager.getLogger(CassandraPersistentActorRepository.class);
+    private static final Logger logger = LoggerFactory.getLogger(CassandraPersistentActorRepository.class);
     private final String clusterName;
     private final ThreadBoundExecutor asyncUpdateExecutor;
     private final long readExecutionThresholdMillis;
@@ -118,7 +117,7 @@ public final class CassandraPersistentActorRepository implements PersistentActor
         } finally {
             final long endTime = currentTimeMillis();
             if((endTime - startTime) > readExecutionThresholdMillis) {
-                logger.warn(format("Cassandra read operation took %d msecs (%d retries) for actorId [%s] on shard [%s]",(endTime - startTime),(2 - attemptsRemaining),actorId,shard.toString()));
+                logger.warn("Cassandra read operation took {} msecs ({} retries) for actorId [{}] on shard [{}]", (endTime - startTime), (2 - attemptsRemaining), actorId, shard);
             }
         }
     }

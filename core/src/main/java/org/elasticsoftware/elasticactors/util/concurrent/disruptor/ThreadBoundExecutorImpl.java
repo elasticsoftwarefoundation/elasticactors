@@ -19,12 +19,12 @@ package org.elasticsoftware.elasticactors.util.concurrent.disruptor;
 import com.lmax.disruptor.EventTranslatorOneArg;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnableEventProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,13 +32,11 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static java.lang.String.format;
-
 /**
  * @author Joost van de Wijgerd
  */
 public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
-    private static final Logger LOG = LogManager.getLogger(ThreadBoundExecutorImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(ThreadBoundExecutorImpl.class);
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
     private final ThreadFactory threadFactory;
     private final List<Disruptor<ThreadBoundEventWrapper>> disruptors;
@@ -52,7 +50,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
         this.threadFactory = threadFactory;
         this.disruptors = new ArrayList<>(workers);
 
-        LOG.info(format("Initializing (Disruptor)ThreadBoundExecutor[%s]",threadFactory.toString()));
+        logger.info("Initializing (Disruptor)ThreadBoundExecutor[{}]",threadFactory);
         ThreadBoundEventWrapperFactory eventFactory = new ThreadBoundEventWrapperFactory();
 
         for (int i = 0; i < workers; i++) {
@@ -75,14 +73,14 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
 
     @Override
     public void shutdown() {
-        LOG.info(format("shutting down the (Disruptor)ThreadBoundExecutor[%s]",threadFactory.toString()));
+        logger.info("Shutting down the (Disruptor)ThreadBoundExecutor[{}]",threadFactory);
         if (shuttingDown.compareAndSet(false, true)) {
             for (Disruptor<ThreadBoundEventWrapper> disruptor : disruptors) {
                 // @todo: we may want to have a timeout here
                 disruptor.shutdown();
             }
         }
-        LOG.info(format("(Disruptor)ThreadBoundExecutor[%s] shut down completed",threadFactory.toString()));
+        logger.info("(Disruptor)ThreadBoundExecutor[{}] shut down completed",threadFactory);
     }
 
     @Override

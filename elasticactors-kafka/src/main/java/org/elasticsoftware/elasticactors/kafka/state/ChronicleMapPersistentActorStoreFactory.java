@@ -16,18 +16,18 @@
 
 package org.elasticsoftware.elasticactors.kafka.state;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 
 import java.io.IOException;
 
 public final class ChronicleMapPersistentActorStoreFactory implements PersistentActorStoreFactory {
-    private static final Logger logger = LogManager.getLogger(ChronicleMapPersistentActorStoreFactory.class);
+    private static final Logger logger = LoggerFactory.getLogger(ChronicleMapPersistentActorStoreFactory.class);
     private Environment environment;
 
     @Autowired

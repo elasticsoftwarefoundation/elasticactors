@@ -21,8 +21,6 @@ import org.apache.activemq.artemis.api.core.client.ClientConsumer;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientProducer;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
@@ -31,13 +29,14 @@ import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static java.lang.String.format;
 import static org.apache.activemq.artemis.api.core.Message.HDR_DUPLICATE_DETECTION_ID;
 import static org.elasticsoftware.elasticactors.messaging.UUIDTools.toByteArray;
 
@@ -45,7 +44,7 @@ import static org.elasticsoftware.elasticactors.messaging.UUIDTools.toByteArray;
  * @author Joost van de Wijgerd
  */
 public final class LocalMessageQueue implements MessageQueue, org.apache.activemq.artemis.api.core.client.MessageHandler {
-    private static final Logger logger = LogManager.getLogger(LocalMessageQueue.class);
+    private static final Logger logger = LoggerFactory.getLogger(LocalMessageQueue.class);
 
     private final ThreadBoundExecutor queueExecutor;
     private final InternalMessageDeserializer internalMessageDeserializer;
@@ -345,7 +344,7 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
 
         @Override
         public void onError(InternalMessage message, Throwable exception) {
-            logger.error(format("Error handling transient message, payloadClass [%s]", message.getPayloadClass()),exception);
+            logger.error("Error handling transient message, payloadClass [{}]", message.getPayloadClass(),exception);
         }
 
         @Override

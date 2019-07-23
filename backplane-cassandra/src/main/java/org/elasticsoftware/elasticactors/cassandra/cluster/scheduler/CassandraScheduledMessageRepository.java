@@ -23,14 +23,14 @@ import me.prettyprint.cassandra.service.template.ColumnFamilyRowMapper;
 import me.prettyprint.cassandra.service.template.ColumnFamilyTemplate;
 import me.prettyprint.cassandra.service.template.ColumnFamilyUpdater;
 import me.prettyprint.hector.api.beans.Composite;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRepository;
 import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
  * @author Joost van de Wijgerd
  */
 public final class CassandraScheduledMessageRepository implements ScheduledMessageRepository {
-    private static final Logger logger = LogManager.getLogger(CassandraScheduledMessageRepository.class);
+    private static final Logger logger = LoggerFactory.getLogger(CassandraScheduledMessageRepository.class);
     private final String clusterName;
     private final ColumnFamilyTemplate<Composite,Composite> columnFamilyTemplate;
     private final ListResultMapper resultMapper = new ListResultMapper();
@@ -110,7 +110,7 @@ public final class CassandraScheduledMessageRepository implements ScheduledMessa
                     try {
                         resultList.add(scheduledMessageDeserializer.deserialize(results.getByteArray(columnName)));
                     } catch(IOException e)  {
-                        logger.error(e);
+                        logger.error("Error while deserializing Scheduled Message", e);
                     }
                 }
             }

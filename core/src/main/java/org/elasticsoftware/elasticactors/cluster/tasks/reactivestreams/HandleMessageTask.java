@@ -16,8 +16,6 @@
 
 package org.elasticsoftware.elasticactors.cluster.tasks.reactivestreams;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ActorSystem;
@@ -41,6 +39,8 @@ import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -49,15 +49,13 @@ import java.util.Set;
 
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
-import static java.lang.String.format;
-
 /**
  * Task that is responsible for internalMessage deserialization, error handling and state updates
  *
  * @author Joost van de Wijged
  */
 public final class HandleMessageTask extends ActorLifecycleTask implements SubscriberContext {
-    private static final Logger log = LogManager.getLogger(HandleMessageTask.class);
+    private static final Logger log = LoggerFactory.getLogger(HandleMessageTask.class);
     private InternalPersistentSubscription currentSubscription;
 
     HandleMessageTask(InternalActorSystem actorSystem,
@@ -115,6 +113,7 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
 
     }
 
+    @Override
     protected boolean doInActorContext(InternalActorSystem actorSystem,
                                        ElasticActor receiver,
                                        ActorRef receiverRef,
@@ -136,8 +135,8 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
             }
             return true;
         } catch (Exception e) {
-            log.error(format("Exception while Deserializing Message class %s in ActorSystem [%s]",
-                    internalMessage.getPayloadClass(), actorSystem.getName()), e);
+            log.error("Exception while Deserializing Message class {} in ActorSystem [{}]",
+                    internalMessage.getPayloadClass(), actorSystem.getName(), e);
             return false;
         }
     }
@@ -160,23 +159,22 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
                 return shouldUpdateState(receiver, message);
             } catch (ClassNotFoundException e) {
                 // the message type (class) that I am subscribing to is not available
-                log.error(format("Actor[%s]: Could not find message type: <%s>, unable to deserialize subscribed message", receiverRef.toString(), nextMessage.getMessageName()));
+                log.error("Actor[{}]: Could not find message type: <{}>, unable to deserialize subscribed message", receiverRef, nextMessage.getMessageName());
             } catch (IOException e) {
-                log.error(format("Actor[%s]: Problem trying to deserialize message embedded in NextMessage", receiverRef.toString()), e);
+                log.error("Actor[{}]: Problem trying to deserialize message embedded in NextMessage", receiverRef, e);
             } catch (Exception e) {
-                log.error(format("Unexpected Exception while calling onNext on Subscriber with type %s of Actor %s",
+                log.error("Unexpected Exception while calling onNext on Subscriber with type {} of Actor {}",
                         currentSubscription.getSubscriber() != null ?
                                 currentSubscription.getSubscriber().getClass().getSimpleName() : null,
-                        receiverRef), e);
+                        receiverRef, e);
             } finally {
                 InternalSubscriberContext.getAndClearContext();
             }
         } else {
             // there is no corresponding persistent subscription related to this publisher/message combination
             // this should not happen, however if it does happen we need to cancel the subscriber on the publisher side
-            log.error(format("Subscriber %s is missing PersistentSubscription for Publisher %s while handling NextMessage", receiverRef, publisherRef));
+            log.error("Subscriber {} is missing PersistentSubscription for Publisher {} while handling NextMessage", receiverRef, publisherRef);
             publisherRef.tell(new CancelMessage(receiverRef, nextMessage.getMessageName()));
-
         }
         return false;
     }
@@ -212,10 +210,10 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
             try {
                 persistentSubscription.get().getSubscriber().onSubscribe(persistentSubscription.get());
             } catch(Exception e) {
-                log.error(format("Unexpected Exception while calling onSubscribe on Subscriber with type %s of Actor %s",
+                log.error("Unexpected Exception while calling onSubscribe on Subscriber with type {} of Actor {}",
                         currentSubscription.getSubscriber() != null ?
                                 currentSubscription.getSubscriber().getClass().getSimpleName() : null,
-                        receiverRef), e);
+                        receiverRef, e);
             } finally {
                 InternalSubscriberContext.getAndClearContext();
             }
@@ -223,7 +221,7 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
             // we got a subscription message, but there is no corresponding PersistentSubscription ... this should not
             // be possible. however since the other side now has a corresponding subscriber reference we need to cancel
             // it to keep
-            log.error(format("Subscriber %s is missing PersistentSubscription for Publisher %s while handling SubscriptionMessage", receiverRef, publisherRef));
+            log.error("Subscriber {} is missing PersistentSubscription for Publisher {} while handling SubscriptionMessage", receiverRef, publisherRef);
             publisherRef.tell(new CancelMessage(subscriberRef, subscriptionMessage.getMessageName()));
         }
 
@@ -238,17 +236,17 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
             try {
                 persistentSubscription.get().getSubscriber().onComplete();
             } catch(Exception e) {
-                log.error(format("Unexpected Exception while calling onComplete on Subscriber with type %s of Actor %s",
+                log.error("Unexpected Exception while calling onComplete on Subscriber with type {} of Actor {}",
                     currentSubscription.getSubscriber() != null ?
                             currentSubscription.getSubscriber().getClass().getSimpleName() : null,
-                    receiverRef), e);
+                    receiverRef, e);
             } finally {
                 InternalSubscriberContext.getAndClearContext();
                 persistentActor.removeSubscription(completedMessage.getMessageName(), publisherRef);
             }
         } else {
             // got a completed message but missing subscription
-            log.error(format("Subscriber %s is missing PersistentSubscription for Publisher %s while handling CompletedMessage", receiverRef, publisherRef));
+            log.error("Subscriber {} is missing PersistentSubscription for Publisher {} while handling CompletedMessage", receiverRef, publisherRef);
         }
     }
 

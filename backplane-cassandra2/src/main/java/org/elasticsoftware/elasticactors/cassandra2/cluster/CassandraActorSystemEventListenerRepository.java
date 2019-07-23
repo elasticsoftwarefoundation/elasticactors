@@ -20,16 +20,15 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ShardKey;
-import org.elasticsoftware.elasticactors.cassandra2.util.ExecutionUtils;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEvent;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListener;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRepository;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorSystemEventListenerDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorSystemEventListenerSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -42,7 +41,7 @@ import static org.elasticsoftware.elasticactors.cassandra2.util.ExecutionUtils.e
  * @author Joost van de Wijgerd
  */
 public final class CassandraActorSystemEventListenerRepository implements ActorSystemEventListenerRepository {
-    private static final Logger logger = LogManager.getLogger(CassandraActorSystemEventListenerRepository.class);
+    private static final Logger logger = LoggerFactory.getLogger(CassandraActorSystemEventListenerRepository.class);
     public static final String INSERT_QUERY = "INSERT INTO \"ActorSystemEventListeners\" (key, key2, key3, column1, value) VALUES (?, ?, ?, ?, ?)";
     public static final String DELETE_QUERY = "DELETE FROM \"ActorSystemEventListeners\" WHERE key = ? AND key2 = ? AND key3 = ? AND column1 = ?";
     public static final String SELECT_QUERY = "SELECT value FROM \"ActorSystemEventListeners\" WHERE key = ? and key2 = ? and key3 = ?";

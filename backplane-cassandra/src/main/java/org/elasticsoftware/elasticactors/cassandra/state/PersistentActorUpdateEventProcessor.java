@@ -19,21 +19,20 @@ package org.elasticsoftware.elasticactors.cassandra.state;
 import me.prettyprint.cassandra.service.template.ColumnFamilyTemplate;
 import me.prettyprint.cassandra.service.template.ColumnFamilyUpdater;
 import me.prettyprint.hector.api.beans.Composite;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class PersistentActorUpdateEventProcessor implements ThreadBoundEventProcessor<PersistentActorUpdateEvent> {
-    private static final Logger logger = LogManager.getLogger(PersistentActorUpdateEventProcessor.class);
+    private static final Logger logger = LoggerFactory.getLogger(PersistentActorUpdateEventProcessor.class);
     private final ColumnFamilyTemplate<Composite,String> columnFamilyTemplate;
 
     public PersistentActorUpdateEventProcessor(ColumnFamilyTemplate<Composite, String> columnFamilyTemplate) {
@@ -72,7 +71,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
             // add some trace info
             if(logger.isTraceEnabled()) {
                 final long endTime = currentTimeMillis();
-                logger.trace(format("Updating %d Actor state entrie(s) took %d msecs",events.size(),endTime-startTime));
+                logger.trace("Updating {} Actor state entrie(s) took {} msecs", events.size(), endTime - startTime);
             }
         }
     }
