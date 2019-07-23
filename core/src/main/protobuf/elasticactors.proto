@@ -22,6 +22,7 @@ message InternalMessage {
     optional bool undeliverable = 7;
     repeated string receivers = 8;
     optional uint32 timeout = 9;
+    map<string, string> traceData = 10;
 }
 
 message ScheduledMessage {

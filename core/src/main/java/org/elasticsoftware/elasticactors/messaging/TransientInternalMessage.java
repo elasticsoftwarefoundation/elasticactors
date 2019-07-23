@@ -17,13 +17,14 @@
 package org.elasticsoftware.elasticactors.messaging;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.tracing.TraceDataProvider;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -35,6 +36,7 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
     private final UUID id;
     private final Object payload;
     private final boolean undeliverable;
+    private final ImmutableMap<String, String> traceData;
 
     public TransientInternalMessage(ActorRef sender, ActorRef receiver, Object payload) {
         this(sender,receiver,payload,false);
@@ -54,8 +56,10 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
         this.id = UUIDTools.createTimeBasedUUID();
         this.payload = payload;
         this.undeliverable = undeliverable;
+        this.traceData = TraceDataProvider.get();
     }
 
+    @Override
     public ActorRef getSender() {
         return sender;
     }
@@ -65,10 +69,12 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
         return receivers;
     }
 
+    @Override
     public UUID getId() {
         return id;
     }
 
+    @Override
     public ByteBuffer getPayload() {
         throw new UnsupportedOperationException(String.format("This implementation is intended to be used local only, for remote use [%s]",InternalMessageImpl.class.getSimpleName()));
     }
@@ -107,4 +113,10 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
     public InternalMessage copyOf() {
         return this;
     }
+
+    @Override
+    public ImmutableMap<String, String> getTraceData() {
+        return traceData;
+    }
+
 }

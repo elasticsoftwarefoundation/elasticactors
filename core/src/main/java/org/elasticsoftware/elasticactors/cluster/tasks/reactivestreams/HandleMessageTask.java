@@ -41,7 +41,9 @@ import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.tracing.TraceHelper;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Optional;
@@ -100,21 +102,22 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
     }
 
     @Override
-    protected Optional<Class> unwrapMessageClass(InternalMessage internalMessage)  {
+    protected Class<?> unwrapMessageClass(@Nonnull InternalMessage internalMessage)  {
         if(NextMessage.class.getName().equals(internalMessage.getPayloadClass())) {
             try {
                 NextMessage nextMessage = (NextMessage) internalMessage.getPayload(
                         actorSystem.getDeserializer(Class.forName(internalMessage.getPayloadClass())));
-                return Optional.of(Class.forName(nextMessage.getMessageName()));
+                return Class.forName(nextMessage.getMessageName());
             } catch(IOException | ClassNotFoundException e) {
-                return Optional.empty();
+                return null;
             }
         } else {
-            return Optional.empty();
+            return null;
         }
 
     }
 
+    @Override
     protected boolean doInActorContext(InternalActorSystem actorSystem,
                                        ElasticActor receiver,
                                        ActorRef receiverRef,
@@ -138,6 +141,7 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
         } catch (Exception e) {
             log.error(format("Exception while Deserializing Message class %s in ActorSystem [%s]",
                     internalMessage.getPayloadClass(), actorSystem.getName()), e);
+            TraceHelper.onError(e);
             return false;
         }
     }
@@ -161,13 +165,16 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
             } catch (ClassNotFoundException e) {
                 // the message type (class) that I am subscribing to is not available
                 log.error(format("Actor[%s]: Could not find message type: <%s>, unable to deserialize subscribed message", receiverRef.toString(), nextMessage.getMessageName()));
+                TraceHelper.onError(e);
             } catch (IOException e) {
                 log.error(format("Actor[%s]: Problem trying to deserialize message embedded in NextMessage", receiverRef.toString()), e);
+                TraceHelper.onError(e);
             } catch (Exception e) {
                 log.error(format("Unexpected Exception while calling onNext on Subscriber with type %s of Actor %s",
                         currentSubscription.getSubscriber() != null ?
                                 currentSubscription.getSubscriber().getClass().getSimpleName() : null,
                         receiverRef), e);
+                TraceHelper.onError(e);
             } finally {
                 InternalSubscriberContext.getAndClearContext();
             }
@@ -216,6 +223,7 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
                         currentSubscription.getSubscriber() != null ?
                                 currentSubscription.getSubscriber().getClass().getSimpleName() : null,
                         receiverRef), e);
+                TraceHelper.onError(e);
             } finally {
                 InternalSubscriberContext.getAndClearContext();
             }
@@ -242,6 +250,7 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
                     currentSubscription.getSubscriber() != null ?
                             currentSubscription.getSubscriber().getClass().getSimpleName() : null,
                     receiverRef), e);
+                TraceHelper.onError(e);
             } finally {
                 InternalSubscriberContext.getAndClearContext();
                 persistentActor.removeSubscription(completedMessage.getMessageName(), publisherRef);

@@ -17,16 +17,16 @@
 package org.elasticsoftware.elasticactors.messaging;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
+import org.elasticsoftware.elasticactors.tracing.TraceDataProvider;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -42,6 +42,7 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
     private final boolean undeliverable;
     private final int timeout;
     private transient byte[] serializedForm;
+    private final ImmutableMap<String, String> traceData;
 
     public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass,boolean durable) {
         this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass, durable, false);
@@ -75,16 +76,30 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
                                boolean durable,
                                boolean undeliverable,
                                int timeout) {
+        this(id, sender, receivers, payload, payloadClass, durable, undeliverable, timeout, TraceDataProvider.get());
+    }
+
+    public InternalMessageImpl(UUID id,
+                               ActorRef sender,
+                               ImmutableList<ActorRef> receivers,
+                               ByteBuffer payload,
+                               String payloadClass,
+                               boolean durable,
+                               boolean undeliverable,
+                               int timeout,
+                               ImmutableMap<String, String> traceData) {
+        this.id = id;
         this.sender = sender;
         this.receivers = receivers;
-        this.id = id;
         this.payload = payload;
         this.payloadClass = payloadClass;
         this.durable = durable;
         this.undeliverable = undeliverable;
         this.timeout = timeout;
+        this.traceData = traceData;
     }
 
+    @Override
     public ActorRef getSender() {
         return sender;
     }
@@ -94,10 +109,12 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
         return receivers;
     }
 
+    @Override
     public UUID getId() {
         return id;
     }
 
+    @Override
     public ByteBuffer getPayload() {
         return payload;
     }
@@ -138,6 +155,12 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
 
     @Override
     public InternalMessage copyOf() {
-        return new InternalMessageImpl(id, sender, receivers, payload.asReadOnlyBuffer(), payloadClass, durable, undeliverable, timeout);
+        return new InternalMessageImpl(id, sender, receivers, payload.asReadOnlyBuffer(), payloadClass, durable, undeliverable, timeout, traceData);
     }
+
+    @Override
+    public ImmutableMap<String, String> getTraceData() {
+        return traceData;
+    }
+
 }
