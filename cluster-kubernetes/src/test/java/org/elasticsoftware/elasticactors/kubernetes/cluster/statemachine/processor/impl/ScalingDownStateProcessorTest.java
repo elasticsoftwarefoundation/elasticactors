@@ -54,6 +54,19 @@ public class ScalingDownStateProcessorTest {
     }
 
     @Test
+    public void testProcess_shouldSwitchToStable_regardlessOfReadyReplicas() {
+        StatefulSet newStableState = resourceWith(3, 3, 2);
+        assertFalse(processor.process(newStableState));
+
+        assertEquals(data.getCurrentState().get(), STABLE);
+        assertEquals(data.getCurrentTopology().get(), 3);
+        assertEquals(data.getLatestStableState().get(), newStableState);
+        then(listener).should().onTopologyChange(3);
+        then(taskScheduler).should().cancelScheduledTask();
+        then(taskScheduler).should(never()).scheduleTask(any(), any(), any());
+    }
+
+    @Test
     public void testProcess_shouldSwitchToStable_delayedProcessing_scaleUp() {
         StatefulSet newStableState = resourceWith(6, 6, 6);
         assertFalse(processor.process(newStableState));

@@ -19,11 +19,13 @@ public class ScalingDownStateProcessor extends AbstractTaskSchedulingStateProces
 
         int desiredReplicas = getDesiredReplicas(resource);
         int actualReplicas = getActualReplicas(resource);
-        int readyReplicas = getReadyReplicas(resource);
         int currentDesiredReplicas = getDesiredReplicas(kubernetesStateMachineData.getLatestStableState().get());
 
-        // spec and status should all be the same
-        if (desiredReplicas == actualReplicas && desiredReplicas == readyReplicas) {
+        /*
+         * Spec and status should be the same, but for scaling down there's no need to wait for
+         * the number of ready replicas to be equal to the number of actual and desired replicas.
+         */
+        if (desiredReplicas == actualReplicas) {
             logger.info(format("Successfully scaled down to %d nodes. Switching to STABLE", desiredReplicas));
             switchToStableState(resource);
         } else if (desiredReplicas > currentDesiredReplicas) {
