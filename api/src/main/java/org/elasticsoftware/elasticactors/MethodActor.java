@@ -28,7 +28,12 @@ import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import static java.lang.String.format;
 
@@ -168,11 +173,11 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                     final Throwable cause = e.getCause();
                     if(Exception.class.isAssignableFrom(cause.getClass())) {
                         // throw (Exception) cause;
-                        logger.error(format("Unexpected Exception in handlerMethod: %s",definition.handlerMethod.toString()), cause);
+                        logger.error(format("Unexpected Exception in handlerMethod '%s' for actor [%s]", definition.handlerMethod.toString(), String.valueOf(getSelf())), cause);
                     } else {
                         // this is some system error, don't swallow it but just rethrow the Invocation Target Exception
                         // throw e;
-                        logger.error(format("Unexpected InvocationTargetException in handlerMethod: %s",definition.handlerMethod.toString()), e);
+                        logger.error(format("Unexpected InvocationTargetException in handlerMethod '%s' for actor [%s]", definition.handlerMethod.toString(), String.valueOf(getSelf())), e);
                     }
                 }
             }
