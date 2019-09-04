@@ -16,17 +16,50 @@
 
 package org.elasticsoftware.elasticactors.tracing;
 
+import com.google.common.collect.ImmutableMap;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
 public final class TraceHelper {
 
-    public static void run(@Nonnull Runnable r, @Nullable InternalMessage m, @Nonnull String name) {
-        r.run();
+    public static void runWithTracing(@Nonnull String name, @Nullable InternalMessage message, @Nonnull Runnable runnable) {
+        runnable.run();
     }
 
-    public static void onError(Throwable t) {
+    public static <T> T callWithTracing(@Nonnull String name, @Nullable InternalMessage message, @Nonnull Callable<T> callable) throws Exception {
+        return callable.call();
+    }
+
+    public static <T> T supplyWithTracing(@Nonnull String name, @Nullable InternalMessage message, @Nonnull Supplier<T> supplier) {
+        return supplier.get();
+    }
+
+    public static void throwingRunWithTracing(@Nonnull String name, @Nullable InternalMessage message, @Nonnull ThrowingRunnable throwingRunnable) throws Exception {
+        throwingRunnable.run();
+    }
+
+    public static void runWithTracing(@Nonnull String name, @Nonnull Runnable runnable) {
+        runWithTracing(name, null, runnable);
+    }
+
+    public static <T> T callWithTracing(@Nonnull String name, @Nonnull Callable<T> callable) throws Exception {
+        return callWithTracing(name, null, callable);
+    }
+
+    public static <T> T supplyWithTracing(@Nonnull String name, @Nonnull Supplier<T> supplier) {
+        return supplyWithTracing(name, null, supplier);
+    }
+
+    public static void throwingRunWithTracing(@Nonnull String name, @Nonnull ThrowingRunnable throwingRunnable) throws Exception {
+        throwingRunWithTracing(name, null, throwingRunnable);
+    }
+
+    @Nullable
+    public static ImmutableMap<String, String> getTraceData() {
+        return null;
     }
 }

@@ -20,24 +20,34 @@ import brave.ScopedSpan;
 import brave.Span;
 import brave.Tracing;
 import brave.propagation.Propagation.Getter;
+import brave.propagation.Propagation.Setter;
 import brave.propagation.TraceContext;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
 public final class TraceHelper {
 
+    private static final Logger logger = LoggerFactory.getLogger(TraceHelper.class);
+
     private static final Getter<InternalMessage, String> GETTER =
             (c, k) -> c.getTraceData() != null ? c.getTraceData().get(k) : null;
+    private static final Setter<Builder<String, String>, String> SETTER = Builder::put;
 
-    public static void run(@Nonnull Runnable r, @Nullable InternalMessage m, @Nonnull String name) {
-        Tracing tracing = Tracing.current();
+    static Tracing tracing;
+
+    public static void runWithTracing(@Nonnull String name, @Nullable InternalMessage message, @Nonnull Runnable runnable) {
         if (tracing != null) {
-            TraceContext parent = getTraceContext(tracing, m);
-            ScopedSpan span = tracing.tracer().startScopedSpanWithParent(name, parent);
+            ScopedSpan span = createScopedSpan(name, message);
             try {
-                r.run();
+                runnable.run();
             } catch (Throwable t) {
                 span.error(t);
                 throw t;
@@ -45,21 +55,98 @@ public final class TraceHelper {
                 span.finish();
             }
         } else {
-            r.run();
+            logger.warn("Attempted to run task '{}' with tracing before initialization of Tracing bean", name);
+            runnable.run();
         }
     }
 
-    public static void onError(Throwable t) {
-        Tracing tracing = Tracing.current();
+    public static <T> T callWithTracing(@Nonnull String name, @Nullable InternalMessage message, @Nonnull Callable<T> callable) throws Exception {
         if (tracing != null) {
-            Span current = tracing.tracer().currentSpan();
-            if (current != null) {
-                current.error(t);
+            ScopedSpan span = createScopedSpan(name, message);
+            try {
+                return callable.call();
+            } catch (Throwable t) {
+                span.error(t);
+                throw t;
+            } finally {
+                span.finish();
             }
+        } else {
+            logger.warn("Attempted to call task '{}' with tracing before initialization of Tracing bean", name);
+            return callable.call();
         }
     }
 
-    private static TraceContext getTraceContext(Tracing tracing, @Nullable InternalMessage message) {
+    public static <T> T supplyWithTracing(@Nonnull String name, @Nullable InternalMessage message, @Nonnull Supplier<T> supplier) {
+        if (tracing != null) {
+            ScopedSpan span = createScopedSpan(name, message);
+            try {
+                return supplier.get();
+            } catch (Throwable t) {
+                span.error(t);
+                throw t;
+            } finally {
+                span.finish();
+            }
+        } else {
+            logger.warn("Attempted to run supplier task '{}' with tracing before initialization of Tracing bean", name);
+            return supplier.get();
+        }
+    }
+
+    public static void throwingRunWithTracing(@Nonnull String name, @Nullable InternalMessage message, @Nonnull ThrowingRunnable throwingRunnable) throws Exception {
+        if (tracing != null) {
+            ScopedSpan span = createScopedSpan(name, message);
+            try {
+                throwingRunnable.run();
+            } catch (Throwable t) {
+                span.error(t);
+                throw t;
+            } finally {
+                span.finish();
+            }
+        } else {
+            logger.warn("Attempted to run throwing runnable task '{}' with tracing before initialization of Tracing bean", name);
+            throwingRunnable.run();
+        }
+    }
+
+    public static void runWithTracing(@Nonnull String name, @Nonnull Runnable runnable) {
+        runWithTracing(name, null, runnable);
+    }
+
+    public static <T> T callWithTracing(@Nonnull String name, @Nonnull Callable<T> callable) throws Exception {
+        return callWithTracing(name, null, callable);
+    }
+
+    public static <T> T supplyWithTracing(@Nonnull String name, @Nonnull Supplier<T> supplier) {
+        return supplyWithTracing(name, null, supplier);
+    }
+
+    public static void throwingRunWithTracing(@Nonnull String name, @Nonnull ThrowingRunnable throwingRunnable) throws Exception {
+        throwingRunWithTracing(name, null, throwingRunnable);
+    }
+
+    private static ScopedSpan createScopedSpan(@Nonnull String name, @Nullable InternalMessage message) {
+        return tracing.tracer().startScopedSpanWithParent(name, getTraceContext(message));
+    }
+
+    @Nullable
+    public static ImmutableMap<String, String> getTraceData() {
+        if (tracing != null) {
+            Span currentSpan = tracing.tracer().currentSpan();
+            if (currentSpan != null) {
+                Builder<String, String> builder = ImmutableMap.builder();
+                tracing.propagation().injector(SETTER).inject(currentSpan.context(), builder);
+                return builder.build();
+            }
+        } else {
+            logger.warn("Attempted to get trace data before initialization of Tracing bean");
+        }
+        return null;
+    }
+
+    private static TraceContext getTraceContext(@Nullable InternalMessage message) {
         if (message != null) {
             return tracing.propagation().extractor(GETTER).extract(message).context();
         }

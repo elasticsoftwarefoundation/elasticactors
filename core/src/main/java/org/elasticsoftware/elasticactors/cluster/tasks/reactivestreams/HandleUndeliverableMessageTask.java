@@ -39,7 +39,6 @@ import org.elasticsoftware.elasticactors.reactivestreams.InternalPersistentSubsc
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
-import org.elasticsoftware.elasticactors.tracing.TraceHelper;
 
 import java.util.Optional;
 
@@ -138,7 +137,6 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask imp
                                 currentSubscription.getSubscriber() != null ?
                                         currentSubscription.getSubscriber().getClass().getSimpleName() : null,
                                 receiverRef), e);
-                        TraceHelper.onError(e);
                     } finally {
                         InternalSubscriberContext.getAndClearContext();
                     }
@@ -154,7 +152,6 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask imp
         } catch (Exception e) {
             log.error(String.format("Exception while Deserializing Message class %s in ActorSystem [%s]",
                     internalMessage.getPayloadClass(), actorSystem.getName()), e);
-            TraceHelper.onError(e);
         }
         return false;
     }

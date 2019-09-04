@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.tracing.TraceDataProvider;
+import org.elasticsoftware.elasticactors.tracing.TraceHelper;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -56,7 +56,7 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
         this.id = UUIDTools.createTimeBasedUUID();
         this.payload = payload;
         this.undeliverable = undeliverable;
-        this.traceData = TraceDataProvider.get();
+        this.traceData = TraceHelper.getTraceData();
     }
 
     @Override

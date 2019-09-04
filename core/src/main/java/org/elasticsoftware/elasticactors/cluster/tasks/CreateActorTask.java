@@ -30,7 +30,6 @@ import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
-import org.elasticsoftware.elasticactors.tracing.TraceHelper;
 
 import javax.annotation.Nullable;
 
@@ -84,7 +83,6 @@ public final class CreateActorTask extends ActorLifecycleTask {
 
         } catch (Exception e) {
             logger.error("Exception calling postCreate",e);
-            TraceHelper.onError(e);
         }
         // check persistence config (if any) -> by default return true
         return shouldUpdateState(receiver, ActorLifecycleStep.CREATE);
