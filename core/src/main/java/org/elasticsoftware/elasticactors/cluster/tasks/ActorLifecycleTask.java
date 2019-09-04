@@ -33,7 +33,6 @@ import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
-import org.elasticsoftware.elasticactors.tracing.TraceHelper;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import javax.annotation.Nonnull;
@@ -89,10 +88,6 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
 
     @Override
     public final void run() {
-        TraceHelper.run(this::runTask, internalMessage, getClass().getSimpleName());
-    }
-
-    private void runTask() {
         // measure start of the execution
         if(this.measurement != null) {
             this.measurement.setExecutionStart(System.nanoTime());
@@ -108,7 +103,6 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         } catch (Exception e) {
             log.error("Exception in doInActorContext",e);
             executionException = e;
-            TraceHelper.onError(e);
         } finally {
             // reset the serialization context
             SerializationContext.reset();
@@ -142,7 +136,6 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                     }
                 } catch (Exception e) {
                     log.error(format("Exception while serializing ActorState for actor [%s]", receiverRef.getActorId()), e);
-                    TraceHelper.onError(e);
                 } finally {
                     // always ensure we release the memory of the serialized state
                      persistentActor.setSerializedState(null);

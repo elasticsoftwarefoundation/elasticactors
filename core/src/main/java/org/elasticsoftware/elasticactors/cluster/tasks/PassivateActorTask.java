@@ -28,7 +28,6 @@ import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
-import org.elasticsoftware.elasticactors.tracing.TraceHelper;
 
 /**
  * @author Joost van de Wijgerd
@@ -54,7 +53,6 @@ public final class PassivateActorTask extends ActorLifecycleTask {
             receiver.prePassivate();
         } catch (Exception e) {
             logger.error("Exception calling prePassivate",e);
-            TraceHelper.onError(e);
         }
         // check persistence config (if any) -> by default return false
         return shouldUpdateState(receiver,ActorLifecycleStep.PASSIVATE);

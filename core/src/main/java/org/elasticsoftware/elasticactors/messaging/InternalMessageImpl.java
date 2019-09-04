@@ -22,7 +22,7 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
-import org.elasticsoftware.elasticactors.tracing.TraceDataProvider;
+import org.elasticsoftware.elasticactors.tracing.TraceHelper;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -76,7 +76,7 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
                                boolean durable,
                                boolean undeliverable,
                                int timeout) {
-        this(id, sender, receivers, payload, payloadClass, durable, undeliverable, timeout, TraceDataProvider.get());
+        this(id, sender, receivers, payload, payloadClass, durable, undeliverable, timeout, TraceHelper.getTraceData());
     }
 
     public InternalMessageImpl(UUID id,

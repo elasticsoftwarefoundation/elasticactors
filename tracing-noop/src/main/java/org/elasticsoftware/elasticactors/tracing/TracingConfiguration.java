@@ -16,14 +16,6 @@
 
 package org.elasticsoftware.elasticactors.tracing;
 
-import com.google.common.collect.ImmutableMap;
+public final class TracingConfiguration {
 
-import javax.annotation.Nullable;
-
-public final class TraceDataProvider {
-
-    @Nullable
-    public static ImmutableMap<String, String> get() {
-        return null;
-    }
 }

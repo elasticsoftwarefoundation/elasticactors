@@ -31,7 +31,6 @@ import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
-import org.elasticsoftware.elasticactors.tracing.TraceHelper;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -90,20 +89,17 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                 // see if it is a recoverable exception
                 if(!e.isRecoverable()) {
                     log.error(format("Unrecoverable MessageDeliveryException while handling message for actor [%s]", receiverRef.toString()), e);
-                    TraceHelper.onError(e);
                 }
                 // message cannot be sent but state should be updated as the received message did most likely change
                 // the state
                 return shouldUpdateState(receiver, message);
             } catch (Exception e) {
                 log.error(format("Exception while handling message for actor [%s]", receiverRef.toString()), e);
-                TraceHelper.onError(e);
                 return false;
             }
         } catch (Exception e) {
             log.error(format("Exception while Deserializing Message class %s in ActorSystem [%s]",
                     internalMessage.getPayloadClass(), actorSystem.getName()), e);
-            TraceHelper.onError(e);
             return false;
         }
     }
@@ -121,7 +117,6 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                 }
             } catch(Exception e) {
                 log.error("Unexpected exception while forwarding message to Subscribers", e);
-                TraceHelper.onError(e);
             }
         }
     }

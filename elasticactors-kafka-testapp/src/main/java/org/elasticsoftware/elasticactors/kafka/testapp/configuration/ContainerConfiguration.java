@@ -22,8 +22,14 @@ import org.elasticsoftware.elasticactors.ServiceActor;
 import org.elasticsoftware.elasticactors.configuration.ClusteringConfiguration;
 import org.elasticsoftware.elasticactors.kafka.configuration.NodeConfiguration;
 import org.elasticsoftware.elasticactors.spring.ActorAnnotationBeanNameGenerator;
+import org.elasticsoftware.elasticactors.tracing.TracingConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableMBeanExport;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.aspectj.EnableSpringConfigured;
 import org.springframework.core.env.Environment;
 
@@ -40,7 +46,7 @@ import javax.annotation.PostConstruct;
         basePackages = {"org.elasticsoftware.elasticactors.base.serialization","org.elasticsoftware.elasticactors.kafka"},
         nameGenerator = ActorAnnotationBeanNameGenerator.class,
         includeFilters = {@ComponentScan.Filter(value = {ServiceActor.class}, type = FilterType.ANNOTATION)})
-@Import(value = {ClusteringConfiguration.class, NodeConfiguration.class})
+@Import(value = {ClusteringConfiguration.class, NodeConfiguration.class, TracingConfiguration.class})
 public class ContainerConfiguration {
     private Environment environment;
     private ActorSystem actorSystem;
