@@ -173,11 +173,11 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                     final Throwable cause = e.getCause();
                     if(Exception.class.isAssignableFrom(cause.getClass())) {
                         // throw (Exception) cause;
-                        logger.error(format("Unexpected Exception in handlerMethod '%s' for actor [%s]", definition.handlerMethod.toString(), String.valueOf(getSelf())), cause);
+                        logger.error(format("Unexpected Exception in handlerMethod '%s' for actor [%s]", definition.handlerMethod.toString(), getSelf()), cause);
                     } else {
                         // this is some system error, don't swallow it but just rethrow the Invocation Target Exception
                         // throw e;
-                        logger.error(format("Unexpected InvocationTargetException in handlerMethod '%s' for actor [%s]", definition.handlerMethod.toString(), String.valueOf(getSelf())), e);
+                        logger.error(format("Unexpected InvocationTargetException in handlerMethod '%s' for actor [%s]", definition.handlerMethod.toString(), getSelf()), e);
                     }
                 }
             }
