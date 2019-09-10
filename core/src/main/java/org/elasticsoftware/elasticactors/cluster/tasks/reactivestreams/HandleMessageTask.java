@@ -147,11 +147,11 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
     private boolean handle(NextMessage nextMessage, ElasticActor receiver, ActorRef publisherRef, InternalActorSystem actorSystem) {
         Optional<InternalPersistentSubscription> persistentSubscription =
                 persistentActor.getSubscription(nextMessage.getMessageName(), publisherRef);
-        currentSubscription = persistentSubscription.get();
-        InternalSubscriberContext.setContext(this);
 
         if(persistentSubscription.isPresent()) {
             try {
+                currentSubscription = persistentSubscription.get();
+                InternalSubscriberContext.setContext(this);
                 // @todo: for now the message name == messageClass
                 Class<?> messageClass = Class.forName(nextMessage.getMessageName());
                 MessageDeserializer<?> deserializer = actorSystem.getDeserializer(messageClass);
