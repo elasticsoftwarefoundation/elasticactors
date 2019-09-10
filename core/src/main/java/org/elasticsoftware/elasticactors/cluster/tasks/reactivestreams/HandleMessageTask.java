@@ -18,12 +18,22 @@ package org.elasticsoftware.elasticactors.cluster.tasks.reactivestreams;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.PersistentSubscription;
+import org.elasticsoftware.elasticactors.SubscriberContext;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
-import org.elasticsoftware.elasticactors.messaging.reactivestreams.*;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.CancelMessage;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.CompletedMessage;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.RequestMessage;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.SubscribeMessage;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.SubscriptionMessage;
 import org.elasticsoftware.elasticactors.reactivestreams.InternalPersistentSubscription;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
@@ -31,15 +41,15 @@ import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
-import org.reactivestreams.Subscriber;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.Set;
 
-import static java.lang.String.format;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
+
+import static java.lang.String.format;
 
 /**
  * Task that is responsible for internalMessage deserialization, error handling and state updates
@@ -135,11 +145,11 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
     private boolean handle(NextMessage nextMessage, ElasticActor receiver, ActorRef publisherRef, InternalActorSystem actorSystem) {
         Optional<InternalPersistentSubscription> persistentSubscription =
                 persistentActor.getSubscription(nextMessage.getMessageName(), publisherRef);
-        currentSubscription = persistentSubscription.get();
-        InternalSubscriberContext.setContext(this);
 
         if(persistentSubscription.isPresent()) {
             try {
+                currentSubscription = persistentSubscription.get();
+                InternalSubscriberContext.setContext(this);
                 // @todo: for now the message name == messageClass
                 Class<?> messageClass = Class.forName(nextMessage.getMessageName());
                 MessageDeserializer<?> deserializer = actorSystem.getDeserializer(messageClass);
