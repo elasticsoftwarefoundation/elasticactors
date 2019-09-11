@@ -30,6 +30,7 @@ import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.tracing.Tracer;
 
 import javax.annotation.Nullable;
 
@@ -72,15 +73,16 @@ public final class CreateActorTask extends ActorLifecycleTask {
             logger.debug(String.format("Creating Actor for ref [%s] of type [%s]",receiverRef.toString(),receiver.getClass().getName()));
         }
         try {
-            // first update (this is async fire and forget for now)
-            if(persistentActor != null) {
-                persistentActorRepository.update((ShardKey) persistentActor.getKey(), persistentActor);
-            }
+            Tracer.get().throwingRunInCurrentTrace(() -> {
+                // first update (this is async fire and forget for now)
+                if (persistentActor != null) {
+                    persistentActorRepository.update((ShardKey) persistentActor.getKey(), persistentActor);
+                }
+                // @todo: somehow figure out the creator
 
-            // @todo: somehow figure out the creator
-            receiver.postCreate(null);
-            receiver.postActivate(null);
-
+                receiver.postCreate(null);
+                receiver.postActivate(null);
+            });
         } catch (Exception e) {
             logger.error("Exception calling postCreate",e);
         }

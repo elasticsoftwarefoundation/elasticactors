@@ -45,7 +45,7 @@
         </dependency>
         <dependency>
             <groupId>org.elasticsoftware.elasticactors</groupId>
-            <artifactId>elasticactors-tracing-noop</artifactId>
+            <artifactId>elasticactors-tracing-api</artifactId>
             <version>${project.version}</version>
         </dependency>
 

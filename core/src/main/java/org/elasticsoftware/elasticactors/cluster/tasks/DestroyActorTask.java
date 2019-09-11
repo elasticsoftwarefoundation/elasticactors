@@ -32,6 +32,7 @@ import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.tracing.Tracer;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -84,14 +85,16 @@ public final class DestroyActorTask extends ActorLifecycleTask {
             logger.debug(String.format("Destroying Actor for ref [%s] of type [%s]",receiverRef.toString(),receiver.getClass().getName()));
         }
         try {
-            // @todo: figure out the destroyer
-            receiver.preDestroy(null);
-            notifyPublishers();
-            notifySubscribers();
-            // delete entry here to serialize on state updates
-            if(persistentActorRepository != null) {
-                persistentActorRepository.delete(shardKey, receiverRef.getActorId());
-            }
+            Tracer.get().throwingRunInCurrentTrace(() -> {
+                // @todo: figure out the destroyer
+                receiver.preDestroy(null);
+                notifyPublishers();
+                notifySubscribers();
+                // delete entry here to serialize on state updates
+                if (persistentActorRepository != null) {
+                    persistentActorRepository.delete(shardKey, receiverRef.getActorId());
+                }
+            });
         } catch (Exception e) {
             logger.error("Exception calling preDestroy",e);
         }

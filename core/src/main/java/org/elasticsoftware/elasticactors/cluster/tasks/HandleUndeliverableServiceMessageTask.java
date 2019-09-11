@@ -27,6 +27,7 @@ import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.tracing.Tracer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import java.util.Collection;
@@ -99,8 +100,7 @@ public final class HandleUndeliverableServiceMessageTask implements ThreadBoundR
         Exception executionException = null;
         InternalActorContext.setContext(this);
         try {
-            Object message = deserializeMessage(actorSystem, internalMessage);
-            serviceActor.onUndeliverable(internalMessage.getSender(), message);
+            Tracer.get().throwingRunInCurrentTrace(this::internalHandleUndeliverable);
         } catch(Exception e) {
             // @todo: send an error message to the sender
             logger.error(String.format("Exception while handling message for service [%s]",serviceRef.toString()),e);
@@ -115,5 +115,10 @@ public final class HandleUndeliverableServiceMessageTask implements ThreadBoundR
                 messageHandlerEventListener.onError(internalMessage,executionException);
             }
         }
+    }
+
+    private void internalHandleUndeliverable() throws Exception {
+        Object message = deserializeMessage(actorSystem, internalMessage);
+        serviceActor.onUndeliverable(internalMessage.getSender(), message);
     }
 }

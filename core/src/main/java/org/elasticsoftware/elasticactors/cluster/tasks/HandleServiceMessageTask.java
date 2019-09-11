@@ -27,6 +27,7 @@ import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.tracing.Tracer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import java.util.Collection;
@@ -109,8 +110,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         Exception executionException = null;
         InternalActorContext.setContext(this);
         try {
-            Object message = deserializeMessage(actorSystem, internalMessage);
-            serviceActor.onReceive(internalMessage.getSender(), message);
+            Tracer.get().throwingRunInCurrentTrace(this::internalHandleMessage);
         } catch(Exception e) {
             // @todo: send an error message to the sender
             logger.error(String.format("Exception while handling message for service [%s]",serviceRef.toString()),e);
@@ -137,5 +137,10 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         if(this.measurement != null) {
             logger.trace(format("(%s) Message of type [%s] with id [%s] for actor [%s] took %d microsecs in queue, %d microsecs to execute, 0 microsecs to serialize and %d microsecs to ack (state update false)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId().toString() : "null",serviceRef.getActorId(),measurement.getQueueDuration(MICROSECONDS),measurement.getExecutionDuration(MICROSECONDS),measurement.getAckDuration(MICROSECONDS)));
         }
+    }
+
+    private void internalHandleMessage() throws Exception {
+        Object message = deserializeMessage(actorSystem, internalMessage);
+        serviceActor.onReceive(internalMessage.getSender(), message);
     }
 }

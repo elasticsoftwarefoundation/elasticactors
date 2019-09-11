@@ -29,6 +29,7 @@ import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.tracing.Tracer;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 
 import static java.lang.String.format;
@@ -60,10 +61,12 @@ public final class ActivateActorTask extends ActorLifecycleTask {
         if(persistentActor.getSerializedState() != null) {
             final SerializationFramework framework = SerializationTools.getSerializationFramework(actorSystem.getParent(), receiver.getClass());
             try {
-                ActorState actorState = receiver.preActivate(persistentActor.getPreviousActorStateVersion(),
-                                                             persistentActor.getCurrentActorStateVersion(),
-                                                             persistentActor.getSerializedState(),
-                                                             framework);
+                ActorState actorState =
+                        Tracer.get().throwingSupplyInCurrentTrace(() -> receiver.preActivate(
+                                persistentActor.getPreviousActorStateVersion(),
+                                persistentActor.getCurrentActorStateVersion(),
+                                persistentActor.getSerializedState(),
+                                framework));
                 if(actorState == null) {
                     actorState = SerializationTools.deserializeActorState(actorSystem.getParent(),receiver.getClass(),persistentActor.getSerializedState());
                 } else {
@@ -78,7 +81,8 @@ public final class ActivateActorTask extends ActorLifecycleTask {
         }
 
         try {
-            receiver.postActivate(persistentActor.getPreviousActorStateVersion());
+            Tracer.get().throwingRunInCurrentTrace(() ->
+                    receiver.postActivate(persistentActor.getPreviousActorStateVersion()));
         } catch (Exception e) {
             logger.error(format("Exception calling postActivate for actorId [%s]", receiverRef.getActorId()),e);
             return false;

@@ -17,7 +17,6 @@
 package org.elasticsoftware.elasticactors.configuration;
 
 import org.elasticsoftware.elasticactors.Asynchronous;
-import org.elasticsoftware.elasticactors.tracing.TracingConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -36,7 +35,7 @@ import java.util.concurrent.Executor;
 @EnableSpringConfigured
 @EnableAsync(annotation = Asynchronous.class)
 @PropertySource(value = "file:/etc/elasticactors/system.properties")
-@Import(value = {ClusteringConfiguration.class, NodeConfiguration.class, MessagingConfiguration.class, BackplaneConfiguration.class, TracingConfiguration.class})
+@Import(value = {ClusteringConfiguration.class, NodeConfiguration.class, MessagingConfiguration.class, BackplaneConfiguration.class})
 public class AppConfiguration extends AsyncConfigurerSupport {
     @Bean(name = "asyncExecutor")
     public Executor getAsyncExecutor() {
