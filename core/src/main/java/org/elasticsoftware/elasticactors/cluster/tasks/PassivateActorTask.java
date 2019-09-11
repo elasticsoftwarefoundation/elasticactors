@@ -28,6 +28,7 @@ import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.tracing.Tracer;
 
 /**
  * @author Joost van de Wijgerd
@@ -50,7 +51,7 @@ public final class PassivateActorTask extends ActorLifecycleTask {
                                        ActorRef receiverRef,
                                        InternalMessage internalMessage) {
         try {
-            receiver.prePassivate();
+            Tracer.get().throwingRunInCurrentTrace(receiver::prePassivate);
         } catch (Exception e) {
             logger.error("Exception calling prePassivate",e);
         }

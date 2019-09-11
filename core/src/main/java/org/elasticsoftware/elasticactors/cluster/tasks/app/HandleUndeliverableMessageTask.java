@@ -27,6 +27,7 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.tracing.Tracer;
 
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
@@ -59,10 +60,12 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
                                        ActorRef receiverRef,
                                        InternalMessage internalMessage) {
         try {
-            Object message = deserializeMessage(actorSystem, internalMessage);
+            Object message = Tracer.get().throwingSupplyInCurrentTrace(() ->
+                    deserializeMessage(actorSystem, internalMessage));
             try {
-                receiver.onUndeliverable(internalMessage.getSender(), message);
-                return shouldUpdateState(receiver,message);
+                Tracer.get().throwingRunInCurrentTrace(() ->
+                        receiver.onUndeliverable(internalMessage.getSender(), message));
+                return shouldUpdateState(receiver, message);
             } catch(MessageDeliveryException e) {
                 // see if it is a recoverable exception
                 if(!e.isRecoverable()) {

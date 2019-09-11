@@ -145,8 +145,9 @@
         <module>elasticactors-kafka-testapp</module>
         <module>indexing-elasticsearch</module>
         <module>cluster-kubernetes</module>
-        <module>tracing-noop</module>
+        <module>tracing-api</module>
         <module>tracing-brave</module>
+        <module>test-tracing-brave</module>
     </modules>
 
     <build>

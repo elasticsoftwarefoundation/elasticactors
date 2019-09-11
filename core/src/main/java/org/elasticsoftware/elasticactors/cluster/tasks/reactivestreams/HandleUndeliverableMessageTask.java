@@ -39,6 +39,7 @@ import org.elasticsoftware.elasticactors.reactivestreams.InternalPersistentSubsc
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.tracing.Tracer;
 
 import java.util.Optional;
 
@@ -98,7 +99,8 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask imp
                                        ActorRef receiverRef,
                                        InternalMessage internalMessage) {
         try {
-            Object message = deserializeMessage(actorSystem, internalMessage);
+            Object message = Tracer.get().throwingSupplyInCurrentTrace(() ->
+                    deserializeMessage(actorSystem, internalMessage));
             if(message instanceof NextMessage) {
                 NextMessage nextMessage = (NextMessage) message;
                 // the subscriber is gone, need to remove the subscriber reference
@@ -129,9 +131,10 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask imp
                     currentSubscription = persistentSubscription.get();
                     InternalSubscriberContext.setContext(this);
                     try {
-                        currentSubscription.getSubscriber().onError(
+                        Tracer.get().throwingRunInCurrentTrace(() ->
+                                currentSubscription.getSubscriber().onError(
                                 new PublisherNotFoundException(String.format("Actor[%s] does not exist",
-                                        internalMessage.getSender().toString()), internalMessage.getSender()));
+                                        internalMessage.getSender().toString()), internalMessage.getSender())));
                     } catch(Exception e) {
                         log.error(format("Unexpected Exception while calling onError on Subscriber with type %s of Actor %s",
                                 currentSubscription.getSubscriber() != null ?

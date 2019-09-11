@@ -33,6 +33,7 @@ import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.tracing.Tracer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import javax.annotation.Nonnull;
@@ -98,7 +99,10 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         SerializationContext.initialize();
         boolean shouldUpdateState = false;
         try {
-            shouldUpdateState = doInActorContext(actorSystem, receiver, receiverRef, internalMessage);
+            shouldUpdateState = Tracer.get().throwingSupplyWithTracing(
+                    getClass().getSimpleName(),
+                    internalMessage,
+                    this::internalDoInActorContext);
             executeLifecycleListeners();
         } catch (Exception e) {
             log.error("Exception in doInActorContext",e);
@@ -165,6 +169,10 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                 }
             }
         }
+    }
+
+    private boolean internalDoInActorContext() {
+        return doInActorContext(actorSystem, receiver, receiverRef, internalMessage);
     }
 
     protected abstract boolean doInActorContext(InternalActorSystem actorSystem,
