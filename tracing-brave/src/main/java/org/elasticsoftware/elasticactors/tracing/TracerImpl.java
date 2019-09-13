@@ -19,11 +19,10 @@ package org.elasticsoftware.elasticactors.tracing;
 import brave.Span;
 import brave.Tracer.SpanInScope;
 import brave.Tracing;
-import brave.propagation.Propagation.Getter;
-import brave.propagation.Propagation.Setter;
+import brave.propagation.TraceContext.Extractor;
+import brave.propagation.TraceContext.Injector;
 import brave.propagation.TraceContextOrSamplingFlags;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 import org.elasticsoftware.elasticactors.ActorContextHolder;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
@@ -35,19 +34,29 @@ import org.springframework.beans.factory.annotation.Configurable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.function.Supplier;
 
 @Configurable
 public final class TracerImpl implements Tracer {
 
-    private static final Getter<InternalMessage, String> GETTER =
-            (c, k) -> c.getTraceData() != null ? c.getTraceData().get(k) : null;
-    private static final Setter<Builder<String, String>, String> SETTER = Builder::put;
-
     private static final Logger logger = LoggerFactory.getLogger(Tracer.class);
 
-    @Autowired
     private Tracing tracing;
+    private Injector<ImmutableMap.Builder<String, String>> injector;
+    private Extractor<InternalMessage> extractor;
+
+    @Autowired
+    private void setTracing(Tracing tracing) {
+        this.tracing = tracing;
+        this.injector = tracing.propagation().injector(ImmutableMap.Builder::put);
+        this.extractor = tracing.propagation().extractor(TracerImpl::extractContextVariable);
+    }
+
+    private static String extractContextVariable(InternalMessage carrier, String key) {
+        Map<String, String> traceData = carrier.getTraceData();
+        return traceData != null ? traceData.get(key) : null;
+    }
 
     @Override
     public void runWithTracing(
@@ -195,8 +204,7 @@ public final class TracerImpl implements Tracer {
             @Nonnull String name,
             @Nullable InternalMessage message) {
         if (message != null) {
-            TraceContextOrSamplingFlags extracted =
-                    tracing.propagation().extractor(GETTER).extract(message);
+            TraceContextOrSamplingFlags extracted = extractor.extract(message);
             if (extracted.context() != null) {
                 return tracing.tracer().nextSpan(extracted).name(name);
             }
@@ -222,8 +230,8 @@ public final class TracerImpl implements Tracer {
     public ImmutableMap<String, String> getTraceData() {
         Span currentSpan = tracing.tracer().currentSpan();
         if (currentSpan != null) {
-            Builder<String, String> builder = ImmutableMap.builder();
-            tracing.propagation().injector(SETTER).inject(currentSpan.context(), builder);
+            ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+            injector.inject(currentSpan.context(), builder);
             return builder.build();
         }
         return null;
