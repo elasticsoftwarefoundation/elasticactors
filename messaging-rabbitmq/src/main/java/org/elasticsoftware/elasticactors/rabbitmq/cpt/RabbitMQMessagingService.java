@@ -17,15 +17,17 @@
 package org.elasticsoftware.elasticactors.rabbitmq.cpt;
 
 import com.google.common.base.Throwables;
-import com.rabbitmq.client.*;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.ShutdownNotifier;
 import net.jodah.lyra.ConnectionOptions;
 import net.jodah.lyra.Connections;
 import net.jodah.lyra.config.Config;
 import net.jodah.lyra.config.RecoveryPolicy;
 import net.jodah.lyra.event.ChannelListener;
 import net.jodah.lyra.util.Duration;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
@@ -41,6 +43,8 @@ import org.elasticsoftware.elasticactors.rabbitmq.ack.WriteBehindMessageAcker;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
@@ -56,14 +60,17 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
+import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.ASYNC;
+import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.BUFFERED;
+import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.WRITE_BEHIND;
+
 import static java.lang.String.format;
-import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.*;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class RabbitMQMessagingService implements ChannelListenerRegistry, RabbitMQMessagingServiceInterface, ChannelListener {
-    private static final Logger logger = LogManager.getLogger(RabbitMQMessagingService.class);
+    private static final Logger logger = LoggerFactory.getLogger(RabbitMQMessagingService.class);
     private final ConnectionFactory connectionFactory = new ConnectionFactory();
     private final String rabbitmqHosts;
     private final Integer rabbitmqPort;
@@ -244,7 +251,7 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
                 try {
                     channelEvent.accept(listener);
                 } catch(Exception e) {
-                    logger.error(format("Exception while calling [%s] on ChannelListener [%s]", channelEventName, listener.toString()),e);
+                    logger.error("Exception while calling [{}] on ChannelListener [{}]", channelEventName, listener,e);
                 }
             }
         }

@@ -17,21 +17,23 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import com.google.common.collect.ImmutableList;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.PhysicalNode;
-import org.elasticsoftware.elasticactors.messaging.*;
-
-import static java.lang.String.format;
+import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.messaging.MessageHandler;
+import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.messaging.MessageQueue;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Joost van de Wijgerd
  */
 public abstract class AbstractActorContainer implements ActorContainer, MessageHandler {
-    private final Logger logger = LogManager.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final ActorRef myRef;
     private final MessageQueueFactory messageQueueFactory;
     protected MessageQueue messageQueue;
@@ -73,12 +75,12 @@ public abstract class AbstractActorContainer implements ActorContainer, MessageH
         // if a message-undeliverable is undeliverable, don't send an undeliverable message back!
         ActorRef senderRef = internalMessage.getSender();
         try {
-            if (senderRef != null && senderRef instanceof ActorContainerRef && !internalMessage.isUndeliverable()) {
+            if (senderRef instanceof ActorContainerRef && !internalMessage.isUndeliverable()) {
                 ((ActorContainerRef) senderRef).getActorContainer().undeliverableMessage(internalMessage, receiverRef);
             } else if(internalMessage.isUndeliverable()) {
-                logger.error(format("Receiver for undeliverable message not found: message type '%s' , receiver '%s'", internalMessage.getPayloadClass(), receiverRef.toString()));
+                logger.error("Receiver for undeliverable message not found: message type '{}' , receiver '{}'", internalMessage.getPayloadClass(), receiverRef);
             } else {
-                logger.warn(format("Could not send message undeliverable: original message type '%s' , receiver '%s'", internalMessage.getPayloadClass(), receiverRef.toString()));
+                logger.warn("Could not send message undeliverable: original message type '{}' , receiver '{}'", internalMessage.getPayloadClass(), receiverRef);
             }
         } finally {
             // ack anyway

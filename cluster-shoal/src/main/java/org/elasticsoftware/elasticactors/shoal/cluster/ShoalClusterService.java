@@ -16,33 +16,53 @@
 
 package org.elasticsoftware.elasticactors.shoal.cluster;
 
-import com.sun.enterprise.ee.cms.core.*;
-import com.sun.enterprise.ee.cms.impl.client.*;
+import com.sun.enterprise.ee.cms.core.AliveAndReadyView;
+import com.sun.enterprise.ee.cms.core.CallBack;
+import com.sun.enterprise.ee.cms.core.FailureNotificationSignal;
+import com.sun.enterprise.ee.cms.core.GMSConstants;
+import com.sun.enterprise.ee.cms.core.GMSException;
+import com.sun.enterprise.ee.cms.core.GMSFactory;
+import com.sun.enterprise.ee.cms.core.GroupLeadershipNotificationSignal;
+import com.sun.enterprise.ee.cms.core.GroupManagementService;
+import com.sun.enterprise.ee.cms.core.JoinedAndReadyNotificationSignal;
+import com.sun.enterprise.ee.cms.core.MessageSignal;
+import com.sun.enterprise.ee.cms.core.PlannedShutdownSignal;
+import com.sun.enterprise.ee.cms.core.ServiceProviderConfigurationKeys;
+import com.sun.enterprise.ee.cms.core.Signal;
+import com.sun.enterprise.ee.cms.impl.client.FailureNotificationActionFactoryImpl;
+import com.sun.enterprise.ee.cms.impl.client.FailureSuspectedActionFactoryImpl;
+import com.sun.enterprise.ee.cms.impl.client.GroupLeadershipNotificationActionFactoryImpl;
+import com.sun.enterprise.ee.cms.impl.client.JoinNotificationActionFactoryImpl;
+import com.sun.enterprise.ee.cms.impl.client.JoinedAndReadyNotificationActionFactoryImpl;
+import com.sun.enterprise.ee.cms.impl.client.MessageActionFactoryImpl;
+import com.sun.enterprise.ee.cms.impl.client.PlannedShutdownActionFactoryImpl;
 import com.sun.enterprise.mgmt.transport.grizzly.GrizzlyConfigConstants;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ClusterEventListener;
 import org.elasticsoftware.elasticactors.cluster.ClusterMessageHandler;
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.elasticsoftware.elasticactors.cluster.PhysicalNodeImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static java.lang.String.format;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class ShoalClusterService implements ClusterService {
-    private static final Logger logger = LogManager.getLogger(ShoalClusterService.class);
+    private static final Logger logger = LoggerFactory.getLogger(ShoalClusterService.class);
     private static final String COMPONENT_NAME = "ElasticActors";
     private final String clusterName;
     private final String nodeId;
@@ -128,7 +148,7 @@ public final class ShoalClusterService implements ClusterService {
         final CallBack gmsCallback = new CallBack() {
             @Override
             public void processNotification(Signal notification) {
-                logger.info(format("got signal [%s] from member [%s]", notification.getClass().getSimpleName(), notification.getMemberToken()));
+                logger.info("Got signal [{}] from member [{}]", notification.getClass().getSimpleName(), notification.getMemberToken());
                 if(notification instanceof JoinedAndReadyNotificationSignal) {
                     fireTopologyChanged(((JoinedAndReadyNotificationSignal)notification).getCurrentView());
                 } else if(notification instanceof PlannedShutdownSignal) {
@@ -151,7 +171,7 @@ public final class ShoalClusterService implements ClusterService {
                         try {
                             clusterMessageHandler.handleMessage(messageSignal.getMessage(),messageSignal.getMemberToken());
                         } catch (Exception e) {
-                            logger.error(format("Exception while handling MessageSignal from member %s, signal bytes (HEX): -", messageSignal.getMemberToken()),e);
+                            logger.error("Exception while handling MessageSignal from member {}, signal bytes (HEX): -", messageSignal.getMemberToken(),e);
                         }
                     }
                 }
@@ -173,7 +193,7 @@ public final class ShoalClusterService implements ClusterService {
 
     private void fireTopologyChanged(AliveAndReadyView currentView) {
         List<String> coreMembers = gms.getGroupHandle().getCurrentCoreMembers();
-        logger.info("fireTopologyChanged members in view: "+coreMembers.toString());
+        logger.info("fireTopologyChanged members in view: {}", coreMembers.toString());
         for (ClusterEventListener eventListener : eventListeners) {
             try {
                 eventListener.onTopologyChanged(convert(coreMembers));
@@ -191,7 +211,7 @@ public final class ShoalClusterService implements ClusterService {
             logger.info("fireLeadershipChanged member: "+signal.getMemberToken());
             for (ClusterEventListener eventListener : eventListeners) {
                 try {
-                    eventListener.onMasterElected(convert(Arrays.asList(signal.getMemberToken())).get(0));
+                    eventListener.onMasterElected(convert(Collections.singletonList(signal.getMemberToken())).get(0));
                 } catch (Exception e) {
                     logger.error("Exception on fireLeadershipChanged",e);
                 }
@@ -203,7 +223,7 @@ public final class ShoalClusterService implements ClusterService {
             logger.info("fireLeadershipChanged member: "+signal.getMemberToken());
             for (ClusterEventListener eventListener : eventListeners) {
                 try {
-                    eventListener.onMasterElected(convert(Arrays.asList(signal.getMemberToken())).get(0));
+                    eventListener.onMasterElected(convert(Collections.singletonList(signal.getMemberToken())).get(0));
                 } catch (Exception e) {
                     logger.error("Exception on fireLeadershipChanged",e);
                 }

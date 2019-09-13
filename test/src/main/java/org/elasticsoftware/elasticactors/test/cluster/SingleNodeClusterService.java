@@ -16,12 +16,12 @@
 
 package org.elasticsoftware.elasticactors.test.cluster;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ClusterEventListener;
 import org.elasticsoftware.elasticactors.cluster.ClusterMessageHandler;
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @author Joost van de Wijgerd
  */
 public class SingleNodeClusterService implements ClusterService {
-    private static Logger logger = LogManager.getLogger(SingleNodeClusterService.class);
+    private static Logger logger = LoggerFactory.getLogger(SingleNodeClusterService.class);
     private final Queue<ClusterEventListener> eventListeners = new ConcurrentLinkedQueue<>();
     private ClusterMessageHandler clusterMessageHandler;
     private final PhysicalNode localNode;

@@ -16,12 +16,12 @@
 
 package org.elasticsoftware.elasticactors.state;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  * @author Joost van de Wijgerd
  */
 public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateProcessor, ThreadBoundEventProcessor<ActorStateUpdateEvent> {
-    private static final Logger logger = LogManager.getLogger(DefaultActorStateUpdateProcessor.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultActorStateUpdateProcessor.class);
     private final ThreadBoundExecutor<ActorStateUpdateEvent> executor;
     private final List<ActorStateUpdateListener> listeners = new ArrayList<>();
     private final Consumer<List<ActorStateUpdateEvent>> processingFunction;
@@ -76,7 +76,7 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
             try {
                 listener.onUpdate(events);
             } catch(Exception e) {
-                logger.error(String.format("Unexpected Exception while processing ActorStateUpdates on listener of type %s", listener.getClass().getSimpleName()), e);
+                logger.error("Unexpected Exception while processing ActorStateUpdates on listener of type {}", listener.getClass().getSimpleName(), e);
             }
         }
     }
@@ -86,7 +86,7 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
             try {
                 listener.onUpdate(events.stream().map(ActorStateUpdateEvent::copyOf).collect(Collectors.toList()));
             } catch(Exception e) {
-                logger.error(String.format("Unexpected Exception while processing ActorStateUpdates on listener of type %s", listener.getClass().getSimpleName()), e);
+                logger.error("Unexpected Exception while processing ActorStateUpdates on listener of type {}", listener.getClass().getSimpleName(), e);
             }
         }
     }

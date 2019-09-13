@@ -23,12 +23,37 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.Actor;
+import org.elasticsoftware.elasticactors.ActorContainer;
+import org.elasticsoftware.elasticactors.ActorContainerRef;
+import org.elasticsoftware.elasticactors.ActorContextHolder;
+import org.elasticsoftware.elasticactors.ActorLifecycleListener;
+import org.elasticsoftware.elasticactors.ActorLifecycleListenerRegistry;
+import org.elasticsoftware.elasticactors.ActorNode;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorRefGroup;
+import org.elasticsoftware.elasticactors.ActorShard;
+import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.PhysicalNode;
+import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.TempActor;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
-import org.elasticsoftware.elasticactors.cluster.*;
+import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
+import org.elasticsoftware.elasticactors.cluster.ActorRefTools;
+import org.elasticsoftware.elasticactors.cluster.ActorShardRef;
+import org.elasticsoftware.elasticactors.cluster.ActorSystemEvent;
+import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerImpl;
+import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRegistry;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.LocalActorRefGroup;
+import org.elasticsoftware.elasticactors.cluster.NodeSelector;
+import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
+import org.elasticsoftware.elasticactors.cluster.ShardDistributionStrategy;
+import org.elasticsoftware.elasticactors.cluster.ShardDistributor;
 import org.elasticsoftware.elasticactors.cluster.scheduler.InternalScheduler;
 import org.elasticsoftware.elasticactors.kafka.cluster.KafkaInternalActorSystems;
 import org.elasticsoftware.elasticactors.kafka.scheduler.KafkaTopicScheduler;
@@ -39,24 +64,41 @@ import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
-import org.elasticsoftware.elasticactors.serialization.*;
+import org.elasticsoftware.elasticactors.serialization.Deserializer;
+import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.groupingBy;
 
 public final class KafkaActorSystemInstance implements InternalActorSystem, ShardDistributor, ActorSystemEventListenerRegistry {
-    private static final Logger logger = LogManager.getLogger(KafkaActorSystemInstance.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaActorSystemInstance.class);
     private final InternalActorSystemConfiguration configuration;
     private final NodeSelectorFactory nodeSelectorFactory;
     private final KafkaInternalActorSystems cluster;
@@ -178,7 +220,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
                 ElasticActor existingInstance = actorInstances.putIfAbsent(actorClass, actorInstance);
                 return existingInstance == null ? actorInstance : existingInstance;
             } catch (Exception e) {
-                logger.error(format("Exception creating actor instance for actorClass [%s]",actorClass.getName()), e);
+                logger.error("Exception creating actor instance for actorClass [{}]",actorClass.getName(), e);
                 return null;
             }
         } else {
@@ -405,7 +447,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         final boolean initializing = initialized.compareAndSet(false, true);
         // see if this was the first time, if so we need to initialize the ActorSystem
         if (initializing) {
-            logger.info(format("Initializing ActorSystem [%s]", getName()));
+            logger.info("Initializing ActorSystem [{}]", getName());
         }
 
         NodeSelector nodeSelector = nodeSelectorFactory.create(nodes);
@@ -484,7 +526,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
 
         logger.info("Cluster shard mapping summary:");
         for (Map.Entry<PhysicalNode, Collection<ShardKey>> entry : shardDistribution.asMap().entrySet()) {
-            logger.info(format("\t%s has %d shards assigned", entry.getKey(), entry.getValue().size()));
+            logger.info("\t{} has {} shards assigned", entry.getKey(), entry.getValue().size());
         }
     }
 

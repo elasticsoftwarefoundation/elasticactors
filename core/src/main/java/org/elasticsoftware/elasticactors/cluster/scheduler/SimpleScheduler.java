@@ -16,17 +16,22 @@
 
 package org.elasticsoftware.elasticactors.cluster.scheduler;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.UUID;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Simple in-memory scheduler that is backed by a {@link java.util.concurrent.ScheduledExecutorService}
@@ -34,7 +39,7 @@ import java.util.concurrent.*;
  * @author Joost van de Wijgerd
  */
 public final class SimpleScheduler implements SchedulerService,ScheduledMessageRefFactory {
-    private static final Logger logger = LogManager.getLogger(SimpleScheduler.class);
+    private static final Logger logger = LoggerFactory.getLogger(SimpleScheduler.class);
     private ScheduledExecutorService scheduledExecutorService;
     private final ConcurrentMap<String,ScheduledFuture> scheduledFutures = new ConcurrentHashMap<>();
 

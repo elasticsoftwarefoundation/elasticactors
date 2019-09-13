@@ -22,8 +22,6 @@ import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.Ku
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesStateMachineData;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.processor.AbstractTaskSchedulingStateProcessor;
 
-import static java.lang.String.format;
-
 public class ScalingDownStateProcessor extends AbstractTaskSchedulingStateProcessor {
 
     public ScalingDownStateProcessor(KubernetesStateMachineData kubernetesStateMachineData, TaskScheduler taskScheduler) {
@@ -42,7 +40,7 @@ public class ScalingDownStateProcessor extends AbstractTaskSchedulingStateProces
          * the number of ready replicas to be equal to the number of actual and desired replicas.
          */
         if (desiredReplicas == actualReplicas) {
-            logger.info(format("Successfully scaled down to %d nodes. Switching to STABLE", desiredReplicas));
+            logger.info("Successfully scaled down to {} nodes. Switching to STABLE", desiredReplicas);
             switchToStableState(resource);
         } else if (desiredReplicas > currentDesiredReplicas) {
             logger.info("Scaling down cancelled. Scale up detected. Switching to SCALING_UP");

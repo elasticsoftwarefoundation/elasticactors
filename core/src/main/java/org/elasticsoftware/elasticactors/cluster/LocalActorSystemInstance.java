@@ -20,9 +20,23 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.Actor;
+import org.elasticsoftware.elasticactors.ActorContainer;
+import org.elasticsoftware.elasticactors.ActorContainerRef;
+import org.elasticsoftware.elasticactors.ActorContextHolder;
+import org.elasticsoftware.elasticactors.ActorLifecycleListener;
+import org.elasticsoftware.elasticactors.ActorLifecycleListenerRegistry;
+import org.elasticsoftware.elasticactors.ActorNode;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorRefGroup;
+import org.elasticsoftware.elasticactors.ActorShard;
+import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.NodeKey;
+import org.elasticsoftware.elasticactors.PhysicalNode;
+import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.TempActor;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.scheduler.InternalScheduler;
@@ -38,11 +52,22 @@ import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -52,16 +77,17 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
+import static org.elasticsoftware.elasticactors.cluster.ActorSystemEvent.ACTOR_SHARD_INITIALIZED;
+
 import static java.lang.String.format;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
-import static org.elasticsoftware.elasticactors.cluster.ActorSystemEvent.ACTOR_SHARD_INITIALIZED;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class LocalActorSystemInstance implements InternalActorSystem, ShardDistributor {
-    private static final Logger logger = LogManager.getLogger(LocalActorSystemInstance.class);
+    private static final Logger logger = LoggerFactory.getLogger(LocalActorSystemInstance.class);
     private final InternalActorSystemConfiguration configuration;
     private final ActorShard[] shards;
     private final ReadWriteLock[] shardLocks;
@@ -116,11 +142,11 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
         // The Messaging subsystem is closed before this instance
         // Need to sort out the order
         /*
-        logger.info(format("Shutting down %d ActorNode instances",activeNodes.size()));
+        logger.info("Shutting down {} ActorNode instances",activeNodes.size());
         for (ActorNode node : activeNodes.values()) {
             node.destroy();
         }
-        logger.info(format("Shutting down %d ActorShards",shards.length));
+        logger.info("Shutting down {} ActorShards",shards.length);
         for (ActorShard shard : shards) {
             shard.destroy();
         }
@@ -181,7 +207,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
         final boolean initializing = initialized.compareAndSet(false, true);
         // see if this was the first time, if so we need to initialize the ActorSystem
         if (initializing) {
-            logger.info(format("Initializing ActorSystem [%s]", getName()));
+            logger.info("Initializing ActorSystem [{}]", getName());
         }
 
         NodeSelector nodeSelector = nodeSelectorFactory.create(nodes);
@@ -212,7 +238,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
                     final ActorShard currentShard = shards[i];
                     if (currentShard == null || !currentShard.getOwningNode().isLocal()) {
                         String owningNodeId = currentShard != null ? currentShard.getOwningNode().getId() : "<No Node>";
-                        logger.info(format("I will own %s", shardKey.toString()));
+                        logger.info("I will own {}", shardKey);
                         // destroy the current remote shard instance
                         if (currentShard != null) {
                             currentShard.destroy();
@@ -226,7 +252,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
                             // register with the strategy to wait for shard to be released
                             strategy.registerWaitForRelease(newShard, node);
                         } catch(Exception e) {
-                            logger.error(format("IMPORTANT: waiting on release of shard %s from node %s failed,  ElasticActors cluster is unstable. Please check all nodes", shardKey, owningNodeId), e);
+                            logger.error("IMPORTANT: waiting on release of shard {} from node {} failed,  ElasticActors cluster is unstable. Please check all nodes", shardKey, owningNodeId, e);
                             stable = false;
                         } finally {
                             // add it to the new local shards
@@ -238,13 +264,13 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
                         }
                     } else {
                         // we own the shard already, no change needed
-                        logger.info(format("I already own %s", shardKey.toString()));
+                        logger.info("I already own {}", shardKey);
                     }
                 } else {
                     // the shard will be managed by another node
                     final ActorShard currentShard = shards[i];
                     if (currentShard == null || currentShard.getOwningNode().isLocal()) {
-                        logger.info(format("%s will own %s", node, shardKey));
+                        logger.info("{} will own {}", node, shardKey);
                         try {
                             // destroy the current local shard instance
                             if (currentShard != null) {
@@ -254,7 +280,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
                                 strategy.signalRelease(currentShard, node);
                             }
                         } catch(Exception e) {
-                            logger.error(format("IMPORTANT: signalling release of shard %s to node %s failed, ElasticActors cluster is unstable. Please check all nodes", shardKey, node), e);
+                            logger.error("IMPORTANT: signalling release of shard {} to node {} failed, ElasticActors cluster is unstable. Please check all nodes", shardKey, node, e);
                             stable = false;
                         } finally {
                             // create a new remote shard and swap it
@@ -265,7 +291,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
                         }
                     } else {
                         // shard was already remote
-                        logger.info(format("%s will own %s", node, shardKey));
+                        logger.info("{} will own {}", node, shardKey);
                     }
                 }
             }
@@ -301,10 +327,10 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
         SortedMap<String, Long> sortedNodes = new TreeMap<>(collect);
         logger.info("Cluster shard mapping summary:");
         for (Map.Entry<String, Long> entry : sortedNodes.entrySet()) {
-            logger.info(format("\t%s has %d shards assigned", entry.getKey(), entry.getValue()));
+            logger.info("\t{} has {} shards assigned", entry.getKey(), entry.getValue());
         }
         // now we need to generate the events for the new local shards (if any)
-        logger.info(format("Generating ACTOR_SHARD_INITIALIZED events for %d new shards",newLocalShards.size()));
+        logger.info("Generating ACTOR_SHARD_INITIALIZED events for {} new shards",newLocalShards.size());
         for (Integer newLocalShard : newLocalShards) {
             this.actorSystemEventListenerService.generateEvents(shardAdapters[newLocalShard], ACTOR_SHARD_INITIALIZED);
         }
@@ -351,7 +377,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
                 ElasticActor existingInstance = actorInstances.putIfAbsent(actorClass, actorInstance);
                 return existingInstance == null ? actorInstance : existingInstance;
             } catch (Exception e) {
-                logger.error(format("Exception creating actor instance for actorClass [%s]",actorClass.getName()), e);
+                logger.error("Exception creating actor instance for actorClass [{}]",actorClass.getName(), e);
                 return null;
             }
         } else {

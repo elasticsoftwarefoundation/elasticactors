@@ -21,8 +21,6 @@ import org.elasticsoftware.elasticactors.kubernetes.cluster.TaskScheduler;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesClusterState;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesStateMachineData;
 
-import static java.lang.String.format;
-
 public abstract class AbstractTaskSchedulingStateProcessor extends AbstractStateProcessor {
 
     private final static String TASK_NAME = "SCALE_UP_TIMEOUT_TASK";
@@ -47,7 +45,7 @@ public abstract class AbstractTaskSchedulingStateProcessor extends AbstractState
     protected void scheduleTimeoutTask(int desiredReplicas, int baseReplicas) {
         taskScheduler.scheduleTask(() -> {
             final int stableReplicas = getDesiredReplicas(kubernetesStateMachineData.getLatestStableState().get());
-            logger.error(format("Scaling up to %d nodes failed. Reverting to previous stable state with %d nodes -> setting status to UNSTABLE", desiredReplicas, stableReplicas));
+            logger.error("Scaling up to {} nodes failed. Reverting to previous stable state with {} nodes -> setting status to UNSTABLE", desiredReplicas, stableReplicas);
             kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.UNSTABLE);
             // change the topology back to the old state
             onTopologyChange(stableReplicas);

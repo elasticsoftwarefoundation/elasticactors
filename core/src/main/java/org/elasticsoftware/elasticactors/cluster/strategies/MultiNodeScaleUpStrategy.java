@@ -16,28 +16,24 @@
 
 package org.elasticsoftware.elasticactors.cluster.strategies;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.ShardDistributionStrategy;
 import org.elasticsoftware.elasticactors.cluster.messaging.ShardReleasedMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import static java.lang.String.format;
-
 /**
  * @author Joost van de Wijgerd
  */
 public abstract class MultiNodeScaleUpStrategy implements ShardDistributionStrategy {
-    protected final Logger logger = LogManager.getLogger(this.getClass());
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final LinkedBlockingQueue<ShardReleasedMessage> shardReleasedMessages;
     private final ConcurrentMap<ShardKey,ActorShard> registeredShards = new ConcurrentHashMap<>();
 
@@ -56,7 +52,7 @@ public abstract class MultiNodeScaleUpStrategy implements ShardDistributionStrat
         final long maxWaitTimeMillis = startTime + TimeUnit.MILLISECONDS.convert(maxWaitTime,unit);
         long waitTime = TimeUnit.MILLISECONDS.convert(maxWaitTime,unit);
         if(!registeredShards.isEmpty()) {
-            logger.info(format("Waiting maximum of %d %s for %d Shards to be released by Remote Nodes",maxWaitTime,unit.name(),registeredShards.size()));
+            logger.info("Waiting maximum of {} {} for {} Shards to be released by Remote Nodes",maxWaitTime,unit.name(),registeredShards.size());
         }
         while(!registeredShards.isEmpty() && maxWaitTimeMillis >= System.currentTimeMillis()) {
             try {
@@ -67,10 +63,10 @@ public abstract class MultiNodeScaleUpStrategy implements ShardDistributionStrat
                     // handle the shard
                     ActorShard localShard = registeredShards.remove(shardKey);
                     if(localShard != null) {
-                        logger.info(format("Initializing LocalShard %s",shardKey.toString()));
+                        logger.info("Initializing LocalShard {}",shardKey);
                         localShard.init();
                     } else {
-                        logger.error(format("IMPORTANT: Got a ShardReleasedMessage for an unregistered shard [%s], ElasticActors cluster is unstable. Please check all nodes",shardKey));
+                        logger.error("IMPORTANT: Got a ShardReleasedMessage for an unregistered shard [{}], ElasticActors cluster is unstable. Please check all nodes",shardKey);
                     }
                 }
                 // reset the waitTime interval
@@ -85,7 +81,7 @@ public abstract class MultiNodeScaleUpStrategy implements ShardDistributionStrat
 
         if(!registeredShards.isEmpty()) {
             logger.warn("Timed out while waiting for Shards to be released");
-            logger.info(format("Going ahead with initializing %d Local Shards",registeredShards.size()));
+            logger.info("Going ahead with initializing {} Local Shards",registeredShards.size());
             for (ActorShard actorShard : registeredShards.values()) {
                 try {
                     actorShard.init();

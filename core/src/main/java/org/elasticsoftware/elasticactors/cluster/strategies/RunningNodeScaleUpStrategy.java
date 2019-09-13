@@ -24,8 +24,6 @@ import org.elasticsoftware.elasticactors.cluster.protobuf.Clustering;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static java.lang.String.format;
-
 /**
  * @author Joost van de Wijgerd
  */
@@ -47,7 +45,7 @@ public final class RunningNodeScaleUpStrategy extends MultiNodeScaleUpStrategy {
         clusterMessageBuilder.setShardReleased(shardReleasedBuilder);
         byte[] messageBytes = clusterMessageBuilder.build().toByteArray();
         clusterService.sendMessage(nextOwner.getId(),messageBytes);
-        logger.info(format("Releasing Shard %s to Node %s",localShard.getKey().toString(),nextOwner.getId()));
+        logger.info("Releasing Shard {} to Node {}",localShard.getKey(),nextOwner.getId());
     }
 
 }

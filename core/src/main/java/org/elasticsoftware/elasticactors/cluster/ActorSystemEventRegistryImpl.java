@@ -16,26 +16,24 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import static java.lang.String.format;
-
 /**
  * @author Joost van de Wijgerd
  */
 public final class ActorSystemEventRegistryImpl implements ActorSystemEventListenerService {
-    private static final Logger logger = LogManager.getLogger(ActorSystemEventRegistryImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(ActorSystemEventRegistryImpl.class);
     private ActorSystemEventListenerRepository eventListenerRepository;
     private InternalActorSystem actorSystem;
 
@@ -88,7 +86,7 @@ public final class ActorSystemEventRegistryImpl implements ActorSystemEventListe
                     ActorRef receiver = actorSystem.actorFor(listener.getActorId());
                     actorShard.sendMessage(null, receiver, message);
                 } catch(Exception e) {
-                    logger.error(format("Exception while sending message [%s] to actorId [%s] for ActorSystemEvent.%s",listener.getMessageClass().getName(),listener.getActorId(),actorSystemEvent.name()),e);
+                    logger.error("Exception while sending message [{}] to actorId [{}] for ActorSystemEvent.{}",listener.getMessageClass().getName(),listener.getActorId(),actorSystemEvent.name(),e);
                 }
             }
         }

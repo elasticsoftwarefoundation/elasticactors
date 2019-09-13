@@ -22,8 +22,6 @@ import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.Ku
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesStateMachineData;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.processor.AbstractTaskSchedulingStateProcessor;
 
-import static java.lang.String.format;
-
 public class ScalingUpStateProcessor extends AbstractTaskSchedulingStateProcessor {
 
     public ScalingUpStateProcessor(KubernetesStateMachineData kubernetesStateMachineData, TaskScheduler taskScheduler) {
@@ -53,7 +51,7 @@ public class ScalingUpStateProcessor extends AbstractTaskSchedulingStateProcesso
         }
         // don't wait for the other node to be ready but shed partitions immediately
         else if (actualReplicas > currentDesiredReplicas || actualReplicas > currentActualReplicas) {
-            logger.info(format("Starting scale up to %d nodes. Switching to SCALING_UP_STARTED", desiredReplicas));
+            logger.info("Starting scale up to {} nodes. Switching to SCALING_UP_STARTED", desiredReplicas);
             kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.SCALING_UP_STARTED);
             onTopologyChange(desiredReplicas);
             // we need to set a timeout to receive the ready message

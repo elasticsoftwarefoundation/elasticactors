@@ -16,8 +16,8 @@
 
 package org.elasticsoftware.elasticactors.util.concurrent;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ import java.util.List;
  * @author Joost van de Wijgerd
  */
 public final class ThreadBoundRunnableEventProcessor implements ThreadBoundEventProcessor<ThreadBoundRunnable> {
-    private static final Logger logger = LogManager.getLogger(ThreadBoundExecutorImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(ThreadBoundExecutorImpl.class);
 
     @Override
     public void process(List<ThreadBoundRunnable> events) {
@@ -33,7 +33,7 @@ public final class ThreadBoundRunnableEventProcessor implements ThreadBoundEvent
             try {
                 r.run();
             } catch (Throwable exception) {
-                logger.error(String.format("exception on queue %s while executing runnable: %s", Thread.currentThread().getName(), r), exception);
+                logger.error("Exception on queue {} while executing runnable: {}", Thread.currentThread().getName(), r, exception);
             }
         }
     }
@@ -44,7 +44,7 @@ public final class ThreadBoundRunnableEventProcessor implements ThreadBoundEvent
             try {
                 event.run();
             } catch (Throwable exception) {
-                logger.error(String.format("exception on queue %s while executing runnable: %s", Thread.currentThread().getName(), event), exception);
+                logger.error("Exception on queue {} while executing runnable: {}", Thread.currentThread().getName(), event, exception);
             }
         }
     }

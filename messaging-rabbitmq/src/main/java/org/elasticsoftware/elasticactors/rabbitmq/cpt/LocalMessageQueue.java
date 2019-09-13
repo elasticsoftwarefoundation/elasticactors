@@ -16,10 +16,14 @@
 
 package org.elasticsoftware.elasticactors.rabbitmq.cpt;
 
-import com.rabbitmq.client.*;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.AlreadyClosedException;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.MessageProperties;
+import com.rabbitmq.client.ShutdownSignalException;
 import net.jodah.lyra.event.ChannelListener;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
@@ -30,19 +34,19 @@ import org.elasticsoftware.elasticactors.rabbitmq.MessageAcker;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static java.lang.String.format;
-
 /**
  * @author Joost van de Wijgerd
  */
 public final class LocalMessageQueue extends DefaultConsumer implements MessageQueue, ChannelListener {
-    private static final Logger logger = LogManager.getLogger(LocalMessageQueue.class);
+    private static final Logger logger = LoggerFactory.getLogger(LocalMessageQueue.class);
     private final Channel consumerChannel;
     private final Channel producerChannel;
     private final String exchangeName;
@@ -150,7 +154,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
     @Override
     public void handleCancel(String consumerTag) throws IOException {
         // we were cancelled by an outside force, should not happen. treat as an error
-        logger.error(format("Unexpectedly cancelled: consumerTag = %s", consumerTag));
+        logger.error("Unexpectedly cancelled: consumerTag = {}", consumerTag);
     }
 
     @Override
@@ -246,7 +250,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
                 if(logger.isTraceEnabled()) {
                     long endTime = System.currentTimeMillis();
                     if(message != null) {
-                        logger.trace(format("(rabbit) Message of type [%s] with id [%s] took %d msecs to execute on queue [%s]", message.getPayloadClass(), message.getId().toString(), endTime - startTime, queueName));
+                        logger.trace("(rabbit) Message of type [{}] with id [{}] took {} msecs to execute on queue [{}]", message.getPayloadClass(), message.getId(), endTime - startTime, queueName);
                     }
                 }
             }
@@ -303,7 +307,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
             } finally {
                 if(logger.isTraceEnabled()) {
                     long endTime = System.currentTimeMillis();
-                    logger.trace(format("(local) Message of type [%s] with id [%s] took %d msecs to execute on queue [%s]",message.getPayloadClass(),message.getId().toString(), endTime-startTime,queueName));
+                    logger.trace("(local) Message of type [{}] with id [{}] took {} msecs to execute on queue [{}]",message.getPayloadClass(),message.getId(), endTime-startTime,queueName);
                 }
             }
         }
@@ -313,7 +317,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
 
         @Override
         public void onError(InternalMessage message, Throwable exception) {
-            logger.error(format("Error handling transient message, payloadClass [%s]", message.getPayloadClass()),exception);
+            logger.error("Error handling transient message, payloadClass [{}]", message.getPayloadClass(),exception);
         }
 
         @Override

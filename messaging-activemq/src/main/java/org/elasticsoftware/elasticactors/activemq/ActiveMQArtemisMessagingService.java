@@ -23,12 +23,16 @@ import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnectorFactory;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.PhysicalNode;
-import org.elasticsoftware.elasticactors.messaging.*;
+import org.elasticsoftware.elasticactors.messaging.MessageHandler;
+import org.elasticsoftware.elasticactors.messaging.MessageQueue;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
+import org.elasticsoftware.elasticactors.messaging.MessagingService;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -37,17 +41,24 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static org.apache.activemq.artemis.api.core.SimpleString.toSimpleString;
+import static org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.HOST_PROP_NAME;
+import static org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.NIO_REMOTING_THREADS_PROPNAME;
+import static org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.PORT_PROP_NAME;
+import static org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.TCP_NODELAY_PROPNAME;
+import static org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.TCP_RECEIVEBUFFER_SIZE_PROPNAME;
+import static org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.TCP_SENDBUFFER_SIZE_PROPNAME;
+import static org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.USE_NIO_PROP_NAME;
+import static org.springframework.util.StringUtils.commaDelimitedListToSet;
+
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
-import static org.apache.activemq.artemis.api.core.SimpleString.toSimpleString;
-import static org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants.*;
-import static org.springframework.util.StringUtils.commaDelimitedListToSet;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class ActiveMQArtemisMessagingService implements MessagingService {
-    private static final Logger logger = LogManager.getLogger(ActiveMQArtemisMessagingService.class);
+    private static final Logger logger = LoggerFactory.getLogger(ActiveMQArtemisMessagingService.class);
     private static final String QUEUE_NAME_FORMAT = "%s/%s";
     private static final String EA_ADDRESS_FORMAT = "ea.%s";
     private static final int SERVER_DEFAULT_PORT = 61616;

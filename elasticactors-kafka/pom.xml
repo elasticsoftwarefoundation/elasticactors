@@ -14,7 +14,9 @@
   ~   limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>elasticactors-parent</artifactId>
         <groupId>org.elasticsoftware.elasticactors</groupId>
@@ -36,33 +38,37 @@
         <dependency>
             <groupId>org.elasticsoftware.elasticactors</groupId>
             <artifactId>elasticactors-spi</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.elasticsoftware.elasticactors</groupId>
             <artifactId>elasticactors-core</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.elasticsoftware.elasticactors</groupId>
             <artifactId>elasticactors-runtime</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
-            <version>${kafka.version}</version>
         </dependency>
         <dependency>
             <groupId>net.openhft</groupId>
             <artifactId>chronicle-map</artifactId>
-            <version>${chronicle-map.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.sun.java</groupId>
-                    <artifactId>tools</artifactId>
-                </exclusion>
-            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
