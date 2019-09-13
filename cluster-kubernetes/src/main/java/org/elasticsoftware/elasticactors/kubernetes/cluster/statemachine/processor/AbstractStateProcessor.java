@@ -17,14 +17,14 @@
 package org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.processor;
 
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesClusterState;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesStateMachineData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractStateProcessor implements StateProcessor {
 
-    protected final Logger logger = LogManager.getLogger(getClass());
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     protected final KubernetesStateMachineData kubernetesStateMachineData;
 

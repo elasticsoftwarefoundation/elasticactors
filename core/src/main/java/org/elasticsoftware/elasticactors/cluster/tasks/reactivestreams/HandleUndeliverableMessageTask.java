@@ -16,8 +16,6 @@
 
 package org.elasticsoftware.elasticactors.cluster.tasks.reactivestreams;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ActorSystem;
@@ -40,6 +38,8 @@ import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.elasticsoftware.elasticactors.tracing.Tracer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
@@ -53,7 +53,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijged
  */
 public final class HandleUndeliverableMessageTask extends ActorLifecycleTask implements SubscriberContext {
-    private static final Logger log = LogManager.getLogger(HandleUndeliverableMessageTask.class);
+    private static final Logger log = LoggerFactory.getLogger(HandleUndeliverableMessageTask.class);
     private InternalPersistentSubscription currentSubscription;
 
     public HandleUndeliverableMessageTask(InternalActorSystem actorSystem,

@@ -20,15 +20,14 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ShardKey;
-import org.elasticsoftware.elasticactors.cassandra2.util.ExecutionUtils;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRepository;
 import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -42,7 +41,7 @@ import static org.elasticsoftware.elasticactors.cassandra2.util.ExecutionUtils.e
  * @author Joost van de Wijgerd
  */
 public final class CassandraScheduledMessageRepository implements ScheduledMessageRepository {
-    private static final Logger logger = LogManager.getLogger(CassandraScheduledMessageRepository.class);
+    private static final Logger logger = LoggerFactory.getLogger(CassandraScheduledMessageRepository.class);
     private final String clusterName;
     private final Session cassandraSession;
     private final PreparedStatement insertStatement;

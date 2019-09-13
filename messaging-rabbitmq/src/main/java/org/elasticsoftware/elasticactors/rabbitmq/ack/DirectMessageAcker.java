@@ -17,9 +17,9 @@
 package org.elasticsoftware.elasticactors.rabbitmq.ack;
 
 import com.rabbitmq.client.Channel;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.rabbitmq.MessageAcker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -27,7 +27,7 @@ import java.io.IOException;
  * @author Joost van de Wijgerd
  */
 public final class DirectMessageAcker implements MessageAcker {
-    private static final Logger logger = LogManager.getLogger(DirectMessageAcker.class);
+    private static final Logger logger = LoggerFactory.getLogger(DirectMessageAcker.class);
     private final Channel consumerChannel;
 
     public DirectMessageAcker(Channel consumerChannel) {

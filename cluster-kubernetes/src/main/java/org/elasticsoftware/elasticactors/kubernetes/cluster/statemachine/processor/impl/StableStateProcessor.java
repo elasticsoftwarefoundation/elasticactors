@@ -21,8 +21,6 @@ import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.Ku
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesStateMachineData;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.processor.AbstractStateProcessor;
 
-import static java.lang.String.format;
-
 public class StableStateProcessor extends AbstractStateProcessor {
 
     public StableStateProcessor(KubernetesStateMachineData kubernetesStateMachineData) {
@@ -40,15 +38,15 @@ public class StableStateProcessor extends AbstractStateProcessor {
         if (desiredReplicas == currentDesiredReplicas && desiredReplicas == actualReplicas) {
             logger.info("Cluster topology remains unchanged");
         } else if (desiredReplicas == actualReplicas && desiredReplicas == readyReplicas) {
-            logger.info(format("Cluster topology changed from %d to %d replicas. We probably missed a few updates. Signalling topology change", currentDesiredReplicas, desiredReplicas));
+            logger.info("Cluster topology changed from {} to {} replicas. We probably missed a few updates. Signalling topology change", currentDesiredReplicas, desiredReplicas);
             switchToStableState(resource);
         } else if (desiredReplicas < currentDesiredReplicas) {
-            logger.info(format("Cluster topology changed from %d to %d replicas. Switching to SCALING_DOWN", currentDesiredReplicas, desiredReplicas));
+            logger.info("Cluster topology changed from {} to {} replicas. Switching to SCALING_DOWN", currentDesiredReplicas, desiredReplicas);
             // we are scaling down the cluster
             kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.SCALING_DOWN);
             return true;
         } else if (desiredReplicas > currentDesiredReplicas || desiredReplicas > actualReplicas) {
-            logger.info(format("Cluster topology changed from %d to %d replicas. Switching to SCALING_UP", currentDesiredReplicas, desiredReplicas));
+            logger.info("Cluster topology changed from {} to {} replicas. Switching to SCALING_UP", currentDesiredReplicas, desiredReplicas);
             // we are scaling up the cluster
             kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.SCALING_UP);
             return true;

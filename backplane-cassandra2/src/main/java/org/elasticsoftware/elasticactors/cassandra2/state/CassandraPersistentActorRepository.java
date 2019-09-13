@@ -20,10 +20,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ShardKey;
-import org.elasticsoftware.elasticactors.cassandra2.util.ExecutionUtils;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
@@ -31,20 +28,22 @@ import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static java.lang.String.format;
-import static java.lang.System.currentTimeMillis;
 import static org.elasticsoftware.elasticactors.cassandra2.util.ExecutionUtils.executeWithRetry;
+
+import static java.lang.System.currentTimeMillis;
 
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class CassandraPersistentActorRepository implements PersistentActorRepository {
-    private static final Logger logger = LogManager.getLogger(CassandraPersistentActorRepository.class);
+    private static final Logger logger = LoggerFactory.getLogger(CassandraPersistentActorRepository.class);
     private final String clusterName;
     private final ThreadBoundExecutor asyncUpdateExecutor;
     private final long readExecutionThresholdMillis;
@@ -116,7 +115,7 @@ public final class CassandraPersistentActorRepository implements PersistentActor
         } finally {
             final long endTime = currentTimeMillis();
             if((endTime - startTime) > readExecutionThresholdMillis) {
-                logger.warn(format("Cassandra read operation took %d msecs for actorId [%s] on shard [%s]",(endTime - startTime), actorId, shard.toString()));
+                logger.warn("Cassandra read operation took {} msecs for actorId [{}] on shard [{}]", (endTime - startTime), actorId, shard.toString());
             }
         }
     }

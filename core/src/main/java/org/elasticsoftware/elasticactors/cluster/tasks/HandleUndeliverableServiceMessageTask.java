@@ -16,8 +16,6 @@
 
 package org.elasticsoftware.elasticactors.cluster.tasks;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorContext;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
@@ -29,6 +27,8 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.tracing.Tracer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -41,7 +41,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  * @author Joost van de Wijgerd
  */
 public final class HandleUndeliverableServiceMessageTask implements ThreadBoundRunnable<String>, ActorContext {
-    private static final Logger logger = LogManager.getLogger(HandleUndeliverableServiceMessageTask.class);
+    private static final Logger logger = LoggerFactory.getLogger(HandleUndeliverableServiceMessageTask.class);
     private final ActorRef serviceRef;
     private final InternalActorSystem actorSystem;
     private final ElasticActor serviceActor;
@@ -103,7 +103,7 @@ public final class HandleUndeliverableServiceMessageTask implements ThreadBoundR
             Tracer.get().throwingRunInCurrentTrace(this::internalHandleUndeliverable);
         } catch(Exception e) {
             // @todo: send an error message to the sender
-            logger.error(String.format("Exception while handling message for service [%s]",serviceRef.toString()),e);
+            logger.error("Exception while handling message for service [{}]",serviceRef,e);
             executionException = e;
         } finally {
             InternalActorContext.getAndClearContext();

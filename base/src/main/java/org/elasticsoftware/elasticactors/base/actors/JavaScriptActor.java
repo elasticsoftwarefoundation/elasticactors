@@ -16,8 +16,6 @@
 
 package org.elasticsoftware.elasticactors.base.actors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.UntypedActor;
@@ -25,8 +23,15 @@ import org.elasticsoftware.elasticactors.base.serialization.JacksonSerialization
 import org.elasticsoftware.elasticactors.base.state.JavaScriptActorState;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.script.*;
+import javax.script.Compilable;
+import javax.script.CompiledScript;
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 /**
  * @author Joost van de Wijgerd
@@ -34,7 +39,7 @@ import javax.script.*;
 @Actor(stateClass = JavaScriptActorState.class, serializationFramework = JacksonSerializationFramework.class)
 @PersistenceConfig(persistOnMessages = true)
 public final class JavaScriptActor extends UntypedActor {
-    private static final Logger logger = LogManager.getLogger(JavaScriptActor.class);
+    private static final Logger logger = LoggerFactory.getLogger(JavaScriptActor.class);
 
     @Override
     public void postActivate(String previousVersion) throws Exception {
@@ -51,7 +56,7 @@ public final class JavaScriptActor extends UntypedActor {
                     // eval so it's ready for invocations
                     compiledScript.eval();
                 } catch(ScriptException e) {
-                    logger.error(String.format("Problem compiling script for actor with id [%s]", getSelf().getActorId()), e);
+                    logger.error("Problem compiling script for actor with id [{}]", getSelf().getActorId(), e);
                 }
             } else {
                 logger.error("Nashorn ScriptEngine not found. Make sure you are running on Java 8");

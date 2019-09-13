@@ -20,8 +20,6 @@ import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.admin.indices.get.GetIndexResponse;
@@ -33,6 +31,8 @@ import org.elasticsoftware.elasticactors.indexing.elasticsearch.IndexConfig;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdate;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.InputStreamReader;
@@ -44,13 +44,12 @@ import java.util.Set;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Sets.newHashSet;
-import static java.lang.String.format;
 import static org.elasticsoftware.elasticactors.indexing.elasticsearch.IndexConfig.VersioningStrategy.NONE;
 import static org.elasticsoftware.elasticactors.indexing.elasticsearch.IndexConfig.VersioningStrategy.REINDEX_ON_ACTIVATE;
 
 public final class Indexer implements ActorStateUpdateListener {
 
-    private static final Logger logger = LogManager.getLogger(Indexer.class);
+    private static final Logger logger = LoggerFactory.getLogger(Indexer.class);
 
     private Client client;
 
@@ -127,12 +126,12 @@ public final class Indexer implements ActorStateUpdateListener {
                 .execute(new ActionListener<DeleteResponse>() {
                     @Override
                     public void onResponse(DeleteResponse deleteResponse) {
-                        logger.debug(format("Successfully deleted actor {%s} from elasticsearch", actorId));
+                        logger.debug("Successfully deleted actor {{}} from elasticsearch", actorId);
                     }
 
                     @Override
                     public void onFailure(Exception e) {
-                        logger.error(format("Failed to delete actor {%s} from elasticsearch", actorId), e);
+                        logger.error("Failed to delete actor {{}} from elasticsearch", actorId, e);
                     }
                 });
     }
@@ -145,8 +144,8 @@ public final class Indexer implements ActorStateUpdateListener {
                 setUpIndexAliases(indexConfig, update);
                 setupIndices.add(indexName);
             } catch (Exception e) {
-                logger.error(format("Error while trying to setup aliases for index {%s}. Actor <%s> will not be indexed in elasticsearch",
-                        indexName, update.getActorRef()), e);
+                logger.error("Error while trying to setup aliases for index {{}}. Actor <{}> will not be indexed in elasticsearch",
+                        indexName, update.getActorRef(), e);
                 return;
             }
         }
@@ -160,16 +159,16 @@ public final class Indexer implements ActorStateUpdateListener {
                     .execute(new ActionListener<IndexResponse>() {
                         @Override
                         public void onResponse(IndexResponse indexResponse) {
-                            logger.debug(format("Successfully indexed actor {%s} in elasticsearch", update.getActorRef()));
+                            logger.debug("Successfully indexed actor {{}} in elasticsearch", update.getActorRef());
                         }
 
                         @Override
                         public void onFailure(Exception e) {
-                            logger.error(format("Failed to index actor {%s} in elasticsearch", update.getActorRef()), e);
+                            logger.error("Failed to index actor {{}} in elasticsearch", update.getActorRef(), e);
                         }
                     });
         } catch (Exception e) {
-            logger.error(format("Encountered error while trying to index actor {%s} in elasticsearch", update.getActorRef()), e);
+            logger.error("Encountered error while trying to index actor {{}} in elasticsearch", update.getActorRef(), e);
         }
     }
 

@@ -22,8 +22,6 @@ import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.Ku
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesStateMachineData;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.processor.AbstractTaskSchedulingStateProcessor;
 
-import static java.lang.String.format;
-
 public class ScalingUpStartedStateProcessor extends AbstractTaskSchedulingStateProcessor {
 
     public ScalingUpStartedStateProcessor(KubernetesStateMachineData kubernetesStateMachineData, TaskScheduler taskScheduler) {
@@ -39,7 +37,7 @@ public class ScalingUpStartedStateProcessor extends AbstractTaskSchedulingStateP
         int currentDesiredReplicas = getDesiredReplicas(kubernetesStateMachineData.getLatestStableState().get());
 
         if (desiredReplicas == actualReplicas && desiredReplicas == readyReplicas) {
-            logger.info(format("Successfully scaled up to %d nodes. Switching to STABLE", desiredReplicas));
+            logger.info("Successfully scaled up to {} nodes. Switching to STABLE", desiredReplicas);
             switchToStableState(resource);
         } else if (desiredReplicas < currentDesiredReplicas && desiredReplicas < actualReplicas) {
             logger.info("Scaling up cancelled. Scale down detected. Switching to SCALING_DOWN");
@@ -47,7 +45,7 @@ public class ScalingUpStartedStateProcessor extends AbstractTaskSchedulingStateP
             cancelScheduledTimeoutTask();
             return true;
         } else if (desiredReplicas > kubernetesStateMachineData.getCurrentTopology().get()) {
-            logger.info(format("New scale up to %d nodes detected. Switching to SCALING_UP", desiredReplicas));
+            logger.info("New scale up to {} nodes detected. Switching to SCALING_UP", desiredReplicas);
             kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.SCALING_UP);
             return true;
         }

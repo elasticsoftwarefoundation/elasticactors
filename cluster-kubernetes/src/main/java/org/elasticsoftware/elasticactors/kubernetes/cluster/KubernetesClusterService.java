@@ -21,8 +21,6 @@ import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watcher;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ClusterEventListener;
 import org.elasticsoftware.elasticactors.cluster.ClusterMessageHandler;
@@ -30,6 +28,8 @@ import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesStateMachine;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesStateMachineListener;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.impl.SingleThreadKubernetesStateMachine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -43,7 +43,7 @@ import static java.lang.String.format;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 public final class KubernetesClusterService implements ClusterService, KubernetesStateMachineListener {
-    private static final Logger logger = LogManager.getLogger(KubernetesClusterService.class);
+    private static final Logger logger = LoggerFactory.getLogger(KubernetesClusterService.class);
     private KubernetesClient client;
     private final String namespace;
     private final String name;
@@ -107,7 +107,7 @@ public final class KubernetesClusterService implements ClusterService, Kubernete
 
     @Override
     public void onTopologyChange(int totalReplicas) {
-        logger.info(format("Signalling Cluster Topology change to %d nodes", totalReplicas));
+        logger.info("Signalling Cluster Topology change to {} nodes", totalReplicas);
         List<PhysicalNode> nodeList = new ArrayList<>(totalReplicas);
         for (int i = 0; i < totalReplicas; i++) {
             String id = format("%s-%d", name, i);
@@ -159,7 +159,7 @@ public final class KubernetesClusterService implements ClusterService, Kubernete
 
         @Override
         public void onClose(KubernetesClientException cause) {
-            logger.error(format("Watcher on statefulset %s was closed", name));
+            logger.error("Watcher on statefulset {} was closed", name);
             // try to re-add it
             client.apps().statefulSets().inNamespace(namespace).withName(name).watch(watcher);
         }

@@ -16,14 +16,14 @@
 
 package org.elasticsoftware.elasticactors.indexing.elasticsearch;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.elasticsoftware.elasticactors.indexing.elasticsearch.indexer.Indexer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -36,13 +36,11 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 
-import static java.lang.String.format;
-
 @Configuration
 @EnableSpringConfigured
 public class IndexderAppConfig {
 
-    private static final Logger logger = LogManager.getLogger(IndexderAppConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(IndexderAppConfig.class);
 
     @Autowired
     private Environment environment;
@@ -55,7 +53,7 @@ public class IndexderAppConfig {
         Integer elasticsearchPort = environment.getProperty("actor.indexing.elasticsearch.port", Integer.class, 9300);
         String elasticsearchClusterName = environment.getProperty("actor.indexing.elasticsearch.cluster.name", String.class, "elasticsearch");
 
-        logger.info(format("Creating elasticsearch client with hosts <%s>", Arrays.toString(elasticsearchHosts)));
+        logger.info("Creating elasticsearch client with hosts <{}>", Arrays.toString(elasticsearchHosts));
 
         Settings settings = Settings.builder()
                 .put("cluster.name", elasticsearchClusterName).build();

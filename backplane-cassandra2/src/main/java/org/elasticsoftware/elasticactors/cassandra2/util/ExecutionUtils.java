@@ -19,12 +19,16 @@ package org.elasticsoftware.elasticactors.cassandra2.util;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
-import com.datastax.driver.core.exceptions.*;
-import org.apache.logging.log4j.Logger;
+import com.datastax.driver.core.exceptions.BootstrappingException;
+import com.datastax.driver.core.exceptions.ConnectionException;
+import com.datastax.driver.core.exceptions.CoordinatorException;
+import com.datastax.driver.core.exceptions.DriverException;
+import com.datastax.driver.core.exceptions.OverloadedException;
+import com.datastax.driver.core.exceptions.QueryConsistencyException;
+import com.datastax.driver.core.exceptions.UnavailableException;
+import org.slf4j.Logger;
 
 import java.net.InetAddress;
-
-import static java.lang.String.format;
 
 /**
  * @author Joost van de Wijgerd
@@ -39,19 +43,19 @@ public final class ExecutionUtils {
             try {
                 return cassandraSession.execute(statement);
             } catch (ConnectionException | OverloadedException | QueryConsistencyException | BootstrappingException e) {
-                logger.warn(format("%s on node %s while executing statement, retry attempt %d", e.getClass().getSimpleName(), e.getHost(), attempts));
+                logger.warn("{} on node {} while executing statement, retry attempt {}", e.getClass().getSimpleName(), e.getHost(), attempts);
                 latestException = e;
             }  catch(UnavailableException e) {
-                logger.error(format("node %s is reporting not enough replicas available, will not retry", e.getHost()));
+                logger.error("node {} is reporting not enough replicas available, will not retry", e.getHost());
                 throw e;
             } catch(RuntimeException e) {
                 InetAddress node = (e instanceof CoordinatorException) ? ((CoordinatorException)e).getHost() : null;
-                logger.error(format("%s on node %s while executing statement, will not retry", e.getClass().getSimpleName(), node));
+                logger.error("{} on node {} while executing statement, will not retry", e.getClass().getSimpleName(), node);
                 throw e;
             }
         }
         // if we end up here the retry failed and latestException must be set
-        logger.error(format("Failed to execute Statement after %d attempts, throwing latest exception %s", attempts, latestException.getClass().getSimpleName()));
+        logger.error("Failed to execute Statement after {} attempts, throwing latest exception {}", attempts, latestException.getClass().getSimpleName());
         throw latestException;
     }
 }

@@ -17,8 +17,6 @@
 package org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine;
 
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.TaskScheduler;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesClusterState;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.data.KubernetesStateMachineData;
@@ -29,15 +27,15 @@ import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.process
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.processor.impl.StableStateProcessor;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.processor.impl.UninitializedStateProcessor;
 import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.processor.impl.UnstableStateProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.EnumMap;
 import java.util.Map;
 
-import static java.lang.String.format;
-
 public abstract class AbstractKubernetesStateMachine implements KubernetesStateMachine {
 
-    protected final Logger logger = LogManager.getLogger(getClass());
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final Map<KubernetesClusterState, StateProcessor> stateProcessorMap = new EnumMap<>(KubernetesClusterState.class);
 
@@ -45,8 +43,8 @@ public abstract class AbstractKubernetesStateMachine implements KubernetesStateM
     private final UninitializedStateProcessor uninitializedStateProcessor = new UninitializedStateProcessor(kubernetesStateMachineData);
 
     protected void processStateUpdate(StatefulSet resource) {
-        logger.info(format("Received Cluster State Update: spec.replicas=%d, status.replicas=%d, status.readyReplicas=%d",
-                resource.getSpec().getReplicas(), resource.getStatus().getReplicas(), resource.getStatus().getReadyReplicas()));
+        logger.info("Received Cluster State Update: spec.replicas={}, status.replicas={}, status.readyReplicas={}",
+                resource.getSpec().getReplicas(), resource.getStatus().getReplicas(), resource.getStatus().getReadyReplicas());
         boolean reprocess;
         do {
             KubernetesClusterState clusterState = kubernetesStateMachineData.getCurrentState().get();

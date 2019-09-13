@@ -16,8 +16,6 @@
 
 package org.elasticsoftware.elasticactors.cluster.tasks;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorLifecycleListener;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
@@ -31,6 +29,8 @@ import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.elasticsoftware.elasticactors.tracing.Tracer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
@@ -38,7 +38,7 @@ import javax.annotation.Nullable;
  * @author Joost van de Wijgerd
  */
 public final class CreateActorTask extends ActorLifecycleTask {
-    private static final Logger logger = LogManager.getLogger(CreateActorTask.class);
+    private static final Logger logger = LoggerFactory.getLogger(CreateActorTask.class);
     @Nullable
     private final PersistentActor persistentActor;
 
@@ -70,7 +70,7 @@ public final class CreateActorTask extends ActorLifecycleTask {
                                        ActorRef receiverRef,
                                        InternalMessage internalMessage) {
         if(logger.isDebugEnabled()) {
-            logger.debug(String.format("Creating Actor for ref [%s] of type [%s]",receiverRef.toString(),receiver.getClass().getName()));
+            logger.debug("Creating Actor for ref [{}] of type [{}]",receiverRef,receiver.getClass().getName());
         }
         try {
             Tracer.get().throwingRunInCurrentTrace(() -> {

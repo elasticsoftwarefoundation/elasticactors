@@ -17,23 +17,22 @@
 package org.elasticsoftware.elasticactors.rabbitmq.ack;
 
 import com.rabbitmq.client.Channel;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.rabbitmq.MessageAcker;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import static java.lang.String.format;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class AsyncMessageAcker implements MessageAcker {
-    private static final Logger logger = LogManager.getLogger(AsyncMessageAcker.class);
+    private static final Logger logger = LoggerFactory.getLogger(AsyncMessageAcker.class);
     private final ExecutorService executorService = newSingleThreadExecutor(new DaemonThreadFactory("RABBITMQ-MESSAGE_ACKER"));
     private final Channel consumerChannel;
 
@@ -82,7 +81,7 @@ public final class AsyncMessageAcker implements MessageAcker {
             try {
                 consumerChannel.basicAck(this.deliveryTag,false);
             } catch (Exception e) {
-                logger.error(format("Unexpected Exception while acking message [%d]",deliveryTag),e);
+                logger.error("Unexpected Exception while acking message [{}]",deliveryTag,e);
             }
         }
     }

@@ -16,26 +16,36 @@
 
 package org.elasticsoftware.elasticactors.kafka.testapp.actors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.Actor;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.MessageHandler;
+import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEvent;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.*;
+import org.elasticsoftware.elasticactors.kafka.testapp.messages.ActivateAccountCommand;
+import org.elasticsoftware.elasticactors.kafka.testapp.messages.BalanceQuery;
+import org.elasticsoftware.elasticactors.kafka.testapp.messages.CreditAccountEvent;
+import org.elasticsoftware.elasticactors.kafka.testapp.messages.DebitAccountEvent;
+import org.elasticsoftware.elasticactors.kafka.testapp.messages.ScheduleDebitCommand;
+import org.elasticsoftware.elasticactors.kafka.testapp.messages.TransferCommand;
+import org.elasticsoftware.elasticactors.kafka.testapp.messages.VirtualCashAccountAdapter;
 import org.elasticsoftware.elasticactors.kafka.testapp.state.VirtualCashAccountState;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
 @Actor(serializationFramework = JacksonSerializationFramework.class, stateClass = VirtualCashAccountState.class)
 @PersistenceConfig(excluded = {BalanceQuery.class, ScheduleDebitCommand.class}, persistOn = {})
 public class VirtualCashAccountActor extends MethodActor {
-    private static final Logger logger  = LogManager.getLogger(VirtualCashAccountActor.class);
+    private static final Logger logger  = LoggerFactory.getLogger(VirtualCashAccountActor.class);
 
     @Override
     public void postCreate(ActorRef creator) throws Exception {
         VirtualCashAccountState state = getState(VirtualCashAccountState.class);
-        logger.info(state.getId()+".postCreate");
+        logger.info("{}.postCreate", state.getId());
         getSystem().getEventListenerRegistry().register(getSelf(), ActorSystemEvent.ACTOR_SHARD_INITIALIZED, new ActivateAccountCommand());
     }
 
@@ -53,7 +63,7 @@ public class VirtualCashAccountActor extends MethodActor {
      */
     @MessageHandler
     public void handle(CreditAccountEvent event, VirtualCashAccountState state) {
-        logger.info(String.format("Account %s credited with %s %s", state.getId(), event.getAmount().toPlainString(), state.getCurrency()));
+        logger.info("Account {} credited with {} {}", state.getId(), event.getAmount().toPlainString(), state.getCurrency());
         state.setBalance(state.getBalance().add(event.getAmount()));
     }
 
@@ -65,31 +75,31 @@ public class VirtualCashAccountActor extends MethodActor {
      */
     @MessageHandler
     public void handle(DebitAccountEvent event, VirtualCashAccountState state) {
-        logger.info(String.format("Account %s debited with %s %s", state.getId(), event.getAmount().toPlainString(), state.getCurrency()));
+        logger.info("Account {} debited with {} {}", state.getId(), event.getAmount().toPlainString(), state.getCurrency());
         state.setBalance(state.getBalance().subtract(event.getAmount()));
     }
 
     @MessageHandler
     public void handle(BalanceQuery query, VirtualCashAccountState state, ActorRef replyRef) {
-        logger.info(String.format("Account %s has balance of %s %s", state.getId(), state.getBalance().toPlainString(), state.getCurrency()));
+        logger.info("Account {} has balance of {} {}", state.getId(), state.getBalance().toPlainString(), state.getCurrency());
         replyRef.tell(new VirtualCashAccountAdapter(state.getBalance(), state.getCurrency()));
     }
 
     @MessageHandler
     public void handle(ActivateAccountCommand command, VirtualCashAccountState state) {
-        logger.info(state.getId()+" received ActivateAccountCommand");
+        logger.info("{} received ActivateAccountCommand", state.getId());
     }
 
     @MessageHandler
     public void handle(ScheduleDebitCommand command, ActorSystem actorSystem) {
-        logger.info("Scheduling message of type "+command.getMessage().getClass().getSimpleName()+" to run in 10 seconds");
+        logger.info("Scheduling message of type {} to run in 10 seconds", command.getMessage().getClass().getSimpleName());
         actorSystem.getScheduler().scheduleOnce(getSelf(), command.getMessage(), getSelf(), 10, TimeUnit.SECONDS);
     }
 
     @MessageHandler
     public void handle(TransferCommand command, VirtualCashAccountState state, ActorSystem actorSystem, ActorRef replyRef) {
-        logger.info(String.format("Transfer %s %s from %s to %s", command.getAmount().toPlainString(),
-                command.getCurrency(), command.getFromAccount(), command.getToAccount()));
+        logger.info("Transfer {} {} from {} to {}", command.getAmount().toPlainString(),
+                command.getCurrency(), command.getFromAccount(), command.getToAccount());
         // so some sanity checking
         if(command.getFromAccount().equals(state.getId())) {
             // we need to debit this account (if we have enough money)
