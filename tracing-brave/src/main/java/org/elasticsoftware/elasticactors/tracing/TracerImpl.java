@@ -56,7 +56,6 @@ public final class TracerImpl implements Tracer {
             @Nonnull Runnable runnable) {
         Span span = createSpan(name, message);
         try (SpanInScope ignore = tracing.tracer().withSpanInScope(span)) {
-            tagWithActorContextData(span);
             runnable.run();
         } catch (Throwable t) {
             span.error(t);
@@ -72,7 +71,6 @@ public final class TracerImpl implements Tracer {
             @Nullable InternalMessage message,
             @Nonnull ThrowingRunnable<E> throwingRunnable) throws E {
         Span span = createSpan(name, message);
-        tagWithActorContextData(span);
         try (SpanInScope ignore = tracing.tracer().withSpanInScope(span)) {
             throwingRunnable.run();
         } catch (Throwable t) {
@@ -89,7 +87,6 @@ public final class TracerImpl implements Tracer {
             @Nullable InternalMessage message,
             @Nonnull Supplier<T> supplier) {
         Span span = createSpan(name, message);
-        tagWithActorContextData(span);
         try (SpanInScope ignore = tracing.tracer().withSpanInScope(span)) {
             return supplier.get();
         } catch (Throwable t) {
@@ -106,7 +103,6 @@ public final class TracerImpl implements Tracer {
             @Nullable InternalMessage message,
             @Nonnull ThrowingSupplier<T, E> throwingSupplier) throws E {
         Span span = createSpan(name, message);
-        tagWithActorContextData(span);
         try (SpanInScope ignore = tracing.tracer().withSpanInScope(span)) {
             return throwingSupplier.get();
         } catch (Throwable t) {
@@ -189,6 +185,15 @@ public final class TracerImpl implements Tracer {
     private Span createSpan(
             @Nonnull String name,
             @Nullable InternalMessage message) {
+        Span span = extractOrCreateSpan(name, message);
+        tagWithActorContextData(span);
+        return span;
+    }
+
+    @Nonnull
+    private Span extractOrCreateSpan(
+            @Nonnull String name,
+            @Nullable InternalMessage message) {
         if (message != null) {
             TraceContextOrSamplingFlags extracted =
                     tracing.propagation().extractor(GETTER).extract(message);
@@ -197,6 +202,19 @@ public final class TracerImpl implements Tracer {
             }
         }
         return tracing.tracer().nextSpan().name(name);
+    }
+
+    private static void tagWithActorContextData(@Nonnull Span span) {
+        if (ActorContextHolder.hasActorContext()) {
+            ActorRef self = ActorContextHolder.getSelf();
+            ActorSystem system = ActorContextHolder.getSystem();
+            if (self != null) {
+                span.tag("actor.id", self.getActorId());
+                span.tag("actor.cluster", self.getActorCluster());
+            }
+            span.tag("actorsystem.name", system.getName());
+            span.tag("actorsystem.version", system.getConfiguration().getVersion());
+        }
     }
 
     @Override
@@ -209,16 +227,6 @@ public final class TracerImpl implements Tracer {
             return builder.build();
         }
         return null;
-    }
-
-    private static void tagWithActorContextData(Span span) {
-        if (ActorContextHolder.hasActorContext()) {
-            ActorRef self = ActorContextHolder.getSelf();
-            ActorSystem system = ActorContextHolder.getSystem();
-            span.tag("actor.id", String.valueOf(self != null ? self.getActorId() : null));
-            span.tag("actorsystem.name", system.getName());
-            span.tag("actorsystem.version", system.getConfiguration().getVersion());
-        }
     }
 
 }
