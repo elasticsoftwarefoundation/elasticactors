@@ -20,9 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
-import org.elasticsoftware.elasticactors.RemoteActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import javax.annotation.PreDestroy;
@@ -78,9 +76,9 @@ public final class RemoteActorSystems {
     }
 
     public ActorSystem get(String actorSystemName) {
-        List<RemoteActorSystemInstance> instances = remoteActorSystems.entrySet().stream()
-                .filter(entry -> entry.getValue().getName().equals(actorSystemName))
-                .map(Map.Entry::getValue).collect(Collectors.toList());
+        List<RemoteActorSystemInstance> instances = remoteActorSystems.values().stream()
+                .filter(remoteActorSystemInstance -> remoteActorSystemInstance.getName().equals(actorSystemName))
+                .collect(Collectors.toList());
         if(!instances.isEmpty()) {
             if(instances.size() > 1) {
                 // cannot determine which one to use,
