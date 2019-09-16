@@ -193,7 +193,7 @@ public final class ShoalClusterService implements ClusterService {
 
     private void fireTopologyChanged(AliveAndReadyView currentView) {
         List<String> coreMembers = gms.getGroupHandle().getCurrentCoreMembers();
-        logger.info("fireTopologyChanged members in view: {}", coreMembers.toString());
+        logger.info("fireTopologyChanged members in view: {}", coreMembers);
         for (ClusterEventListener eventListener : eventListeners) {
             try {
                 eventListener.onTopologyChanged(convert(coreMembers));
