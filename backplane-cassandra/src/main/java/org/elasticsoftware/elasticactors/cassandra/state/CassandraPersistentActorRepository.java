@@ -117,7 +117,7 @@ public final class CassandraPersistentActorRepository implements PersistentActor
         } finally {
             final long endTime = currentTimeMillis();
             if((endTime - startTime) > readExecutionThresholdMillis) {
-                logger.warn("Cassandra read operation took {} msecs ({} retries) for actorId [{}] on shard [{}]", (endTime - startTime), (2 - attemptsRemaining), actorId, shard.toString());
+                logger.warn("Cassandra read operation took {} msecs ({} retries) for actorId [{}] on shard [{}]", (endTime - startTime), (2 - attemptsRemaining), actorId, shard);
             }
         }
     }
