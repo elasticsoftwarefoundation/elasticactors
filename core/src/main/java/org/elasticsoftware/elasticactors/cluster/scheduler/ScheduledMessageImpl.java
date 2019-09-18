@@ -108,6 +108,7 @@ public final class ScheduledMessageImpl implements ScheduledMessage {
         return unit.convert(fireTime - now(),TimeUnit.MILLISECONDS);
     }
 
+    @Override
     public int compareTo(Delayed other) {
         if (other == this)
             return 0;

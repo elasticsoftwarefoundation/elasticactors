@@ -28,7 +28,6 @@ import com.sun.enterprise.ee.cms.core.JoinedAndReadyNotificationSignal;
 import com.sun.enterprise.ee.cms.core.MessageSignal;
 import com.sun.enterprise.ee.cms.core.PlannedShutdownSignal;
 import com.sun.enterprise.ee.cms.core.ServiceProviderConfigurationKeys;
-import com.sun.enterprise.ee.cms.core.Signal;
 import com.sun.enterprise.ee.cms.impl.client.FailureNotificationActionFactoryImpl;
 import com.sun.enterprise.ee.cms.impl.client.FailureSuspectedActionFactoryImpl;
 import com.sun.enterprise.ee.cms.impl.client.GroupLeadershipNotificationActionFactoryImpl;
@@ -145,34 +144,27 @@ public final class ShoalClusterService implements ClusterService {
                 (GroupManagementService) GMSFactory.startGMSModule(serverName, groupName, GroupManagementService.MemberType.CORE, props);
 
 
-        final CallBack gmsCallback = new CallBack() {
-            @Override
-            public void processNotification(Signal notification) {
-                logger.info("Got signal [{}] from member [{}]", notification.getClass().getSimpleName(), notification.getMemberToken());
-                if(notification instanceof JoinedAndReadyNotificationSignal) {
-                    fireTopologyChanged(((JoinedAndReadyNotificationSignal)notification).getCurrentView());
-                } else if(notification instanceof PlannedShutdownSignal) {
-                    fireTopologyChanged(((PlannedShutdownSignal)notification).getCurrentView());
-                } else if(notification instanceof FailureNotificationSignal) {
-                    fireTopologyChanged(((FailureNotificationSignal) notification).getCurrentView());
-                } else if(notification instanceof GroupLeadershipNotificationSignal) {
-                    fireLeadershipChanged((GroupLeadershipNotificationSignal)notification);
-                }
+        final CallBack gmsCallback = notification -> {
+            logger.info("Got signal [{}] from member [{}]", notification.getClass().getSimpleName(), notification.getMemberToken());
+            if(notification instanceof JoinedAndReadyNotificationSignal) {
+                fireTopologyChanged(((JoinedAndReadyNotificationSignal)notification).getCurrentView());
+            } else if(notification instanceof PlannedShutdownSignal) {
+                fireTopologyChanged(((PlannedShutdownSignal)notification).getCurrentView());
+            } else if(notification instanceof FailureNotificationSignal) {
+                fireTopologyChanged(((FailureNotificationSignal) notification).getCurrentView());
+            } else if(notification instanceof GroupLeadershipNotificationSignal) {
+                fireLeadershipChanged((GroupLeadershipNotificationSignal)notification);
             }
         };
 
-        final CallBack messagingCallback = new CallBack() {
-
-            @Override
-            public void processNotification(Signal notification) {
-                if(notification instanceof MessageSignal) {
-                    if(clusterMessageHandler != null) {
-                        MessageSignal messageSignal = (MessageSignal) notification;
-                        try {
-                            clusterMessageHandler.handleMessage(messageSignal.getMessage(),messageSignal.getMemberToken());
-                        } catch (Exception e) {
-                            logger.error("Exception while handling MessageSignal from member {}, signal bytes (HEX): -", messageSignal.getMemberToken(),e);
-                        }
+        final CallBack messagingCallback = notification -> {
+            if(notification instanceof MessageSignal) {
+                if(clusterMessageHandler != null) {
+                    MessageSignal messageSignal = (MessageSignal) notification;
+                    try {
+                        clusterMessageHandler.handleMessage(messageSignal.getMessage(),messageSignal.getMemberToken());
+                    } catch (Exception e) {
+                        logger.error("Exception while handling MessageSignal from member {}, signal bytes (HEX): -", messageSignal.getMemberToken(),e);
                     }
                 }
             }

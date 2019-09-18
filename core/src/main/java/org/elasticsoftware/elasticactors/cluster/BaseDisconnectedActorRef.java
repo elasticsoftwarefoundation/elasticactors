@@ -20,12 +20,9 @@ import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscriber;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.function.Consumer;
 
 /**
  * @author Joost van de Wijgerd
@@ -48,6 +45,7 @@ public abstract class BaseDisconnectedActorRef implements ActorRef, ActorContain
         return clusterName;
     }
 
+    @Override
     public final String getActorId() {
         return actorId;
     }

@@ -37,6 +37,7 @@ import java.util.concurrent.Executor;
 @PropertySource(value = "file:/etc/elasticactors/system.properties")
 @Import(value = {ClusteringConfiguration.class, NodeConfiguration.class, MessagingConfiguration.class, BackplaneConfiguration.class})
 public class AppConfiguration extends AsyncConfigurerSupport {
+    @Override
     @Bean(name = "asyncExecutor")
     public Executor getAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

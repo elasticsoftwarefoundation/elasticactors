@@ -86,9 +86,9 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 
     private ScopeMetadataResolver scopeMetadataResolver;
 
-    private final Set<Class<?>> annotatedClasses = new LinkedHashSet<Class<?>>();
+    private final Set<Class<?>> annotatedClasses = new LinkedHashSet<>();
 
-    private final Set<String> basePackages = new LinkedHashSet<String>();
+    private final Set<String> basePackages = new LinkedHashSet<>();
 
     private final Set<TypeFilter> includeFilters = new LinkedHashSet<>();
 

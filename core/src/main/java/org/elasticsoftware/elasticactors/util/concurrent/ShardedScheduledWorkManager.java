@@ -93,7 +93,7 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
     }
 
     public void registerShard(K shard) {
-        delayQueues.putIfAbsent(shard,new DelayQueue<T>());
+        delayQueues.putIfAbsent(shard, new DelayQueue<>());
     }
 
     public void unregisterShard(K shard) {

@@ -197,7 +197,7 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
     public void addChannelListener(final Channel channel,final ChannelListener channelListener) {
         Set<ChannelListener> listeners = this.channelListenerRegistry.get(channel);
         if(listeners == null) {
-            listeners = Collections.newSetFromMap(new ConcurrentHashMap<ChannelListener, Boolean>());
+            listeners = Collections.newSetFromMap(new ConcurrentHashMap<>());
             if(this.channelListenerRegistry.putIfAbsent(channel,listeners) != null) {
                 // was already created
                 listeners = this.channelListenerRegistry.get(channel);
@@ -257,14 +257,17 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
         }
     }
 
+    @Override
     public boolean isClientConnectionOpen() {
         return clientConnection != null && clientConnection.isOpen();
     }
 
+    @Override
     public boolean areConsumerChannelsOpen() {
         return consumerChannel != null && consumerChannel.isOpen();
     }
 
+    @Override
     public boolean areProducerChannelsOpen() {
         return producerChannels.stream().allMatch(ShutdownNotifier::isOpen);
     }

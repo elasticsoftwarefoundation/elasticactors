@@ -521,10 +521,9 @@ public final class KafkaActorThread extends Thread {
     }
 
     void assign(KafkaActorNode node, boolean primary) {
-        runCommand((kafkaConsumer, kafkaProducer) -> {
-            // we are registering the local node, which means this ActorThread is managing the node topic
-            this.localActorNode = new ManagedActorNode(node, primary);
-        });
+        // we are registering the local node, which means this ActorThread is managing the node topic
+        runCommand((kafkaConsumer, kafkaProducer) ->
+                this.localActorNode = new ManagedActorNode(node, primary));
     }
 
     void assign(KafkaActorShard actorShard) {
@@ -544,13 +543,11 @@ public final class KafkaActorThread extends Thread {
             // switch state to rebalancing
             this.state = KafkaActorSystemState.REBALANCING;
             // filter only on shards the are managed by this thread
-            shardDistribution.asMap().entrySet()
-                    .forEach(entry -> entry.getValue().forEach(shardKey -> {
+            shardDistribution.asMap()
+                    .forEach((node, value) -> value.forEach(shardKey -> {
                         // find the actorShard (will be null if not managed by this instance)
                         KafkaActorShard actorShard = managedShards.get(shardKey);
                         if(actorShard != null) {
-                            // more convenient names
-                            PhysicalNode node = entry.getKey();
                             // see if the assigned node is the local node
                             if (node.isLocal()) {
                                 if (actorShard.getOwningNode() == null || !actorShard.getOwningNode().equals(node)) {
@@ -650,8 +647,8 @@ public final class KafkaActorThread extends Thread {
 
     private void assignPartitions() {
         // assign the message partitions
-        List<TopicPartition> messagePartitions = this.localShards.entrySet().stream()
-                .map(entry -> new TopicPartition(messagesTopic, entry.getKey().getShardId())).collect(Collectors.toList());
+        List<TopicPartition> messagePartitions = this.localShards.keySet().stream()
+                .map(managedActorShard -> new TopicPartition(messagesTopic, managedActorShard.getShardId())).collect(Collectors.toList());
         if(localActorNode != null) {
             // node topics have exactly the number of partitions as there are KafkaActorThreads per node
             // this is very fickle but needed to support the affinityKey logic for TempActors
@@ -660,18 +657,19 @@ public final class KafkaActorThread extends Thread {
         this.messageConsumer.assign(messagePartitions);
 
         // also need to assign the state partitions
-        List<TopicPartition> statePartitions = this.localShards.entrySet().stream()
-                .map(entry -> new TopicPartition(persistentActorsTopic, entry.getKey().getShardId())).collect(Collectors.toList());
+        List<TopicPartition> statePartitions = this.localShards.keySet().stream()
+                .map(managedActorShard -> new TopicPartition(persistentActorsTopic, managedActorShard.getShardId())).collect(Collectors.toList());
         this.stateConsumer.assign(statePartitions);
 
         // and the scheduled messages
-        List<TopicPartition> scheduledMessagesPartitions = this.localShards.entrySet().stream()
-                .map(entry -> new TopicPartition(scheduledMessagesTopic, entry.getKey().getShardId())).collect(Collectors.toList());
+        List<TopicPartition> scheduledMessagesPartitions = this.localShards.keySet().stream()
+                .map(managedActorShard -> new TopicPartition(scheduledMessagesTopic, managedActorShard.getShardId())).collect(Collectors.toList());
         this.scheduledMessagesConsumer.assign(scheduledMessagesPartitions);
 
         // the actorsystem event listeners
-        List<TopicPartition> actorSystemEventListenersPartitions = this.localShards.entrySet().stream()
-                .map(entry -> new TopicPartition(actorSystemEventListenersTopic, entry.getKey().getShardId())).collect(Collectors.toList());
+        List<TopicPartition> actorSystemEventListenersPartitions =
+                this.localShards.keySet().stream()
+                .map(managedActorShard -> new TopicPartition(actorSystemEventListenersTopic, managedActorShard.getShardId())).collect(Collectors.toList());
         this.actorSystemEventListenersConsumer.assign(actorSystemEventListenersPartitions);
     }
 
@@ -1164,6 +1162,7 @@ public final class KafkaActorThread extends Thread {
             this.scheduledMessages = TreeMultimap.create(Comparator.naturalOrder(), Comparator.naturalOrder());
         }
 
+        @Override
         public ShardKey getKey() {
             return actorShard.getKey();
         }
@@ -1233,9 +1232,8 @@ public final class KafkaActorThread extends Thread {
                                 this.actorStore.put(persistentActor.getSelf().getActorId(), serializedActor, metadata.offset());
                             } else {
                                 // need to update on the KafkaActorThread
-                                runCommand((kafkaConsumer, kafkaProducer) -> {
-                                    this.actorStore.put(persistentActor.getSelf().getActorId(), serializedActor, metadata.offset());
-                                });
+                                runCommand((kafkaConsumer, kafkaProducer) ->
+                                        this.actorStore.put(persistentActor.getSelf().getActorId(), serializedActor, metadata.offset()));
                             }
                         } else {
                             // update without updating the offset
