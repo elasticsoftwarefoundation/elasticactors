@@ -41,7 +41,6 @@ import static java.lang.String.format;
  */
 public abstract class MethodActor extends TypedActor<Object> implements PersistenceAdvisor {
     private static final Logger logger = LoggerFactory.getLogger(MethodActor.class);
-    private static final MessageHandlerOrderComparator ORDER_COMPARATOR = new MessageHandlerOrderComparator();
     private final Map<Class<?>,List<HandlerMethodDefinition>> handlerCache = new HashMap<>();
     @Nullable private final Class<? extends ActorState> stateClass;
 
@@ -117,8 +116,9 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
     }
 
     private void orderHandlerCache() {
+        Comparator<HandlerMethodDefinition> comparator = Comparator.comparing(m -> m.order);
         for (List<HandlerMethodDefinition> definitions : handlerCache.values()) {
-            definitions.sort(ORDER_COMPARATOR);
+            definitions.sort(comparator);
         }
     }
 
@@ -258,13 +258,6 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
 
             }
             return arguments;
-        }
-    }
-
-    private static final class MessageHandlerOrderComparator implements Comparator<HandlerMethodDefinition> {
-        @Override
-        public int compare(HandlerMethodDefinition o1, HandlerMethodDefinition o2) {
-            return Integer.compare(o1.order, o2.order);
         }
     }
 }

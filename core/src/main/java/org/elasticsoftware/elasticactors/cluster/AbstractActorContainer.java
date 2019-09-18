@@ -88,6 +88,7 @@ public abstract class AbstractActorContainer implements ActorContainer, MessageH
         }
     }
 
+    @Override
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
         sendMessage(from, ImmutableList.of(to), message);
     }

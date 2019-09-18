@@ -17,7 +17,6 @@
 package org.elasticsoftware.elasticactors.base.state;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
@@ -29,6 +28,7 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY)
 public abstract class JacksonActorState<Body> implements ActorState<Body> {
 
+    @Override
     @JsonIgnore
     public abstract Body getBody();
 

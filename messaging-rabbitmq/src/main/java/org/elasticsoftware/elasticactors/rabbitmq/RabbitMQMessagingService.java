@@ -167,14 +167,17 @@ public final class RabbitMQMessagingService implements RabbitMQMessagingServiceI
         producerChannel.basicPublish(exchangeName,queueName,true,false,null,serializedMessage);
     }
 
+    @Override
     public MessageQueueFactory getLocalMessageQueueFactory() {
         return localMessageQueueFactory;
     }
 
+    @Override
     public MessageQueueFactory getRemoteMessageQueueFactory() {
         return remoteMessageQueueFactory;
     }
 
+    @Override
     public MessageQueueFactoryFactory getRemoteActorSystemMessageQueueFactoryFactory() {
         return remoteActorSystemMessageQueueFactoryFactory;
     }
@@ -183,7 +186,7 @@ public final class RabbitMQMessagingService implements RabbitMQMessagingServiceI
     public void addChannelListener(final Channel channel,final ChannelListener channelListener) {
         Set<ChannelListener> listeners = this.channelListenerRegistry.get(channel);
         if(listeners == null) {
-            listeners = Collections.newSetFromMap(new ConcurrentHashMap<ChannelListener, Boolean>());
+            listeners = Collections.newSetFromMap(new ConcurrentHashMap<>());
             if(this.channelListenerRegistry.putIfAbsent(channel,listeners) != null) {
                 // was already created
                 listeners = this.channelListenerRegistry.get(channel);
@@ -230,14 +233,17 @@ public final class RabbitMQMessagingService implements RabbitMQMessagingServiceI
         propagateChannelEvent(channel, c -> c.onRecoveryFailure(channel, failure), "onRecoveryFailure");
     }
 
+    @Override
     public boolean isClientConnectionOpen() {
         return clientConnection != null && clientConnection.isOpen();
     }
 
+    @Override
     public boolean areConsumerChannelsOpen() {
         return consumerChannel != null && consumerChannel.isOpen();
     }
 
+    @Override
     public boolean areProducerChannelsOpen() {
         return producerChannel != null && producerChannel.isOpen();
     }

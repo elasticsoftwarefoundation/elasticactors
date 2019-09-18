@@ -93,7 +93,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     private final ReadWriteLock[] shardLocks;
     private final ActorShardAdapter[] shardAdapters;
     private final NodeSelectorFactory nodeSelectorFactory;
-    private final ConcurrentMap<Class, ElasticActor> actorInstances = new ConcurrentHashMap<Class, ElasticActor>();
+    private final ConcurrentMap<Class, ElasticActor> actorInstances = new ConcurrentHashMap<>();
     private final InternalActorSystems cluster;
     private MessageQueueFactory localMessageQueueFactory;
     private MessageQueueFactory remoteMessageQueueFactory;
@@ -157,7 +157,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     public void updateNodes(List<PhysicalNode> nodes) throws Exception {
         // first see if we need to remove nodes
         // make a map
-        HashMap<String, PhysicalNode> nodeMap = new HashMap<String, PhysicalNode>();
+        HashMap<String, PhysicalNode> nodeMap = new HashMap<>();
         for (PhysicalNode node : nodes) {
             nodeMap.put(node.getId(), node);
         }
@@ -336,6 +336,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
         }
     }
 
+    @Override
     public int getNumberOfShards() {
         return configuration.getNumberOfShards();
     }

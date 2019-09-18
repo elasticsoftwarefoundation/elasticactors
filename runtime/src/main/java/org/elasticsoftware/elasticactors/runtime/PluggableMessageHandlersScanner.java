@@ -51,6 +51,7 @@ public final class PluggableMessageHandlersScanner implements MessageHandlersReg
     private final ListMultimap<Class<? extends ElasticActor>,ActorLifecycleListener<?>> lifecycleListeners = LinkedListMultimap.create();
 
 
+    @Override
     @PostConstruct
     public void init() {
         String[] basePackages = ScannerHelper.findBasePackagesOnClasspath(applicationContext.getClassLoader());

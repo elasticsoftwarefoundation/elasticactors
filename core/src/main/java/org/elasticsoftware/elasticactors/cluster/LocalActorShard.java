@@ -138,6 +138,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         }
     }
 
+    @Override
     public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
         InternalMessage internalMessage = createInternalMessage(from, to, message);
         if (internalMessage != null) messageQueue.offer(internalMessage);
