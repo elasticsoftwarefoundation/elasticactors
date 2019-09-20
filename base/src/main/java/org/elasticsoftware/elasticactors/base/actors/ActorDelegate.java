@@ -186,9 +186,9 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
 
         default MessageConsumer<M> andThen(MessageConsumer<? super M> after) {
             Objects.requireNonNull(after);
-            return (ActorRef a, M t) -> {
-                accept(a, t);
-                after.accept(a, t);
+            return (a, m) -> {
+                accept(a, m);
+                after.accept(a, m);
             };
         }
     }
