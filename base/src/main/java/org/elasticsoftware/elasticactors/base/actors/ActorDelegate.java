@@ -147,6 +147,16 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
          * @return A {@link MessageHandlingStep} version of this builder
          */
         MessageHandlingStep<D> preReceive(MessageConsumer<Object> consumer);
+
+        /**
+         * A convenience alias to {@link PreReceiveStep#preReceive(MessageConsumer)}
+         */
+        MessageHandlingStep<D> preReceive(ThrowingConsumer<Object> consumer);
+
+        /**
+         * A convenience alias to {@link PreReceiveStep#preReceive(MessageConsumer)}
+         */
+        MessageHandlingStep<D> preReceive(ThrowingRunnable runnable);
     }
 
     public interface MessageHandlingStep<D> extends PostReceiveStep<D> {
@@ -163,6 +173,16 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
         <M> MessageHandlingStep<D> onReceive(Class<M> tClass, MessageConsumer<? super M> consumer);
 
         /**
+         * A convenience alias to {@link MessageHandlingStep#onReceive(Class, MessageConsumer)}
+         */
+        <M> MessageHandlingStep<D> onReceive(Class<M> tClass, ThrowingConsumer<? super M> consumer);
+
+        /**
+         * A convenience alias to {@link MessageHandlingStep#onReceive(Class, MessageConsumer)}
+         */
+        <M> MessageHandlingStep<D> onReceive(Class<M> tClass, ThrowingRunnable runnable);
+
+        /**
          * Adds a message consumer for any message types not covered by the current consumers.
          * <br/><br/>
          *
@@ -177,6 +197,16 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
          * @return A {@link PostReceiveStep} version of this builder
          */
         PostReceiveStep<D> orElse(MessageConsumer<Object> consumer);
+
+        /**
+         * A convenience alias to {@link MessageHandlingStep#orElse(MessageConsumer)}
+         */
+        PostReceiveStep<D> orElse(ThrowingConsumer<Object> consumer);
+
+        /**
+         * A convenience alias to {@link MessageHandlingStep#orElse(MessageConsumer)}
+         */
+        PostReceiveStep<D> orElse(ThrowingRunnable runnable);
     }
 
     public interface PostReceiveStep<D> extends OnUndeliverableStep<D> {
@@ -187,6 +217,16 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
          * @return A {@link OnUndeliverableStep} version of this builder
          */
         OnUndeliverableStep<D> postReceive(MessageConsumer<Object> consumer);
+
+        /**
+         * A convenience alias to {@link PostReceiveStep#postReceive(MessageConsumer)}
+         */
+        OnUndeliverableStep<D> postReceive(ThrowingConsumer<Object> consumer);
+
+        /**
+         * A convenience alias to {@link PostReceiveStep#postReceive(MessageConsumer)}
+         */
+        OnUndeliverableStep<D> postReceive(ThrowingRunnable runnable);
     }
 
     public interface OnUndeliverableStep<D> extends BuildStep<D> {
@@ -198,6 +238,16 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
          * {@link ActorNotFoundException} if the message could not be delivered.
          */
         BuildStep<D> onUndeliverable(MessageConsumer<Object> consumer);
+
+        /**
+         * A convenience alias to {@link OnUndeliverableStep#onUndeliverable(MessageConsumer)}
+         */
+        BuildStep<D> onUndeliverable(ThrowingConsumer<Object> consumer);
+
+        /**
+         * A convenience alias to {@link OnUndeliverableStep#onUndeliverable(MessageConsumer)}
+         */
+        BuildStep<D> onUndeliverable(ThrowingRunnable runnable);
     }
 
     public final static class Builder<D> implements MessageHandlingStep<D>, PreparatoryStep<D> {
@@ -221,11 +271,31 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
         }
 
         @Override
+        public PreparatoryStep<D> deleteAfterReceive(boolean deleteAfterReceive) {
+            this.deleteAfterReceive = deleteAfterReceive;
+            return this;
+        }
+
+        @Override
         public <M> MessageHandlingStep<D> onReceive(Class<M> tClass, MessageConsumer<? super M> consumer) {
             Objects.requireNonNull(tClass);
             Objects.requireNonNull(consumer);
             onReceiveConsumers.put(tClass, consumer);
             return this;
+        }
+
+        @Override
+        public <M> MessageHandlingStep<D> onReceive(Class<M> tClass, ThrowingConsumer<? super M> consumer) {
+            Objects.requireNonNull(tClass);
+            Objects.requireNonNull(consumer);
+            return onReceive(tClass, (a, m) -> consumer.accept(m));
+        }
+
+        @Override
+        public <M> MessageHandlingStep<D> onReceive(Class<M> tClass, ThrowingRunnable runnable) {
+            Objects.requireNonNull(tClass);
+            Objects.requireNonNull(runnable);
+            return onReceive(tClass, (a, m) -> runnable.run());
         }
 
         @Override
@@ -236,6 +306,18 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
         }
 
         @Override
+        public PostReceiveStep<D> orElse(ThrowingConsumer<Object> consumer) {
+            Objects.requireNonNull(consumer);
+            return orElse((a, m) -> consumer.accept(m));
+        }
+
+        @Override
+        public PostReceiveStep<D> orElse(ThrowingRunnable runnable) {
+            Objects.requireNonNull(runnable);
+            return orElse((a, m) -> runnable.run());
+        }
+
+        @Override
         public BuildStep<D> onUndeliverable(MessageConsumer<Object> consumer) {
             Objects.requireNonNull(consumer);
             this.onUndeliverableConsumer = consumer;
@@ -243,21 +325,53 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
         }
 
         @Override
-        public PreparatoryStep<D> deleteAfterReceive(boolean deleteAfterReceive) {
-            this.deleteAfterReceive = deleteAfterReceive;
-            return this;
+        public BuildStep<D> onUndeliverable(ThrowingConsumer<Object> consumer) {
+            Objects.requireNonNull(consumer);
+            return onUndeliverable((a, m) -> consumer.accept(m));
+        }
+
+        @Override
+        public BuildStep<D> onUndeliverable(ThrowingRunnable runnable) {
+            Objects.requireNonNull(runnable);
+            return onUndeliverable((a, m) -> runnable.run());
         }
 
         @Override
         public MessageHandlingStep<D> preReceive(MessageConsumer<Object> consumer) {
+            Objects.requireNonNull(consumer);
             this.preReceiveConsumer = consumer;
             return this;
         }
 
         @Override
+        public MessageHandlingStep<D> preReceive(ThrowingConsumer<Object> consumer) {
+            Objects.requireNonNull(consumer);
+            return preReceive((a, m) -> consumer.accept(m));
+        }
+
+        @Override
+        public MessageHandlingStep<D> preReceive(ThrowingRunnable runnable) {
+            Objects.requireNonNull(runnable);
+            return preReceive((a, m) -> runnable.run());
+        }
+
+        @Override
         public OnUndeliverableStep<D> postReceive(MessageConsumer<Object> consumer) {
+            Objects.requireNonNull(consumer);
             this.postReceiveConsumer = consumer;
             return this;
+        }
+
+        @Override
+        public OnUndeliverableStep<D> postReceive(ThrowingConsumer<Object> consumer) {
+            Objects.requireNonNull(consumer);
+            return postReceive((a, m) -> consumer.accept(m));
+        }
+
+        @Override
+        public OnUndeliverableStep<D> postReceive(ThrowingRunnable runnable) {
+            Objects.requireNonNull(runnable);
+            return postReceive((a, m) -> runnable.run());
         }
     }
 
@@ -276,6 +390,33 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
             return (a, m) -> {
                 accept(a, m);
                 after.accept(a, m);
+            };
+        }
+    }
+
+    @FunctionalInterface
+    public interface ThrowingConsumer<M> {
+
+        void accept(M message) throws Exception;
+
+        default ThrowingConsumer<M> andThen(ThrowingConsumer<? super M> after) {
+            Objects.requireNonNull(after);
+            return m -> {
+                accept(m);
+                after.accept(m);
+            };
+        }
+    }
+
+    @FunctionalInterface
+    public interface ThrowingRunnable {
+        void run() throws Exception;
+
+        default ThrowingRunnable andThen(ThrowingRunnable after) {
+            Objects.requireNonNull(after);
+            return () -> {
+                run();
+                after.run();
             };
         }
     }
