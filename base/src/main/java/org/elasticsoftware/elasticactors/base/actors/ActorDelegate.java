@@ -59,7 +59,7 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
         return NoopSerializationFramework.class;
     }
 
-    public static <D> Builder<D> builder() {
+    public static <D> MessageHandlingStep<D> builder() {
         return new Builder<>();
     }
 
