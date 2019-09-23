@@ -51,10 +51,10 @@ public class GreetingTest {
 
         ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
                 .deleteAfterReceive(false)
-                .onReceive(ScheduledGreeting.class, (a, m) -> System.out.println("Got Scheduled Greeting"))
-                .onReceive(Greeting.class, (a, m) -> System.out.println(format("Got Greeting from %s", m.getWho())))
+                .onReceive(ScheduledGreeting.class, () -> System.out.println("Got Scheduled Greeting"))
+                .onReceive(Greeting.class, m -> System.out.println(format("Got Greeting from %s", m.getWho())))
                 .orElse(MessageConsumer.NOOP)
-                .postReceive((a, m) -> countDownLatch.countDown())
+                .postReceive(countDownLatch::countDown)
                 .build());
 
         greeter.tell(new Greeting("Joost van de Wijgerd"), replyActor);
