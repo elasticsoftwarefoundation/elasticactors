@@ -65,22 +65,22 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
 
     private static class FunctionalActorDelegate<D> extends ActorDelegate<D> {
 
-        private final Map<Class<?>, MessageConsumer<?>> onReplyConsumers;
+        private final Map<Class<?>, MessageConsumer<?>> onReceiveConsumers;
         private final MessageConsumer<Object> orElseConsumer;
         private final MessageConsumer<Object> onUndeliverableConsumer;
 
         private FunctionalActorDelegate(
-                Map<Class<?>, MessageConsumer<?>> onReplyConsumers,
+                Map<Class<?>, MessageConsumer<?>> onReceiveConsumers,
                 MessageConsumer<Object> orElseConsumer,
                 MessageConsumer<Object> onUndeliverableConsumer) {
-            this.onReplyConsumers = ImmutableMap.copyOf(onReplyConsumers);
+            this.onReceiveConsumers = ImmutableMap.copyOf(onReceiveConsumers);
             this.orElseConsumer = orElseConsumer;
             this.onUndeliverableConsumer = onUndeliverableConsumer;
         }
 
         @Override
         public void onReceive(ActorRef sender, D message) throws Exception {
-            MessageConsumer<D> consumer = (MessageConsumer<D>) onReplyConsumers.get(message.getClass());
+            MessageConsumer<D> consumer = (MessageConsumer<D>) onReceiveConsumers.get(message.getClass());
             if (consumer != null) {
                 consumer.accept(sender, message);
             } else if (orElseConsumer != null) {
@@ -108,7 +108,7 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
     public interface MessageHandlingStep<D> extends OnUndeliverableStep<D> {
 
         /**
-         * Adds a reply message consumer for a given reply type, replacing any consumer previously
+         * Adds a message consumer for a given message type, replacing any consumer previously
          * assigned to that type, if any.
          *
          * @param tClass The class of the messages
@@ -116,11 +116,11 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
          * @param <M> The type of the messages
          * @return This builder
          */
-        <M> MessageHandlingStep<D> onReply(Class<M> tClass, MessageConsumer<M> consumer);
+        <M> MessageHandlingStep<D> onReceive(Class<M> tClass, MessageConsumer<M> consumer);
 
         /**
-         * Adds a message consumer for any reply types not covered by the current reply types
-         * consumers. <br/>
+         * Adds a message consumer for any message types not covered by the current consumers.
+         * <br/>
          *
          * Note that, if no consumer for unexpected types is provided, the actor will throw an
          * {@link UnexpectedResponseTypeException} if a message of an unknown type is received.
@@ -144,23 +144,23 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
 
     public final static class Builder<D> implements MessageHandlingStep<D> {
 
-        private Map<Class<?>, MessageConsumer<?>> onReplyConsumers = new HashMap<>();
+        private Map<Class<?>, MessageConsumer<?>> onReceiveConsumers = new HashMap<>();
         private MessageConsumer<Object> orElseConsumer;
         private MessageConsumer<Object> onUndeliverableConsumer;
 
         @Override
         public ActorDelegate<D> build() {
             return new FunctionalActorDelegate<>(
-                    onReplyConsumers,
+                    onReceiveConsumers,
                     orElseConsumer,
                     onUndeliverableConsumer);
         }
 
         @Override
-        public <M> MessageHandlingStep<D> onReply(Class<M> tClass, MessageConsumer<M> consumer) {
+        public <M> MessageHandlingStep<D> onReceive(Class<M> tClass, MessageConsumer<M> consumer) {
             Objects.requireNonNull(tClass);
             Objects.requireNonNull(consumer);
-            onReplyConsumers.put(tClass, consumer);
+            onReceiveConsumers.put(tClass, consumer);
             return this;
         }
 
