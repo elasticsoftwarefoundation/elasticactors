@@ -296,7 +296,7 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
          * <pre>{@code builder.onReceive(MessageClass.class,
          *      () -> {
          *          this.doSomething();
-         *          stopActor();
+         *          stopActor().run();
          *      });}
          * </pre>
          *
