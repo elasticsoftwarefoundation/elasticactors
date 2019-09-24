@@ -290,6 +290,24 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
          *      perform(this::doSometing).andThen(() ->
          *          ActorContextHolder.getSystem().stop(ActorContextHolder.getSelf())))}
          * </pre>
+         *
+         * or:
+         *
+         * <pre>{@code builder.onReceive(MessageClass.class,
+         *      () -> {
+         *          this.doSomething();
+         *          stopActor();
+         *      });}
+         * </pre>
+         *
+         * or:
+         *
+         * <pre>{@code builder.onReceive(MessageClass.class,
+         *      () -> {
+         *          this.doSomething();
+         *          ActorContextHolder.getSystem().stop(ActorContextHolder.getSelf());
+         *      });}
+         * </pre>
          */
         public static ThrowingRunnable stopActor() {
             return STOP_ACTOR;
