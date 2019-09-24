@@ -28,7 +28,6 @@ import org.testng.annotations.Test;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static org.elasticsoftware.elasticactors.base.actors.ActorDelegate.Builder.perform;
 import static org.elasticsoftware.elasticactors.base.actors.ActorDelegate.Builder.stopActor;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
@@ -82,9 +81,10 @@ public class GreetingTest {
 
         ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
                 .deleteAfterReceive(false)
-                .onReceive(ScheduledGreeting.class,
-                        perform(() -> System.out.println("Got Scheduled Greeting"))
-                                .andThen(stopActor()))
+                .onReceive(ScheduledGreeting.class, () -> {
+                    System.out.println("Got Scheduled Greeting");
+                    stopActor();
+                })
                 .onReceive(Greeting.class, m -> System.out.println(format("Got Greeting from %s", m.getWho())))
                 .orElse(MessageConsumer.NOOP)
                 .postReceive(countDownLatch::countDown)
