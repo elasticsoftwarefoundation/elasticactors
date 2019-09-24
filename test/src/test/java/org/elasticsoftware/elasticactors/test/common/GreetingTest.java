@@ -28,6 +28,9 @@ import org.testng.annotations.Test;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static org.elasticsoftware.elasticactors.base.actors.ActorDelegate.Builder.perform;
+import static org.elasticsoftware.elasticactors.base.actors.ActorDelegate.Builder.stopActor;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 import static java.lang.String.format;
@@ -64,5 +67,33 @@ public class GreetingTest {
         testActorSystem.destroy();
     }
 
+    @Test
+    public void testStopAfterGreeting() throws Exception {
 
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+        ActorRef greeter = actorSystem.actorOf("greeter",GreetingActor.class,new StringState("Hello World"));
+
+        //ScheduledMessageRef messageRef = actorSystem.getScheduler().scheduleOnce(null,new Greeting("Delayed Message"),greeter,2, TimeUnit.SECONDS);
+
+        final CountDownLatch countDownLatch = new CountDownLatch(2);
+
+        ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
+                .deleteAfterReceive(false)
+                .onReceive(ScheduledGreeting.class,
+                        perform(() -> System.out.println("Got Scheduled Greeting"))
+                                .andThen(stopActor()))
+                .onReceive(Greeting.class, m -> System.out.println(format("Got Greeting from %s", m.getWho())))
+                .orElse(MessageConsumer.NOOP)
+                .postReceive(countDownLatch::countDown)
+                .build());
+
+        greeter.tell(new Greeting("Joost van de Wijgerd"), replyActor);
+
+        assertFalse(countDownLatch.await(5, TimeUnit.SECONDS));
+
+        testActorSystem.destroy();
+    }
 }
