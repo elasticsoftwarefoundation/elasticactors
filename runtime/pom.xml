@@ -249,7 +249,7 @@
                             <dependency>
                                 <groupId>org.codehaus.plexus</groupId>
                                 <artifactId>plexus-utils</artifactId>
-                                <version>3.0.9</version>
+                                <version>${plexus-utils.version}</version>
                             </dependency>
                         </dependencies>
                     </plugin>
