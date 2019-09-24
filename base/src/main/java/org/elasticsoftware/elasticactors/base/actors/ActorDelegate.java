@@ -121,6 +121,7 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
     }
 
     public interface BuildStep<D> {
+
         /**
          * Builds the ActorDelegate actor
          *
@@ -133,7 +134,8 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
     public interface PreparatoryStep<D> extends PreReceiveStep<D> {
 
         /**
-         * Sets whether or not the actor should be stopped after receiving a message. Defaults to {@code true}.
+         * Sets whether or not the actor should be stopped after receiving a message.
+         * Defaults to {@code true}.
          *
          * @param deleteAfterReceive If true, this actor will be stopped as soon as it receives a message
          * @return A {@link PreReceiveStep} version of this builder
@@ -226,6 +228,7 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
 
         /**
          * Sets a consumer that must be executed after each message is received
+         *
          * @param consumer The consumer
          * @return A {@link OnUndeliverableStep} version of this builder
          */
@@ -273,80 +276,11 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
 
     public final static class Builder<D> implements MessageHandlingStep<D>, PreparatoryStep<D> {
 
-        private final static ThrowingRunnable STOP_ACTOR =
-                () -> ActorContextHolder.getSystem().stop(ActorContextHolder.getSelf());
-
         /**
-         * Convenience function for stopping the actor. This is intended to be used within the
-         * scope of this builder.
-         * <br/><br/>
-         * Example:
-         * <pre>{@code builder.onReceive(MessageClass.class,
-         *      perform(this::doSometing).andThen(stopActor()))}
-         * </pre>
-         *
-         * This is equivalent to:
-         * <pre>{@code builder.onReceive(MessageClass.class,
-         *      perform(this::doSometing).andThen(() ->
-         *          ActorContextHolder.getSystem().stop(ActorContextHolder.getSelf())))}
-         * </pre>
-         *
-         * or:
-         *
-         * <pre>{@code builder.onReceive(MessageClass.class,
-         *      () -> {
-         *          this.doSomething();
-         *          stopActor().run();
-         *      });}
-         * </pre>
-         *
-         * or:
-         *
-         * <pre>{@code builder.onReceive(MessageClass.class,
-         *      () -> {
-         *          this.doSomething();
-         *          ActorContextHolder.getSystem().stop(ActorContextHolder.getSelf());
-         *      });}
-         * </pre>
+         * Convenience function for stopping the actor.
          */
-        public static ThrowingRunnable stopActor() {
-            return STOP_ACTOR;
-        }
-
-        /**
-         * Convenience method for chaining operations
-         * @param consumer The initial consumer
-         * @param <M> The message type
-         * @return The consumer passed as the {@code consumer} parameter
-         */
-        @Nonnull
-        public static <M> MessageConsumer<M> perform(@Nonnull MessageConsumer<M> consumer) {
-            Objects.requireNonNull(consumer);
-            return consumer;
-        }
-
-        /**
-         * Convenience method for chaining operations
-         * @param consumer The initial consumer
-         * @param <M> The message type
-         * @return The {@link MessageConsumer} equivalent of {@code consumer} parameter
-         */
-        @Nonnull
-        public static <M> MessageConsumer<M> perform(@Nonnull ThrowingConsumer<M> consumer) {
-            Objects.requireNonNull(consumer);
-            return (a, m) -> consumer.accept(m);
-        }
-
-        /**
-         * Convenience method for chaining operations
-         * @param runnable The initial runnable
-         * @param <M> The message type
-         * @return The {@link MessageConsumer} equivalent of {@code runnable} parameter
-         */
-        @Nonnull
-        public static <M> MessageConsumer<M> perform(@Nonnull ThrowingRunnable runnable) {
-            Objects.requireNonNull(runnable);
-            return (a, m) -> runnable.run();
+        public static void stopActor() throws Exception {
+            ActorContextHolder.getSystem().stop(ActorContextHolder.getSelf());
         }
 
         private Map<Class<?>, MessageConsumer<?>> onReceiveConsumers = new HashMap<>();
@@ -506,23 +440,6 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
                 after.accept(a, m);
             };
         }
-
-        default MessageConsumer<M> andThen(ThrowingConsumer<? super M> after) {
-            Objects.requireNonNull(after);
-            return (a, m) -> {
-                accept(a, m);
-                after.accept(m);
-            };
-        }
-
-        default MessageConsumer<M> andThen(ThrowingRunnable after) {
-            Objects.requireNonNull(after);
-            return (a, m) -> {
-                accept(a, m);
-                after.run();
-            };
-        }
-
     }
 
     @FunctionalInterface
@@ -537,18 +454,11 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
                 after.accept(m);
             };
         }
-
-        default ThrowingConsumer<M> andThen(ThrowingRunnable after) {
-            Objects.requireNonNull(after);
-            return m -> {
-                accept(m);
-                after.run();
-            };
-        }
     }
 
     @FunctionalInterface
     public interface ThrowingRunnable {
+
         void run() throws Exception;
 
         default ThrowingRunnable andThen(ThrowingRunnable after) {
