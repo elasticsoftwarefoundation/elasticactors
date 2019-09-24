@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.base.actors;
 
 import com.google.common.collect.ImmutableMap;
+import org.elasticsoftware.elasticactors.ActorContextHolder;
 import org.elasticsoftware.elasticactors.ActorNotFoundException;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
@@ -272,6 +273,64 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
 
     public final static class Builder<D> implements MessageHandlingStep<D>, PreparatoryStep<D> {
 
+        private final static ThrowingRunnable STOP_ACTOR =
+                () -> ActorContextHolder.getSystem().stop(ActorContextHolder.getSelf());
+
+        /**
+         * Convenience function for stopping the actor. This is intended to be used within the
+         * scope of this builder.
+         * <br/><br/>
+         * Example:
+         * <pre>{@code builder.onReceive(MessageClass.class,
+         *      perform(this::doSometing).andThen(stopActor()))}
+         * </pre>
+         *
+         * This is equivalent to:
+         * <pre>{@code builder.onReceive(MessageClass.class,
+         *      perform(this::doSometing).andThen(() ->
+         *          ActorContextHolder.getSystem().stop(ActorContextHolder.getSelf())))}
+         * </pre>
+         */
+        public static ThrowingRunnable stopActor() {
+            return STOP_ACTOR;
+        }
+
+        /**
+         * Convenience method for chaining operations
+         * @param consumer The initial consumer
+         * @param <M> The message type
+         * @return The consumer passed as the {@code consumer} parameter
+         */
+        @Nonnull
+        public static <M> MessageConsumer<M> perform(@Nonnull MessageConsumer<M> consumer) {
+            Objects.requireNonNull(consumer);
+            return consumer;
+        }
+
+        /**
+         * Convenience method for chaining operations
+         * @param consumer The initial consumer
+         * @param <M> The message type
+         * @return The {@link MessageConsumer} equivalent of {@code consumer} parameter
+         */
+        @Nonnull
+        public static <M> MessageConsumer<M> perform(@Nonnull ThrowingConsumer<M> consumer) {
+            Objects.requireNonNull(consumer);
+            return (a, m) -> consumer.accept(m);
+        }
+
+        /**
+         * Convenience method for chaining operations
+         * @param runnable The initial runnable
+         * @param <M> The message type
+         * @return The {@link MessageConsumer} equivalent of {@code runnable} parameter
+         */
+        @Nonnull
+        public static <M> MessageConsumer<M> perform(@Nonnull ThrowingRunnable runnable) {
+            Objects.requireNonNull(runnable);
+            return (a, m) -> runnable.run();
+        }
+
         private Map<Class<?>, MessageConsumer<?>> onReceiveConsumers = new HashMap<>();
         private MessageConsumer<Object> orElseConsumer;
         private MessageConsumer<Object> onUndeliverableConsumer;
@@ -429,6 +488,23 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
                 after.accept(a, m);
             };
         }
+
+        default MessageConsumer<M> andThen(ThrowingConsumer<? super M> after) {
+            Objects.requireNonNull(after);
+            return (a, m) -> {
+                accept(a, m);
+                after.accept(m);
+            };
+        }
+
+        default MessageConsumer<M> andThen(ThrowingRunnable after) {
+            Objects.requireNonNull(after);
+            return (a, m) -> {
+                accept(a, m);
+                after.run();
+            };
+        }
+
     }
 
     @FunctionalInterface
@@ -441,6 +517,14 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
             return m -> {
                 accept(m);
                 after.accept(m);
+            };
+        }
+
+        default ThrowingConsumer<M> andThen(ThrowingRunnable after) {
+            Objects.requireNonNull(after);
+            return m -> {
+                accept(m);
+                after.run();
             };
         }
     }
