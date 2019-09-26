@@ -197,20 +197,20 @@
                 <version>${hectorclient.version}</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>properties-maven-plugin</artifactId>
                         <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>properties-maven-plugin</artifactId>
                     </exclusion>
                     <exclusion>
+                        <groupId>org.apache.cassandra</groupId>
                         <artifactId>cassandra-all</artifactId>
-                        <groupId>org.apache.cassandra</groupId>
                     </exclusion>
                     <exclusion>
+                        <groupId>org.apache.cassandra</groupId>
                         <artifactId>cassandra-thrift</artifactId>
-                        <groupId>org.apache.cassandra</groupId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>guava</artifactId>
                         <groupId>com.google.guava</groupId>
+                        <artifactId>guava</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -220,16 +220,8 @@
                 <version>${cassandra.version}</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>servlet-api</artifactId>
                         <groupId>javax.servlet</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>jcl-over-slf4j</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>log4j-over-slf4j</artifactId>
+                        <artifactId>servlet-api</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -252,8 +244,8 @@
                 <classifier>shaded</classifier>
                 <exclusions>
                     <exclusion>
-                        <artifactId>*</artifactId>
                         <groupId>io.netty</groupId>
+                        <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -263,28 +255,20 @@
                 <version>${spring-data-redis.version}</version>
                 <exclusions>
                     <exclusion>
+                        <groupId>org.springframework</groupId>
                         <artifactId>spring-context</artifactId>
-                        <groupId>org.springframework</groupId>
                     </exclusion>
                     <exclusion>
+                        <groupId>org.springframework</groupId>
                         <artifactId>spring-tx</artifactId>
-                        <groupId>org.springframework</groupId>
                     </exclusion>
                     <exclusion>
+                        <groupId>org.springframework</groupId>
                         <artifactId>spring-core</artifactId>
-                        <groupId>org.springframework</groupId>
                     </exclusion>
                     <exclusion>
+                        <groupId>org.springframework</groupId>
                         <artifactId>spring-context-support</artifactId>
-                        <groupId>org.springframework</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.slf4</groupId>
-                        <artifactId>slf4j-api</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.slf4</groupId>
-                        <artifactId>jcl-over-slf4j</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -312,25 +296,22 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
-                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>jcl-over-slf4j</artifactId>
                 <version>${slf4j.version}</version>
-                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>jul-to-slf4j</artifactId>
                 <version>${slf4j.version}</version>
-                <scope>provided</scope>
             </dependency>
+            <!-- This is for Log4J 1-->
             <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-core</artifactId>
-                <version>${log4j.version}</version>
-                <scope>provided</scope>
+                <groupId>org.slf4j</groupId>
+                <artifactId>log4j-over-slf4j</artifactId>
+                <version>${slf4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -386,16 +367,6 @@
                 <groupId>io.fabric8</groupId>
                 <artifactId>kubernetes-client</artifactId>
                 <version>${kubernetes-client.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4</groupId>
-                        <artifactId>slf4j-api</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.slf4</groupId>
-                        <artifactId>jul-to-slf4j</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.shoal</groupId>
@@ -441,12 +412,6 @@
                 <groupId>org.apache.kafka</groupId>
                 <artifactId>kafka-clients</artifactId>
                 <version>${kafka.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4</groupId>
-                        <artifactId>slf4j-api</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>net.openhft</groupId>
@@ -456,10 +421,6 @@
                     <exclusion>
                         <groupId>com.sun.java</groupId>
                         <artifactId>tools</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>jcl-over-slf4j</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -519,7 +480,6 @@
                 <groupId>io.zipkin.brave</groupId>
                 <artifactId>brave</artifactId>
                 <version>${brave.version}</version>
-                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>javax.annotation</groupId>
@@ -550,10 +510,11 @@
                 <version>${slf4j.version}</version>
                 <scope>test</scope>
             </dependency>
+            <!-- The ElasticSearch client requires this for testing -->
             <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>log4j-over-slf4j</artifactId>
-                <version>${slf4j.version}</version>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>${log4j.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
