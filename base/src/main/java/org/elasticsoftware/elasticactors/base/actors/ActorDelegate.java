@@ -67,6 +67,7 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
 
     private static class FunctionalActorDelegate<D> extends ActorDelegate<D> {
 
+
         private final Map<Class<?>, MessageConsumer<?>> onReceiveConsumers;
         private final MessageConsumer<D> orElseConsumer;
         private final MessageConsumer<Object> onUndeliverableConsumer;
@@ -203,7 +204,7 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
          * <br/><br/>
          *
          * A convenience constant for when such behavior is not desired is provided with
-         * {@link MessageConsumer#NOOP}
+         * {@link MessageConsumer#noop()}
          *
          * @param consumer The consumer
          * @return A {@link PostReceiveStep} version of this builder
@@ -439,7 +440,9 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
         /**
          * A message consumer that does nothing
          */
-        MessageConsumer<Object> NOOP = (a, m) -> {};
+        static <T> MessageConsumer<T> noop() {
+            return (a, m) -> { };
+        }
 
         void accept(ActorRef actorRef, M message) throws Exception;
 

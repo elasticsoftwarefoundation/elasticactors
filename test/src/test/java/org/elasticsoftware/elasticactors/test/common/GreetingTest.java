@@ -55,7 +55,7 @@ public class GreetingTest {
                 .deleteAfterReceive(false)
                 .onReceive(ScheduledGreeting.class, () -> System.out.println("Got Scheduled Greeting"))
                 .onReceive(Greeting.class, m -> System.out.println(format("Got Greeting from %s", m.getWho())))
-                .orElse(MessageConsumer.NOOP)
+                .orElse(MessageConsumer.noop())
                 .postReceive(countDownLatch::countDown)
                 .build());
 
@@ -86,7 +86,7 @@ public class GreetingTest {
                     stopActor();
                 })
                 .onReceive(Greeting.class, m -> System.out.println(format("Got Greeting from %s", m.getWho())))
-                .orElse(MessageConsumer.NOOP)
+                .orElse(MessageConsumer.noop())
                 .postReceive(countDownLatch::countDown)
                 .build());
 
