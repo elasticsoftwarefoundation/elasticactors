@@ -695,25 +695,14 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <version>3.0.0-M2</version>
-                <executions>
-                    <execution>
-                        <id>enforce-maven</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <requireJavaVersion>
-                                    <version>1.8</version>
-                                </requireJavaVersion>
-                                <requireMavenVersion>
-                                    <version>3.0.5</version>
-                                </requireMavenVersion>
-                                <banDuplicatePomDependencyVersions/>
-                            </rules>
-                        </configuration>
-                    </execution>
-                </executions>
+                <configuration>
+                    <rules>
+                        <requireMavenVersion>
+                            <version>3.0.5</version>
+                        </requireMavenVersion>
+                        <banDuplicatePomDependencyVersions/>
+                    </rules>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -40,6 +40,11 @@
             <groupId>org.elasticsoftware.elasticactors</groupId>
             <artifactId>elasticactors-kafka</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>runtime</scope>
+        </dependency>
     </dependencies>
 
 
