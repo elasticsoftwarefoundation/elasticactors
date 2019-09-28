@@ -67,7 +67,6 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
 
     private static class FunctionalActorDelegate<D> extends ActorDelegate<D> {
 
-
         private final Map<Class<?>, MessageConsumer<?>> onReceiveConsumers;
         private final MessageConsumer<D> orElseConsumer;
         private final MessageConsumer<Object> onUndeliverableConsumer;
@@ -91,7 +90,7 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
 
         @Override
         public void onReceive(ActorRef sender, D message) throws Exception {
-            MessageConsumer<D> consumer = (MessageConsumer<D>) onReceiveConsumers.get(message.getClass());
+            MessageConsumer consumer = onReceiveConsumers.get(message.getClass());
             if (consumer != null) {
                 runIfPresent(sender, message, preReceiveConsumer);
                 consumer.accept(sender, message);
