@@ -16,10 +16,10 @@
 
 package org.elasticsoftware.elasticactors.cassandra.serialization;
 
-import com.google.common.base.Charsets;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -34,7 +34,7 @@ public class CompressionTest {
 
         CompressingSerializer<String> serializer = new CompressingSerializer<>(new StringSerializer());
         byte[] serialized = serializer.serialize(testString);
-        assertEquals(new String(serialized, Charsets.UTF_8), testString);
+        assertEquals(new String(serialized, StandardCharsets.UTF_8), testString);
 
         DecompressingDeserializer<String> deserializer = new DecompressingDeserializer<>(new StringDeserializer());
         String deserializedString = deserializer.deserialize(serialized);
@@ -70,7 +70,7 @@ public class CompressionTest {
         CompressingSerializer<String> serializer = new CompressingSerializer<>(new StringSerializer());
         byte[] serialized = serializer.serialize(testString);
 
-        assertTrue(serialized.length < testString.getBytes(Charsets.UTF_8).length);
+        assertTrue(serialized.length < testString.getBytes(StandardCharsets.UTF_8).length);
 
         DecompressingDeserializer<String> deserializer = new DecompressingDeserializer<>(new StringDeserializer());
         String deserializedString = deserializer.deserialize(serialized);
@@ -85,7 +85,7 @@ public class CompressionTest {
         CompressingSerializer<String> serializer = new CompressingSerializer<>(new StringSerializer(),1024);
         byte[] serialized = serializer.serialize(testString);
 
-        assertTrue(serialized.length < testString.getBytes(Charsets.UTF_8).length);
+        assertTrue(serialized.length < testString.getBytes(StandardCharsets.UTF_8).length);
 
         DecompressingDeserializer<String> deserializer = new DecompressingDeserializer<>(new StringDeserializer());
         String deserializedString = deserializer.deserialize(serialized);
@@ -101,7 +101,7 @@ public class CompressionTest {
         CompressingSerializer<String> serializer = new CompressingSerializer<>(new StringSerializer(),512);
         byte[] serialized = serializer.serialize(testString);
 
-        assertTrue(serialized.length < testString.getBytes(Charsets.UTF_8).length);
+        assertTrue(serialized.length < testString.getBytes(StandardCharsets.UTF_8).length);
 
         DecompressingDeserializer<String> deserializer = new DecompressingDeserializer<>(new StringDeserializer());
         String deserializedString = deserializer.deserialize(serialized);

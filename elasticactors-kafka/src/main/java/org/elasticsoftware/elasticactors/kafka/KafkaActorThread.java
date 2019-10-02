@@ -46,7 +46,6 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.NodeKey;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
-import org.elasticsoftware.elasticactors.base.util.Charsets;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
@@ -92,6 +91,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1219,7 +1219,7 @@ public final class KafkaActorThread extends Thread {
                 byte[] serializedActor = stateSerializer.serialize(persistentActor);
                 if(logger.isDebugEnabled()) {
                     logger.debug("Serializing PersistentActor: keySize={}, valueSize={}",
-                            persistentActor.getSelf().getActorId().getBytes(Charsets.UTF_8).length,
+                            persistentActor.getSelf().getActorId().getBytes(StandardCharsets.UTF_8).length,
                             serializedActor.length);
                 }
                 ProducerRecord<Object,Object> producerRecord = new ProducerRecord<>(persistentActorsTopic, this.getKey().getShardId(),

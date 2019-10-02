@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.kafka;
 
-import com.google.common.base.Charsets;
 import com.google.common.cache.Cache;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableListMultimap;
@@ -79,6 +78,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -320,7 +320,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
     }
 
     private KafkaActorShard shardFor(String actorId) {
-        return this.actorShards[Math.abs(hashFunction.hashString(actorId, Charsets.UTF_8).asInt()) % this.actorShards.length];
+        return this.actorShards[Math.abs(hashFunction.hashString(actorId, StandardCharsets.UTF_8).asInt()) % this.actorShards.length];
     }
 
 

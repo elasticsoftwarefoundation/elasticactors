@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.indexing.elasticsearch.indexer;
 
-import com.google.common.base.Charsets;
 import org.awaitility.Durations;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
@@ -39,6 +38,7 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -224,7 +224,7 @@ public class IndexerTest {
 
         ActorStateUpdate update = Mockito.mock(ActorStateUpdate.class);
         when(update.getActorRef()).thenReturn(actorRef);
-        ByteBuffer charBuffer = ByteBuffer.wrap("{\"testField\": \"testData\"}".getBytes(Charsets.UTF_8));
+        ByteBuffer charBuffer = ByteBuffer.wrap("{\"testField\": \"testData\"}".getBytes(StandardCharsets.UTF_8));
         when(update.getSerializedState()).thenReturn(charBuffer);
 
         return update;

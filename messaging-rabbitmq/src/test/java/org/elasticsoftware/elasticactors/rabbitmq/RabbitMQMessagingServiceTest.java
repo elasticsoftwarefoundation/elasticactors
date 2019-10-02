@@ -16,12 +16,16 @@
 
 package org.elasticsoftware.elasticactors.rabbitmq;
 
-import com.google.common.base.Charsets;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
-import org.elasticsoftware.elasticactors.messaging.*;
+import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
+import org.elasticsoftware.elasticactors.messaging.MessageHandler;
+import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.messaging.MessageQueue;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
@@ -32,16 +36,18 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static java.lang.String.format;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertTrue;
+
+import static java.lang.String.format;
 
 /**
  * @author Joost van de Wijgerd
@@ -167,7 +173,7 @@ public class RabbitMQMessagingServiceTest {
     }
 
     private InternalMessage createInternalMessage(String name,int count) {
-        ByteBuffer payload = ByteBuffer.wrap(format(PAYLOAD_FORMAT, count, name).getBytes(Charsets.UTF_8));
+        ByteBuffer payload = ByteBuffer.wrap(format(PAYLOAD_FORMAT, count, name).getBytes(StandardCharsets.UTF_8));
         return new InternalMessageImpl(senderRef,receiverRef,payload,String.class.getName(),true);
     }
 }

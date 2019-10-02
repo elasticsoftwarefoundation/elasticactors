@@ -18,7 +18,6 @@ package org.elasticsoftware.elasticactors.indexing.elasticsearch.indexer;
 
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
@@ -36,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -151,7 +151,7 @@ public final class Indexer implements ActorStateUpdateListener {
         }
 
         try (ByteBufferBackedInputStream is = new ByteBufferBackedInputStream(update.getSerializedState())) {
-            String actorState = CharStreams.toString(new InputStreamReader(is, Charsets.UTF_8));
+            String actorState = CharStreams.toString(new InputStreamReader(is, StandardCharsets.UTF_8));
 
             client.prepareIndex(indexName, indexConfig.typeName(), update.getActorRef().getActorId())
                     .setOpType(IndexRequest.OpType.INDEX)

@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -58,6 +57,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import javax.annotation.Nullable;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -507,7 +507,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     }
 
     private ActorShard shardFor(String actorId) {
-        return shardAdapters[Math.abs(hashFunction.hashString(actorId, Charsets.UTF_8).asInt()) % shards.length];
+        return shardAdapters[Math.abs(hashFunction.hashString(actorId, StandardCharsets.UTF_8).asInt()) % shards.length];
     }
 
 

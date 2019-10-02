@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.cluster.scheduler;
 
-import com.google.common.base.Charsets;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
@@ -40,6 +39,7 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -173,7 +173,7 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
                 }
             } catch(IOException e) {
                 // try to figure out what is wrong with the bytes
-                String jsonMessage = new String(message.getMessageBytes(), Charsets.UTF_8);
+                String jsonMessage = new String(message.getMessageBytes(), StandardCharsets.UTF_8);
                 logger.error("IOException while deserializing ScheduledMessage contents [{}] of message class [{}]",jsonMessage,message.getMessageClass().getName(),e);
             } catch(Exception e) {
                 logger.error("Caught unexpected Exception while exexuting ScheduledMessage",e);
