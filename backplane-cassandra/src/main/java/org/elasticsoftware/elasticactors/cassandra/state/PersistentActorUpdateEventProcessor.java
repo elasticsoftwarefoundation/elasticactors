@@ -71,7 +71,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
             // add some trace info
             if(logger.isTraceEnabled()) {
                 final long endTime = currentTimeMillis();
-                logger.trace("Updating {}} Actor state entrie(s) took {} msecs", events.size(), endTime - startTime);
+                logger.trace("Updating {} Actor state entrie(s) took {} msecs", events.size(), endTime - startTime);
             }
         }
     }
