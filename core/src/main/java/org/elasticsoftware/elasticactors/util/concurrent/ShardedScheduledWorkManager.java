@@ -237,14 +237,7 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
                     }
                 }
             } finally {
-                infoMessage("Worker thread stopped");
-            }
-        }
-
-        private void infoMessage(String messageFormat, Object... args) {
-            if (LOGGER.isInfoEnabled()) {
-                String formattedMessage = format(messageFormat, args);
-                LOGGER.info(formattedMessage);
+                LOGGER.info("Worker thread stopped");
             }
         }
     }

@@ -91,9 +91,9 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
         workManager.registerShard(shardKey);
         // fetch block from repository
         // @todo: for now we'll fetch all, this obviously has memory issues
+        long startTime = System.currentTimeMillis();
         List<ScheduledMessage> scheduledMessages = scheduledMessageRepository.getAll(shardKey);
         if(logger.isInfoEnabled()) {
-            long startTime = System.currentTimeMillis();
             logger.info("Registering shard {} and loaded {} scheduled messages in {} milliseconds",
                     shardKey.toString(),
                     scheduledMessages.size(),
