@@ -217,7 +217,6 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
             try {
                 while (!stop) {
                     T work = null;
-                    long waitTimeMillis = MAX_AWAIT_MILLIS;
                     // pick a random queue to block on if there are no Delayed object younger than MAX_AWAIT_MILLIS
                     for (Map.Entry<K, DelayQueue<T>> delayQueueEntry : delayQueues.entrySet()) {
                         final DelayQueue<T> delayQueue = delayQueueEntry.getValue();
