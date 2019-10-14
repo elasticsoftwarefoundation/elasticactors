@@ -77,8 +77,8 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
         stop = false;
         for (int i = 0; i < numberOfWorkers; i++) {
             Future<?> future = useNonBlockingWorker ?
-                    executor.submit(new RunnableWorker(workerFactory.create())) :
-                    executor.submit(new NonBlockingRunnableWorker(workerFactory.create()));
+                    executor.submit(new NonBlockingRunnableWorker(workerFactory.create())) :
+                    executor.submit(new RunnableWorker(workerFactory.create()));
             futures.add(future);
         }
     }
@@ -216,11 +216,10 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
         public void run() {
             try {
                 while (!stop) {
-                    T work = null;
                     // pick a random queue to block on if there are no Delayed object younger than MAX_AWAIT_MILLIS
                     for (Map.Entry<K, DelayQueue<T>> delayQueueEntry : delayQueues.entrySet()) {
                         final DelayQueue<T> delayQueue = delayQueueEntry.getValue();
-                        work = delayQueue.poll();
+                        T work = delayQueue.poll();
                         if(work != null) {
                             try {
                                 workExecutor.execute(delayQueueEntry.getKey(),work);
