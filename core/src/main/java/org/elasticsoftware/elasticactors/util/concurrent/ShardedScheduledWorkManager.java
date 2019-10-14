@@ -22,12 +22,14 @@ import org.apache.logging.log4j.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static java.lang.Boolean.FALSE;
 import static java.lang.String.format;
 
 /**
@@ -50,11 +52,22 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
 
     private final ReentrantLock waitLock = new ReentrantLock();
     private final Condition waitCondition =  waitLock.newCondition();
+    private final Boolean useNonBlockingWorker;
 
-    public ShardedScheduledWorkManager(ExecutorService executor, WorkExecutorFactory<WorkExecutor<K,T>> workerFactory, int numberOfWorkers){
+    public ShardedScheduledWorkManager(ExecutorService executor,
+                                       WorkExecutorFactory<WorkExecutor<K,T>> workerFactory,
+                                       int numberOfWorkers) {
+        this(executor, workerFactory, numberOfWorkers, FALSE);
+    }
+
+    public ShardedScheduledWorkManager(ExecutorService executor,
+                                       WorkExecutorFactory<WorkExecutor<K,T>> workerFactory,
+                                       int numberOfWorkers,
+                                       Boolean useNonBlockingWorker) {
         this.executor = executor;
         this.numberOfWorkers = Math.max(1,numberOfWorkers);
         this.workerFactory = workerFactory;
+        this.useNonBlockingWorker = useNonBlockingWorker;
         futures = new ArrayList<>();
         delayQueues = new ConcurrentHashMap<>();
     }
@@ -63,7 +76,9 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
     public void init() {
         stop = false;
         for (int i = 0; i < numberOfWorkers; i++) {
-            Future<?> future = executor.submit(new RunnableWorker(workerFactory.create()));
+            Future<?> future = useNonBlockingWorker ?
+                    executor.submit(new RunnableWorker(workerFactory.create())) :
+                    executor.submit(new NonBlockingRunnableWorker(workerFactory.create()));
             futures.add(future);
         }
     }
@@ -76,7 +91,7 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
             for (Future<?> f : futures) {
                 try {
                     f.cancel(true);
-                } catch (Exception e) {
+                } catch (Exception ignored) {
                 }// ignore
             }
             delayQueues.clear();
@@ -93,15 +108,14 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
         delayQueues.remove(shard);
     }
 
-    public void schedule(K shard, T... unitsOfWork) {
+    @SafeVarargs
+    public final void schedule(K shard, T... unitsOfWork) {
         final DelayQueue<T> delayQueue = this.delayQueues.get(shard);
         if(delayQueue == null) {
             throw new RejectedExecutionException(format("Shard: %s is not registered, please call registerShard first",shard.toString()));
         }
         // add all
-        for (T unitOfWork : unitsOfWork) {
-            delayQueue.add(unitOfWork);
-        }
+        delayQueue.addAll(Arrays.asList(unitsOfWork));
         // wake up a waiting thread
         try {
             final ReentrantLock waitLock = ShardedScheduledWorkManager.this.waitLock;
@@ -136,7 +150,7 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
     private final class RunnableWorker implements Runnable {
         private final WorkExecutor<K,T> workExecutor;
 
-        public RunnableWorker(WorkExecutor<K,T> workExecutor){
+        RunnableWorker(WorkExecutor<K, T> workExecutor){
             this.workExecutor = workExecutor;
         }
 
@@ -177,6 +191,50 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
                         // ignore
                     }
 
+                }
+            } finally {
+                infoMessage("Worker thread stopped");
+            }
+        }
+
+        private void infoMessage(String messageFormat, Object... args) {
+            if (LOGGER.isInfoEnabled()) {
+                String formattedMessage = format(messageFormat, args);
+                LOGGER.info(formattedMessage);
+            }
+        }
+    }
+
+    private final class NonBlockingRunnableWorker implements Runnable {
+        private final WorkExecutor<K,T> workExecutor;
+
+        NonBlockingRunnableWorker(WorkExecutor<K, T> workExecutor){
+            this.workExecutor = workExecutor;
+        }
+
+        @Override
+        public void run() {
+            try {
+                while (!stop) {
+                    T work = null;
+                    long waitTimeMillis = MAX_AWAIT_MILLIS;
+                    // pick a random queue to block on if there are no Delayed object younger than MAX_AWAIT_MILLIS
+                    for (Map.Entry<K, DelayQueue<T>> delayQueueEntry : delayQueues.entrySet()) {
+                        final DelayQueue<T> delayQueue = delayQueueEntry.getValue();
+                        work = delayQueue.poll();
+                        if(work != null) {
+                            try {
+                                workExecutor.execute(delayQueueEntry.getKey(),work);
+                            } catch(Throwable e) {
+                                LOGGER.error("Exception while executing work!", e);
+                            }
+                        }
+                    }
+                    // just sleep for 1 millisecond
+                    try {
+                        Thread.sleep(1);
+                    } catch (InterruptedException ignored) {
+                    }
                 }
             } finally {
                 infoMessage("Worker thread stopped");
