@@ -51,12 +51,22 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
     private ShardedScheduledWorkManager<ShardKey,ScheduledMessage> workManager;
     private ScheduledMessageRepository scheduledMessageRepository;
     private InternalActorSystem actorSystem;
+    private final int numberOfWorkers;
+    private final Boolean useNonBlockingWorker;
 
+    public ShardedScheduler() {
+        this(Runtime.getRuntime().availableProcessors(), Boolean.FALSE);
+    }
+
+    public ShardedScheduler(int numberOfWorkers, Boolean useNonBlockingWorker) {
+        this.numberOfWorkers = numberOfWorkers;
+        this.useNonBlockingWorker = useNonBlockingWorker;
+    }
 
     @PostConstruct
     public void init() {
         ExecutorService executorService = Executors.newCachedThreadPool(new DaemonThreadFactory("SCHEDULER"));
-        workManager = new ShardedScheduledWorkManager<>(executorService,this,Runtime.getRuntime().availableProcessors());
+        workManager = new ShardedScheduledWorkManager<>(executorService, this, numberOfWorkers, useNonBlockingWorker);
         workManager.init();
     }
 
@@ -81,7 +91,14 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
         workManager.registerShard(shardKey);
         // fetch block from repository
         // @todo: for now we'll fetch all, this obviously has memory issues
+        long startTime = System.nanoTime();
         List<ScheduledMessage> scheduledMessages = scheduledMessageRepository.getAll(shardKey);
+        if(logger.isInfoEnabled()) {
+            logger.info("Registering shard {} and loaded {} scheduled messages in {} nanoseconds",
+                    shardKey.toString(),
+                    scheduledMessages.size(),
+                    System.nanoTime() - startTime);
+        }
         workManager.schedule(shardKey,scheduledMessages.toArray(new ScheduledMessage[scheduledMessages.size()]));
     }
 
