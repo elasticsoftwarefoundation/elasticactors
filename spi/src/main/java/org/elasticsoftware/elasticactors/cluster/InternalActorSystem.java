@@ -61,6 +61,10 @@ public interface InternalActorSystem extends ActorSystem, ShardAccessor {
      */
     ElasticActor getServiceInstance(ActorRef serviceRef);
 
+    default void shutdown() {
+
+    }
+
     /**
      * Returns a {@link ActorNode} that can be either remote or local
      *

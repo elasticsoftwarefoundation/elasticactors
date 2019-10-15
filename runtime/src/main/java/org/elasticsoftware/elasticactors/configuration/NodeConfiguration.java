@@ -55,6 +55,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Map;
 
+import static java.lang.Boolean.FALSE;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -98,7 +100,7 @@ public class NodeConfiguration {
     @Bean(name = {"objectMapper"})
     public ObjectMapper createObjectMapper(ShardedScheduler schedulerService) {
         String basePackages = env.getProperty("ea.scan.packages",String.class,"");
-        Boolean useAfterburner = env.getProperty("ea.base.useAfterburner",Boolean.class,Boolean.FALSE);
+        Boolean useAfterburner = env.getProperty("ea.base.useAfterburner",Boolean.class, FALSE);
         // @todo: fix version
         ObjectMapperBuilder builder = new ObjectMapperBuilder(node,schedulerService,"1.0.0",basePackages);
         builder.setUseAfterBurner(useAfterburner);
@@ -141,7 +143,7 @@ public class NodeConfiguration {
     @DependsOn("asyncUpdateExecutor")
     public ThreadBoundExecutor createActorExecutor() {
         final int workers = env.getProperty("ea.actorExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
-        final Boolean useDisruptor = env.getProperty("ea.actorExecutor.useDisruptor",Boolean.class,Boolean.FALSE);
+        final Boolean useDisruptor = env.getProperty("ea.actorExecutor.useDisruptor",Boolean.class, FALSE);
         if(useDisruptor) {
             return new org.elasticsoftware.elasticactors.util.concurrent.disruptor.ThreadBoundExecutorImpl(new DaemonThreadFactory("ACTOR-WORKER"),workers);
         } else {
@@ -153,7 +155,7 @@ public class NodeConfiguration {
     @DependsOn("actorExecutor")
     public ThreadBoundExecutor createQueueExecutor() {
         final int workers = env.getProperty("ea.queueExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
-        final Boolean useDisruptor = env.getProperty("ea.actorExecutor.useDisruptor",Boolean.class,Boolean.FALSE);
+        final Boolean useDisruptor = env.getProperty("ea.actorExecutor.useDisruptor",Boolean.class, FALSE);
         if(useDisruptor) {
             return new org.elasticsoftware.elasticactors.util.concurrent.disruptor.ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"), workers);
         } else {
@@ -173,8 +175,9 @@ public class NodeConfiguration {
 
     @Bean(name = {"scheduler"})
     public ShardedScheduler createScheduler() {
-        //@todo: maybe configure scheduler here with number of workers
-        return new ShardedScheduler();
+        int numberOfWorkers = env.getProperty("ea.shardedScheduler.workerCount", Integer.class, Runtime.getRuntime().availableProcessors());
+        Boolean useNonBlockingWorker = env.getProperty("ea.shardedScheduler.useNonBlockingWorker", Boolean.class, FALSE);
+        return new ShardedScheduler(numberOfWorkers, useNonBlockingWorker);
     }
 
     @Bean(name = {"actorSystemEventListenerService"})
