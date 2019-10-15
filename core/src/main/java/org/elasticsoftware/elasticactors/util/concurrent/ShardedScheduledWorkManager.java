@@ -25,7 +25,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -209,11 +216,14 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
         @Override
         public void run() {
             try {
+                long sleep = 1;
                 while (!stop) {
                     for (Map.Entry<K, DelayQueue<T>> delayQueueEntry : delayQueues.entrySet()) {
                         final DelayQueue<T> delayQueue = delayQueueEntry.getValue();
                         T work = delayQueue.poll();
                         if(work != null) {
+                            // reset backoff
+                            sleep = 1;
                             try {
                                 workExecutor.execute(delayQueueEntry.getKey(),work);
                             } catch(Throwable e) {
@@ -221,9 +231,11 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
                             }
                         }
                     }
-                    // just sleep for 1 millisecond
                     try {
-                        Thread.sleep(1);
+                        LOGGER.trace(
+                                "NonBlocking Scheduled Worker sleeping for {} milliseconds",
+                                sleep);
+                        Thread.sleep(sleep);
                     } catch (InterruptedException ignored) {
                     }
                     // use incremental backoff here
