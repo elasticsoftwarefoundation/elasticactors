@@ -40,7 +40,8 @@ import static java.lang.String.format;
  */
 public final class ShardedScheduledWorkManager<K,T extends Delayed> {
     private static final Logger LOGGER = LogManager.getLogger(ShardedScheduledWorkManager.class);
-    public static final long MAX_AWAIT_MILLIS = 60000L;
+    private static final long MAX_AWAIT_MILLIS = 60000L;
+    private static final long MAX_SLEEP_MILLIS = 32L;
 
     private final ExecutorService executor;
     private final WorkExecutorFactory<WorkExecutor<K,T>> workerFactory;
@@ -193,14 +194,7 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
 
                 }
             } finally {
-                infoMessage("Worker thread stopped");
-            }
-        }
-
-        private void infoMessage(String messageFormat, Object... args) {
-            if (LOGGER.isInfoEnabled()) {
-                String formattedMessage = format(messageFormat, args);
-                LOGGER.info(formattedMessage);
+                LOGGER.info("Worker thread stopped");
             }
         }
     }
@@ -216,7 +210,6 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
         public void run() {
             try {
                 while (!stop) {
-                    // pick a random queue to block on if there are no Delayed object younger than MAX_AWAIT_MILLIS
                     for (Map.Entry<K, DelayQueue<T>> delayQueueEntry : delayQueues.entrySet()) {
                         final DelayQueue<T> delayQueue = delayQueueEntry.getValue();
                         T work = delayQueue.poll();
@@ -233,6 +226,8 @@ public final class ShardedScheduledWorkManager<K,T extends Delayed> {
                         Thread.sleep(1);
                     } catch (InterruptedException ignored) {
                     }
+                    // use incremental backoff here
+                    sleep = Math.min(sleep * 2, MAX_SLEEP_MILLIS);
                 }
             } finally {
                 LOGGER.info("Worker thread stopped");
