@@ -17,10 +17,10 @@
 package org.elasticsoftware.elasticactors.rabbitmq.ack;
 
 import com.rabbitmq.client.Channel;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.rabbitmq.MessageAcker;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.TreeSet;
@@ -29,14 +29,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class BufferingMessageAcker implements Runnable, MessageAcker {
-    private static final Logger logger = LogManager.getLogger(BufferingMessageAcker.class);
+    private static final Logger logger = LoggerFactory.getLogger(BufferingMessageAcker.class);
     private final Channel consumerChannel;
     private final LinkedBlockingQueue<Tag> tagQueue = new LinkedBlockingQueue<>();
     private long lastAckedTag = -1;
@@ -120,7 +119,7 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
             try {
                 consumerChannel.basicAck(ackUntil,true);
                 if(logger.isInfoEnabled()) {
-                    logger.info(format("Acked all messages from %d up until %d",lastAckedTag,ackUntil));
+                    logger.info("Acked all messages from {} up until {}",lastAckedTag,ackUntil);
                 }
                 lastAckedTag = ackUntil;
             } catch (IOException e) {

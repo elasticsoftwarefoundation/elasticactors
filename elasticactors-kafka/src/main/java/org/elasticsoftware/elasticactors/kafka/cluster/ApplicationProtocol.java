@@ -16,9 +16,11 @@
 
 package org.elasticsoftware.elasticactors.kafka.cluster;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorLifecycleListener;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
@@ -28,6 +30,8 @@ import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -36,12 +40,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
-import static java.lang.String.format;
 import static org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask.shouldUpdateState;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 public final class ApplicationProtocol {
-    private static final Logger logger = LogManager.getLogger(ApplicationProtocol.class);
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationProtocol.class);
 
     private static void executeLifecycleListeners(InternalActorSystem actorSystem,
                                                   PersistentActor persistentActor,
@@ -83,7 +86,7 @@ public final class ApplicationProtocol {
                 persistentActor.setState(actorState);
                 persistentActor.setSerializedState(null);
             } catch (Exception e) {
-                logger.error(format("Exception calling preActivate for actorId [%s]", receiverRef.getActorId()), e);
+                logger.error("Exception calling preActivate for actorId [{}]", receiverRef.getActorId(), e);
             }
         }
 
@@ -91,7 +94,7 @@ public final class ApplicationProtocol {
             receiver.postActivate(persistentActor.getPreviousActorStateVersion());
             executeLifecycleListeners(actorSystem, persistentActor, (a, p) -> a.postActivate(p.getSelf(), p.getState(), p.getPreviousActorStateVersion()));
         } catch (Exception e) {
-            logger.error(format("Exception calling postActivate for actorId [%s]", receiverRef.getActorId()), e);
+            logger.error("Exception calling postActivate for actorId [{}]", receiverRef.getActorId(), e);
             return false;
         }
         // when the preActivate has a result we should always store the state
@@ -120,7 +123,7 @@ public final class ApplicationProtocol {
                                       ActorRef receiverRef,
                                       @Nullable InternalMessage internalMessage) {
         if(logger.isDebugEnabled()) {
-            logger.debug(String.format("Creating Actor for ref [%s] of type [%s]",receiverRef.toString(), receiver.getClass().getName()));
+            logger.debug("Creating Actor for ref [{}] of type [{}]",receiverRef, receiver.getClass().getName());
         }
         try {
             // the creator is the sender of the internalMessage
@@ -142,7 +145,7 @@ public final class ApplicationProtocol {
                                        ActorRef receiverRef,
                                        InternalMessage internalMessage) {
         if(logger.isDebugEnabled()) {
-            logger.debug(String.format("Destroying Actor for ref [%s] of type [%s]",receiverRef.toString(),receiver.getClass().getName()));
+            logger.debug("Destroying Actor for ref [{}] of type [{}]",receiverRef,receiver.getClass().getName());
         }
         try {
             // @todo: figure out the destroyer
@@ -170,18 +173,18 @@ public final class ApplicationProtocol {
             } catch(MessageDeliveryException e) {
                 // see if it is a recoverable exception
                 if(!e.isRecoverable()) {
-                    logger.error(format("Unrecoverable MessageDeliveryException while handling message for actor [%s]", receiverRef.toString()), e);
+                    logger.error("Unrecoverable MessageDeliveryException while handling message for actor [{}]", receiverRef, e);
                 }
                 // message cannot be sent but state should be updated as the received message did most likely change
                 // the state
                 return shouldUpdateState(receiver, message);
             } catch (Exception e) {
-                logger.error(String.format("Exception while handling undeliverable message for actor [%s]", receiverRef.toString()), e);
+                logger.error("Exception while handling undeliverable message for actor [{}]", receiverRef, e);
                 return false;
             }
         } catch (Exception e) {
-            logger.error(String.format("Exception while Deserializing Message class %s in ActorSystem [%s]",
-                    internalMessage.getPayloadClass(), actorSystem.getName()), e);
+            logger.error("Exception while Deserializing Message class {} in ActorSystem [{}]",
+                    internalMessage.getPayloadClass(), actorSystem.getName(), e);
             return false;
         }
     }
@@ -201,19 +204,19 @@ public final class ApplicationProtocol {
             } catch(MessageDeliveryException e) {
                 // see if it is a recoverable exception
                 if(!e.isRecoverable()) {
-                    logger.error(format("Unrecoverable MessageDeliveryException while handling message for actor [%s]", receiverRef.toString()), e);
+                    logger.error("Unrecoverable MessageDeliveryException while handling message for actor [{}]", receiverRef, e);
                 }
                 // message cannot be sent but state should be updated as the received message did most likely change
                 // the state
                 return shouldUpdateState(receiver, message);
 
             } catch (Exception e) {
-                logger.error(format("Exception while handling message for actor [%s]", receiverRef.toString()), e);
+                logger.error("Exception while handling message for actor [{}]", receiverRef, e);
                 return false;
             }
         } catch (Exception e) {
-            logger.error(format("Exception while Deserializing Message class %s in ActorSystem [%s]",
-                    internalMessage.getPayloadClass(), actorSystem.getName()), e);
+            logger.error("Exception while Deserializing Message class {} in ActorSystem [{}]",
+                    internalMessage.getPayloadClass(), actorSystem.getName(), e);
             return false;
         }
     }

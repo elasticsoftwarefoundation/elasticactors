@@ -59,6 +59,7 @@ public final class RemoteActorShard extends AbstractActorContainer implements Ac
         return shardKey;
     }
 
+    @Override
     public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
         MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
         // get the durable flag

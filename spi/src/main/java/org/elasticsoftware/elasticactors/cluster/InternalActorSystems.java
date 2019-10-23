@@ -16,7 +16,11 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorNode;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorShard;
+import org.elasticsoftware.elasticactors.ActorSystems;
+import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
@@ -25,6 +29,7 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
  * @author Joost van de Wijgerd
  */
 public interface InternalActorSystems extends ActorSystems {
+    @Override
     InternalActorSystem get(String name);
 
     <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass);

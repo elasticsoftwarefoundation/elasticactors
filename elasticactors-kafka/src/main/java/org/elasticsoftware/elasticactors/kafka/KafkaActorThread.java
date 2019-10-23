@@ -25,57 +25,100 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
-import org.apache.kafka.clients.producer.*;
+import org.apache.kafka.clients.producer.Callback;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.errors.*;
+import org.apache.kafka.common.errors.InterruptException;
+import org.apache.kafka.common.errors.ProducerFencedException;
+import org.apache.kafka.common.errors.RetriableException;
+import org.apache.kafka.common.errors.SerializationException;
+import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.*;
-import org.elasticsoftware.elasticactors.base.util.Charsets;
+import org.elasticsoftware.elasticactors.ActorContainerRef;
+import org.elasticsoftware.elasticactors.ActorNode;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorShard;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.NodeKey;
+import org.elasticsoftware.elasticactors.PhysicalNode;
+import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
-import org.elasticsoftware.elasticactors.cluster.*;
+import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
+import org.elasticsoftware.elasticactors.cluster.ActorSystemEvent;
+import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListener;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.ShardDistributionStrategy;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.kafka.cluster.ActorLifecycleFunction;
 import org.elasticsoftware.elasticactors.kafka.cluster.ApplicationProtocol;
 import org.elasticsoftware.elasticactors.kafka.cluster.ReactiveStreamsProtocol;
-import org.elasticsoftware.elasticactors.kafka.serialization.*;
-import org.elasticsoftware.elasticactors.kafka.state.ChronicleMapPersistentActorStore;
-import org.elasticsoftware.elasticactors.kafka.state.InMemoryPersistentActorStore;
+import org.elasticsoftware.elasticactors.kafka.serialization.KafkaActorSystemEventListenerDeserializer;
+import org.elasticsoftware.elasticactors.kafka.serialization.KafkaInternalMessageDeserializer;
+import org.elasticsoftware.elasticactors.kafka.serialization.KafkaInternalMessageSerializer;
+import org.elasticsoftware.elasticactors.kafka.serialization.KafkaPersistentActorSerializer;
+import org.elasticsoftware.elasticactors.kafka.serialization.KafkaProducerSerializer;
+import org.elasticsoftware.elasticactors.kafka.serialization.KafkaScheduledMessageDeserializer;
+import org.elasticsoftware.elasticactors.kafka.serialization.UUIDDeserializer;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStore;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory;
 import org.elasticsoftware.elasticactors.kafka.utils.TopicNamesHelper;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
-import org.elasticsoftware.elasticactors.messaging.internal.*;
-import org.elasticsoftware.elasticactors.serialization.*;
+import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.PersistActorMessage;
+import org.elasticsoftware.elasticactors.serialization.Deserializer;
+import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationContext;
+import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageDeserializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.util.ManifestTools;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
-import java.util.concurrent.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-import static java.lang.String.format;
 import static org.apache.kafka.common.requests.IsolationLevel.READ_COMMITTED;
 import static org.elasticsoftware.elasticactors.kafka.utils.TopicNamesHelper.getNodeMessagesTopic;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
+import static java.lang.String.format;
+
 public final class KafkaActorThread extends Thread {
-    private static final Logger logger = LogManager.getLogger(KafkaActorSystemInstance.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaActorSystemInstance.class);
     private static final AtomicInteger THREAD_ID_SEQUENCE = new AtomicInteger(0);
     private static final long DEFAULT_OFFSET_INCREASE = 2L;
     // this instance acts as a tombstone for stopped actors
@@ -290,15 +333,15 @@ public final class KafkaActorThread extends Thread {
             ConsumerRecords<UUID, InternalMessage> consumerRecords = messageConsumer.poll(1);
             if (!consumerRecords.isEmpty()) {
                 if(logger.isDebugEnabled()) {
-                    logger.debug(format("messageConsumer has %d records to process", consumerRecords.count()));
+                    logger.debug("messageConsumer has {} records to process", consumerRecords.count());
                 }
                 consumerRecords.partitions().forEach(topicPartition -> consumerRecords.records(topicPartition).forEach(consumerRecord -> {
                     try {
                         if(logger.isDebugEnabled()) {
-                            logger.debug(format("handling InternalMessage(sender:%s, receiver:%s, type:%s)  with offset %d from topicPartition(%s)",
+                            logger.debug("handling InternalMessage(sender:{}, receiver:{}, type:{})  with offset {} from topicPartition({})",
                                     consumerRecord.value().getSender(), consumerRecord.value().getReceivers().get(0),
                                     consumerRecord.value().getPayloadClass(), consumerRecord.offset(),
-                                    topicPartition.toString()));
+                                    topicPartition);
                         }
                         // start a new transaction for each message
                         producer.beginTransaction();
@@ -478,10 +521,9 @@ public final class KafkaActorThread extends Thread {
     }
 
     void assign(KafkaActorNode node, boolean primary) {
-        runCommand((kafkaConsumer, kafkaProducer) -> {
-            // we are registering the local node, which means this ActorThread is managing the node topic
-            this.localActorNode = new ManagedActorNode(node, primary);
-        });
+        // we are registering the local node, which means this ActorThread is managing the node topic
+        runCommand((kafkaConsumer, kafkaProducer) ->
+                this.localActorNode = new ManagedActorNode(node, primary));
     }
 
     void assign(KafkaActorShard actorShard) {
@@ -501,23 +543,21 @@ public final class KafkaActorThread extends Thread {
             // switch state to rebalancing
             this.state = KafkaActorSystemState.REBALANCING;
             // filter only on shards the are managed by this thread
-            shardDistribution.asMap().entrySet()
-                    .forEach(entry -> entry.getValue().forEach(shardKey -> {
+            shardDistribution.asMap()
+                    .forEach((node, value) -> value.forEach(shardKey -> {
                         // find the actorShard (will be null if not managed by this instance)
                         KafkaActorShard actorShard = managedShards.get(shardKey);
                         if(actorShard != null) {
-                            // more convenient names
-                            PhysicalNode node = entry.getKey();
                             // see if the assigned node is the local node
                             if (node.isLocal()) {
                                 if (actorShard.getOwningNode() == null || !actorShard.getOwningNode().equals(node)) {
                                     String owningNodeId = actorShard.getOwningNode() != null ? actorShard.getOwningNode().getId() : "<No Node>";
-                                    logger.info(format("I will own %s", shardKey.toString()));
+                                    logger.info("I will own {}", shardKey);
                                     try {
                                         // register with the strategy to wait for shard to be released
                                         distributionStrategy.registerWaitForRelease(actorShard, node);
                                     } catch (Exception e) {
-                                        logger.error(format("IMPORTANT: waiting on release of shard %s from node %s failed,  ElasticActors cluster is unstable. Please check all nodes", shardKey, owningNodeId), e);
+                                        logger.error("IMPORTANT: waiting on release of shard {} from node {} failed,  ElasticActors cluster is unstable. Please check all nodes", shardKey, owningNodeId, e);
                                         // signal this back later
                                         stable.set(false);
                                     } finally {
@@ -529,12 +569,12 @@ public final class KafkaActorThread extends Thread {
                                     }
                                 } else {
                                     // we own the shard already, no change needed
-                                    logger.info(format("I already own %s", shardKey.toString()));
+                                    logger.info("I already own {}", shardKey);
                                 }
                             } else {
                                 // the shard will be managed by another node
                                 if (actorShard.getOwningNode() == null || actorShard.getOwningNode().isLocal()) {
-                                    logger.info(format("%s will own %s", node, shardKey));
+                                    logger.info("{} will own {}", node, shardKey);
                                     try {
                                         // destroy the current local shard instance
                                         if (actorShard.getOwningNode() != null) {
@@ -546,13 +586,13 @@ public final class KafkaActorThread extends Thread {
                                             distributionStrategy.signalRelease(actorShard, node);
                                         }
                                     } catch (Exception e) {
-                                        logger.error(format("IMPORTANT: signalling release of shard %s to node %s failed, ElasticActors cluster is unstable. Please check all nodes", shardKey, node), e);
+                                        logger.error("IMPORTANT: signalling release of shard {} to node {} failed, ElasticActors cluster is unstable. Please check all nodes", shardKey, node, e);
                                         // signal this back later
                                         stable.set(false);
                                     }
                                 } else {
                                     // shard was already remote
-                                    logger.info(format("%s will own %s", node, shardKey));
+                                    logger.info("{} will own {}", node, shardKey);
                                 }
                             }
                         }
@@ -607,8 +647,8 @@ public final class KafkaActorThread extends Thread {
 
     private void assignPartitions() {
         // assign the message partitions
-        List<TopicPartition> messagePartitions = this.localShards.entrySet().stream()
-                .map(entry -> new TopicPartition(messagesTopic, entry.getKey().getShardId())).collect(Collectors.toList());
+        List<TopicPartition> messagePartitions = this.localShards.keySet().stream()
+                .map(managedActorShard -> new TopicPartition(messagesTopic, managedActorShard.getShardId())).collect(Collectors.toList());
         if(localActorNode != null) {
             // node topics have exactly the number of partitions as there are KafkaActorThreads per node
             // this is very fickle but needed to support the affinityKey logic for TempActors
@@ -617,18 +657,19 @@ public final class KafkaActorThread extends Thread {
         this.messageConsumer.assign(messagePartitions);
 
         // also need to assign the state partitions
-        List<TopicPartition> statePartitions = this.localShards.entrySet().stream()
-                .map(entry -> new TopicPartition(persistentActorsTopic, entry.getKey().getShardId())).collect(Collectors.toList());
+        List<TopicPartition> statePartitions = this.localShards.keySet().stream()
+                .map(managedActorShard -> new TopicPartition(persistentActorsTopic, managedActorShard.getShardId())).collect(Collectors.toList());
         this.stateConsumer.assign(statePartitions);
 
         // and the scheduled messages
-        List<TopicPartition> scheduledMessagesPartitions = this.localShards.entrySet().stream()
-                .map(entry -> new TopicPartition(scheduledMessagesTopic, entry.getKey().getShardId())).collect(Collectors.toList());
+        List<TopicPartition> scheduledMessagesPartitions = this.localShards.keySet().stream()
+                .map(managedActorShard -> new TopicPartition(scheduledMessagesTopic, managedActorShard.getShardId())).collect(Collectors.toList());
         this.scheduledMessagesConsumer.assign(scheduledMessagesPartitions);
 
         // the actorsystem event listeners
-        List<TopicPartition> actorSystemEventListenersPartitions = this.localShards.entrySet().stream()
-                .map(entry -> new TopicPartition(actorSystemEventListenersTopic, entry.getKey().getShardId())).collect(Collectors.toList());
+        List<TopicPartition> actorSystemEventListenersPartitions =
+                this.localShards.keySet().stream()
+                .map(managedActorShard -> new TopicPartition(actorSystemEventListenersTopic, managedActorShard.getShardId())).collect(Collectors.toList());
         this.actorSystemEventListenersConsumer.assign(actorSystemEventListenersPartitions);
     }
 
@@ -700,7 +741,7 @@ public final class KafkaActorThread extends Thread {
             }
         } while((stateRecords != null && !stateRecords.isEmpty()) || !endOffsets.isEmpty());
         int uniques = managedActorShards.stream().mapToInt(value -> value.actorStore.count()).sum();
-        logger.info(format("Loaded %d unique persistent actors from %d entries", uniques, totalCount));
+        logger.info("Loaded {} unique persistent actors from {} entries", uniques, totalCount);
     }
 
     private void initializeScheduledMessages(List<ManagedActorShard> managedActorShards) {
@@ -864,7 +905,7 @@ public final class KafkaActorThread extends Thread {
                             serviceActor.postActivate(null);
                         } catch (Exception e) {
                             // @todo: send an error message to the sender
-                            logger.error(String.format("Exception while handling message for service [%s]", serviceRef.toString()), e);
+                            logger.error("Exception while handling message for service [{}]", serviceRef, e);
                         } finally {
                             InternalActorContext.getAndClearContext();
                             this.localActorNode.initializedActors.add(serviceRef);
@@ -928,7 +969,7 @@ public final class KafkaActorThread extends Thread {
                     }
                 } catch(Exception e) {
                     // @todo: send an error message to the sender
-                    logger.error(String.format("Exception while handling message for service [%s]",receiverRef.toString()),e);
+                    logger.error("Exception while handling message for service [{}]",receiverRef,e);
                 } finally {
                     InternalActorContext.getAndClearContext();
                 }
@@ -989,9 +1030,9 @@ public final class KafkaActorThread extends Thread {
                         }
                     } else {
                         // we currently don't handle message undeliverable for ActorNodeMessages
-                        logger.error(format("ActorNode with id [%s] is not reachable, discarding message of type [%s] from [%s] for [%s]",
+                        logger.error("ActorNode with id [{}] is not reachable, discarding message of type [{}] from [{}] for [{}]",
                                 actorNodeMessage.getNodeId(), actorNodeMessage.getMessage().getClass().getName(), internalMessage.getSender(),
-                                actorNodeMessage.getReceiverRef()));
+                                actorNodeMessage.getReceiverRef());
                     }
                 } else {
                     // we currently don't handle message undeliverable for ActorNodeMessages
@@ -1003,9 +1044,9 @@ public final class KafkaActorThread extends Thread {
             }
         } catch (Exception e) {
             // @todo: determine if this is a recoverable error case or just a programming error
-            logger.error(format("Exception while handling InternalMessage for Shard [%s]; senderRef [%s], messageType [%s]",
-                    managedActorContainer.getKey().toString(),
-                    internalMessage.getSender().toString(), internalMessage.getPayloadClass()), e);
+            logger.error("Exception while handling InternalMessage for Shard [{}]; senderRef [{}], messageType [{}]",
+                    managedActorContainer.getKey(),
+                    internalMessage.getSender(), internalMessage.getPayloadClass(), e);
         }
     }
 
@@ -1037,12 +1078,12 @@ public final class KafkaActorThread extends Thread {
         // if a message-undeliverable is undeliverable, don't send an undeliverable message back!
         ActorRef senderRef = internalMessage.getSender();
         try {
-            if (senderRef != null && senderRef instanceof ActorContainerRef && !internalMessage.isUndeliverable()) {
+            if (senderRef instanceof ActorContainerRef && !internalMessage.isUndeliverable()) {
                 ((ActorContainerRef) senderRef).getActorContainer().undeliverableMessage(internalMessage, receiverRef);
             } else if(internalMessage.isUndeliverable()) {
-                logger.error(format("Receiver for undeliverable message not found: message type '%s' , receiver '%s'", internalMessage.getPayloadClass(), receiverRef.toString()));
+                logger.error("Receiver for undeliverable message not found: message type '{}' , receiver '{}'", internalMessage.getPayloadClass(), receiverRef);
             } else {
-                logger.warn(format("Could not send message undeliverable: original message type '%s' , receiver '%s'", internalMessage.getPayloadClass(), receiverRef.toString()));
+                logger.warn("Could not send message undeliverable: original message type '{}' , receiver '{}'", internalMessage.getPayloadClass(), receiverRef);
             }
         } catch(Exception e) {
             logger.error("Exception while sending undeliverable message", e);
@@ -1096,8 +1137,8 @@ public final class KafkaActorThread extends Thread {
     private InternalMessage createInternalMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws IOException {
         MessageSerializer<Object> messageSerializer = (MessageSerializer<Object>) internalActorSystem.getSerializer(message.getClass());
         if(messageSerializer == null) {
-            logger.error(format("No message serializer found for class: %s. NOT sending message",
-                    message.getClass().getSimpleName()));
+            logger.error("No message serializer found for class: {}. NOT sending message",
+                    message.getClass().getSimpleName());
             return null;
         }
         // get the durable flag
@@ -1121,6 +1162,7 @@ public final class KafkaActorThread extends Thread {
             this.scheduledMessages = TreeMultimap.create(Comparator.naturalOrder(), Comparator.naturalOrder());
         }
 
+        @Override
         public ShardKey getKey() {
             return actorShard.getKey();
         }
@@ -1176,9 +1218,9 @@ public final class KafkaActorThread extends Thread {
             try {
                 byte[] serializedActor = stateSerializer.serialize(persistentActor);
                 if(logger.isDebugEnabled()) {
-                    logger.debug(format("Serializing PersistentActor: keySize=%d, valueSize=%d",
-                            persistentActor.getSelf().getActorId().getBytes(Charsets.UTF_8).length,
-                            serializedActor.length));
+                    logger.debug("Serializing PersistentActor: keySize={}, valueSize={}",
+                            persistentActor.getSelf().getActorId().getBytes(StandardCharsets.UTF_8).length,
+                            serializedActor.length);
                 }
                 ProducerRecord<Object,Object> producerRecord = new ProducerRecord<>(persistentActorsTopic, this.getKey().getShardId(),
                         persistentActor.getSelf().getActorId(), serializedActor);
@@ -1190,9 +1232,8 @@ public final class KafkaActorThread extends Thread {
                                 this.actorStore.put(persistentActor.getSelf().getActorId(), serializedActor, metadata.offset());
                             } else {
                                 // need to update on the KafkaActorThread
-                                runCommand((kafkaConsumer, kafkaProducer) -> {
-                                    this.actorStore.put(persistentActor.getSelf().getActorId(), serializedActor, metadata.offset());
-                                });
+                                runCommand((kafkaConsumer, kafkaProducer) ->
+                                        this.actorStore.put(persistentActor.getSelf().getActorId(), serializedActor, metadata.offset()));
                             }
                         } else {
                             // update without updating the offset

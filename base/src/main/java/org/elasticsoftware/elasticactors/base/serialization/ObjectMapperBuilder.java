@@ -26,18 +26,22 @@ import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import net.jodah.typetools.TypeResolver;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRefFactory;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.net.URL;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * {@link com.fasterxml.jackson.annotation.JsonTypeName}. The classes are registered as subtypes
@@ -46,7 +50,7 @@ import java.util.*;
  * @author Joost van de Wijgerd
  */
 public class ObjectMapperBuilder {
-    private static final Logger logger = LogManager.getLogger(ObjectMapperBuilder.class);
+    private static final Logger logger = LoggerFactory.getLogger(ObjectMapperBuilder.class);
     public static final String RESOURCE_NAME = "META-INF/elasticactors.properties";
     private final String version;
     private final ActorRefFactory actorRefFactory;
@@ -125,7 +129,7 @@ public class ObjectMapperBuilder {
 
     private void registerSubtypes(Reflections reflections,ObjectMapper objectMapper) {
         Set<Class<?>> subTypes = reflections.getTypesAnnotatedWith(JsonTypeName.class);
-        objectMapper.registerSubtypes(subTypes.toArray(new Class<?>[subTypes.size()]));
+        objectMapper.registerSubtypes(subTypes.toArray(new Class<?>[0]));
     }
 
     private void registerCustomSerializers(Reflections reflections, SimpleModule jacksonModule) {
@@ -135,7 +139,7 @@ public class ObjectMapperBuilder {
             try {
                 jacksonModule.addSerializer(objectClass, customSerializer.newInstance());
             } catch(Exception e) {
-                logger.warn(String.format("Failed to create Custom Jackson Serializer: %s",customSerializer.getName()),e);
+                logger.warn("Failed to create Custom Jackson Serializer: {}",customSerializer.getName(),e);
             }
         }
     }
@@ -151,7 +155,7 @@ public class ObjectMapperBuilder {
                     Class<?> objectClass = deserializer.handledType();
                     jacksonModule.addDeserializer(objectClass, deserializer);
                 } catch(Exception e) {
-                    logger.error(String.format("Failed to create Custom Jackson Deserializer: %s", customDeserializer.getName()), e);
+                    logger.error("Failed to create Custom Jackson Deserializer: {}", customDeserializer.getName(), e);
                 }
             } else {
                 // this ones can currently not be created by the scanner due to the special constructor
@@ -163,7 +167,7 @@ public class ObjectMapperBuilder {
                             jacksonModule.addDeserializer(objectClass, deserializer);
                             break;
                         } catch(Exception e) {
-                            logger.error(String.format("Failed to create Custom Jackson Deserializer: %s", customDeserializer.getName()),e);
+                            logger.error("Failed to create Custom Jackson Deserializer: {}", customDeserializer.getName(),e);
                         }
                     } else if(hasSingleConstrutorParameterMatching(constructor,ScheduledMessageRefFactory.class)) {
                         try {
@@ -172,7 +176,7 @@ public class ObjectMapperBuilder {
                             jacksonModule.addDeserializer(objectClass, deserializer);
                             break;
                         } catch(Exception e) {
-                            logger.error(String.format("Failed to create Custom Jackson Deserializer: %s", customDeserializer.getName()),e);
+                            logger.error("Failed to create Custom Jackson Deserializer: {}", customDeserializer.getName(),e);
                         }
                     }
                 }

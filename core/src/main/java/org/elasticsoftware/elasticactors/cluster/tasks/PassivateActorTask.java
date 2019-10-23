@@ -16,8 +16,6 @@
 
 package org.elasticsoftware.elasticactors.cluster.tasks;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorLifecycleListener;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
@@ -28,12 +26,14 @@ import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class PassivateActorTask extends ActorLifecycleTask {
-    private static final Logger logger = LogManager.getLogger(PassivateActorTask.class);
+    private static final Logger logger = LoggerFactory.getLogger(PassivateActorTask.class);
 
     public PassivateActorTask(ActorStateUpdateProcessor actorStateUpdateProcessor,
                               PersistentActorRepository persistentActorRepository,

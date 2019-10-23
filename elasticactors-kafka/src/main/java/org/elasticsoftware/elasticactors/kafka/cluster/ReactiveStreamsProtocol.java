@@ -16,31 +16,35 @@
 
 package org.elasticsoftware.elasticactors.kafka.cluster;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.PublisherNotFoundException;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.reactivestreams.*;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.CancelMessage;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.CompletedMessage;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.RequestMessage;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.SubscribeMessage;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.SubscriptionMessage;
 import org.elasticsoftware.elasticactors.reactivestreams.InternalPersistentSubscription;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.Set;
 
-import static java.lang.String.format;
 import static org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask.shouldUpdateState;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 public final class ReactiveStreamsProtocol {
-    private static final Logger logger = LogManager.getLogger(ReactiveStreamsProtocol.class);
+    private static final Logger logger = LoggerFactory.getLogger(ReactiveStreamsProtocol.class);
 
     public static Boolean handleUndeliverableMessage(InternalActorSystem actorSystem,
                                                      PersistentActor persistentActor,
@@ -84,10 +88,10 @@ public final class ReactiveStreamsProtocol {
                                 new PublisherNotFoundException(String.format("Actor[%s] does not exist",
                                         internalMessage.getSender().toString()), internalMessage.getSender()));
                     } catch(Exception e) {
-                        logger.error(format("Unexpected Exception while calling onError on Subscriber with type %s of Actor %s",
+                        logger.error("Unexpected Exception while calling onError on Subscriber with type {} of Actor {}",
                                 currentSubscription.getSubscriber() != null ?
                                         currentSubscription.getSubscriber().getClass().getSimpleName() : null,
-                                receiverRef), e);
+                                receiverRef, e);
                     } finally {
                         InternalSubscriberContext.getAndClearContext();
                     }
@@ -101,8 +105,8 @@ public final class ReactiveStreamsProtocol {
                 return persistentActor.removeSubscriber(subscriptionMessage.getMessageName(), new MessageSubscriber(internalMessage.getSender()));
             }
         } catch (Exception e) {
-            logger.error(String.format("Exception while Deserializing Message class %s in ActorSystem [%s]",
-                    internalMessage.getPayloadClass(), actorSystem.getName()), e);
+            logger.error("Exception while Deserializing Message class {} in ActorSystem [{}]",
+                    internalMessage.getPayloadClass(), actorSystem.getName(), e);
 
         }
         return false;
@@ -130,8 +134,8 @@ public final class ReactiveStreamsProtocol {
             }
             return true;
         } catch (Exception e) {
-            logger.error(format("Exception while Deserializing Message class %s in ActorSystem [%s]",
-                    internalMessage.getPayloadClass(), actorSystem.getName()), e);
+            logger.error("Exception while Deserializing Message class {} in ActorSystem [{}]",
+                    internalMessage.getPayloadClass(), actorSystem.getName(), e);
             return false;
         }
     }
@@ -159,21 +163,21 @@ public final class ReactiveStreamsProtocol {
                 return shouldUpdateState(receiver, message);
             } catch (ClassNotFoundException e) {
                 // the message type (class) that I am subscribing to is not available
-                logger.error(format("Actor[%s]: Could not find message type: <%s>, unable to deserialize subscribed message", receiverRef.toString(), nextMessage.getMessageName()));
+                logger.error("Actor[{}]: Could not find message type: <{}>, unable to deserialize subscribed message", receiverRef, nextMessage.getMessageName());
             } catch (IOException e) {
-                logger.error(format("Actor[%s]: Problem trying to deserialize message embedded in NextMessage", receiverRef.toString()), e);
+                logger.error("Actor[{}]: Problem trying to deserialize message embedded in NextMessage", receiverRef, e);
             } catch (Exception e) {
-                logger.error(format("Unexpected Exception while calling onNext on Subscriber with type %s of Actor %s",
+                logger.error("Unexpected Exception while calling onNext on Subscriber with type {} of Actor {}",
                         currentSubscription.getSubscriber() != null ?
                                 currentSubscription.getSubscriber().getClass().getSimpleName() : null,
-                        receiverRef), e);
+                        receiverRef, e);
             } finally {
                 InternalSubscriberContext.getAndClearContext();
             }
         } else {
             // there is no corresponding persistent subscription related to this publisher/message combination
             // this should not happen, however if it does happen we need to cancel the subscriber on the publisher side
-            logger.error(format("Subscriber %s is missing PersistentSubscription for Publisher %s while handling NextMessage", receiverRef, publisherRef));
+            logger.error("Subscriber {} is missing PersistentSubscription for Publisher {} while handling NextMessage", receiverRef, publisherRef);
             publisherRef.tell(new CancelMessage(receiverRef, nextMessage.getMessageName()));
 
         }
@@ -215,10 +219,10 @@ public final class ReactiveStreamsProtocol {
             try {
                 persistentSubscription.get().getSubscriber().onSubscribe(persistentSubscription.get());
             } catch(Exception e) {
-                logger.error(format("Unexpected Exception while calling onSubscribe on Subscriber with type %s of Actor %s",
+                logger.error("Unexpected Exception while calling onSubscribe on Subscriber with type {} of Actor {}",
                         currentSubscription.getSubscriber() != null ?
                                 currentSubscription.getSubscriber().getClass().getSimpleName() : null,
-                        subscriberRef), e);
+                        subscriberRef, e);
             } finally {
                 InternalSubscriberContext.getAndClearContext();
             }
@@ -226,7 +230,7 @@ public final class ReactiveStreamsProtocol {
             // we got a subscription message, but there is no corresponding PersistentSubscription ... this should not
             // be possible. however since the other side now has a corresponding subscriber reference we need to cancel
             // it to keep
-            logger.error(format("Subscriber %s is missing PersistentSubscription for Publisher %s while handling SubscriptionMessage", subscriberRef, publisherRef));
+            logger.error("Subscriber {} is missing PersistentSubscription for Publisher {} while handling SubscriptionMessage", subscriberRef, publisherRef);
             publisherRef.tell(new CancelMessage(subscriberRef, subscriptionMessage.getMessageName()));
         }
 
@@ -245,17 +249,17 @@ public final class ReactiveStreamsProtocol {
             try {
                 persistentSubscription.get().getSubscriber().onComplete();
             } catch(Exception e) {
-                logger.error(format("Unexpected Exception while calling onComplete on Subscriber with type %s of Actor %s",
+                logger.error("Unexpected Exception while calling onComplete on Subscriber with type {} of Actor {}",
                         currentSubscription.getSubscriber() != null ?
                                 currentSubscription.getSubscriber().getClass().getSimpleName() : null,
-                        subscriberRef), e);
+                        subscriberRef, e);
             } finally {
                 InternalSubscriberContext.getAndClearContext();
                 persistentActor.removeSubscription(completedMessage.getMessageName(), publisherRef);
             }
         } else {
             // got a completed message but missing subscription
-            logger.error(format("Subscriber %s is missing PersistentSubscription for Publisher %s while handling CompletedMessage", subscriberRef, publisherRef));
+            logger.error("Subscriber {} is missing PersistentSubscription for Publisher {} while handling CompletedMessage", subscriberRef, publisherRef);
         }
     }
 

@@ -24,7 +24,13 @@ import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
-import org.elasticsoftware.elasticactors.cluster.*;
+import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerService;
+import org.elasticsoftware.elasticactors.cluster.ClusterService;
+import org.elasticsoftware.elasticactors.cluster.HashingNodeSelectorFactory;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.LocalActorSystemInstance;
+import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
+import org.elasticsoftware.elasticactors.cluster.PhysicalNodeImpl;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
@@ -53,7 +59,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Map;
@@ -177,4 +182,5 @@ public class TestConfiguration {
     public SystemSerializationFramework createSystemSerializationFramework(InternalActorSystems internalActorSystems) {
         return new SystemSerializationFramework(internalActorSystems);
     }
+
 }

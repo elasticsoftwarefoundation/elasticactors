@@ -16,18 +16,16 @@
 
 package org.elasticsoftware.elasticactors.kafka;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.elasticsoftware.elasticactors.kafka.configuration.ContainerConfiguration;
 import org.elasticsoftware.elasticactors.spring.AnnotationConfigApplicationContext;
-import org.springframework.http.server.reactive.HttpHandler;
-import org.springframework.web.server.adapter.WebHttpHandlerBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CountDownLatch;
 
 public class TestApplication {
-    private static final Logger logger = LogManager.getLogger(TestApplication.class);
+    private static final Logger logger = LoggerFactory.getLogger(TestApplication.class);
 
     public static void main(String[] args) {
         logger.info("Starting container");

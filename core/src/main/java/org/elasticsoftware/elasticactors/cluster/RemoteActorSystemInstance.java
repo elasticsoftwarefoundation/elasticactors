@@ -16,10 +16,19 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import com.google.common.base.Charsets;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorContainer;
+import org.elasticsoftware.elasticactors.ActorContainerRef;
+import org.elasticsoftware.elasticactors.ActorContextHolder;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorRefGroup;
+import org.elasticsoftware.elasticactors.ActorShard;
+import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.ActorSystems;
+import org.elasticsoftware.elasticactors.RemoteActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
@@ -27,6 +36,7 @@ import org.elasticsoftware.elasticactors.scheduler.Scheduler;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
 /**
@@ -182,6 +192,6 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
     }
 
     private ActorShard shardFor(String actorId) {
-        return shards[Math.abs(hashFunction.hashString(actorId, Charsets.UTF_8).asInt()) % shards.length];
+        return shards[Math.abs(hashFunction.hashString(actorId, StandardCharsets.UTF_8).asInt()) % shards.length];
     }
 }

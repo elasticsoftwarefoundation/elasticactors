@@ -18,13 +18,24 @@ package org.elasticsoftware.elasticactors.cluster;
 
 import com.google.common.cache.Cache;
 import com.google.common.collect.ImmutableList;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorNode;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.NodeKey;
+import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
-import org.elasticsoftware.elasticactors.cluster.tasks.*;
-import org.elasticsoftware.elasticactors.messaging.*;
+import org.elasticsoftware.elasticactors.cluster.tasks.ActivateServiceActorTask;
+import org.elasticsoftware.elasticactors.cluster.tasks.CreateActorTask;
+import org.elasticsoftware.elasticactors.cluster.tasks.DestroyActorTask;
+import org.elasticsoftware.elasticactors.cluster.tasks.HandleServiceMessageTask;
+import org.elasticsoftware.elasticactors.cluster.tasks.HandleUndeliverableServiceMessageTask;
+import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
+import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.messaging.MultiMessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.messaging.TransientInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
@@ -34,6 +45,8 @@ import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -50,7 +63,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  */
 @Configurable
 public final class LocalActorNode extends AbstractActorContainer implements ActorNode, EvictionListener<PersistentActor<NodeKey>> {
-    private static final Logger logger = LogManager.getLogger(LocalActorNode.class);
+    private static final Logger logger = LoggerFactory.getLogger(LocalActorNode.class);
     private final InternalActorSystem actorSystem;
     private final NodeKey nodeKey;
     private ThreadBoundExecutor actorExecutor;
@@ -91,6 +104,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
         return nodeKey;
     }
 
+    @Override
     public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
         // we need some special handling for the CreateActorMessage in case of Temp Actor
         if(CreateActorMessage.class.equals(message.getClass()) && ActorType.TEMP.equals(CreateActorMessage.class.cast(message).getType())) {
@@ -207,7 +221,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                     //@todo: let the sender know his message could not be delivered
                     // we ack the message anyway
                     messageHandlerEventListener.onError(internalMessage,e);
-                    logger.error(String.format("Exception while handling InternalMessage for Actor [%s]; senderRef [%s], messageType [%s] ",receiverRef.getActorId(),internalMessage.getSender().toString(), internalMessage.getPayloadClass()),e);
+                    logger.error("Exception while handling InternalMessage for Actor [{}]; senderRef [{}], messageType [{}] ",receiverRef.getActorId(),internalMessage.getSender(), internalMessage.getPayloadClass(),e);
                 }
             } else {
                 // the internalMessage is intended for the shard, this means it's about creating or destroying an actor
@@ -240,7 +254,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                             activateService(activateActorMessage,internalMessage,messageHandlerEventListener);
                         } else {
                             // we don't support activating any other types
-                            logger.error(String.format("Received ActivateActorMessage for type [%s], ignoring",activateActorMessage.getActorType()));
+                            logger.error("Received ActivateActorMessage for type [{}], ignoring",activateActorMessage.getActorType());
                             // ack the message anyway
                             messageHandlerEventListener.onDone(internalMessage);
                         }
@@ -251,7 +265,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                 } catch(Exception e) {
                     // @todo: determine if this is a recoverable error case or just a programming error
                     messageHandlerEventListener.onError(internalMessage,e);
-                    logger.error(String.format("Exception while handling InternalMessage for Shard [%s]; senderRef [%s], messageType [%s]", nodeKey.toString(), internalMessage.getSender().toString(), internalMessage.getPayloadClass()),e);
+                    logger.error("Exception while handling InternalMessage for Shard [{}]; senderRef [{}], messageType [{}]", nodeKey, internalMessage.getSender(), internalMessage.getPayloadClass(),e);
                 }
 
             }

@@ -41,7 +41,7 @@ public class CacheManager<K,V> {
     private final Cache<CacheKey,V> backingCache;
     private final Multimap<Object,CacheKey> segmentIndex;
     private final GlobalRemovalListener globalRemovalListener = new GlobalRemovalListener();
-    private final ConcurrentMap<Object,EvictionListener<V>> evictionListeners = new ConcurrentHashMap<Object,EvictionListener<V>>();
+    private final ConcurrentMap<Object,EvictionListener<V>> evictionListeners = new ConcurrentHashMap<>();
 
     public CacheManager(int maximumSize) {
         backingCache = CacheBuilder.newBuilder().maximumSize(maximumSize)

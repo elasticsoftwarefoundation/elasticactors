@@ -16,26 +16,28 @@
 
 package org.elasticsoftware.elasticactors.kafka.testapp;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
-import org.elasticsoftware.elasticactors.PhysicalNode;
-import org.elasticsoftware.elasticactors.cluster.ClusterEventListener;
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.elasticsoftware.elasticactors.kafka.testapp.actors.VirtualCashAccountActor;
 import org.elasticsoftware.elasticactors.kafka.testapp.configuration.ContainerConfiguration;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.*;
+import org.elasticsoftware.elasticactors.kafka.testapp.messages.BalanceQuery;
+import org.elasticsoftware.elasticactors.kafka.testapp.messages.CreditAccountEvent;
+import org.elasticsoftware.elasticactors.kafka.testapp.messages.DebitAccountEvent;
+import org.elasticsoftware.elasticactors.kafka.testapp.messages.ScheduleDebitCommand;
+import org.elasticsoftware.elasticactors.kafka.testapp.messages.TransferCommand;
+import org.elasticsoftware.elasticactors.kafka.testapp.messages.VirtualCashAccountAdapter;
 import org.elasticsoftware.elasticactors.kafka.testapp.state.VirtualCashAccountState;
 import org.elasticsoftware.elasticactors.spring.AnnotationConfigApplicationContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 public class KafkaTestApplication {
-    private static final Logger logger = LogManager.getLogger(KafkaTestApplication.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaTestApplication.class);
 
     public static void main(String[] args) {
         logger.info("Starting container");

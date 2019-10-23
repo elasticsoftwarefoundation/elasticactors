@@ -16,23 +16,31 @@
 
 package org.elasticsoftware.elasticactors.cassandra2.state;
 
-import com.datastax.driver.core.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.BoundStatement;
+import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.ProtocolVersion;
+import com.datastax.driver.core.Session;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import static com.datastax.driver.core.BatchStatement.Type.UNLOGGED;
-import static java.lang.String.format;
-import static java.lang.System.currentTimeMillis;
 import static org.elasticsoftware.elasticactors.cassandra2.util.ExecutionUtils.executeWithRetry;
+
+import static java.lang.System.currentTimeMillis;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class PersistentActorUpdateEventProcessor implements ThreadBoundEventProcessor<PersistentActorUpdateEvent> {
-    private static final Logger logger = LogManager.getLogger(PersistentActorUpdateEventProcessor.class);
+    private static final Logger logger = LoggerFactory.getLogger(PersistentActorUpdateEventProcessor.class);
     public static final String INSERT_QUERY = "INSERT INTO \"PersistentActors\" (key, key2, column1, value) VALUES (?, ?, ?, ?)";
     public static final String DELETE_QUERY = "DELETE FROM \"PersistentActors\" where key = ? AND key2 = ? AND column1 = ?";
     private final Session cassandraSession;
@@ -126,7 +134,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
             // add some trace info
             if(logger.isTraceEnabled()) {
                 final long endTime = currentTimeMillis();
-                logger.trace(format("Updating %d Actor state entrie(s) took %d msecs",events.size(),endTime-startTime));
+                logger.trace("Updating {} Actor state entrie(s) took {} msecs", events.size(), endTime - startTime);
             }
         }
     }

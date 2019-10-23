@@ -16,7 +16,12 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorLifecycleListener;
+import org.elasticsoftware.elasticactors.ActorNode;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.cluster.scheduler.InternalScheduler;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
@@ -28,6 +33,7 @@ import java.util.List;
  */
 public interface InternalActorSystem extends ActorSystem, ShardAccessor {
 
+    @Override
     InternalActorSystemConfiguration getConfiguration();
 
     /**
@@ -94,6 +100,7 @@ public interface InternalActorSystem extends ActorSystem, ShardAccessor {
 
     InternalScheduler getInternalScheduler();
 
+    @Override
     InternalActorSystems getParent();
 
     List<ActorLifecycleListener<?>> getActorLifecycleListeners(Class<? extends ElasticActor> actorClass);

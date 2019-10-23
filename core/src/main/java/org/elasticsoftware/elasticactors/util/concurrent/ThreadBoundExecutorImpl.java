@@ -16,22 +16,25 @@
 
 package org.elasticsoftware.elasticactors.util.concurrent;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static java.lang.String.format;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
-    private static final Logger LOG = LogManager.getLogger(ThreadBoundExecutorImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(ThreadBoundExecutorImpl.class);
     private final ThreadFactory threadFactory;
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
     private final List<BlockingQueue<ThreadBoundEvent>> queues = new ArrayList<>();
@@ -47,7 +50,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
 
     public ThreadBoundExecutorImpl(ThreadBoundEventProcessor eventProcessor, int maxBatchSize, ThreadFactory threadFactory, int numberOfThreads) {
         this.threadFactory = threadFactory;
-        LOG.info(format("Initializing (LinkedBlockingQueue)ThreadBoundExecutor[%s]",threadFactory.toString()));
+        logger.info("Initializing (LinkedBlockingQueue)ThreadBoundExecutor[{}]",threadFactory);
         for (int i = 0; i < numberOfThreads; i++) {
             BlockingQueue<ThreadBoundEvent> queue = new LinkedBlockingQueue<>();
             Thread t = threadFactory.newThread(new Consumer(queue,eventProcessor,maxBatchSize));
@@ -61,6 +64,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
      *
      * @param event The runnable to execute
      */
+    @Override
     public void execute(ThreadBoundEvent event) {
         if (shuttingDown.get()) {
             throw new RejectedExecutionException("The system is shutting down.");
@@ -79,8 +83,9 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
         return Math.abs(key.hashCode()) % queues.size();
     }
 
+    @Override
     public void shutdown() {
-        LOG.info(format("shutting down the (LinkedBlockingQueue)ThreadBoundExecutor[%s]",threadFactory.toString()));
+        logger.info("Shutting down the (LinkedBlockingQueue)ThreadBoundExecutor[{}]",threadFactory);
         if (shuttingDown.compareAndSet(false, true)) {
             final CountDownLatch shuttingDownLatch = new CountDownLatch(queues.size());
             for (BlockingQueue<ThreadBoundEvent> queue : queues) {
@@ -88,14 +93,14 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
             }
             try {
                 if (!shuttingDownLatch.await(30, TimeUnit.SECONDS)) {
-                    LOG.error(format("timeout while waiting for (LinkedBlockingQueue)ThreadBoundExecutor[%s] queues to empty",threadFactory.toString()));
+                    logger.error("Timeout while waiting for (LinkedBlockingQueue)ThreadBoundExecutor[{}] queues to empty",threadFactory);
                 }
             } catch (InterruptedException ignore) {
                 //we are shutting down anyway
-                LOG.warn(format("(LinkedBlockingQueue)ThreadBoundExecutor[%s] shutdown interrupted.",threadFactory.toString()));
+                logger.warn("(LinkedBlockingQueue)ThreadBoundExecutor[{}] shutdown interrupted.",threadFactory);
             }
         }
-        LOG.info(format("(LinkedBlockingQueue)ThreadBoundExecutor[%s] shut down completed",threadFactory.toString()));
+        logger.info("(LinkedBlockingQueue)ThreadBoundExecutor[{}] shut down completed",threadFactory);
     }
 
 
@@ -153,10 +158,10 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
                             }
                         }
                     } catch (InterruptedException e) {
-                        LOG.warn(String.format("Consumer on queue %s interrupted.", Thread.currentThread().getName()));
+                        logger.warn("Consumer on queue {} interrupted.", Thread.currentThread().getName());
                         //ignore
                     } catch (Throwable exception) {
-                        LOG.error(String.format("exception on queue %s while executing events", Thread.currentThread().getName()), exception);
+                        logger.error("Exception on queue {} while executing events", Thread.currentThread().getName(), exception);
                     } finally {
                         // reset the batch
                         batch.clear();

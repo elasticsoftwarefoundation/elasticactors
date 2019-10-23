@@ -16,8 +16,7 @@
 
 package org.elasticsoftware.elasticactors.indexing.elasticsearch.indexer;
 
-import com.google.common.base.Charsets;
-import org.awaitility.Duration;
+import org.awaitility.Durations;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.InternalSettingsPreparer;
@@ -31,17 +30,23 @@ import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdate;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
-import org.testng.annotations.*;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static org.awaitility.Awaitility.await;
-import static org.awaitility.Duration.*;
+import static org.awaitility.Durations.FIVE_SECONDS;
+import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Durations.ONE_SECOND;
 import static org.elasticsoftware.elasticactors.indexing.elasticsearch.IndexConfig.VersioningStrategy.NONE;
 import static org.elasticsoftware.elasticactors.indexing.elasticsearch.IndexConfig.VersioningStrategy.REINDEX_ON_ACTIVATE;
 import static org.mockito.Mockito.mock;
@@ -155,7 +160,7 @@ public class IndexerTest {
         indexer.onUpdate(newArrayList(update));
 
         await()
-                .atMost(Duration.ONE_MINUTE)
+                .atMost(Durations.ONE_MINUTE)
                 .pollInterval(ONE_HUNDRED_MILLISECONDS)
                 .until(() -> {
                     refreshIndices();
@@ -174,7 +179,7 @@ public class IndexerTest {
         indexer.onUpdate(newArrayList(update));
 
         await()
-                .atMost(Duration.ONE_MINUTE)
+                .atMost(Durations.ONE_MINUTE)
                 .pollInterval(ONE_SECOND)
                 .until(() -> {
                     refreshIndices();
@@ -219,7 +224,7 @@ public class IndexerTest {
 
         ActorStateUpdate update = Mockito.mock(ActorStateUpdate.class);
         when(update.getActorRef()).thenReturn(actorRef);
-        ByteBuffer charBuffer = ByteBuffer.wrap("{\"testField\": \"testData\"}".getBytes(Charsets.UTF_8));
+        ByteBuffer charBuffer = ByteBuffer.wrap("{\"testField\": \"testData\"}".getBytes(StandardCharsets.UTF_8));
         when(update.getSerializedState()).thenReturn(charBuffer);
 
         return update;
