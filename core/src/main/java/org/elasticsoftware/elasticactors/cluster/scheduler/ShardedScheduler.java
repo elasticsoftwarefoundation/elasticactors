@@ -100,7 +100,7 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
         List<ScheduledMessage> scheduledMessages = scheduledMessageRepository.getAll(shardKey);
         if(logger.isInfoEnabled()) {
             logger.info("Registering shard {} and loaded {} scheduled messages in {} nanoseconds",
-                    shardKey.toString(),
+                    shardKey,
                     scheduledMessages.size(),
                     System.nanoTime() - startTime);
         }
@@ -122,7 +122,7 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
                 if(actorShard.getOwningNode().isLocal()) {
                     // we're in business
                     try {
-                        long fireTime = System.currentTimeMillis() + TimeUnit.MILLISECONDS.convert(delay,timeUnit);
+                        long fireTime = System.currentTimeMillis() + timeUnit.toMillis(delay);
                         MessageSerializer serializer = actorSystem.getSerializer(message.getClass());
                         ByteBuffer serializedMessage = serializer.serialize(message);
                         byte[] serializedBytes = new byte[serializedMessage.remaining()];
@@ -138,7 +138,7 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
             }
         }
         // sender param didn't fit the criteria
-        throw new IllegalArgumentException(format("sender ref: %s needs to be a non-temp, non-service, locally sharded actor ref",(sender == null) ? "null" : sender.toString()));
+        throw new IllegalArgumentException(format("sender ref: %s needs to be a non-temp, non-service, locally sharded actor ref", sender));
     }
 
     @Override

@@ -16,9 +16,14 @@
 
 package org.elasticsoftware.elasticactors.kafka.scheduler;
 
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorContainer;
+import org.elasticsoftware.elasticactors.ActorContainerRef;
+import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
-import org.elasticsoftware.elasticactors.cluster.scheduler.*;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageImpl;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageShardRef;
 import org.elasticsoftware.elasticactors.kafka.KafkaActorShard;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
@@ -48,7 +53,7 @@ public final class KafkaTopicScheduler implements Scheduler {
                 if(actorShard.getOwningNode() != null && actorShard.getOwningNode().isLocal()) {
                     // we're in business
                     try {
-                        long fireTime = System.currentTimeMillis() + TimeUnit.MILLISECONDS.convert(delay,timeUnit);
+                        long fireTime = System.currentTimeMillis() + timeUnit.toMillis(delay);
                         MessageSerializer serializer = actorSystem.getSerializer(message.getClass());
                         ByteBuffer serializedMessage = serializer.serialize(message);
                         byte[] serializedBytes = new byte[serializedMessage.remaining()];
@@ -63,7 +68,7 @@ public final class KafkaTopicScheduler implements Scheduler {
             }
         }
         // sender param didn't fit the criteria
-        throw new IllegalArgumentException(format("sender ref: %s needs to be a non-temp, non-service, locally sharded actor ref",(sender == null) ? "null" : sender.toString()));
+        throw new IllegalArgumentException(format("sender ref: %s needs to be a non-temp, non-service, locally sharded actor ref", sender));
     }
 
 }
