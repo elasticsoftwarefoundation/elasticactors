@@ -64,7 +64,7 @@ public final class ClientActorRef implements ActorRef {
 
     @Override
     public void tell(Object message, ActorRef sender) throws MessageDeliveryException {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Client actor refs can only send messages");
     }
 
     @Override
@@ -84,13 +84,13 @@ public final class ClientActorRef implements ActorRef {
     @Override
     public <T> CompletionStage<T> ask(
             Object message, Class<T> responseType) {
-        throw new UnsupportedOperationException();
+        return ask(message, responseType, false);
     }
 
     @Override
     public <T> CompletionStage<T> ask(
             Object message, Class<T> responseType, Boolean persistOnResponse) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Client actor refs can't ask");
     }
 
     @Override
@@ -100,7 +100,7 @@ public final class ClientActorRef implements ActorRef {
 
     @Override
     public <T> Publisher<T> publisherOf(Class<T> messageClass) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Client actor refs can't publish");
     }
 
     @Override
