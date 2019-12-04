@@ -62,9 +62,9 @@ import org.springframework.core.env.Environment;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.net.InetAddress;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -88,7 +88,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private final Cache<Class<? extends ElasticActor>,String> actorStateVersionCache = CacheBuilder.newBuilder().maximumSize(1024).build();
     private final Cache<String,ActorRef> actorRefCache;
-    private final Map<Class<? extends SerializationFramework>,SerializationFramework> serializationFrameworks = new HashMap<>();
+    private final Map<Class<? extends SerializationFramework>,SerializationFramework> serializationFrameworks = new ConcurrentHashMap<>();
     @Autowired
     private ApplicationContext applicationContext;
     @Autowired
@@ -266,15 +266,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
 
     @Override
     public SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass) {
-        //return applicationContext.getBean(frameworkClass);
-        // cache the serialization frameworks for quick lookup (application context lookup is sloooooowwwwww)
-        SerializationFramework serializationFramework = this.serializationFrameworks.get(frameworkClass);
-        if(serializationFramework == null) {
-            serializationFramework = applicationContext.getBean(frameworkClass);
-            // @todo: this is not thread safe and should happen at the initialization stage
-            this.serializationFrameworks.put(frameworkClass,serializationFramework);
-        }
-        return serializationFramework;
+        return serializationFrameworks.computeIfAbsent(frameworkClass, applicationContext::getBean);
     }
 
     @Override
