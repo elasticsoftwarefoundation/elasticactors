@@ -88,7 +88,7 @@ public class TestConfiguration {
         return new LocalActorSystemInstance(localNode,internalActorSystems,configuration,nodeSelectorFactory);
     }
 
-    @Bean(name = {"actorSystems,actorRefFactory"})
+    @Bean(name = {"actorSystems", "actorRefFactory"})
     public InternalActorSystemsImpl createInternalActorSystems(ApplicationContext applicationContext,
                                                            ClusterService clusterService) {
         return new InternalActorSystemsImpl(applicationContext, clusterService, localNode);
