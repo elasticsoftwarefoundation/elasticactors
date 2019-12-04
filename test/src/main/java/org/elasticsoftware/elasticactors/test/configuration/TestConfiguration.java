@@ -68,7 +68,7 @@ import java.util.Map;
  */
 @Configuration
 @EnableSpringConfigured
-@Import({BackplaneConfiguration.class, MessagingConfiguration.class})
+@Import({BackplaneConfiguration.class, MessagingConfiguration.class, ClientConfiguration.class})
 public class TestConfiguration {
     @Autowired
     private Environment env;

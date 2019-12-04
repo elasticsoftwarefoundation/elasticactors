@@ -7,6 +7,8 @@ import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
+import org.elasticsoftware.elasticactors.messaging.MessageHandler;
+import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.serialization.Message;
@@ -16,8 +18,10 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 
 import java.util.List;
 
-final class ClientActorShard implements ActorShard {
+final class ClientActorShard implements ActorShard, MessageHandler {
 
+    private static final String HANDLE_MESSAGES_ERROR =
+            "Client message handlers can't handle messages";
     private final ShardKey key;
     private final String actorPath;
     private final MessageQueueFactory messageQueueFactory;
@@ -103,8 +107,19 @@ final class ClientActorShard implements ActorShard {
     }
 
     @Override
+    public PhysicalNode getPhysicalNode() {
+        throw new UnsupportedOperationException(
+                "Client message handlers are not associated to a physical node");
+    }
+
+    @Override
+    public void handleMessage(InternalMessage message, MessageHandlerEventListener mhel) {
+        mhel.onError(message, new UnsupportedOperationException(HANDLE_MESSAGES_ERROR));
+    }
+
+    @Override
     public void init() throws Exception {
-        this.messageQueue = messageQueueFactory.create(actorPath, null);
+        this.messageQueue = messageQueueFactory.create(actorPath, this);
     }
 
     @Override

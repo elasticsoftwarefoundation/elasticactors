@@ -37,6 +37,10 @@
             <artifactId>elasticactors-runtime</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <artifactId>elasticactors-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>

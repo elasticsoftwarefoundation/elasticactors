@@ -15,6 +15,7 @@ import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
 
 import javax.annotation.Nullable;
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -26,6 +27,9 @@ public class ClientActorSystem implements ActorSystem {
     private final ActorSystemConfiguration configuration;
     private final ActorShard[] shards;
 
+    private final SerializationFrameworkCache serializationFrameworkCache;
+    private final MessageQueueFactory messageQueueFactory;
+
     public ClientActorSystem(
             String clusterName,
             ActorSystemConfiguration configuration,
@@ -33,13 +37,9 @@ public class ClientActorSystem implements ActorSystem {
             MessageQueueFactory messageQueueFactory) {
         this.clusterName = clusterName;
         this.configuration = configuration;
+        this.serializationFrameworkCache = serializationFrameworkCache;
+        this.messageQueueFactory = messageQueueFactory;
         this.shards = new ActorShard[configuration.getNumberOfShards()];
-        for (int i = 0; i < configuration.getNumberOfShards(); i++) {
-            this.shards[i] = new ClientActorShard(
-                    new ShardKey(configuration.getName(), i),
-                    messageQueueFactory,
-                    serializationFrameworkCache);
-        }
     }
 
     @Override
@@ -129,6 +129,19 @@ public class ClientActorSystem implements ActorSystem {
     @Override
     public ActorRefGroup groupOf(Collection<ActorRef> members) throws IllegalArgumentException {
         throw new UnsupportedOperationException();
+    }
+
+    @PostConstruct
+    public void init() throws Exception {
+        for (int i = 0; i < shards.length; i++) {
+            this.shards[i] = new ClientActorShard(
+                    new ShardKey(configuration.getName(), i),
+                    messageQueueFactory,
+                    serializationFrameworkCache);
+        }
+        for (ActorShard shard : shards) {
+            shard.init();
+        }
     }
 
     @PreDestroy
