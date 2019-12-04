@@ -103,7 +103,7 @@ final class ClientActorShard implements ActorShard, MessageHandler {
 
     @Override
     public void offerInternalMessage(InternalMessage message) {
-        throw new UnsupportedOperationException("Client actor shards can't send internal messages");
+        messageQueue.add(message);
     }
 
     @Override
