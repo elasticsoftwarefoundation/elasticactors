@@ -35,11 +35,7 @@
     <dependencies>
         <dependency>
             <groupId>org.elasticsoftware.elasticactors</groupId>
-            <artifactId>elasticactors-spi</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.elasticsoftware.elasticactors</groupId>
-            <artifactId>elasticactors-api</artifactId>
+            <artifactId>elasticactors-messaging</artifactId>
         </dependency>
 
         <dependency>
@@ -50,17 +46,6 @@
         <dependency>
             <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.uuid</groupId>
-            <artifactId>java-uuid-generator</artifactId>
-        </dependency>
-
-        <!-- This is for Log4J 1, which is a compile-time dependency for java-uuid-generator -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>log4j-over-slf4j</artifactId>
         </dependency>
 
         <dependency>
@@ -87,11 +72,6 @@
         <dependency>
             <groupId>javax.persistence</groupId>
             <artifactId>persistence-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
         </dependency>
 
         <dependency>
