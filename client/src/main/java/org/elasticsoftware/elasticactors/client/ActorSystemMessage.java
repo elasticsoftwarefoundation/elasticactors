@@ -16,6 +16,8 @@
 
 package org.elasticsoftware.elasticactors.client;
 
+import org.elasticsoftware.elasticactors.serialization.Message;
+
 /**
  * This interface aims to provide the same information
  * {@link org.elasticsoftware.elasticactors.serialization.Message}
@@ -23,5 +25,19 @@ package org.elasticsoftware.elasticactors.client;
  * create classes for each message type.
  */
 public interface ActorSystemMessage {
+
+    default boolean isDurable() {
+        return true;
+    }
+
+    default boolean isImmutable() {
+        return false;
+    }
+
+    default int getTimeout() {
+        return Message.NO_TIMEOUT;
+    }
+
+    byte[] getPayload();
 
 }
