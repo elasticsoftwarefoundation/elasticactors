@@ -76,7 +76,7 @@ public class GreetingTest {
         testActorSystem.initialize();
 
         ActorSystem actorSystem = testActorSystem.getActorSystem();
-        ActorSystem clientActorSystem = testActorSystem.getClientActorSystem();
+        ActorSystem clientActorSystem = testActorSystem.getRemoteActorSystem();
         ActorRef greeter = actorSystem.actorOf("greeter",GreetingActor.class,new StringState("Hello World"));
 
         //ScheduledMessageRef messageRef = actorSystem.getScheduler().scheduleOnce(null,new Greeting("Delayed Message"),greeter,2, TimeUnit.SECONDS);

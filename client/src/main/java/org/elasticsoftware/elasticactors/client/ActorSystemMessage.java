@@ -19,25 +19,42 @@ package org.elasticsoftware.elasticactors.client;
 import org.elasticsoftware.elasticactors.serialization.Message;
 
 /**
- * This interface aims to provide the same information
- * {@link org.elasticsoftware.elasticactors.serialization.Message}
- * does. The point here is to allow thinner clients to interface with actor system without having to
- * create classes for each message type.
+ * This interface aims to provide the same information {@link Message} does. The point here is to
+ * allow thinner clients to interface with actor system without having to create classes for each
+ * message type.
+ *
+ * <br/><br/>
+ * <strong>
+ * Classes implementing this interface should not be annotation with {@link Message}
+ * </strong>
+ * If it is, the values provided by the {@link Message} annotation will take precedence over the
+ * ones provided by the object.
  */
 public interface ActorSystemMessage {
 
+    /**
+     * Equivalent to {@link Message#durable()}
+     */
     default boolean isDurable() {
         return true;
     }
 
-    default boolean isImmutable() {
-        return false;
-    }
-
+    /**
+     * Equivalent to {@link Message#timeout()}
+     */
     default int getTimeout() {
         return Message.NO_TIMEOUT;
     }
 
+    /**
+     * Since Elastic Actors currently deserializes messages based on their class, this method should
+     * return the name of the class which the payload represents on the receiving end.
+     */
+    String getPayloadClass();
+
+    /**
+     * The serialized payload data.
+     */
     byte[] getPayload();
 
 }

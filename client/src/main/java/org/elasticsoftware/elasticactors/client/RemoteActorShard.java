@@ -34,10 +34,11 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 
 import java.util.List;
 
-final class ClientActorShard implements ActorShard, MessageHandler {
+final class RemoteActorShard implements ActorShard, MessageHandler {
 
-    private static final String HANDLE_MESSAGES_ERROR =
-            "Client message handlers can't handle messages";
+    private static final PhysicalNode UNKNOWN_REMOTE_NODE =
+            new PhysicalNodeImpl("UNKNOWN", null, false);
+
     private final ShardKey key;
     private final String actorPath;
     private final MessageQueueFactory messageQueueFactory;
@@ -45,7 +46,7 @@ final class ClientActorShard implements ActorShard, MessageHandler {
 
     private MessageQueue messageQueue;
 
-    ClientActorShard(
+    RemoteActorShard(
             ShardKey key,
             MessageQueueFactory messageQueueFactory,
             SerializationFrameworkCache serializationFrameworkCache) {
@@ -62,7 +63,7 @@ final class ClientActorShard implements ActorShard, MessageHandler {
 
     @Override
     public PhysicalNode getOwningNode() {
-        throw new UnsupportedOperationException("Client actor shards are not owned by any nodes");
+        return getPhysicalNode();
     }
 
     @Override
@@ -72,7 +73,10 @@ final class ClientActorShard implements ActorShard, MessageHandler {
 
     /**
      * A specialization of {@link ActorShard#sendMessage(ActorRef, ActorRef, Object)} for a
-     * ClientActorShard. The sender is always ignored.
+     * ClientActorShard. <br/><br/>
+     * <strong>
+     * The sender is always ignored.
+     * </strong>
      */
     @Override
     public void sendMessage(ActorRef sender, ActorRef receiver, Object message) throws Exception {
@@ -81,32 +85,71 @@ final class ClientActorShard implements ActorShard, MessageHandler {
 
     /**
      * A specialization of {@link ActorShard#sendMessage(ActorRef, List, Object)} for a
-     * ClientActorShard. The sender is always ignored.
+     * ClientActorShard.
+     * <br/><br/>
+     * <strong>
+     *     The sender is always ignored.
+     * </strong>
      */
     @Override
     public void sendMessage(
             ActorRef sender, List<? extends ActorRef> receiver, Object message) throws Exception {
-        MessageSerializer messageSerializer = getSerializer(message.getClass());
-        // get the durable flag
-        Message messageAnnotation = message.getClass().getAnnotation(Message.class);
-        final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
-        final int timeout =
-                (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
+        MessageSerializer<?> messageSerializer = getSerializer(message.getClass());
+        final boolean durable = isDurable(message);
+        final int timeout = getTimeout(message);
+        String payloadClass = getPayloadClass(message);
         messageQueue.offer(new InternalMessageImpl(
                 null,
                 ImmutableList.copyOf(receiver),
                 SerializationContext.serialize(messageSerializer, message),
-                message.getClass().getName(),
+                payloadClass,
                 durable,
                 timeout));
     }
 
+    private boolean isDurable(Object message) {
+        Message messageAnnotation = message.getClass().getAnnotation(Message.class);
+        if (messageAnnotation != null) {
+            return messageAnnotation.durable();
+        }
+        if (message instanceof ActorSystemMessage) {
+            return ((ActorSystemMessage) message).isDurable();
+        }
+        return true;
+    }
+
+    private int getTimeout(Object message) {
+        Message messageAnnotation = message.getClass().getAnnotation(Message.class);
+        if (messageAnnotation != null) {
+            return messageAnnotation.timeout();
+        }
+        if (message instanceof ActorSystemMessage) {
+            return ((ActorSystemMessage) message).getTimeout();
+        }
+        return Message.NO_TIMEOUT;
+    }
+
+    private String getPayloadClass(Object message) {
+        Message messageAnnotation = message.getClass().getAnnotation(Message.class);
+        if (messageAnnotation != null) {
+            return message.getClass().getName();
+        }
+        if (message instanceof ActorSystemMessage) {
+            return ((ActorSystemMessage) message).getPayloadClass();
+        }
+        return message.getClass().getName();
+    }
+
+    @SuppressWarnings("unchecked")
     private <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
         Message messageAnnotation = messageClass.getAnnotation(Message.class);
         if (messageAnnotation != null) {
             SerializationFramework framework = serializationFrameworkCache
                     .getSerializationFramework(messageAnnotation.serializationFramework());
             return framework.getSerializer(messageClass);
+        }
+        if (ActorSystemMessage.class.isAssignableFrom(messageClass)) {
+            return (MessageSerializer<T>) ActorSystemMessageSerializer.get();
         }
         return null;
     }
@@ -124,13 +167,14 @@ final class ClientActorShard implements ActorShard, MessageHandler {
 
     @Override
     public PhysicalNode getPhysicalNode() {
-        throw new UnsupportedOperationException(
-                "Client message handlers are not associated to a physical node");
+        return UNKNOWN_REMOTE_NODE;
     }
 
     @Override
     public void handleMessage(InternalMessage message, MessageHandlerEventListener mhel) {
-        mhel.onError(message, new UnsupportedOperationException(HANDLE_MESSAGES_ERROR));
+        mhel.onError(
+                message,
+                new UnsupportedOperationException("Client message handlers can't handle messages"));
     }
 
     @Override

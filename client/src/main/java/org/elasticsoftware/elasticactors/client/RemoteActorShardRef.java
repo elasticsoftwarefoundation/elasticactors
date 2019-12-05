@@ -21,27 +21,44 @@ import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.reactivestreams.Publisher;
 
+import javax.annotation.Nullable;
 import java.util.concurrent.CompletionStage;
 
-public final class ClientActorRef implements ActorRef {
+public final class RemoteActorShardRef implements ActorRef {
 
     private final String clusterName;
     private final ActorShard shard;
     private final String actorId;
     private final String refSpec;
 
-    ClientActorRef(
+    RemoteActorShardRef(
             String clusterName,
             ActorShard shard,
             String actorId) {
         this.clusterName = clusterName;
         this.shard = shard;
         this.actorId = actorId;
-        this.refSpec = String.format(
-                "actor://%s/%s/shards/%d",
-                clusterName,
-                shard.getKey().getActorSystemName(),
-                shard.getKey().getShardId());
+        this.refSpec = generateRefSpec(clusterName, shard, actorId);
+    }
+
+    public static String generateRefSpec(
+            String clusterName,
+            ActorShard shard,
+            @Nullable String actorId) {
+        if (actorId != null) {
+            return String.format(
+                    "actor://%s/%s/shards/%d/%s",
+                    clusterName,
+                    shard.getKey().getActorSystemName(),
+                    shard.getKey().getShardId(),
+                    actorId);
+        } else {
+            return String.format(
+                    "actor://%s/%s/shards/%d",
+                    clusterName,
+                    shard.getKey().getActorSystemName(),
+                    shard.getKey().getShardId());
+        }
     }
 
     @Override
@@ -64,7 +81,7 @@ public final class ClientActorRef implements ActorRef {
 
     @Override
     public void tell(Object message, ActorRef sender) throws MessageDeliveryException {
-        throw new UnsupportedOperationException("Client actor refs can only send messages");
+        throw new UnsupportedOperationException("Can only send anonymous messages (i.e. no sender");
     }
 
     @Override
@@ -82,15 +99,16 @@ public final class ClientActorRef implements ActorRef {
     }
 
     @Override
-    public <T> CompletionStage<T> ask(
-            Object message, Class<T> responseType) {
-        return ask(message, responseType, false);
+    public <T> CompletionStage<T> ask(Object message, Class<T> responseType) {
+        throw new UnsupportedOperationException("Remote actors cannot use ask");
     }
 
     @Override
     public <T> CompletionStage<T> ask(
-            Object message, Class<T> responseType, Boolean persistOnResponse) {
-        throw new UnsupportedOperationException("Client actor refs can't ask");
+            Object message,
+            Class<T> responseType,
+            Boolean persistOnResponse) {
+        throw new UnsupportedOperationException("Remote actors cannot use ask");
     }
 
     @Override

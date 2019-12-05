@@ -36,7 +36,7 @@ import javax.annotation.PreDestroy;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
-public class ClientActorSystem implements ActorSystem {
+public class RemoteActorSystem implements ActorSystem {
 
     private final HashFunction hashFunction = Hashing.murmur3_32();
     private final String clusterName;
@@ -46,7 +46,7 @@ public class ClientActorSystem implements ActorSystem {
     private final SerializationFrameworkCache serializationFrameworkCache;
     private final MessageQueueFactory messageQueueFactory;
 
-    public ClientActorSystem(
+    public RemoteActorSystem(
             String clusterName,
             ActorSystemConfiguration configuration,
             SerializationFrameworkCache serializationFrameworkCache,
@@ -65,24 +65,24 @@ public class ClientActorSystem implements ActorSystem {
 
     @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass) throws Exception {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
     public ActorRef actorOf(String actorId, String actorClassName) throws Exception {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState)
             throws Exception {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
     public ActorRef actorOf(String actorId, String actorClassName, ActorState initialState)
             throws Exception {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
@@ -91,45 +91,45 @@ public class ClientActorSystem implements ActorSystem {
             String actorClassName,
             ActorState initialState,
             ActorRef creatorRef) throws Exception {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
     public <T> ActorRef tempActorOf(Class<T> actorClass, @Nullable ActorState initialState)
             throws Exception {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Temporary Actors are not supported for Remote ActorSystem instances");
     }
 
     @Override
     public ActorRef actorFor(String actorId) {
         int shardNum = Math.abs(hashFunction.hashString(actorId, StandardCharsets.UTF_8).asInt())
                 % configuration.getNumberOfShards();
-        return new ClientActorRef(clusterName, shards[shardNum], actorId);
+        return new RemoteActorShardRef(clusterName, shards[shardNum], actorId);
     }
 
     @Override
     public ActorRef serviceActorFor(String actorId) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Service Actors are not supported for Remote ActorSystem instances");
     }
 
     @Override
     public ActorRef serviceActorFor(String nodeId, String actorId) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Service Actors are not supported for Remote ActorSystem instances");
     }
 
     @Override
     public Scheduler getScheduler() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Scheduler is not supported for Remote ActorSystem instances");
     }
 
     @Override
     public ActorSystems getParent() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Parent ActorSystem not available for remote ActorSystem instances");
     }
 
     @Override
     public void stop(ActorRef actorRef) throws Exception {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
@@ -139,18 +139,18 @@ public class ClientActorSystem implements ActorSystem {
 
     @Override
     public ActorSystemEventListenerRegistry getEventListenerRegistry() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Event listener registry is not supported for remote ActorSystem instances");
     }
 
     @Override
     public ActorRefGroup groupOf(Collection<ActorRef> members) throws IllegalArgumentException {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Creating Remote ActorRefGroup objects is not supported for Remote ActorSystem instances");
     }
 
     @PostConstruct
     public void init() throws Exception {
         for (int i = 0; i < shards.length; i++) {
-            this.shards[i] = new ClientActorShard(
+            this.shards[i] = new RemoteActorShard(
                     new ShardKey(configuration.getName(), i),
                     messageQueueFactory,
                     serializationFrameworkCache);
