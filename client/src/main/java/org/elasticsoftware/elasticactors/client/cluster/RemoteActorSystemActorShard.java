@@ -159,7 +159,7 @@ final class RemoteActorSystemActorShard implements ActorShard, MessageHandler {
     @Override
     public void undeliverableMessage(
             InternalMessage undeliverableMessage, ActorRef receiverRef) throws Exception {
-        throw new UnsupportedOperationException("Client actor shards can't receive responses");
+        throw new UnsupportedOperationException("Remote ActorSystem shards can't receive responses");
     }
 
     @Override
@@ -176,7 +176,7 @@ final class RemoteActorSystemActorShard implements ActorShard, MessageHandler {
     public void handleMessage(InternalMessage message, MessageHandlerEventListener mhel) {
         mhel.onError(
                 message,
-                new UnsupportedOperationException("Client message handlers can't handle messages"));
+                new UnsupportedOperationException("Remote ActorSystem shards can't handle messages"));
     }
 
     @Override
