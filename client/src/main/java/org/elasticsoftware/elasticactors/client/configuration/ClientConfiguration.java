@@ -39,7 +39,7 @@ public class ClientConfiguration {
     }
 
     @Bean
-    public ActorRefFactory remoteActorShardRefFactory(
+    public RemoteActorSystemActorShardRefFactory remoteActorShardRefFactory(
             ShardAccessor shardAccessor,
             @Value("${ea.actorRefCache.maximumSize:10240}") Integer maximumSize) {
         Cache<String, ActorRef> actorRefCache =
