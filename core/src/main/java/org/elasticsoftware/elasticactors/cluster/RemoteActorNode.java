@@ -27,7 +27,6 @@ import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 
 import java.util.List;
@@ -37,7 +36,7 @@ import java.util.List;
  */
 
 public final class RemoteActorNode extends AbstractActorContainer implements ActorNode {
-    private final SerializationAccessor actorSystem;
+    private final InternalActorSystem actorSystem;
     private final NodeKey nodeKey;
 
     public RemoteActorNode(PhysicalNode remoteNode,

@@ -34,7 +34,6 @@ import org.elasticsoftware.elasticactors.messaging.reactivestreams.SubscribeMess
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.SubscriptionMessage;
 import org.elasticsoftware.elasticactors.reactivestreams.InternalPersistentSubscription;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
@@ -142,7 +141,7 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
         }
     }
 
-    private boolean handle(NextMessage nextMessage, ElasticActor receiver, ActorRef publisherRef, SerializationAccessor actorSystem) {
+    private boolean handle(NextMessage nextMessage, ElasticActor receiver, ActorRef publisherRef, InternalActorSystem actorSystem) {
         Optional<InternalPersistentSubscription> persistentSubscription =
                 persistentActor.getSubscription(nextMessage.getMessageName(), publisherRef);
 

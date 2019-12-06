@@ -39,7 +39,6 @@ import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
-import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
@@ -172,7 +171,7 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
-    public SerializationAccessor createLocalActorSystemInstance() {
+    public InternalActorSystem createLocalActorSystemInstance() {
         return new LocalActorSystemInstance(node,node,configuration,nodeSelectorFactory);
     }
 

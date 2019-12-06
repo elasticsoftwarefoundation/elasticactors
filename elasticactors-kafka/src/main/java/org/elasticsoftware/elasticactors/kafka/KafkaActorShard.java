@@ -28,7 +28,6 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 
 import java.io.IOException;
@@ -40,7 +39,7 @@ public final class KafkaActorShard implements ActorShard {
     private final ActorRef myRef;
     private final AtomicReference<PhysicalNode> owningNode = new AtomicReference<>(null);
     private final KafkaActorThread actorThread;
-    private final SerializationAccessor actorSystem;
+    private final InternalActorSystem actorSystem;
 
     public KafkaActorShard(ShardKey key, KafkaActorThread actorThread, InternalActorSystem actorSystem) {
         this.key = key;

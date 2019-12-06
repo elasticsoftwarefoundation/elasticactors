@@ -42,7 +42,6 @@ import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
-import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
@@ -140,7 +139,7 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"internalActorSystem"})
-    public SerializationAccessor createLocalActorSystemInstance(ShardActorCacheManager shardActorCacheManager,
+    public InternalActorSystem createLocalActorSystemInstance(ShardActorCacheManager shardActorCacheManager,
                                                               NodeActorCacheManager nodeActorCacheManager,
                                                               ActorLifecycleListenerRegistry actorLifecycleListenerRegistry,
                                                               PersistentActorStoreFactory persistentActorStoreFactory) {

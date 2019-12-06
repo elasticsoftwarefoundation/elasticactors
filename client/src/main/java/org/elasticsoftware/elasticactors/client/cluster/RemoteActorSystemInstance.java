@@ -32,6 +32,11 @@ import org.elasticsoftware.elasticactors.cluster.ShardAccessor;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
+import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 
 import javax.annotation.Nullable;
@@ -40,7 +45,7 @@ import javax.annotation.PreDestroy;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
-public final class RemoteActorSystemInstance implements ActorSystem, ShardAccessor {
+public final class RemoteActorSystemInstance implements ActorSystem, ShardAccessor, SerializationAccessor {
 
     private final HashFunction hashFunction = Hashing.murmur3_32();
     private final RemoteActorSystemConfiguration configuration;
@@ -208,4 +213,29 @@ public final class RemoteActorSystemInstance implements ActorSystem, ShardAccess
         return shards.length;
     }
 
+    @Override
+    public <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
+        MessageSerializer<T> messageSerializer = serializationFrameworks.getSystemMessageSerializer(messageClass);
+        if(messageSerializer == null) {
+            Message messageAnnotation = messageClass.getAnnotation(Message.class);
+            if(messageAnnotation != null) {
+                SerializationFramework framework = serializationFrameworks.getSerializationFramework(messageAnnotation.serializationFramework());
+                messageSerializer = framework.getSerializer(messageClass);
+            }
+        }
+        return messageSerializer;
+    }
+
+    @Override
+    public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
+        MessageDeserializer<T> messageDeserializer = serializationFrameworks.getSystemMessageDeserializer(messageClass);
+        if(messageDeserializer == null) {
+            Message messageAnnotation = messageClass.getAnnotation(Message.class);
+            if(messageAnnotation != null) {
+                SerializationFramework framework = serializationFrameworks.getSerializationFramework(messageAnnotation.serializationFramework());
+                messageDeserializer = framework.getDeserializer(messageClass);
+            }
+        }
+        return messageDeserializer;
+    }
 }

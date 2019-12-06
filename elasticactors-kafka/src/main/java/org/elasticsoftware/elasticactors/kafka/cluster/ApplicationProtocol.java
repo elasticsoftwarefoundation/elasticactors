@@ -25,7 +25,6 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
@@ -225,7 +224,7 @@ public final class ApplicationProtocol {
     private static void notifySubscribers(PersistentActor persistentActor,
                                           InternalMessage internalMessage,
                                           ActorRef receiverRef,
-                                          SerializationAccessor actorSystem) {
+                                          InternalActorSystem actorSystem) {
         if(persistentActor.getMessageSubscribers() != null) {
             try {
                 // todo consider using ActorRefGroup here
@@ -252,7 +251,7 @@ public final class ApplicationProtocol {
         }
     }
 
-    private static byte[] getMessageBytes(InternalMessage internalMessage, SerializationAccessor actorSystem) throws IOException {
+    private static byte[] getMessageBytes(InternalMessage internalMessage, InternalActorSystem actorSystem) throws IOException {
         if(internalMessage.getPayload() != null) {
             if(internalMessage.getPayload().hasArray()) {
                 return internalMessage.getPayload().array();
