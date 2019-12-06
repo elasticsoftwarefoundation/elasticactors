@@ -136,10 +136,7 @@ final class RemoteActorSystemActorShard implements ActorShard, MessageHandler {
 
     private String getPayloadClass(Object message) {
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
-        if (messageAnnotation != null) {
-            return message.getClass().getName();
-        }
-        if (message instanceof ActorSystemMessage) {
+        if (messageAnnotation == null && message instanceof ActorSystemMessage) {
             return ((ActorSystemMessage) message).getPayloadClass();
         }
         return message.getClass().getName();
