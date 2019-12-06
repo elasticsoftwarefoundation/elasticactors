@@ -32,7 +32,7 @@ import java.util.List;
 public class ClientConfiguration {
 
     @Bean
-    public ClientSerializationFrameworks serializationFrameworks(
+    public ClientSerializationFrameworks clientSerializationFrameworks(
             ActorRefFactory actorRefFactory,
             List<SerializationFramework> serializationFrameworks) {
         return new ClientSerializationFrameworks(actorRefFactory, serializationFrameworks);
