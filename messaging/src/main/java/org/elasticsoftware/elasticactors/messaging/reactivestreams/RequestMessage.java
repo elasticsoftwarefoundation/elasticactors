@@ -17,21 +17,26 @@
 package org.elasticsoftware.elasticactors.messaging.reactivestreams;
 
 import org.elasticsoftware.elasticactors.serialization.Message;
-import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 
 /**
  * @author Joost van de Wijgerd
  */
 @Message(immutable = true, durable = false, serializationFramework = SystemSerializationFramework.class)
-public final class CompletedMessage implements ReactiveStreamsProtocol {
+public final class RequestMessage implements ReactiveStreamsProtocol {
     private final String messageName;
+    private final long n;
 
-    public CompletedMessage(String messageName) {
+    public RequestMessage(String messageName, long n) {
         this.messageName = messageName;
+        this.n = n;
     }
 
     public String getMessageName() {
         return messageName;
+    }
+
+    public long getN() {
+        return n;
     }
 }

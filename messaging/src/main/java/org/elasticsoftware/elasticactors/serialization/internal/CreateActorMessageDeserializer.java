@@ -23,7 +23,7 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
+import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 
 import java.io.IOException;
@@ -41,7 +41,7 @@ public final class CreateActorMessageDeserializer implements MessageDeserializer
 
     @Override
     public CreateActorMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        Elasticactors.CreateActorMessage protobufMessage = Elasticactors.CreateActorMessage.parseFrom(ByteString.copyFrom(serializedObject));
+        Messaging.CreateActorMessage protobufMessage = Messaging.CreateActorMessage.parseFrom(ByteString.copyFrom(serializedObject));
         return new CreateActorMessage(protobufMessage.getActorSystem(),
                 protobufMessage.getActorClass(),
                 protobufMessage.getActorId(),

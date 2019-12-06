@@ -23,3 +23,50 @@ message InternalMessage {
   repeated string receivers = 8;
   optional uint32 timeout = 9;
 }
+
+enum ActorType {
+  PERSISTENT = 0;
+  TEMP = 1;
+  SERVICE = 2;
+}
+
+message CreateActorMessage {
+  optional string actorId = 1;
+  optional bytes initialState = 2;
+  optional string actorClass = 3;
+  optional string actorSystem = 4;
+  optional ActorType type = 5;
+  optional string affinityKey = 6;
+}
+
+message DestroyActorMessage {
+  optional string actorRef = 1;
+}
+
+message ActivateActorMessage {
+  optional string actorSystem = 1;
+  optional string actorId = 2;
+  optional ActorType type = 3;
+}
+
+message WireMessage {
+  optional string queueName = 1;
+  optional bytes internalMessage = 2;
+}
+
+message CancelScheduledMessageMessage {
+  optional bytes messageId = 1;
+  optional uint64 fireTime = 2;
+}
+
+message ActorNodeMessage {
+  optional string receiver = 1;
+  optional string nodeId = 2;
+  optional string payloadClass = 3;
+  optional bytes payload = 4;
+  optional bool undeliverable = 5;
+}
+
+message PersistActorMessage {
+  optional string actorRef = 1;
+}

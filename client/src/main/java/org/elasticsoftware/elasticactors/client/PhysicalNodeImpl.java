@@ -26,7 +26,7 @@ final class PhysicalNodeImpl implements PhysicalNode {
     private final InetAddress address;
     private final boolean local;
 
-    public PhysicalNodeImpl(String id, InetAddress address, boolean local) {
+    PhysicalNodeImpl(String id, InetAddress address, boolean local) {
         this.id = id;
         this.address = address;
         this.local = local;

@@ -19,7 +19,7 @@ package org.elasticsoftware.elasticactors.serialization.internal;
 import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
+import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -36,7 +36,7 @@ public final class DestroyActorMessageDeserializer implements MessageDeserialize
 
     @Override
     public DestroyActorMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        Elasticactors.DestroyActorMessage protobufMessage = Elasticactors.DestroyActorMessage.parseFrom(ByteString.copyFrom(serializedObject));
+        Messaging.DestroyActorMessage protobufMessage = Messaging.DestroyActorMessage.parseFrom(ByteString.copyFrom(serializedObject));
         return new DestroyActorMessage(actorRefDeserializer.deserialize(protobufMessage.getActorRef()));
     }
 

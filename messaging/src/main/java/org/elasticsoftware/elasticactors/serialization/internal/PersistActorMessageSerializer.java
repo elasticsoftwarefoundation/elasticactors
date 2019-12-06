@@ -16,9 +16,9 @@
 
 package org.elasticsoftware.elasticactors.serialization.internal;
 
-import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.PersistActorMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
+import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -26,19 +26,17 @@ import java.nio.ByteBuffer;
 /**
  * @author Joost van de Wijgerd
  */
-public final class ActivateActorMessageSerializer implements MessageSerializer<ActivateActorMessage> {
+public final class PersistActorMessageSerializer implements MessageSerializer<PersistActorMessage> {
 
-    public ActivateActorMessageSerializer() {
 
+    public PersistActorMessageSerializer() {
     }
 
 
     @Override
-    public ByteBuffer serialize(ActivateActorMessage message) throws IOException {
-        Elasticactors.ActivateActorMessage.Builder builder = Elasticactors.ActivateActorMessage.newBuilder();
-        builder.setActorSystem(message.getActorSystem());
-        builder.setActorId(message.getActorId());
-        builder.setType(Elasticactors.ActorType.valueOf(message.getActorType().ordinal()));
+    public ByteBuffer serialize(PersistActorMessage message) throws IOException {
+        Messaging.PersistActorMessage.Builder builder = Messaging.PersistActorMessage.newBuilder();
+        builder.setActorRef(message.getActorRef().toString());
         return ByteBuffer.wrap(builder.build().toByteArray());
     }
 

@@ -16,25 +16,15 @@
 
 package org.elasticsoftware.elasticactors.serialization.internal;
 
-import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
-import org.elasticsoftware.elasticactors.messaging.ImmutableInternalMessage;
-import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
-import org.elasticsoftware.elasticactors.serialization.Deserializer;
-import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
+import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.UUID;
-
-import static org.elasticsoftware.elasticactors.messaging.UUIDTools.toUUID;
 
 /**
  * @author Joost van de Wijgerd
@@ -51,7 +41,7 @@ public final class ActorNodeMessageDeserializer implements MessageDeserializer<A
     @Override
     public ActorNodeMessage deserialize(ByteBuffer serializedObject) throws IOException {
         try {
-            Elasticactors.ActorNodeMessage protobufMessage = Elasticactors.ActorNodeMessage.parseFrom(ByteString.copyFrom(serializedObject));
+            Messaging.ActorNodeMessage protobufMessage = Messaging.ActorNodeMessage.parseFrom(ByteString.copyFrom(serializedObject));
             ActorRef receiverRef = protobufMessage.getReceiver()!=null && !protobufMessage.getReceiver().isEmpty() ? actorRefDeserializer.deserialize(protobufMessage.getReceiver()) : null;
             String messageClassString = protobufMessage.getPayloadClass();
             Class<?> messageClass = Class.forName(messageClassString);

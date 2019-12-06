@@ -18,7 +18,7 @@ package org.elasticsoftware.elasticactors.serialization.internal;
 
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
+import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -35,7 +35,7 @@ public final class DestroyActorMessageSerializer implements MessageSerializer<De
 
     @Override
     public ByteBuffer serialize(DestroyActorMessage message) throws IOException {
-        Elasticactors.DestroyActorMessage.Builder builder = Elasticactors.DestroyActorMessage.newBuilder();
+        Messaging.DestroyActorMessage.Builder builder = Messaging.DestroyActorMessage.newBuilder();
         builder.setActorRef(message.getActorRef().toString());
         return ByteBuffer.wrap(builder.build().toByteArray());
     }

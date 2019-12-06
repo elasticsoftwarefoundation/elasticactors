@@ -19,8 +19,8 @@ package org.elasticsoftware.elasticactors.serialization.internal;
 import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
-import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
+import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -28,22 +28,18 @@ import java.nio.ByteBuffer;
 /**
  * @author Joost van de Wijgerd
  */
-public final class CancelScheduledMessageMessageDeserializer implements MessageDeserializer<CancelScheduledMessageMessage> {
+public final class CancelScheduleMessageMessageSerializer implements MessageSerializer<CancelScheduledMessageMessage> {
 
-
-    public CancelScheduledMessageMessageDeserializer() {
+    public CancelScheduleMessageMessageSerializer() {
 
     }
 
     @Override
-    public CancelScheduledMessageMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        Elasticactors.CancelScheduledMessageMessage protobufMessage = Elasticactors.CancelScheduledMessageMessage.parseFrom(ByteString.copyFrom(serializedObject));
-        return new CancelScheduledMessageMessage(UUIDTools.toUUID(protobufMessage.getMessageId().toByteArray()),
-                                                 protobufMessage.getFireTime());
+    public ByteBuffer serialize(CancelScheduledMessageMessage message) throws IOException {
+        Messaging.CancelScheduledMessageMessage.Builder builder = Messaging.CancelScheduledMessageMessage.newBuilder();
+        builder.setMessageId(ByteString.copyFrom(UUIDTools.toByteArray(message.getMessageId())));
+        builder.setFireTime(message.getFireTime());
+        return ByteBuffer.wrap(builder.build().toByteArray());
     }
 
-    @Override
-    public Class<CancelScheduledMessageMessage> getMessageClass() {
-        return CancelScheduledMessageMessage.class;
-    }
 }

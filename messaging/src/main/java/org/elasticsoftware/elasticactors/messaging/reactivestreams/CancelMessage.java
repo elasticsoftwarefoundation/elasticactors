@@ -18,7 +18,6 @@ package org.elasticsoftware.elasticactors.messaging.reactivestreams;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.Message;
-import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 
 /**
