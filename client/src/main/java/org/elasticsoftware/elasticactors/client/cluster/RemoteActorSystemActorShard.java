@@ -46,10 +46,12 @@ final class RemoteActorSystemActorShard implements ActorShard, MessageHandler {
     private final String actorPath;
     private final MessageQueueFactory messageQueueFactory;
     private final SerializationFrameworks serializationFrameworks;
+    private final ActorRef myRef;
 
     private MessageQueue messageQueue;
 
     RemoteActorSystemActorShard(
+            String clusterName,
             ShardKey key,
             MessageQueueFactory messageQueueFactory,
             SerializationFrameworks serializationFrameworks) {
@@ -57,6 +59,7 @@ final class RemoteActorSystemActorShard implements ActorShard, MessageHandler {
         this.messageQueueFactory = messageQueueFactory;
         this.serializationFrameworks = serializationFrameworks;
         this.actorPath = String.format("%s/shards/%d", key.getActorSystemName(), key.getShardId());
+        this.myRef = new RemoteActorSystemActorShardRef(clusterName, this, null);
     }
 
     @Override
@@ -71,7 +74,7 @@ final class RemoteActorSystemActorShard implements ActorShard, MessageHandler {
 
     @Override
     public ActorRef getActorRef() {
-        throw new UnsupportedOperationException("Client actor shards can't receive messages");
+        return myRef;
     }
 
     /**

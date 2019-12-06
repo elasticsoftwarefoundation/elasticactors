@@ -169,6 +169,7 @@ public final class RemoteActorSystemInstance implements ActorSystem, ShardAccess
     public void init() throws Exception {
         for (int i = 0; i < shards.length; i++) {
             this.shards[i] = new RemoteActorSystemActorShard(
+                    configuration.getClusterName(),
                     new ShardKey(configuration.getName(), i),
                     messageQueueFactory,
                     serializationFrameworks);

@@ -104,6 +104,31 @@ public class GreetingTest {
     }
 
     @Test
+    public void testGreeting_client_createActor() throws Exception {
+
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        ActorSystem clientActorSystem = testActorSystem.getRemoteActorSystem();
+        ActorRef greeter = clientActorSystem.actorOf("greeter",GreetingActor.class,new StringState("Hello World"));
+
+        //ScheduledMessageRef messageRef = actorSystem.getScheduler().scheduleOnce(null,new Greeting("Delayed Message"),greeter,2, TimeUnit.SECONDS);
+
+        final CountDownLatch countDownLatch = new CountDownLatch(2);
+
+        clientActorSystem.actorFor("greeter")
+                .tell(new Greeting("This will error out because we use a local queue"));
+        greeter.tell(new Greeting("Joost van de Wijgerd"));
+
+        assertFalse(countDownLatch.await(5, TimeUnit.SECONDS));
+
+        assertEquals(LocalMessageQueue.getThrownExceptions().size(), 3);
+        LocalMessageQueue.getThrownExceptions().forEach(e -> assertTrue(e instanceof UnsupportedOperationException));
+
+        testActorSystem.destroy();
+    }
+
+    @Test
     public void testStopAfterGreeting() throws Exception {
 
         TestActorSystem testActorSystem = new TestActorSystem();
