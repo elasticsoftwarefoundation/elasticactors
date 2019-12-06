@@ -33,10 +33,10 @@ import java.nio.ByteBuffer;
  * @author Joost van de Wijgerd
  */
 public final class CreateActorMessageDeserializer implements MessageDeserializer<CreateActorMessage> {
-    private final SerializationFrameworks actorSystems;
+    private final SerializationFrameworks serializationFrameworks;
 
-    public CreateActorMessageDeserializer(SerializationFrameworks actorSystems) {
-        this.actorSystems = actorSystems;
+    public CreateActorMessageDeserializer(SerializationFrameworks serializationFrameworks) {
+        this.serializationFrameworks = serializationFrameworks;
     }
 
     @Override
@@ -58,7 +58,8 @@ public final class CreateActorMessageDeserializer implements MessageDeserializer
 
     private ActorState deserializeState(String actorClass, byte[] serializedState) throws IOException {
         try {
-            return SerializationTools.deserializeActorState(actorSystems,
+            return SerializationTools.deserializeActorState(
+                    serializationFrameworks,
                     (Class<? extends ElasticActor>) Class.forName(actorClass),
                     serializedState);
         } catch (ClassNotFoundException e) {

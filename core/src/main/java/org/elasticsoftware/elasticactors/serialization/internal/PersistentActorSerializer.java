@@ -31,10 +31,10 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.serializ
  * @author Joost van de Wijgerd
  */
 public final class PersistentActorSerializer implements Serializer<PersistentActor<ShardKey>,byte[]> {
-    private final SerializationFrameworks actorSystems;
+    private final SerializationFrameworks serializationFrameworks;
 
-    public PersistentActorSerializer(SerializationFrameworks actorSystems) {
-        this.actorSystems = actorSystems;
+    public PersistentActorSerializer(SerializationFrameworks serializationFrameworks) {
+        this.serializationFrameworks = serializationFrameworks;
     }
 
     @Override
@@ -69,6 +69,6 @@ public final class PersistentActorSerializer implements Serializer<PersistentAct
     private byte[] getSerializedState(PersistentActor<ShardKey> persistentActor) throws IOException {
         // if the state was already serialized, assume it's the most recent to avoid duplicate serialization
         return persistentActor.getSerializedState() != null ? persistentActor.getSerializedState() :
-                serializeActorState(actorSystems,persistentActor.getActorClass(),persistentActor.getState());
+                serializeActorState(serializationFrameworks,persistentActor.getActorClass(),persistentActor.getState());
     }
 }

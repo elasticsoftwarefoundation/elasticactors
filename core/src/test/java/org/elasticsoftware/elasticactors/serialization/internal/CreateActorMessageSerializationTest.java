@@ -36,12 +36,10 @@ public class CreateActorMessageSerializationTest {
     @Test
     public void testSerialization() throws IOException {
         SerializationFrameworks serializationFrameworks = mock(InternalActorSystems.class);
-        CreateActorMessageSerializer serializer = new CreateActorMessageSerializer(
-                serializationFrameworks);
+        CreateActorMessageSerializer serializer = new CreateActorMessageSerializer(serializationFrameworks);
 
         ByteBuffer serializedForm = serializer.serialize(new CreateActorMessage("LocalNode","testClass","listener",null));
-        CreateActorMessageDeserializer deserializer = new CreateActorMessageDeserializer(
-                serializationFrameworks);
+        CreateActorMessageDeserializer deserializer = new CreateActorMessageDeserializer(serializationFrameworks);
 
         CreateActorMessage deserializedMessage = deserializer.deserialize(serializedForm);
         assertNotNull(deserializedMessage);
