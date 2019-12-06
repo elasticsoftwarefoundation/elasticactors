@@ -14,13 +14,15 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.client;
+package org.elasticsoftware.elasticactors.client.cluster;
 
 import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.client.messaging.ActorSystemMessage;
+import org.elasticsoftware.elasticactors.client.serialization.ActorSystemMessageSerializer;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
@@ -31,10 +33,11 @@ import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 
 import java.util.List;
 
-final class RemoteActorShard implements ActorShard, MessageHandler {
+final class RemoteActorSystemActorShard implements ActorShard, MessageHandler {
 
     private static final PhysicalNode UNKNOWN_REMOTE_NODE =
             new PhysicalNodeImpl("UNKNOWN", null, false);
@@ -42,17 +45,17 @@ final class RemoteActorShard implements ActorShard, MessageHandler {
     private final ShardKey key;
     private final String actorPath;
     private final MessageQueueFactory messageQueueFactory;
-    private final SerializationFrameworkCache serializationFrameworkCache;
+    private final SerializationFrameworks serializationFrameworks;
 
     private MessageQueue messageQueue;
 
-    RemoteActorShard(
+    RemoteActorSystemActorShard(
             ShardKey key,
             MessageQueueFactory messageQueueFactory,
-            SerializationFrameworkCache serializationFrameworkCache) {
+            SerializationFrameworks serializationFrameworks) {
         this.key = key;
         this.messageQueueFactory = messageQueueFactory;
-        this.serializationFrameworkCache = serializationFrameworkCache;
+        this.serializationFrameworks = serializationFrameworks;
         this.actorPath = String.format("%s/shards/%d", key.getActorSystemName(), key.getShardId());
     }
 
@@ -143,7 +146,7 @@ final class RemoteActorShard implements ActorShard, MessageHandler {
     private <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
         Message messageAnnotation = messageClass.getAnnotation(Message.class);
         if (messageAnnotation != null) {
-            SerializationFramework framework = serializationFrameworkCache
+            SerializationFramework framework = serializationFrameworks
                     .getSerializationFramework(messageAnnotation.serializationFramework());
             return framework.getSerializer(messageClass);
         }

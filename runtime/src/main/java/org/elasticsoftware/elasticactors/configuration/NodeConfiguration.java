@@ -25,7 +25,13 @@ import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
-import org.elasticsoftware.elasticactors.cluster.*;
+import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerService;
+import org.elasticsoftware.elasticactors.cluster.ActorSystemEventRegistryImpl;
+import org.elasticsoftware.elasticactors.cluster.HashingNodeSelectorFactory;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.LocalActorSystemInstance;
+import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
+import org.elasticsoftware.elasticactors.cluster.RemoteActorSystems;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ShardedScheduler;
 import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
@@ -33,11 +39,13 @@ import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
+import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
+import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
+import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.DefaultActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.NoopActorStateUpdateProcessor;
-import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
@@ -108,8 +116,8 @@ public class NodeConfiguration {
     }
 
     @Bean(name = "systemSerializationFramework")
-    public SystemSerializationFramework createSystemSerializationFramework(InternalActorSystems internalActorSystems) {
-        return new SystemSerializationFramework(internalActorSystems);
+    public SystemSerializationFramework createSystemSerializationFramework(SerializationFrameworks serializationFrameworks) {
+        return new SystemSerializationFramework(serializationFrameworks);
     }
 
     @Bean(name = {"messagesScanner"})
@@ -164,7 +172,7 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
-    public InternalActorSystem createLocalActorSystemInstance() {
+    public SerializationAccessor createLocalActorSystemInstance() {
         return new LocalActorSystemInstance(node,node,configuration,nodeSelectorFactory);
     }
 

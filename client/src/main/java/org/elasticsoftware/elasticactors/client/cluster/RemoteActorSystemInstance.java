@@ -14,7 +14,7 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.client;
+package org.elasticsoftware.elasticactors.client.cluster;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -25,10 +25,14 @@ import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.ActorSystems;
+import org.elasticsoftware.elasticactors.RemoteActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRegistry;
+import org.elasticsoftware.elasticactors.cluster.ShardAccessor;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
+import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
@@ -36,24 +40,21 @@ import javax.annotation.PreDestroy;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
-public class RemoteActorSystem implements ActorSystem {
+public final class RemoteActorSystemInstance implements ActorSystem, ShardAccessor {
 
     private final HashFunction hashFunction = Hashing.murmur3_32();
-    private final String clusterName;
-    private final ActorSystemConfiguration configuration;
+    private final RemoteActorSystemConfiguration configuration;
     private final ActorShard[] shards;
 
-    private final SerializationFrameworkCache serializationFrameworkCache;
+    private final SerializationFrameworks serializationFrameworks;
     private final MessageQueueFactory messageQueueFactory;
 
-    public RemoteActorSystem(
-            String clusterName,
-            ActorSystemConfiguration configuration,
-            SerializationFrameworkCache serializationFrameworkCache,
+    public RemoteActorSystemInstance(
+            RemoteActorSystemConfiguration configuration,
+            SerializationFrameworks serializationFrameworks,
             MessageQueueFactory messageQueueFactory) {
-        this.clusterName = clusterName;
         this.configuration = configuration;
-        this.serializationFrameworkCache = serializationFrameworkCache;
+        this.serializationFrameworks = serializationFrameworks;
         this.messageQueueFactory = messageQueueFactory;
         this.shards = new ActorShard[configuration.getNumberOfShards()];
     }
@@ -65,33 +66,47 @@ public class RemoteActorSystem implements ActorSystem {
 
     @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass) throws Exception {
-        throw new UnsupportedOperationException("Not yet implemented");
+        return actorOf(actorId, actorClass.getName(), null);
     }
 
     @Override
     public ActorRef actorOf(String actorId, String actorClassName) throws Exception {
-        throw new UnsupportedOperationException("Not yet implemented");
+        return actorOf(actorId, actorClassName, null);
     }
 
     @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState)
             throws Exception {
-        throw new UnsupportedOperationException("Not yet implemented");
+        return actorOf(actorId, actorClass.getName(), initialState);
     }
 
     @Override
     public ActorRef actorOf(String actorId, String actorClassName, ActorState initialState)
             throws Exception {
-        throw new UnsupportedOperationException("Not yet implemented");
+        return actorOf(actorId, actorClassName, initialState, null);
     }
 
+    /**
+     * A specialization of {@link ActorSystem#actorOf(String, String, ActorState, ActorRef)} for a
+     * RemoteActorSystem. <br/><br/>
+     * <strong>
+     * The creatorRef is always ignored.
+     * </strong>
+     */
     @Override
     public ActorRef actorOf(
             String actorId,
             String actorClassName,
             ActorState initialState,
             ActorRef creatorRef) throws Exception {
-        throw new UnsupportedOperationException("Not yet implemented");
+        ActorShard shard = shardFor(actorId);
+        // send CreateActorMessage to shard
+        CreateActorMessage createActorMessage =
+                new CreateActorMessage(getName(), actorClassName, actorId, initialState);
+        shard.sendMessage(null, shard.getActorRef(), createActorMessage);
+        // create actor ref
+        // @todo: add cache to speed up performance
+        return new RemoteActorSystemActorShardRef(configuration.getClusterName(), shard, actorId);
     }
 
     @Override
@@ -102,9 +117,12 @@ public class RemoteActorSystem implements ActorSystem {
 
     @Override
     public ActorRef actorFor(String actorId) {
-        int shardNum = Math.abs(hashFunction.hashString(actorId, StandardCharsets.UTF_8).asInt())
-                % configuration.getNumberOfShards();
-        return new RemoteActorShardRef(clusterName, shards[shardNum], actorId);
+        ActorShard shard = shardFor(actorId);
+        return new RemoteActorSystemActorShardRef(configuration.getClusterName(), shard, actorId);
+    }
+
+    private ActorShard shardFor(String actorId) {
+        return shards[Math.abs(hashFunction.hashString(actorId, StandardCharsets.UTF_8).asInt()) % shards.length];
     }
 
     @Override
@@ -134,7 +152,7 @@ public class RemoteActorSystem implements ActorSystem {
 
     @Override
     public ActorSystemConfiguration getConfiguration() {
-        return configuration;
+        return new ActorSystemDelegateConfiguration(configuration);
     }
 
     @Override
@@ -150,10 +168,10 @@ public class RemoteActorSystem implements ActorSystem {
     @PostConstruct
     public void init() throws Exception {
         for (int i = 0; i < shards.length; i++) {
-            this.shards[i] = new RemoteActorShard(
+            this.shards[i] = new RemoteActorSystemActorShard(
                     new ShardKey(configuration.getName(), i),
                     messageQueueFactory,
-                    serializationFrameworkCache);
+                    serializationFrameworks);
         }
         for (ActorShard shard : shards) {
             shard.init();
@@ -165,6 +183,28 @@ public class RemoteActorSystem implements ActorSystem {
         for (ActorShard shard : shards) {
             shard.destroy();
         }
+    }
+
+    @Override
+    public ActorShard getShard(String actorPath) {
+        // for now we support only <ActorSystemName>/shards/<shardId>
+        // @todo: do this with actorRef tools
+        String[] pathElements = actorPath.split("/");
+        if (pathElements[1].equals("shards")) {
+            return getShard(Integer.parseInt(pathElements[2]));
+        } else {
+            throw new IllegalArgumentException(String.format("No ActorShard found for actorPath [%s]", actorPath));
+        }
+    }
+
+    @Override
+    public ActorShard getShard(int shardId) {
+        return shards[shardId];
+    }
+
+    @Override
+    public int getNumberOfShards() {
+        return shards.length;
     }
 
 }

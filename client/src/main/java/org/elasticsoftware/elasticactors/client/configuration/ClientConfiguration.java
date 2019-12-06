@@ -14,18 +14,29 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.client.spring;
+package org.elasticsoftware.elasticactors.client.configuration;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.client.RemoteActorShardRefFactory;
+import org.elasticsoftware.elasticactors.client.cluster.RemoteActorSystemActorShardRefFactory;
+import org.elasticsoftware.elasticactors.client.serialization.ClientSerializationFrameworks;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.ShardAccessor;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 
-public class RabbitClientConfiguration {
+import java.util.List;
+
+public class ClientConfiguration {
+
+    @Bean
+    public ClientSerializationFrameworks serializationFrameworks(
+            ActorRefFactory actorRefFactory,
+            List<SerializationFramework> serializationFrameworks) {
+        return new ClientSerializationFrameworks(actorRefFactory, serializationFrameworks);
+    }
 
     @Bean
     public ActorRefFactory remoteActorShardRefFactory(
@@ -33,7 +44,7 @@ public class RabbitClientConfiguration {
             @Value("${ea.actorRefCache.maximumSize:10240}") Integer maximumSize) {
         Cache<String, ActorRef> actorRefCache =
                 CacheBuilder.newBuilder().maximumSize(maximumSize).build();
-        return new RemoteActorShardRefFactory(shardAccessor, actorRefCache);
+        return new RemoteActorSystemActorShardRefFactory(shardAccessor, actorRefCache);
     }
 
 }

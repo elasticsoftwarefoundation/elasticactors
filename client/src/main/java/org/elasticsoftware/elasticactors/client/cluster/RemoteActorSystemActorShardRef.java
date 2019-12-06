@@ -14,7 +14,7 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.client;
+package org.elasticsoftware.elasticactors.client.cluster;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
@@ -24,14 +24,14 @@ import org.reactivestreams.Publisher;
 import javax.annotation.Nullable;
 import java.util.concurrent.CompletionStage;
 
-public final class RemoteActorShardRef implements ActorRef {
+final class RemoteActorSystemActorShardRef implements ActorRef {
 
     private final String clusterName;
     private final ActorShard shard;
     private final String actorId;
     private final String refSpec;
 
-    RemoteActorShardRef(
+    RemoteActorSystemActorShardRef(
             String clusterName,
             ActorShard shard,
             String actorId) {

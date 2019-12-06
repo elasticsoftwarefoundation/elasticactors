@@ -14,23 +14,25 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.client;
+package org.elasticsoftware.elasticactors.serialization;
 
-import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+public interface SerializationAccessor {
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
+    /**
+     * Return the serializer for the given message type
+     *
+     * @param messageClass
+     * @param <T>
+     * @return
+     */
+    <T> MessageSerializer<T> getSerializer(Class<T> messageClass);
 
-public final class ActorSystemMessageSerializer implements MessageSerializer<ActorSystemMessage> {
-
-    private final static ActorSystemMessageSerializer INSTANCE = new ActorSystemMessageSerializer();
-
-    public static ActorSystemMessageSerializer get() {
-        return INSTANCE;
-    }
-
-    @Override
-    public ByteBuffer serialize(ActorSystemMessage object) throws IOException {
-        return ByteBuffer.wrap(object.getPayload());
-    }
+    /**
+     * Return the deserializer for the give message type
+     *
+     * @param messageClass
+     * @param <T>
+     * @return
+     */
+    <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass);
 }

@@ -16,28 +16,39 @@
 
 package org.elasticsoftware.elasticactors.test;
 
-import org.elasticsoftware.elasticactors.*;
-import org.elasticsoftware.elasticactors.cluster.*;
-import org.elasticsoftware.elasticactors.cluster.strategies.SingleNodeScaleUpStrategy;
+import org.elasticsoftware.elasticactors.ActorNode;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorShard;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.PhysicalNode;
+import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
+import org.elasticsoftware.elasticactors.cluster.ActorRefTools;
+import org.elasticsoftware.elasticactors.cluster.ActorShardRef;
+import org.elasticsoftware.elasticactors.cluster.ClusterService;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.LocalClusterActorNodeRef;
+import org.elasticsoftware.elasticactors.cluster.RebalancingEventListener;
+import org.elasticsoftware.elasticactors.cluster.ServiceActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.MessagingSystemDeserializers;
+import org.elasticsoftware.elasticactors.serialization.MessagingSystemSerializers;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SystemDeserializers;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializers;
 import org.elasticsoftware.elasticactors.util.ManifestTools;
 import org.springframework.context.ApplicationContext;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class InternalActorSystemsImpl implements InternalActorSystems, ActorRefFactory {
-    private final SystemSerializers systemSerializers = new SystemSerializers(this);
-    private final SystemDeserializers systemDeserializers = new SystemDeserializers(this,this);
+    private final SystemSerializers systemSerializers = new MessagingSystemSerializers(this);
+    private final SystemDeserializers systemDeserializers = new MessagingSystemDeserializers(this,this);
     private final ApplicationContext applicationContext;
     private final ClusterService clusterService;
     private final PhysicalNode localNode;

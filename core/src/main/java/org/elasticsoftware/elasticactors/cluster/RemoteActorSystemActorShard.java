@@ -31,6 +31,7 @@ import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 
 import java.util.List;
 
@@ -40,7 +41,7 @@ import java.util.List;
 
 public final class RemoteActorSystemActorShard implements ActorShard, MessageHandler {
     private static final PhysicalNode UNKNOWN_REMOTE_NODE = new PhysicalNodeImpl("UNKNOWN",null,false);
-    private final InternalActorSystems actorSystems;
+    private final SerializationFrameworks actorSystems;
     private final ShardKey shardKey;
     private final MessageQueueFactory messageQueueFactory;
     private final ActorRef myRef;

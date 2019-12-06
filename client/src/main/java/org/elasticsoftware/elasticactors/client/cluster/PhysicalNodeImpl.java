@@ -14,7 +14,7 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.client;
+package org.elasticsoftware.elasticactors.client.cluster;
 
 import org.elasticsoftware.elasticactors.PhysicalNode;
 

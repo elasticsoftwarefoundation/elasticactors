@@ -25,9 +25,9 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.LocalClusterActorNodeRef;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
-import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 
 import java.io.IOException;
@@ -37,7 +37,7 @@ public final class KafkaActorNode implements ActorNode {
     private final NodeKey key;
     private final PhysicalNode node;
     private final KafkaActorThread actorThread;
-    private final InternalActorSystem actorSystem;
+    private final SerializationAccessor actorSystem;
     private final ActorRef myRef;
 
     public KafkaActorNode(PhysicalNode node, KafkaActorThread actorThread, InternalActorSystem actorSystem) {

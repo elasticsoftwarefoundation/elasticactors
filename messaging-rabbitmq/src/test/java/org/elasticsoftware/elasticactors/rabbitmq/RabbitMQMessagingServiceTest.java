@@ -26,6 +26,7 @@ import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
@@ -62,7 +63,7 @@ public class RabbitMQMessagingServiceTest {
     private ActorRef senderRef;
     private ActorRef receiverRef;
     private ActorRefFactory actorRefFactory;
-    private InternalActorSystem internalActorSystem;
+    private SerializationAccessor serializationAccessor;
 
     @BeforeTest(alwaysRun = true)
     public void setUp() {
@@ -70,7 +71,7 @@ public class RabbitMQMessagingServiceTest {
         receiverRef = mock(ActorRef.class);
 
         actorRefFactory = mock(ActorRefFactory.class);
-        internalActorSystem = mock(InternalActorSystem.class);
+        serializationAccessor = mock(InternalActorSystem.class);
 
         when(receiverRef.toString()).thenReturn("actor://test.vdwbv.com/test/shards/1/testReceiver");
         when(senderRef.toString()).thenReturn("actor://test.vdwbv.com/test/shards/1/testSender");
@@ -92,7 +93,8 @@ public class RabbitMQMessagingServiceTest {
                                                                                  5672, System.getProperty("username","guest"),
                                                                                  System.getProperty("password","guest"),
                                                                                  MessageAcker.Type.DIRECT,
-                                                                                 queueExecutor, new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem), 10);
+                                                                                 queueExecutor, new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory),
+                serializationAccessor), 10);
         messagingService.start();
 
         final CountDownLatch waitLatch = new CountDownLatch(NUM_MESSAGES);

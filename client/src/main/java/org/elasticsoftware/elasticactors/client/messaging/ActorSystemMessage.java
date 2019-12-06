@@ -14,7 +14,7 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.client;
+package org.elasticsoftware.elasticactors.client.messaging;
 
 import org.elasticsoftware.elasticactors.serialization.Message;
 

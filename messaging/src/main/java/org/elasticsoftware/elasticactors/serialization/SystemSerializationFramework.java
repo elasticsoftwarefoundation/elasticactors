@@ -18,16 +18,15 @@ package org.elasticsoftware.elasticactors.serialization;
 
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
-import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class SystemSerializationFramework implements SerializationFramework {
-    private final InternalActorSystems internalActorSystems;
+    private final SerializationFrameworks serializationFrameworks;
 
-    public SystemSerializationFramework(InternalActorSystems internalActorSystems) {
-        this.internalActorSystems = internalActorSystems;
+    public SystemSerializationFramework(SerializationFrameworks serializationFrameworks) {
+        this.serializationFrameworks = serializationFrameworks;
     }
 
     @Override
@@ -37,12 +36,12 @@ public final class SystemSerializationFramework implements SerializationFramewor
 
     @Override
     public <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
-        return internalActorSystems.getSystemMessageSerializer(messageClass);
+        return serializationFrameworks.getSystemMessageSerializer(messageClass);
     }
 
     @Override
     public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
-        return internalActorSystems.getSystemMessageDeserializer(messageClass);
+        return serializationFrameworks.getSystemMessageDeserializer(messageClass);
     }
 
     @Override

@@ -16,7 +16,11 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorNode;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorShard;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -67,7 +71,7 @@ public class ActorRefTools {
 
     private ActorRef handleLocalActorSystemReference(String refSpec, String[] components, String actorId) {
         String actorSystemName = components[1];
-        InternalActorSystem actorSystem = actorSystems.get(actorSystemName);
+        SerializationAccessor actorSystem = actorSystems.get(actorSystemName);
         if (actorSystem == null) {
             throw new IllegalArgumentException(format("Unknown ActorSystem: %s", actorSystemName));
         }

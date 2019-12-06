@@ -18,12 +18,12 @@ package org.elasticsoftware.elasticactors.serialization.internal;
 
 import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.ImmutableInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
 
 import java.io.IOException;
@@ -36,11 +36,11 @@ import static org.elasticsoftware.elasticactors.messaging.UUIDTools.toUUID;
  */
 public final class InternalMessageDeserializer implements Deserializer<byte[],InternalMessage> {
     private final ActorRefDeserializer actorRefDeserializer;
-    private final InternalActorSystem internalActorSystem;
+    private final SerializationAccessor serializationAccessor;
 
-    public InternalMessageDeserializer(ActorRefDeserializer actorRefDeserializer, InternalActorSystem internalActorSystem) {
+    public InternalMessageDeserializer(ActorRefDeserializer actorRefDeserializer, SerializationAccessor serializationAccessor) {
         this.actorRefDeserializer = actorRefDeserializer;
-        this.internalActorSystem = internalActorSystem;
+        this.serializationAccessor = serializationAccessor;
     }
 
     @Override
@@ -71,7 +71,7 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
         if(messageClass == null) {
             return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable, timeout);
         } else {
-            Object payloadObject = internalActorSystem.getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
+            Object payloadObject = serializationAccessor.getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
             return new ImmutableInternalMessage(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), payloadObject, durable, undeliverable, timeout);
         }
     }

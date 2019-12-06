@@ -18,11 +18,10 @@ package org.elasticsoftware.elasticactors.serialization.internal;
 
 import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.ShardKey;
-import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
-import org.elasticsoftware.elasticactors.util.SerializationTools;
 
 import java.io.IOException;
 
@@ -32,9 +31,9 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.serializ
  * @author Joost van de Wijgerd
  */
 public final class PersistentActorSerializer implements Serializer<PersistentActor<ShardKey>,byte[]> {
-    private final InternalActorSystems actorSystems;
+    private final SerializationFrameworks actorSystems;
 
-    public PersistentActorSerializer(InternalActorSystems actorSystems) {
+    public PersistentActorSerializer(SerializationFrameworks actorSystems) {
         this.actorSystems = actorSystems;
     }
 

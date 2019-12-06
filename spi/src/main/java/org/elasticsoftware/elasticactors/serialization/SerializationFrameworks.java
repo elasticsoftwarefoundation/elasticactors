@@ -16,7 +16,11 @@
 
 package org.elasticsoftware.elasticactors.serialization;
 
-public interface SystemDeserializers {
+public interface SerializationFrameworks {
 
-    <T> MessageDeserializer<T> get(Class<T> messageClass);
+    <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass);
+
+    <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass);
+
+    SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass);
 }

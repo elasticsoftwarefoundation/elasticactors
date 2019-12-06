@@ -16,58 +16,7 @@
 
 package org.elasticsoftware.elasticactors.serialization;
 
-import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
-import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
-import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
-import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
-import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
-import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
-import org.elasticsoftware.elasticactors.messaging.internal.PersistActorMessage;
-import org.elasticsoftware.elasticactors.messaging.reactivestreams.CancelMessage;
-import org.elasticsoftware.elasticactors.messaging.reactivestreams.CompletedMessage;
-import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
-import org.elasticsoftware.elasticactors.messaging.reactivestreams.RequestMessage;
-import org.elasticsoftware.elasticactors.messaging.reactivestreams.SubscribeMessage;
-import org.elasticsoftware.elasticactors.messaging.reactivestreams.SubscriptionMessage;
-import org.elasticsoftware.elasticactors.serialization.internal.ActivateActorMessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.internal.ActorNodeMessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.internal.CancelScheduleMessageMessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.internal.CreateActorMessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.internal.DestroyActorMessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.internal.PersistActorMessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.reactivestreams.CancelMessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.reactivestreams.CompletedMessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.reactivestreams.NextMessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.reactivestreams.RequestMessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.reactivestreams.SubscribeMessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.reactivestreams.SubscriptionMessageSerializer;
+public interface SystemSerializers {
 
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * @author Joost van de Wijgerd
- */
-public final class SystemSerializers {
-    private final Map<Class,MessageSerializer> systemSerializers = new HashMap<>();
-
-    public SystemSerializers(InternalActorSystems cluster) {
-        systemSerializers.put(CreateActorMessage.class,new CreateActorMessageSerializer(cluster));
-        systemSerializers.put(DestroyActorMessage.class,new DestroyActorMessageSerializer());
-        systemSerializers.put(ActivateActorMessage.class,new ActivateActorMessageSerializer());
-        systemSerializers.put(CancelScheduledMessageMessage.class,new CancelScheduleMessageMessageSerializer());
-        systemSerializers.put(ActorNodeMessage.class, new ActorNodeMessageSerializer(cluster));
-        systemSerializers.put(PersistActorMessage.class, new PersistActorMessageSerializer());
-        //reactive streams protocol
-        systemSerializers.put(CancelMessage.class, new CancelMessageSerializer());
-        systemSerializers.put(CompletedMessage.class, new CompletedMessageSerializer());
-        systemSerializers.put(NextMessage.class, new NextMessageSerializer());
-        systemSerializers.put(RequestMessage.class, new RequestMessageSerializer());
-        systemSerializers.put(SubscribeMessage.class, new SubscribeMessageSerializer());
-        systemSerializers.put(SubscriptionMessage.class, new SubscriptionMessageSerializer());
-    }
-
-    public <T> MessageSerializer<T> get(Class<T> messageClass) {
-        return systemSerializers.get(messageClass);
-    }
+    <T> MessageSerializer<T> get(Class<T> messageClass);
 }

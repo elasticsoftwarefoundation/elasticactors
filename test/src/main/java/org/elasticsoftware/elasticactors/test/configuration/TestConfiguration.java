@@ -21,6 +21,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.PhysicalNode;
+import org.elasticsoftware.elasticactors.RemoteActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
@@ -34,8 +35,10 @@ import org.elasticsoftware.elasticactors.cluster.PhysicalNodeImpl;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
+import org.elasticsoftware.elasticactors.runtime.DefaultRemoteConfiguration;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
+import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
@@ -101,6 +104,11 @@ public class TestConfiguration {
         // yaml mapper
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         return objectMapper.readValue(configResource.getInputStream(), DefaultConfiguration.class);
+    }
+
+    @Bean(name = {"remoteConfiguration"})
+    public RemoteActorSystemConfiguration getRemoteConfiguration(ActorSystemConfiguration configuration) throws IOException {
+        return new DefaultRemoteConfiguration("testCluster", configuration.getName(), configuration.getNumberOfShards());
     }
 
     @Bean(name = {"objectMapper"})
@@ -179,8 +187,8 @@ public class TestConfiguration {
     }
 
     @Bean(name = "systemSerializationFramework")
-    public SystemSerializationFramework createSystemSerializationFramework(InternalActorSystems internalActorSystems) {
-        return new SystemSerializationFramework(internalActorSystems);
+    public SystemSerializationFramework createSystemSerializationFramework(SerializationFrameworks serializationFrameworks) {
+        return new SystemSerializationFramework(serializationFrameworks);
     }
 
 }

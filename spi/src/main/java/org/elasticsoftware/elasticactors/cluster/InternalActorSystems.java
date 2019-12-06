@@ -21,22 +21,14 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.ActorSystems;
 import org.elasticsoftware.elasticactors.ElasticActor;
-import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface InternalActorSystems extends ActorSystems {
+public interface InternalActorSystems extends ActorSystems, SerializationFrameworks {
     @Override
     InternalActorSystem get(String name);
-
-    <T> MessageSerializer<T> getSystemMessageSerializer(Class<T> messageClass);
-
-    <T> MessageDeserializer<T> getSystemMessageDeserializer(Class<T> messageClass);
-
-    SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass);
 
     ActorRef createPersistentActorRef(ActorShard shard, String actorId);
 
