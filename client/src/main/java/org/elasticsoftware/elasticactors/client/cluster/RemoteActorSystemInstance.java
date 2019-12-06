@@ -27,6 +27,8 @@ import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.ActorSystems;
 import org.elasticsoftware.elasticactors.RemoteActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.client.messaging.ActorSystemMessage;
+import org.elasticsoftware.elasticactors.client.serialization.ActorSystemMessageSerializer;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRegistry;
 import org.elasticsoftware.elasticactors.cluster.ShardAccessor;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
@@ -213,6 +215,7 @@ public final class RemoteActorSystemInstance implements ActorSystem, ShardAccess
         return shards.length;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
         MessageSerializer<T> messageSerializer = serializationFrameworks.getSystemMessageSerializer(messageClass);
@@ -221,6 +224,8 @@ public final class RemoteActorSystemInstance implements ActorSystem, ShardAccess
             if(messageAnnotation != null) {
                 SerializationFramework framework = serializationFrameworks.getSerializationFramework(messageAnnotation.serializationFramework());
                 messageSerializer = framework.getSerializer(messageClass);
+            } else if (ActorSystemMessage.class.isAssignableFrom(messageClass)) {
+                messageSerializer = (MessageSerializer<T>) ActorSystemMessageSerializer.get();
             }
         }
         return messageSerializer;
