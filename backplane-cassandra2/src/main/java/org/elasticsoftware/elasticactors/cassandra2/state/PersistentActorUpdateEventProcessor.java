@@ -21,6 +21,7 @@ import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.Session;
+import org.elasticsoftware.elasticactors.cassandra.common.state.PersistentActorUpdateEvent;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +59,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
         this.insertStatement = cassandraSession.prepare(INSERT_QUERY);
         this.deleteStatement = cassandraSession.prepare(DELETE_QUERY);
         if(optimizedV1Batches) {
-            prepateBatchIfNeeded(maxBatchSize);
+            prepareBatchIfNeeded(maxBatchSize);
         }
         this.optimizedV1Batches = optimizedV1Batches;
     }
@@ -68,7 +69,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
      *
      * @param maxBatchSize
      */
-    private void prepateBatchIfNeeded(int maxBatchSize) {
+    private void prepareBatchIfNeeded(int maxBatchSize) {
         // check the protocol to see if BatchStatements are supported
         ProtocolVersion protocolVersion = cassandraSession.getCluster().getConfiguration().getProtocolOptions().getProtocolVersion();
         if(ProtocolVersion.V1.equals(protocolVersion)) {

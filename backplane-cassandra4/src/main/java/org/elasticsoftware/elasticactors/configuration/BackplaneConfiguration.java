@@ -16,18 +16,17 @@
 
 package org.elasticsoftware.elasticactors.configuration;
 
-import com.datastax.driver.core.*;
-import com.datastax.driver.core.policies.ConstantReconnectionPolicy;
-import com.datastax.driver.core.policies.DefaultRetryPolicy;
-import com.datastax.driver.core.policies.LoggingRetryPolicy;
-import com.datastax.driver.core.policies.RoundRobinPolicy;
-import org.elasticsoftware.elasticactors.cassandra2.cluster.CassandraActorSystemEventListenerRepository;
-import org.elasticsoftware.elasticactors.cassandra2.cluster.scheduler.CassandraScheduledMessageRepository;
-import org.elasticsoftware.elasticactors.cassandra2.health.CassandraHealthCheck;
+import com.datastax.oss.driver.api.core.ConsistencyLevel;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
+import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
 import org.elasticsoftware.elasticactors.cassandra.common.serialization.CompressingSerializer;
 import org.elasticsoftware.elasticactors.cassandra.common.serialization.DecompressingDeserializer;
-import org.elasticsoftware.elasticactors.cassandra2.state.CassandraPersistentActorRepository;
-import org.elasticsoftware.elasticactors.cassandra2.state.PersistentActorUpdateEventProcessor;
+import org.elasticsoftware.elasticactors.cassandra4.cluster.CassandraActorSystemEventListenerRepository;
+import org.elasticsoftware.elasticactors.cassandra4.cluster.scheduler.CassandraScheduledMessageRepository;
+import org.elasticsoftware.elasticactors.cassandra4.health.CassandraHealthCheck;
+import org.elasticsoftware.elasticactors.cassandra4.state.CassandraPersistentActorRepository;
+import org.elasticsoftware.elasticactors.cassandra4.state.PersistentActorUpdateEventProcessor;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRepository;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
@@ -50,7 +49,12 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.net.InetSocketAddress;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Joost van de Wijgerd
@@ -63,12 +67,11 @@ public class BackplaneConfiguration {
     @Autowired
     private ActorRefFactory actorRefFactory;
 
-    private Session cassandraSession;
+    private CqlSession cassandraSession;
 
     @PostConstruct
     public void initialize() {
         String cassandraHosts = env.getProperty("ea.cassandra.hosts","localhost:9042");
-        String cassandraClusterName = env.getProperty("ea.cassandra.cluster","ElasticActorsCluster");
         String cassandraKeyspaceName = env.getProperty("ea.cassandra.keyspace","\"ElasticActors\"");
         Integer cassandraPort = env.getProperty("ea.cassandra.port", Integer.class, 9042);
 
@@ -85,30 +88,30 @@ public class BackplaneConfiguration {
             i+=1;
         }
 
-        PoolingOptions poolingOptions = new PoolingOptions();
-        poolingOptions.setHeartbeatIntervalSeconds(60);
-        poolingOptions.setConnectionsPerHost(HostDistance.LOCAL, 2, env.getProperty("ea.cassandra.maxActive",Integer.class,Runtime.getRuntime().availableProcessors() * 3));
-        poolingOptions.setPoolTimeoutMillis(2000);
+        List<InetSocketAddress> contactPointAddresses = Arrays.stream(contactPoints)
+                .map(host -> new InetSocketAddress(host, cassandraPort))
+                .collect(Collectors.toList());
 
-        Cluster cassandraCluster =
-                Cluster.builder().withClusterName(cassandraClusterName)
-                        .addContactPoints(contactPoints)
-                        .withPort(cassandraPort)
-                .withLoadBalancingPolicy(new RoundRobinPolicy())
-                .withRetryPolicy(new LoggingRetryPolicy(DefaultRetryPolicy.INSTANCE))
-                .withPoolingOptions(poolingOptions)
-                .withReconnectionPolicy(new ConstantReconnectionPolicy(env.getProperty("ea.cassandra.retryDownedHostsDelayInSeconds",Integer.class,1) * 1000))
-                .withQueryOptions(new QueryOptions().setConsistencyLevel(ConsistencyLevel.QUORUM)).build();
+        DriverConfigLoader driverConfigLoader = DriverConfigLoader.programmaticBuilder()
+                .withDuration(DefaultDriverOption.HEARTBEAT_INTERVAL, Duration.ofSeconds(60))
+                .withString(DefaultDriverOption.REQUEST_CONSISTENCY, ConsistencyLevel.QUORUM.name())
+                .withString(DefaultDriverOption.RETRY_POLICY_CLASS, "DefaultRetryPolicy")
+                .withString(DefaultDriverOption.RECONNECTION_POLICY_CLASS, "ConstantReconnectionPolicy")
+                .withDuration(DefaultDriverOption.RECONNECTION_BASE_DELAY, Duration.ofSeconds(env.getProperty("ea.cassandra.retryDownedHostsDelayInSeconds",Integer.class,1)))
+                .withString(DefaultDriverOption.LOAD_BALANCING_POLICY_CLASS, "DcInferringLoadBalancingPolicy")
+                .build();
 
-        this.cassandraSession = cassandraCluster.connect(cassandraKeyspaceName);
 
-        
+        cassandraSession = CqlSession.builder()
+                .addContactPoints(contactPointAddresses)
+                .withConfigLoader(driverConfigLoader)
+                .withKeyspace(cassandraKeyspaceName)
+                .build();
     }
 
     @PreDestroy
     public void destroy() {
         this.cassandraSession.close();
-        this.cassandraSession.getCluster().close();
     }
 
     @Bean(name = {"asyncUpdateExecutor"}, destroyMethod = "shutdown")

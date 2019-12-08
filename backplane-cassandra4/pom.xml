@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~   Copyright 2013 - 2019 The Original Authors
   ~
@@ -14,15 +15,17 @@
   ~   limitations under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>org.elasticsoftware.elasticactors</groupId>
         <artifactId>elasticactors-parent</artifactId>
+        <groupId>org.elasticsoftware.elasticactors</groupId>
         <version>2.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>backplane-cassandra2</artifactId>
+    <artifactId>backplane-cassandra4</artifactId>
     <packaging>jar</packaging>
 
     <name>Elastic Software Foundation :: ElasticActors :: Cassandra 2.x Backplane</name>
@@ -34,25 +37,16 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.lz4</groupId>
-            <artifactId>lz4-java</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.elasticsoftware.elasticactors</groupId>
-            <artifactId>elasticactors-spi</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.elasticsoftware.elasticactors</groupId>
-            <artifactId>elasticactors-core</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.elasticsoftware.elasticactors</groupId>
             <artifactId>backplane-cassandra-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.datastax.cassandra</groupId>
-            <artifactId>cassandra-driver-core</artifactId>
-            <classifier>shaded</classifier>
+            <groupId>com.datastax.oss</groupId>
+            <artifactId>java-driver-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-handler</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -63,4 +57,6 @@
             <artifactId>spring-context</artifactId>
         </dependency>
     </dependencies>
+
+
 </project>
