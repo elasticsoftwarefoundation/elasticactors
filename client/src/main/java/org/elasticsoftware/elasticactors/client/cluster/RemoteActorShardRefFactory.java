@@ -19,24 +19,29 @@ package org.elasticsoftware.elasticactors.client.cluster;
 import com.google.common.cache.Cache;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
-import org.elasticsoftware.elasticactors.cluster.ShardAccessor;
+import org.springframework.context.ApplicationContext;
 
 import static java.lang.String.format;
 
-public final class RemoteActorSystemActorShardRefFactory implements ActorRefFactory {
+public final class RemoteActorShardRefFactory implements ActorRefFactory {
 
     private static final String EXCEPTION_FORMAT =
             "Invalid ActorRef, required spec: "
                     + "[actor://<cluster>/<actorSystem>/[shards|nodes|services]/<shardId>/"
                     + "<actorId (optional)>, actual spec: [%s]";
 
-    private final ShardAccessor shardAccessor;
+    private final ApplicationContext applicationContext;
     private final Cache<String, ActorRef> actorRefCache;
+    private RemoteActorSystems actorSystems;
 
-    public RemoteActorSystemActorShardRefFactory(
-            ShardAccessor shardAccessor,
-            Cache<String, ActorRef> actorRefCache) {
-        this.shardAccessor = shardAccessor;
+    private RemoteActorSystems getActorSystems() {
+        return actorSystems != null
+                ? actorSystems
+                : (actorSystems = applicationContext.getBean(RemoteActorSystems.class));
+    }
+
+    public RemoteActorShardRefFactory(ApplicationContext applicationContext, Cache<String, ActorRef> actorRefCache) {
+        this.applicationContext = applicationContext;
         this.actorRefCache = actorRefCache;
     }
 
@@ -85,9 +90,9 @@ public final class RemoteActorSystemActorShardRefFactory implements ActorRefFact
         if ("shards".equals(components[2])) {
             return handleRemoteShard(components, actorId);
         } else if ("nodes".equals(components[2])) {
-            throw new UnsupportedOperationException("Remote ActorSystem cannot resolve nodes");
+            return handleRemoteNode(components, actorId);
         } else if ("services".equals(components[2])) {
-            throw new UnsupportedOperationException("Remote ActorSystem cannot resolve services");
+            return handleRemoteService(components, actorId);
         } else {
             throw new IllegalArgumentException(format(EXCEPTION_FORMAT, refSpec));
         }
@@ -96,10 +101,42 @@ public final class RemoteActorSystemActorShardRefFactory implements ActorRefFact
     protected ActorRef handleRemoteShard(String[] components, String actorId) {
         String clusterName = components[0];
         String actorSystemName = components[1];
+        RemoteActorSystemInstance remoteActorSystem =
+                getActorSystems().get(clusterName, actorSystemName);
         int shardId = Integer.parseInt(components[3]);
-        return new RemoteActorSystemActorShardRef(
+        if (remoteActorSystem == null) {
+            // return a disconnected actor ref that throws exception on tell() so that the
+            // deserialization never fails even when the remote actor cannot be reached
+            return new DisconnectedRemoteActorShardRef(
+                    clusterName,
+                    actorSystemName,
+                    actorId,
+                    shardId);
+        }
+        return new RemoteActorShardRef(
                 clusterName,
-                shardAccessor.getShard(format("%s/shards/%d", actorSystemName, shardId)),
+                remoteActorSystem.getShard(format("%s/shards/%d", actorSystemName, shardId)),
+                actorId);
+    }
+
+    protected ActorRef handleRemoteNode(String[] components, String actorId) {
+        String clusterName = components[0];
+        String actorSystemName = components[1];
+        String nodeId = components[3];
+        return new DisconnectedRemoteActorNodeRef(
+                clusterName,
+                actorSystemName,
+                nodeId,
+                actorId);
+    }
+
+    protected ActorRef handleRemoteService(String[] components, String actorId) {
+        String clusterName = components[0];
+        String actorSystemName = components[1];
+        return new DisconnectedServiceActorRef(
+                clusterName,
+                actorSystemName,
+                components[3],
                 actorId);
     }
 

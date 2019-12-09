@@ -18,7 +18,7 @@ package org.elasticsoftware.elasticactors.test;
 
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ServiceActor;
-import org.elasticsoftware.elasticactors.client.cluster.RemoteActorSystemInstance;
+import org.elasticsoftware.elasticactors.client.cluster.RemoteActorSystems;
 import org.elasticsoftware.elasticactors.runtime.ScannerHelper;
 import org.elasticsoftware.elasticactors.spring.ActorAnnotationBeanNameGenerator;
 import org.elasticsoftware.elasticactors.spring.AnnotationConfigApplicationContext;
@@ -56,7 +56,7 @@ public final class TestActorSystem {
     }
 
     public ActorSystem getRemoteActorSystem() {
-        return applicationContext.getBean(RemoteActorSystemInstance.class);
+        return applicationContext.getBean(RemoteActorSystems.class).get("testCluster", "test");
     }
 
     @PostConstruct

@@ -18,6 +18,8 @@ package org.elasticsoftware.elasticactors.client.cluster;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
+import org.elasticsoftware.elasticactors.ActorContainer;
+import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorRefGroup;
 import org.elasticsoftware.elasticactors.ActorShard;
@@ -33,6 +35,7 @@ import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRegistr
 import org.elasticsoftware.elasticactors.cluster.ShardAccessor;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
@@ -47,7 +50,8 @@ import javax.annotation.PreDestroy;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
-public final class RemoteActorSystemInstance implements ActorSystem, ShardAccessor, SerializationAccessor {
+public final class RemoteActorSystemInstance
+        implements ActorSystem, ShardAccessor, SerializationAccessor {
 
     private final HashFunction hashFunction = Hashing.murmur3_32();
     private final RemoteActorSystemConfiguration configuration;
@@ -56,7 +60,7 @@ public final class RemoteActorSystemInstance implements ActorSystem, ShardAccess
     private final SerializationFrameworks serializationFrameworks;
     private final MessageQueueFactory messageQueueFactory;
 
-    public RemoteActorSystemInstance(
+    RemoteActorSystemInstance(
             RemoteActorSystemConfiguration configuration,
             SerializationFrameworks serializationFrameworks,
             MessageQueueFactory messageQueueFactory) {
@@ -113,48 +117,58 @@ public final class RemoteActorSystemInstance implements ActorSystem, ShardAccess
         shard.sendMessage(null, shard.getActorRef(), createActorMessage);
         // create actor ref
         // @todo: add cache to speed up performance
-        return new RemoteActorSystemActorShardRef(configuration.getClusterName(), shard, actorId);
+        return new RemoteActorShardRef(configuration.getClusterName(), shard, actorId);
     }
 
     @Override
     public <T> ActorRef tempActorOf(Class<T> actorClass, @Nullable ActorState initialState)
             throws Exception {
-        throw new UnsupportedOperationException("Temporary Actors are not supported for Remote ActorSystem instances");
+        throw new UnsupportedOperationException(
+                "Temporary Actors are not supported for Remote ActorSystem instances");
     }
 
     @Override
     public ActorRef actorFor(String actorId) {
         ActorShard shard = shardFor(actorId);
-        return new RemoteActorSystemActorShardRef(configuration.getClusterName(), shard, actorId);
+        return new RemoteActorShardRef(configuration.getClusterName(), shard, actorId);
     }
 
     private ActorShard shardFor(String actorId) {
-        return shards[Math.abs(hashFunction.hashString(actorId, StandardCharsets.UTF_8).asInt()) % shards.length];
+        return shards[Math.abs(hashFunction.hashString(actorId, StandardCharsets.UTF_8).asInt())
+                % shards.length];
     }
 
     @Override
     public ActorRef serviceActorFor(String actorId) {
-        throw new UnsupportedOperationException("Service Actors are not supported for Remote ActorSystem instances");
+        throw new UnsupportedOperationException(
+                "Service Actors are not supported for Remote ActorSystem instances");
     }
 
     @Override
     public ActorRef serviceActorFor(String nodeId, String actorId) {
-        throw new UnsupportedOperationException("Service Actors are not supported for Remote ActorSystem instances");
+        throw new UnsupportedOperationException(
+                "Service Actors are not supported for Remote ActorSystem instances");
     }
 
     @Override
     public Scheduler getScheduler() {
-        throw new UnsupportedOperationException("Scheduler is not supported for Remote ActorSystem instances");
+        throw new UnsupportedOperationException(
+                "Scheduler is not supported for Remote ActorSystem instances");
     }
 
     @Override
     public ActorSystems getParent() {
-        throw new UnsupportedOperationException("Parent ActorSystem not available for remote ActorSystem instances");
+        throw new UnsupportedOperationException(
+                "Parent ActorSystem not available for remote ActorSystem instances");
     }
 
     @Override
     public void stop(ActorRef actorRef) throws Exception {
-        throw new UnsupportedOperationException("Not yet implemented");
+        ActorContainer handlingContainer = ((ActorContainerRef) actorRef).getActorContainer();
+        handlingContainer.sendMessage(
+                null,
+                handlingContainer.getActorRef(),
+                new DestroyActorMessage(actorRef));
     }
 
     @Override
@@ -164,18 +178,21 @@ public final class RemoteActorSystemInstance implements ActorSystem, ShardAccess
 
     @Override
     public ActorSystemEventListenerRegistry getEventListenerRegistry() {
-        throw new UnsupportedOperationException("Event listener registry is not supported for remote ActorSystem instances");
+        throw new UnsupportedOperationException(
+                "Event listener registry is not supported for remote ActorSystem instances");
     }
 
     @Override
     public ActorRefGroup groupOf(Collection<ActorRef> members) throws IllegalArgumentException {
-        throw new UnsupportedOperationException("Creating Remote ActorRefGroup objects is not supported for Remote ActorSystem instances");
+        throw new UnsupportedOperationException(
+                "Creating Remote ActorRefGroup objects is not supported for Remote ActorSystem "
+                        + "instances");
     }
 
     @PostConstruct
     public void init() throws Exception {
         for (int i = 0; i < shards.length; i++) {
-            this.shards[i] = new RemoteActorSystemActorShard(
+            this.shards[i] = new RemoteActorShard(
                     configuration.getClusterName(),
                     new ShardKey(configuration.getName(), i),
                     messageQueueFactory,
@@ -201,7 +218,9 @@ public final class RemoteActorSystemInstance implements ActorSystem, ShardAccess
         if (pathElements[1].equals("shards")) {
             return getShard(Integer.parseInt(pathElements[2]));
         } else {
-            throw new IllegalArgumentException(String.format("No ActorShard found for actorPath [%s]", actorPath));
+            throw new IllegalArgumentException(String.format(
+                    "No ActorShard found for actorPath [%s]",
+                    actorPath));
         }
     }
 
@@ -218,11 +237,13 @@ public final class RemoteActorSystemInstance implements ActorSystem, ShardAccess
     @SuppressWarnings("unchecked")
     @Override
     public <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
-        MessageSerializer<T> messageSerializer = serializationFrameworks.getSystemMessageSerializer(messageClass);
-        if(messageSerializer == null) {
+        MessageSerializer<T> messageSerializer =
+                serializationFrameworks.getSystemMessageSerializer(messageClass);
+        if (messageSerializer == null) {
             Message messageAnnotation = messageClass.getAnnotation(Message.class);
-            if(messageAnnotation != null) {
-                SerializationFramework framework = serializationFrameworks.getSerializationFramework(messageAnnotation.serializationFramework());
+            if (messageAnnotation != null) {
+                SerializationFramework framework =
+                        serializationFrameworks.getSerializationFramework(messageAnnotation.serializationFramework());
                 messageSerializer = framework.getSerializer(messageClass);
             } else if (ActorSystemMessage.class.isAssignableFrom(messageClass)) {
                 messageSerializer = (MessageSerializer<T>) ActorSystemMessageSerializer.get();
@@ -233,11 +254,13 @@ public final class RemoteActorSystemInstance implements ActorSystem, ShardAccess
 
     @Override
     public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
-        MessageDeserializer<T> messageDeserializer = serializationFrameworks.getSystemMessageDeserializer(messageClass);
-        if(messageDeserializer == null) {
+        MessageDeserializer<T> messageDeserializer =
+                serializationFrameworks.getSystemMessageDeserializer(messageClass);
+        if (messageDeserializer == null) {
             Message messageAnnotation = messageClass.getAnnotation(Message.class);
-            if(messageAnnotation != null) {
-                SerializationFramework framework = serializationFrameworks.getSerializationFramework(messageAnnotation.serializationFramework());
+            if (messageAnnotation != null) {
+                SerializationFramework framework =
+                        serializationFrameworks.getSerializationFramework(messageAnnotation.serializationFramework());
                 messageDeserializer = framework.getDeserializer(messageClass);
             }
         }

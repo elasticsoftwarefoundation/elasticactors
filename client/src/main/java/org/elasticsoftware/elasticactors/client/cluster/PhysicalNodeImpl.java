@@ -61,8 +61,7 @@ final class PhysicalNodeImpl implements PhysicalNode {
             return false;
         }
         PhysicalNodeImpl that = (PhysicalNodeImpl) o;
-        return local == that.local &&
-                Objects.equals(id, that.id);
+        return Objects.equals(id, that.id);
     }
 
     @Override

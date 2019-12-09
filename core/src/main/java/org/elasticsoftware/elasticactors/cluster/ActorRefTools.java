@@ -121,8 +121,6 @@ public class ActorRefTools {
     }
 
     private ActorRef handleRemoteActorSystemReference(String refSpec, String[] components, String actorId) {
-        String clusterName = components[0];
-        String actorSystemName = components[1];
         if ("shards".equals(components[2])) {
             return handleRemoteShard(components, actorId);
         } else if ("nodes".equals(components[2])) {

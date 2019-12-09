@@ -60,7 +60,7 @@ public class MessagingConfiguration {
                                 useMessageHandler, useReceiveImmediate);
     }
 
-    @Bean(name = {"messagingService,remoteActorSystemMessageQueueFactoryFactory"})
+    @Bean(name = {"messagingService", "remoteActorSystemMessageQueueFactoryFactory"})
     public MessagingService getMessagingService() {
         return messagingService;
     }

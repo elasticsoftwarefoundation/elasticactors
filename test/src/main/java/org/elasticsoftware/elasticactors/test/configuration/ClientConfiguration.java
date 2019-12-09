@@ -16,12 +16,18 @@
 
 package org.elasticsoftware.elasticactors.test.configuration;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.RemoteActorSystemConfiguration;
-import org.elasticsoftware.elasticactors.client.cluster.RemoteActorSystemInstance;
+import org.elasticsoftware.elasticactors.client.cluster.RemoteActorShardRefFactory;
+import org.elasticsoftware.elasticactors.client.cluster.RemoteActorSystems;
 import org.elasticsoftware.elasticactors.client.serialization.ClientSerializationFrameworks;
-import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 
 import java.util.List;
@@ -29,15 +35,35 @@ import java.util.List;
 public class ClientConfiguration {
 
     @Bean
-    public RemoteActorSystemInstance clientActorSystem(
-            RemoteActorSystemConfiguration configuration,
-            ActorRefFactory actorRefFactory,
-            MessageQueueFactory localMessageQueueFactory,
+    public RemoteActorSystems clientRemoteActorSystems(
+            List<RemoteActorSystemConfiguration> remoteConfigurations,
+            ClientSerializationFrameworks serializationFrameworks,
+            MessageQueueFactoryFactory remoteActorSystemMessageQueueFactoryFactory) {
+        return new RemoteActorSystems(
+                remoteConfigurations,
+                serializationFrameworks,
+                remoteActorSystemMessageQueueFactoryFactory);
+    }
+
+    @Bean
+    public ClientSerializationFrameworks clientSerializationFrameworks(
+            RemoteActorShardRefFactory actorShardRefFactory,
             List<SerializationFramework> serializationFrameworks) {
-        return new RemoteActorSystemInstance(
-                configuration,
-                new ClientSerializationFrameworks(actorRefFactory, serializationFrameworks),
-                localMessageQueueFactory);
+        return new ClientSerializationFrameworks(actorShardRefFactory, serializationFrameworks);
+    }
+
+    @Bean
+    public RemoteActorShardRefFactory remoteActorShardRefFactory(
+            ApplicationContext applicationContext,
+            @Value("${ea.actorRefCache.maximumSize:10240}") Integer maximumSize) {
+        Cache<String, ActorRef> actorRefCache =
+                CacheBuilder.newBuilder().maximumSize(maximumSize).build();
+        return new RemoteActorShardRefFactory(applicationContext, actorRefCache);
+    }
+
+    @Bean
+    public MessageQueueFactoryFactory messageQueueFactoryFactory(MessageQueueFactory localMessageQueueFactory) {
+        return clusterName -> localMessageQueueFactory;
     }
 
 }

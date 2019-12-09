@@ -94,7 +94,12 @@ public class NodeConfiguration {
     }
 
 
-    @Bean(name = {"elasticActorsNode,actorSystems,actorRefFactory"})
+    @Bean(name = {
+            "elasticActorsNode",
+            "actorSystems",
+            "actorRefFactory",
+            "serializationFrameworks"
+    })
     public ElasticActorsNode getNode() {
         return node;
     }

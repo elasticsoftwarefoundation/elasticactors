@@ -16,22 +16,25 @@
 
 package org.elasticsoftware.elasticactors.client.cluster;
 
+import org.elasticsoftware.elasticactors.ActorContainer;
+import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.reactivestreams.Publisher;
 
 import javax.annotation.Nullable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-final class RemoteActorSystemActorShardRef implements ActorRef {
+final class RemoteActorShardRef implements ActorRef, ActorContainerRef {
 
     private final String clusterName;
     private final ActorShard shard;
     private final String actorId;
     private final String refSpec;
 
-    RemoteActorSystemActorShardRef(
+    RemoteActorShardRef(
             String clusterName,
             ActorShard shard,
             String actorId) {
@@ -69,7 +72,7 @@ final class RemoteActorSystemActorShardRef implements ActorRef {
     @Override
     public String getActorPath() {
         return String.format(
-                "%s/nodes/%s",
+                "%s/shards/%s",
                 shard.getKey().getActorSystemName(),
                 shard.getKey().getShardId());
     }
@@ -81,7 +84,10 @@ final class RemoteActorSystemActorShardRef implements ActorRef {
 
     @Override
     public void tell(Object message, ActorRef sender) throws MessageDeliveryException {
-        throw new UnsupportedOperationException("Can only send anonymous messages (i.e. no sender");
+        if (sender != null) {
+            throw new IllegalArgumentException("Can only send anonymous messages (i.e. no sender");
+        }
+        tell(message);
     }
 
     @Override
@@ -100,7 +106,9 @@ final class RemoteActorSystemActorShardRef implements ActorRef {
 
     @Override
     public <T> CompletionStage<T> ask(Object message, Class<T> responseType) {
-        throw new UnsupportedOperationException("Remote actors cannot use ask");
+        CompletableFuture<T> future = new CompletableFuture<>();
+        future.completeExceptionally(getAskException());
+        return future;
     }
 
     @Override
@@ -108,7 +116,13 @@ final class RemoteActorSystemActorShardRef implements ActorRef {
             Object message,
             Class<T> responseType,
             Boolean persistOnResponse) {
-        throw new UnsupportedOperationException("Remote actors cannot use ask");
+        CompletableFuture<T> future = new CompletableFuture<>();
+        future.completeExceptionally(getAskException());
+        return future;
+    }
+
+    private UnsupportedOperationException getAskException() {
+        return new UnsupportedOperationException("Remote actors references cannot use ask");
     }
 
     @Override
@@ -118,7 +132,7 @@ final class RemoteActorSystemActorShardRef implements ActorRef {
 
     @Override
     public <T> Publisher<T> publisherOf(Class<T> messageClass) {
-        throw new UnsupportedOperationException("Client actor refs can't publish");
+        return s -> s.onError(new UnsupportedOperationException("Remote actor refs can't publish"));
     }
 
     @Override
@@ -134,5 +148,10 @@ final class RemoteActorSystemActorShardRef implements ActorRef {
     @Override
     public final String toString() {
         return this.refSpec;
+    }
+
+    @Override
+    public ActorContainer getActorContainer() {
+        return shard;
     }
 }

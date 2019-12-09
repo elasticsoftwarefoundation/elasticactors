@@ -553,6 +553,7 @@
         <module>client</module>
         <module>messaging</module>
         <module>client-spring-amqp</module>
+        <module>client-rabbitmq</module>
     </modules>
 
     <build>

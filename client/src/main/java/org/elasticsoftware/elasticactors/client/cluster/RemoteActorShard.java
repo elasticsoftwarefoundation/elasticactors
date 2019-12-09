@@ -37,7 +37,7 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 
 import java.util.List;
 
-final class RemoteActorSystemActorShard implements ActorShard, MessageHandler {
+final class RemoteActorShard implements ActorShard, MessageHandler {
 
     private static final PhysicalNode UNKNOWN_REMOTE_NODE =
             new PhysicalNodeImpl("UNKNOWN", null, false);
@@ -50,7 +50,7 @@ final class RemoteActorSystemActorShard implements ActorShard, MessageHandler {
 
     private MessageQueue messageQueue;
 
-    RemoteActorSystemActorShard(
+    RemoteActorShard(
             String clusterName,
             ShardKey key,
             MessageQueueFactory messageQueueFactory,
@@ -59,7 +59,7 @@ final class RemoteActorSystemActorShard implements ActorShard, MessageHandler {
         this.messageQueueFactory = messageQueueFactory;
         this.serializationFrameworks = serializationFrameworks;
         this.actorPath = String.format("%s/shards/%d", key.getActorSystemName(), key.getShardId());
-        this.myRef = new RemoteActorSystemActorShardRef(clusterName, this, null);
+        this.myRef = new RemoteActorShardRef(clusterName, this, null);
     }
 
     @Override
@@ -159,7 +159,7 @@ final class RemoteActorSystemActorShard implements ActorShard, MessageHandler {
     @Override
     public void undeliverableMessage(
             InternalMessage undeliverableMessage, ActorRef receiverRef) throws Exception {
-        throw new UnsupportedOperationException("Remote ActorSystem shards can't receive responses");
+        // Do nothing
     }
 
     @Override
@@ -176,7 +176,8 @@ final class RemoteActorSystemActorShard implements ActorShard, MessageHandler {
     public void handleMessage(InternalMessage message, MessageHandlerEventListener mhel) {
         mhel.onError(
                 message,
-                new UnsupportedOperationException("Remote ActorSystem shards can't handle messages"));
+                new UnsupportedOperationException("Remote ActorSystem shards can't handle "
+                        + "messages"));
     }
 
     @Override
