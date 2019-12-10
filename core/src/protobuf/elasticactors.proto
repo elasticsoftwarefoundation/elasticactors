@@ -1,0 +1,41 @@
+syntax = "proto2";
+
+package org.elasticsoftware.elasticactors.serialization.protobuf;
+
+
+option optimize_for = SPEED;
+
+// WARNING:
+//    you must not change the tag numbers of any existing fields.
+//    you must not add or delete any required fields.
+//    you may delete optional or repeated fields.
+//    you may add new optional or repeated fields but you must use fresh tag numbers (i.e. tag numbers that were never
+//        used in this protocol buffer, not even by deleted fields).
+
+message ActorSystemEventListener {
+    optional string actorId = 1;
+    optional string messageClass = 2;
+    optional bytes message = 3;
+}
+
+message PersistentActor {
+    optional string actorRef = 1;
+    optional string actorClass = 2;
+    optional string actorSystemVersion = 3;
+    optional bytes state = 4;
+    optional string shardKey = 5;
+    repeated Subscriber subscribers = 6;
+    repeated Subscription subscriptions = 7;
+}
+
+message Subscriber {
+    optional string subscriberRef = 1;
+    optional string messageName = 2;
+    optional uint64 leases = 3;
+}
+
+message Subscription {
+    optional string publisherRef = 1;
+    optional string messageName = 2;
+    optional bool cancelled = 3;
+}

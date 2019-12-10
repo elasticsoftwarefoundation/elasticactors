@@ -143,6 +143,11 @@
             </dependency>
             <dependency>
                 <groupId>org.elasticsoftware.elasticactors</groupId>
+                <artifactId>elasticactors-messaging</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.elasticsoftware.elasticactors</groupId>
                 <artifactId>elasticactors-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -164,6 +169,11 @@
             <dependency>
                 <groupId>org.elasticsoftware.elasticactors</groupId>
                 <artifactId>elasticactors-spi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <artifactId>elasticactors-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -540,6 +550,10 @@
         <module>cluster-kubernetes</module>
         <module>backplane-cassandra-common</module>
         <module>backplane-cassandra4</module>
+        <module>client</module>
+        <module>messaging</module>
+        <module>client-spring-amqp</module>
+        <module>client-rabbitmq</module>
     </modules>
 
     <build>

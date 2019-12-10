@@ -17,10 +17,25 @@
 package org.elasticsoftware.elasticactors.kafka.cluster;
 
 import com.google.common.cache.Cache;
-import org.elasticsoftware.elasticactors.*;
-import org.elasticsoftware.elasticactors.cluster.*;
+import org.elasticsoftware.elasticactors.ActorNode;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorShard;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
+import org.elasticsoftware.elasticactors.cluster.ActorShardRef;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.RebalancingEventListener;
+import org.elasticsoftware.elasticactors.cluster.ServiceActorRef;
 import org.elasticsoftware.elasticactors.kafka.KafkaActorNode;
-import org.elasticsoftware.elasticactors.serialization.*;
+import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.MessagingSystemDeserializers;
+import org.elasticsoftware.elasticactors.serialization.MessagingSystemSerializers;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.SystemDeserializers;
+import org.elasticsoftware.elasticactors.serialization.SystemSerializers;
 
 import javax.annotation.Nullable;
 
@@ -28,8 +43,8 @@ public final class KafkaInternalActorSystems implements InternalActorSystems, Ac
     private final InternalActorSystems delegate;
     private final Cache<String,ActorRef> actorRefCache;
     private final KafkaActorRefTools actorRefTools;
-    private final SystemSerializers systemSerializers = new SystemSerializers(this);
-    private final SystemDeserializers systemDeserializers = new SystemDeserializers(this, this);
+    private final SystemSerializers systemSerializers = new MessagingSystemSerializers(this);
+    private final SystemDeserializers systemDeserializers = new MessagingSystemDeserializers(this, this);
 
     public KafkaInternalActorSystems(InternalActorSystems delegate, Cache<String, ActorRef> actorRefCache) {
         this.delegate = delegate;

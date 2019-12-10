@@ -1,0 +1,50 @@
+/*
+ *   Copyright 2013 - 2019 The Original Authors
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
+package org.elasticsoftware.elasticactors.client.serialization;
+
+import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
+import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
+import org.elasticsoftware.elasticactors.serialization.SystemSerializers;
+import org.elasticsoftware.elasticactors.serialization.internal.ActivateActorMessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.internal.CancelScheduleMessageMessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.internal.CreateActorMessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.internal.DestroyActorMessageSerializer;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public final class ClientSystemSerializers implements SystemSerializers {
+
+    private final Map<Class, MessageSerializer> systemSerializers = new HashMap<>();
+
+    public ClientSystemSerializers(SerializationFrameworks serializationFrameworks) {
+        systemSerializers.put(CreateActorMessage.class, new CreateActorMessageSerializer(serializationFrameworks));
+        systemSerializers.put(DestroyActorMessage.class, new DestroyActorMessageSerializer());
+        systemSerializers.put(ActivateActorMessage.class, new ActivateActorMessageSerializer());
+        systemSerializers.put(CancelScheduledMessageMessage.class, new CancelScheduleMessageMessageSerializer());
+    }
+
+    @Override
+    public <T> MessageSerializer<T> get(Class<T> messageClass) {
+        return systemSerializers.get(messageClass);
+    }
+
+}

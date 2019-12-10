@@ -18,13 +18,13 @@ package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.RemoteActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import javax.annotation.PreDestroy;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -34,16 +34,21 @@ import java.util.stream.Collectors;
  */
 public final class RemoteActorSystems {
     private static final Logger logger = LoggerFactory.getLogger(RemoteActorSystems.class);
-    private final Map<String,RemoteActorSystemInstance> remoteActorSystems = new HashMap<>();
+    private final Map<String,RemoteActorSystemInstance> remoteActorSystems;
 
     public RemoteActorSystems(InternalActorSystemConfiguration configuration,
                               InternalActorSystems cluster,
                               @Qualifier("remoteActorSystemMessageQueueFactoryFactory") MessageQueueFactoryFactory remoteActorSystemMessageQueueFactoryFactory) {
         // create but don't initialize the remote systems (this needs to happen on the rebalancing thread)
-        configuration.getRemoteConfigurations().forEach(remoteConfiguration ->
-                remoteActorSystems.put(remoteConfiguration.getClusterName(),
-                        new RemoteActorSystemInstance(remoteConfiguration,cluster,
-                                remoteActorSystemMessageQueueFactoryFactory.create(remoteConfiguration.getClusterName()))));
+        remoteActorSystems = configuration.getRemoteConfigurations()
+                .stream()
+                .collect(Collectors.toMap(
+                        RemoteActorSystemConfiguration::getClusterName,
+                        remoteConfiguration -> new RemoteActorSystemInstance(
+                                remoteConfiguration,
+                                cluster,
+                                remoteActorSystemMessageQueueFactoryFactory.create(
+                                        remoteConfiguration.getClusterName()))));
     }
 
 

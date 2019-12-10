@@ -48,6 +48,8 @@ import org.elasticsoftware.elasticactors.cluster.strategies.SingleNodeScaleUpStr
 import org.elasticsoftware.elasticactors.cluster.strategies.StartingNodeScaleUpStrategy;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.MessagingSystemDeserializers;
+import org.elasticsoftware.elasticactors.serialization.MessagingSystemSerializers;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SystemDeserializers;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializers;
@@ -62,9 +64,9 @@ import org.springframework.core.env.Environment;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.net.InetAddress;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -81,14 +83,14 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     private final String clusterName;
     private final String nodeId;
     private final InetAddress nodeAddress;
-    private final SystemSerializers systemSerializers = new SystemSerializers(this);
+    private final SystemSerializers systemSerializers = new MessagingSystemSerializers(this);
     private final SystemDeserializers systemDeserializers;
     private final InternalActorSystemConfiguration configuration;
     private final CountDownLatch waitLatch = new CountDownLatch(1);
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private final Cache<Class<? extends ElasticActor>,String> actorStateVersionCache = CacheBuilder.newBuilder().maximumSize(1024).build();
     private final Cache<String,ActorRef> actorRefCache;
-    private final Map<Class<? extends SerializationFramework>,SerializationFramework> serializationFrameworks = new HashMap<>();
+    private final Map<Class<? extends SerializationFramework>,SerializationFramework> serializationFrameworks = new ConcurrentHashMap<>();
     @Autowired
     private ApplicationContext applicationContext;
     @Autowired
@@ -109,7 +111,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
         this.nodeId = nodeId;
         this.nodeAddress = nodeAddress;
         this.configuration = configuration;
-        this.systemDeserializers = new SystemDeserializers(this,this);
+        this.systemDeserializers = new MessagingSystemDeserializers(this,this);
         this.actorRefCache = actorRefCache;
         this.actorRefTools = new ActorRefTools(this);
     }
@@ -124,7 +126,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
         this.nodeId = nodeId;
         this.nodeAddress = nodeAddress;
         this.configuration = configuration;
-        this.systemDeserializers = new SystemDeserializers(this, actorRefFactory);
+        this.systemDeserializers = new MessagingSystemDeserializers(this, actorRefFactory);
         this.actorRefCache = actorRefCache;
         this.actorRefTools = new ActorRefTools(this);
     }
@@ -240,13 +242,13 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     @Override
     public ActorSystem getRemote(String clusterName, String actorSystemName) {
         RemoteActorSystems remoteActorSystems = applicationContext.getBean(RemoteActorSystems.class);
-        return remoteActorSystems != null ? remoteActorSystems.get(clusterName,actorSystemName) : null;
+        return remoteActorSystems.get(clusterName,actorSystemName);
     }
 
     @Override
     public ActorSystem getRemote(String actorSystemName) {
         RemoteActorSystems remoteActorSystems = applicationContext.getBean(RemoteActorSystems.class);
-        return remoteActorSystems != null ? remoteActorSystems.get(actorSystemName) : null;
+        return remoteActorSystems.get(actorSystemName);
     }
 
     @Override
@@ -266,15 +268,7 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
 
     @Override
     public SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass) {
-        //return applicationContext.getBean(frameworkClass);
-        // cache the serialization frameworks for quick lookup (application context lookup is sloooooowwwwww)
-        SerializationFramework serializationFramework = this.serializationFrameworks.get(frameworkClass);
-        if(serializationFramework == null) {
-            serializationFramework = applicationContext.getBean(frameworkClass);
-            // @todo: this is not thread safe and should happen at the initialization stage
-            this.serializationFrameworks.put(frameworkClass,serializationFramework);
-        }
-        return serializationFramework;
+        return serializationFrameworks.computeIfAbsent(frameworkClass, applicationContext::getBean);
     }
 
     @Override

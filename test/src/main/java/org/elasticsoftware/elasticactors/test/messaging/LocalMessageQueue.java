@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors.test.messaging;
 
+import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
@@ -24,6 +25,9 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @author Joost van de Wijgerd
@@ -34,6 +38,12 @@ public final class LocalMessageQueue implements MessageQueue {
     private final MessageHandler messageHandler;
     private final TransientAck transientAck = new TransientAck();
     private final ThreadBoundExecutor queueExecutor;
+
+    private static final List<Throwable> thrownExceptions = new CopyOnWriteArrayList<>();
+
+    public static List<Throwable> getThrownExceptions() {
+        return ImmutableList.copyOf(thrownExceptions);
+    }
 
     public LocalMessageQueue(ThreadBoundExecutor queueExecutor,String queueName, MessageHandler messageHandler) {
         this.queueExecutor = queueExecutor;
@@ -71,7 +81,7 @@ public final class LocalMessageQueue implements MessageQueue {
 
     @Override
     public void destroy() {
-
+        thrownExceptions.clear();
     }
 
 
@@ -110,6 +120,7 @@ public final class LocalMessageQueue implements MessageQueue {
         @Override
         public void onError(InternalMessage message, Throwable exception) {
             logger.error("Error handling transient message, payloadClass [{}]",message.getPayloadClass(),exception);
+            thrownExceptions.add(exception);
         }
 
         @Override

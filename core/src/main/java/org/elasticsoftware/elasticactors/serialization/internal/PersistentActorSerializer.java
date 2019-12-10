@@ -18,11 +18,10 @@ package org.elasticsoftware.elasticactors.serialization.internal;
 
 import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.ShardKey;
-import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
-import org.elasticsoftware.elasticactors.util.SerializationTools;
 
 import java.io.IOException;
 
@@ -32,10 +31,10 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.serializ
  * @author Joost van de Wijgerd
  */
 public final class PersistentActorSerializer implements Serializer<PersistentActor<ShardKey>,byte[]> {
-    private final InternalActorSystems actorSystems;
+    private final SerializationFrameworks serializationFrameworks;
 
-    public PersistentActorSerializer(InternalActorSystems actorSystems) {
-        this.actorSystems = actorSystems;
+    public PersistentActorSerializer(SerializationFrameworks serializationFrameworks) {
+        this.serializationFrameworks = serializationFrameworks;
     }
 
     @Override
@@ -70,6 +69,6 @@ public final class PersistentActorSerializer implements Serializer<PersistentAct
     private byte[] getSerializedState(PersistentActor<ShardKey> persistentActor) throws IOException {
         // if the state was already serialized, assume it's the most recent to avoid duplicate serialization
         return persistentActor.getSerializedState() != null ? persistentActor.getSerializedState() :
-                serializeActorState(actorSystems,persistentActor.getActorClass(),persistentActor.getState());
+                serializeActorState(serializationFrameworks,persistentActor.getActorClass(),persistentActor.getState());
     }
 }

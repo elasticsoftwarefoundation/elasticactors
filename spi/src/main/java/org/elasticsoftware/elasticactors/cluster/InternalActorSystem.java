@@ -23,15 +23,14 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.cluster.scheduler.InternalScheduler;
-import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 
 import java.util.List;
 
 /**
  * @author Joost van de Wijgerd
  */
-public interface InternalActorSystem extends ActorSystem, ShardAccessor {
+public interface InternalActorSystem extends ActorSystem, ShardAccessor, SerializationAccessor {
 
     @Override
     InternalActorSystemConfiguration getConfiguration();
@@ -79,24 +78,6 @@ public interface InternalActorSystem extends ActorSystem, ShardAccessor {
      * @return
      */
     ActorNode getNode();
-
-    /**
-     * Return the serializer for the given message type
-     *
-     * @param messageClass
-     * @param <T>
-     * @return
-     */
-    <T> MessageSerializer<T> getSerializer(Class<T> messageClass);
-
-    /**
-     * Return the deserializer for the give message type
-     *
-     * @param messageClass
-     * @param <T>
-     * @return
-     */
-    <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass);
 
     InternalScheduler getInternalScheduler();
 

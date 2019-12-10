@@ -23,12 +23,14 @@ import org.elasticsoftware.elasticactors.base.actors.ActorDelegate.MessageConsum
 import org.elasticsoftware.elasticactors.base.actors.ReplyActor;
 import org.elasticsoftware.elasticactors.base.state.StringState;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
+import org.elasticsoftware.elasticactors.test.messaging.LocalMessageQueue;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.elasticsoftware.elasticactors.base.actors.ActorDelegate.Builder.stopActor;
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
@@ -62,6 +64,66 @@ public class GreetingTest {
         greeter.tell(new Greeting("Joost van de Wijgerd"), replyActor);
 
         assertTrue(countDownLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(LocalMessageQueue.getThrownExceptions().isEmpty());
+
+        testActorSystem.destroy();
+    }
+
+    @Test
+    public void testGreeting_client() throws Exception {
+
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+        ActorSystem clientActorSystem = testActorSystem.getRemoteActorSystem();
+        ActorRef greeter = actorSystem.actorOf("greeter",GreetingActor.class,new StringState("Hello World"));
+
+        //ScheduledMessageRef messageRef = actorSystem.getScheduler().scheduleOnce(null,new Greeting("Delayed Message"),greeter,2, TimeUnit.SECONDS);
+
+        final CountDownLatch countDownLatch = new CountDownLatch(2);
+
+        ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
+                .deleteAfterReceive(false)
+                .onReceive(ScheduledGreeting.class, () -> System.out.println("Got Scheduled Greeting"))
+                .onReceive(Greeting.class, m -> System.out.println(format("Got Greeting from %s", m.getWho())))
+                .orElse(MessageConsumer.noop())
+                .postReceive(countDownLatch::countDown)
+                .build());
+
+        clientActorSystem.actorFor("greeter")
+                .tell(new Greeting("This will error out because we use a local queue"));
+        greeter.tell(new Greeting("Joost van de Wijgerd"), replyActor);
+
+        assertTrue(countDownLatch.await(5, TimeUnit.SECONDS));
+
+        assertEquals(LocalMessageQueue.getThrownExceptions().size(), 1);
+        assertTrue(LocalMessageQueue.getThrownExceptions().get(0) instanceof UnsupportedOperationException);
+
+        testActorSystem.destroy();
+    }
+
+    @Test
+    public void testGreeting_client_createActor() throws Exception {
+
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        ActorSystem clientActorSystem = testActorSystem.getRemoteActorSystem();
+        ActorRef greeter = clientActorSystem.actorOf("greeter",GreetingActor.class,new StringState("Hello World"));
+
+        //ScheduledMessageRef messageRef = actorSystem.getScheduler().scheduleOnce(null,new Greeting("Delayed Message"),greeter,2, TimeUnit.SECONDS);
+
+        final CountDownLatch countDownLatch = new CountDownLatch(2);
+
+        clientActorSystem.actorFor("greeter")
+                .tell(new Greeting("This will error out because we use a local queue"));
+        greeter.tell(new Greeting("Joost van de Wijgerd"));
+
+        assertFalse(countDownLatch.await(5, TimeUnit.SECONDS));
+
+        assertEquals(LocalMessageQueue.getThrownExceptions().size(), 3);
+        LocalMessageQueue.getThrownExceptions().forEach(e -> assertTrue(e instanceof UnsupportedOperationException));
 
         testActorSystem.destroy();
     }
@@ -93,7 +155,9 @@ public class GreetingTest {
         greeter.tell(new Greeting("Joost van de Wijgerd"), replyActor);
 
         assertFalse(countDownLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(LocalMessageQueue.getThrownExceptions().isEmpty());
 
         testActorSystem.destroy();
     }
+
 }

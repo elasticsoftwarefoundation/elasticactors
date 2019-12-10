@@ -16,7 +16,10 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorNode;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorShard;
+import org.elasticsoftware.elasticactors.ActorSystem;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -118,8 +121,6 @@ public class ActorRefTools {
     }
 
     private ActorRef handleRemoteActorSystemReference(String refSpec, String[] components, String actorId) {
-        String clusterName = components[0];
-        String actorSystemName = components[1];
         if ("shards".equals(components[2])) {
             return handleRemoteShard(components, actorId);
         } else if ("nodes".equals(components[2])) {

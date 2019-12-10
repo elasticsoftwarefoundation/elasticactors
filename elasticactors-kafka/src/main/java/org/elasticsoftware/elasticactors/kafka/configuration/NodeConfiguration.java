@@ -27,24 +27,22 @@ import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
-import org.elasticsoftware.elasticactors.cluster.*;
+import org.elasticsoftware.elasticactors.cluster.HashingNodeSelectorFactory;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRefFactory;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRefTools;
-import org.elasticsoftware.elasticactors.cluster.scheduler.ShardedScheduler;
 import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
 import org.elasticsoftware.elasticactors.kafka.KafkaActorSystemInstance;
 import org.elasticsoftware.elasticactors.kafka.serialization.CompressingSerializer;
 import org.elasticsoftware.elasticactors.kafka.serialization.DecompressingDeserializer;
-import org.elasticsoftware.elasticactors.kafka.state.ChronicleMapPersistentActorStoreFactory;
-import org.elasticsoftware.elasticactors.kafka.state.InMemoryPeristentActorStoreFactory;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory;
-import org.elasticsoftware.elasticactors.kafka.utils.TopicHelper;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
-import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorDeserializer;
@@ -87,7 +85,12 @@ public class NodeConfiguration {
     }
 
 
-    @Bean(name = {"elasticActorsNode,actorSystems,actorRefFactory"})
+    @Bean(name = {
+            "elasticActorsNode",
+            "actorSystems",
+            "actorRefFactory",
+            "serializationFrameworks"
+    })
     public ElasticActorsNode getNode() {
         return node;
     }
@@ -109,8 +112,8 @@ public class NodeConfiguration {
     }
 
     @Bean(name = "systemSerializationFramework")
-    public SystemSerializationFramework createSystemSerializationFramework(InternalActorSystems internalActorSystems) {
-        return new SystemSerializationFramework(internalActorSystems);
+    public SystemSerializationFramework createSystemSerializationFramework(SerializationFrameworks serializationFrameworks) {
+        return new SystemSerializationFramework(serializationFrameworks);
     }
 
     @Bean(name = {"messagesScanner"})
