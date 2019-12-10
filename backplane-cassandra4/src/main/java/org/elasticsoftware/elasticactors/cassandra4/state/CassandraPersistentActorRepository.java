@@ -14,12 +14,12 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.cassandra2.state;
+package org.elasticsoftware.elasticactors.cassandra4.state;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.Row;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cassandra.common.state.PersistentActorUpdateEvent;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
@@ -35,9 +35,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static org.elasticsoftware.elasticactors.cassandra2.util.ExecutionUtils.executeWithRetry;
-
 import static java.lang.System.currentTimeMillis;
+import static org.elasticsoftware.elasticactors.cassandra4.util.ExecutionUtils.executeWithRetry;
 
 
 /**
@@ -48,16 +47,16 @@ public final class CassandraPersistentActorRepository implements PersistentActor
     private final String clusterName;
     private final ThreadBoundExecutor asyncUpdateExecutor;
     private final long readExecutionThresholdMillis;
-    private final Session cassandraSession;
+    private final CqlSession cassandraSession;
     private final PreparedStatement selectStatement;
     private final Deserializer<ByteBuffer,PersistentActor> deserializer;
     private final Serializer<PersistentActor,ByteBuffer> serializer;
 
-    public CassandraPersistentActorRepository(Session cassandraSession, String clusterName, ThreadBoundExecutor asyncUpdateExecutor, Serializer serializer, Deserializer deserializer) {
+    public CassandraPersistentActorRepository(CqlSession cassandraSession, String clusterName, ThreadBoundExecutor asyncUpdateExecutor, Serializer serializer, Deserializer deserializer) {
         this(cassandraSession, clusterName,asyncUpdateExecutor,serializer, deserializer, 200);
     }
 
-    public CassandraPersistentActorRepository(Session cassandraSession, String clusterName, ThreadBoundExecutor asyncUpdateExecutor, Serializer serializer, Deserializer deserializer, long readExecutionThresholdMillis) {
+    public CassandraPersistentActorRepository(CqlSession cassandraSession, String clusterName, ThreadBoundExecutor asyncUpdateExecutor, Serializer serializer, Deserializer deserializer, long readExecutionThresholdMillis) {
         this.cassandraSession = cassandraSession;
         this.selectStatement = cassandraSession.prepare("select value from \"PersistentActors\" where key = ? and key2 = ? AND column1 = ?");
         this.clusterName = clusterName;
@@ -103,7 +102,7 @@ public final class CassandraPersistentActorRepository implements PersistentActor
             return null;
         } else {
             // should have only a single column here
-            return this.deserializer.deserialize(resultRow.getBytes(0));
+            return this.deserializer.deserialize(resultRow.getByteBuffer(0));
         }
     }
 

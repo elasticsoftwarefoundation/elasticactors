@@ -14,7 +14,7 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.cassandra2.serialization;
+package org.elasticsoftware.elasticactors.cassandra.common.serialization;
 
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;

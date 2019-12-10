@@ -51,6 +51,7 @@
         <lz4.version>1.7.0</lz4.version>
         <kafka.version>2.3.1</kafka.version>
         <cassandra-driver.version>3.8.0</cassandra-driver.version>
+        <cassandra4-driver.version>4.3.1</cassandra4-driver.version>
         <servlet-api.version>3.1.0</servlet-api.version>
         <activemq-artemis.version>1.5.6</activemq-artemis.version>
         <disruptor.version>3.4.2</disruptor.version>
@@ -71,6 +72,7 @@
         <persistence-api.version>1.0.2</persistence-api.version>
         <plexus-utils.version>3.0.9</plexus-utils.version>
         <aspectj-maven-plugin.version>1.11</aspectj-maven-plugin.version>
+        <netty.version>4.1.43.Final</netty.version>
     </properties>
 
     <scm>
@@ -112,6 +114,11 @@
             <dependency>
                 <groupId>org.elasticsoftware.elasticactors</groupId>
                 <artifactId>elasticactors-base</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <artifactId>backplane-cassandra-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -236,6 +243,22 @@
                         <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.datastax.oss</groupId>
+                <artifactId>java-driver-core</artifactId>
+                <version>${cassandra4-driver.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>netty-handler</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-handler</artifactId>
+                <version>${netty.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework.data</groupId>
@@ -515,6 +538,8 @@
         <module>elasticactors-kafka-testapp</module>
         <module>indexing-elasticsearch</module>
         <module>cluster-kubernetes</module>
+        <module>backplane-cassandra-common</module>
+        <module>backplane-cassandra4</module>
     </modules>
 
     <build>

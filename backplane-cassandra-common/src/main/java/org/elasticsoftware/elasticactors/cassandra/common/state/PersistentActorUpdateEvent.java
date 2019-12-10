@@ -14,7 +14,7 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.cassandra2.state;
+package org.elasticsoftware.elasticactors.cassandra.common.state;
 
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
