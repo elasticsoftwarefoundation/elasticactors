@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.RemoteActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.client.cluster.RemoteActorShardRefFactory;
 import org.elasticsoftware.elasticactors.client.cluster.RemoteActorSystems;
 import org.elasticsoftware.elasticactors.client.serialization.ClientSerializationFrameworks;
+import org.elasticsoftware.elasticactors.client.serialization.SerializedActorStateSerializationFramework;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
@@ -63,6 +64,11 @@ public class ClientConfiguration {
                 remoteConfigurations,
                 serializationFrameworks,
                 remoteActorSystemMessageQueueFactoryFactory);
+    }
+
+    @Bean
+    public SerializedActorStateSerializationFramework serializedActorStateSerializationFramework() {
+        return new SerializedActorStateSerializationFramework();
     }
 
 }
