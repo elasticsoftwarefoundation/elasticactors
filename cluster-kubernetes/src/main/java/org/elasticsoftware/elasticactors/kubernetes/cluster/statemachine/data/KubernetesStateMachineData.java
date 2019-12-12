@@ -28,12 +28,14 @@ public class KubernetesStateMachineData {
 
     private final AtomicReference<KubernetesClusterState> currentState;
     private final AtomicReference<StatefulSet> latestStableState;
+    private final AtomicReference<StatefulSet> latestState;
     private final AtomicInteger currentTopology;
     private final Queue<KubernetesStateMachineListener> stateMachineListeners;
 
     public KubernetesStateMachineData() {
         this.currentState = new AtomicReference<>();
         this.latestStableState = new AtomicReference<>();
+        this.latestState = new AtomicReference<>();
         this.currentTopology = new AtomicInteger();
         this.stateMachineListeners = new ConcurrentLinkedQueue<>();
     }
@@ -44,6 +46,10 @@ public class KubernetesStateMachineData {
 
     public AtomicReference<StatefulSet> getLatestStableState() {
         return latestStableState;
+    }
+
+    public AtomicReference<StatefulSet> getLatestState() {
+        return latestState;
     }
 
     public AtomicInteger getCurrentTopology() {

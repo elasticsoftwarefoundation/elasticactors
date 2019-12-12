@@ -48,7 +48,7 @@ public class AbstractKubernetesStateMachineTest {
 
     private KubernetesStateMachine stateMachine;
     private KubernetesStateMachineData stateMachineData;
-    private AtomicReference scheduledTimeoutTask;
+    private AtomicReference<?> scheduledTimeoutTask;
     private StatefulSet originalStable;
 
     private static class DefaultKubernetesStateMachine extends AbstractKubernetesStateMachine {
@@ -73,7 +73,7 @@ public class AbstractKubernetesStateMachineTest {
         stateMachine = new DefaultKubernetesStateMachine(taskScheduler);
         Field scheduledTaskField = findField(TaskScheduler.class, "scheduledTask");
         ReflectionUtils.makeAccessible(scheduledTaskField);
-        scheduledTimeoutTask = (AtomicReference) getField(scheduledTaskField, taskScheduler);
+        scheduledTimeoutTask = (AtomicReference<?>) getField(scheduledTaskField, taskScheduler);
         Field kubernetesStateMachineDataField = findField(AbstractKubernetesStateMachine.class, "kubernetesStateMachineData");
         ReflectionUtils.makeAccessible(kubernetesStateMachineDataField);
         stateMachineData = (KubernetesStateMachineData) getField(kubernetesStateMachineDataField, stateMachine);
@@ -93,11 +93,13 @@ public class AbstractKubernetesStateMachineTest {
     @Test
     public void shouldScaleUp() {
         stateMachine.handleStateUpdate(originalStable);
-        stateMachine.handleStateUpdate(resourceWith(4, 3, 3));
+        StatefulSet latestState = resourceWith(4, 3, 3);
+        stateMachine.handleStateUpdate(latestState);
 
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 3);
         assertEquals(stateMachineData.getLatestStableState().get(), originalStable);
+        assertEquals(stateMachineData.getLatestState().get(), latestState);
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_UP);
     }
 
@@ -105,22 +107,26 @@ public class AbstractKubernetesStateMachineTest {
     public void shouldScaleUpAndThenStartScalingUp() {
         stateMachine.handleStateUpdate(originalStable);
         stateMachine.handleStateUpdate(resourceWith(4, 3, 3));
-        stateMachine.handleStateUpdate(resourceWith(4, 4, 3));
+        StatefulSet latestState = resourceWith(4, 4, 3);
+        stateMachine.handleStateUpdate(latestState);
 
         assertNotNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 4);
         assertEquals(stateMachineData.getLatestStableState().get(), originalStable);
+        assertEquals(stateMachineData.getLatestState().get(), latestState);
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_UP_STARTED);
     }
 
     @Test
     public void shouldGoStraightToScalingUpStarted() {
         stateMachine.handleStateUpdate(originalStable);
-        stateMachine.handleStateUpdate(resourceWith(4, 4, 3));
+        StatefulSet latestState = resourceWith(4, 4, 3);
+        stateMachine.handleStateUpdate(latestState);
 
         assertNotNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 4);
         assertEquals(stateMachineData.getLatestStableState().get(), originalStable);
+        assertEquals(stateMachineData.getLatestState().get(), latestState);
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_UP_STARTED);
     }
 
@@ -134,6 +140,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 3);
         assertEquals(stateMachineData.getLatestStableState().get(), newStable);
+        assertEquals(stateMachineData.getLatestState().get(), newStable);
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
     }
 
@@ -147,6 +154,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 3);
         assertEquals(stateMachineData.getLatestStableState().get(), newStable);
+        assertEquals(stateMachineData.getLatestState().get(), newStable);
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
     }
 
@@ -154,11 +162,13 @@ public class AbstractKubernetesStateMachineTest {
     public void shouldScaleUpAndDown() {
         stateMachine.handleStateUpdate(originalStable);
         stateMachine.handleStateUpdate(resourceWith(4, 3, 3));
-        stateMachine.handleStateUpdate(resourceWith(2, 3, 3));
+        StatefulSet latestState = resourceWith(2, 3, 3);
+        stateMachine.handleStateUpdate(latestState);
 
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 3);
         assertEquals(stateMachineData.getLatestStableState().get(), originalStable);
+        assertEquals(stateMachineData.getLatestState().get(), latestState);
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_DOWN);
     }
 
@@ -166,11 +176,13 @@ public class AbstractKubernetesStateMachineTest {
     public void shouldGoStraightToScalingUpStartedAndScaleDown() {
         stateMachine.handleStateUpdate(originalStable);
         stateMachine.handleStateUpdate(resourceWith(4, 4, 3));
-        stateMachine.handleStateUpdate(resourceWith(2, 3, 3));
+        StatefulSet latestState = resourceWith(2, 3, 3);
+        stateMachine.handleStateUpdate(latestState);
 
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 4);
         assertEquals(stateMachineData.getLatestStableState().get(), originalStable);
+        assertEquals(stateMachineData.getLatestState().get(), latestState);
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_DOWN);
     }
 
@@ -184,6 +196,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 6);
         assertEquals(stateMachineData.getLatestStableState().get(), scale.get(scale.size() - 1));
+        assertEquals(stateMachineData.getLatestState().get(), scale.get(scale.size() - 1));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
     }
 
@@ -195,6 +208,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 6);
         assertEquals(stateMachineData.getLatestStableState().get(), scale.get(scale.size() - 1));
+        assertEquals(stateMachineData.getLatestState().get(), scale.get(scale.size() - 1));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
     }
 
@@ -208,6 +222,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNotNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 6);
         assertEquals(stateMachineData.getLatestStableState().get(), originalStable);
+        assertEquals(stateMachineData.getLatestState().get(), scale.get(scale.size() - 2));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_UP_STARTED);
     }
 
@@ -219,17 +234,20 @@ public class AbstractKubernetesStateMachineTest {
         assertNotNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 6);
         assertEquals(stateMachineData.getLatestStableState().get(), scale.get(0));
+        assertEquals(stateMachineData.getLatestState().get(), scale.get(scale.size() - 2));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_UP_STARTED);
     }
 
     @Test
     public void shouldNotDoAnything_rollingUpdate() {
         stateMachine.handleStateUpdate(originalStable);
-        stateMachine.handleStateUpdate(resourceWith(3, 3, 2));
+        StatefulSet latestState = resourceWith(3, 3, 2);
+        stateMachine.handleStateUpdate(latestState);
 
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 3);
         assertEquals(stateMachineData.getLatestStableState().get(), originalStable);
+        assertEquals(stateMachineData.getLatestState().get(), latestState);
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
     }
 
@@ -243,6 +261,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 1);
         assertEquals(stateMachineData.getLatestStableState().get(), scale.get(scale.size() - 1));
+        assertEquals(stateMachineData.getLatestState().get(), scale.get(scale.size() - 1));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
     }
 
@@ -258,6 +277,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 1);
         assertEquals(stateMachineData.getLatestStableState().get(), scaleDown.get(scaleDown.size() - 1));
+        assertEquals(stateMachineData.getLatestState().get(), scaleDown.get(scaleDown.size() - 1));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
     }
 
@@ -273,6 +293,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 6);
         assertEquals(stateMachineData.getLatestStableState().get(), scaleUp.get(scaleUp.size() - 1));
+        assertEquals(stateMachineData.getLatestState().get(), scaleUp.get(scaleUp.size() - 1));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
     }
 
@@ -288,6 +309,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 6);
         assertEquals(stateMachineData.getLatestStableState().get(), originalStable);
+        assertEquals(stateMachineData.getLatestState().get(), scaleDown.get(scaleDown.size() - 2));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_DOWN);
     }
 
@@ -303,6 +325,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNotNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 6);
         assertEquals(stateMachineData.getLatestStableState().get(), originalStable);
+        assertEquals(stateMachineData.getLatestState().get(), scaleUp.get(scaleUp.size() - 2));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_UP_STARTED);
     }
 
@@ -316,6 +339,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNotNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 6);
         assertEquals(stateMachineData.getLatestStableState().get(), originalStable);
+        assertEquals(stateMachineData.getLatestState().get(), scaleUp.get(scaleUp.size() - 2));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_UP_STARTED);
 
         List<StatefulSet> scaleDown = scale(6, 1);
@@ -324,6 +348,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 1);
         assertEquals(stateMachineData.getLatestStableState().get(), scaleDown.get(scaleDown.size() - 1));
+        assertEquals(stateMachineData.getLatestState().get(), scaleDown.get(scaleDown.size() - 1));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
     }
 
@@ -337,6 +362,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 3);
         assertEquals(stateMachineData.getLatestStableState().get(), originalStable);
+        assertEquals(stateMachineData.getLatestState().get(), scaleDown.get(scaleDown.size() - 2));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_DOWN);
 
         List<StatefulSet> scaleUp = scale(1, 6);
@@ -345,6 +371,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 6);
         assertEquals(stateMachineData.getLatestStableState().get(), scaleUp.get(scaleUp.size() - 1));
+        assertEquals(stateMachineData.getLatestState().get(), scaleUp.get(scaleUp.size() - 1));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
     }
 
@@ -358,6 +385,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNotNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 5);
         assertEquals(stateMachineData.getLatestStableState().get(), originalStable);
+        assertEquals(stateMachineData.getLatestState().get(), firstScaleUp.get(firstScaleUp.size() - 2));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_UP_STARTED);
 
         List<StatefulSet> secondScaleUp = scale(5, 7);
@@ -366,6 +394,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 7);
         assertEquals(stateMachineData.getLatestStableState().get(), secondScaleUp.get(secondScaleUp.size() - 1));
+        assertEquals(stateMachineData.getLatestState().get(), secondScaleUp.get(secondScaleUp.size() - 1));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
     }
 
@@ -378,6 +407,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNotNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 5);
         assertEquals(stateMachineData.getLatestStableState().get(), firstScaleUp.get(2));
+        assertEquals(stateMachineData.getLatestState().get(), firstScaleUp.get(firstScaleUp.size() - 2));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_UP_STARTED);
 
         List<StatefulSet> secondScaleUp = scale(5, 7);
@@ -386,6 +416,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 7);
         assertEquals(stateMachineData.getLatestStableState().get(), secondScaleUp.get(secondScaleUp.size() - 1));
+        assertEquals(stateMachineData.getLatestState().get(), secondScaleUp.get(secondScaleUp.size() - 1));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
     }
 
@@ -400,6 +431,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNotNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 8);
         assertEquals(stateMachineData.getLatestStableState().get(), firstScaleUp.get(0));
+        assertEquals(stateMachineData.getLatestState().get(), firstScaleUp.get(firstScaleUp.size() - 1));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_UP_STARTED);
 
         List<StatefulSet> secondScaleUp = scale(5, 7);
@@ -409,6 +441,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNotNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 8);
         assertEquals(stateMachineData.getLatestStableState().get(), firstScaleUp.get(0));
+        assertEquals(stateMachineData.getLatestState().get(), secondScaleUp.get(0));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_UP_STARTED);
 
         secondScaleUp.subList(1, secondScaleUp.size()).forEach(stateMachine::handleStateUpdate);
@@ -416,6 +449,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 7);
         assertEquals(stateMachineData.getLatestStableState().get(), secondScaleUp.get(secondScaleUp.size() - 1));
+        assertEquals(stateMachineData.getLatestState().get(), secondScaleUp.get(secondScaleUp.size() - 1));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
     }
 
@@ -432,6 +466,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 7);
         assertEquals(stateMachineData.getLatestStableState().get(), originalStable);
+        assertEquals(stateMachineData.getLatestState().get(), firstScaleDown.get(firstScaleDown.size() - 1));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_DOWN);
 
         List<StatefulSet> secondScaleDown = scale(5, 3);
@@ -441,6 +476,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 7);
         assertEquals(stateMachineData.getLatestStableState().get(), originalStable);
+        assertEquals(stateMachineData.getLatestState().get(), secondScaleDown.get(0));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.SCALING_DOWN);
 
         secondScaleDown.subList(1, secondScaleDown.size()).forEach(stateMachine::handleStateUpdate);
@@ -448,6 +484,7 @@ public class AbstractKubernetesStateMachineTest {
         assertNull(scheduledTimeoutTask.get());
         assertEquals(stateMachineData.getCurrentTopology().get(), 3);
         assertEquals(stateMachineData.getLatestStableState().get(), secondScaleDown.get(secondScaleDown.size() - 1));
+        assertEquals(stateMachineData.getLatestState().get(), secondScaleDown.get(secondScaleDown.size() - 1));
         assertEquals(stateMachineData.getCurrentState().get(), KubernetesClusterState.STABLE);
     }
 

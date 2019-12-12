@@ -45,6 +45,7 @@ public abstract class AbstractKubernetesStateMachine implements KubernetesStateM
     protected void processStateUpdate(StatefulSet resource) {
         logger.info("Received Cluster State Update: spec.replicas={}, status.replicas={}, status.readyReplicas={}",
                 resource.getSpec().getReplicas(), resource.getStatus().getReplicas(), resource.getStatus().getReadyReplicas());
+        kubernetesStateMachineData.getLatestState().set(resource);
         boolean reprocess;
         do {
             KubernetesClusterState clusterState = kubernetesStateMachineData.getCurrentState().get();

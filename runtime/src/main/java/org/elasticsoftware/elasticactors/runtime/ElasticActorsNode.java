@@ -29,6 +29,7 @@ import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.ActorRefTools;
 import org.elasticsoftware.elasticactors.cluster.ActorShardRef;
+import org.elasticsoftware.elasticactors.cluster.BaseDisconnectedActorRef;
 import org.elasticsoftware.elasticactors.cluster.ClusterEventListener;
 import org.elasticsoftware.elasticactors.cluster.ClusterMessageHandler;
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
@@ -59,7 +60,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.core.env.Environment;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -93,8 +93,6 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     private final Map<Class<? extends SerializationFramework>,SerializationFramework> serializationFrameworks = new ConcurrentHashMap<>();
     @Autowired
     private ApplicationContext applicationContext;
-    @Autowired
-    private Environment environment;
     private ClusterService clusterService;
     private final LinkedBlockingQueue<ShardReleasedMessage> shardReleasedMessages = new LinkedBlockingQueue<>();
     private final AtomicReference<List<PhysicalNode>> currentTopology = new AtomicReference<>(null);
@@ -152,7 +150,8 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     @Override
     public void onTopologyChanged(final List<PhysicalNode> topology) throws Exception {
         // see if we have a scale up or a scale down event
-        List<PhysicalNode> previousTopology = currentTopology.get();
+        // store the new topology as the current one
+        List<PhysicalNode> previousTopology = currentTopology.getAndSet(topology);
         ShardDistributionStrategy shardDistributionStrategy;
         if(previousTopology == null) {
             // scale out, I'm the one that's starting up.. will receive Local Shards..
@@ -182,8 +181,6 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
                 shardDistributionStrategy = new RunningNodeScaleDownStrategy();
             }
         }
-        // store the new topology as the current one
-        this.currentTopology.set(topology);
         scheduledExecutorService.submit(new RebalancingRunnable(shardDistributionStrategy, topology));
     }
 
@@ -224,7 +221,9 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
         ActorRef actorRef = actorRefCache.getIfPresent(refSpec);
         if(actorRef == null) {
             actorRef = actorRefTools.parse(refSpec);
-            actorRefCache.put(refSpec,actorRef);
+            if (!(actorRef instanceof BaseDisconnectedActorRef)) {
+                actorRefCache.put(refSpec, actorRef);
+            }
         }
         return actorRef;
     }

@@ -31,7 +31,7 @@ public class TaskScheduler {
     private final ScheduledExecutorService scheduledExecutorService;
     private final Integer timeoutSeconds;
 
-    private final AtomicReference<ScheduledFuture> scheduledTask;
+    private final AtomicReference<ScheduledFuture<?>> scheduledTask;
 
     public TaskScheduler(ScheduledExecutorService scheduledExecutorService, Integer timeoutSeconds) {
         this.scheduledTask = new AtomicReference<>();

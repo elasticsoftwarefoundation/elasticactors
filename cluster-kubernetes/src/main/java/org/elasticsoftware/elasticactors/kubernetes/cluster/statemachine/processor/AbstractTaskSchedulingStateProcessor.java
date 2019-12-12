@@ -44,11 +44,16 @@ public abstract class AbstractTaskSchedulingStateProcessor extends AbstractState
 
     protected void scheduleTimeoutTask(int desiredReplicas, int baseReplicas) {
         taskScheduler.scheduleTask(() -> {
-            final int stableReplicas = getDesiredReplicas(kubernetesStateMachineData.getLatestStableState().get());
-            logger.error("Scaling up to {} nodes failed. Reverting to previous stable state with {} nodes -> setting status to UNSTABLE", desiredReplicas, stableReplicas);
+            StatefulSet latestState = kubernetesStateMachineData.getLatestState().get();
+            final int currentReplicas = Math.max(getDesiredReplicas(latestState), getActualReplicas(latestState));
+            logger.error(
+                    "Scaling up to {} nodes failed. "
+                            + "Setting topology to {} nodes -> setting status to UNSTABLE",
+                    desiredReplicas,
+                    currentReplicas);
             kubernetesStateMachineData.getCurrentState().set(KubernetesClusterState.UNSTABLE);
             // change the topology back to the old state
-            onTopologyChange(stableReplicas);
+            onTopologyChange(currentReplicas);
         }, Math.max(desiredReplicas - baseReplicas, 1), TASK_NAME);
     }
 
