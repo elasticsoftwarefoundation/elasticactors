@@ -38,8 +38,8 @@
             <artifactId>elasticactors-spi</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.elasticsoftware.elasticactors</groupId>
-            <artifactId>elasticactors-core</artifactId>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
         </dependency>
         <dependency>
             <groupId>org.shoal</groupId>

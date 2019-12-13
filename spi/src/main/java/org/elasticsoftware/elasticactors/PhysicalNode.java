@@ -21,10 +21,48 @@ import java.net.InetAddress;
 /**
  * @author Joost van de Wijgerd
  */
-public interface PhysicalNode {
-    boolean isLocal();
+public class PhysicalNode {
+    private final String id;
+    private final InetAddress address;
+    private final boolean local;
 
-    String getId();
+    public PhysicalNode(String id, InetAddress address, boolean local) {
+        this.id = id;
+        this.address = address;
+        this.local = local;
+    }
 
-    InetAddress getAddress();
+    public boolean isLocal() {
+        return local;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public InetAddress getAddress() {
+        return address;
+    }
+
+    @Override
+    public String toString() {
+        return id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof PhysicalNode)) {
+            return false;
+        }
+        PhysicalNode that = (PhysicalNode) o;
+        return id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
 }

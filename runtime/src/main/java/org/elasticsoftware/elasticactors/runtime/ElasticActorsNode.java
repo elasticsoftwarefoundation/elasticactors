@@ -24,7 +24,6 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ElasticActor;
-import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.ActorRefTools;
@@ -78,14 +77,11 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * @author Joost van de Wijgerd
  */
-public final class ElasticActorsNode implements PhysicalNode, InternalActorSystems, ActorRefFactory, ClusterEventListener, ClusterMessageHandler {
+public final class ElasticActorsNode extends PhysicalNode implements InternalActorSystems, ActorRefFactory, ClusterEventListener, ClusterMessageHandler {
     private static final Logger logger = LoggerFactory.getLogger(ElasticActorsNode.class);
     private final String clusterName;
-    private final String nodeId;
-    private final InetAddress nodeAddress;
     private final SystemSerializers systemSerializers = new MessagingSystemSerializers(this);
     private final SystemDeserializers systemDeserializers;
-    private final InternalActorSystemConfiguration configuration;
     private final CountDownLatch waitLatch = new CountDownLatch(1);
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private final Cache<Class<? extends ElasticActor>,String> actorStateVersionCache = CacheBuilder.newBuilder().maximumSize(1024).build();
@@ -103,12 +99,9 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     public ElasticActorsNode(String clusterName,
                              String nodeId,
                              InetAddress nodeAddress,
-                             InternalActorSystemConfiguration configuration,
                              Cache<String,ActorRef> actorRefCache) {
+        super(nodeId, nodeAddress, true);
         this.clusterName = clusterName;
-        this.nodeId = nodeId;
-        this.nodeAddress = nodeAddress;
-        this.configuration = configuration;
         this.systemDeserializers = new MessagingSystemDeserializers(this,this);
         this.actorRefCache = actorRefCache;
         this.actorRefTools = new ActorRefTools(this);
@@ -117,13 +110,10 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
     public ElasticActorsNode(String clusterName,
                              String nodeId,
                              InetAddress nodeAddress,
-                             InternalActorSystemConfiguration configuration,
                              Cache<String,ActorRef> actorRefCache,
                              ActorRefFactory actorRefFactory) {
+        super(nodeId, nodeAddress, true);
         this.clusterName = clusterName;
-        this.nodeId = nodeId;
-        this.nodeAddress = nodeAddress;
-        this.configuration = configuration;
         this.systemDeserializers = new MessagingSystemDeserializers(this, actorRefFactory);
         this.actorRefCache = actorRefCache;
         this.actorRefTools = new ActorRefTools(this);
@@ -311,21 +301,6 @@ public final class ElasticActorsNode implements PhysicalNode, InternalActorSyste
             actorStateVersionCache.put(actorClass,version);
         }
         return version;
-    }
-
-    @Override
-    public boolean isLocal() {
-        return true;
-    }
-
-    @Override
-    public String getId() {
-        return nodeId;
-    }
-
-    @Override
-    public InetAddress getAddress() {
-        return nodeAddress;
     }
 
     private final class RebalancingRunnable implements Runnable {

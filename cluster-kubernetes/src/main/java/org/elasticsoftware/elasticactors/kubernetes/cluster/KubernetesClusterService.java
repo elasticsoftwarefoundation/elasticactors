@@ -25,9 +25,6 @@ import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ClusterEventListener;
 import org.elasticsoftware.elasticactors.cluster.ClusterMessageHandler;
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
-import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesStateMachine;
-import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.KubernetesStateMachineListener;
-import org.elasticsoftware.elasticactors.kubernetes.cluster.statemachine.impl.SingleThreadKubernetesStateMachine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,12 +34,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.String.format;
-import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
-public final class KubernetesClusterService implements ClusterService, KubernetesStateMachineListener {
+public final class KubernetesClusterService implements ClusterService {
     private static final Logger logger = LoggerFactory.getLogger(KubernetesClusterService.class);
     private KubernetesClient client;
     private final String namespace;
@@ -50,18 +46,13 @@ public final class KubernetesClusterService implements ClusterService, Kubernete
     private final String nodeId;
     private final String masterNodeId;
     private final Queue<ClusterEventListener> eventListeners = new ConcurrentLinkedQueue<>();
-    private final KubernetesStateMachine kubernetesStateMachine;
+    private final AtomicInteger currentTopology = new AtomicInteger();
 
-    public KubernetesClusterService(String namespace, String name, String nodeId, Integer timeoutSeconds) {
+    public KubernetesClusterService(String namespace, String name, String nodeId) {
         this.namespace = namespace;
         this.name = name;
         this.nodeId = nodeId;
         this.masterNodeId = format("%s-0", name);
-
-        ScheduledExecutorService scheduledExecutorService =
-                newSingleThreadScheduledExecutor(new DaemonThreadFactory("KUBERNETES_CLUSTERSERVICE_SCHEDULER"));
-        this.kubernetesStateMachine = new SingleThreadKubernetesStateMachine(new TaskScheduler(scheduledExecutorService, timeoutSeconds));
-        this.kubernetesStateMachine.addListener(this);
     }
 
     @PostConstruct
@@ -82,20 +73,20 @@ public final class KubernetesClusterService implements ClusterService, Kubernete
 
     @Override
     public void reportReady() throws Exception {
-        StatefulSet statefulSet = client.apps().statefulSets().inNamespace(namespace).withName(name).get();
+        StatefulSet resource = client.apps().statefulSets().inNamespace(namespace).withName(name).get();
 
-        if (statefulSet == null) {
+        if (resource == null) {
             throw new IllegalStateException(format("StatefulSet %s not found in namespace %s", name, namespace));
         }
 
         // send out the first update
-        kubernetesStateMachine.handleStateUpdate(statefulSet);
+        handleStatefulSetUpdate(resource);
 
         // subscribe to updates
-        client.apps().statefulSets().inNamespace(namespace).withName(name).watch(watcher);
+        watchStatefulSet();
 
         // and send out the master to be the 0 ordinal pod (i.e. <name>-0)
-        PhysicalNodeImpl masterNode = new PhysicalNodeImpl(masterNodeId, null, nodeId.equals(masterNodeId));
+        PhysicalNode masterNode = new PhysicalNode(masterNodeId, null, nodeId.equals(masterNodeId));
         this.eventListeners.forEach(clusterEventListener -> {
             try {
                 clusterEventListener.onMasterElected(masterNode);
@@ -105,23 +96,28 @@ public final class KubernetesClusterService implements ClusterService, Kubernete
         });
     }
 
-    @Override
-    public void onTopologyChange(int totalReplicas) {
-        logger.info("Signalling Cluster Topology change to {} nodes", totalReplicas);
-        List<PhysicalNode> nodeList = new ArrayList<>(totalReplicas);
-        for (int i = 0; i < totalReplicas; i++) {
-            String id = format("%s-%d", name, i);
-            nodeList.add(new PhysicalNodeImpl(id, null, id.equals(nodeId)));
-        }
+    private void watchStatefulSet() {
+        client.apps().statefulSets().inNamespace(namespace).withName(name).watch(watcher);
+    }
 
-        this.eventListeners.forEach(clusterEventListener -> {
-            try {
-                clusterEventListener.onTopologyChanged(nodeList);
-            } catch (Exception e) {
-                logger.error("Unexpected exception while calling clusterEventListener.onTopologyChanged", e);
+    private void handleStatefulSetUpdate(StatefulSet resource) {
+        int totalReplicas = resource.getStatus().getReplicas();
+        if (currentTopology.getAndSet(totalReplicas) != totalReplicas) {
+            logger.info("Signalling Cluster Topology change to {} nodes", totalReplicas);
+            List<PhysicalNode> nodeList = new ArrayList<>(totalReplicas);
+            for (int i = 0; i < totalReplicas; i++) {
+                String id = format("%s-%d", name, i);
+                nodeList.add(new PhysicalNode(id, null, id.equals(nodeId)));
             }
-        });
 
+            this.eventListeners.forEach(clusterEventListener -> {
+                try {
+                    clusterEventListener.onTopologyChanged(nodeList);
+                } catch (Exception e) {
+                    logger.error("Unexpected exception while calling clusterEventListener.onTopologyChanged", e);
+                }
+            });
+        }
     }
 
     @Override
@@ -152,8 +148,8 @@ public final class KubernetesClusterService implements ClusterService, Kubernete
     private final Watcher<StatefulSet> watcher = new Watcher<StatefulSet>() {
         @Override
         public void eventReceived(Action action, StatefulSet resource) {
-            if (Action.MODIFIED.equals(action)) {
-                kubernetesStateMachine.handleStateUpdate(resource);
+            if (action == Action.MODIFIED) {
+                handleStatefulSetUpdate(resource);
             }
         }
 
@@ -161,7 +157,8 @@ public final class KubernetesClusterService implements ClusterService, Kubernete
         public void onClose(KubernetesClientException cause) {
             logger.error("Watcher on statefulset {} was closed", name);
             // try to re-add it
-            client.apps().statefulSets().inNamespace(namespace).withName(name).watch(watcher);
+            watchStatefulSet();
         }
     };
+
 }

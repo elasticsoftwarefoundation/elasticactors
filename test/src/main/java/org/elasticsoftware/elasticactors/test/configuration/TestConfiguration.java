@@ -31,7 +31,6 @@ import org.elasticsoftware.elasticactors.cluster.HashingNodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.cluster.LocalActorSystemInstance;
 import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
-import org.elasticsoftware.elasticactors.cluster.PhysicalNodeImpl;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
@@ -78,7 +77,7 @@ public class TestConfiguration {
     @Autowired
     private ResourceLoader resourceLoader;
     private final NodeSelectorFactory nodeSelectorFactory = new HashingNodeSelectorFactory();
-    private final PhysicalNode localNode = new PhysicalNodeImpl(UUIDTools.createRandomUUID().toString(), InetAddress.getLoopbackAddress(), true);
+    private final PhysicalNode localNode = new PhysicalNode(UUIDTools.createRandomUUID().toString(), InetAddress.getLoopbackAddress(), true);
 
     @Bean(name = "systemInitializer")
     public SystemInitializer createSystemInitializer(LocalActorSystemInstance localActorSystemInstance, ClusterService clusterService) {

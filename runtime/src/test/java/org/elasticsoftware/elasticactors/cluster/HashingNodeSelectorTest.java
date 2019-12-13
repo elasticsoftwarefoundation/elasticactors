@@ -33,10 +33,10 @@ public class HashingNodeSelectorTest {
     @Test
     public void testThreeNodes() throws UnknownHostException {
         List<PhysicalNode> clusterNodes =
-                Arrays.<PhysicalNode>asList(
-                        new PhysicalNodeImpl("c8b53fd9-4d95-43fc-a1f7-96ca9e305d4", InetAddress.getByName("192.168.56.1"), true),
-                        new PhysicalNodeImpl("3bf98a1a-3c43-4d90-86d3-20c8f22d96c0", InetAddress.getByName("192.168.56.1"), false),
-                        new PhysicalNodeImpl("45a3fad3-c823-42f9-b0e5-90370b232698", InetAddress.getByName("192.168.56.1"), false));
+                Arrays.asList(
+                        new PhysicalNode("c8b53fd9-4d95-43fc-a1f7-96ca9e305d4", InetAddress.getByName("192.168.56.1"), true),
+                        new PhysicalNode("3bf98a1a-3c43-4d90-86d3-20c8f22d96c0", InetAddress.getByName("192.168.56.1"), false),
+                        new PhysicalNode("45a3fad3-c823-42f9-b0e5-90370b232698", InetAddress.getByName("192.168.56.1"), false));
 
         HashingNodeSelector hashingNodeSelector = new HashingNodeSelector(clusterNodes);
 
