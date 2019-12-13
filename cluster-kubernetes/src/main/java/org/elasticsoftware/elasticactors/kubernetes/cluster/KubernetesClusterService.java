@@ -20,6 +20,7 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ClusterEventListener;
@@ -34,9 +35,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.String.format;
+import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 public final class KubernetesClusterService implements ClusterService {
     private static final Logger logger = LoggerFactory.getLogger(KubernetesClusterService.class);
@@ -46,7 +51,11 @@ public final class KubernetesClusterService implements ClusterService {
     private final String nodeId;
     private final String masterNodeId;
     private final Queue<ClusterEventListener> eventListeners = new ConcurrentLinkedQueue<>();
+    private final ExecutorService clusterServiceExecutor =
+            newSingleThreadExecutor(new DaemonThreadFactory("KUBERNETES_CLUSTER_SERVICE"));
     private final AtomicInteger currentTopology = new AtomicInteger();
+    private final AtomicBoolean shuttingDown = new AtomicBoolean();
+    private final AtomicReference<Watch> currentWatch = new AtomicReference<>();
 
     public KubernetesClusterService(String namespace, String name, String nodeId) {
         this.namespace = namespace;
@@ -68,7 +77,12 @@ public final class KubernetesClusterService implements ClusterService {
 
     @PreDestroy
     public void destroy() {
-
+        shuttingDown.set(true);
+        Watch watch = currentWatch.get();
+        if (watch != null) {
+            watch.close();
+        }
+        clusterServiceExecutor.shutdownNow();
     }
 
     @Override
@@ -97,10 +111,23 @@ public final class KubernetesClusterService implements ClusterService {
     }
 
     private void watchStatefulSet() {
-        client.apps().statefulSets().inNamespace(namespace).withName(name).watch(watcher);
+        currentWatch.set(client.apps()
+                .statefulSets()
+                .inNamespace(namespace)
+                .withName(name)
+                .watch(watcher));
     }
 
     private void handleStatefulSetUpdate(StatefulSet resource) {
+        clusterServiceExecutor.submit(() -> reportTopologyChangeIfNeeded(resource));
+    }
+
+    private void reportTopologyChangeIfNeeded(StatefulSet resource) {
+        logger.info(
+                "Received Cluster State Update: spec.replicas={}, status.replicas={}, status.readyReplicas={}",
+                resource.getSpec().getReplicas(),
+                resource.getStatus().getReplicas(),
+                resource.getStatus().getReadyReplicas());
         int totalReplicas = resource.getStatus().getReplicas();
         if (currentTopology.getAndSet(totalReplicas) != totalReplicas) {
             logger.info("Signalling Cluster Topology change to {} nodes", totalReplicas);
@@ -157,7 +184,9 @@ public final class KubernetesClusterService implements ClusterService {
         public void onClose(KubernetesClientException cause) {
             logger.error("Watcher on statefulset {} was closed", name);
             // try to re-add it
-            watchStatefulSet();
+            if (!shuttingDown.get()) {
+                watchStatefulSet();
+            }
         }
     };
 
