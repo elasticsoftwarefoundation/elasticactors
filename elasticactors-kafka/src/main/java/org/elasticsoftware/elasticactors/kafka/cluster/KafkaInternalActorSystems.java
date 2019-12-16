@@ -24,6 +24,7 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.ActorShardRef;
+import org.elasticsoftware.elasticactors.cluster.BaseDisconnectedActorRef;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.cluster.RebalancingEventListener;
@@ -139,7 +140,9 @@ public final class KafkaInternalActorSystems implements InternalActorSystems, Ac
         ActorRef actorRef = actorRefCache.getIfPresent(refSpec);
         if(actorRef == null) {
             actorRef = actorRefTools.parse(refSpec);
-            actorRefCache.put(refSpec, actorRef);
+            if (!(actorRef instanceof BaseDisconnectedActorRef)) {
+                actorRefCache.put(refSpec, actorRef);
+            }
         }
         return actorRef;
     }

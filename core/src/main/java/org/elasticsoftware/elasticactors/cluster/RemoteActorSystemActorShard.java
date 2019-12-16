@@ -39,7 +39,7 @@ import java.util.List;
  */
 
 public final class RemoteActorSystemActorShard implements ActorShard, MessageHandler {
-    private static final PhysicalNode UNKNOWN_REMOTE_NODE = new PhysicalNodeImpl("UNKNOWN",null,false);
+    private static final PhysicalNode UNKNOWN_REMOTE_NODE = new PhysicalNode("UNKNOWN", null, false);
     private final InternalActorSystems actorSystems;
     private final ShardKey shardKey;
     private final MessageQueueFactory messageQueueFactory;

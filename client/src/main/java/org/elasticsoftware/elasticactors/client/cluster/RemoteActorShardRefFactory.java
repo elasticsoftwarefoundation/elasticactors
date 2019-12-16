@@ -50,7 +50,9 @@ public final class RemoteActorShardRefFactory implements ActorRefFactory {
         ActorRef actorRef = actorRefCache.getIfPresent(refSpec);
         if (actorRef == null) {
             actorRef = parse(refSpec);
-            actorRefCache.put(refSpec, actorRef);
+            if (!(actorRef instanceof BaseDisconnectedActorRef)) {
+                actorRefCache.put(refSpec, actorRef);
+            }
         }
         return actorRef;
     }

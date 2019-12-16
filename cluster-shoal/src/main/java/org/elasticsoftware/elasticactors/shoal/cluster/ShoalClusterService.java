@@ -40,7 +40,6 @@ import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ClusterEventListener;
 import org.elasticsoftware.elasticactors.cluster.ClusterMessageHandler;
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
-import org.elasticsoftware.elasticactors.cluster.PhysicalNodeImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -227,10 +226,10 @@ public final class ShoalClusterService implements ClusterService {
         List<PhysicalNode> clusterNodes = new LinkedList<>();
         for (String member : coreMembers) {
             if(nodeId.equals(member)) {
-                clusterNodes.add(new PhysicalNodeImpl(nodeId,nodeAddress,true));
+                clusterNodes.add(new PhysicalNode(nodeId, nodeAddress, true));
             } else {
                 InetAddress address = InetAddress.getByName((String) gms.getMemberDetails(member).get("address"));
-                clusterNodes.add(new PhysicalNodeImpl(member,address,false));
+                clusterNodes.add(new PhysicalNode(member, address, false));
             }
         }
         return clusterNodes;

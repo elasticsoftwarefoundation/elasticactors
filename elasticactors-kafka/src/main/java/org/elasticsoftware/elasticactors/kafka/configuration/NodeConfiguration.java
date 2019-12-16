@@ -81,7 +81,7 @@ public class NodeConfiguration {
         String clusterName = env.getRequiredProperty("ea.cluster");
         int maximumSize = env.getProperty("ea.actorRefCache.maximumSize",Integer.class,10240);
         actorRefCache = CacheBuilder.newBuilder().maximumSize(maximumSize).build();
-        node = new ElasticActorsNode(clusterName, nodeId, nodeAddress, configuration, actorRefCache);
+        node = new ElasticActorsNode(clusterName, nodeId, nodeAddress, actorRefCache);
     }
 
 
