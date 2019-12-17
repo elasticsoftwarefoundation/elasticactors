@@ -83,7 +83,7 @@ public class MessagingConfiguration {
         }
     }
 
-    @Bean(name = {"messagingService", "remoteActorSystemMessageQueueFactoryFactory"})
+    @Bean(name = {"messagingService"})
     public MessagingService getMessagingService() {
         return messagingService;
     }
