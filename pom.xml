@@ -69,7 +69,7 @@
         <awaitility.version>4.0.1</awaitility.version>
         <reactive-streams.version>1.0.3</reactive-streams.version>
         <jsr305.version>3.0.2</jsr305.version>
-        <persistence-api.version>1.0.2</persistence-api.version>
+        <persistence-api.version>2.2</persistence-api.version>
         <plexus-utils.version>3.0.9</plexus-utils.version>
         <aspectj-maven-plugin.version>1.11</aspectj-maven-plugin.version>
         <netty.version>4.1.43.Final</netty.version>
@@ -416,7 +416,7 @@
             </dependency>
             <dependency>
                 <groupId>javax.persistence</groupId>
-                <artifactId>persistence-api</artifactId>
+                <artifactId>javax.persistence-api</artifactId>
                 <version>${persistence-api.version}</version>
             </dependency>
             <dependency>
