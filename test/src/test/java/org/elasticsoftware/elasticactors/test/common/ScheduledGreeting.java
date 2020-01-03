@@ -26,7 +26,7 @@ import org.elasticsoftware.elasticactors.serialization.Message;
  * @author Joost van de Wijgerd
  */
 @Message(serializationFramework = JacksonSerializationFramework.class,durable = true)
-public final class ScheduledGreeting {
+public final class ScheduledGreeting implements IScheduledGreeting {
     private final ScheduledMessageRef messageRef;
 
     @JsonCreator
@@ -34,6 +34,7 @@ public final class ScheduledGreeting {
         this.messageRef = messageRef;
     }
 
+    @Override
     public ScheduledMessageRef getMessageRef() {
         return messageRef;
     }

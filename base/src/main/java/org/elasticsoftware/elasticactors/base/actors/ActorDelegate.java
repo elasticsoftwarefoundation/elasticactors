@@ -90,7 +90,16 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
 
         @Override
         public void onReceive(ActorRef sender, D message) throws Exception {
-            MessageConsumer consumer = onReceiveConsumers.get(message.getClass());
+            Class<?> messageClass = message.getClass();
+            MessageConsumer consumer = onReceiveConsumers.get(messageClass);
+            if (consumer == null) {
+                for (Map.Entry<Class<?>, MessageConsumer<?>> e : onReceiveConsumers.entrySet()) {
+                    if (e.getKey().isAssignableFrom(messageClass)) {
+                        consumer = e.getValue();
+                        break;
+                    }
+                }
+            }
             if (consumer != null) {
                 runIfPresent(sender, message, preReceiveConsumer);
                 consumer.accept(sender, message);
@@ -100,7 +109,9 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
                 orElseConsumer.accept(sender, message);
                 runIfPresent(sender, message, postReceiveConsumer);
             } else {
-                throw new UnexpectedResponseTypeException("Receiver unexpectedly responded with a message of type " + message.getClass().getTypeName());
+                throw new UnexpectedResponseTypeException(
+                        "Receiver unexpectedly responded with a message of type "
+                                + messageClass.getTypeName());
             }
         }
 
