@@ -160,4 +160,99 @@ public class GreetingTest {
         testActorSystem.destroy();
     }
 
+    @Test
+    public void testGreeting_messageSupertype() throws Exception {
+
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+        ActorRef greeter = actorSystem.actorOf("greeter",GreetingActor.class,new StringState("Hello World"));
+
+        //ScheduledMessageRef messageRef = actorSystem.getScheduler().scheduleOnce(null,new Greeting("Delayed Message"),greeter,2, TimeUnit.SECONDS);
+
+        final CountDownLatch countDownLatch = new CountDownLatch(2);
+
+        ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
+                .deleteAfterReceive(false)
+                .onReceive(IScheduledGreeting.class, () -> System.out.println("Got Scheduled Greeting"))
+                .onReceive(Greeting.class, m -> System.out.println(format("Got Greeting from %s", m.getWho())))
+                .orElse(MessageConsumer.noop())
+                .postReceive(countDownLatch::countDown)
+                .build());
+
+        greeter.tell(new Greeting("Joost van de Wijgerd"), replyActor);
+
+        assertTrue(countDownLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(LocalMessageQueue.getThrownExceptions().isEmpty());
+
+        testActorSystem.destroy();
+    }
+
+    @Test
+    public void testGreeting_client_messageSupertype() throws Exception {
+
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+        ActorSystem clientActorSystem = testActorSystem.getRemoteActorSystem();
+        ActorRef greeter = actorSystem.actorOf("greeter",GreetingActor.class,new StringState("Hello World"));
+
+        //ScheduledMessageRef messageRef = actorSystem.getScheduler().scheduleOnce(null,new Greeting("Delayed Message"),greeter,2, TimeUnit.SECONDS);
+
+        final CountDownLatch countDownLatch = new CountDownLatch(2);
+
+        ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
+                .deleteAfterReceive(false)
+                .onReceive(IScheduledGreeting.class, () -> System.out.println("Got Scheduled Greeting"))
+                .onReceive(Greeting.class, m -> System.out.println(format("Got Greeting from %s", m.getWho())))
+                .orElse(MessageConsumer.noop())
+                .postReceive(countDownLatch::countDown)
+                .build());
+
+        clientActorSystem.actorFor("greeter")
+                .tell(new Greeting("This will error out because we use a local queue"));
+        greeter.tell(new Greeting("Joost van de Wijgerd"), replyActor);
+
+        assertTrue(countDownLatch.await(5, TimeUnit.SECONDS));
+
+        assertEquals(LocalMessageQueue.getThrownExceptions().size(), 1);
+        assertTrue(LocalMessageQueue.getThrownExceptions().get(0) instanceof UnsupportedOperationException);
+
+        testActorSystem.destroy();
+    }
+
+    @Test
+    public void testStopAfterGreeting_messageSupertype() throws Exception {
+
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+        ActorRef greeter = actorSystem.actorOf("greeter",GreetingActor.class,new StringState("Hello World"));
+
+        //ScheduledMessageRef messageRef = actorSystem.getScheduler().scheduleOnce(null,new Greeting("Delayed Message"),greeter,2, TimeUnit.SECONDS);
+
+        final CountDownLatch countDownLatch = new CountDownLatch(2);
+
+        ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
+                .deleteAfterReceive(false)
+                .onReceive(IScheduledGreeting.class, () -> {
+                    System.out.println("Got Scheduled Greeting");
+                    stopActor();
+                })
+                .onReceive(Greeting.class, m -> System.out.println(format("Got Greeting from %s", m.getWho())))
+                .orElse(MessageConsumer.noop())
+                .postReceive(countDownLatch::countDown)
+                .build());
+
+        greeter.tell(new Greeting("Joost van de Wijgerd"), replyActor);
+
+        assertFalse(countDownLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(LocalMessageQueue.getThrownExceptions().isEmpty());
+
+        testActorSystem.destroy();
+    }
+
 }
