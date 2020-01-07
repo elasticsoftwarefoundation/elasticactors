@@ -66,7 +66,7 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
 
     @PreDestroy
     public void destroy() {
-        scheduledExecutorService.shutdown();
+        scheduledExecutorService.shutdownNow();
     }
 
     public ShardedScheduler() {
