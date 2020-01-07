@@ -32,6 +32,7 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.LocalActorSystemInstance;
 import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.RemoteActorSystems;
+import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ShardedScheduler;
 import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
@@ -186,10 +187,9 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"scheduler"})
-    public ShardedScheduler createScheduler() {
+    public SchedulerService createScheduler() {
         int numberOfWorkers = env.getProperty("ea.shardedScheduler.workerCount", Integer.class, Runtime.getRuntime().availableProcessors());
-        Boolean useNonBlockingWorker = env.getProperty("ea.shardedScheduler.useNonBlockingWorker", Boolean.class, FALSE);
-        return new ShardedScheduler(numberOfWorkers, useNonBlockingWorker);
+        return new ShardedScheduler(numberOfWorkers);
     }
 
     @Bean(name = {"actorSystemEventListenerService"})

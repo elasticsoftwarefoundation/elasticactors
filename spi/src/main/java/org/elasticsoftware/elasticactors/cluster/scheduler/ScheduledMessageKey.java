@@ -40,15 +40,19 @@ public final class ScheduledMessageKey {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ScheduledMessageKey)) {
+            return false;
+        }
 
         ScheduledMessageKey that = (ScheduledMessageKey) o;
 
-        if (fireTime != that.fireTime) return false;
-        if (!id.equals(that.id)) return false;
-
-        return true;
+        if (fireTime != that.fireTime) {
+            return false;
+        }
+        return id.equals(that.id);
     }
 
     @Override
