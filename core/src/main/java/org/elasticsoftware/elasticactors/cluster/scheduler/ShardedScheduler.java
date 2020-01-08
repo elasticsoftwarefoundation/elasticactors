@@ -39,7 +39,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
@@ -56,7 +55,7 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
     private ScheduledMessageRepository scheduledMessageRepository;
     private InternalActorSystem actorSystem;
     private ScheduledExecutorService scheduledExecutorService;
-    private final ConcurrentMap<ShardKey, ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>>> scheduledFutures = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<ShardKey, ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>>> scheduledFutures = new ConcurrentHashMap<>();
     private final int numberOfWorkers;
 
     @PostConstruct
@@ -88,48 +87,81 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
     }
 
     private void schedule(ShardKey shardKey, ScheduledMessage scheduledMessage) {
-        ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>> scheduledFuturesForShard =
-                scheduledFutures.get(shardKey);
-        if (scheduledFuturesForShard != null) {
-            scheduledFuturesForShard.computeIfAbsent(
-                    scheduledMessage.getKey(),
-                    key -> scheduledExecutorService.schedule(
-                            new ScheduledMessageRunnable(
-                                    shardKey,
-                                    scheduledMessage),
-                            scheduledMessage.getDelay(TimeUnit.MILLISECONDS),
-                            TimeUnit.MILLISECONDS));
+        /*
+         * Using computeIfPresent here allows for more granular locking instead of locking at the
+         * scheduler or at the map level
+         */
+        ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>> currentScheduledFuturesForShard =
+                scheduledFutures.computeIfPresent(shardKey, (key, scheduledFuturesForShard) -> {
+                    // Schedule only if not scheduled before
+                    scheduledFuturesForShard.computeIfAbsent(
+                            scheduledMessage.getKey(),
+                            messageKey -> scheduledExecutorService.schedule(
+                                    new ScheduledMessageRunnable(
+                                            key,
+                                            scheduledMessage),
+                                    scheduledMessage.getDelay(TimeUnit.MILLISECONDS),
+                                    TimeUnit.MILLISECONDS));
+                    return scheduledFuturesForShard;
+                });
+        if (currentScheduledFuturesForShard == null) {
+            throw new RejectedExecutionException(format(
+                    "Shard: %s is not registered, please call registerShard first",
+                    shardKey));
         }
     }
 
     private void unschedule(ShardKey shardKey, ScheduledMessageKey messageKey) {
-        ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>> scheduledFuturesForShard =
-                scheduledFutures.get(shardKey);
-        if (scheduledFuturesForShard != null) {
-            ScheduledFuture<?> scheduledFuture = scheduledFuturesForShard.remove(messageKey);
-            if (scheduledFuture != null) {
-                scheduledFuture.cancel(false);
-            }
+        /*
+         * Using computeIfPresent here allows for more granular locking instead of locking at the
+         * scheduler or at the map level
+         */
+        ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>> currentScheduledFuturesForShard =
+                scheduledFutures.computeIfPresent(shardKey, (key, scheduledFuturesForShard) -> {
+                    ScheduledFuture<?> scheduledFuture =
+                            scheduledFuturesForShard.remove(messageKey);
+                    if (scheduledFuture != null) {
+                        scheduledFuture.cancel(false);
+                    }
+                    return scheduledFuturesForShard;
+                });
+        if (currentScheduledFuturesForShard == null) {
+            throw new IllegalArgumentException(format(
+                    "Shard: %s is not registered, please call registerShard first",
+                    shardKey));
         }
     }
 
     @Override
     public void registerShard(ShardKey shardKey) {
         // obtain the scheduler shard
-        scheduledFutures.computeIfAbsent(shardKey, key -> new ConcurrentHashMap<>());
-        // fetch block from repository
-        // @todo: for now we'll fetch all, this obviously has memory issues
-        long startTime = System.nanoTime();
-        List<ScheduledMessage> scheduledMessages = scheduledMessageRepository.getAll(shardKey);
-        if(logger.isInfoEnabled()) {
-            logger.info("Registering shard {} and loaded {} scheduled messages in {} nanoseconds",
-                    shardKey,
-                    scheduledMessages.size(),
-                    System.nanoTime() - startTime);
-        }
-        for (ScheduledMessage message : scheduledMessages) {
-            schedule(shardKey, message);
-        }
+        // Using computeIfAbsent so we can lock the map propertly while loading the messages
+        scheduledFutures.computeIfAbsent(shardKey, key -> {
+            // fetch block from repository
+            // @todo: for now we'll fetch all, this obviously has memory issues
+            long startTime = System.nanoTime();
+            List<ScheduledMessage> scheduledMessages = scheduledMessageRepository.getAll(shardKey);
+            if (logger.isInfoEnabled()) {
+                logger.info(
+                        "Registering shard {} and loaded {} scheduled messages in {} nanoseconds",
+                        shardKey,
+                        scheduledMessages.size(),
+                        System.nanoTime() - startTime);
+            }
+            ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>> scheduledFuturesForShard =
+                    new ConcurrentHashMap<>();
+            for (ScheduledMessage scheduledMessage : scheduledMessages) {
+                scheduledFuturesForShard.put(
+                        scheduledMessage.getKey(),
+                        scheduledExecutorService.schedule(
+                                new ScheduledMessageRunnable(
+                                        key,
+                                        scheduledMessage),
+                                scheduledMessage.getDelay(TimeUnit.MILLISECONDS),
+                                TimeUnit.MILLISECONDS));
+            }
+            return scheduledFuturesForShard;
+        });
     }
 
     @Override
@@ -137,9 +169,7 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
         ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>> scheduledFuturesForShard =
                 scheduledFutures.remove(shardKey);
         if (scheduledFuturesForShard != null) {
-            for (ScheduledFuture<?> scheduledFuture : scheduledFuturesForShard.values()) {
-                scheduledFuture.cancel(false);
-            }
+            scheduledFuturesForShard.forEach((k, scheduledFuture) -> scheduledFuture.cancel(false));
         }
     }
 
@@ -198,6 +228,7 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
 
         @Override
         public void run() {
+            boolean executionInterruptedByResharding = false;
             try {
                 final MessageDeserializer messageDeserializer = actorSystem.getDeserializer(message.getMessageClass());
                 if(messageDeserializer != null) {
@@ -216,9 +247,15 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
                     // so it should be no problem
                     long fireTime = System.currentTimeMillis() + 1000L;
                     ScheduledMessage rescheduledMessage = new ScheduledMessageImpl(fireTime,message.getSender(),message.getReceiver(),message.getMessageClass(),message.getMessageBytes());
-                    scheduledMessageRepository.create(shardKey, rescheduledMessage);
-                    schedule(shardKey,rescheduledMessage);
-                    logger.warn("Got a recoverable MessageDeliveryException, rescheduling ScheduledMessage to fire in 1000 msecs");
+                    try {
+                        schedule(shardKey, rescheduledMessage);
+                        scheduledMessageRepository.create(shardKey, rescheduledMessage);
+                        logger.warn("Got a recoverable MessageDeliveryException, rescheduling ScheduledMessage to fire in 1000 msecs");
+                    } catch (RejectedExecutionException re) {
+                        executionInterruptedByResharding = true;
+                        logger.error("Got a recoverable MessageDeliveryException, but the shard [{}] is not registered anymore. "
+                                + "Skipping rescheduling and letting the new owner of the shard try to send the message", shardKey);
+                    }
                 } else {
                     logger.error("Got an unrecoverable MessageDeliveryException",e);
                 }
@@ -229,13 +266,15 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
             } catch(Exception e) {
                 logger.error("Caught unexpected Exception while exexuting ScheduledMessage",e);
             } finally {
-                // always remove from the backing store
-                scheduledMessageRepository.delete(shardKey, message.getKey());
-                // always remove from the map of scheduled futures
-                ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>> mapForShard =
-                        scheduledFutures.get(shardKey);
-                if (mapForShard != null) {
-                    mapForShard.remove(message.getKey());
+                // Always remove from the map of scheduled futures
+                ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>>
+                        scheduledFuturesForShard = scheduledFutures.get(shardKey);
+                if (scheduledFuturesForShard != null) {
+                    scheduledFuturesForShard.remove(message.getKey());
+                }
+                // Delete the message only if the execution was not interrupted by resharding
+                if (!executionInterruptedByResharding) {
+                    scheduledMessageRepository.delete(shardKey, message.getKey());
                 }
             }
         }
