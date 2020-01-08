@@ -266,12 +266,15 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
             } catch(Exception e) {
                 logger.error("Caught unexpected Exception while exexuting ScheduledMessage",e);
             } finally {
-                // Always remove from the map of scheduled futures
-                ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>>
-                        scheduledFuturesForShard = scheduledFutures.get(shardKey);
-                if (scheduledFuturesForShard != null) {
+                /*
+                 * Always remove from the map of scheduled futures.
+                 * Using computeIfPresent as a cheap locking mechanism. Such synchronization is
+                 * necessary because this task can execute while the map is still being populated.
+                 */
+                scheduledFutures.computeIfPresent(shardKey, (key, scheduledFuturesForShard) -> {
                     scheduledFuturesForShard.remove(message.getKey());
-                }
+                    return scheduledFuturesForShard;
+                });
                 // Delete the message only if the execution was not interrupted by resharding
                 if (!executionInterruptedByResharding) {
                     scheduledMessageRepository.delete(shardKey, message.getKey());
