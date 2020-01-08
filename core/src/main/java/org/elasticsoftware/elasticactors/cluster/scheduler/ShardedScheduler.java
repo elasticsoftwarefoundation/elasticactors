@@ -91,18 +91,14 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
         ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>> scheduledFuturesForShard =
                 scheduledFutures.get(shardKey);
         if (scheduledFuturesForShard != null) {
-            ScheduledFuture<?> previous =
-                    scheduledFuturesForShard.get(scheduledMessage.getKey());
-            if (previous == null || previous.cancel(false)) {
-                scheduledFuturesForShard.put(
-                        scheduledMessage.getKey(),
-                        scheduledExecutorService.schedule(
-                                new ScheduledMessageRunnable(
-                                        shardKey,
-                                        scheduledMessage),
-                                scheduledMessage.getDelay(TimeUnit.MILLISECONDS),
-                                TimeUnit.MILLISECONDS));
-            }
+            scheduledFuturesForShard.computeIfAbsent(
+                    scheduledMessage.getKey(),
+                    key -> scheduledExecutorService.schedule(
+                            new ScheduledMessageRunnable(
+                                    shardKey,
+                                    scheduledMessage),
+                            scheduledMessage.getDelay(TimeUnit.MILLISECONDS),
+                            TimeUnit.MILLISECONDS));
         }
     }
 
