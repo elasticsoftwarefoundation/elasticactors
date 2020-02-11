@@ -26,7 +26,7 @@
     <artifactId>backplane-cassandra4</artifactId>
     <packaging>jar</packaging>
 
-    <name>Elastic Software Foundation :: ElasticActors :: Cassandra 2.x Backplane</name>
+    <name>Elastic Software Foundation :: ElasticActors :: Cassandra 4.x Backplane</name>
     <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
     <properties>
