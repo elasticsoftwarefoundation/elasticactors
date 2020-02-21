@@ -28,7 +28,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <cassandra.version>3.11.5</cassandra.version>
+        <cassandra.version>3.11.6</cassandra.version>
         <!-- TODO this md5 digest is for verion 3.11.4-->
         <cassandra.version.md5>40f49dc7dbcd49e2e18e2dead7dd074a</cassandra.version.md5>
         <hectorclient.version>2.0-0</hectorclient.version>
