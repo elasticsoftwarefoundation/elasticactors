@@ -43,12 +43,6 @@
             <artifactId>java-uuid-generator</artifactId>
         </dependency>
 
-        <!-- This is for Log4J 1, which is a compile-time dependency for java-uuid-generator -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>log4j-over-slf4j</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
