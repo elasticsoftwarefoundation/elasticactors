@@ -182,7 +182,7 @@ public final class KubernetesClusterService implements ClusterService {
 
         @Override
         public void onClose(KubernetesClientException cause) {
-            logger.error("Watcher on statefulset {} was closed", name);
+            logger.error("Watcher on statefulset {} was closed", name, cause);
             // try to re-add it
             if (!shuttingDown.get()) {
                 watchStatefulSet();
