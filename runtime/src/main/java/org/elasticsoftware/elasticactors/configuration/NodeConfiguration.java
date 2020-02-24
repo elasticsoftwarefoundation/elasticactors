@@ -188,8 +188,7 @@ public class NodeConfiguration {
     @Bean(name = {"scheduler"})
     public ShardedScheduler createScheduler() {
         int numberOfWorkers = env.getProperty("ea.shardedScheduler.workerCount", Integer.class, Runtime.getRuntime().availableProcessors());
-        Boolean useNonBlockingWorker = env.getProperty("ea.shardedScheduler.useNonBlockingWorker", Boolean.class, FALSE);
-        return new ShardedScheduler(numberOfWorkers, useNonBlockingWorker);
+        return new ShardedScheduler(numberOfWorkers);
     }
 
     @Bean(name = {"actorSystemEventListenerService"})

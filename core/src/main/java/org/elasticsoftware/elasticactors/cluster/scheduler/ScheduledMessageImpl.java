@@ -36,6 +36,7 @@ public final class ScheduledMessageImpl implements ScheduledMessage {
     private final ActorRef receiver;
     private final Class messageClass;
     private final byte[] messageBytes;
+    private final ScheduledMessageKey key;
 
     public ScheduledMessageImpl(long fireTime, ActorRef sender, ActorRef receiver, Class messageClass,byte[] messageBytes) {
         this(UUIDTools.createTimeBasedUUID(),fireTime,sender,receiver, messageClass, messageBytes);
@@ -48,6 +49,7 @@ public final class ScheduledMessageImpl implements ScheduledMessage {
         this.receiver = receiver;
         this.messageClass = messageClass;
         this.messageBytes = messageBytes;
+        this.key = new ScheduledMessageKey(id, fireTime);
     }
 
     /**
@@ -62,7 +64,7 @@ public final class ScheduledMessageImpl implements ScheduledMessage {
 
     @Override
     public ScheduledMessageKey getKey() {
-        return new ScheduledMessageKey(this.id,this.fireTime);
+        return key;
     }
 
     @Override
@@ -128,21 +130,20 @@ public final class ScheduledMessageImpl implements ScheduledMessage {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ScheduledMessage)) {
+            return false;
+        }
 
-        ScheduledMessageImpl that = (ScheduledMessageImpl) o;
+        ScheduledMessage that = (ScheduledMessage) o;
 
-        if (fireTime != that.fireTime) return false;
-        if (!id.equals(that.id)) return false;
-
-        return true;
+        return key.equals(that.getKey());
     }
 
     @Override
     public int hashCode() {
-        int result = id.hashCode();
-        result = 31 * result + (int) (fireTime ^ (fireTime >>> 32));
-        return result;
+        return key.hashCode();
     }
 }

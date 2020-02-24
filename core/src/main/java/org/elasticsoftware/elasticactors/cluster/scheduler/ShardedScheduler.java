@@ -28,9 +28,6 @@ import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
-import org.elasticsoftware.elasticactors.util.concurrent.ShardedScheduledWorkManager;
-import org.elasticsoftware.elasticactors.util.concurrent.WorkExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.WorkExecutorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,9 +38,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
@@ -51,33 +50,30 @@ import static java.lang.String.format;
 /**
  * @author Joost van de Wijgerd
  */
-public final class ShardedScheduler implements SchedulerService,WorkExecutorFactory,ScheduledMessageRefFactory {
+public final class ShardedScheduler implements SchedulerService,ScheduledMessageRefFactory {
     private static final Logger logger = LoggerFactory.getLogger(ShardedScheduler.class);
-    private ShardedScheduledWorkManager<ShardKey,ScheduledMessage> workManager;
     private ScheduledMessageRepository scheduledMessageRepository;
     private InternalActorSystem actorSystem;
+    private ScheduledExecutorService scheduledExecutorService;
+    private final ConcurrentHashMap<ShardKey, ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>>> scheduledFutures = new ConcurrentHashMap<>();
     private final int numberOfWorkers;
-    private final Boolean useNonBlockingWorker;
-
-    public ShardedScheduler() {
-        this(Runtime.getRuntime().availableProcessors(), Boolean.FALSE);
-    }
-
-    public ShardedScheduler(int numberOfWorkers, Boolean useNonBlockingWorker) {
-        this.numberOfWorkers = numberOfWorkers;
-        this.useNonBlockingWorker = useNonBlockingWorker;
-    }
 
     @PostConstruct
     public void init() {
-        ExecutorService executorService = Executors.newCachedThreadPool(new DaemonThreadFactory("SCHEDULER"));
-        workManager = new ShardedScheduledWorkManager<>(executorService, this, numberOfWorkers, useNonBlockingWorker);
-        workManager.init();
+        scheduledExecutorService = Executors.newScheduledThreadPool(numberOfWorkers, new DaemonThreadFactory("SCHEDULER"));
     }
 
     @PreDestroy
     public void destroy() {
-        workManager.destroy();
+        scheduledExecutorService.shutdownNow();
+    }
+
+    public ShardedScheduler() {
+        this(Runtime.getRuntime().availableProcessors());
+    }
+
+    public ShardedScheduler(int numberOfWorkers) {
+        this.numberOfWorkers = numberOfWorkers;
     }
 
     @Inject
@@ -90,26 +86,91 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
         this.actorSystem = actorSystem;
     }
 
+    private void schedule(ShardKey shardKey, ScheduledMessage scheduledMessage) {
+        /*
+         * Using computeIfPresent here allows for more granular locking instead of locking at the
+         * scheduler or at the map level
+         */
+        ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>> currentScheduledFuturesForShard =
+                scheduledFutures.computeIfPresent(shardKey, (key, scheduledFuturesForShard) -> {
+                    // Schedule only if not scheduled before
+                    scheduledFuturesForShard.computeIfAbsent(
+                            scheduledMessage.getKey(),
+                            messageKey -> scheduledExecutorService.schedule(
+                                    new ScheduledMessageRunnable(
+                                            key,
+                                            scheduledMessage),
+                                    scheduledMessage.getDelay(TimeUnit.MILLISECONDS),
+                                    TimeUnit.MILLISECONDS));
+                    return scheduledFuturesForShard;
+                });
+        if (currentScheduledFuturesForShard == null) {
+            throw new RejectedExecutionException(format(
+                    "Shard: %s is not registered, please call registerShard first",
+                    shardKey));
+        }
+    }
+
+    private void unschedule(ShardKey shardKey, ScheduledMessageKey messageKey) {
+        /*
+         * Using computeIfPresent here allows for more granular locking instead of locking at the
+         * scheduler or at the map level
+         */
+        ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>> currentScheduledFuturesForShard =
+                scheduledFutures.computeIfPresent(shardKey, (key, scheduledFuturesForShard) -> {
+                    ScheduledFuture<?> scheduledFuture =
+                            scheduledFuturesForShard.remove(messageKey);
+                    if (scheduledFuture != null) {
+                        scheduledFuture.cancel(false);
+                    }
+                    return scheduledFuturesForShard;
+                });
+        if (currentScheduledFuturesForShard == null) {
+            throw new IllegalArgumentException(format(
+                    "Shard: %s is not registered, please call registerShard first",
+                    shardKey));
+        }
+    }
+
     @Override
     public void registerShard(ShardKey shardKey) {
         // obtain the scheduler shard
-        workManager.registerShard(shardKey);
-        // fetch block from repository
-        // @todo: for now we'll fetch all, this obviously has memory issues
-        long startTime = System.nanoTime();
-        List<ScheduledMessage> scheduledMessages = scheduledMessageRepository.getAll(shardKey);
-        if(logger.isInfoEnabled()) {
-            logger.info("Registering shard {} and loaded {} scheduled messages in {} nanoseconds",
-                    shardKey,
-                    scheduledMessages.size(),
-                    System.nanoTime() - startTime);
-        }
-        workManager.schedule(shardKey,scheduledMessages.toArray(new ScheduledMessage[0]));
+        // Using computeIfAbsent so we can lock the map propertly while loading the messages
+        scheduledFutures.computeIfAbsent(shardKey, key -> {
+            // fetch block from repository
+            // @todo: for now we'll fetch all, this obviously has memory issues
+            long startTime = System.nanoTime();
+            List<ScheduledMessage> scheduledMessages = scheduledMessageRepository.getAll(shardKey);
+            if (logger.isInfoEnabled()) {
+                logger.info(
+                        "Registering shard {} and loaded {} scheduled messages in {} nanoseconds",
+                        shardKey,
+                        scheduledMessages.size(),
+                        System.nanoTime() - startTime);
+            }
+            ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>> scheduledFuturesForShard =
+                    new ConcurrentHashMap<>();
+            for (ScheduledMessage scheduledMessage : scheduledMessages) {
+                scheduledFuturesForShard.put(
+                        scheduledMessage.getKey(),
+                        scheduledExecutorService.schedule(
+                                new ScheduledMessageRunnable(
+                                        key,
+                                        scheduledMessage),
+                                scheduledMessage.getDelay(TimeUnit.MILLISECONDS),
+                                TimeUnit.MILLISECONDS));
+            }
+            return scheduledFuturesForShard;
+        });
     }
 
     @Override
     public void unregisterShard(ShardKey shardKey) {
-        workManager.unregisterShard(shardKey);
+        ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>> scheduledFuturesForShard =
+                scheduledFutures.remove(shardKey);
+        if (scheduledFuturesForShard != null) {
+            scheduledFuturesForShard.forEach((k, scheduledFuture) -> scheduledFuture.cancel(false));
+        }
     }
 
     @Override
@@ -129,7 +190,7 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
                         serializedMessage.get(serializedBytes);
                         ScheduledMessage scheduledMessage = new ScheduledMessageImpl(fireTime,sender,receiver,message.getClass(),serializedBytes);
                         scheduledMessageRepository.create(actorShard.getKey(), scheduledMessage);
-                        workManager.schedule(actorShard.getKey(),scheduledMessage);
+                        schedule(actorShard.getKey(),scheduledMessage);
                         return new ScheduledMessageShardRef(actorSystem.getParent().getClusterName(),actorShard,new ScheduledMessageKey(scheduledMessage.getId(),fireTime));
                     } catch(Exception e) {
                         throw new RejectedExecutionException(e);
@@ -142,11 +203,6 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
     }
 
     @Override
-    public WorkExecutor create() {
-        return new ScheduledMessageExecutor();
-    }
-
-    @Override
     public ScheduledMessageRef create(String refSpec) {
         final InternalActorSystems cluster = actorSystem.getParent();
         return ScheduledMessageRefTools.parse(refSpec,cluster);
@@ -156,14 +212,23 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
     public void cancel(ShardKey shardKey,ScheduledMessageKey messageKey) {
         // sanity check if this is actually a local shard that we manage
         // bit of a hack to send in a broken ScheduledMessage (only the key set)
-        workManager.unschedule(shardKey,new ScheduledMessageImpl(messageKey.getId(),messageKey.getFireTime()));
+        unschedule(shardKey,messageKey);
         scheduledMessageRepository.delete(shardKey,messageKey);
     }
 
-    private final class ScheduledMessageExecutor implements WorkExecutor<ShardKey,ScheduledMessage> {
+    private final class ScheduledMessageRunnable implements Runnable {
+
+        private final ShardKey shardKey;
+        private final ScheduledMessage message;
+
+        public ScheduledMessageRunnable(ShardKey shardKey, ScheduledMessage message) {
+            this.shardKey = shardKey;
+            this.message = message;
+        }
 
         @Override
-        public void execute(final ShardKey shardKey,final ScheduledMessage message) {
+        public void run() {
+            boolean executionInterruptedByResharding = false;
             try {
                 final MessageDeserializer messageDeserializer = actorSystem.getDeserializer(message.getMessageClass());
                 if(messageDeserializer != null) {
@@ -182,9 +247,15 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
                     // so it should be no problem
                     long fireTime = System.currentTimeMillis() + 1000L;
                     ScheduledMessage rescheduledMessage = new ScheduledMessageImpl(fireTime,message.getSender(),message.getReceiver(),message.getMessageClass(),message.getMessageBytes());
-                    scheduledMessageRepository.create(shardKey, rescheduledMessage);
-                    workManager.schedule(shardKey,rescheduledMessage);
-                    logger.warn("Got a recoverable MessageDeliveryException, rescheduling ScheduledMessage to fire in 1000 msecs");
+                    try {
+                        schedule(shardKey, rescheduledMessage);
+                        scheduledMessageRepository.create(shardKey, rescheduledMessage);
+                        logger.warn("Got a recoverable MessageDeliveryException, rescheduling ScheduledMessage to fire in 1000 msecs");
+                    } catch (RejectedExecutionException re) {
+                        executionInterruptedByResharding = true;
+                        logger.error("Got a recoverable MessageDeliveryException, but the shard [{}] is not registered anymore. "
+                                + "Skipping rescheduling and letting the new owner of the shard try to send the message", shardKey);
+                    }
                 } else {
                     logger.error("Got an unrecoverable MessageDeliveryException",e);
                 }
@@ -195,8 +266,19 @@ public final class ShardedScheduler implements SchedulerService,WorkExecutorFact
             } catch(Exception e) {
                 logger.error("Caught unexpected Exception while exexuting ScheduledMessage",e);
             } finally {
-                // always remove from the backing store
-                scheduledMessageRepository.delete(shardKey, message.getKey());
+                /*
+                 * Always remove from the map of scheduled futures.
+                 * Using computeIfPresent as a cheap locking mechanism. Such synchronization is
+                 * necessary because this task can execute while the map is still being populated.
+                 */
+                scheduledFutures.computeIfPresent(shardKey, (key, scheduledFuturesForShard) -> {
+                    scheduledFuturesForShard.remove(message.getKey());
+                    return scheduledFuturesForShard;
+                });
+                // Delete the message only if the execution was not interrupted by resharding
+                if (!executionInterruptedByResharding) {
+                    scheduledMessageRepository.delete(shardKey, message.getKey());
+                }
             }
         }
     }
