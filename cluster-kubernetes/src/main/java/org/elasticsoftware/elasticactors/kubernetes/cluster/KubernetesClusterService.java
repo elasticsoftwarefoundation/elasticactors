@@ -149,7 +149,8 @@ public final class KubernetesClusterService implements ClusterService {
 
     @Override
     public void reportPlannedShutdown() {
-        // don't do anything.. scale down changes should come from the k8s api
+        // Acklowledge we're shutting down, silence Watcher error messages when scaling down
+        shuttingDown.set(true);
     }
 
     @Override
@@ -182,9 +183,9 @@ public final class KubernetesClusterService implements ClusterService {
 
         @Override
         public void onClose(KubernetesClientException cause) {
-            logger.error("Watcher on statefulset {} was closed", name, cause);
-            // try to re-add it
+            // try to re-add it if we're not shutting down
             if (!shuttingDown.get()) {
+                logger.error("Watcher on statefulset {} was closed", name, cause);
                 watchStatefulSet();
             }
         }
