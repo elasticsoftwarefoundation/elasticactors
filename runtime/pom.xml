@@ -111,7 +111,6 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>aspectj-maven-plugin</artifactId>
-                <version>${aspectj-maven-plugin.version}</version>
                 <executions>
                     <execution>
                         <goals>
@@ -167,9 +166,7 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.6</version>
                         <configuration>
                             <useAgent>true</useAgent>
                         </configuration>
@@ -193,7 +190,6 @@
                 <plugins>
                     <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>
-                        <version>3.1.1</version>
                         <configuration>
                             <!-- <filters>
                                  <filter>src/assemble/filter.properties</filter>
@@ -217,7 +213,6 @@
                     <plugin>
                         <groupId>com.googlecode.maven-download-plugin</groupId>
                         <artifactId>download-maven-plugin</artifactId>
-                        <version>1.4.2</version>
                         <executions>
                             <execution>
                                 <id>download-cassandra</id>
