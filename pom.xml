@@ -19,7 +19,7 @@
 
     <groupId>org.elasticsoftware.elasticactors</groupId>
     <artifactId>elasticactors-parent</artifactId>
-    <version>2.3.2-SNAPSHOT</version>
+    <version>2.3.2</version>
 
     <packaging>pom</packaging>
 
@@ -78,7 +78,7 @@
         <developerConnection>scm:git:git@github.com:elasticsoftwarefoundation/elasticactors.git
         </developerConnection>
         <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
-        <tag>HEAD</tag>
+        <tag>v2.3.2</tag>
     </scm>
 
     <repositories>
@@ -778,8 +778,8 @@
                         <requireMavenVersion>
                             <version>3.0.5</version>
                         </requireMavenVersion>
-                        <banDuplicatePomDependencyVersions/>
-                        <dependencyConvergence/>
+                        <banDuplicatePomDependencyVersions />
+                        <dependencyConvergence />
                     </rules>
                 </configuration>
             </plugin>
