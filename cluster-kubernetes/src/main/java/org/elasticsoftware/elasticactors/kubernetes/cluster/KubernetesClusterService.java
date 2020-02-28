@@ -135,7 +135,7 @@ public final class KubernetesClusterService implements ClusterService {
                 resource.getStatus().getReplicas(),
                 resource.getStatus().getReadyReplicas());
         int totalReplicas = Boolean.TRUE.equals(useDesiredReplicas)
-                ? resource.getSpec().getReplicas()
+                ? Math.max(resource.getSpec().getReplicas(), resource.getStatus().getReplicas())
                 : resource.getStatus().getReplicas();
         if (currentTopology.getAndSet(totalReplicas) != totalReplicas) {
             logger.info("Signalling Cluster Topology change to {} nodes", totalReplicas);
