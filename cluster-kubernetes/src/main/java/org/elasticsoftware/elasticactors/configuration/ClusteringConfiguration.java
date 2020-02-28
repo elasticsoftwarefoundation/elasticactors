@@ -31,6 +31,10 @@ public class ClusteringConfiguration {
         String namespace = env.getProperty("ea.cluster.kubernetes.namespace", "default");
         String name = env.getRequiredProperty("ea.cluster.kubernetes.statefulsetName");
         String nodeId = env.getRequiredProperty("ea.node.id");
-        return new KubernetesClusterService(namespace, name, nodeId);
+        Boolean useDesiredReplicas = env.getProperty(
+                "ea.cluster.kubernetes.useDesiredReplicas",
+                Boolean.class,
+                Boolean.FALSE);
+        return new KubernetesClusterService(namespace, name, nodeId, useDesiredReplicas);
     }
 }

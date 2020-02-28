@@ -56,11 +56,17 @@ public final class KubernetesClusterService implements ClusterService {
     private final AtomicInteger currentTopology = new AtomicInteger();
     private final AtomicBoolean shuttingDown = new AtomicBoolean();
     private final AtomicReference<Watch> currentWatch = new AtomicReference<>();
+    private final Boolean useDesiredReplicas;
 
-    public KubernetesClusterService(String namespace, String name, String nodeId) {
+    public KubernetesClusterService(
+            String namespace,
+            String name,
+            String nodeId,
+            Boolean useDesiredReplicas) {
         this.namespace = namespace;
         this.name = name;
         this.nodeId = nodeId;
+        this.useDesiredReplicas = useDesiredReplicas;
         this.masterNodeId = format("%s-0", name);
     }
 
@@ -128,7 +134,9 @@ public final class KubernetesClusterService implements ClusterService {
                 resource.getSpec().getReplicas(),
                 resource.getStatus().getReplicas(),
                 resource.getStatus().getReadyReplicas());
-        int totalReplicas = resource.getStatus().getReplicas();
+        int totalReplicas = Boolean.TRUE.equals(useDesiredReplicas)
+                ? Math.max(resource.getSpec().getReplicas(), resource.getStatus().getReplicas())
+                : resource.getStatus().getReplicas();
         if (currentTopology.getAndSet(totalReplicas) != totalReplicas) {
             logger.info("Signalling Cluster Topology change to {} nodes", totalReplicas);
             List<PhysicalNode> nodeList = new ArrayList<>(totalReplicas);
