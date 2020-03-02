@@ -17,33 +17,31 @@
 package org.elasticsoftware.elasticactors.base.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.elasticsoftware.elasticactors.serialization.MessagePayloadStringConverter;
+import org.elasticsoftware.elasticactors.serialization.MessageStringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.nio.ByteBuffer;
 
-public final class JacksonMessagePayloadStringConverter implements MessagePayloadStringConverter {
+public final class JacksonMessageStringSerializer<T> implements MessageStringSerializer<T> {
 
     private static final Logger logger =
-            LoggerFactory.getLogger(JacksonMessagePayloadStringConverter.class);
+            LoggerFactory.getLogger(JacksonMessageStringSerializer.class);
 
     private final ObjectMapper objectMapper;
 
-    public JacksonMessagePayloadStringConverter(ObjectMapper objectMapper) {
+    public JacksonMessageStringSerializer(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
     @Nullable
     @Override
-    public String convert(@Nullable ByteBuffer messagePayload) {
+    public String serialize(@Nullable T message) {
         try {
-            if (messagePayload != null) {
-                return objectMapper.readValue(messagePayload.array(), String.class);
+            if (message != null) {
+                return objectMapper.writeValueAsString(message);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("Exception thrown while converting message payload to String", e);
         }
         return null;

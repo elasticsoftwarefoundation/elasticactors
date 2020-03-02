@@ -17,9 +17,14 @@
 package org.elasticsoftware.elasticactors.serialization;
 
 import javax.annotation.Nullable;
-import java.nio.ByteBuffer;
 
-public interface MessagePayloadStringConverter {
+public interface MessageStringSerializer<T> {
+
+    /**
+     * Serializes a message into a String.
+     * <br/>
+     * This method must <strong><em>never</em></strong> throw any exceptions.
+     */
     @Nullable
-    String convert(@Nullable ByteBuffer messagePayload);
+    String serialize(@Nullable T message);
 }

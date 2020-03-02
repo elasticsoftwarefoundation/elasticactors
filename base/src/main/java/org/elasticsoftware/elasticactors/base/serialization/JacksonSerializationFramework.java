@@ -22,8 +22,8 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.MessagePayloadStringConverter;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.MessageStringSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 
@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentMap;
 public final class JacksonSerializationFramework implements SerializationFramework {
     private final ConcurrentMap<Class,JacksonMessageDeserializer> deserializers = new ConcurrentHashMap<>();
     private final JacksonMessageSerializer serializer;
-    private final JacksonMessagePayloadStringConverter payloadStringConverter;
+    private final JacksonMessageStringSerializer stringSerializer;
     private final ObjectMapper objectMapper;
     private final JacksonActorStateSerializer actorStateSerializer;
     private final JacksonActorStateDeserializer actorStateDeserializer;
@@ -48,7 +48,7 @@ public final class JacksonSerializationFramework implements SerializationFramewo
     public JacksonSerializationFramework(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
         this.serializer = new JacksonMessageSerializer(objectMapper);
-        this.payloadStringConverter = new JacksonMessagePayloadStringConverter(objectMapper);
+        this.stringSerializer = new JacksonMessageStringSerializer(objectMapper);
         this.actorStateSerializer = new JacksonActorStateSerializer(objectMapper);
         this.actorStateDeserializer = new JacksonActorStateDeserializer(objectMapper);
     }
@@ -68,8 +68,8 @@ public final class JacksonSerializationFramework implements SerializationFramewo
     }
 
     @Override
-    public MessagePayloadStringConverter getPayloadStringConverter(Class<?> messageClass) {
-        return payloadStringConverter;
+    public <T> MessageStringSerializer<T> getStringSerializer(Class<T> messageClass) {
+        return stringSerializer;
     }
 
     @Override

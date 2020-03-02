@@ -17,7 +17,7 @@
 package org.elasticsoftware.elasticactors;
 
 import org.elasticsoftware.elasticactors.serialization.Message;
-import org.elasticsoftware.elasticactors.serialization.MessagePayloadStringConverter;
+import org.elasticsoftware.elasticactors.serialization.MessageStringSerializer;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
@@ -29,7 +29,6 @@ import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.nio.ByteBuffer;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -163,8 +162,7 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
         return null;
     }
 
-    private final ThreadLocal<ByteBuffer> currentMessagePayload = new ThreadLocal<>();
-    private final ThreadLocal<MessagePayloadStringConverter> currentPayloadStringConverter =
+    private final ThreadLocal<MessageStringSerializer> currentMessageStringSerializer =
             new ThreadLocal<>();
 
     /**
@@ -174,16 +172,13 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
     public final void onReceive(
             ActorRef sender,
             Object message,
-            @Nullable ByteBuffer messagePayload,
-            @Nullable MessagePayloadStringConverter payloadStringConverter)
+            @Nullable MessageStringSerializer messageStringSerializer)
             throws Exception {
         try {
-            currentMessagePayload.set(messagePayload);
-            currentPayloadStringConverter.set(payloadStringConverter);
+            currentMessageStringSerializer.set(messageStringSerializer);
             onReceive(sender, message);
         } finally {
-            currentMessagePayload.set(null);
-            currentPayloadStringConverter.set(null);
+            currentMessageStringSerializer.set(null);
         }
     }
 
@@ -198,9 +193,9 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                             definition.prepareParameters(sender, message));
                 } catch (InvocationTargetException e) {
                     Throwable cause = e.getCause() instanceof Exception ? e.getCause() : e;
-                    MessagePayloadStringConverter payloadStringConverter =
-                            currentPayloadStringConverter.get();
-                    if (payloadStringConverter == null) {
+                    MessageStringSerializer messageStringSerializer =
+                            currentMessageStringSerializer.get();
+                    if (messageStringSerializer == null) {
                         logger.error(
                                 "Unexpected Exception in handler method [{}]. "
                                         + "Actor [{}]. "
@@ -218,7 +213,7 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                                 definition.handlerMethod,
                                 getSelf(),
                                 sender,
-                                payloadStringConverter.convert(currentMessagePayload.get()),
+                                messageStringSerializer.serialize(message),
                                 cause);
                     }
                 }

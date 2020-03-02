@@ -18,8 +18,8 @@ package org.elasticsoftware.elasticactors;
 
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.MessagePayloadStringConverter;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.MessageStringSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 
@@ -38,7 +38,7 @@ public final class TestSerializationFramework implements SerializationFramework 
     }
 
     @Override
-    public MessagePayloadStringConverter getPayloadStringConverter(Class<?> messageClass) {
+    public <T> MessageStringSerializer<T> getStringSerializer(Class<T> messageClass) {
         return null;
     }
 

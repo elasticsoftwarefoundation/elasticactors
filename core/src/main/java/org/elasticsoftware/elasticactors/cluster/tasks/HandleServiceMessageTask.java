@@ -26,7 +26,7 @@ import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
-import org.elasticsoftware.elasticactors.serialization.MessagePayloadStringConverter;
+import org.elasticsoftware.elasticactors.serialization.MessageStringSerializer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
-import static org.elasticsoftware.elasticactors.util.SerializationTools.getPayloadStringConverter;
+import static org.elasticsoftware.elasticactors.util.SerializationTools.getStringSerializer;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
@@ -113,15 +113,14 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         try {
             Class<?> messageClass = Class.forName(internalMessage.getPayloadClass());
             Object message = deserializeMessage(actorSystem, messageClass, internalMessage);
-            MessagePayloadStringConverter payloadStringConverter = getPayloadStringConverter(
+            MessageStringSerializer messageStringSerializer = getStringSerializer(
                     actorSystem.getParent(),
                     messageClass);
             if (serviceActor instanceof MethodActor) {
                 ((MethodActor) serviceActor).onReceive(
                         internalMessage.getSender(),
                         message,
-                        internalMessage.getPayload(),
-                        payloadStringConverter);
+                        messageStringSerializer);
             } else {
                 serviceActor.onReceive(internalMessage.getSender(), message);
             }

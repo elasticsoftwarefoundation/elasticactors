@@ -40,7 +40,7 @@ public final class SystemSerializationFramework implements SerializationFramewor
     }
 
     @Override
-    public MessagePayloadStringConverter getPayloadStringConverter(Class<?> messageClass) {
+    public <T> MessageStringSerializer<T> getStringSerializer(Class<T> messageClass) {
         return null;
     }
 
