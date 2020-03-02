@@ -20,7 +20,9 @@ import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.serialization.MessagePayloadStringConverter;
 import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
@@ -31,17 +33,45 @@ import java.io.IOException;
  * @author Joost van de Wijgerd
  */
 public final class SerializationTools {
-    public static Object deserializeMessage(SerializationAccessor serializationAccessor, InternalMessage internalMessage) throws Exception {
-        Class<?> messageClass = Class.forName(internalMessage.getPayloadClass());
+
+    public static Object deserializeMessage(
+            SerializationAccessor serializationAccessor,
+            InternalMessage internalMessage) throws Exception {
+        return deserializeMessage(
+                serializationAccessor,
+                Class.forName(internalMessage.getPayloadClass()),
+                internalMessage);
+    }
+
+    public static Object deserializeMessage(
+            SerializationAccessor serializationAccessor,
+            Class<?> messageClass,
+            InternalMessage internalMessage) throws Exception {
         MessageDeserializer<?> deserializer = serializationAccessor.getDeserializer(messageClass);
 
-        if(deserializer != null) {
+        if (deserializer != null) {
             return internalMessage.getPayload(deserializer);
         } else {
             //@todo: throw a more targeted exception
-            throw new Exception(String.format("No Deserializer found for Message class %s", internalMessage.getPayloadClass()));
+            throw new Exception(String.format(
+                    "No Deserializer found for Message class %s",
+                    internalMessage.getPayloadClass()));
         }
 
+    }
+
+    public static MessagePayloadStringConverter getPayloadStringConverter(
+            SerializationFrameworks serializationFrameworks,
+            Class<?> messageClass) {
+        Message messageAnnotation = messageClass.getAnnotation(Message.class);
+        if (messageAnnotation != null) {
+            SerializationFramework serializationFramework = serializationFrameworks
+                    .getSerializationFramework(messageAnnotation.serializationFramework());
+            if (serializationFramework != null) {
+                return serializationFramework.getPayloadStringConverter(messageClass);
+            }
+        }
+        return null;
     }
 
     public static ActorState deserializeActorState(SerializationFrameworks serializationFrameworks, Class<? extends ElasticActor> actorClass, byte[] serializedState) throws IOException {

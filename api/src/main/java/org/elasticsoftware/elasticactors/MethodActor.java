@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors;
 
 import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.MessagePayloadStringConverter;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
@@ -36,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 
 import static java.lang.String.format;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * @author Joost van de Wijgerd
@@ -164,18 +164,26 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
     }
 
     private final ThreadLocal<ByteBuffer> currentMessagePayload = new ThreadLocal<>();
+    private final ThreadLocal<MessagePayloadStringConverter> currentPayloadStringConverter =
+            new ThreadLocal<>();
 
     /**
      * Internal implementation of {@link ElasticActor::onReceive} to enable logging offending
      * messages when an unexpected exception occurs.
      */
-    public final void onReceive(ActorRef sender, Object message, ByteBuffer payload)
+    public final void onReceive(
+            ActorRef sender,
+            Object message,
+            @Nullable ByteBuffer messagePayload,
+            @Nullable MessagePayloadStringConverter payloadStringConverter)
             throws Exception {
         try {
-            currentMessagePayload.set(payload);
+            currentMessagePayload.set(messagePayload);
+            currentPayloadStringConverter.set(payloadStringConverter);
             onReceive(sender, message);
         } finally {
             currentMessagePayload.set(null);
+            currentPayloadStringConverter.set(null);
         }
     }
 
@@ -190,25 +198,34 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                             definition.prepareParameters(sender, message));
                 } catch (InvocationTargetException e) {
                     Throwable cause = e.getCause() instanceof Exception ? e.getCause() : e;
-                    logger.error(
-                            "Unexpected Exception in handler method [{}]. "
-                                    + "Actor: [{}]. "
-                                    + "Sender: [{}]. "
-                                    + "Message payload: {}",
-                            definition.handlerMethod,
-                            getSelf(),
-                            sender,
-                            getAsString(currentMessagePayload.get()),
-                            cause);
+                    MessagePayloadStringConverter payloadStringConverter =
+                            currentPayloadStringConverter.get();
+                    if (payloadStringConverter == null) {
+                        logger.error(
+                                "Unexpected Exception in handler method [{}]. "
+                                        + "Actor [{}]. "
+                                        + "Sender [{}].",
+                                definition.handlerMethod,
+                                getSelf(),
+                                sender,
+                                cause);
+                    } else {
+                        logger.error(
+                                "Unexpected Exception in handler method [{}]. "
+                                        + "Actor [{}]. "
+                                        + "Sender [{}]. "
+                                        + "Message payload: {}",
+                                definition.handlerMethod,
+                                getSelf(),
+                                sender,
+                                payloadStringConverter.convert(currentMessagePayload.get()),
+                                cause);
+                    }
                 }
             }
         } else {
             onUnhandled(sender, message);
         }
-    }
-
-    private String getAsString(ByteBuffer payload) {
-        return payload != null ? new String(payload.array(), UTF_8) : null;
     }
 
     protected void onUnhandled(ActorRef sender, Object message) {

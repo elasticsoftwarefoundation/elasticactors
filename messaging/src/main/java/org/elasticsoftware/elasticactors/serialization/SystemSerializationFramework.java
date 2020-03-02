@@ -40,6 +40,11 @@ public final class SystemSerializationFramework implements SerializationFramewor
     }
 
     @Override
+    public MessagePayloadStringConverter getPayloadStringConverter(Class<?> messageClass) {
+        return null;
+    }
+
+    @Override
     public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
         return serializationFrameworks.getSystemMessageDeserializer(messageClass);
     }

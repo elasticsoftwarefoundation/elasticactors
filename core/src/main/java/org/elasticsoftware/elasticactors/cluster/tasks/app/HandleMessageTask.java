@@ -25,6 +25,7 @@ import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
+import org.elasticsoftware.elasticactors.serialization.MessagePayloadStringConverter;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
@@ -38,8 +39,7 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.elasticsoftware.elasticactors.util.SerializationTools.getPayloadStringConverter;
 
 /**
  * Task that is responsible for internalMessage deserialization, error handling and state updates
@@ -80,13 +80,18 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                                        ActorRef receiverRef,
                                        InternalMessage internalMessage) {
         try {
-            Object message = deserializeMessage(actorSystem, internalMessage);
+            Class<?> messageClass = Class.forName(internalMessage.getPayloadClass());
+            Object message = deserializeMessage(actorSystem, messageClass, internalMessage);
+            MessagePayloadStringConverter payloadStringConverter = getPayloadStringConverter(
+                    actorSystem.getParent(),
+                    messageClass);
             try {
                 if (receiver instanceof MethodActor) {
                     ((MethodActor) receiver).onReceive(
                             internalMessage.getSender(),
                             message,
-                            internalMessage.getPayload());
+                            internalMessage.getPayload(),
+                            payloadStringConverter);
                 } else {
                     receiver.onReceive(internalMessage.getSender(), message);
                 }
@@ -102,32 +107,37 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                 // the state
                 return shouldUpdateState(receiver, message);
             } catch (Exception e) {
-                ByteBuffer payload = internalMessage.getPayload();
-                log.error(
-                        "Exception while handling message. "
-                                + "Actor [{}]. "
-                                + "Message payload: {}",
-                        receiverRef,
-                        getAsString(payload),
-                        e);
+                if (payloadStringConverter == null) {
+                    log.error(
+                            "Exception while handling message of type [{}]. "
+                                    + "Actor [{}]. "
+                                    + "Sender [{}]",
+                            internalMessage.getPayloadClass(),
+                            receiverRef,
+                            internalMessage.getSender(),
+                            e);
+                } else {
+                    log.error(
+                            "Exception while handling message of type [{}]. "
+                                    + "Actor [{}]. "
+                                    + "Sender [{}]. "
+                                    + "Message payload: {}",
+                            internalMessage.getPayloadClass(),
+                            receiverRef,
+                            internalMessage.getSender(),
+                            payloadStringConverter.convert(internalMessage.getPayload()),
+                            e);
+                }
                 return false;
             }
         } catch (Exception e) {
-            ByteBuffer payload = internalMessage.getPayload();
             log.error(
-                    "Exception while Deserializing Message class [{}]. "
-                            + "ActorSystem [{}]. "
-                            + "Message payload: {}",
+                    "Exception while Deserializing Message class [{}] in ActorSystem [{}]",
                     internalMessage.getPayloadClass(),
                     actorSystem.getName(),
-                    getAsString(payload),
                     e);
             return false;
         }
-    }
-
-    private String getAsString(ByteBuffer payload) {
-        return payload != null ? new String(payload.array(), UTF_8) : null;
     }
 
     private void notifySubscribers(InternalMessage internalMessage) {
