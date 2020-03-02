@@ -27,9 +27,9 @@ import javax.annotation.Nullable;
  * should normally not be implemented directly.
  *
  * @author Joost van de Wijgerd
- * @see     {@link TypedActor}
- * @see     {@link UntypedActor}
- * @see     {@link MethodActor}
+ * @see     TypedActor
+ * @see     UntypedActor
+ * @see     MethodActor
  */
 public interface ElasticActor<T> {
     /**
@@ -38,9 +38,9 @@ public interface ElasticActor<T> {
      *
      * @param creator       {@link ActorRef} to the Actor that created this instance or null if {@link ActorSystem#actorOf(String, Class, ActorState)} was called from other code
      * @throws Exception    when something unexpected happens
-     * @see                 {@link org.elasticsoftware.elasticactors.ActorContextHolder#getSelf()}
-     * @see                 {@link ActorContextHolder#getState(Class)}
-     * @see                 {@link org.elasticsoftware.elasticactors.ActorContextHolder#getSystem()}
+     * @see                 org.elasticsoftware.elasticactors.ActorContextHolder#getSelf()
+     * @see                 ActorContextHolder#getState(Class)
+     * @see                 org.elasticsoftware.elasticactors.ActorContextHolder#getSystem()
      */
     void postCreate(@Nullable ActorRef creator) throws Exception;
 
@@ -69,9 +69,9 @@ public interface ElasticActor<T> {
      *
      * @param previousVersion   the previous version of this {@link ElasticActor} instance. Can be used to determine whether the state needs to be transformed between versions
      * @throws Exception    when something unexpected happens
-     * @see                 {@link org.elasticsoftware.elasticactors.ActorContextHolder#getSelf()}
-     * @see                 {@link ActorContextHolder#getState(Class)}
-     * @see                 {@link org.elasticsoftware.elasticactors.ActorContextHolder#getSystem()}
+     * @see                 org.elasticsoftware.elasticactors.ActorContextHolder#getSelf()
+     * @see                 ActorContextHolder#getState(Class)
+     * @see                 org.elasticsoftware.elasticactors.ActorContextHolder#getSystem()
      */
     void postActivate(@Nullable String previousVersion) throws Exception;
 
@@ -83,9 +83,9 @@ public interface ElasticActor<T> {
      * @param sender        the sender of the message (as passed in {@link ActorRef#tell(Object, ActorRef)})
      * @param message       the message object
      * @throws Exception    when something unexpected happens
-     * @see                 {@link org.elasticsoftware.elasticactors.ActorContextHolder#getSelf()}
-     * @see                 {@link ActorContextHolder#getState(Class)}
-     * @see                 {@link org.elasticsoftware.elasticactors.ActorContextHolder#getSystem()}
+     * @see                 org.elasticsoftware.elasticactors.ActorContextHolder#getSelf()
+     * @see                 ActorContextHolder#getState(Class)
+     * @see                 org.elasticsoftware.elasticactors.ActorContextHolder#getSystem()
      */
     void onReceive(ActorRef sender, T message) throws Exception;
 
@@ -98,9 +98,9 @@ public interface ElasticActor<T> {
      * @param receiver      the {@link ActorRef} the message was originally sent to
      * @param message       the original message
      * @throws Exception    when something unexpected happens
-     * @see                 {@link org.elasticsoftware.elasticactors.ActorContextHolder#getSelf()}
-     * @see                 {@link ActorContextHolder#getState(Class)}
-     * @see                 {@link org.elasticsoftware.elasticactors.ActorContextHolder#getSystem()}
+     * @see                 org.elasticsoftware.elasticactors.ActorContextHolder#getSelf()
+     * @see                 ActorContextHolder#getState(Class)
+     * @see                 org.elasticsoftware.elasticactors.ActorContextHolder#getSystem()
      */
     void onUndeliverable(ActorRef receiver, Object message) throws Exception;
 
@@ -110,9 +110,9 @@ public interface ElasticActor<T> {
      * Access to the {@link ActorContext} can be obtained by using the {@link ActorContextHolder} methods
      *
      * @throws Exception    when something unexpected happens
-     * @see                 {@link org.elasticsoftware.elasticactors.ActorContextHolder#getSelf()}
-     * @see                 {@link ActorContextHolder#getState(Class)}
-     * @see                 {@link org.elasticsoftware.elasticactors.ActorContextHolder#getSystem()}
+     * @see                 org.elasticsoftware.elasticactors.ActorContextHolder#getSelf()
+     * @see                 ActorContextHolder#getState(Class)
+     * @see                 org.elasticsoftware.elasticactors.ActorContextHolder#getSystem()
      */
     void prePassivate() throws Exception;
 
@@ -122,9 +122,9 @@ public interface ElasticActor<T> {
      * Access to the {@link ActorContext} can be obtained by using the {@link ActorContextHolder} methods
      *
      * @throws Exception    when something unexpected happens
-     * @see                 {@link org.elasticsoftware.elasticactors.ActorContextHolder#getSelf()}
-     * @see                 {@link ActorContextHolder#getState(Class)}
-     * @see                 {@link org.elasticsoftware.elasticactors.ActorContextHolder#getSystem()}
+     * @see                 org.elasticsoftware.elasticactors.ActorContextHolder#getSelf()
+     * @see                 ActorContextHolder#getState(Class)
+     * @see                 org.elasticsoftware.elasticactors.ActorContextHolder#getSystem()
      */
     void preDestroy(ActorRef destroyer) throws Exception;
 

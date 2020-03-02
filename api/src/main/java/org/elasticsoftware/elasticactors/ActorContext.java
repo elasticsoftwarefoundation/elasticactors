@@ -32,18 +32,18 @@ import java.util.Set;
  * be used.
  *
  * @author Joost van de Wijgerd
- * @see     {@link ElasticActor#onReceive(ActorRef, Object)}
- * @see     {@link ElasticActor#onUndeliverable(ActorRef, Object)}
- * @see     {@link ElasticActor#postCreate(ActorRef)}
- * @see     {@link ElasticActor#postActivate(String)}
- * @see     {@link org.elasticsoftware.elasticactors.ElasticActor#prePassivate()}
- * @see     {@link ElasticActor#preDestroy(ActorRef)}
- * @see     {@link org.elasticsoftware.elasticactors.TypedActor#getSystem()}
- * @see     {@link TypedActor#getState(Class)}
- * @see     {@link org.elasticsoftware.elasticactors.TypedActor#getSelf()}
- * @see     {@link org.elasticsoftware.elasticactors.ActorContextHolder#getSystem()}
- * @see     {@link ActorContextHolder#getState(Class)}
- * @see     {@link org.elasticsoftware.elasticactors.ActorContextHolder#getSelf()}
+ * @see     ElasticActor#onReceive(ActorRef, Object)
+ * @see     ElasticActor#onUndeliverable(ActorRef, Object)
+ * @see     ElasticActor#postCreate(ActorRef)
+ * @see     ElasticActor#postActivate(String)
+ * @see     org.elasticsoftware.elasticactors.ElasticActor#prePassivate()
+ * @see     ElasticActor#preDestroy(ActorRef)
+ * @see     org.elasticsoftware.elasticactors.TypedActor#getSystem()
+ * @see     TypedActor#getState(Class)
+ * @see     org.elasticsoftware.elasticactors.TypedActor#getSelf()
+ * @see     org.elasticsoftware.elasticactors.ActorContextHolder#getSystem()
+ * @see     ActorContextHolder#getState(Class)
+ * @see     org.elasticsoftware.elasticactors.ActorContextHolder#getSelf()
  */
 public interface ActorContext {
     /**

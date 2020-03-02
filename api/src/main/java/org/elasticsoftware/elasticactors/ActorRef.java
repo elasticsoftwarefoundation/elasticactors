@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors;
 
 import org.reactivestreams.Publisher;
+
 import java.util.concurrent.CompletionStage;
 
 /**
@@ -32,10 +33,10 @@ import java.util.concurrent.CompletionStage;
  * Temporary Actors: actor://<cluster>/<actorSystem>/nodes/<nodeId>/<actorId><br/>
  *
  *
- * @see     {@link ActorSystem#actorFor(String)}
- * @see     {@link ActorSystem#actorOf(String, Class, ActorState)}
- * @see     {@link ActorSystem#tempActorOf(Class, ActorState)}
- * @see     {@link ActorSystem#serviceActorFor(String)}
+ * @see     ActorSystem#actorFor(String)
+ * @see     ActorSystem#actorOf(String, Class, ActorState)
+ * @see     ActorSystem#tempActorOf(Class, ActorState)
+ * @see     ActorSystem#serviceActorFor(String)
  *
  * @author Joost van de Wijgerd
  */
@@ -53,9 +54,9 @@ public interface ActorRef {
      * The actor id is what the Developer names the Actor, or in case of Temporary Actors it's a
      * {@link java.util.UUID} that's assigned by the Runtime
      *
-     * @see         {@link ActorSystem#actorFor(String)}
-     * @see         {@link ActorSystem#tempActorOf(Class, ActorState)}
-     * @see         {@link ActorSystem#serviceActorFor(String)}
+     * @see         ActorSystem#actorFor(String)
+     * @see         ActorSystem#tempActorOf(Class, ActorState)
+     * @see         ActorSystem#serviceActorFor(String)
      * @return      the actor id for this {@link ActorRef}
      */
     String getActorId();
