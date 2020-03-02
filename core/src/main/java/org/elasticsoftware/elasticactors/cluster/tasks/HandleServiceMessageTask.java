@@ -21,6 +21,7 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
@@ -109,7 +110,14 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         InternalActorContext.setContext(this);
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
-            serviceActor.onReceive(internalMessage.getSender(), message);
+            if (serviceActor instanceof MethodActor) {
+                ((MethodActor) serviceActor).onReceive(
+                        internalMessage.getSender(),
+                        message,
+                        internalMessage.getPayload());
+            } else {
+                serviceActor.onReceive(internalMessage.getSender(), message);
+            }
         } catch(Exception e) {
             // @todo: send an error message to the sender
             logger.error("Exception while handling message for service [{}]",serviceRef,e);
