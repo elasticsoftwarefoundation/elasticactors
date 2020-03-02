@@ -33,29 +33,15 @@ import java.io.IOException;
  * @author Joost van de Wijgerd
  */
 public final class SerializationTools {
-
-    public static Object deserializeMessage(
-            SerializationAccessor serializationAccessor,
-            InternalMessage internalMessage) throws Exception {
-        return deserializeMessage(
-                serializationAccessor,
-                Class.forName(internalMessage.getPayloadClass()),
-                internalMessage);
-    }
-
-    public static Object deserializeMessage(
-            SerializationAccessor serializationAccessor,
-            Class<?> messageClass,
-            InternalMessage internalMessage) throws Exception {
+    public static Object deserializeMessage(SerializationAccessor serializationAccessor, InternalMessage internalMessage) throws Exception {
+        Class<?> messageClass = Class.forName(internalMessage.getPayloadClass());
         MessageDeserializer<?> deserializer = serializationAccessor.getDeserializer(messageClass);
 
-        if (deserializer != null) {
+        if(deserializer != null) {
             return internalMessage.getPayload(deserializer);
         } else {
             //@todo: throw a more targeted exception
-            throw new Exception(String.format(
-                    "No Deserializer found for Message class %s",
-                    internalMessage.getPayloadClass()));
+            throw new Exception(String.format("No Deserializer found for Message class %s", internalMessage.getPayloadClass()));
         }
 
     }

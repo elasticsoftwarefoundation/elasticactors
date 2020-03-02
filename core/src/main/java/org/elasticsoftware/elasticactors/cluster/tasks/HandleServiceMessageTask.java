@@ -27,6 +27,7 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.serialization.MessageStringSerializer;
+import org.elasticsoftware.elasticactors.util.SerializationTools;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +38,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
-import static org.elasticsoftware.elasticactors.util.SerializationTools.getStringSerializer;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
@@ -111,11 +111,8 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         Exception executionException = null;
         InternalActorContext.setContext(this);
         try {
-            Class<?> messageClass = Class.forName(internalMessage.getPayloadClass());
-            Object message = deserializeMessage(actorSystem, messageClass, internalMessage);
-            MessageStringSerializer messageStringSerializer = getStringSerializer(
-                    actorSystem.getParent(),
-                    messageClass);
+            Object message = deserializeMessage(actorSystem, internalMessage);
+            MessageStringSerializer messageStringSerializer = getStringSerializer(message);
             if (serviceActor instanceof MethodActor) {
                 ((MethodActor) serviceActor).onReceive(
                         internalMessage.getSender(),
@@ -156,6 +153,20 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         // do some trace logging
         if(this.measurement != null) {
             logger.trace("({}) Message of type [{}] with id [{}] for actor [{}] took {} microsecs in queue, {} microsecs to execute, 0 microsecs to serialize and {} microsecs to ack (state update false)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId() : "null",serviceRef.getActorId(),measurement.getQueueDuration(MICROSECONDS),measurement.getExecutionDuration(MICROSECONDS),measurement.getAckDuration(MICROSECONDS));
+        }
+    }
+
+    private MessageStringSerializer<?> getStringSerializer(Object message) {
+        try {
+            return SerializationTools.getStringSerializer(
+                    actorSystem.getParent(),
+                    message.getClass());
+        } catch (Exception e) {
+            logger.error(
+                    "Unexpected exception resolving message string serializer for type [{}]",
+                    message.getClass().getName(),
+                    e);
+            return null;
         }
     }
 }

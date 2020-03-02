@@ -31,6 +31,7 @@ import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.util.SerializationTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +40,6 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
-import static org.elasticsoftware.elasticactors.util.SerializationTools.getStringSerializer;
 
 /**
  * Task that is responsible for internalMessage deserialization, error handling and state updates
@@ -80,11 +80,8 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                                        ActorRef receiverRef,
                                        InternalMessage internalMessage) {
         try {
-            Class<?> messageClass = Class.forName(internalMessage.getPayloadClass());
-            Object message = deserializeMessage(actorSystem, messageClass, internalMessage);
-            MessageStringSerializer messageStringSerializer = getStringSerializer(
-                    actorSystem.getParent(),
-                    messageClass);
+            Object message = deserializeMessage(actorSystem, internalMessage);
+            MessageStringSerializer messageStringSerializer = getStringSerializer(message);
             try {
                 if (receiver instanceof MethodActor) {
                     ((MethodActor) receiver).onReceive(
@@ -136,6 +133,20 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                     actorSystem.getName(),
                     e);
             return false;
+        }
+    }
+
+    private MessageStringSerializer<?> getStringSerializer(Object message) {
+        try {
+            return SerializationTools.getStringSerializer(
+                    actorSystem.getParent(),
+                    message.getClass());
+        } catch (Exception e) {
+            log.error(
+                    "Unexpected exception resolving message string serializer for type [{}]",
+                    message.getClass().getName(),
+                    e);
+            return null;
         }
     }
 
