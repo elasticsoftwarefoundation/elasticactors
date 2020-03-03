@@ -189,8 +189,8 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
     protected void onUnhandled(ActorRef sender, Object message) {
         logger.error(
                 "Unhandled message of type [{}] received. "
-                        + "Actor: [{}]. "
-                        + "Sender: [{}]. "
+                        + "Actor [{}]. "
+                        + "Sender [{}]. "
                         + "Message payload: {}",
                 message.getClass().getName(),
                 getSelf(),
