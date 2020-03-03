@@ -23,7 +23,7 @@ import org.elasticsoftware.elasticactors.client.state.SerializedActorState;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.MessageStringSerializer;
+import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 
@@ -46,7 +46,7 @@ public final class SerializedActorStateSerializationFramework implements Seriali
     }
 
     @Override
-    public <T> MessageStringSerializer<T> getStringSerializer(Class<T> messageClass) {
+    public <T> MessageToStringSerializer<T> getToStringSerializer(Class<T> messageClass) {
         throw new UnsupportedOperationException("Only actor state serialization is supported");
     }
 

@@ -14,17 +14,21 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.serialization;
+package org.elasticsoftware.elasticactors.base.serialization;
 
-import javax.annotation.Nullable;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
 
-public interface MessageStringSerializer<T> {
+public final class JacksonMessageToStringSerializer<T> implements MessageToStringSerializer<T> {
 
-    /**
-     * Serializes a message into a String.
-     * <br/>
-     * This method must <strong><em>never</em></strong> throw any exceptions.
-     */
-    @Nullable
-    String serialize(@Nullable T message);
+    private final ObjectMapper objectMapper;
+
+    public JacksonMessageToStringSerializer(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
+    @Override
+    public String serialize(T message) throws Exception {
+        return objectMapper.writeValueAsString(message);
+    }
 }

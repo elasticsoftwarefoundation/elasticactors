@@ -19,14 +19,14 @@ package org.elasticsoftware.elasticactors.cluster.tasks.app;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
-import org.elasticsoftware.elasticactors.MethodActor;
+import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.MessageStringSerializer;
+import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
@@ -81,13 +81,13 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                                        InternalMessage internalMessage) {
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
-            MessageStringSerializer messageStringSerializer = getStringSerializer(message);
+            MessageToStringSerializer messageToStringSerializer = getStringSerializer(message);
             try {
-                if (receiver instanceof MethodActor) {
-                    ((MethodActor) receiver).onReceive(
+                if (receiver instanceof TypedActor) {
+                    ((TypedActor) receiver).onReceive(
                             internalMessage.getSender(),
                             message,
-                            messageStringSerializer);
+                            messageToStringSerializer);
                 } else {
                     receiver.onReceive(internalMessage.getSender(), message);
                 }
@@ -103,7 +103,7 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                 // the state
                 return shouldUpdateState(receiver, message);
             } catch (Exception e) {
-                if (messageStringSerializer == null) {
+                if (messageToStringSerializer == null) {
                     log.error(
                             "Exception while handling message of type [{}]. "
                                     + "Actor [{}]. "
@@ -121,7 +121,7 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                             internalMessage.getPayloadClass(),
                             receiverRef,
                             internalMessage.getSender(),
-                            messageStringSerializer.serialize(message),
+                            messageToStringSerializer.serialize(message),
                             e);
                 }
                 return false;
@@ -136,7 +136,7 @@ public final class HandleMessageTask extends ActorLifecycleTask {
         }
     }
 
-    private MessageStringSerializer<?> getStringSerializer(Object message) {
+    private MessageToStringSerializer<?> getStringSerializer(Object message) {
         try {
             return SerializationTools.getStringSerializer(
                     actorSystem.getParent(),

@@ -35,7 +35,7 @@ public final class NoopSerializationFramework implements SerializationFramework 
     }
 
     @Override
-    public <T> MessageStringSerializer<T> getStringSerializer(Class<T> messageClass) {
+    public <T> MessageToStringSerializer<T> getToStringSerializer(Class<T> messageClass) {
         return null;
     }
 

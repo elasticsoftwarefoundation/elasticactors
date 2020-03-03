@@ -22,7 +22,7 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.MessageStringSerializer;
+import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
@@ -46,7 +46,7 @@ public final class SerializationTools {
 
     }
 
-    public static <T> MessageStringSerializer<T> getStringSerializer(
+    public static <T> MessageToStringSerializer<T> getStringSerializer(
             SerializationFrameworks serializationFrameworks,
             Class<T> messageClass) {
         Message messageAnnotation = messageClass.getAnnotation(Message.class);
@@ -54,7 +54,7 @@ public final class SerializationTools {
             SerializationFramework serializationFramework = serializationFrameworks
                     .getSerializationFramework(messageAnnotation.serializationFramework());
             if (serializationFramework != null) {
-                return serializationFramework.getStringSerializer(messageClass);
+                return serializationFramework.getToStringSerializer(messageClass);
             }
         }
         return null;

@@ -21,12 +21,12 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ElasticActor;
-import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
+import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
-import org.elasticsoftware.elasticactors.serialization.MessageStringSerializer;
+import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.slf4j.Logger;
@@ -112,12 +112,12 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         InternalActorContext.setContext(this);
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
-            MessageStringSerializer messageStringSerializer = getStringSerializer(message);
-            if (serviceActor instanceof MethodActor) {
-                ((MethodActor) serviceActor).onReceive(
+            MessageToStringSerializer messageToStringSerializer = getStringSerializer(message);
+            if (serviceActor instanceof TypedActor) {
+                ((TypedActor) serviceActor).onReceive(
                         internalMessage.getSender(),
                         message,
-                        messageStringSerializer);
+                        messageToStringSerializer);
             } else {
                 serviceActor.onReceive(internalMessage.getSender(), message);
             }
@@ -156,7 +156,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         }
     }
 
-    private MessageStringSerializer<?> getStringSerializer(Object message) {
+    private MessageToStringSerializer<?> getStringSerializer(Object message) {
         try {
             return SerializationTools.getStringSerializer(
                     actorSystem.getParent(),

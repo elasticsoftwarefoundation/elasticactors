@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors;
 
+import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -132,5 +133,45 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
 
     protected final Map<String, Set<ActorRef>> getSubscribers() {
         return ActorContextHolder.getSubscribers();
+    }
+
+    /**
+     * Safely serializes the contents of a message to a String
+     */
+    protected final String serializeToString(T message) {
+        MessageToStringSerializer<T> messageToStringSerializer =
+                currentMessageToStringSerializer.get();
+        if (messageToStringSerializer == null) {
+            return null;
+        }
+        try {
+            return messageToStringSerializer.serialize(message);
+        } catch (Exception e) {
+            logger.error(
+                    "Exception thrown while serializing message of type [{}] to String",
+                    message.getClass().getName(),
+                    e);
+            return null;
+        }
+    }
+
+    private final ThreadLocal<MessageToStringSerializer<T>> currentMessageToStringSerializer =
+            new ThreadLocal<>();
+
+    /**
+     * Internal implementation of {@link ElasticActor::onReceive} to enable logging offending
+     * messages when an unexpected exception occurs
+     */
+    public final void onReceive(
+            ActorRef sender,
+            T message,
+            @Nullable MessageToStringSerializer<T> messageToStringSerializer)
+            throws Exception {
+        try {
+            currentMessageToStringSerializer.set(messageToStringSerializer);
+            onReceive(sender, message);
+        } finally {
+            currentMessageToStringSerializer.set(null);
+        }
     }
 }

@@ -44,7 +44,7 @@ public interface SerializationFramework {
      * @param messageClass
      * @return
      */
-    <T> MessageStringSerializer<T> getStringSerializer(Class<T> messageClass);
+    <T> MessageToStringSerializer<T> getToStringSerializer(Class<T> messageClass);
 
     /**
      * Return the correct deserializer for the specified message class
