@@ -20,7 +20,9 @@ import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
@@ -42,6 +44,20 @@ public final class SerializationTools {
             throw new Exception(String.format("No Deserializer found for Message class %s", internalMessage.getPayloadClass()));
         }
 
+    }
+
+    public static <T> MessageToStringSerializer<T> getStringSerializer(
+            SerializationFrameworks serializationFrameworks,
+            Class<T> messageClass) {
+        Message messageAnnotation = messageClass.getAnnotation(Message.class);
+        if (messageAnnotation != null) {
+            SerializationFramework serializationFramework = serializationFrameworks
+                    .getSerializationFramework(messageAnnotation.serializationFramework());
+            if (serializationFramework != null) {
+                return serializationFramework.getToStringSerializer(messageClass);
+            }
+        }
+        return null;
     }
 
     public static ActorState deserializeActorState(SerializationFrameworks serializationFrameworks, Class<? extends ElasticActor> actorClass, byte[] serializedState) throws IOException {

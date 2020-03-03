@@ -21,8 +21,6 @@ import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 import org.elasticsoftware.elasticactors.state.PersistenceConfigHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
@@ -40,7 +38,6 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public abstract class MethodActor extends TypedActor<Object> implements PersistenceAdvisor {
-    private static final Logger logger = LoggerFactory.getLogger(MethodActor.class);
     private static final Comparator<HandlerMethodDefinition> ORDER_COMPARATOR = Comparator.comparing(m -> m.order);
     private final Map<Class<?>,List<HandlerMethodDefinition>> handlerCache = new HashMap<>();
     @Nullable private final Class<? extends ActorState> stateClass;
@@ -164,29 +161,41 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
     @Override
     public void onReceive(ActorRef sender, Object message) throws Exception {
         List<HandlerMethodDefinition> definitions = handlerCache.get(message.getClass());
-        if(definitions != null) {
+        if (definitions != null) {
             for (HandlerMethodDefinition definition : definitions) {
                 try {
-                    definition.handlerMethod.invoke(definition.targetInstance,definition.prepareParameters(sender,message));
+                    definition.handlerMethod.invoke(
+                            definition.targetInstance,
+                            definition.prepareParameters(sender, message));
                 } catch (InvocationTargetException e) {
-                    final Throwable cause = e.getCause();
-                    if(Exception.class.isAssignableFrom(cause.getClass())) {
-                        // throw (Exception) cause;
-                        logger.error("Unexpected Exception in handlerMethod '{}' for actor [{}]", definition.handlerMethod, getSelf(), cause);
-                    } else {
-                        // this is some system error, don't swallow it but just rethrow the Invocation Target Exception
-                        // throw e;
-                        logger.error("Unexpected InvocationTargetException in handlerMethod '{}' for actor [{}]", definition.handlerMethod, getSelf(), e);
-                    }
+                    Throwable cause = e.getCause() instanceof Exception ? e.getCause() : e;
+                    logger.error(
+                            "Unexpected Exception in handler method [{}]. "
+                                    + "Actor [{}]. "
+                                    + "Sender [{}]. "
+                                    + "Message payload: {}",
+                            definition.handlerMethod,
+                            getSelf(),
+                            sender,
+                            serializeToString(message),
+                            cause);
                 }
             }
         } else {
-            onUnhandled(sender,message);
+            onUnhandled(sender, message);
         }
     }
 
-    protected void onUnhandled(ActorRef sender,Object message) {
-
+    protected void onUnhandled(ActorRef sender, Object message) {
+        logger.error(
+                "Unhandled message of type [{}] received. "
+                        + "Actor [{}]. "
+                        + "Sender [{}]. "
+                        + "Message payload: {}",
+                message.getClass().getName(),
+                getSelf(),
+                sender,
+                serializeToString(message));
     }
 
     private enum ParameterType {

@@ -32,15 +32,12 @@ import org.elasticsoftware.elasticactors.kafka.testapp.messages.TransferCommand;
 import org.elasticsoftware.elasticactors.kafka.testapp.messages.VirtualCashAccountAdapter;
 import org.elasticsoftware.elasticactors.kafka.testapp.state.VirtualCashAccountState;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
 @Actor(serializationFramework = JacksonSerializationFramework.class, stateClass = VirtualCashAccountState.class)
 @PersistenceConfig(excluded = {BalanceQuery.class, ScheduleDebitCommand.class}, persistOn = {})
 public class VirtualCashAccountActor extends MethodActor {
-    private static final Logger logger  = LoggerFactory.getLogger(VirtualCashAccountActor.class);
 
     @Override
     public void postCreate(ActorRef creator) throws Exception {

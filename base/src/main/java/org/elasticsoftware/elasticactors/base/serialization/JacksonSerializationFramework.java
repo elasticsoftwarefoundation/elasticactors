@@ -19,7 +19,13 @@ package org.elasticsoftware.elasticactors.base.serialization;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
-import org.elasticsoftware.elasticactors.serialization.*;
+import org.elasticsoftware.elasticactors.serialization.Deserializer;
+import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.Serializer;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -33,6 +39,7 @@ import java.util.concurrent.ConcurrentMap;
 public final class JacksonSerializationFramework implements SerializationFramework {
     private final ConcurrentMap<Class,JacksonMessageDeserializer> deserializers = new ConcurrentHashMap<>();
     private final JacksonMessageSerializer serializer;
+    private final JacksonMessageToStringSerializer toStringSerializer;
     private final ObjectMapper objectMapper;
     private final JacksonActorStateSerializer actorStateSerializer;
     private final JacksonActorStateDeserializer actorStateDeserializer;
@@ -41,6 +48,7 @@ public final class JacksonSerializationFramework implements SerializationFramewo
     public JacksonSerializationFramework(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
         this.serializer = new JacksonMessageSerializer(objectMapper);
+        this.toStringSerializer = new JacksonMessageToStringSerializer(objectMapper);
         this.actorStateSerializer = new JacksonActorStateSerializer(objectMapper);
         this.actorStateDeserializer = new JacksonActorStateDeserializer(objectMapper);
     }
@@ -57,6 +65,11 @@ public final class JacksonSerializationFramework implements SerializationFramewo
     @Override
     public <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
         return serializer;
+    }
+
+    @Override
+    public <T> MessageToStringSerializer<T> getToStringSerializer(Class<T> messageClass) {
+        return toStringSerializer;
     }
 
     @Override

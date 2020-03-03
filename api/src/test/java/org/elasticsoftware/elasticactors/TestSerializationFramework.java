@@ -16,7 +16,12 @@
 
 package org.elasticsoftware.elasticactors;
 
-import org.elasticsoftware.elasticactors.serialization.*;
+import org.elasticsoftware.elasticactors.serialization.Deserializer;
+import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.elasticsoftware.elasticactors.serialization.Serializer;
 
 /**
  * @author Joost van de Wijgerd
@@ -30,6 +35,11 @@ public final class TestSerializationFramework implements SerializationFramework 
     @Override
     public <T> MessageSerializer<T> getSerializer(Class<T> messageClass) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public <T> MessageToStringSerializer<T> getToStringSerializer(Class<T> messageClass) {
+        return null;
     }
 
     @Override

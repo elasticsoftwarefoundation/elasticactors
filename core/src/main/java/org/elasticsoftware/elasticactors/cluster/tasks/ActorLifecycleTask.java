@@ -220,17 +220,14 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
 
     /**
      * Return the actual message class that is being handled. By default this method will return
-     * {@link InternalMessage#getPayloadClass()} but it can be overridden to support other protocols that wrap the
-     * ultimate message being delivered. If the
-     *
-     * @param internalMessage
-     * @return
-     * @throws ClassNotFoundException
+     * {@link InternalMessage#getPayloadClass()} but it can be overridden to support other protocols
+     * that wrap the ultimate message being delivered.
      */
     protected Optional<Class> unwrapMessageClass(InternalMessage internalMessage) {
         try {
             return Optional.of(Class.forName(internalMessage.getPayloadClass()));
         } catch (ClassNotFoundException e) {
+            log.error("Class [{}] not found", internalMessage.getPayloadClass());
             return Optional.empty();
         }
     }

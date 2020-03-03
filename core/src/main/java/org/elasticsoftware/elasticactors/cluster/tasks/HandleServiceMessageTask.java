@@ -22,9 +22,12 @@ import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
+import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
+import org.elasticsoftware.elasticactors.util.SerializationTools;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,10 +112,25 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         InternalActorContext.setContext(this);
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
-            serviceActor.onReceive(internalMessage.getSender(), message);
-        } catch(Exception e) {
+            MessageToStringSerializer messageToStringSerializer = getStringSerializer(message);
+            if (serviceActor instanceof TypedActor) {
+                ((TypedActor) serviceActor).onReceive(
+                        internalMessage.getSender(),
+                        message,
+                        messageToStringSerializer);
+            } else {
+                serviceActor.onReceive(internalMessage.getSender(), message);
+            }
+        } catch (Exception e) {
             // @todo: send an error message to the sender
-            logger.error("Exception while handling message for service [{}]",serviceRef,e);
+            logger.error(
+                    "Exception while handling message of type [{}]. "
+                            + "Service [{}]. "
+                            + "Sender [{}]",
+                    internalMessage.getPayloadClass(),
+                    serviceRef,
+                    internalMessage.getSender(),
+                    e);
             executionException = e;
         } finally {
             InternalActorContext.getAndClearContext();
@@ -135,6 +153,20 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         // do some trace logging
         if(this.measurement != null) {
             logger.trace("({}) Message of type [{}] with id [{}] for actor [{}] took {} microsecs in queue, {} microsecs to execute, 0 microsecs to serialize and {} microsecs to ack (state update false)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId() : "null",serviceRef.getActorId(),measurement.getQueueDuration(MICROSECONDS),measurement.getExecutionDuration(MICROSECONDS),measurement.getAckDuration(MICROSECONDS));
+        }
+    }
+
+    private MessageToStringSerializer<?> getStringSerializer(Object message) {
+        try {
+            return SerializationTools.getStringSerializer(
+                    actorSystem.getParent(),
+                    message.getClass());
+        } catch (Exception e) {
+            logger.error(
+                    "Unexpected exception resolving message string serializer for type [{}]",
+                    message.getClass().getName(),
+                    e);
+            return null;
         }
     }
 }

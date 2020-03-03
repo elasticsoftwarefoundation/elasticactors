@@ -40,6 +40,13 @@ public interface SerializationFramework {
     <T> MessageSerializer<T> getSerializer(Class<T> messageClass);
 
     /**
+     * Return the correct String serializer for the passed message class
+     * @param messageClass
+     * @return
+     */
+    <T> MessageToStringSerializer<T> getToStringSerializer(Class<T> messageClass);
+
+    /**
      * Return the correct deserializer for the specified message class
      *
      * @param messageClass
