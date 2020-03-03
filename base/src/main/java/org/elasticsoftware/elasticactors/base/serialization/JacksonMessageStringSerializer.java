@@ -42,7 +42,10 @@ public final class JacksonMessageStringSerializer<T> implements MessageStringSer
                 return objectMapper.writeValueAsString(message);
             }
         } catch (Exception e) {
-            logger.error("Exception thrown while converting message payload to String", e);
+            logger.error(
+                    "Exception thrown while converting message of type [{}] to String",
+                    message.getClass().getName(),
+                    e);
         }
         return null;
     }
