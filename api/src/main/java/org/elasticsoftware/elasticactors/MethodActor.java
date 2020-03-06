@@ -173,7 +173,7 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                             "Unexpected Exception in handler method [{}]. "
                                     + "Actor [{}]. "
                                     + "Sender [{}]. "
-                                    + "Message payload: [{}]",
+                                    + "Message payload [{}]",
                             definition.handlerMethod,
                             getSelf(),
                             sender,
@@ -191,7 +191,7 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                 "Unhandled message of type [{}] received. "
                         + "Actor [{}]. "
                         + "Sender [{}]. "
-                        + "Message payload: [{}]",
+                        + "Message payload [{}]",
                 message.getClass().getName(),
                 getSelf(),
                 sender,

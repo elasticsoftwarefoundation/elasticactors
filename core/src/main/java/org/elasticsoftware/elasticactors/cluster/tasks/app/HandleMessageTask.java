@@ -117,7 +117,7 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                             "Exception while handling message of type [{}]. "
                                     + "Actor [{}]. "
                                     + "Sender [{}]. "
-                                    + "Message payload: [{}]",
+                                    + "Message payload [{}]",
                             internalMessage.getPayloadClass(),
                             receiverRef,
                             internalMessage.getSender(),
