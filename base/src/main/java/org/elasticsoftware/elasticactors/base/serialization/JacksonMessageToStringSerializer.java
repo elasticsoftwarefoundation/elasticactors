@@ -32,7 +32,7 @@ public final class JacksonMessageToStringSerializer<T> implements MessageToStrin
     @Override
     public String serialize(T message) throws Exception {
         String serialized = objectMapper.writeValueAsString(message);
-        if (serialized.length() > maxLength) {
+        if (serialized != null && serialized.length() > maxLength) {
             serialized = "[CONTENT_TOO_BIG]: " + serialized.substring(0, maxLength);
         }
         return serialized;
