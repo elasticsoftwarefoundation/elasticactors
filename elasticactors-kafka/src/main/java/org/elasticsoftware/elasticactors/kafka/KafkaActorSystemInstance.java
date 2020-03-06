@@ -72,6 +72,7 @@ import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
@@ -114,23 +115,26 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
     private final KafkaTopicScheduler schedulerService;
     private final HashFunction hashFunction = Hashing.murmur3_32();
     private final ActorLifecycleListenerRegistry actorLifecycleListenerRegistry;
+    private final Environment environment;
 
-    public KafkaActorSystemInstance(ElasticActorsNode node,
-                                    InternalActorSystemConfiguration configuration,
-                                    NodeSelectorFactory nodeSelectorFactory,
-                                    Integer numberOfShardThreads,
-                                    String bootstrapServers,
-                                    Cache<String,ActorRef> actorRefCache,
-                                    ShardActorCacheManager shardActorCacheManager,
-                                    NodeActorCacheManager nodeActorCacheManager,
-                                    Serializer<PersistentActor<ShardKey>, byte[]> stateSerializer,
-                                    Deserializer<byte[], PersistentActor<ShardKey>> stateDeserializer,
-                                    ActorLifecycleListenerRegistry actorLifecycleListenerRegistry,
-                                    PersistentActorStoreFactory persistentActorStoreFactory) {
+    public KafkaActorSystemInstance(
+            ElasticActorsNode node,
+            InternalActorSystemConfiguration configuration,
+            NodeSelectorFactory nodeSelectorFactory,
+            Integer numberOfShardThreads,
+            String bootstrapServers,
+            Cache<String, ActorRef> actorRefCache,
+            ShardActorCacheManager shardActorCacheManager,
+            NodeActorCacheManager nodeActorCacheManager,
+            Serializer<PersistentActor<ShardKey>, byte[]> stateSerializer,
+            Deserializer<byte[], PersistentActor<ShardKey>> stateDeserializer,
+            ActorLifecycleListenerRegistry actorLifecycleListenerRegistry,
+            PersistentActorStoreFactory persistentActorStoreFactory, Environment environment) {
         this.actorLifecycleListenerRegistry = actorLifecycleListenerRegistry;
         this.schedulerService = new KafkaTopicScheduler(this);
         this.localNode = node;
-        // we need a wrapper around the default implementation that adds the partition for the node topics
+        // we need a wrapper around the default implementation that adds the partition for the
+        //node topics
         this.cluster = new KafkaInternalActorSystems(node, actorRefCache);
         this.configuration = configuration;
         this.nodeSelectorFactory = nodeSelectorFactory;
@@ -139,17 +143,29 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         this.shardThreads = new KafkaActorThread[numberOfShardThreads];
         // make sure all the topics exist and are properly configured before staring the system
         try {
-            TopicHelper.ensureTopicsExists(bootstrapServers, node.getId(), numberOfShardThreads, this);
-        } catch(Exception e) {
+            TopicHelper.ensureTopicsExists(
+                    bootstrapServers,
+                    node.getId(),
+                    numberOfShardThreads,
+                    this);
+        } catch (Exception e) {
             throw new RuntimeException("FATAL Exception on ensureTopicsExist", e);
         }
 
-        for(int i = 0 ; i < numberOfShardThreads ; i++) {
-            this.shardThreads[i] = new KafkaActorThread(cluster.getClusterName(), bootstrapServers, localNode.getId(),
-                    this, actorRefFactory, shardActorCacheManager, nodeActorCacheManager, stateSerializer,
-                    stateDeserializer, persistentActorStoreFactory);
+        for (int i = 0; i < numberOfShardThreads; i++) {
+            this.shardThreads[i] = new KafkaActorThread(
+                    cluster.getClusterName(),
+                    bootstrapServers,
+                    localNode.getId(),
+                    this,
+                    actorRefFactory,
+                    shardActorCacheManager,
+                    nodeActorCacheManager,
+                    stateSerializer,
+                    stateDeserializer,
+                    persistentActorStoreFactory);
         }
-        for(int i = 0 ; i < configuration.getNumberOfShards() ; i++) {
+        for (int i = 0; i < configuration.getNumberOfShards(); i++) {
             this.actorShards[i] = new KafkaActorShard(new ShardKey(configuration.getName(), i),
                     this.shardThreads[i % numberOfShardThreads], this);
         }
@@ -157,10 +173,12 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         // add the local node to the first shard as primary
         this.localActorNode = new KafkaActorNode(localNode, this.shardThreads[0], this);
         this.activeNodes.add(localActorNode);
-        // each KafkaActorThread will have a copy of the ManagedActorNode - all managing one partition
+        // each KafkaActorThread will have a copy of the ManagedActorNode - all managing one
+        //partition
         for (int i = 1; i < shardThreads.length; i++) {
             shardThreads[i].assign(localActorNode, false);
         }
+        this.environment = environment;
     }
 
     @PostConstruct
@@ -554,5 +572,37 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         // get the underlying KafkaActorShard
         KafkaActorShard actorShard = (KafkaActorShard) ((ActorShardRef) receiver).getActorContainer();
         actorShard.getActorThread().deregister(actorShard.getKey(), event, receiver);
+    }
+
+    @Nullable
+    @Override
+    public String getProperty(String key) {
+        return environment.getProperty(key);
+    }
+
+    @Override
+    public String getProperty(String key, String defaultValue) {
+        return environment.getProperty(key, defaultValue);
+    }
+
+    @Nullable
+    @Override
+    public <T> T getProperty(String key, Class<T> targetType) {
+        return environment.getProperty(key, targetType);
+    }
+
+    @Override
+    public <T> T getProperty(String key, Class<T> targetType, T defaultValue) {
+        return environment.getProperty(key, targetType, defaultValue);
+    }
+
+    @Override
+    public String getRequiredProperty(String key) throws IllegalStateException {
+        return environment.getRequiredProperty(key);
+    }
+
+    @Override
+    public <T> T getRequiredProperty(String key, Class<T> targetType) throws IllegalStateException {
+        return environment.getRequiredProperty(key, targetType);
     }
 }

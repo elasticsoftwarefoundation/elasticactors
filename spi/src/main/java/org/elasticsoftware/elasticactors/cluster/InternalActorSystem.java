@@ -30,7 +30,8 @@ import java.util.List;
 /**
  * @author Joost van de Wijgerd
  */
-public interface InternalActorSystem extends ActorSystem, ShardAccessor, SerializationAccessor {
+public interface InternalActorSystem
+        extends ActorSystem, ShardAccessor, SerializationAccessor, EnvironmentAccessor {
 
     @Override
     InternalActorSystemConfiguration getConfiguration();

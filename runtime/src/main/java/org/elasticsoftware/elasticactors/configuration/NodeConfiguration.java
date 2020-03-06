@@ -177,7 +177,7 @@ public class NodeConfiguration {
 
     @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
     public InternalActorSystem createLocalActorSystemInstance() {
-        return new LocalActorSystemInstance(node,node,configuration,nodeSelectorFactory);
+        return new LocalActorSystemInstance(node, node, configuration, nodeSelectorFactory, env);
     }
 
     @Bean(name = {"remoteActorSystems"})

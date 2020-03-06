@@ -84,6 +84,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     private final ShardActorCacheManager actorCacheManager;
     // the cacheloader instance that is reused to avoid garbage being created on each call
     private final CacheLoader cacheLoader = new CacheLoader();
+    private final int maxLogSerializedBodyLength;
 
     private Long serializationWarnThreshold;
 
@@ -97,6 +98,10 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         this.actorSystem = actorSystem;
         this.actorCacheManager = actorCacheManager;
         this.shardKey = new ShardKey(actorSystem.getName(), shard);
+        this.maxLogSerializedBodyLength = actorSystem.getProperty(
+                "ea.logging.serialization.maxBodyLength",
+                Integer.class,
+                1024 * 500); // 500000 characters
     }
 
     @Autowired
@@ -216,15 +221,17 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                                                                           messageHandlerEventListener));
                         } else {
                             actorExecutor.execute(getProtocolFactory(internalMessage.getPayloadClass())
-                                    .createHandleMessageTask(actorSystem,
-                                                             actorInstance,
-                                                             receiverRef,
-                                                             internalMessage,
-                                                             actor,
-                                                             persistentActorRepository,
-                                                             actorStateUpdateProcessor,
-                                                             messageHandlerEventListener,
-                                                             serializationWarnThreshold));
+                                    .createHandleMessageTask(
+                                            actorSystem,
+                                            actorInstance,
+                                            receiverRef,
+                                            internalMessage,
+                                            actor,
+                                            persistentActorRepository,
+                                            actorStateUpdateProcessor,
+                                            messageHandlerEventListener,
+                                            serializationWarnThreshold,
+                                            maxLogSerializedBodyLength));
                         }
                     }
                 } catch (UncheckedExecutionException e) {

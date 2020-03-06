@@ -155,9 +155,20 @@ public class NodeConfiguration {
         Deserializer<byte[],PersistentActor<ShardKey>> deserializer = new DecompressingDeserializer<>(new PersistentActorDeserializer(node, node));
         // NOTE: the node topic will be created with ea.shardThreads.workerCount number of partitions, changing this
         // value will require you to update the topic or face serious issues otherwise
-        return new KafkaActorSystemInstance(node, configuration, nodeSelectorFactory, workers, bootstrapServers,
-                actorRefCache, shardActorCacheManager, nodeActorCacheManager, serializer, deserializer,
-                actorLifecycleListenerRegistry, persistentActorStoreFactory);
+        return new KafkaActorSystemInstance(
+                node,
+                configuration,
+                nodeSelectorFactory,
+                workers,
+                bootstrapServers,
+                actorRefCache,
+                shardActorCacheManager,
+                nodeActorCacheManager,
+                serializer,
+                deserializer,
+                actorLifecycleListenerRegistry,
+                persistentActorStoreFactory,
+                env);
     }
 
     @Bean(name = {"internalActorSystemHealthCheck"})

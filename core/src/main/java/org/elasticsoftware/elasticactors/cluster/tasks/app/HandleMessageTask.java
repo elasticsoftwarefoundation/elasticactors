@@ -49,28 +49,53 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
 public final class HandleMessageTask extends ActorLifecycleTask {
     private static final Logger log = LoggerFactory.getLogger(HandleMessageTask.class);
 
+    private final int maxLogSerializedBodyLength;
 
-    public HandleMessageTask(InternalActorSystem actorSystem,
-                             ElasticActor receiver,
-                             ActorRef receiverRef,
-                             InternalMessage internalMessage,
-                             PersistentActor persistentActor,
-                             PersistentActorRepository persistentActorRepository,
-                             ActorStateUpdateProcessor actorStateUpdateProcessor,
-                             MessageHandlerEventListener messageHandlerEventListener,
-                             Long serializationWarnThreshold) {
-        super(actorStateUpdateProcessor, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, serializationWarnThreshold);
+    public HandleMessageTask(
+            InternalActorSystem actorSystem,
+            ElasticActor receiver,
+            ActorRef receiverRef,
+            InternalMessage internalMessage,
+            PersistentActor persistentActor,
+            PersistentActorRepository persistentActorRepository,
+            ActorStateUpdateProcessor actorStateUpdateProcessor,
+            MessageHandlerEventListener messageHandlerEventListener,
+            Long serializationWarnThreshold,
+            int maxLogSerializedBodyLength) {
+        super(
+                actorStateUpdateProcessor,
+                persistentActorRepository,
+                persistentActor,
+                actorSystem,
+                receiver,
+                receiverRef,
+                messageHandlerEventListener,
+                internalMessage,
+                serializationWarnThreshold);
+        this.maxLogSerializedBodyLength = maxLogSerializedBodyLength;
     }
 
-    public HandleMessageTask(InternalActorSystem actorSystem,
-                             ElasticActor receiver,
-                             ActorRef receiverRef,
-                             InternalMessage internalMessage,
-                             PersistentActor persistentActor,
-                             PersistentActorRepository persistentActorRepository,
-                             ActorStateUpdateProcessor actorStateUpdateProcessor,
-                             MessageHandlerEventListener messageHandlerEventListener) {
-        super(actorStateUpdateProcessor,persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, null);
+    public HandleMessageTask(
+            InternalActorSystem actorSystem,
+            ElasticActor receiver,
+            ActorRef receiverRef,
+            InternalMessage internalMessage,
+            PersistentActor persistentActor,
+            PersistentActorRepository persistentActorRepository,
+            ActorStateUpdateProcessor actorStateUpdateProcessor,
+            MessageHandlerEventListener messageHandlerEventListener,
+            int maxLogSerializedBodyLength) {
+        super(
+                actorStateUpdateProcessor,
+                persistentActorRepository,
+                persistentActor,
+                actorSystem,
+                receiver,
+                receiverRef,
+                messageHandlerEventListener,
+                internalMessage,
+                null);
+        this.maxLogSerializedBodyLength = maxLogSerializedBodyLength;
     }
 
 
@@ -87,6 +112,7 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                     ((TypedActor) receiver).onReceive(
                             internalMessage.getSender(),
                             message,
+                            maxLogSerializedBodyLength,
                             messageToStringSerializer);
                 } else {
                     receiver.onReceive(internalMessage.getSender(), message);
@@ -113,6 +139,11 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                             internalMessage.getSender(),
                             e);
                 } else {
+                    String serializedContent = messageToStringSerializer.serialize(message);
+                    if (serializedContent.length() > maxLogSerializedBodyLength) {
+                        serializedContent = "[CONTENT_TOO_BIG]: "
+                                + serializedContent.substring(0, maxLogSerializedBodyLength);
+                    }
                     log.error(
                             "Exception while handling message of type [{}]. "
                                     + "Actor [{}]. "
@@ -121,7 +152,7 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                             internalMessage.getPayloadClass(),
                             receiverRef,
                             internalMessage.getSender(),
-                            messageToStringSerializer.serialize(message),
+                            serializedContent,
                             e);
                 }
                 return false;

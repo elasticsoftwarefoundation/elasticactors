@@ -87,7 +87,12 @@ public class TestConfiguration {
 
     @DependsOn("configuration") @Bean(name = {"internalActorSystem"})
     public LocalActorSystemInstance createLocalActorSystemInstance(InternalActorSystems internalActorSystems, InternalActorSystemConfiguration configuration) {
-        return new LocalActorSystemInstance(localNode,internalActorSystems,configuration,nodeSelectorFactory);
+        return new LocalActorSystemInstance(
+                localNode,
+                internalActorSystems,
+                configuration,
+                nodeSelectorFactory,
+                env);
     }
 
     @Bean(name = {"actorSystems", "actorRefFactory", "serializationFrameworks"})

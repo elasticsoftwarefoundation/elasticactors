@@ -55,6 +55,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.env.Environment;
 
 import javax.annotation.Nullable;
 import java.nio.charset.StandardCharsets;
@@ -108,8 +109,14 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     private final ActorNodeAdapter localNodeAdapter;
     private final HashFunction hashFunction = Hashing.murmur3_32();
     private final AtomicBoolean stable = new AtomicBoolean(false);
+    private final Environment environment;
 
-    public LocalActorSystemInstance(PhysicalNode localNode, InternalActorSystems cluster, InternalActorSystemConfiguration configuration, NodeSelectorFactory nodeSelectorFactory) {
+    public LocalActorSystemInstance(
+            PhysicalNode localNode,
+            InternalActorSystems cluster,
+            InternalActorSystemConfiguration configuration,
+            NodeSelectorFactory nodeSelectorFactory,
+            Environment environment) {
         this.configuration = configuration;
         this.nodeSelectorFactory = nodeSelectorFactory;
         this.cluster = cluster;
@@ -120,7 +127,9 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
             shardLocks[i] = new ReentrantReadWriteLock();
             shardAdapters[i] = new ActorShardAdapter(new ShardKey(configuration.getName(), i));
         }
-        this.localNodeAdapter = new ActorNodeAdapter(new NodeKey(configuration.getName(), localNode.getId()));
+        this.localNodeAdapter =
+                new ActorNodeAdapter(new NodeKey(configuration.getName(), localNode.getId()));
+        this.environment = environment;
     }
 
     @Override
@@ -602,6 +611,38 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     @Autowired
     public void setActorLifecycleListenerRegistry(ActorLifecycleListenerRegistry actorLifecycleListenerRegistry) {
         this.actorLifecycleListenerRegistry = actorLifecycleListenerRegistry;
+    }
+
+    @Nullable
+    @Override
+    public String getProperty(String key) {
+        return environment.getProperty(key);
+    }
+
+    @Override
+    public String getProperty(String key, String defaultValue) {
+        return environment.getProperty(key, defaultValue);
+    }
+
+    @Nullable
+    @Override
+    public <T> T getProperty(String key, Class<T> targetType) {
+        return environment.getProperty(key, targetType);
+    }
+
+    @Override
+    public <T> T getProperty(String key, Class<T> targetType, T defaultValue) {
+        return environment.getProperty(key, targetType, defaultValue);
+    }
+
+    @Override
+    public String getRequiredProperty(String key) throws IllegalStateException {
+        return environment.getRequiredProperty(key);
+    }
+
+    @Override
+    public <T> T getRequiredProperty(String key, Class<T> targetType) throws IllegalStateException {
+        return environment.getRequiredProperty(key, targetType);
     }
 
     private final class ActorShardAdapter implements ActorShard {

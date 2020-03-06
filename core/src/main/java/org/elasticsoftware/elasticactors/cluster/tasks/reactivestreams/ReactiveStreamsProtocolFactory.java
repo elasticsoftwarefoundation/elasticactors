@@ -31,34 +31,47 @@ import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
  * @author Joost van de Wijgerd
  */
 public final class ReactiveStreamsProtocolFactory implements ProtocolFactory {
+
     @Override
-    public ActorLifecycleTask createHandleMessageTask(InternalActorSystem actorSystem,
-                                                      ElasticActor receiver,
-                                                      ActorRef receiverRef,
-                                                      InternalMessage internalMessage,
-                                                      PersistentActor persistentActor,
-                                                      PersistentActorRepository persistentActorRepository,
-                                                      ActorStateUpdateProcessor actorStateUpdateProcessor,
-                                                      MessageHandlerEventListener messageHandlerEventListener,
-                                                      Long serializationWarnThreshold) {
-        return new HandleMessageTask(actorSystem, receiver, receiverRef, internalMessage, persistentActor,
-                persistentActorRepository, actorStateUpdateProcessor, messageHandlerEventListener, serializationWarnThreshold);
+    public ActorLifecycleTask createHandleMessageTask(
+            InternalActorSystem actorSystem,
+            ElasticActor receiver,
+            ActorRef receiverRef,
+            InternalMessage internalMessage,
+            PersistentActor persistentActor,
+            PersistentActorRepository persistentActorRepository,
+            ActorStateUpdateProcessor actorStateUpdateProcessor,
+            MessageHandlerEventListener messageHandlerEventListener,
+            Long serializationWarnThreshold,
+            int maxLogSerializedBodyLength) {
+        return new HandleMessageTask(
+                actorSystem,
+                receiver,
+                receiverRef,
+                internalMessage,
+                persistentActor,
+                persistentActorRepository,
+                actorStateUpdateProcessor,
+                messageHandlerEventListener,
+                serializationWarnThreshold);
     }
 
     @Override
-    public ActorLifecycleTask createHandleUndeliverableMessageTask(InternalActorSystem actorSystem,
-                                                                   ElasticActor receiver,
-                                                                   ActorRef receiverRef,
-                                                                   InternalMessage internalMessage,
-                                                                   PersistentActor persistentActor,
-                                                                   PersistentActorRepository persistentActorRepository,
-                                                                   MessageHandlerEventListener messageHandlerEventListener) {
-        return new HandleUndeliverableMessageTask(actorSystem,
-                                                  receiver,
-                                                  receiverRef,
-                                                  internalMessage,
-                                                  persistentActor,
-                                                  persistentActorRepository,
-                                                  messageHandlerEventListener);
+    public ActorLifecycleTask createHandleUndeliverableMessageTask(
+            InternalActorSystem actorSystem,
+            ElasticActor receiver,
+            ActorRef receiverRef,
+            InternalMessage internalMessage,
+            PersistentActor persistentActor,
+            PersistentActorRepository persistentActorRepository,
+            MessageHandlerEventListener messageHandlerEventListener) {
+        return new HandleUndeliverableMessageTask(
+                actorSystem,
+                receiver,
+                receiverRef,
+                internalMessage,
+                persistentActor,
+                persistentActorRepository,
+                messageHandlerEventListener);
     }
 }

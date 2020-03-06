@@ -52,12 +52,15 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     private final InternalMessage internalMessage;
     private final MessageHandlerEventListener messageHandlerEventListener;
     private final Measurement measurement;
+    private final int maxLogSerializedBodyLength;
 
-    public HandleServiceMessageTask(InternalActorSystem actorSystem,
-                                    ActorRef serviceRef,
-                                    ElasticActor serviceActor,
-                                    InternalMessage internalMessage,
-                                    MessageHandlerEventListener messageHandlerEventListener) {
+    public HandleServiceMessageTask(
+            InternalActorSystem actorSystem,
+            ActorRef serviceRef,
+            ElasticActor serviceActor,
+            InternalMessage internalMessage,
+            MessageHandlerEventListener messageHandlerEventListener,
+            int maxLogSerializedBodyLength) {
         this.serviceRef = serviceRef;
         this.actorSystem = actorSystem;
         this.serviceActor = serviceActor;
@@ -65,6 +68,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         this.messageHandlerEventListener = messageHandlerEventListener;
         // only measure when trace is enabled
         this.measurement = logger.isTraceEnabled() ? new Measurement(System.nanoTime()) : null;
+        this.maxLogSerializedBodyLength = maxLogSerializedBodyLength;
     }
 
     @Override
@@ -112,11 +116,12 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         InternalActorContext.setContext(this);
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
-            MessageToStringSerializer messageToStringSerializer = getStringSerializer(message);
             if (serviceActor instanceof TypedActor) {
+                MessageToStringSerializer messageToStringSerializer = getStringSerializer(message);
                 ((TypedActor) serviceActor).onReceive(
                         internalMessage.getSender(),
                         message,
+                        maxLogSerializedBodyLength,
                         messageToStringSerializer);
             } else {
                 serviceActor.onReceive(internalMessage.getSender(), message);

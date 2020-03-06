@@ -70,6 +70,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     private final NodeActorCacheManager actorCacheManager;
     private Cache<ActorRef,PersistentActor<NodeKey>> actorCache;
     private final Set<ElasticActor> initializedActors = new HashSet<>();
+    private final int maxLogSerializedBodyLength;
 
     public LocalActorNode(PhysicalNode node,
                           InternalActorSystem actorSystem,
@@ -80,6 +81,10 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
         this.actorSystem = actorSystem;
         this.actorCacheManager = actorCacheManager;
         this.nodeKey = new NodeKey(actorSystem.getName(), node.getId());
+        this.maxLogSerializedBodyLength = actorSystem.getProperty(
+                "ea.logging.serialization.maxBodyLength",
+                Integer.class,
+                1024 * 500); // 500000 characters
     }
 
     @Override
@@ -179,13 +184,14 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                         } else {
                             actorExecutor.execute(getProtocolFactory(internalMessage.getPayloadClass())
                                     .createHandleMessageTask(actorSystem,
-                                                             actorInstance,
-                                                             receiverRef,
-                                                             internalMessage,
-                                                             actor,
-                                                            null,null,
-                                                             messageHandlerEventListener,
-                                                             null));
+                                            actorInstance,
+                                            receiverRef,
+                                            internalMessage,
+                                            actor,
+                                            null, null,
+                                            messageHandlerEventListener,
+                                            null,
+                                            maxLogSerializedBodyLength));
                         }
 
                     } else {
@@ -201,20 +207,24 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                             }
                             // ok, now it can handle the message
                             if(!internalMessage.isUndeliverable()) {
-                            actorExecutor.execute(new HandleServiceMessageTask(actorSystem,
-                                                                               receiverRef,
-                                                                               serviceInstance,
-                                                                               internalMessage,
-                                                                               messageHandlerEventListener));
+                                actorExecutor.execute(new HandleServiceMessageTask(
+                                        actorSystem,
+                                        receiverRef,
+                                        serviceInstance,
+                                        internalMessage,
+                                        messageHandlerEventListener,
+                                        maxLogSerializedBodyLength));
                             } else {
-                                actorExecutor.execute(new HandleUndeliverableServiceMessageTask(actorSystem,
-                                                                                                receiverRef,
-                                                                                                serviceInstance,
-                                                                                                internalMessage,
-                                                                                                messageHandlerEventListener));
+                                actorExecutor.execute(new HandleUndeliverableServiceMessageTask(
+                                        actorSystem,
+                                        receiverRef,
+                                        serviceInstance,
+                                        internalMessage,
+                                        messageHandlerEventListener));
                             }
                         } else {
-                            handleUndeliverable(internalMessage, receiverRef, messageHandlerEventListener);
+                            handleUndeliverable(internalMessage, receiverRef,
+                                    messageHandlerEventListener);
                         }
                     }
                 } catch(Exception e) {

@@ -145,7 +145,14 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
             return null;
         }
         try {
-            return messageToStringSerializer.serialize(message);
+            String serializedContent = messageToStringSerializer.serialize(message);
+            Integer maxLogSerializedBodyLength = currentMaxLogSerializedBodyLength.get();
+            if (maxLogSerializedBodyLength != null
+                    && serializedContent.length() > maxLogSerializedBodyLength) {
+                serializedContent = "[CONTENT_TOO_BIG]: "
+                        + serializedContent.substring(0, maxLogSerializedBodyLength);
+            }
+            return serializedContent;
         } catch (Exception e) {
             logger.error(
                     "Exception thrown while serializing message of type [{}] to String",
@@ -157,6 +164,7 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
 
     private final ThreadLocal<MessageToStringSerializer<T>> currentMessageToStringSerializer =
             new ThreadLocal<>();
+    private final ThreadLocal<Integer> currentMaxLogSerializedBodyLength = new ThreadLocal<>();
 
     /**
      * Internal implementation of {@link ElasticActor::onReceive} to enable logging offending
@@ -165,13 +173,16 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
     public final void onReceive(
             ActorRef sender,
             T message,
+            int maxLogSerializedBodyLength,
             @Nullable MessageToStringSerializer<T> messageToStringSerializer)
             throws Exception {
         try {
             currentMessageToStringSerializer.set(messageToStringSerializer);
+            currentMaxLogSerializedBodyLength.set(maxLogSerializedBodyLength);
             onReceive(sender, message);
         } finally {
             currentMessageToStringSerializer.set(null);
+            currentMaxLogSerializedBodyLength.set(null);
         }
     }
 }
