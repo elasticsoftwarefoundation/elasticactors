@@ -26,6 +26,7 @@ import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -37,18 +38,31 @@ import java.util.concurrent.ConcurrentMap;
  */
 @Named
 public final class JacksonSerializationFramework implements SerializationFramework {
-    private final ConcurrentMap<Class,JacksonMessageDeserializer> deserializers = new ConcurrentHashMap<>();
+
+    public final static int DEFAULT_MAX_LENGTH = 500_000;
+
+    private static final String MAX_LENGTH_CONFIGURATION_KEY =
+            "${ea.serialization.string.maxLength:" + DEFAULT_MAX_LENGTH + "}";
+
+    private final ConcurrentMap<Class, JacksonMessageDeserializer> deserializers =
+            new ConcurrentHashMap<>();
     private final JacksonMessageSerializer serializer;
     private final JacksonMessageToStringSerializer toStringSerializer;
     private final ObjectMapper objectMapper;
     private final JacksonActorStateSerializer actorStateSerializer;
     private final JacksonActorStateDeserializer actorStateDeserializer;
 
-    @Inject
     public JacksonSerializationFramework(ObjectMapper objectMapper) {
+        this(objectMapper, DEFAULT_MAX_LENGTH);
+    }
+
+    @Inject
+    public JacksonSerializationFramework(
+            ObjectMapper objectMapper,
+            @Value(MAX_LENGTH_CONFIGURATION_KEY) int maxLength) {
         this.objectMapper = objectMapper;
         this.serializer = new JacksonMessageSerializer(objectMapper);
-        this.toStringSerializer = new JacksonMessageToStringSerializer(objectMapper);
+        this.toStringSerializer = new JacksonMessageToStringSerializer(objectMapper, maxLength);
         this.actorStateSerializer = new JacksonActorStateSerializer(objectMapper);
         this.actorStateDeserializer = new JacksonActorStateDeserializer(objectMapper);
     }

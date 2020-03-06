@@ -22,13 +22,19 @@ import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer
 public final class JacksonMessageToStringSerializer<T> implements MessageToStringSerializer<T> {
 
     private final ObjectMapper objectMapper;
+    private final int maxLength;
 
-    public JacksonMessageToStringSerializer(ObjectMapper objectMapper) {
+    public JacksonMessageToStringSerializer(ObjectMapper objectMapper, int maxLength) {
         this.objectMapper = objectMapper;
+        this.maxLength = maxLength;
     }
 
     @Override
     public String serialize(T message) throws Exception {
-        return objectMapper.writeValueAsString(message);
+        String serialized = objectMapper.writeValueAsString(message);
+        if (serialized.length() > maxLength) {
+            serialized = "[CONTENT_TOO_BIG]: " + serialized.substring(0, maxLength);
+        }
+        return serialized;
     }
 }
