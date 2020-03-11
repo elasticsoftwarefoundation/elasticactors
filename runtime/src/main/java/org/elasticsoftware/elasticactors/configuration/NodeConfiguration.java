@@ -34,6 +34,7 @@ import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.RemoteActorSystems;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ShardedScheduler;
 import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
+import org.elasticsoftware.elasticactors.logging.LogLevel;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
@@ -177,7 +178,16 @@ public class NodeConfiguration {
 
     @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
     public InternalActorSystem createLocalActorSystemInstance() {
-        return new LocalActorSystemInstance(node,node,configuration,nodeSelectorFactory);
+        LogLevel onUnhandledLogLevel = env.getProperty(
+                "ea.logging.unhandled.level",
+                LogLevel.class,
+                LogLevel.WARN);
+        return new LocalActorSystemInstance(
+                node,
+                node,
+                configuration,
+                nodeSelectorFactory,
+                onUnhandledLogLevel);
     }
 
     @Bean(name = {"remoteActorSystems"})
