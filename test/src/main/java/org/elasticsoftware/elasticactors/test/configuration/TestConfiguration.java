@@ -32,6 +32,7 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.cluster.LocalActorSystemInstance;
 import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler;
+import org.elasticsoftware.elasticactors.logging.LogLevel;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.DefaultRemoteConfiguration;
@@ -87,7 +88,12 @@ public class TestConfiguration {
 
     @DependsOn("configuration") @Bean(name = {"internalActorSystem"})
     public LocalActorSystemInstance createLocalActorSystemInstance(InternalActorSystems internalActorSystems, InternalActorSystemConfiguration configuration) {
-        return new LocalActorSystemInstance(localNode,internalActorSystems,configuration,nodeSelectorFactory);
+        return new LocalActorSystemInstance(
+                localNode,
+                internalActorSystems,
+                configuration,
+                nodeSelectorFactory,
+                LogLevel.WARN);
     }
 
     @Bean(name = {"actorSystems", "actorRefFactory", "serializationFrameworks"})

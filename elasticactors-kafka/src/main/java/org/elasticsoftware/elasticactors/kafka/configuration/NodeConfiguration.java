@@ -145,33 +145,21 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"internalActorSystem"})
-    public InternalActorSystem createLocalActorSystemInstance(
-            ShardActorCacheManager shardActorCacheManager,
-            NodeActorCacheManager nodeActorCacheManager,
-            ActorLifecycleListenerRegistry actorLifecycleListenerRegistry,
-            PersistentActorStoreFactory persistentActorStoreFactory) {
-        final int workers = env.getProperty(
-                "ea.shardThreads.workerCount",
-                Integer.class,
-                Runtime.getRuntime().availableProcessors());
+    public InternalActorSystem createLocalActorSystemInstance(ShardActorCacheManager shardActorCacheManager,
+                                                              NodeActorCacheManager nodeActorCacheManager,
+                                                              ActorLifecycleListenerRegistry actorLifecycleListenerRegistry,
+                                                              PersistentActorStoreFactory persistentActorStoreFactory) {
+        final int workers = env.getProperty("ea.shardThreads.workerCount",Integer.class,Runtime.getRuntime().availableProcessors());
         final String bootstrapServers = env.getRequiredProperty("ea.kafka.bootstrapServers");
-        final Integer compressionThreshold = env.getProperty(
-                "ea.persistentActorRepository.compressionThreshold",
-                Integer.class,
-                512);
-        Serializer<PersistentActor<ShardKey>, byte[]> serializer =
-                new CompressingSerializer<>(
-                        new PersistentActorSerializer(node),
-                        compressionThreshold);
-        Deserializer<byte[], PersistentActor<ShardKey>> deserializer =
-                new DecompressingDeserializer<>(new PersistentActorDeserializer(node, node));
+        final Integer compressionThreshold = env.getProperty("ea.persistentActorRepository.compressionThreshold",Integer.class, 512);
+        Serializer<PersistentActor<ShardKey>,byte[]> serializer = new CompressingSerializer<>(new PersistentActorSerializer(node),compressionThreshold);
+        Deserializer<byte[],PersistentActor<ShardKey>> deserializer = new DecompressingDeserializer<>(new PersistentActorDeserializer(node, node));
+        // NOTE: the node topic will be created with ea.shardThreads.workerCount number of partitions, changing this
+        // value will require you to update the topic or face serious issues otherwise
         LogLevel onUnhandledLogLevel = env.getProperty(
                 "ea.logging.unhandled.level",
                 LogLevel.class,
                 LogLevel.WARN);
-        // NOTE: the node topic will be created with ea.shardThreads.workerCount number of
-        //partitions, changing this
-        // value will require you to update the topic or face serious issues otherwise
         return new KafkaActorSystemInstance(
                 node,
                 configuration,
