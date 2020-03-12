@@ -117,10 +117,17 @@ public class TestConfiguration {
         return new DefaultRemoteConfiguration("testCluster", configuration.getName(), configuration.getNumberOfShards());
     }
 
-    @Bean(name = {"objectMapper"})
-    public ObjectMapper createObjectMapper(SimpleScheduler simpleScheduler, InternalActorSystemsImpl actorRefFactory) {
+    @Bean(name = {"objectMapperBuilder"})
+    public ObjectMapperBuilder createObjectMapperBuilder(
+            SimpleScheduler simpleScheduler,
+            InternalActorSystemsImpl actorRefFactory) {
         // @todo: fix version
-        return new ObjectMapperBuilder(actorRefFactory,simpleScheduler,"1.0.0").build();
+        return new ObjectMapperBuilder(actorRefFactory, simpleScheduler, "1.0.0");
+    }
+
+    @Bean(name = {"objectMapper"})
+    public ObjectMapper createObjectMapper(ObjectMapperBuilder builder) {
+        return builder.build();
     }
 
     @Bean(name = {"messagesScanner"})

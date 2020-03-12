@@ -110,14 +110,15 @@ public class NodeConfiguration {
         return configuration;
     }
 
-    @Bean(name = {"objectMapper"})
-    public ObjectMapper createObjectMapper(ShardedScheduler schedulerService) {
+    @Bean(name = {"objectMapperBuilder"})
+    public ObjectMapperBuilder createObjectMapperBuilder(ShardedScheduler schedulerService) {
         String basePackages = env.getProperty("ea.scan.packages",String.class,"");
         Boolean useAfterburner = env.getProperty("ea.base.useAfterburner",Boolean.class, FALSE);
         // @todo: fix version
-        ObjectMapperBuilder builder = new ObjectMapperBuilder(node,schedulerService,"1.0.0",basePackages);
+        ObjectMapperBuilder builder =
+                new ObjectMapperBuilder(node, schedulerService, basePackages, "1.0.0");
         builder.setUseAfterBurner(useAfterburner);
-        return builder.build();
+        return builder;
     }
 
     @Bean(name = "systemSerializationFramework")

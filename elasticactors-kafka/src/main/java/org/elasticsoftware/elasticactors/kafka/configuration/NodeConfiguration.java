@@ -101,15 +101,16 @@ public class NodeConfiguration {
         return configuration;
     }
 
-    @Bean(name = {"objectMapper"})
-    public ObjectMapper createObjectMapper() {
+    @Bean(name = {"objectMapperBuilder"})
+    public ObjectMapperBuilder createObjectMapperBuilder() {
         String basePackages = env.getProperty("ea.scan.packages",String.class,"");
         Boolean useAfterburner = env.getProperty("ea.base.useAfterburner",Boolean.class,Boolean.FALSE);
         ScheduledMessageRefFactory scheduledMessageRefFactory = refSpec -> ScheduledMessageRefTools.parse(refSpec, node);
         // @todo: fix version
-        ObjectMapperBuilder builder = new ObjectMapperBuilder(node,scheduledMessageRefFactory,"1.0.0",basePackages);
+        ObjectMapperBuilder builder =
+                new ObjectMapperBuilder(node, scheduledMessageRefFactory, basePackages, "1.0.0");
         builder.setUseAfterBurner(useAfterburner);
-        return builder.build();
+        return builder;
     }
 
     @Bean(name = "systemSerializationFramework")

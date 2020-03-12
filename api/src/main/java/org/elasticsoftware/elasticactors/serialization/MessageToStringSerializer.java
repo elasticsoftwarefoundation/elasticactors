@@ -16,6 +16,13 @@
 
 package org.elasticsoftware.elasticactors.serialization;
 
+/**
+ * A serializer that converts a message to a String.
+ * Its primary usage is logging messages that cause unexpected exceptions.
+ * <br/>
+ * <strong>IMPORTANT:</strong> due to the fact messages can potentially contain sensitive data,
+ * implementations should be careful not to expose such data in the converted message body.
+ */
 public interface MessageToStringSerializer<T> {
 
     /**

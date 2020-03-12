@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentMap;
 @Named
 public final class JacksonSerializationFramework implements SerializationFramework {
 
-    public final static int DEFAULT_MAX_LENGTH = 500_000;
+    public final static int DEFAULT_MAX_LENGTH = 5_000;
 
     private static final String MAX_LENGTH_CONFIGURATION_KEY =
             "${ea.serialization.string.maxLength:" + DEFAULT_MAX_LENGTH + "}";

@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.base.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
 
 public final class JacksonMessageToStringSerializer<T> implements MessageToStringSerializer<T> {
@@ -25,7 +26,11 @@ public final class JacksonMessageToStringSerializer<T> implements MessageToStrin
     private final int maxLength;
 
     public JacksonMessageToStringSerializer(ObjectMapper objectMapper, int maxLength) {
-        this.objectMapper = objectMapper;
+        this.objectMapper = objectMapper.copy()
+                .setFilterProvider(new SimpleFilterProvider()
+                        .setFailOnUnknownId(false)
+                        .addFilter(JsonLogFilter.FILTER_NAME, new JsonLogFilter()))
+                .addMixIn(Object.class, JsonLogMixin.class);
         this.maxLength = maxLength;
     }
 
