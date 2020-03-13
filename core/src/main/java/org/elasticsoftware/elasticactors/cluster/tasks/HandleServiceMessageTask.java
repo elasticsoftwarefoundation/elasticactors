@@ -113,23 +113,35 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
             MessageToStringSerializer messageToStringSerializer = getStringSerializer(message);
-            if (serviceActor instanceof TypedActor) {
-                ((TypedActor) serviceActor).onReceive(
-                        internalMessage.getSender(),
-                        message,
-                        messageToStringSerializer);
-            } else {
-                serviceActor.onReceive(internalMessage.getSender(), message);
+            try {
+                if (serviceActor instanceof TypedActor) {
+                    ((TypedActor) serviceActor).onReceive(
+                            internalMessage.getSender(),
+                            message,
+                            messageToStringSerializer);
+                } else {
+                    serviceActor.onReceive(internalMessage.getSender(), message);
+                }
+            } catch (Exception e) {
+                if (logger.isErrorEnabled()) {
+                    logger.error(
+                            "Exception while handling message of type [{}]. "
+                                    + "Service [{}]. "
+                                    + "Sender [{}]. "
+                                    + "Message payload [{}].",
+                            internalMessage.getPayloadClass(),
+                            serviceRef,
+                            internalMessage.getSender(),
+                            serializeToString(message, messageToStringSerializer),
+                            e);
+                }
+                executionException = e;
             }
         } catch (Exception e) {
-            // @todo: send an error message to the sender
             logger.error(
-                    "Exception while handling message of type [{}]. "
-                            + "Service [{}]. "
-                            + "Sender [{}]",
+                    "Exception while Deserializing Message class [{}] in ActorSystem [{}]",
                     internalMessage.getPayloadClass(),
-                    serviceRef,
-                    internalMessage.getSender(),
+                    actorSystem.getName(),
                     e);
             executionException = e;
         } finally {
@@ -153,6 +165,26 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         // do some trace logging
         if(this.measurement != null) {
             logger.trace("({}) Message of type [{}] with id [{}] for actor [{}] took {} microsecs in queue, {} microsecs to execute, 0 microsecs to serialize and {} microsecs to ack (state update false)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId() : "null",serviceRef.getActorId(),measurement.getQueueDuration(MICROSECONDS),measurement.getExecutionDuration(MICROSECONDS),measurement.getAckDuration(MICROSECONDS));
+        }
+    }
+
+    /**
+     * Safely serializes the contents of a message to a String
+     */
+    private String serializeToString(
+            Object message,
+            MessageToStringSerializer messageToStringSerializer) {
+        if (messageToStringSerializer == null) {
+            return null;
+        }
+        try {
+            return messageToStringSerializer.serialize(message);
+        } catch (Exception e) {
+            logger.error(
+                    "Exception thrown while serializing message of type [{}] to String",
+                    message.getClass().getName(),
+                    e);
+            return null;
         }
     }
 

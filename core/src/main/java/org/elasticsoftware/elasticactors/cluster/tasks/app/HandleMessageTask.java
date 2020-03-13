@@ -47,7 +47,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  * @author Joost van de Wijged
  */
 public final class HandleMessageTask extends ActorLifecycleTask {
-    private static final Logger log = LoggerFactory.getLogger(HandleMessageTask.class);
+    private static final Logger logger = LoggerFactory.getLogger(HandleMessageTask.class);
 
 
     public HandleMessageTask(InternalActorSystem actorSystem,
@@ -97,23 +97,14 @@ public final class HandleMessageTask extends ActorLifecycleTask {
             } catch(MessageDeliveryException e) {
                 // see if it is a recoverable exception
                 if(!e.isRecoverable()) {
-                    log.error("Unrecoverable MessageDeliveryException while handling message for actor [{}]", receiverRef, e);
+                    logger.error("Unrecoverable MessageDeliveryException while handling message for actor [{}]", receiverRef, e);
                 }
                 // message cannot be sent but state should be updated as the received message did most likely change
                 // the state
                 return shouldUpdateState(receiver, message);
             } catch (Exception e) {
-                if (messageToStringSerializer == null) {
-                    log.error(
-                            "Exception while handling message of type [{}]. "
-                                    + "Actor [{}]. "
-                                    + "Sender [{}]",
-                            internalMessage.getPayloadClass(),
-                            receiverRef,
-                            internalMessage.getSender(),
-                            e);
-                } else {
-                    log.error(
+                if (logger.isErrorEnabled()) {
+                    logger.error(
                             "Exception while handling message of type [{}]. "
                                     + "Actor [{}]. "
                                     + "Sender [{}]. "
@@ -121,18 +112,38 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                             internalMessage.getPayloadClass(),
                             receiverRef,
                             internalMessage.getSender(),
-                            messageToStringSerializer.serialize(message),
+                            serializeToString(message, messageToStringSerializer),
                             e);
                 }
                 return false;
             }
         } catch (Exception e) {
-            log.error(
+            logger.error(
                     "Exception while Deserializing Message class [{}] in ActorSystem [{}]",
                     internalMessage.getPayloadClass(),
                     actorSystem.getName(),
                     e);
             return false;
+        }
+    }
+
+    /**
+     * Safely serializes the contents of a message to a String
+     */
+    private String serializeToString(
+            Object message,
+            MessageToStringSerializer messageToStringSerializer) {
+        if (messageToStringSerializer == null) {
+            return null;
+        }
+        try {
+            return messageToStringSerializer.serialize(message);
+        } catch (Exception e) {
+            logger.error(
+                    "Exception thrown while serializing message of type [{}] to String",
+                    message.getClass().getName(),
+                    e);
+            return null;
         }
     }
 
@@ -142,7 +153,7 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                     actorSystem.getParent(),
                     message.getClass());
         } catch (Exception e) {
-            log.error(
+            logger.error(
                     "Unexpected exception resolving message string serializer for type [{}]",
                     message.getClass().getName(),
                     e);
@@ -162,7 +173,7 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                             .forEach(messageSubscriber -> messageSubscriber.getSubscriberRef().tell(nextMessage, receiverRef));
                 }
             } catch(Exception e) {
-                log.error("Unexpected exception while forwarding message to Subscribers", e);
+                logger.error("Unexpected exception while forwarding message to Subscribers", e);
             }
         }
     }
