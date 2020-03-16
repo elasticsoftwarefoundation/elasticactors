@@ -47,22 +47,25 @@ public final class JacksonSerializationFramework implements SerializationFramewo
     private final ConcurrentMap<Class, JacksonMessageDeserializer> deserializers =
             new ConcurrentHashMap<>();
     private final JacksonMessageSerializer serializer;
-    private final JacksonMessageToStringSerializer toStringSerializer;
+    private final MessageToStringSerializer toStringSerializer;
     private final ObjectMapper objectMapper;
     private final JacksonActorStateSerializer actorStateSerializer;
     private final JacksonActorStateDeserializer actorStateDeserializer;
 
     public JacksonSerializationFramework(ObjectMapper objectMapper) {
-        this(objectMapper, DEFAULT_MAX_LENGTH);
+        this(objectMapper, DEFAULT_MAX_LENGTH, false);
     }
 
     @Inject
     public JacksonSerializationFramework(
             ObjectMapper objectMapper,
-            @Value(MAX_LENGTH_CONFIGURATION_KEY) int maxLength) {
+            @Value(MAX_LENGTH_CONFIGURATION_KEY) int maxLength,
+            @Value("${ea.logging.useToString:false}") boolean useToString) {
         this.objectMapper = objectMapper;
         this.serializer = new JacksonMessageSerializer(objectMapper);
-        this.toStringSerializer = new JacksonMessageToStringSerializer(objectMapper, maxLength);
+        this.toStringSerializer = useToString
+                ? new PlainMessageToStringSerializer(maxLength)
+                : new JacksonMessageToStringSerializer(objectMapper, maxLength);
         this.actorStateSerializer = new JacksonActorStateSerializer(objectMapper);
         this.actorStateDeserializer = new JacksonActorStateDeserializer(objectMapper);
     }
