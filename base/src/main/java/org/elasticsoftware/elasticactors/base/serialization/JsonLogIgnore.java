@@ -9,8 +9,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * A custom annotation for preventing the serialization of annotated fields or methods when logging a message's
- * body. It is inspired by {@link JsonIgnore} and works in a similar fashion.
+ * A custom annotation for preventing the serialization of annotated fields or methods when logging
+ * a message's body. It is inspired by {@link JsonIgnore} and works in a similar fashion.
  */
 @Documented
 @Target({ElementType.METHOD, ElementType.FIELD})
