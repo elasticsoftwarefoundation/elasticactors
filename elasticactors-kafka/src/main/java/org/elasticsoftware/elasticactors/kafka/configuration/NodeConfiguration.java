@@ -59,6 +59,9 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.InetAddress;
 
+import static org.elasticsoftware.elasticactors.MethodActor.DEFAULT_UNHANDLED_LEVEL;
+import static org.elasticsoftware.elasticactors.MethodActor.LOGGING_UNHANDLED_LEVEL_PROPERTY;
+
 public class NodeConfiguration {
     @Autowired
     private Environment env;
@@ -158,9 +161,9 @@ public class NodeConfiguration {
         // NOTE: the node topic will be created with ea.shardThreads.workerCount number of partitions, changing this
         // value will require you to update the topic or face serious issues otherwise
         LogLevel onUnhandledLogLevel = env.getProperty(
-                "ea.logging.unhandled.level",
+                LOGGING_UNHANDLED_LEVEL_PROPERTY,
                 LogLevel.class,
-                LogLevel.WARN);
+                DEFAULT_UNHANDLED_LEVEL);
         return new KafkaActorSystemInstance(
                 node,
                 configuration,

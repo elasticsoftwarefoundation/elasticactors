@@ -33,16 +33,20 @@ import javax.inject.Named;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import static org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer.DEFAULT_MAX_LENGTH;
+import static org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer.LOGGING_MAXIMUM_LENGTH_PROPERTY;
+import static org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer.LOGGING_USE_TO_STRING_PROPERTY;
+
 /**
  * @author Joost van de Wijgerd
  */
 @Named
 public final class JacksonSerializationFramework implements SerializationFramework {
 
-    public final static int DEFAULT_MAX_LENGTH = 5_000;
-
     private static final String MAX_LENGTH_CONFIGURATION_KEY =
-            "${ea.serialization.string.maxLength:" + DEFAULT_MAX_LENGTH + "}";
+            "${" + LOGGING_MAXIMUM_LENGTH_PROPERTY + ":" + DEFAULT_MAX_LENGTH + "}";
+    private static final String LOGGING_USE_TO_STRING_KEY =
+            "${" + LOGGING_USE_TO_STRING_PROPERTY + ":false}";
 
     private final ConcurrentMap<Class, JacksonMessageDeserializer> deserializers =
             new ConcurrentHashMap<>();
@@ -60,7 +64,7 @@ public final class JacksonSerializationFramework implements SerializationFramewo
     public JacksonSerializationFramework(
             ObjectMapper objectMapper,
             @Value(MAX_LENGTH_CONFIGURATION_KEY) int maxLength,
-            @Value("${ea.logging.useToString:false}") boolean useToString) {
+            @Value(LOGGING_USE_TO_STRING_KEY) boolean useToString) {
         this.objectMapper = objectMapper;
         this.serializer = new JacksonMessageSerializer(objectMapper);
         this.toStringSerializer = useToString

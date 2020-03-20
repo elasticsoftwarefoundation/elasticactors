@@ -29,8 +29,8 @@ public final class JacksonMessageToStringSerializer<T> implements MessageToStrin
         this.objectMapper = objectMapper.copy()
                 .setFilterProvider(new SimpleFilterProvider()
                         .setFailOnUnknownId(false)
-                        .addFilter(JsonLogFilter.FILTER_NAME, new JsonLogFilter()))
-                .addMixIn(Object.class, JsonLogMixin.class);
+                        .addFilter(JsonLogIgnoreFilter.FILTER_NAME, new JsonLogIgnoreFilter()))
+                .addMixIn(Object.class, JsonLogIgnoreMixin.class);
         this.maxLength = maxLength;
     }
 
@@ -38,7 +38,7 @@ public final class JacksonMessageToStringSerializer<T> implements MessageToStrin
     public String serialize(T message) throws Exception {
         String serialized = objectMapper.writeValueAsString(message);
         if (serialized != null && serialized.length() > maxLength) {
-            serialized = "[CONTENT_TOO_BIG]: " + serialized.substring(0, maxLength);
+            serialized = CONTENT_TOO_BIG_PREFIX + serialized.substring(0, maxLength);
         }
         return serialized;
     }

@@ -38,6 +38,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.elasticsoftware.elasticactors.MethodActor.DEFAULT_UNHANDLED_LEVEL;
+import static org.elasticsoftware.elasticactors.MethodActor.LOGGING_UNHANDLED_LEVEL_PROPERTY;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -91,9 +94,9 @@ public final class DefaultConfiguration implements InternalActorSystemConfigurat
             if (serviceActor instanceof MethodActor) {
                 Environment env = applicationContext.getEnvironment();
                 LogLevel onUnhandledLogLevel = env.getProperty(
-                        "ea.logging.unhandled.level",
+                        LOGGING_UNHANDLED_LEVEL_PROPERTY,
                         LogLevel.class,
-                        LogLevel.WARN);
+                        DEFAULT_UNHANDLED_LEVEL);
                 ((MethodActor) serviceActor).setOnUnhandledLogLevel(onUnhandledLogLevel);
             }
             this.serviceActors.put(serviceId, serviceActor);

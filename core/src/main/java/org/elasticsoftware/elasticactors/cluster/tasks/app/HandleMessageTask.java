@@ -25,6 +25,7 @@ import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
+import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
@@ -103,18 +104,7 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                 // the state
                 return shouldUpdateState(receiver, message);
             } catch (Exception e) {
-                if (logger.isErrorEnabled()) {
-                    logger.error(
-                            "Exception while handling message of type [{}]. "
-                                    + "Actor [{}]. "
-                                    + "Sender [{}]. "
-                                    + "Message payload [{}].",
-                            internalMessage.getPayloadClass(),
-                            receiverRef,
-                            internalMessage.getSender(),
-                            serializeToString(message, messageToStringSerializer),
-                            e);
-                }
+                logException(message, receiverRef, internalMessage, messageToStringSerializer, e);
                 return false;
             }
         } catch (Exception e) {
@@ -124,6 +114,38 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                     actorSystem.getName(),
                     e);
             return false;
+        }
+    }
+
+    private void logException(
+            Object message,
+            ActorRef receiverRef,
+            InternalMessage internalMessage,
+            MessageToStringSerializer messageToStringSerializer,
+            Exception e) {
+        if (logger.isErrorEnabled()) {
+            Message messageAnnotation = message.getClass().getAnnotation(Message.class);
+            if (messageAnnotation != null && messageAnnotation.loggable()) {
+                logger.error(
+                        "Exception while handling message of type [{}]. "
+                                + "Actor [{}]. "
+                                + "Sender [{}]. "
+                                + "Message payload [{}].",
+                        internalMessage.getPayloadClass(),
+                        receiverRef,
+                        internalMessage.getSender(),
+                        serializeToString(message, messageToStringSerializer),
+                        e);
+            } else {
+                logger.error(
+                        "Exception while handling message of type [{}]. "
+                                + "Actor [{}]. "
+                                + "Sender [{}].",
+                        internalMessage.getPayloadClass(),
+                        receiverRef,
+                        internalMessage.getSender(),
+                        e);
+            }
         }
     }
 

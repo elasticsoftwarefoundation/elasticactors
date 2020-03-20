@@ -63,6 +63,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Map;
 
+import static org.elasticsoftware.elasticactors.MethodActor.DEFAULT_UNHANDLED_LEVEL;
+import static org.elasticsoftware.elasticactors.MethodActor.LOGGING_UNHANDLED_LEVEL_PROPERTY;
+
 import static java.lang.Boolean.FALSE;
 
 /**
@@ -70,6 +73,7 @@ import static java.lang.Boolean.FALSE;
  */
 
 public class NodeConfiguration {
+
     @Autowired
     private Environment env;
     @Autowired
@@ -180,9 +184,9 @@ public class NodeConfiguration {
     @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
     public InternalActorSystem createLocalActorSystemInstance() {
         LogLevel onUnhandledLogLevel = env.getProperty(
-                "ea.logging.unhandled.level",
+                LOGGING_UNHANDLED_LEVEL_PROPERTY,
                 LogLevel.class,
-                LogLevel.WARN);
+                DEFAULT_UNHANDLED_LEVEL);
         return new LocalActorSystemInstance(
                 node,
                 node,
