@@ -16,7 +16,11 @@
 
 package org.elasticsoftware.elasticactors.serialization;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author Joost van de Wijgerd
@@ -65,4 +69,25 @@ public @interface Message {
      * @return  the timeout value (in milliseconds) for the message pojo annotation with this annotation
      */
     int timeout() default NO_TIMEOUT;
+
+    /**
+     * Determines whether or not a message's contents can be included in the logs. The format
+     * depends on the {@link MessageToStringSerializer} implementation used by the serialization
+     * framework (unless the {@value MessageToStringSerializer#LOGGING_USE_TO_STRING_PROPERTY}
+     * property is set to {@code true}, in which case the {@link Object#toString()} method is used).
+     *
+     * <br/><br/>
+     * The maximum length of the message as a String can be controlled using the {@value
+     * MessageToStringSerializer#LOGGING_MAXIMUM_LENGTH_PROPERTY} property
+     * (default: {@value MessageToStringSerializer#DEFAULT_MAX_LENGTH}).
+     * Content that's too big will be trimmed and prefixed with the
+     * string {@value MessageToStringSerializer#CONTENT_TOO_BIG_PREFIX}.
+     *
+     * <br/><br/>
+     * <strong>IMPORTANT:</strong> due to the fact messages can potentially contain sensitive data,
+     * think very carefully about which messages should be logged and which data should be exposed.
+     *
+     * @return true if the message can be logged, false otherwise.
+     */
+    boolean loggable() default false;
 }

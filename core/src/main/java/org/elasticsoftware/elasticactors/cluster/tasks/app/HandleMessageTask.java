@@ -25,6 +25,7 @@ import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
+import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
@@ -47,7 +48,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  * @author Joost van de Wijged
  */
 public final class HandleMessageTask extends ActorLifecycleTask {
-    private static final Logger log = LoggerFactory.getLogger(HandleMessageTask.class);
+    private static final Logger logger = LoggerFactory.getLogger(HandleMessageTask.class);
 
 
     public HandleMessageTask(InternalActorSystem actorSystem,
@@ -97,42 +98,74 @@ public final class HandleMessageTask extends ActorLifecycleTask {
             } catch(MessageDeliveryException e) {
                 // see if it is a recoverable exception
                 if(!e.isRecoverable()) {
-                    log.error("Unrecoverable MessageDeliveryException while handling message for actor [{}]", receiverRef, e);
+                    logger.error("Unrecoverable MessageDeliveryException while handling message for actor [{}]", receiverRef, e);
                 }
                 // message cannot be sent but state should be updated as the received message did most likely change
                 // the state
                 return shouldUpdateState(receiver, message);
             } catch (Exception e) {
-                if (messageToStringSerializer == null) {
-                    log.error(
-                            "Exception while handling message of type [{}]. "
-                                    + "Actor [{}]. "
-                                    + "Sender [{}]",
-                            internalMessage.getPayloadClass(),
-                            receiverRef,
-                            internalMessage.getSender(),
-                            e);
-                } else {
-                    log.error(
-                            "Exception while handling message of type [{}]. "
-                                    + "Actor [{}]. "
-                                    + "Sender [{}]. "
-                                    + "Message payload [{}].",
-                            internalMessage.getPayloadClass(),
-                            receiverRef,
-                            internalMessage.getSender(),
-                            messageToStringSerializer.serialize(message),
-                            e);
-                }
+                logException(message, receiverRef, internalMessage, messageToStringSerializer, e);
                 return false;
             }
         } catch (Exception e) {
-            log.error(
+            logger.error(
                     "Exception while Deserializing Message class [{}] in ActorSystem [{}]",
                     internalMessage.getPayloadClass(),
                     actorSystem.getName(),
                     e);
             return false;
+        }
+    }
+
+    private void logException(
+            Object message,
+            ActorRef receiverRef,
+            InternalMessage internalMessage,
+            MessageToStringSerializer messageToStringSerializer,
+            Exception e) {
+        if (logger.isErrorEnabled()) {
+            Message messageAnnotation = message.getClass().getAnnotation(Message.class);
+            if (messageAnnotation != null && messageAnnotation.loggable()) {
+                logger.error(
+                        "Exception while handling message of type [{}]. "
+                                + "Actor [{}]. "
+                                + "Sender [{}]. "
+                                + "Message payload [{}].",
+                        internalMessage.getPayloadClass(),
+                        receiverRef,
+                        internalMessage.getSender(),
+                        serializeToString(message, messageToStringSerializer),
+                        e);
+            } else {
+                logger.error(
+                        "Exception while handling message of type [{}]. "
+                                + "Actor [{}]. "
+                                + "Sender [{}].",
+                        internalMessage.getPayloadClass(),
+                        receiverRef,
+                        internalMessage.getSender(),
+                        e);
+            }
+        }
+    }
+
+    /**
+     * Safely serializes the contents of a message to a String
+     */
+    private String serializeToString(
+            Object message,
+            MessageToStringSerializer messageToStringSerializer) {
+        if (messageToStringSerializer == null) {
+            return null;
+        }
+        try {
+            return messageToStringSerializer.serialize(message);
+        } catch (Exception e) {
+            logger.error(
+                    "Exception thrown while serializing message of type [{}] to String",
+                    message.getClass().getName(),
+                    e);
+            return null;
         }
     }
 
@@ -142,7 +175,7 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                     actorSystem.getParent(),
                     message.getClass());
         } catch (Exception e) {
-            log.error(
+            logger.error(
                     "Unexpected exception resolving message string serializer for type [{}]",
                     message.getClass().getName(),
                     e);
@@ -162,7 +195,7 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                             .forEach(messageSubscriber -> messageSubscriber.getSubscriberRef().tell(nextMessage, receiverRef));
                 }
             } catch(Exception e) {
-                log.error("Unexpected exception while forwarding message to Subscribers", e);
+                logger.error("Unexpected exception while forwarding message to Subscribers", e);
             }
         }
     }

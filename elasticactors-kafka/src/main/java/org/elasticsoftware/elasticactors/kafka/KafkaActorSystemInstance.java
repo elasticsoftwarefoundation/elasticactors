@@ -35,6 +35,7 @@ import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.TempActor;
@@ -58,6 +59,7 @@ import org.elasticsoftware.elasticactors.kafka.cluster.KafkaInternalActorSystems
 import org.elasticsoftware.elasticactors.kafka.scheduler.KafkaTopicScheduler;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory;
 import org.elasticsoftware.elasticactors.kafka.utils.TopicHelper;
+import org.elasticsoftware.elasticactors.logging.LogLevel;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
@@ -114,19 +116,22 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
     private final KafkaTopicScheduler schedulerService;
     private final HashFunction hashFunction = Hashing.murmur3_32();
     private final ActorLifecycleListenerRegistry actorLifecycleListenerRegistry;
+    private final LogLevel onUnhandledLogLevel;
 
-    public KafkaActorSystemInstance(ElasticActorsNode node,
-                                    InternalActorSystemConfiguration configuration,
-                                    NodeSelectorFactory nodeSelectorFactory,
-                                    Integer numberOfShardThreads,
-                                    String bootstrapServers,
-                                    Cache<String,ActorRef> actorRefCache,
-                                    ShardActorCacheManager shardActorCacheManager,
-                                    NodeActorCacheManager nodeActorCacheManager,
-                                    Serializer<PersistentActor<ShardKey>, byte[]> stateSerializer,
-                                    Deserializer<byte[], PersistentActor<ShardKey>> stateDeserializer,
-                                    ActorLifecycleListenerRegistry actorLifecycleListenerRegistry,
-                                    PersistentActorStoreFactory persistentActorStoreFactory) {
+    public KafkaActorSystemInstance(
+            ElasticActorsNode node,
+            InternalActorSystemConfiguration configuration,
+            NodeSelectorFactory nodeSelectorFactory,
+            Integer numberOfShardThreads,
+            String bootstrapServers,
+            Cache<String, ActorRef> actorRefCache,
+            ShardActorCacheManager shardActorCacheManager,
+            NodeActorCacheManager nodeActorCacheManager,
+            Serializer<PersistentActor<ShardKey>, byte[]> stateSerializer,
+            Deserializer<byte[], PersistentActor<ShardKey>> stateDeserializer,
+            ActorLifecycleListenerRegistry actorLifecycleListenerRegistry,
+            PersistentActorStoreFactory persistentActorStoreFactory,
+            LogLevel onUnhandledLogLevel) {
         this.actorLifecycleListenerRegistry = actorLifecycleListenerRegistry;
         this.schedulerService = new KafkaTopicScheduler(this);
         this.localNode = node;
@@ -161,6 +166,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         for (int i = 1; i < shardThreads.length; i++) {
             shardThreads[i].assign(localActorNode, false);
         }
+        this.onUnhandledLogLevel = onUnhandledLogLevel;
     }
 
     @PostConstruct
@@ -213,19 +219,21 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
     @Override
     public ElasticActor getActorInstance(ActorRef actorRef, Class<? extends ElasticActor> actorClass) {
         // ensure the actor instance is created
-        ElasticActor actorInstance = actorInstances.get(actorClass);
-        if (actorInstance == null) {
+        return actorInstances.computeIfAbsent(actorClass, k -> {
             try {
-                actorInstance = actorClass.newInstance();
-                ElasticActor existingInstance = actorInstances.putIfAbsent(actorClass, actorInstance);
-                return existingInstance == null ? actorInstance : existingInstance;
+                ElasticActor actorInstance = actorClass.newInstance();
+                if (actorInstance instanceof MethodActor) {
+                    ((MethodActor) actorInstance).setOnUnhandledLogLevel(onUnhandledLogLevel);
+                }
+                return actorInstance;
             } catch (Exception e) {
-                logger.error("Exception creating actor instance for actorClass [{}]",actorClass.getName(), e);
+                logger.error(
+                        "Exception creating actor instance for actorClass [{}]",
+                        actorClass.getName(),
+                        e);
                 return null;
             }
-        } else {
-            return actorInstance;
-        }
+        });
     }
 
     @Override

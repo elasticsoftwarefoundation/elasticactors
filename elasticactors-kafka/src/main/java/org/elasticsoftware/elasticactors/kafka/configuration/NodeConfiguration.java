@@ -37,6 +37,7 @@ import org.elasticsoftware.elasticactors.kafka.KafkaActorSystemInstance;
 import org.elasticsoftware.elasticactors.kafka.serialization.CompressingSerializer;
 import org.elasticsoftware.elasticactors.kafka.serialization.DecompressingDeserializer;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory;
+import org.elasticsoftware.elasticactors.logging.LogLevel;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
@@ -57,6 +58,9 @@ import org.springframework.core.io.ResourceLoader;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.InetAddress;
+
+import static org.elasticsoftware.elasticactors.MethodActor.DEFAULT_UNHANDLED_LEVEL;
+import static org.elasticsoftware.elasticactors.MethodActor.LOGGING_UNHANDLED_LEVEL_PROPERTY;
 
 public class NodeConfiguration {
     @Autowired
@@ -100,15 +104,16 @@ public class NodeConfiguration {
         return configuration;
     }
 
-    @Bean(name = {"objectMapper"})
-    public ObjectMapper createObjectMapper() {
+    @Bean(name = {"objectMapperBuilder"})
+    public ObjectMapperBuilder createObjectMapperBuilder() {
         String basePackages = env.getProperty("ea.scan.packages",String.class,"");
         Boolean useAfterburner = env.getProperty("ea.base.useAfterburner",Boolean.class,Boolean.FALSE);
         ScheduledMessageRefFactory scheduledMessageRefFactory = refSpec -> ScheduledMessageRefTools.parse(refSpec, node);
         // @todo: fix version
-        ObjectMapperBuilder builder = new ObjectMapperBuilder(node,scheduledMessageRefFactory,"1.0.0",basePackages);
+        ObjectMapperBuilder builder =
+                new ObjectMapperBuilder(node, scheduledMessageRefFactory, basePackages, "1.0.0");
         builder.setUseAfterBurner(useAfterburner);
-        return builder.build();
+        return builder;
     }
 
     @Bean(name = "systemSerializationFramework")
@@ -155,9 +160,24 @@ public class NodeConfiguration {
         Deserializer<byte[],PersistentActor<ShardKey>> deserializer = new DecompressingDeserializer<>(new PersistentActorDeserializer(node, node));
         // NOTE: the node topic will be created with ea.shardThreads.workerCount number of partitions, changing this
         // value will require you to update the topic or face serious issues otherwise
-        return new KafkaActorSystemInstance(node, configuration, nodeSelectorFactory, workers, bootstrapServers,
-                actorRefCache, shardActorCacheManager, nodeActorCacheManager, serializer, deserializer,
-                actorLifecycleListenerRegistry, persistentActorStoreFactory);
+        LogLevel onUnhandledLogLevel = env.getProperty(
+                LOGGING_UNHANDLED_LEVEL_PROPERTY,
+                LogLevel.class,
+                DEFAULT_UNHANDLED_LEVEL);
+        return new KafkaActorSystemInstance(
+                node,
+                configuration,
+                nodeSelectorFactory,
+                workers,
+                bootstrapServers,
+                actorRefCache,
+                shardActorCacheManager,
+                nodeActorCacheManager,
+                serializer,
+                deserializer,
+                actorLifecycleListenerRegistry,
+                persistentActorStoreFactory,
+                onUnhandledLogLevel);
     }
 
     @Bean(name = {"internalActorSystemHealthCheck"})
