@@ -32,11 +32,11 @@
         <!-- TODO this md5 digest is for verion 3.11.4-->
         <cassandra.version.md5>40f49dc7dbcd49e2e18e2dead7dd074a</cassandra.version.md5>
         <hectorclient.version>2.0-0</hectorclient.version>
-        <spring.version>5.2.4.RELEASE</spring.version>
+        <spring.version>5.2.5.RELEASE</spring.version>
         <aspectj.version>1.9.5</aspectj.version>
         <protobuf.version>3.11.4</protobuf.version>
         <grizzly.version>2.4.4</grizzly.version>
-        <log4j.version>2.13.0</log4j.version>
+        <log4j.version>2.13.1</log4j.version>
         <!-- the cassandra driver has a hard dependency on this version -->
         <guava.version>19.0</guava.version>
         <jackson.version>2.10.3</jackson.version>
