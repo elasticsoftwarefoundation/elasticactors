@@ -17,6 +17,8 @@
 package org.elasticsoftware.elasticactors.spring;
 
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.context.ContextLoaderListener;
 
 import javax.servlet.ServletContextEvent;
@@ -25,6 +27,9 @@ import javax.servlet.ServletContextEvent;
  * @author Joost van de Wijgerd
  */
 public final class ElasticActorsContextLoaderListener extends ContextLoaderListener {
+
+    private final static Logger logger = LoggerFactory.getLogger(ElasticActorsContextLoaderListener.class);
+
     @Override
     public void contextInitialized(ServletContextEvent event) {
         // make sure everything is initialized
@@ -34,6 +39,7 @@ public final class ElasticActorsContextLoaderListener extends ContextLoaderListe
         try {
             clusterService.reportReady();
         } catch (Exception e) {
+            logger.error("Exception in ClusterService.reportReady()", e);
             throw new RuntimeException("Exception in ClusterService.reportReady()",e);
         }
     }

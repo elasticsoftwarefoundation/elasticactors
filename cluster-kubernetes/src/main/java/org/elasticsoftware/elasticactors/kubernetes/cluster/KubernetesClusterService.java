@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -54,7 +53,6 @@ public final class KubernetesClusterService implements ClusterService {
     private final ExecutorService clusterServiceExecutor =
             newSingleThreadExecutor(new DaemonThreadFactory("KUBERNETES_CLUSTER_SERVICE"));
     private final AtomicInteger currentTopology = new AtomicInteger();
-    private final AtomicBoolean shuttingDown = new AtomicBoolean();
     private final AtomicReference<Watch> currentWatch = new AtomicReference<>();
     private final Boolean useDesiredReplicas;
 
@@ -83,7 +81,6 @@ public final class KubernetesClusterService implements ClusterService {
 
     @PreDestroy
     public void destroy() {
-        shuttingDown.set(true);
         Watch watch = currentWatch.get();
         if (watch != null) {
             watch.close();
@@ -117,10 +114,17 @@ public final class KubernetesClusterService implements ClusterService {
     }
 
     private void watchStatefulSet() {
+        String resourceVersion = client.apps()
+                .statefulSets()
+                .inNamespace(namespace)
+                .list()
+                .getMetadata()
+                .getResourceVersion();
         currentWatch.set(client.apps()
                 .statefulSets()
                 .inNamespace(namespace)
                 .withName(name)
+                .withResourceVersion(resourceVersion)
                 .watch(watcher));
     }
 
@@ -157,8 +161,7 @@ public final class KubernetesClusterService implements ClusterService {
 
     @Override
     public void reportPlannedShutdown() {
-        // Acklowledge we're shutting down, silence Watcher error messages when scaling down
-        shuttingDown.set(true);
+        // do nothing
     }
 
     @Override
@@ -191,9 +194,9 @@ public final class KubernetesClusterService implements ClusterService {
 
         @Override
         public void onClose(KubernetesClientException cause) {
-            // try to re-add it if we're not shutting down
-            if (!shuttingDown.get()) {
-                logger.error("Watcher on statefulset {} was closed", name, cause);
+            // try to re-add it if it's an abnormal close
+            if (cause != null) {
+                logger.error("Watcher on StatefulSet {} was closed", name, cause);
                 watchStatefulSet();
             }
         }
