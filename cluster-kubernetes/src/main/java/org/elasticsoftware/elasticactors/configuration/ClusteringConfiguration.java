@@ -34,7 +34,7 @@ public class ClusteringConfiguration {
         Boolean useDesiredReplicas = env.getProperty(
                 "ea.cluster.kubernetes.useDesiredReplicas",
                 Boolean.class,
-                Boolean.FALSE);
+                Boolean.TRUE);
         return new KubernetesClusterService(namespace, name, nodeId, useDesiredReplicas);
     }
 }
