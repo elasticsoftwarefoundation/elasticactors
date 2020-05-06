@@ -40,6 +40,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.String.format;
+import static java.net.HttpURLConnection.HTTP_GONE;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 public final class KubernetesClusterService implements ClusterService {
@@ -126,6 +127,11 @@ public final class KubernetesClusterService implements ClusterService {
                 .withName(name)
                 .withResourceVersion(resourceVersion)
                 .watch(watcher));
+        logger.info(
+                "Watching StatefulSet {} on namespace {} for resource version {} ",
+                name,
+                namespace,
+                resourceVersion);
     }
 
     private void handleStatefulSetUpdate(StatefulSet resource) {
@@ -196,7 +202,14 @@ public final class KubernetesClusterService implements ClusterService {
         public void onClose(KubernetesClientException cause) {
             // try to re-add it if it's an abnormal close
             if (cause != null) {
-                logger.error("Watcher on StatefulSet {} was closed", name, cause);
+                if (cause.getCode() == HTTP_GONE) {
+                    logger.info(
+                            "Watcher on StatefulSet {} was closed. Reason: {} ",
+                            name,
+                            cause.getMessage());
+                } else {
+                    logger.error("Watcher on StatefulSet {} was closed", name, cause);
+                }
                 watchStatefulSet();
             }
         }
