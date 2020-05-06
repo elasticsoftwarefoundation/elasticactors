@@ -128,7 +128,7 @@ public final class KubernetesClusterService implements ClusterService {
                 .withResourceVersion(resourceVersion)
                 .watch(watcher));
         logger.info(
-                "Watching StatefulSet {} on namespace {} for resource version {} ",
+                "Watching StatefulSet {} on namespace {} for resource version {}",
                 name,
                 namespace,
                 resourceVersion);
