@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
@@ -96,6 +97,7 @@ public final class ActivateServiceActorTask implements ThreadBoundRunnable<Strin
     public void run() {
         Exception executionException = null;
         InternalActorContext.setContext(this);
+        TraceContext.enter(internalMessage);
         try {
             serviceActor.postActivate(null);
         } catch(Exception e) {
@@ -104,6 +106,7 @@ public final class ActivateServiceActorTask implements ThreadBoundRunnable<Strin
             executionException = e;
         } finally {
             InternalActorContext.getAndClearContext();
+            TraceContext.leave();
         }
         if(messageHandlerEventListener != null) {
             if(executionException == null) {

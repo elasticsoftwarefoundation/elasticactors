@@ -20,7 +20,7 @@ import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
-import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
+import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
 
 import java.util.concurrent.TimeUnit;
 
@@ -36,13 +36,25 @@ public final class ScheduledMessageSerializer implements Serializer<ScheduledMes
 
     @Override
     public byte[] serialize(ScheduledMessage scheduledMessage) {
-        Elasticactors.ScheduledMessage.Builder builder = Elasticactors.ScheduledMessage.newBuilder();
+        Messaging.ScheduledMessage.Builder builder = Messaging.ScheduledMessage.newBuilder();
         builder.setId(ByteString.copyFrom(UUIDTools.toByteArray(scheduledMessage.getId())));
         builder.setFireTime(scheduledMessage.getFireTime(TimeUnit.MILLISECONDS));
         builder.setMessageClass(scheduledMessage.getMessageClass().getName());
         builder.setSender(scheduledMessage.getSender().toString());
         builder.setReceiver(scheduledMessage.getReceiver().toString());
         builder.setMessage(ByteString.copyFrom(scheduledMessage.getMessageBytes()));
+        if (scheduledMessage.getRealSender() != null) {
+            builder.setRealSender(scheduledMessage.getRealSender());
+        }
+        if (scheduledMessage.getTraceData() != null) {
+            Messaging.TraceData.Builder traceDataBuilder = Messaging.TraceData.newBuilder();
+            traceDataBuilder.setSpanId(scheduledMessage.getTraceData().getSpanId());
+            traceDataBuilder.setTraceId(scheduledMessage.getTraceData().getTraceId());
+            if (scheduledMessage.getTraceData().getParentSpanId() != null) {
+                traceDataBuilder.setParentSpanId(scheduledMessage.getTraceData().getParentSpanId());
+            }
+            builder.setTraceData(traceDataBuilder);
+        }
         return builder.build().toByteArray();
     }
 

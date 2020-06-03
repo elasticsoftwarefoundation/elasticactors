@@ -24,6 +24,7 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.serialization.Message;
@@ -111,6 +112,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         }
         Exception executionException = null;
         InternalActorContext.setContext(this);
+        TraceContext.enter(internalMessage);
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
             MessageToStringSerializer messageToStringSerializer = getStringSerializer(message);
@@ -136,6 +138,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
             executionException = e;
         } finally {
             InternalActorContext.getAndClearContext();
+            TraceContext.leave();
         }
         // marks the end of the execution path
         if(this.measurement != null) {

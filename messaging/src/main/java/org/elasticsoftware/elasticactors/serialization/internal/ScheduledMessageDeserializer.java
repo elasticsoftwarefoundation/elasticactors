@@ -18,10 +18,11 @@ package org.elasticsoftware.elasticactors.serialization.internal;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
-import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageImpl;
+import org.elasticsoftware.elasticactors.messaging.ScheduledMessageImpl;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
-import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
+import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
+import org.elasticsoftware.elasticactors.tracing.TraceData;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -39,14 +40,27 @@ public final class ScheduledMessageDeserializer implements Deserializer<byte[],S
     @Override
     public ScheduledMessage deserialize(byte[] serializedObject) throws IOException {
         try {
-            Elasticactors.ScheduledMessage protobufMessage = Elasticactors.ScheduledMessage.parseFrom(serializedObject);
+            Messaging.ScheduledMessage protobufMessage = Messaging.ScheduledMessage.parseFrom(serializedObject);
             ActorRef sender = protobufMessage.getSender() != null && !protobufMessage.getSender().isEmpty() ? actorRefDeserializer.deserialize(protobufMessage.getSender()) : null;
             ActorRef receiver = actorRefDeserializer.deserialize(protobufMessage.getReceiver());
             Class messageClass = Class.forName(protobufMessage.getMessageClass());
             byte[] messageBytes = protobufMessage.getMessage().toByteArray();
             UUID id = UUIDTools.toUUID(protobufMessage.getId().toByteArray());
             long fireTime = protobufMessage.getFireTime();
-            return new ScheduledMessageImpl(id,fireTime,sender,receiver,messageClass,messageBytes);
+            String realSender = protobufMessage.getRealSender();
+            TraceData traceData = new TraceData(
+                    protobufMessage.getTraceData().getSpanId(),
+                    protobufMessage.getTraceData().getTraceId(),
+                    protobufMessage.getTraceData().getParentSpanId());
+            return new ScheduledMessageImpl(
+                    id,
+                    fireTime,
+                    sender,
+                    receiver,
+                    messageClass,
+                    messageBytes,
+                    realSender,
+                    traceData);
         } catch(ClassNotFoundException e) {
             throw new IOException(e);
         }

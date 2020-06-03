@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
@@ -98,6 +99,7 @@ public final class HandleUndeliverableServiceMessageTask implements ThreadBoundR
     public final void run() {
         Exception executionException = null;
         InternalActorContext.setContext(this);
+        TraceContext.enter(internalMessage);
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
             serviceActor.onUndeliverable(internalMessage.getSender(), message);
@@ -107,6 +109,7 @@ public final class HandleUndeliverableServiceMessageTask implements ThreadBoundR
             executionException = e;
         } finally {
             InternalActorContext.getAndClearContext();
+            TraceContext.leave();
         }
         if(messageHandlerEventListener != null) {
             if(executionException == null) {

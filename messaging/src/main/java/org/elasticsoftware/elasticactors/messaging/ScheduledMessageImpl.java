@@ -14,12 +14,16 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.cluster.scheduler;
+package org.elasticsoftware.elasticactors.messaging;
 
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.messaging.UUIDTools;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.tracing.TraceData;
+import org.elasticsoftware.elasticactors.tracing.TraceDataHolder;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.UUID;
@@ -37,12 +41,40 @@ public final class ScheduledMessageImpl implements ScheduledMessage {
     private final Class messageClass;
     private final byte[] messageBytes;
     private final ScheduledMessageKey key;
+    private final String realSender;
+    private final TraceData traceData;
 
     public ScheduledMessageImpl(long fireTime, ActorRef sender, ActorRef receiver, Class messageClass,byte[] messageBytes) {
         this(UUIDTools.createTimeBasedUUID(),fireTime,sender,receiver, messageClass, messageBytes);
     }
 
-    public ScheduledMessageImpl(UUID id, long fireTime, ActorRef sender, ActorRef receiver, Class messageClass, byte[] messageBytes) {
+    private ScheduledMessageImpl(
+            UUID id,
+            long fireTime,
+            ActorRef sender,
+            ActorRef receiver,
+            Class messageClass,
+            byte[] messageBytes) {
+        this(
+                id,
+                fireTime,
+                sender,
+                receiver,
+                messageClass,
+                messageBytes,
+                TracingHelper.findRealSender(),
+                new TraceData(TraceDataHolder.currentTraceData()));
+    }
+
+    public ScheduledMessageImpl(
+            UUID id,
+            long fireTime,
+            ActorRef sender,
+            ActorRef receiver,
+            Class messageClass,
+            byte[] messageBytes,
+            String realSender,
+            TraceData traceData) {
         this.id = id;
         this.fireTime = fireTime;
         this.sender = sender;
@@ -50,6 +82,8 @@ public final class ScheduledMessageImpl implements ScheduledMessage {
         this.messageClass = messageClass;
         this.messageBytes = messageBytes;
         this.key = new ScheduledMessageKey(id, fireTime);
+        this.realSender = realSender;
+        this.traceData = traceData;
     }
 
     /**
@@ -108,6 +142,18 @@ public final class ScheduledMessageImpl implements ScheduledMessage {
     @Override
     public long getDelay(TimeUnit unit) {
         return unit.convert(fireTime - now(),TimeUnit.MILLISECONDS);
+    }
+
+    @Nullable
+    @Override
+    public String getRealSender() {
+        return realSender;
+    }
+
+    @Nullable
+    @Override
+    public TraceData getTraceData() {
+        return traceData;
     }
 
     @Override

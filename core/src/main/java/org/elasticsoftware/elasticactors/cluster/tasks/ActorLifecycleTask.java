@@ -22,6 +22,7 @@ import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
@@ -94,6 +95,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         Exception executionException = null;
         InternalActorContext.setContext(persistentActor);
         SerializationContext.initialize();
+        TraceContext.enter(internalMessage);
         boolean shouldUpdateState = false;
         try {
             shouldUpdateState = doInActorContext(actorSystem, receiver, receiverRef, internalMessage);
@@ -106,6 +108,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             SerializationContext.reset();
             // clear the state from the thread
             InternalActorContext.getAndClearContext();
+            TraceContext.leave();
             // marks the end of the execution path
             if(this.measurement != null) {
                 this.measurement.setExecutionEnd(System.nanoTime());

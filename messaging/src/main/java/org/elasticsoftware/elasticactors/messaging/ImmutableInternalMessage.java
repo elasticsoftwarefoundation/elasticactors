@@ -20,7 +20,10 @@ import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
+import org.elasticsoftware.elasticactors.tracing.TraceData;
+import org.elasticsoftware.elasticactors.tracing.TraceDataHolder;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
@@ -39,7 +42,8 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
     private final boolean undeliverable;
     private final int timeout;
     private transient byte[] serializedForm;
-
+    private final String realSender;
+    private final TraceData traceData;
 
     public ImmutableInternalMessage(ActorRef sender, ActorRef receiver, ByteBuffer payload, Object payloadObject, boolean durable) {
         this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadObject,durable,false);
@@ -57,14 +61,39 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
         this(id, sender, ImmutableList.of(receiver), payload, payloadObject, durable, undeliverable, NO_TIMEOUT);
     }
 
-    public ImmutableInternalMessage(UUID id,
-                                    ActorRef sender,
-                                    ImmutableList<ActorRef> receivers,
-                                    ByteBuffer payload,
-                                    Object payloadObject,
-                                    boolean durable,
-                                    boolean undeliverable,
-                                    int timeout) {
+    private ImmutableInternalMessage(
+            UUID id,
+            ActorRef sender,
+            ImmutableList<ActorRef> receivers,
+            ByteBuffer payload,
+            Object payloadObject,
+            boolean durable,
+            boolean undeliverable,
+            int timeout) {
+        this(
+                id,
+                sender,
+                receivers,
+                payload,
+                payloadObject,
+                durable,
+                undeliverable,
+                timeout,
+                TracingHelper.findRealSender(),
+                new TraceData(TraceDataHolder.currentTraceData()));
+    }
+
+    public ImmutableInternalMessage(
+            UUID id,
+            ActorRef sender,
+            ImmutableList<ActorRef> receivers,
+            ByteBuffer payload,
+            Object payloadObject,
+            boolean durable,
+            boolean undeliverable,
+            int timeout,
+            String realSender,
+            TraceData traceData) {
         this.sender = sender;
         this.receivers = receivers;
         this.id = id;
@@ -73,6 +102,8 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
         this.durable = durable;
         this.undeliverable = undeliverable;
         this.timeout = timeout;
+        this.realSender = realSender;
+        this.traceData = traceData;
     }
 
     public ActorRef getSender() {
@@ -128,5 +159,17 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
     @Override
     public InternalMessage copyOf() {
         return this;
+    }
+
+    @Override
+    @Nullable
+    public String getRealSender() {
+        return realSender;
+    }
+
+    @Nullable
+    @Override
+    public TraceData getTraceData() {
+        return traceData;
     }
 }
