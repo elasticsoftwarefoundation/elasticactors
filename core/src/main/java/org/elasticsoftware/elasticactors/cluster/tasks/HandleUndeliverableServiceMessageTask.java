@@ -66,6 +66,11 @@ public final class HandleUndeliverableServiceMessageTask implements ThreadBoundR
     }
 
     @Override
+    public String getSelfType() {
+        return serviceActor != null ? serviceActor.getClass().getName() : null;
+    }
+
+    @Override
     public <T extends ActorState> T getState(Class<T> stateClass) {
         return null;
     }
@@ -99,7 +104,7 @@ public final class HandleUndeliverableServiceMessageTask implements ThreadBoundR
     public final void run() {
         Exception executionException = null;
         InternalActorContext.setContext(this);
-        TraceContext.enter(this, serviceActor, internalMessage);
+        TraceContext.enter(internalMessage);
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
             serviceActor.onUndeliverable(internalMessage.getSender(), message);

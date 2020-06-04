@@ -19,8 +19,10 @@ package org.elasticsoftware.elasticactors.messaging;
 import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.tracing.RealSenderData;
 import org.elasticsoftware.elasticactors.tracing.TraceData;
 import org.elasticsoftware.elasticactors.tracing.TraceDataHolder;
+import org.elasticsoftware.elasticactors.util.TracingHelper;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -37,7 +39,7 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
     private final UUID id;
     private final Object payload;
     private final boolean undeliverable;
-    private final String realSender;
+    private final RealSenderData realSenderData;
     private final TraceData traceData;
 
     public TransientInternalMessage(ActorRef sender, ActorRef receiver, Object payload) {
@@ -71,14 +73,14 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
             ImmutableList<ActorRef> receivers,
             Object payload,
             boolean undeliverable,
-            String realSender,
+            RealSenderData realSenderData,
             TraceData traceData) {
         this.sender = sender;
         this.receivers = receivers;
         this.id = UUIDTools.createTimeBasedUUID();
         this.payload = payload;
         this.undeliverable = undeliverable;
-        this.realSender = realSender;
+        this.realSenderData = realSenderData;
         this.traceData = traceData;
     }
 
@@ -136,8 +138,8 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
 
     @Nullable
     @Override
-    public String getRealSender() {
-        return realSender;
+    public RealSenderData getRealSenderData() {
+        return realSenderData;
     }
 
     @Nullable

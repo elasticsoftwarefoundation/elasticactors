@@ -18,7 +18,13 @@ package org.elasticsoftware.elasticactors.cluster.scheduler;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.cluster.tracing.ExternalRealSenderDataContext;
+import org.elasticsoftware.elasticactors.cluster.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
+import org.elasticsoftware.elasticactors.tracing.RealSenderData;
+import org.elasticsoftware.elasticactors.tracing.TraceData;
+import org.elasticsoftware.elasticactors.tracing.TraceDataHolder;
+import org.elasticsoftware.elasticactors.util.TracingHelper;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +47,8 @@ import java.util.concurrent.TimeUnit;
 public final class SimpleScheduler implements SchedulerService,ScheduledMessageRefFactory {
     private static final Logger logger = LoggerFactory.getLogger(SimpleScheduler.class);
     private ScheduledExecutorService scheduledExecutorService;
-    private final ConcurrentMap<String,ScheduledFuture> scheduledFutures = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, ScheduledFuture<?>> scheduledFutures =
+            new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init() {
@@ -86,23 +93,30 @@ public final class SimpleScheduler implements SchedulerService,ScheduledMessageR
     private final class TellActorTask implements Runnable {
         private final String id;
         private final ActorRef sender;
-        private final ActorRef reciever;
+        private final ActorRef receiver;
         private final Object message;
+        private final TraceData traceData = TraceDataHolder.currentTraceData();
+        private final RealSenderData realSender = TracingHelper.findRealSender();
 
-        private TellActorTask(String id, ActorRef sender, ActorRef reciever, Object message) {
+        private TellActorTask(String id, ActorRef sender, ActorRef receiver, Object message) {
             this.id = id;
             this.sender = sender;
-            this.reciever = reciever;
+            this.receiver = receiver;
             this.message = message;
         }
 
         @Override
         public void run() {
             try {
-                reciever.tell(message,sender);
+                TraceContext.enterTraceDataOnlyContext(traceData);
+                ExternalRealSenderDataContext.enter(realSender);
+                receiver.tell(message,sender);
                 scheduledFutures.remove(id);
             } catch (Exception e) {
                 logger.error("Exception sending scheduled messsage",e);
+            } finally {
+                TraceContext.leaveTraceDataOnlyContext();
+                ExternalRealSenderDataContext.leave();
             }
         }
     }

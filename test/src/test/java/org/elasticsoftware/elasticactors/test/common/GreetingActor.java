@@ -22,6 +22,8 @@ import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.base.state.StringState;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
@@ -30,9 +32,10 @@ import java.util.concurrent.TimeUnit;
  */
 @Actor(stateClass = StringState.class,serializationFramework = JacksonSerializationFramework.class)
 public class GreetingActor extends TypedActor<Greeting> {
+    private static final Logger logger = LoggerFactory.getLogger(GreetingActor.class);
     @Override
     public void onReceive(ActorRef sender, Greeting message) throws Exception {
-        System.out.println("Hello " + message.getWho());
+        logger.info("Hello, {}", message.getWho());
         ScheduledMessageRef messageRef = getSystem().getScheduler().scheduleOnce(getSelf(),new Greeting("Greeting Actor"),sender,1, TimeUnit.SECONDS);
         sender.tell(new ScheduledGreeting(messageRef));
     }

@@ -43,8 +43,19 @@ public final class ScheduledMessageSerializer implements Serializer<ScheduledMes
         builder.setSender(scheduledMessage.getSender().toString());
         builder.setReceiver(scheduledMessage.getReceiver().toString());
         builder.setMessage(ByteString.copyFrom(scheduledMessage.getMessageBytes()));
-        if (scheduledMessage.getRealSender() != null) {
-            builder.setRealSender(scheduledMessage.getRealSender());
+        if (scheduledMessage.getRealSenderData() != null
+                && !scheduledMessage.getRealSenderData().isEmpty()) {
+            Messaging.RealSenderData.Builder realSenderDataBuilder =
+                    Messaging.RealSenderData.newBuilder();
+            if (scheduledMessage.getRealSenderData().getRealSender() != null) {
+                realSenderDataBuilder.setRealSender(
+                        scheduledMessage.getRealSenderData().getRealSender());
+            }
+            if (scheduledMessage.getRealSenderData().getRealSenderType() != null) {
+                realSenderDataBuilder.setRealSenderType(
+                        scheduledMessage.getRealSenderData().getRealSenderType());
+            }
+            builder.setRealSenderData(realSenderDataBuilder);
         }
         if (scheduledMessage.getTraceData() != null) {
             Messaging.TraceData.Builder traceDataBuilder = Messaging.TraceData.newBuilder();

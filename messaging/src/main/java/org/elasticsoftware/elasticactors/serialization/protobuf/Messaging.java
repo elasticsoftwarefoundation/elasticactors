@@ -1040,6 +1040,754 @@ public final class Messaging {
 
   }
 
+  public interface RealSenderDataOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional string realSender = 1;</code>
+     */
+    boolean hasRealSender();
+    /**
+     * <code>optional string realSender = 1;</code>
+     */
+    java.lang.String getRealSender();
+    /**
+     * <code>optional string realSender = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getRealSenderBytes();
+
+    /**
+     * <code>optional string realSenderType = 2;</code>
+     */
+    boolean hasRealSenderType();
+    /**
+     * <code>optional string realSenderType = 2;</code>
+     */
+    java.lang.String getRealSenderType();
+    /**
+     * <code>optional string realSenderType = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getRealSenderTypeBytes();
+  }
+  /**
+   * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData}
+   */
+  public  static final class RealSenderData extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData)
+      RealSenderDataOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use RealSenderData.newBuilder() to construct.
+    private RealSenderData(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private RealSenderData() {
+      realSender_ = "";
+      realSenderType_ = "";
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private RealSenderData(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              realSender_ = bs;
+              break;
+            }
+            case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000002;
+              realSenderType_ = bs;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RealSenderData_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RealSenderData_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.class, org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int REALSENDER_FIELD_NUMBER = 1;
+    private volatile java.lang.Object realSender_;
+    /**
+     * <code>optional string realSender = 1;</code>
+     */
+    public boolean hasRealSender() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional string realSender = 1;</code>
+     */
+    public java.lang.String getRealSender() {
+      java.lang.Object ref = realSender_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          realSender_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string realSender = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getRealSenderBytes() {
+      java.lang.Object ref = realSender_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        realSender_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int REALSENDERTYPE_FIELD_NUMBER = 2;
+    private volatile java.lang.Object realSenderType_;
+    /**
+     * <code>optional string realSenderType = 2;</code>
+     */
+    public boolean hasRealSenderType() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string realSenderType = 2;</code>
+     */
+    public java.lang.String getRealSenderType() {
+      java.lang.Object ref = realSenderType_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          realSenderType_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string realSenderType = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getRealSenderTypeBytes() {
+      java.lang.Object ref = realSenderType_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        realSenderType_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, realSender_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, realSenderType_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, realSender_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, realSenderType_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData)) {
+        return super.equals(obj);
+      }
+      org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData other = (org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData) obj;
+
+      boolean result = true;
+      result = result && (hasRealSender() == other.hasRealSender());
+      if (hasRealSender()) {
+        result = result && getRealSender()
+            .equals(other.getRealSender());
+      }
+      result = result && (hasRealSenderType() == other.hasRealSenderType());
+      if (hasRealSenderType()) {
+        result = result && getRealSenderType()
+            .equals(other.getRealSenderType());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasRealSender()) {
+        hash = (37 * hash) + REALSENDER_FIELD_NUMBER;
+        hash = (53 * hash) + getRealSender().hashCode();
+      }
+      if (hasRealSenderType()) {
+        hash = (37 * hash) + REALSENDERTYPE_FIELD_NUMBER;
+        hash = (53 * hash) + getRealSenderType().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData)
+        org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderDataOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RealSenderData_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RealSenderData_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.class, org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.Builder.class);
+      }
+
+      // Construct using org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        realSender_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        realSenderType_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RealSenderData_descriptor;
+      }
+
+      @java.lang.Override
+      public org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData getDefaultInstanceForType() {
+        return org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData build() {
+        org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData buildPartial() {
+        org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData result = new org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.realSender_ = realSender_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.realSenderType_ = realSenderType_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData) {
+          return mergeFrom((org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData other) {
+        if (other == org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.getDefaultInstance()) return this;
+        if (other.hasRealSender()) {
+          bitField0_ |= 0x00000001;
+          realSender_ = other.realSender_;
+          onChanged();
+        }
+        if (other.hasRealSenderType()) {
+          bitField0_ |= 0x00000002;
+          realSenderType_ = other.realSenderType_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.lang.Object realSender_ = "";
+      /**
+       * <code>optional string realSender = 1;</code>
+       */
+      public boolean hasRealSender() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional string realSender = 1;</code>
+       */
+      public java.lang.String getRealSender() {
+        java.lang.Object ref = realSender_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            realSender_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string realSender = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getRealSenderBytes() {
+        java.lang.Object ref = realSender_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          realSender_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string realSender = 1;</code>
+       */
+      public Builder setRealSender(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        realSender_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string realSender = 1;</code>
+       */
+      public Builder clearRealSender() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        realSender_ = getDefaultInstance().getRealSender();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string realSender = 1;</code>
+       */
+      public Builder setRealSenderBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        realSender_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object realSenderType_ = "";
+      /**
+       * <code>optional string realSenderType = 2;</code>
+       */
+      public boolean hasRealSenderType() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string realSenderType = 2;</code>
+       */
+      public java.lang.String getRealSenderType() {
+        java.lang.Object ref = realSenderType_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            realSenderType_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string realSenderType = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getRealSenderTypeBytes() {
+        java.lang.Object ref = realSenderType_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          realSenderType_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string realSenderType = 2;</code>
+       */
+      public Builder setRealSenderType(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        realSenderType_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string realSenderType = 2;</code>
+       */
+      public Builder clearRealSenderType() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        realSenderType_ = getDefaultInstance().getRealSenderType();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string realSenderType = 2;</code>
+       */
+      public Builder setRealSenderTypeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        realSenderType_ = value;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData)
+    }
+
+    // @@protoc_insertion_point(class_scope:org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData)
+    private static final org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData();
+    }
+
+    public static org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<RealSenderData>
+        PARSER = new com.google.protobuf.AbstractParser<RealSenderData>() {
+      @java.lang.Override
+      public RealSenderData parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new RealSenderData(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<RealSenderData> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<RealSenderData> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface ScheduledMessageOrBuilder extends
       // @@protoc_insertion_point(interface_extends:org.elasticsoftware.elasticactors.serialization.protobuf.ScheduledMessage)
       com.google.protobuf.MessageOrBuilder {
@@ -1114,18 +1862,17 @@ public final class Messaging {
     com.google.protobuf.ByteString getMessage();
 
     /**
-     * <code>optional string realSender = 7;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 7;</code>
      */
-    boolean hasRealSender();
+    boolean hasRealSenderData();
     /**
-     * <code>optional string realSender = 7;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 7;</code>
      */
-    java.lang.String getRealSender();
+    org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData getRealSenderData();
     /**
-     * <code>optional string realSender = 7;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 7;</code>
      */
-    com.google.protobuf.ByteString
-        getRealSenderBytes();
+    org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderDataOrBuilder getRealSenderDataOrBuilder();
 
     /**
      * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.TraceData traceData = 8;</code>
@@ -1159,7 +1906,6 @@ public final class Messaging {
       sender_ = "";
       messageClass_ = "";
       message_ = com.google.protobuf.ByteString.EMPTY;
-      realSender_ = "";
     }
 
     @java.lang.Override
@@ -1220,9 +1966,16 @@ public final class Messaging {
               break;
             }
             case 58: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000040) == 0x00000040)) {
+                subBuilder = realSenderData_.toBuilder();
+              }
+              realSenderData_ = input.readMessage(org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(realSenderData_);
+                realSenderData_ = subBuilder.buildPartial();
+              }
               bitField0_ |= 0x00000040;
-              realSender_ = bs;
               break;
             }
             case 66: {
@@ -1442,46 +2195,25 @@ public final class Messaging {
       return message_;
     }
 
-    public static final int REALSENDER_FIELD_NUMBER = 7;
-    private volatile java.lang.Object realSender_;
+    public static final int REALSENDERDATA_FIELD_NUMBER = 7;
+    private org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData realSenderData_;
     /**
-     * <code>optional string realSender = 7;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 7;</code>
      */
-    public boolean hasRealSender() {
+    public boolean hasRealSenderData() {
       return ((bitField0_ & 0x00000040) == 0x00000040);
     }
     /**
-     * <code>optional string realSender = 7;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 7;</code>
      */
-    public java.lang.String getRealSender() {
-      java.lang.Object ref = realSender_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          realSender_ = s;
-        }
-        return s;
-      }
+    public org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData getRealSenderData() {
+      return realSenderData_ == null ? org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.getDefaultInstance() : realSenderData_;
     }
     /**
-     * <code>optional string realSender = 7;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 7;</code>
      */
-    public com.google.protobuf.ByteString
-        getRealSenderBytes() {
-      java.lang.Object ref = realSender_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        realSender_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
+    public org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderDataOrBuilder getRealSenderDataOrBuilder() {
+      return realSenderData_ == null ? org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.getDefaultInstance() : realSenderData_;
     }
 
     public static final int TRACEDATA_FIELD_NUMBER = 8;
@@ -1544,7 +2276,7 @@ public final class Messaging {
         output.writeBytes(6, message_);
       }
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, realSender_);
+        output.writeMessage(7, getRealSenderData());
       }
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeMessage(8, getTraceData());
@@ -1580,7 +2312,8 @@ public final class Messaging {
           .computeBytesSize(6, message_);
       }
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, realSender_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(7, getRealSenderData());
       }
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
@@ -1632,10 +2365,10 @@ public final class Messaging {
         result = result && getMessage()
             .equals(other.getMessage());
       }
-      result = result && (hasRealSender() == other.hasRealSender());
-      if (hasRealSender()) {
-        result = result && getRealSender()
-            .equals(other.getRealSender());
+      result = result && (hasRealSenderData() == other.hasRealSenderData());
+      if (hasRealSenderData()) {
+        result = result && getRealSenderData()
+            .equals(other.getRealSenderData());
       }
       result = result && (hasTraceData() == other.hasTraceData());
       if (hasTraceData()) {
@@ -1678,9 +2411,9 @@ public final class Messaging {
         hash = (37 * hash) + MESSAGE_FIELD_NUMBER;
         hash = (53 * hash) + getMessage().hashCode();
       }
-      if (hasRealSender()) {
-        hash = (37 * hash) + REALSENDER_FIELD_NUMBER;
-        hash = (53 * hash) + getRealSender().hashCode();
+      if (hasRealSenderData()) {
+        hash = (37 * hash) + REALSENDERDATA_FIELD_NUMBER;
+        hash = (53 * hash) + getRealSenderData().hashCode();
       }
       if (hasTraceData()) {
         hash = (37 * hash) + TRACEDATA_FIELD_NUMBER;
@@ -1814,6 +2547,7 @@ public final class Messaging {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
+          getRealSenderDataFieldBuilder();
           getTraceDataFieldBuilder();
         }
       }
@@ -1832,7 +2566,11 @@ public final class Messaging {
         bitField0_ = (bitField0_ & ~0x00000010);
         message_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000020);
-        realSender_ = "";
+        if (realSenderDataBuilder_ == null) {
+          realSenderData_ = null;
+        } else {
+          realSenderDataBuilder_.clear();
+        }
         bitField0_ = (bitField0_ & ~0x00000040);
         if (traceDataBuilder_ == null) {
           traceData_ = null;
@@ -1895,7 +2633,11 @@ public final class Messaging {
         if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
           to_bitField0_ |= 0x00000040;
         }
-        result.realSender_ = realSender_;
+        if (realSenderDataBuilder_ == null) {
+          result.realSenderData_ = realSenderData_;
+        } else {
+          result.realSenderData_ = realSenderDataBuilder_.build();
+        }
         if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
           to_bitField0_ |= 0x00000080;
         }
@@ -1977,10 +2719,8 @@ public final class Messaging {
         if (other.hasMessage()) {
           setMessage(other.getMessage());
         }
-        if (other.hasRealSender()) {
-          bitField0_ |= 0x00000040;
-          realSender_ = other.realSender_;
-          onChanged();
+        if (other.hasRealSenderData()) {
+          mergeRealSenderData(other.getRealSenderData());
         }
         if (other.hasTraceData()) {
           mergeTraceData(other.getTraceData());
@@ -2350,80 +3090,122 @@ public final class Messaging {
         return this;
       }
 
-      private java.lang.Object realSender_ = "";
+      private org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData realSenderData_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData, org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.Builder, org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderDataOrBuilder> realSenderDataBuilder_;
       /**
-       * <code>optional string realSender = 7;</code>
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 7;</code>
        */
-      public boolean hasRealSender() {
+      public boolean hasRealSenderData() {
         return ((bitField0_ & 0x00000040) == 0x00000040);
       }
       /**
-       * <code>optional string realSender = 7;</code>
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 7;</code>
        */
-      public java.lang.String getRealSender() {
-        java.lang.Object ref = realSender_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            realSender_ = s;
+      public org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData getRealSenderData() {
+        if (realSenderDataBuilder_ == null) {
+          return realSenderData_ == null ? org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.getDefaultInstance() : realSenderData_;
+        } else {
+          return realSenderDataBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 7;</code>
+       */
+      public Builder setRealSenderData(org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData value) {
+        if (realSenderDataBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
           }
-          return s;
+          realSenderData_ = value;
+          onChanged();
         } else {
-          return (java.lang.String) ref;
+          realSenderDataBuilder_.setMessage(value);
         }
-      }
-      /**
-       * <code>optional string realSender = 7;</code>
-       */
-      public com.google.protobuf.ByteString
-          getRealSenderBytes() {
-        java.lang.Object ref = realSender_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          realSender_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>optional string realSender = 7;</code>
-       */
-      public Builder setRealSender(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000040;
-        realSender_ = value;
-        onChanged();
+        bitField0_ |= 0x00000040;
         return this;
       }
       /**
-       * <code>optional string realSender = 7;</code>
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 7;</code>
        */
-      public Builder clearRealSender() {
+      public Builder setRealSenderData(
+          org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.Builder builderForValue) {
+        if (realSenderDataBuilder_ == null) {
+          realSenderData_ = builderForValue.build();
+          onChanged();
+        } else {
+          realSenderDataBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000040;
+        return this;
+      }
+      /**
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 7;</code>
+       */
+      public Builder mergeRealSenderData(org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData value) {
+        if (realSenderDataBuilder_ == null) {
+          if (((bitField0_ & 0x00000040) == 0x00000040) &&
+              realSenderData_ != null &&
+              realSenderData_ != org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.getDefaultInstance()) {
+            realSenderData_ =
+              org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.newBuilder(realSenderData_).mergeFrom(value).buildPartial();
+          } else {
+            realSenderData_ = value;
+          }
+          onChanged();
+        } else {
+          realSenderDataBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000040;
+        return this;
+      }
+      /**
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 7;</code>
+       */
+      public Builder clearRealSenderData() {
+        if (realSenderDataBuilder_ == null) {
+          realSenderData_ = null;
+          onChanged();
+        } else {
+          realSenderDataBuilder_.clear();
+        }
         bitField0_ = (bitField0_ & ~0x00000040);
-        realSender_ = getDefaultInstance().getRealSender();
-        onChanged();
         return this;
       }
       /**
-       * <code>optional string realSender = 7;</code>
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 7;</code>
        */
-      public Builder setRealSenderBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000040;
-        realSender_ = value;
+      public org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.Builder getRealSenderDataBuilder() {
+        bitField0_ |= 0x00000040;
         onChanged();
-        return this;
+        return getRealSenderDataFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 7;</code>
+       */
+      public org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderDataOrBuilder getRealSenderDataOrBuilder() {
+        if (realSenderDataBuilder_ != null) {
+          return realSenderDataBuilder_.getMessageOrBuilder();
+        } else {
+          return realSenderData_ == null ?
+              org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.getDefaultInstance() : realSenderData_;
+        }
+      }
+      /**
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 7;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData, org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.Builder, org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderDataOrBuilder> 
+          getRealSenderDataFieldBuilder() {
+        if (realSenderDataBuilder_ == null) {
+          realSenderDataBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData, org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.Builder, org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderDataOrBuilder>(
+                  getRealSenderData(),
+                  getParentForChildren(),
+                  isClean());
+          realSenderData_ = null;
+        }
+        return realSenderDataBuilder_;
       }
 
       private org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.TraceData traceData_ = null;
@@ -2707,18 +3489,17 @@ public final class Messaging {
     int getTimeout();
 
     /**
-     * <code>optional string realSender = 10;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 10;</code>
      */
-    boolean hasRealSender();
+    boolean hasRealSenderData();
     /**
-     * <code>optional string realSender = 10;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 10;</code>
      */
-    java.lang.String getRealSender();
+    org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData getRealSenderData();
     /**
-     * <code>optional string realSender = 10;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 10;</code>
      */
-    com.google.protobuf.ByteString
-        getRealSenderBytes();
+    org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderDataOrBuilder getRealSenderDataOrBuilder();
 
     /**
      * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.TraceData traceData = 11;</code>
@@ -2755,7 +3536,6 @@ public final class Messaging {
       undeliverable_ = false;
       receivers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       timeout_ = 0;
-      realSender_ = "";
     }
 
     @java.lang.Override
@@ -2835,9 +3615,16 @@ public final class Messaging {
               break;
             }
             case 82: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000100) == 0x00000100)) {
+                subBuilder = realSenderData_.toBuilder();
+              }
+              realSenderData_ = input.readMessage(org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(realSenderData_);
+                realSenderData_ = subBuilder.buildPartial();
+              }
               bitField0_ |= 0x00000100;
-              realSender_ = bs;
               break;
             }
             case 90: {
@@ -3119,46 +3906,25 @@ public final class Messaging {
       return timeout_;
     }
 
-    public static final int REALSENDER_FIELD_NUMBER = 10;
-    private volatile java.lang.Object realSender_;
+    public static final int REALSENDERDATA_FIELD_NUMBER = 10;
+    private org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData realSenderData_;
     /**
-     * <code>optional string realSender = 10;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 10;</code>
      */
-    public boolean hasRealSender() {
+    public boolean hasRealSenderData() {
       return ((bitField0_ & 0x00000100) == 0x00000100);
     }
     /**
-     * <code>optional string realSender = 10;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 10;</code>
      */
-    public java.lang.String getRealSender() {
-      java.lang.Object ref = realSender_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          realSender_ = s;
-        }
-        return s;
-      }
+    public org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData getRealSenderData() {
+      return realSenderData_ == null ? org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.getDefaultInstance() : realSenderData_;
     }
     /**
-     * <code>optional string realSender = 10;</code>
+     * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 10;</code>
      */
-    public com.google.protobuf.ByteString
-        getRealSenderBytes() {
-      java.lang.Object ref = realSender_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        realSender_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
+    public org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderDataOrBuilder getRealSenderDataOrBuilder() {
+      return realSenderData_ == null ? org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.getDefaultInstance() : realSenderData_;
     }
 
     public static final int TRACEDATA_FIELD_NUMBER = 11;
@@ -3230,7 +3996,7 @@ public final class Messaging {
         output.writeUInt32(9, timeout_);
       }
       if (((bitField0_ & 0x00000100) == 0x00000100)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 10, realSender_);
+        output.writeMessage(10, getRealSenderData());
       }
       if (((bitField0_ & 0x00000200) == 0x00000200)) {
         output.writeMessage(11, getTraceData());
@@ -3282,7 +4048,8 @@ public final class Messaging {
           .computeUInt32Size(9, timeout_);
       }
       if (((bitField0_ & 0x00000100) == 0x00000100)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(10, realSender_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(10, getRealSenderData());
       }
       if (((bitField0_ & 0x00000200) == 0x00000200)) {
         size += com.google.protobuf.CodedOutputStream
@@ -3346,10 +4113,10 @@ public final class Messaging {
         result = result && (getTimeout()
             == other.getTimeout());
       }
-      result = result && (hasRealSender() == other.hasRealSender());
-      if (hasRealSender()) {
-        result = result && getRealSender()
-            .equals(other.getRealSender());
+      result = result && (hasRealSenderData() == other.hasRealSenderData());
+      if (hasRealSenderData()) {
+        result = result && getRealSenderData()
+            .equals(other.getRealSenderData());
       }
       result = result && (hasTraceData() == other.hasTraceData());
       if (hasTraceData()) {
@@ -3405,9 +4172,9 @@ public final class Messaging {
         hash = (37 * hash) + TIMEOUT_FIELD_NUMBER;
         hash = (53 * hash) + getTimeout();
       }
-      if (hasRealSender()) {
-        hash = (37 * hash) + REALSENDER_FIELD_NUMBER;
-        hash = (53 * hash) + getRealSender().hashCode();
+      if (hasRealSenderData()) {
+        hash = (37 * hash) + REALSENDERDATA_FIELD_NUMBER;
+        hash = (53 * hash) + getRealSenderData().hashCode();
       }
       if (hasTraceData()) {
         hash = (37 * hash) + TRACEDATA_FIELD_NUMBER;
@@ -3541,6 +4308,7 @@ public final class Messaging {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
+          getRealSenderDataFieldBuilder();
           getTraceDataFieldBuilder();
         }
       }
@@ -3565,7 +4333,11 @@ public final class Messaging {
         bitField0_ = (bitField0_ & ~0x00000080);
         timeout_ = 0;
         bitField0_ = (bitField0_ & ~0x00000100);
-        realSender_ = "";
+        if (realSenderDataBuilder_ == null) {
+          realSenderData_ = null;
+        } else {
+          realSenderDataBuilder_.clear();
+        }
         bitField0_ = (bitField0_ & ~0x00000200);
         if (traceDataBuilder_ == null) {
           traceData_ = null;
@@ -3641,7 +4413,11 @@ public final class Messaging {
         if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
           to_bitField0_ |= 0x00000100;
         }
-        result.realSender_ = realSender_;
+        if (realSenderDataBuilder_ == null) {
+          result.realSenderData_ = realSenderData_;
+        } else {
+          result.realSenderData_ = realSenderDataBuilder_.build();
+        }
         if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
           to_bitField0_ |= 0x00000200;
         }
@@ -3739,10 +4515,8 @@ public final class Messaging {
         if (other.hasTimeout()) {
           setTimeout(other.getTimeout());
         }
-        if (other.hasRealSender()) {
-          bitField0_ |= 0x00000200;
-          realSender_ = other.realSender_;
-          onChanged();
+        if (other.hasRealSenderData()) {
+          mergeRealSenderData(other.getRealSenderData());
         }
         if (other.hasTraceData()) {
           mergeTraceData(other.getTraceData());
@@ -4269,80 +5043,122 @@ public final class Messaging {
         return this;
       }
 
-      private java.lang.Object realSender_ = "";
+      private org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData realSenderData_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData, org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.Builder, org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderDataOrBuilder> realSenderDataBuilder_;
       /**
-       * <code>optional string realSender = 10;</code>
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 10;</code>
        */
-      public boolean hasRealSender() {
+      public boolean hasRealSenderData() {
         return ((bitField0_ & 0x00000200) == 0x00000200);
       }
       /**
-       * <code>optional string realSender = 10;</code>
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 10;</code>
        */
-      public java.lang.String getRealSender() {
-        java.lang.Object ref = realSender_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            realSender_ = s;
+      public org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData getRealSenderData() {
+        if (realSenderDataBuilder_ == null) {
+          return realSenderData_ == null ? org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.getDefaultInstance() : realSenderData_;
+        } else {
+          return realSenderDataBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 10;</code>
+       */
+      public Builder setRealSenderData(org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData value) {
+        if (realSenderDataBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
           }
-          return s;
+          realSenderData_ = value;
+          onChanged();
         } else {
-          return (java.lang.String) ref;
+          realSenderDataBuilder_.setMessage(value);
         }
-      }
-      /**
-       * <code>optional string realSender = 10;</code>
-       */
-      public com.google.protobuf.ByteString
-          getRealSenderBytes() {
-        java.lang.Object ref = realSender_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          realSender_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>optional string realSender = 10;</code>
-       */
-      public Builder setRealSender(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000200;
-        realSender_ = value;
-        onChanged();
+        bitField0_ |= 0x00000200;
         return this;
       }
       /**
-       * <code>optional string realSender = 10;</code>
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 10;</code>
        */
-      public Builder clearRealSender() {
+      public Builder setRealSenderData(
+          org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.Builder builderForValue) {
+        if (realSenderDataBuilder_ == null) {
+          realSenderData_ = builderForValue.build();
+          onChanged();
+        } else {
+          realSenderDataBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000200;
+        return this;
+      }
+      /**
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 10;</code>
+       */
+      public Builder mergeRealSenderData(org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData value) {
+        if (realSenderDataBuilder_ == null) {
+          if (((bitField0_ & 0x00000200) == 0x00000200) &&
+              realSenderData_ != null &&
+              realSenderData_ != org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.getDefaultInstance()) {
+            realSenderData_ =
+              org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.newBuilder(realSenderData_).mergeFrom(value).buildPartial();
+          } else {
+            realSenderData_ = value;
+          }
+          onChanged();
+        } else {
+          realSenderDataBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000200;
+        return this;
+      }
+      /**
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 10;</code>
+       */
+      public Builder clearRealSenderData() {
+        if (realSenderDataBuilder_ == null) {
+          realSenderData_ = null;
+          onChanged();
+        } else {
+          realSenderDataBuilder_.clear();
+        }
         bitField0_ = (bitField0_ & ~0x00000200);
-        realSender_ = getDefaultInstance().getRealSender();
-        onChanged();
         return this;
       }
       /**
-       * <code>optional string realSender = 10;</code>
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 10;</code>
        */
-      public Builder setRealSenderBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000200;
-        realSender_ = value;
+      public org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.Builder getRealSenderDataBuilder() {
+        bitField0_ |= 0x00000200;
         onChanged();
-        return this;
+        return getRealSenderDataFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 10;</code>
+       */
+      public org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderDataOrBuilder getRealSenderDataOrBuilder() {
+        if (realSenderDataBuilder_ != null) {
+          return realSenderDataBuilder_.getMessageOrBuilder();
+        } else {
+          return realSenderData_ == null ?
+              org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.getDefaultInstance() : realSenderData_;
+        }
+      }
+      /**
+       * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.RealSenderData realSenderData = 10;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData, org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.Builder, org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderDataOrBuilder> 
+          getRealSenderDataFieldBuilder() {
+        if (realSenderDataBuilder_ == null) {
+          realSenderDataBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData, org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderData.Builder, org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.RealSenderDataOrBuilder>(
+                  getRealSenderData(),
+                  getParentForChildren(),
+                  isClean());
+          realSenderData_ = null;
+        }
+        return realSenderDataBuilder_;
       }
 
       private org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.TraceData traceData_ = null;
@@ -10163,6 +10979,11 @@ public final class Messaging {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceData_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RealSenderData_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RealSenderData_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ScheduledMessage_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -10219,38 +11040,44 @@ public final class Messaging {
       "\n\017messaging.proto\0228org.elasticsoftware.e" +
       "lasticactors.serialization.protobuf\"B\n\tT" +
       "raceData\022\016\n\006spanId\030\001 \002(\t\022\017\n\007traceId\030\002 \002(" +
-      "\t\022\024\n\014parentSpanId\030\003 \001(\t\"\345\001\n\020ScheduledMes" +
-      "sage\022\n\n\002id\030\001 \001(\014\022\020\n\010fireTime\030\002 \001(\004\022\020\n\010re" +
-      "ceiver\030\003 \001(\t\022\016\n\006sender\030\004 \001(\t\022\024\n\014messageC" +
-      "lass\030\005 \001(\t\022\017\n\007message\030\006 \001(\014\022\022\n\nrealSende" +
-      "r\030\007 \001(\t\022V\n\ttraceData\030\010 \001(\0132C.org.elastic" +
-      "software.elasticactors.serialization.pro" +
-      "tobuf.TraceData\"\236\002\n\017InternalMessage\022\020\n\010r" +
-      "eceiver\030\001 \001(\t\022\016\n\006sender\030\002 \001(\t\022\024\n\014payload" +
-      "Class\030\003 \001(\t\022\017\n\007payload\030\004 \001(\014\022\n\n\002id\030\005 \001(\014" +
-      "\022\017\n\007durable\030\006 \001(\010\022\025\n\rundeliverable\030\007 \001(\010" +
-      "\022\021\n\treceivers\030\010 \003(\t\022\017\n\007timeout\030\t \001(\r\022\022\n\n" +
-      "realSender\030\n \001(\t\022V\n\ttraceData\030\013 \001(\0132C.or" +
-      "g.elasticsoftware.elasticactors.serializ" +
-      "ation.protobuf.TraceData\"\314\001\n\022CreateActor" +
-      "Message\022\017\n\007actorId\030\001 \001(\t\022\024\n\014initialState" +
-      "\030\002 \001(\014\022\022\n\nactorClass\030\003 \001(\t\022\023\n\013actorSyste" +
-      "m\030\004 \001(\t\022Q\n\004type\030\005 \001(\0162C.org.elasticsoftw" +
-      "are.elasticactors.serialization.protobuf" +
-      ".ActorType\022\023\n\013affinityKey\030\006 \001(\t\"\'\n\023Destr" +
-      "oyActorMessage\022\020\n\010actorRef\030\001 \001(\t\"\217\001\n\024Act" +
-      "ivateActorMessage\022\023\n\013actorSystem\030\001 \001(\t\022\017" +
-      "\n\007actorId\030\002 \001(\t\022Q\n\004type\030\003 \001(\0162C.org.elas" +
-      "ticsoftware.elasticactors.serialization." +
-      "protobuf.ActorType\"9\n\013WireMessage\022\021\n\tque" +
-      "ueName\030\001 \001(\t\022\027\n\017internalMessage\030\002 \001(\014\"D\n" +
-      "\035CancelScheduledMessageMessage\022\021\n\tmessag" +
-      "eId\030\001 \001(\014\022\020\n\010fireTime\030\002 \001(\004\"r\n\020ActorNode" +
-      "Message\022\020\n\010receiver\030\001 \001(\t\022\016\n\006nodeId\030\002 \001(" +
-      "\t\022\024\n\014payloadClass\030\003 \001(\t\022\017\n\007payload\030\004 \001(\014" +
-      "\022\025\n\rundeliverable\030\005 \001(\010\"\'\n\023PersistActorM" +
-      "essage\022\020\n\010actorRef\030\001 \001(\t*2\n\tActorType\022\016\n" +
-      "\nPERSISTENT\020\000\022\010\n\004TEMP\020\001\022\013\n\007SERVICE\020\002B\002H\001"
+      "\t\022\024\n\014parentSpanId\030\003 \001(\t\"<\n\016RealSenderDat" +
+      "a\022\022\n\nrealSender\030\001 \001(\t\022\026\n\016realSenderType\030" +
+      "\002 \001(\t\"\263\002\n\020ScheduledMessage\022\n\n\002id\030\001 \001(\014\022\020" +
+      "\n\010fireTime\030\002 \001(\004\022\020\n\010receiver\030\003 \001(\t\022\016\n\006se" +
+      "nder\030\004 \001(\t\022\024\n\014messageClass\030\005 \001(\t\022\017\n\007mess" +
+      "age\030\006 \001(\014\022`\n\016realSenderData\030\007 \001(\0132H.org." +
+      "elasticsoftware.elasticactors.serializat" +
+      "ion.protobuf.RealSenderData\022V\n\ttraceData" +
+      "\030\010 \001(\0132C.org.elasticsoftware.elasticacto" +
+      "rs.serialization.protobuf.TraceData\"\354\002\n\017" +
+      "InternalMessage\022\020\n\010receiver\030\001 \001(\t\022\016\n\006sen" +
+      "der\030\002 \001(\t\022\024\n\014payloadClass\030\003 \001(\t\022\017\n\007paylo" +
+      "ad\030\004 \001(\014\022\n\n\002id\030\005 \001(\014\022\017\n\007durable\030\006 \001(\010\022\025\n" +
+      "\rundeliverable\030\007 \001(\010\022\021\n\treceivers\030\010 \003(\t\022" +
+      "\017\n\007timeout\030\t \001(\r\022`\n\016realSenderData\030\n \001(\013" +
+      "2H.org.elasticsoftware.elasticactors.ser" +
+      "ialization.protobuf.RealSenderData\022V\n\ttr" +
+      "aceData\030\013 \001(\0132C.org.elasticsoftware.elas" +
+      "ticactors.serialization.protobuf.TraceDa" +
+      "ta\"\314\001\n\022CreateActorMessage\022\017\n\007actorId\030\001 \001" +
+      "(\t\022\024\n\014initialState\030\002 \001(\014\022\022\n\nactorClass\030\003" +
+      " \001(\t\022\023\n\013actorSystem\030\004 \001(\t\022Q\n\004type\030\005 \001(\0162" +
+      "C.org.elasticsoftware.elasticactors.seri" +
+      "alization.protobuf.ActorType\022\023\n\013affinity" +
+      "Key\030\006 \001(\t\"\'\n\023DestroyActorMessage\022\020\n\010acto" +
+      "rRef\030\001 \001(\t\"\217\001\n\024ActivateActorMessage\022\023\n\013a" +
+      "ctorSystem\030\001 \001(\t\022\017\n\007actorId\030\002 \001(\t\022Q\n\004typ" +
+      "e\030\003 \001(\0162C.org.elasticsoftware.elasticact" +
+      "ors.serialization.protobuf.ActorType\"9\n\013" +
+      "WireMessage\022\021\n\tqueueName\030\001 \001(\t\022\027\n\017intern" +
+      "alMessage\030\002 \001(\014\"D\n\035CancelScheduledMessag" +
+      "eMessage\022\021\n\tmessageId\030\001 \001(\014\022\020\n\010fireTime\030" +
+      "\002 \001(\004\"r\n\020ActorNodeMessage\022\020\n\010receiver\030\001 " +
+      "\001(\t\022\016\n\006nodeId\030\002 \001(\t\022\024\n\014payloadClass\030\003 \001(" +
+      "\t\022\017\n\007payload\030\004 \001(\014\022\025\n\rundeliverable\030\005 \001(" +
+      "\010\"\'\n\023PersistActorMessage\022\020\n\010actorRef\030\001 \001" +
+      "(\t*2\n\tActorType\022\016\n\nPERSISTENT\020\000\022\010\n\004TEMP\020" +
+      "\001\022\013\n\007SERVICE\020\002B\002H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -10270,56 +11097,62 @@ public final class Messaging {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceData_descriptor,
         new java.lang.String[] { "SpanId", "TraceId", "ParentSpanId", });
-    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ScheduledMessage_descriptor =
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RealSenderData_descriptor =
       getDescriptor().getMessageTypes().get(1);
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RealSenderData_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_RealSenderData_descriptor,
+        new java.lang.String[] { "RealSender", "RealSenderType", });
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ScheduledMessage_descriptor =
+      getDescriptor().getMessageTypes().get(2);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ScheduledMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ScheduledMessage_descriptor,
-        new java.lang.String[] { "Id", "FireTime", "Receiver", "Sender", "MessageClass", "Message", "RealSender", "TraceData", });
+        new java.lang.String[] { "Id", "FireTime", "Receiver", "Sender", "MessageClass", "Message", "RealSenderData", "TraceData", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_InternalMessage_descriptor =
-      getDescriptor().getMessageTypes().get(2);
+      getDescriptor().getMessageTypes().get(3);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_InternalMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_InternalMessage_descriptor,
-        new java.lang.String[] { "Receiver", "Sender", "PayloadClass", "Payload", "Id", "Durable", "Undeliverable", "Receivers", "Timeout", "RealSender", "TraceData", });
+        new java.lang.String[] { "Receiver", "Sender", "PayloadClass", "Payload", "Id", "Durable", "Undeliverable", "Receivers", "Timeout", "RealSenderData", "TraceData", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CreateActorMessage_descriptor =
-      getDescriptor().getMessageTypes().get(3);
+      getDescriptor().getMessageTypes().get(4);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CreateActorMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CreateActorMessage_descriptor,
         new java.lang.String[] { "ActorId", "InitialState", "ActorClass", "ActorSystem", "Type", "AffinityKey", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_DestroyActorMessage_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(5);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_DestroyActorMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_DestroyActorMessage_descriptor,
         new java.lang.String[] { "ActorRef", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ActivateActorMessage_descriptor =
-      getDescriptor().getMessageTypes().get(5);
+      getDescriptor().getMessageTypes().get(6);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ActivateActorMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ActivateActorMessage_descriptor,
         new java.lang.String[] { "ActorSystem", "ActorId", "Type", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_WireMessage_descriptor =
-      getDescriptor().getMessageTypes().get(6);
+      getDescriptor().getMessageTypes().get(7);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_WireMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_WireMessage_descriptor,
         new java.lang.String[] { "QueueName", "InternalMessage", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelScheduledMessageMessage_descriptor =
-      getDescriptor().getMessageTypes().get(7);
+      getDescriptor().getMessageTypes().get(8);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelScheduledMessageMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CancelScheduledMessageMessage_descriptor,
         new java.lang.String[] { "MessageId", "FireTime", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ActorNodeMessage_descriptor =
-      getDescriptor().getMessageTypes().get(8);
+      getDescriptor().getMessageTypes().get(9);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ActorNodeMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ActorNodeMessage_descriptor,
         new java.lang.String[] { "Receiver", "NodeId", "PayloadClass", "Payload", "Undeliverable", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_PersistActorMessage_descriptor =
-      getDescriptor().getMessageTypes().get(9);
+      getDescriptor().getMessageTypes().get(10);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_PersistActorMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_PersistActorMessage_descriptor,

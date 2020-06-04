@@ -95,7 +95,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         Exception executionException = null;
         InternalActorContext.setContext(persistentActor);
         SerializationContext.initialize();
-        TraceContext.enter(persistentActor, receiver, internalMessage);
+        TraceContext.enter(internalMessage);
         boolean shouldUpdateState = false;
         try {
             shouldUpdateState = doInActorContext(actorSystem, receiver, receiverRef, internalMessage);

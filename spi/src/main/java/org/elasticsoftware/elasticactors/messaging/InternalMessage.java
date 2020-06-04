@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.messaging;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.tracing.RealSenderData;
 import org.elasticsoftware.elasticactors.tracing.TraceData;
 
 import javax.annotation.Nullable;
@@ -56,7 +57,7 @@ public interface InternalMessage {
     int getTimeout();
 
     @Nullable
-    String getRealSender();
+    RealSenderData getRealSenderData();
 
     @Nullable
     TraceData getTraceData();

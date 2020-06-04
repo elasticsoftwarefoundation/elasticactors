@@ -64,6 +64,11 @@ public final class ActivateServiceActorTask implements ThreadBoundRunnable<Strin
     }
 
     @Override
+    public String getSelfType() {
+        return serviceActor != null ? serviceActor.getClass().getName() : null;
+    }
+
+    @Override
     public <T extends ActorState> T getState(Class<T> stateClass) {
         return null;
     }
@@ -97,7 +102,7 @@ public final class ActivateServiceActorTask implements ThreadBoundRunnable<Strin
     public void run() {
         Exception executionException = null;
         InternalActorContext.setContext(this);
-        TraceContext.enter(this, serviceActor, internalMessage);
+        TraceContext.enter(internalMessage);
         try {
             serviceActor.postActivate(null);
         } catch(Exception e) {

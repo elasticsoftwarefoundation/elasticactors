@@ -22,10 +22,17 @@ import org.elasticsoftware.elasticactors.base.actors.ActorDelegate;
 import org.elasticsoftware.elasticactors.base.actors.ActorDelegate.MessageConsumer;
 import org.elasticsoftware.elasticactors.base.actors.ReplyActor;
 import org.elasticsoftware.elasticactors.base.state.StringState;
+import org.elasticsoftware.elasticactors.cluster.tracing.ExternalRealSenderDataContext;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.elasticsoftware.elasticactors.test.messaging.LocalMessageQueue;
+import org.elasticsoftware.elasticactors.tracing.RealSenderData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -34,12 +41,23 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
-import static java.lang.String.format;
-
 /**
  * @author Joost van de Wijgerd
  */
 public class GreetingTest {
+
+    @BeforeMethod
+    public void addExternalCreatorData(Method method) {
+        ExternalRealSenderDataContext.enter(
+                new RealSenderData(method.toString(), GreetingTest.class.getName()));
+    }
+
+    @AfterMethod
+    public void removeExternalCreatorData() {
+        ExternalRealSenderDataContext.leave();
+    }
+
+    private static final Logger logger = LoggerFactory.getLogger(GreetingTest.class);
     @Test
     public void testGreeting() throws Exception {
 
@@ -55,8 +73,8 @@ public class GreetingTest {
 
         ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
                 .deleteAfterReceive(false)
-                .onReceive(ScheduledGreeting.class, () -> System.out.println("Got Scheduled Greeting"))
-                .onReceive(Greeting.class, m -> System.out.println(format("Got Greeting from %s", m.getWho())))
+                .onReceive(ScheduledGreeting.class, () -> logger.info("Got Scheduled Greeting"))
+                .onReceive(Greeting.class, m -> logger.info("Got Greeting from {}", m.getWho()))
                 .orElse(MessageConsumer.noop())
                 .postReceive(countDownLatch::countDown)
                 .build());
@@ -85,8 +103,8 @@ public class GreetingTest {
 
         ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
                 .deleteAfterReceive(false)
-                .onReceive(ScheduledGreeting.class, () -> System.out.println("Got Scheduled Greeting"))
-                .onReceive(Greeting.class, m -> System.out.println(format("Got Greeting from %s", m.getWho())))
+                .onReceive(ScheduledGreeting.class, () -> logger.info("Got Scheduled Greeting"))
+                .onReceive(Greeting.class, m -> logger.info("Got Greeting from {}", m.getWho()))
                 .orElse(MessageConsumer.noop())
                 .postReceive(countDownLatch::countDown)
                 .build());
@@ -144,10 +162,10 @@ public class GreetingTest {
         ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
                 .deleteAfterReceive(false)
                 .onReceive(ScheduledGreeting.class, () -> {
-                    System.out.println("Got Scheduled Greeting");
+                    logger.info("Got Scheduled Greeting");
                     stopActor();
                 })
-                .onReceive(Greeting.class, m -> System.out.println(format("Got Greeting from %s", m.getWho())))
+                .onReceive(Greeting.class, m -> logger.info("Got Greeting from {}", m.getWho()))
                 .orElse(MessageConsumer.noop())
                 .postReceive(countDownLatch::countDown)
                 .build());
@@ -175,8 +193,8 @@ public class GreetingTest {
 
         ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
                 .deleteAfterReceive(false)
-                .onReceive(IScheduledGreeting.class, () -> System.out.println("Got Scheduled Greeting"))
-                .onReceive(Greeting.class, m -> System.out.println(format("Got Greeting from %s", m.getWho())))
+                .onReceive(IScheduledGreeting.class, () -> logger.info("Got Scheduled Greeting"))
+                .onReceive(Greeting.class, m -> logger.info("Got Greeting from {}", m.getWho()))
                 .orElse(MessageConsumer.noop())
                 .postReceive(countDownLatch::countDown)
                 .build());
@@ -205,8 +223,8 @@ public class GreetingTest {
 
         ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
                 .deleteAfterReceive(false)
-                .onReceive(IScheduledGreeting.class, () -> System.out.println("Got Scheduled Greeting"))
-                .onReceive(Greeting.class, m -> System.out.println(format("Got Greeting from %s", m.getWho())))
+                .onReceive(IScheduledGreeting.class, () -> logger.info("Got Scheduled Greeting"))
+                .onReceive(Greeting.class, m -> logger.info("Got Greeting from {}", m.getWho()))
                 .orElse(MessageConsumer.noop())
                 .postReceive(countDownLatch::countDown)
                 .build());
@@ -239,10 +257,10 @@ public class GreetingTest {
         ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
                 .deleteAfterReceive(false)
                 .onReceive(IScheduledGreeting.class, () -> {
-                    System.out.println("Got Scheduled Greeting");
+                    logger.info("Got Scheduled Greeting");
                     stopActor();
                 })
-                .onReceive(Greeting.class, m -> System.out.println(format("Got Greeting from %s", m.getWho())))
+                .onReceive(Greeting.class, m -> logger.info("Got Greeting from {}", m.getWho()))
                 .orElse(MessageConsumer.noop())
                 .postReceive(countDownLatch::countDown)
                 .build());

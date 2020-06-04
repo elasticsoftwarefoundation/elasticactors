@@ -22,6 +22,7 @@ import org.elasticsoftware.elasticactors.messaging.ScheduledMessageImpl;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
+import org.elasticsoftware.elasticactors.tracing.RealSenderData;
 import org.elasticsoftware.elasticactors.tracing.TraceData;
 
 import java.io.IOException;
@@ -47,11 +48,19 @@ public final class ScheduledMessageDeserializer implements Deserializer<byte[],S
             byte[] messageBytes = protobufMessage.getMessage().toByteArray();
             UUID id = UUIDTools.toUUID(protobufMessage.getId().toByteArray());
             long fireTime = protobufMessage.getFireTime();
-            String realSender = protobufMessage.getRealSender();
+            RealSenderData realSenderData = new RealSenderData(
+                    protobufMessage.getRealSenderData().getRealSender(),
+                    protobufMessage.getRealSenderData().getRealSenderType());
+            if (realSenderData.isEmpty()) {
+                realSenderData = null;
+            }
             TraceData traceData = new TraceData(
                     protobufMessage.getTraceData().getSpanId(),
                     protobufMessage.getTraceData().getTraceId(),
                     protobufMessage.getTraceData().getParentSpanId());
+            if (traceData.isEmpty()) {
+                traceData = null;
+            }
             return new ScheduledMessageImpl(
                     id,
                     fireTime,
@@ -59,7 +68,7 @@ public final class ScheduledMessageDeserializer implements Deserializer<byte[],S
                     receiver,
                     messageClass,
                     messageBytes,
-                    realSender,
+                    realSenderData,
                     traceData);
         } catch(ClassNotFoundException e) {
             throw new IOException(e);

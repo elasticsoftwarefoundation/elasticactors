@@ -21,8 +21,10 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
+import org.elasticsoftware.elasticactors.tracing.RealSenderData;
 import org.elasticsoftware.elasticactors.tracing.TraceData;
 import org.elasticsoftware.elasticactors.tracing.TraceDataHolder;
+import org.elasticsoftware.elasticactors.util.TracingHelper;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -43,7 +45,7 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
     private final boolean undeliverable;
     private final int timeout;
     private transient byte[] serializedForm;
-    private final String realSender;
+    private final RealSenderData realSenderData;
     private final TraceData traceData;
 
     public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass,boolean durable) {
@@ -101,7 +103,7 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
             boolean durable,
             boolean undeliverable,
             int timeout,
-            String realSender,
+            RealSenderData realSenderData,
             TraceData traceData) {
         this.sender = sender;
         this.receivers = receivers;
@@ -111,7 +113,7 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
         this.durable = durable;
         this.undeliverable = undeliverable;
         this.timeout = timeout;
-        this.realSender = realSender;
+        this.realSenderData = realSenderData;
         this.traceData = traceData;
     }
 
@@ -173,8 +175,8 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
 
     @Nullable
     @Override
-    public String getRealSender() {
-        return realSender;
+    public RealSenderData getRealSenderData() {
+        return realSenderData;
     }
 
     @Nullable

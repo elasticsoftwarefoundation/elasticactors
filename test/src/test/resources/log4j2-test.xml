@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Properties>
+        <Property name="pattern">%d{HH:mm:ss.SSS} [%t%notEmpty{,%X{X-B3-SpanId}}%notEmpty{,%X{X-B3-TraceId}}%notEmpty{,%X{X-B3-ParentSpanId}}] %-5level %logger{1.} - %msg%n</Property>
+    </Properties>
+    <Appenders>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+<!--            <PatternLayout pattern="${pattern}"/>-->
+            <JsonLayout compact="true" eventEol="true" properties="true"/>
+            <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="ACCEPT"/>
+        </Console>
+        <Console name="STDERR" target="SYSTEM_ERR">
+<!--            <PatternLayout pattern="${pattern}"/>-->
+            <JsonLayout compact="true" eventEol="true" properties="true"/>
+            <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="ERROR">
+            <AppenderRef ref="STDOUT"/>
+            <AppenderRef ref="STDERR"/>
+        </Root>
+        <Logger name="org.elasticsoftware.elasticactors.test" level="INFO"/>
+    </Loggers>
+</Configuration>

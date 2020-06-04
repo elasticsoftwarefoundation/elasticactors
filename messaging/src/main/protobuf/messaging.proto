@@ -18,6 +18,11 @@ message TraceData {
   optional string parentSpanId = 3;
 }
 
+message RealSenderData {
+  optional string realSender = 1;
+  optional string realSenderType = 2;
+}
+
 message ScheduledMessage {
   optional bytes id = 1;
   optional uint64 fireTime = 2;
@@ -25,7 +30,7 @@ message ScheduledMessage {
   optional string sender = 4;
   optional string messageClass = 5;
   optional bytes message = 6;
-  optional string realSender = 7;
+  optional RealSenderData realSenderData = 7;
   optional TraceData traceData = 8;
 }
 
@@ -39,7 +44,7 @@ message InternalMessage {
   optional bool undeliverable = 7;
   repeated string receivers = 8;
   optional uint32 timeout = 9;
-  optional string realSender = 10;
+  optional RealSenderData realSenderData = 10;
   optional TraceData traceData = 11;
 }
 

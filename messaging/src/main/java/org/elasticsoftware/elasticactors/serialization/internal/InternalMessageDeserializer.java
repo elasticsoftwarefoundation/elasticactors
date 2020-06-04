@@ -25,6 +25,7 @@ import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
+import org.elasticsoftware.elasticactors.tracing.RealSenderData;
 import org.elasticsoftware.elasticactors.tracing.TraceData;
 
 import java.io.IOException;
@@ -65,11 +66,19 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
         boolean durable = protobufMessage.getDurable();
         boolean undeliverable = protobufMessage.getUndeliverable();
         int timeout = protobufMessage.getTimeout() != 0 ? protobufMessage.getTimeout() : InternalMessage.NO_TIMEOUT;
-        String realSender = protobufMessage.getRealSender();
+        RealSenderData realSenderData = new RealSenderData(
+                protobufMessage.getRealSenderData().getRealSender(),
+                protobufMessage.getRealSenderData().getRealSenderType());
+        if (realSenderData.isEmpty()) {
+            realSenderData = null;
+        }
         TraceData traceData = new TraceData(
                 protobufMessage.getTraceData().getSpanId(),
                 protobufMessage.getTraceData().getTraceId(),
                 protobufMessage.getTraceData().getParentSpanId());
+        if (traceData.isEmpty()) {
+            traceData = null;
+        }
         //return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable);
         // optimize immutable message if possible
 
@@ -84,7 +93,7 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
                     durable,
                     undeliverable,
                     timeout,
-                    realSender,
+                    realSenderData,
                     traceData);
         } else {
             Object payloadObject = serializationAccessor.getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
@@ -97,7 +106,7 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
                     durable,
                     undeliverable,
                     timeout,
-                    realSender,
+                    realSenderData,
                     traceData);
         }
     }

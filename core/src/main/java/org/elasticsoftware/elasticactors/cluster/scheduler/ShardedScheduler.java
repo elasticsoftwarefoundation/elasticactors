@@ -24,6 +24,7 @@ import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.tracing.ExternalRealSenderDataContext;
 import org.elasticsoftware.elasticactors.cluster.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.messaging.ScheduledMessageImpl;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
@@ -236,7 +237,8 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
                 if(messageDeserializer != null) {
                     Object deserializedMessage = messageDeserializer.deserialize(ByteBuffer.wrap(message.getMessageBytes()));
                     // send the message
-                    TraceContext.enter(message);
+                    TraceContext.enterTraceDataOnlyContext(message.getTraceData());
+                    ExternalRealSenderDataContext.enter(message.getRealSenderData());
                     final ActorRef receiverRef = message.getReceiver();
                     receiverRef.tell(deserializedMessage,message.getSender());
                 } else {
@@ -282,7 +284,8 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
                 if (!executionInterruptedByResharding) {
                     scheduledMessageRepository.delete(shardKey, message.getKey());
                 }
-                TraceContext.leave();
+                TraceContext.leaveTraceDataOnlyContext();
+                ExternalRealSenderDataContext.leave();
             }
         }
     }

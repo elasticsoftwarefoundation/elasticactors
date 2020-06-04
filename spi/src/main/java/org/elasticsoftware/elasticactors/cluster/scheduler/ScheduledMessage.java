@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.cluster.scheduler;
 
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.tracing.RealSenderData;
 import org.elasticsoftware.elasticactors.tracing.TraceData;
 
 import javax.annotation.Nullable;
@@ -70,7 +71,7 @@ public interface ScheduledMessage extends Delayed {
     Class getMessageClass();
 
     @Nullable
-    String getRealSender();
+    RealSenderData getRealSenderData();
 
     @Nullable
     TraceData getTraceData();

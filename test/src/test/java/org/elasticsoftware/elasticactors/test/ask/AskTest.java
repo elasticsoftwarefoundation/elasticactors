@@ -21,6 +21,8 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.elasticsoftware.elasticactors.test.common.EchoGreetingActor;
 import org.elasticsoftware.elasticactors.test.common.Greeting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.CountDownLatch;
@@ -33,6 +35,9 @@ import static org.testng.Assert.assertEquals;
  * @author Joost van de Wijgerd
  */
 public class AskTest {
+
+    private final static Logger logger = LoggerFactory.getLogger(AskTest.class);
+
     @Test
     public void testAskGreeting() throws Exception {
         TestActorSystem testActorSystem = new TestActorSystem();
@@ -94,7 +99,7 @@ public class AskTest {
         final AtomicReference<String> response = new AtomicReference<>();
 
         echo.ask(new Greeting("echo"), Greeting.class).whenComplete((greeting, throwable) -> {
-            System.out.println(Thread.currentThread().getName());
+            logger.info(Thread.currentThread().getName());
             response.set(greeting.getWho());
             waitLatch.countDown();
         });

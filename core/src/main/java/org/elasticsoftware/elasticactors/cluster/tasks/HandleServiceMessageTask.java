@@ -75,6 +75,11 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     }
 
     @Override
+    public String getSelfType() {
+        return serviceActor != null ? serviceActor.getClass().getName() : null;
+    }
+
+    @Override
     public <T extends ActorState> T getState(Class<T> stateClass) {
         return null;
     }
@@ -112,7 +117,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         }
         Exception executionException = null;
         InternalActorContext.setContext(this);
-        TraceContext.enter(this, serviceActor, internalMessage);
+        TraceContext.enter(internalMessage);
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
             MessageToStringSerializer messageToStringSerializer = getStringSerializer(message);

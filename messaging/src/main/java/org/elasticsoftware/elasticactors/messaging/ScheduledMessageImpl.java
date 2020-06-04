@@ -20,8 +20,10 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.tracing.RealSenderData;
 import org.elasticsoftware.elasticactors.tracing.TraceData;
 import org.elasticsoftware.elasticactors.tracing.TraceDataHolder;
+import org.elasticsoftware.elasticactors.util.TracingHelper;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -41,7 +43,7 @@ public final class ScheduledMessageImpl implements ScheduledMessage {
     private final Class messageClass;
     private final byte[] messageBytes;
     private final ScheduledMessageKey key;
-    private final String realSender;
+    private final RealSenderData realSenderData;
     private final TraceData traceData;
 
     public ScheduledMessageImpl(long fireTime, ActorRef sender, ActorRef receiver, Class messageClass,byte[] messageBytes) {
@@ -73,7 +75,7 @@ public final class ScheduledMessageImpl implements ScheduledMessage {
             ActorRef receiver,
             Class messageClass,
             byte[] messageBytes,
-            String realSender,
+            RealSenderData realSenderData,
             TraceData traceData) {
         this.id = id;
         this.fireTime = fireTime;
@@ -82,7 +84,7 @@ public final class ScheduledMessageImpl implements ScheduledMessage {
         this.messageClass = messageClass;
         this.messageBytes = messageBytes;
         this.key = new ScheduledMessageKey(id, fireTime);
-        this.realSender = realSender;
+        this.realSenderData = realSenderData;
         this.traceData = traceData;
     }
 
@@ -146,8 +148,8 @@ public final class ScheduledMessageImpl implements ScheduledMessage {
 
     @Nullable
     @Override
-    public String getRealSender() {
-        return realSender;
+    public RealSenderData getRealSenderData() {
+        return realSenderData;
     }
 
     @Nullable

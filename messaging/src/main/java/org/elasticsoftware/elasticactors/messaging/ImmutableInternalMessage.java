@@ -20,8 +20,10 @@ import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
+import org.elasticsoftware.elasticactors.tracing.RealSenderData;
 import org.elasticsoftware.elasticactors.tracing.TraceData;
 import org.elasticsoftware.elasticactors.tracing.TraceDataHolder;
+import org.elasticsoftware.elasticactors.util.TracingHelper;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -42,7 +44,7 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
     private final boolean undeliverable;
     private final int timeout;
     private transient byte[] serializedForm;
-    private final String realSender;
+    private final RealSenderData realSenderData;
     private final TraceData traceData;
 
     public ImmutableInternalMessage(ActorRef sender, ActorRef receiver, ByteBuffer payload, Object payloadObject, boolean durable) {
@@ -92,7 +94,7 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
             boolean durable,
             boolean undeliverable,
             int timeout,
-            String realSender,
+            RealSenderData realSenderData,
             TraceData traceData) {
         this.sender = sender;
         this.receivers = receivers;
@@ -102,7 +104,7 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
         this.durable = durable;
         this.undeliverable = undeliverable;
         this.timeout = timeout;
-        this.realSender = realSender;
+        this.realSenderData = realSenderData;
         this.traceData = traceData;
     }
 
@@ -163,8 +165,8 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
 
     @Override
     @Nullable
-    public String getRealSender() {
-        return realSender;
+    public RealSenderData getRealSenderData() {
+        return realSenderData;
     }
 
     @Nullable

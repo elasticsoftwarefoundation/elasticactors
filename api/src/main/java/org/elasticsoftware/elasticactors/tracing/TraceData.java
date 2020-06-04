@@ -24,6 +24,12 @@ public final class TraceData {
         this.parentSpanId = parent != null ? parent.getSpanId() : null;
     }
 
+    public boolean isEmpty() {
+        return this.spanId.isEmpty()
+                && this.traceId.isEmpty()
+                && (this.parentSpanId == null || this.parentSpanId.isEmpty());
+    }
+
     @Nonnull
     public String getSpanId() {
         return spanId;

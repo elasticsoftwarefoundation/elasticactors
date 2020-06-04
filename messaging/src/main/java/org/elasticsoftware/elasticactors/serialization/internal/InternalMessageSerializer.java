@@ -55,8 +55,19 @@ public final class InternalMessageSerializer implements Serializer<InternalMessa
         builder.setDurable(internalMessage.isDurable());
         builder.setUndeliverable(internalMessage.isUndeliverable());
         builder.setTimeout(internalMessage.getTimeout());
-        if (internalMessage.getRealSender() != null) {
-            builder.setRealSender(internalMessage.getRealSender());
+        if (internalMessage.getRealSenderData() != null
+                && !internalMessage.getRealSenderData().isEmpty()) {
+            Messaging.RealSenderData.Builder realSenderDataBuilder =
+                    Messaging.RealSenderData.newBuilder();
+            if (internalMessage.getRealSenderData().getRealSender() != null) {
+                realSenderDataBuilder.setRealSender(
+                        internalMessage.getRealSenderData().getRealSender());
+            }
+            if (internalMessage.getRealSenderData().getRealSenderType() != null) {
+                realSenderDataBuilder.setRealSenderType(
+                        internalMessage.getRealSenderData().getRealSenderType());
+            }
+            builder.setRealSenderData(realSenderDataBuilder);
         }
         if (internalMessage.getTraceData() != null) {
             Messaging.TraceData.Builder traceDataBuilder = Messaging.TraceData.newBuilder();
