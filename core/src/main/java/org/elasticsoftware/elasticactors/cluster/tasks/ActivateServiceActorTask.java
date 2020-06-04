@@ -97,7 +97,7 @@ public final class ActivateServiceActorTask implements ThreadBoundRunnable<Strin
     public void run() {
         Exception executionException = null;
         InternalActorContext.setContext(this);
-        TraceContext.enter(internalMessage);
+        TraceContext.enter(this, serviceActor, internalMessage);
         try {
             serviceActor.postActivate(null);
         } catch(Exception e) {

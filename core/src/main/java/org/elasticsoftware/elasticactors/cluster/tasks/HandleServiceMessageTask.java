@@ -112,7 +112,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         }
         Exception executionException = null;
         InternalActorContext.setContext(this);
-        TraceContext.enter(internalMessage);
+        TraceContext.enter(this, serviceActor, internalMessage);
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
             MessageToStringSerializer messageToStringSerializer = getStringSerializer(message);

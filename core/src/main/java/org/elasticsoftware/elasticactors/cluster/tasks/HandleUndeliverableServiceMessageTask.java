@@ -99,7 +99,7 @@ public final class HandleUndeliverableServiceMessageTask implements ThreadBoundR
     public final void run() {
         Exception executionException = null;
         InternalActorContext.setContext(this);
-        TraceContext.enter(internalMessage);
+        TraceContext.enter(this, serviceActor, internalMessage);
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
             serviceActor.onUndeliverable(internalMessage.getSender(), message);
