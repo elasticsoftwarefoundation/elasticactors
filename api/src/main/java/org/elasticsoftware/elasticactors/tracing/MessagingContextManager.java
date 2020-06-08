@@ -274,7 +274,9 @@ public final class MessagingContextManager {
         if (s != null) {
             String[] parts = s.split("\\.");
             for (int i = 0; i < parts.length - 1; i++) {
-                parts[i] = parts[i].substring(0, 1);
+                if (parts[i].length() > 0) {
+                    parts[i] = parts[i].substring(0, 1);
+                }
             }
             return String.join(".", parts);
         }
