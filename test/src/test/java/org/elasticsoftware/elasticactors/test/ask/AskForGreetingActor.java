@@ -24,6 +24,9 @@ import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.test.common.EchoGreetingActor;
 import org.elasticsoftware.elasticactors.test.common.Greeting;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
+
+import static org.testng.Assert.assertEquals;
 
 /**
  * @author Joost van de Wijgerd
@@ -35,7 +38,13 @@ public class AskForGreetingActor extends MethodActor {
         try {
             ActorRef echo = actorSystem.actorOf("echo", EchoGreetingActor.class);
             logger.info("Got REQUEST in Thread {}", Thread.currentThread().getName());
-
+            assertEquals(
+                    MessagingContextManager.currentMethodContext(),
+                    AskForGreetingActor.class.getMethod(
+                            "handle",
+                            AskForGreeting.class,
+                            ActorSystem.class,
+                            ActorRef.class));
             echo.ask(new Greeting("echo"), Greeting.class, greeting.getPersistOnResponse()).whenComplete((g, throwable) -> {
                 logger.info("Got REPLY in Thread {}", Thread.currentThread().getName());
                 replyActor.tell(g);

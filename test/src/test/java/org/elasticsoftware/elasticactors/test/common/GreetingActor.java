@@ -32,6 +32,8 @@ import java.util.concurrent.TimeUnit;
 
 import static org.elasticsoftware.elasticactors.test.common.GreetingTest.TEST_TRACE_ID;
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.currentCreationContext;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.currentMethodContext;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.shorten;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
@@ -46,11 +48,12 @@ public class GreetingActor extends TypedActor<Greeting> {
     @Override
     public void onReceive(ActorRef sender, Greeting message) throws Exception {
         logger.info("Hello, {}", message.getWho());
+        assertNull(currentMethodContext());
         CreationContext creationContext = currentCreationContext();
         assertNotNull(creationContext);
         assertNull(creationContext.getScheduled());
         assertEquals(creationContext.getCreator(), GreetingTest.class.getSimpleName());
-        assertEquals(creationContext.getCreatorType(), GreetingTest.class.getName());
+        assertEquals(creationContext.getCreatorType(), shorten(GreetingTest.class.getName()));
         TraceContext current = MessagingContextManager.currentTraceContext();
         assertNotNull(current);
         assertNotEquals(current.getSpanId(), TEST_TRACE_ID);

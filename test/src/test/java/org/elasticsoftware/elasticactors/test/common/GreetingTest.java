@@ -40,7 +40,9 @@ import java.util.concurrent.TimeUnit;
 
 import static org.elasticsoftware.elasticactors.base.actors.ActorDelegate.Builder.stopActor;
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.currentCreationContext;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.currentMethodContext;
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.currentTraceContext;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.shorten;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotEquals;
@@ -63,7 +65,7 @@ public class GreetingTest {
                 new CreationContext(
                         this.getClass().getSimpleName(),
                         this.getClass().getName(),
-                        method.toString())));
+                        method)));
     }
 
     @AfterMethod
@@ -121,11 +123,12 @@ public class GreetingTest {
                 .deleteAfterReceive(false)
                 .onReceive(ScheduledGreeting.class, () -> {
                     logger.info("Got Scheduled Greeting");
+                    assertNull(currentMethodContext());
                     CreationContext creationContext = currentCreationContext();
                     assertNotNull(creationContext);
                     assertNull(creationContext.getScheduled());
                     assertEquals(creationContext.getCreator(), "actor://testcluster/test/shards/1/greeter");
-                    assertEquals(creationContext.getCreatorType(), GreetingActor.class.getName());
+                    assertEquals(creationContext.getCreatorType(), shorten(GreetingActor.class));
                     TraceContext traceContext = currentTraceContext();
                     assertNotNull(traceContext);
                     assertNotEquals(traceContext.getParentSpanId(), TEST_TRACE_ID);
@@ -134,11 +137,12 @@ public class GreetingTest {
                 })
                 .onReceive(Greeting.class, m -> {
                     logger.info("Got Greeting from {}", m.getWho());
+                    assertNull(currentMethodContext());
                     CreationContext creationContext = currentCreationContext();
                     assertNotNull(creationContext);
                     assertTrue(creationContext.getScheduled());
                     assertEquals(creationContext.getCreator(), "actor://testcluster/test/shards/1/greeter");
-                    assertEquals(creationContext.getCreatorType(), GreetingActor.class.getName());
+                    assertEquals(creationContext.getCreatorType(), shorten(GreetingActor.class));
                     TraceContext traceContext = currentTraceContext();
                     assertNotNull(traceContext);
                     assertNotEquals(traceContext.getParentSpanId(), TEST_TRACE_ID);

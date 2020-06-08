@@ -6,6 +6,8 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.StringJoiner;
 
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.shorten;
+
 public final class MessageHandlingContext {
 
     private final String messageType;
@@ -16,10 +18,10 @@ public final class MessageHandlingContext {
     public MessageHandlingContext(
             @Nullable ActorContext actorContext,
             @Nullable TracedMessage tracedMessage) {
-        this.messageType = tracedMessage != null ? tracedMessage.getType() : null;
+        this.messageType = tracedMessage != null ? shorten(tracedMessage.getType()) : null;
         this.sender = tracedMessage != null ? safeToString(tracedMessage.getSender()) : null;
         this.receiver = actorContext != null ? safeToString(actorContext.getSelf()) : null;
-        this.receiverType = actorContext != null ? actorContext.getSelfType() : null;
+        this.receiverType = actorContext != null ? shorten(actorContext.getSelfType()) : null;
     }
 
     @Nullable

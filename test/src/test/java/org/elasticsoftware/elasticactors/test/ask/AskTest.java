@@ -53,7 +53,7 @@ public class AskTest {
                 new CreationContext(
                         this.getClass().getSimpleName(),
                         this.getClass().getName(),
-                        method.toString())));
+                        method)));
     }
 
     @AfterMethod

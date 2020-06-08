@@ -1,8 +1,11 @@
 package org.elasticsoftware.elasticactors.tracing;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.StringJoiner;
+
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.shorten;
 
 public final class CreationContext {
 
@@ -28,6 +31,13 @@ public final class CreationContext {
             @Nullable String creatorType,
             @Nullable String creatorMethod) {
         this(creator, creatorType, creatorMethod, null);
+    }
+
+    public CreationContext(
+            @Nullable String creator,
+            @Nullable String creatorType,
+            @Nullable Method creatorMethod) {
+        this(creator, shorten(creatorType), shorten(creatorMethod), null);
     }
 
     private CreationContext(

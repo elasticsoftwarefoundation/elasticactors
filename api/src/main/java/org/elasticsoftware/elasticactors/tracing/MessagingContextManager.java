@@ -54,9 +54,9 @@ public final class MessagingContextManager {
     }
 
     @Nullable
-    public static String currentMethodContext() {
+    public static Method currentMethodContext() {
         MethodContextManager currentManager = MethodContextManager.threadContext.get();
-        return currentManager != null ? safeToString(currentManager.context) : null;
+        return currentManager != null ? currentManager.context : null;
     }
 
     @Nonnull
@@ -196,7 +196,8 @@ public final class MessagingContextManager {
 
     private final static class CreationContextManager implements ContextManager {
 
-        private static final ThreadLocal<CreationContextManager> threadContext = new ThreadLocal<>();
+        private static final ThreadLocal<CreationContextManager> threadContext =
+                new ThreadLocal<>();
 
         private final CreationContext context;
 
@@ -238,23 +239,23 @@ public final class MessagingContextManager {
 
         private static final ThreadLocal<MethodContextManager> threadContext = new ThreadLocal<>();
 
-        private final Object context;
+        private final Method context;
 
         @Nonnull
         @Override
-        public Object getContext() {
+        public Method getContext() {
             return context;
         }
 
-        private MethodContextManager(@Nonnull Object context) {
+        private MethodContextManager(@Nonnull Method context) {
             this.context = Objects.requireNonNull(context);
         }
 
         @Nonnull
-        private static MethodContextManager enter(@Nonnull Object context) {
+        private static MethodContextManager enter(@Nonnull Method context) {
             MethodContextManager newManager = new MethodContextManager(context);
             logEnter(threadContext, newManager);
-            addToLogContext(RECEIVER_METHOD_KEY, context, Object::toString);
+            addToLogContext(RECEIVER_METHOD_KEY, context, MessagingContextManager::shorten);
             threadContext.set(newManager);
             return newManager;
         }
@@ -266,6 +267,44 @@ public final class MessagingContextManager {
             threadContext.set(null);
         }
 
+    }
+
+    @Nullable
+    public static String shorten(@Nullable String s) {
+        if (s != null) {
+            String[] parts = s.split("\\.");
+            for (int i = 0; i < parts.length - 1; i++) {
+                parts[i] = parts[i].substring(0, 1);
+            }
+            return String.join(".", parts);
+        }
+        return null;
+    }
+
+    @Nullable
+    public static String shorten(@Nullable Class<?> c) {
+        if (c != null) {
+            return shorten(c.getName());
+        }
+        return null;
+    }
+
+    @Nonnull
+    public static String shorten(@Nonnull Class<?>[] p) {
+        String[] s = new String[p.length];
+        for (int i = 0; i < p.length; i++) {
+            s[i] = shorten(p[i]);
+        }
+        return String.join(", ", s);
+    }
+
+    @Nullable
+    public static String shorten(@Nullable Method m) {
+        if (m != null) {
+            return shorten(m.getDeclaringClass().getName()) + "." + m.getName() +
+                    "(" + shorten(m.getParameterTypes()) + ")";
+        }
+        return null;
     }
 
     private static <T extends ContextManager> void logEnter(
