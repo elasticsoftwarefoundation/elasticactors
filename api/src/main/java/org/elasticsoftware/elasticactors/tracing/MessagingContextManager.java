@@ -297,7 +297,7 @@ public final class MessagingContextManager {
         for (int i = 0; i < p.length; i++) {
             s[i] = shorten(p[i]);
         }
-        return String.join(", ", s);
+        return String.join(",", s);
     }
 
     @Nullable
