@@ -22,10 +22,20 @@ import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.base.state.StringState;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
+
+import static org.elasticsoftware.elasticactors.test.common.GreetingTest.TEST_TRACE_ID;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.currentCreationContext;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 
 /**
  * @author Joost van de Wijgerd
@@ -36,6 +46,16 @@ public class GreetingActor extends TypedActor<Greeting> {
     @Override
     public void onReceive(ActorRef sender, Greeting message) throws Exception {
         logger.info("Hello, {}", message.getWho());
+        CreationContext creationContext = currentCreationContext();
+        assertNotNull(creationContext);
+        assertNull(creationContext.getScheduled());
+        assertEquals(creationContext.getCreator(), GreetingTest.class.getSimpleName());
+        assertEquals(creationContext.getCreatorType(), GreetingTest.class.getName());
+        TraceContext current = MessagingContextManager.currentTraceContext();
+        assertNotNull(current);
+        assertNotEquals(current.getSpanId(), TEST_TRACE_ID);
+        assertEquals(current.getTraceId(), TEST_TRACE_ID);
+        assertEquals(current.getParentSpanId(), TEST_TRACE_ID);
         ScheduledMessageRef messageRef = getSystem().getScheduler().scheduleOnce(getSelf(),new Greeting("Greeting Actor"),sender,1, TimeUnit.SECONDS);
         sender.tell(new ScheduledGreeting(messageRef));
     }

@@ -21,10 +21,16 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.elasticsoftware.elasticactors.test.common.EchoGreetingActor;
 import org.elasticsoftware.elasticactors.test.common.Greeting;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -38,10 +44,29 @@ public class AskTest {
 
     private final static Logger logger = LoggerFactory.getLogger(AskTest.class);
 
+    private final static ThreadLocal<MessagingContextManager.MessagingScope> testScope = new ThreadLocal<>();
+
+    @BeforeMethod
+    public void addExternalCreatorData(Method method) {
+        testScope.set(MessagingContextManager.enter(
+                new TraceContext(),
+                new CreationContext(
+                        this.getClass().getSimpleName(),
+                        this.getClass().getName(),
+                        method.toString())));
+    }
+
+    @AfterMethod
+    public void removeExternalCreatorData() {
+        testScope.get().close();
+    }
+
     @Test
     public void testAskGreeting() throws Exception {
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
+
+        logger.info("Starting testAskGreeting");
 
         ActorSystem actorSystem = testActorSystem.getActorSystem();
         ActorRef echo = actorSystem.actorOf("e", EchoGreetingActor.class);
@@ -59,6 +84,8 @@ public class AskTest {
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
 
+        logger.info("Starting testAskGreetingViaActor");
+
         ActorSystem actorSystem = testActorSystem.getActorSystem();
         ActorRef echo = actorSystem.actorOf("ask", AskForGreetingActor.class);
 
@@ -74,6 +101,8 @@ public class AskTest {
     public void testAskGreetingViaActorWithPersistOnReponse() throws Exception {
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
+
+        logger.info("Starting testAskGreetingViaActorWithPersistOnReponse");
 
         ActorSystem actorSystem = testActorSystem.getActorSystem();
         ActorRef echo = actorSystem.actorOf("ask", AskForGreetingActor.class);
@@ -91,6 +120,8 @@ public class AskTest {
     public void testAskGreetingAsync() throws Exception {
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
+
+        logger.info("Starting testAskGreetingAsync");
 
         ActorSystem actorSystem = testActorSystem.getActorSystem();
         ActorRef echo = actorSystem.actorOf("e", EchoGreetingActor.class);
@@ -115,6 +146,8 @@ public class AskTest {
     public void testUnexpectedResponse() throws Exception {
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
+
+        logger.info("Starting testUnexpectedResponse");
 
         ActorSystem actorSystem = testActorSystem.getActorSystem();
         ActorRef echo = actorSystem.actorOf("e", EchoGreetingActor.class);

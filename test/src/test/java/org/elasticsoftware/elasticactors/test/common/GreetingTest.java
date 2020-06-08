@@ -22,10 +22,12 @@ import org.elasticsoftware.elasticactors.base.actors.ActorDelegate;
 import org.elasticsoftware.elasticactors.base.actors.ActorDelegate.MessageConsumer;
 import org.elasticsoftware.elasticactors.base.actors.ReplyActor;
 import org.elasticsoftware.elasticactors.base.state.StringState;
-import org.elasticsoftware.elasticactors.cluster.tracing.ExternalRealSenderDataContext;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.elasticsoftware.elasticactors.test.messaging.LocalMessageQueue;
-import org.elasticsoftware.elasticactors.tracing.RealSenderData;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -37,8 +39,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.elasticsoftware.elasticactors.base.actors.ActorDelegate.Builder.stopActor;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.currentCreationContext;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.currentTraceContext;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 /**
@@ -46,20 +53,30 @@ import static org.testng.Assert.assertTrue;
  */
 public class GreetingTest {
 
+    private final static ThreadLocal<MessagingScope> testScope = new ThreadLocal<>();
+    public static final String TEST_TRACE_ID = "abcdefabcdefabcd";
+
     @BeforeMethod
     public void addExternalCreatorData(Method method) {
-        ExternalRealSenderDataContext.enter(
-                new RealSenderData(method.toString(), GreetingTest.class.getName()));
+        testScope.set(MessagingContextManager.enter(
+                new TraceContext(TEST_TRACE_ID, TEST_TRACE_ID, null),
+                new CreationContext(
+                        this.getClass().getSimpleName(),
+                        this.getClass().getName(),
+                        method.toString())));
     }
 
     @AfterMethod
     public void removeExternalCreatorData() {
-        ExternalRealSenderDataContext.leave();
+        testScope.get().close();
     }
 
     private static final Logger logger = LoggerFactory.getLogger(GreetingTest.class);
+
     @Test
     public void testGreeting() throws Exception {
+
+        logger.info("Starting testGreeting");
 
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
@@ -68,7 +85,6 @@ public class GreetingTest {
         ActorRef greeter = actorSystem.actorOf("greeter",GreetingActor.class,new StringState("Hello World"));
 
         //ScheduledMessageRef messageRef = actorSystem.getScheduler().scheduleOnce(null,new Greeting("Delayed Message"),greeter,2, TimeUnit.SECONDS);
-
         final CountDownLatch countDownLatch = new CountDownLatch(2);
 
         ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
@@ -88,7 +104,63 @@ public class GreetingTest {
     }
 
     @Test
+    public void testGreeting_messageContext() throws Exception {
+
+        logger.info("Starting testGreeting");
+
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+        ActorRef greeter = actorSystem.actorOf("greeter",GreetingActor.class,new StringState("Hello World"));
+
+        //ScheduledMessageRef messageRef = actorSystem.getScheduler().scheduleOnce(null,new Greeting("Delayed Message"),greeter,2, TimeUnit.SECONDS);
+        final CountDownLatch countDownLatch = new CountDownLatch(2);
+
+        ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
+                .deleteAfterReceive(false)
+                .onReceive(ScheduledGreeting.class, () -> {
+                    logger.info("Got Scheduled Greeting");
+                    CreationContext creationContext = currentCreationContext();
+                    assertNotNull(creationContext);
+                    assertNull(creationContext.getScheduled());
+                    assertEquals(creationContext.getCreator(), "actor://testcluster/test/shards/1/greeter");
+                    assertEquals(creationContext.getCreatorType(), GreetingActor.class.getName());
+                    TraceContext traceContext = currentTraceContext();
+                    assertNotNull(traceContext);
+                    assertNotEquals(traceContext.getParentSpanId(), TEST_TRACE_ID);
+                    assertEquals(traceContext.getTraceId(), TEST_TRACE_ID);
+                    assertNotEquals(traceContext.getSpanId(), TEST_TRACE_ID);
+                })
+                .onReceive(Greeting.class, m -> {
+                    logger.info("Got Greeting from {}", m.getWho());
+                    CreationContext creationContext = currentCreationContext();
+                    assertNotNull(creationContext);
+                    assertTrue(creationContext.getScheduled());
+                    assertEquals(creationContext.getCreator(), "actor://testcluster/test/shards/1/greeter");
+                    assertEquals(creationContext.getCreatorType(), GreetingActor.class.getName());
+                    TraceContext traceContext = currentTraceContext();
+                    assertNotNull(traceContext);
+                    assertNotEquals(traceContext.getParentSpanId(), TEST_TRACE_ID);
+                    assertEquals(traceContext.getTraceId(), TEST_TRACE_ID);
+                    assertNotEquals(traceContext.getSpanId(), TEST_TRACE_ID);
+                })
+                .orElse(MessageConsumer.noop())
+                .postReceive(countDownLatch::countDown)
+                .build());
+
+        greeter.tell(new Greeting("Joost van de Wijgerd"), replyActor);
+
+        assertTrue(countDownLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(LocalMessageQueue.getThrownExceptions().isEmpty());
+
+        testActorSystem.destroy();
+    }
+
+    @Test
     public void testGreeting_client() throws Exception {
+
+        logger.info("Starting testGreeting_client");
 
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
@@ -124,6 +196,8 @@ public class GreetingTest {
     @Test
     public void testGreeting_client_createActor() throws Exception {
 
+        logger.info("Starting testGreeting_client_createActor");
+
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
 
@@ -148,6 +222,8 @@ public class GreetingTest {
 
     @Test
     public void testStopAfterGreeting() throws Exception {
+
+        logger.info("Starting testStopAfterGreeting");
 
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
@@ -181,6 +257,8 @@ public class GreetingTest {
     @Test
     public void testGreeting_messageSupertype() throws Exception {
 
+        logger.info("Starting testGreeting_messageSupertype");
+
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
 
@@ -209,6 +287,8 @@ public class GreetingTest {
 
     @Test
     public void testGreeting_client_messageSupertype() throws Exception {
+
+        logger.info("Starting testGreeting_client_messageSupertype");
 
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
@@ -243,6 +323,8 @@ public class GreetingTest {
 
     @Test
     public void testStopAfterGreeting_messageSupertype() throws Exception {
+
+        logger.info("Starting testStopAfterGreeting_messageSupertype");
 
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();

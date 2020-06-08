@@ -20,10 +20,8 @@ import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
-import org.elasticsoftware.elasticactors.tracing.RealSenderData;
-import org.elasticsoftware.elasticactors.tracing.TraceData;
-import org.elasticsoftware.elasticactors.tracing.TraceDataHolder;
-import org.elasticsoftware.elasticactors.util.TracingHelper;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -34,7 +32,8 @@ import java.util.UUID;
 /**
  * @author Joost van de Wijgerd
  */
-public final class ImmutableInternalMessage implements InternalMessage,Serializable {
+public final class ImmutableInternalMessage extends AbstractTracedMessage
+        implements InternalMessage, Serializable {
     private final ActorRef sender;
     private final ImmutableList<ActorRef> receivers;
     private final UUID id;
@@ -44,8 +43,6 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
     private final boolean undeliverable;
     private final int timeout;
     private transient byte[] serializedForm;
-    private final RealSenderData realSenderData;
-    private final TraceData traceData;
 
     public ImmutableInternalMessage(ActorRef sender, ActorRef receiver, ByteBuffer payload, Object payloadObject, boolean durable) {
         this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadObject,durable,false);
@@ -63,8 +60,7 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
         this(id, sender, ImmutableList.of(receiver), payload, payloadObject, durable, undeliverable, NO_TIMEOUT);
     }
 
-    private ImmutableInternalMessage(
-            UUID id,
+    private ImmutableInternalMessage(UUID id,
             ActorRef sender,
             ImmutableList<ActorRef> receivers,
             ByteBuffer payload,
@@ -72,17 +68,14 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
             boolean durable,
             boolean undeliverable,
             int timeout) {
-        this(
-                id,
-                sender,
-                receivers,
-                payload,
-                payloadObject,
-                durable,
-                undeliverable,
-                timeout,
-                TracingHelper.findRealSender(),
-                new TraceData(TraceDataHolder.currentTraceData()));
+        this.sender = sender;
+        this.receivers = receivers;
+        this.id = id;
+        this.payload = payload;
+        this.payloadObject = payloadObject;
+        this.durable = durable;
+        this.undeliverable = undeliverable;
+        this.timeout = timeout;
     }
 
     public ImmutableInternalMessage(
@@ -94,8 +87,9 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
             boolean durable,
             boolean undeliverable,
             int timeout,
-            RealSenderData realSenderData,
-            TraceData traceData) {
+            TraceContext traceContext,
+            CreationContext creationContext) {
+        super(traceContext, creationContext);
         this.sender = sender;
         this.receivers = receivers;
         this.id = id;
@@ -104,12 +98,17 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
         this.durable = durable;
         this.undeliverable = undeliverable;
         this.timeout = timeout;
-        this.realSenderData = realSenderData;
-        this.traceData = traceData;
     }
 
+    @Override
+    @Nullable
     public ActorRef getSender() {
         return sender;
+    }
+
+    @Override
+    public String getType() {
+        return payloadObject.getClass().getName();
     }
 
     @Override
@@ -161,17 +160,5 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
     @Override
     public InternalMessage copyOf() {
         return this;
-    }
-
-    @Override
-    @Nullable
-    public RealSenderData getRealSenderData() {
-        return realSenderData;
-    }
-
-    @Nullable
-    @Override
-    public TraceData getTraceData() {
-        return traceData;
     }
 }

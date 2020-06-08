@@ -21,10 +21,8 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
-import org.elasticsoftware.elasticactors.tracing.RealSenderData;
-import org.elasticsoftware.elasticactors.tracing.TraceData;
-import org.elasticsoftware.elasticactors.tracing.TraceDataHolder;
-import org.elasticsoftware.elasticactors.util.TracingHelper;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -35,7 +33,8 @@ import java.util.UUID;
 /**
  * @author Joost van de Wijgerd
  */
-public final class InternalMessageImpl implements InternalMessage,Serializable {
+public final class InternalMessageImpl extends AbstractTracedMessage
+        implements InternalMessage, Serializable {
     private final ActorRef sender;
     private final ImmutableList<ActorRef> receivers;
     private final UUID id;
@@ -45,8 +44,6 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
     private final boolean undeliverable;
     private final int timeout;
     private transient byte[] serializedForm;
-    private final RealSenderData realSenderData;
-    private final TraceData traceData;
 
     public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass,boolean durable) {
         this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass, durable, false);
@@ -81,30 +78,6 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
             boolean durable,
             boolean undeliverable,
             int timeout) {
-        this(
-                id,
-                sender,
-                receivers,
-                payload,
-                payloadClass,
-                durable,
-                undeliverable,
-                timeout,
-                TracingHelper.findRealSender(),
-                new TraceData(TraceDataHolder.currentTraceData()));
-    }
-
-    public InternalMessageImpl(
-            UUID id,
-            ActorRef sender,
-            ImmutableList<ActorRef> receivers,
-            ByteBuffer payload,
-            String payloadClass,
-            boolean durable,
-            boolean undeliverable,
-            int timeout,
-            RealSenderData realSenderData,
-            TraceData traceData) {
         this.sender = sender;
         this.receivers = receivers;
         this.id = id;
@@ -113,12 +86,38 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
         this.durable = durable;
         this.undeliverable = undeliverable;
         this.timeout = timeout;
-        this.realSenderData = realSenderData;
-        this.traceData = traceData;
     }
 
+    public InternalMessageImpl(UUID id,
+            ActorRef sender,
+            ImmutableList<ActorRef> receivers,
+            ByteBuffer payload,
+            String payloadClass,
+            boolean durable,
+            boolean undeliverable,
+            int timeout,
+            TraceContext traceContext,
+            CreationContext creationContext) {
+        super(traceContext, creationContext);
+        this.sender = sender;
+        this.receivers = receivers;
+        this.id = id;
+        this.payload = payload;
+        this.payloadClass = payloadClass;
+        this.durable = durable;
+        this.undeliverable = undeliverable;
+        this.timeout = timeout;
+    }
+
+    @Override
+    @Nullable
     public ActorRef getSender() {
         return sender;
+    }
+
+    @Override
+    public String getType() {
+        return payloadClass;
     }
 
     @Override
@@ -170,18 +169,16 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
 
     @Override
     public InternalMessage copyOf() {
-        return new InternalMessageImpl(id, sender, receivers, payload.asReadOnlyBuffer(), payloadClass, durable, undeliverable, timeout);
-    }
-
-    @Nullable
-    @Override
-    public RealSenderData getRealSenderData() {
-        return realSenderData;
-    }
-
-    @Nullable
-    @Override
-    public TraceData getTraceData() {
-        return traceData;
+        return new InternalMessageImpl(
+                id,
+                sender,
+                receivers,
+                payload.asReadOnlyBuffer(),
+                payloadClass,
+                durable,
+                undeliverable,
+                timeout,
+                getTraceContext(),
+                getCreationContext());
     }
 }

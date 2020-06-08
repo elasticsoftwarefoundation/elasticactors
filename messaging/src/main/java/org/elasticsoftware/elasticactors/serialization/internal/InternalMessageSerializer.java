@@ -55,28 +55,36 @@ public final class InternalMessageSerializer implements Serializer<InternalMessa
         builder.setDurable(internalMessage.isDurable());
         builder.setUndeliverable(internalMessage.isUndeliverable());
         builder.setTimeout(internalMessage.getTimeout());
-        if (internalMessage.getRealSenderData() != null
-                && !internalMessage.getRealSenderData().isEmpty()) {
-            Messaging.RealSenderData.Builder realSenderDataBuilder =
-                    Messaging.RealSenderData.newBuilder();
-            if (internalMessage.getRealSenderData().getRealSender() != null) {
-                realSenderDataBuilder.setRealSender(
-                        internalMessage.getRealSenderData().getRealSender());
+        if (internalMessage.getTraceContext() != null
+                && !internalMessage.getTraceContext().isEmpty()) {
+            Messaging.TraceContext.Builder traceContext = Messaging.TraceContext.newBuilder();
+            traceContext.setSpanId(internalMessage.getTraceContext().getSpanId());
+            traceContext.setTraceId(internalMessage.getTraceContext().getTraceId());
+            if (internalMessage.getTraceContext().getParentSpanId() != null) {
+                traceContext.setParentSpanId(internalMessage.getTraceContext().getParentSpanId());
             }
-            if (internalMessage.getRealSenderData().getRealSenderType() != null) {
-                realSenderDataBuilder.setRealSenderType(
-                        internalMessage.getRealSenderData().getRealSenderType());
-            }
-            builder.setRealSenderData(realSenderDataBuilder);
+            builder.setTraceContext(traceContext);
         }
-        if (internalMessage.getTraceData() != null) {
-            Messaging.TraceData.Builder traceDataBuilder = Messaging.TraceData.newBuilder();
-            traceDataBuilder.setSpanId(internalMessage.getTraceData().getSpanId());
-            traceDataBuilder.setTraceId(internalMessage.getTraceData().getTraceId());
-            if (internalMessage.getTraceData().getParentSpanId() != null) {
-                traceDataBuilder.setParentSpanId(internalMessage.getTraceData().getParentSpanId());
+        if (internalMessage.getCreationContext() != null
+                && !internalMessage.getCreationContext().isEmpty()) {
+            Messaging.CreationContext.Builder creationContext =
+                    Messaging.CreationContext.newBuilder();
+            if (internalMessage.getCreationContext().getCreator() != null) {
+                creationContext.setCreator(internalMessage.getCreationContext().getCreator());
             }
-            builder.setTraceData(traceDataBuilder);
+            if (internalMessage.getCreationContext().getCreatorType() != null) {
+                creationContext.setCreatorType(
+                        internalMessage.getCreationContext().getCreatorType());
+            }
+            if (internalMessage.getCreationContext().getCreatorMethod() != null) {
+                creationContext.setCreatorMethod(
+                        internalMessage.getCreationContext().getCreatorMethod());
+            }
+            if (internalMessage.getCreationContext().getScheduled() != null) {
+                creationContext.setScheduled(
+                        internalMessage.getCreationContext().getScheduled());
+            }
+            builder.setCreationContext(creationContext);
         }
         return builder.build().toByteArray();
     }

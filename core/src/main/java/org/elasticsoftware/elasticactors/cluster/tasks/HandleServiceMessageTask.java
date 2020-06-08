@@ -24,11 +24,11 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
-import org.elasticsoftware.elasticactors.cluster.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.slf4j.Logger;
@@ -39,6 +39,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.enter;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
@@ -117,8 +118,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         }
         Exception executionException = null;
         InternalActorContext.setContext(this);
-        TraceContext.enter(internalMessage);
-        try {
+        try (MessagingContextManager.MessagingScope ignored = enter(this, internalMessage)) {
             Object message = deserializeMessage(actorSystem, internalMessage);
             MessageToStringSerializer messageToStringSerializer = getStringSerializer(message);
             try {
@@ -143,7 +143,6 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
             executionException = e;
         } finally {
             InternalActorContext.getAndClearContext();
-            TraceContext.leave();
         }
         // marks the end of the execution path
         if(this.measurement != null) {

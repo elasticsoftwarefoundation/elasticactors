@@ -24,12 +24,11 @@ import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
-import org.elasticsoftware.elasticactors.cluster.tracing.ExternalRealSenderDataContext;
-import org.elasticsoftware.elasticactors.cluster.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.messaging.ScheduledMessageImpl;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +46,9 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import static org.elasticsoftware.elasticactors.tracing.CreationContext.forScheduling;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.enter;
 
 import static java.lang.String.format;
 
@@ -232,13 +234,13 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
         @Override
         public void run() {
             boolean executionInterruptedByResharding = false;
-            try {
+            try (MessagingScope ignored = enter(
+                    message.getTraceContext(),
+                    forScheduling(message.getCreationContext()))) {
                 final MessageDeserializer messageDeserializer = actorSystem.getDeserializer(message.getMessageClass());
                 if(messageDeserializer != null) {
                     Object deserializedMessage = messageDeserializer.deserialize(ByteBuffer.wrap(message.getMessageBytes()));
                     // send the message
-                    TraceContext.enterTraceDataOnlyContext(message.getTraceData());
-                    ExternalRealSenderDataContext.enter(message.getRealSenderData());
                     final ActorRef receiverRef = message.getReceiver();
                     receiverRef.tell(deserializedMessage,message.getSender());
                 } else {
@@ -284,8 +286,6 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
                 if (!executionInterruptedByResharding) {
                     scheduledMessageRepository.delete(shardKey, message.getKey());
                 }
-                TraceContext.leaveTraceDataOnlyContext();
-                ExternalRealSenderDataContext.leave();
             }
         }
     }

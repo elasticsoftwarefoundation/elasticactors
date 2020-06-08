@@ -6,28 +6,33 @@ import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.concurrent.ThreadLocalRandom;
 
-public final class TraceData {
+public final class TraceContext {
 
     private final String spanId;
     private final String traceId;
     private final String parentSpanId;
 
-    public TraceData(@Nonnull String spanId, @Nonnull String traceId, String parentSpanId) {
+    public TraceContext() {
+        this(null);
+    }
+
+    public TraceContext(
+            @Nonnull String spanId,
+            @Nonnull String traceId,
+            @Nullable String parentSpanId) {
         this.spanId = Objects.requireNonNull(spanId);
         this.traceId = Objects.requireNonNull(traceId);
         this.parentSpanId = parentSpanId;
     }
 
-    public TraceData(TraceData parent) {
+    public TraceContext(@Nullable TraceContext parent) {
         this.spanId = String.format("%016x", ThreadLocalRandom.current().nextLong());
-        this.traceId = parent != null ? parent.getTraceId(): this.spanId;
-        this.parentSpanId = parent != null ? parent.getSpanId() : null;
-    }
-
-    public boolean isEmpty() {
-        return this.spanId.isEmpty()
-                && this.traceId.isEmpty()
-                && (this.parentSpanId == null || this.parentSpanId.isEmpty());
+        this.traceId = parent == null || parent.getTraceId().trim().isEmpty()
+                ? this.spanId
+                : parent.getTraceId();
+        this.parentSpanId = parent == null || parent.getSpanId().trim().isEmpty()
+                ? null
+                : parent.getSpanId();
     }
 
     @Nonnull
@@ -50,35 +55,31 @@ public final class TraceData {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof TraceData)) {
+        if (!(o instanceof TraceContext)) {
             return false;
         }
-
-        TraceData traceData = (TraceData) o;
-
-        if (!spanId.equals(traceData.spanId)) {
-            return false;
-        }
-        if (!traceId.equals(traceData.traceId)) {
-            return false;
-        }
-        return Objects.equals(parentSpanId, traceData.parentSpanId);
+        TraceContext that = (TraceContext) o;
+        return spanId.equals(that.spanId) &&
+                traceId.equals(that.traceId) &&
+                Objects.equals(parentSpanId, that.parentSpanId);
     }
 
     @Override
     public int hashCode() {
-        int result = spanId.hashCode();
-        result = 31 * result + traceId.hashCode();
-        result = 31 * result + (parentSpanId != null ? parentSpanId.hashCode() : 0);
-        return result;
+        return Objects.hash(spanId, traceId, parentSpanId);
     }
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", TraceData.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", TraceContext.class.getSimpleName() + "[", "]")
                 .add("spanId='" + spanId + "'")
                 .add("traceId='" + traceId + "'")
                 .add("parentSpanId='" + parentSpanId + "'")
                 .toString();
+    }
+
+    public boolean isEmpty() {
+        return spanId == null || spanId.trim().isEmpty()
+                || traceId == null || traceId.trim().isEmpty();
     }
 }

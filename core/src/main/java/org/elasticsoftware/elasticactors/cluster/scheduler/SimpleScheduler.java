@@ -18,17 +18,14 @@ package org.elasticsoftware.elasticactors.cluster.scheduler;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ShardKey;
-import org.elasticsoftware.elasticactors.cluster.tracing.ExternalRealSenderDataContext;
-import org.elasticsoftware.elasticactors.cluster.tracing.TraceContext;
+import org.elasticsoftware.elasticactors.messaging.AbstractTracedMessage;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
-import org.elasticsoftware.elasticactors.tracing.RealSenderData;
-import org.elasticsoftware.elasticactors.tracing.TraceData;
-import org.elasticsoftware.elasticactors.tracing.TraceDataHolder;
-import org.elasticsoftware.elasticactors.util.TracingHelper;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.UUID;
@@ -38,6 +35,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import static org.elasticsoftware.elasticactors.tracing.CreationContext.forScheduling;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.enter;
 
 /**
  * Simple in-memory scheduler that is backed by a {@link java.util.concurrent.ScheduledExecutorService}
@@ -90,13 +90,11 @@ public final class SimpleScheduler implements SchedulerService,ScheduledMessageR
         return new SimpleScheduledMessageRef(refSpec,scheduledFuture);
     }
 
-    private final class TellActorTask implements Runnable {
+    private final class TellActorTask extends AbstractTracedMessage implements Runnable {
         private final String id;
         private final ActorRef sender;
         private final ActorRef receiver;
         private final Object message;
-        private final TraceData traceData = TraceDataHolder.currentTraceData();
-        private final RealSenderData realSender = TracingHelper.findRealSender();
 
         private TellActorTask(String id, ActorRef sender, ActorRef receiver, Object message) {
             this.id = id;
@@ -107,17 +105,25 @@ public final class SimpleScheduler implements SchedulerService,ScheduledMessageR
 
         @Override
         public void run() {
-            try {
-                TraceContext.enterTraceDataOnlyContext(traceData);
-                ExternalRealSenderDataContext.enter(realSender);
-                receiver.tell(message,sender);
+            try (MessagingScope ignored = enter(
+                    getTraceContext(),
+                    forScheduling(getCreationContext()))) {
+                receiver.tell(message, sender);
                 scheduledFutures.remove(id);
             } catch (Exception e) {
-                logger.error("Exception sending scheduled messsage",e);
-            } finally {
-                TraceContext.leaveTraceDataOnlyContext();
-                ExternalRealSenderDataContext.leave();
+                logger.error("Exception sending scheduled messsage", e);
             }
+        }
+
+        @Nullable
+        @Override
+        public ActorRef getSender() {
+            return sender;
+        }
+
+        @Override
+        public String getType() {
+            return message.getClass().getName();
         }
     }
 }

@@ -18,8 +18,7 @@ package org.elasticsoftware.elasticactors.messaging;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.tracing.RealSenderData;
-import org.elasticsoftware.elasticactors.tracing.TraceData;
+import org.elasticsoftware.elasticactors.tracing.TracedMessage;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -30,12 +29,14 @@ import java.util.UUID;
 /**
  * @author Joost van de Wijgerd
  */
-public interface InternalMessage {
+public interface InternalMessage extends TracedMessage {
 
     int NO_TIMEOUT = -1;
 
     UUID getId();
 
+    @Override
+    @Nullable
     ActorRef getSender();
 
     List<ActorRef> getReceivers();
@@ -56,9 +57,4 @@ public interface InternalMessage {
 
     int getTimeout();
 
-    @Nullable
-    RealSenderData getRealSenderData();
-
-    @Nullable
-    TraceData getTraceData();
 }

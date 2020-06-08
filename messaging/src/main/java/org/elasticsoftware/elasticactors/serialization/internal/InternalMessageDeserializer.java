@@ -25,13 +25,14 @@ import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
-import org.elasticsoftware.elasticactors.tracing.RealSenderData;
-import org.elasticsoftware.elasticactors.tracing.TraceData;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import java.io.IOException;
 import java.util.UUID;
 
 import static org.elasticsoftware.elasticactors.messaging.UUIDTools.toUUID;
+import static org.elasticsoftware.elasticactors.tracing.CreationContext.forScheduling;
 
 /**
  * @author Joost van de Wijgerd
@@ -66,18 +67,22 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
         boolean durable = protobufMessage.getDurable();
         boolean undeliverable = protobufMessage.getUndeliverable();
         int timeout = protobufMessage.getTimeout() != 0 ? protobufMessage.getTimeout() : InternalMessage.NO_TIMEOUT;
-        RealSenderData realSenderData = new RealSenderData(
-                protobufMessage.getRealSenderData().getRealSender(),
-                protobufMessage.getRealSenderData().getRealSenderType());
-        if (realSenderData.isEmpty()) {
-            realSenderData = null;
+        TraceContext traceContext = new TraceContext(
+                protobufMessage.getTraceContext().getSpanId(),
+                protobufMessage.getTraceContext().getTraceId(),
+                protobufMessage.getTraceContext().getParentSpanId());
+        if (traceContext.isEmpty()) {
+            traceContext = null;
         }
-        TraceData traceData = new TraceData(
-                protobufMessage.getTraceData().getSpanId(),
-                protobufMessage.getTraceData().getTraceId(),
-                protobufMessage.getTraceData().getParentSpanId());
-        if (traceData.isEmpty()) {
-            traceData = null;
+        CreationContext creationContext = new CreationContext(
+                protobufMessage.getCreationContext().getCreator(),
+                protobufMessage.getCreationContext().getCreatorType(),
+                protobufMessage.getCreationContext().getCreatorMethod());
+        if (protobufMessage.getCreationContext().getScheduled()) {
+            creationContext = forScheduling(creationContext);
+        }
+        if (creationContext.isEmpty()) {
+            creationContext = null;
         }
         //return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable);
         // optimize immutable message if possible
@@ -93,8 +98,8 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
                     durable,
                     undeliverable,
                     timeout,
-                    realSenderData,
-                    traceData);
+                    traceContext,
+                    creationContext);
         } else {
             Object payloadObject = serializationAccessor.getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
             return new ImmutableInternalMessage(
@@ -106,8 +111,8 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
                     durable,
                     undeliverable,
                     timeout,
-                    realSenderData,
-                    traceData);
+                    traceContext,
+                    creationContext);
         }
     }
 

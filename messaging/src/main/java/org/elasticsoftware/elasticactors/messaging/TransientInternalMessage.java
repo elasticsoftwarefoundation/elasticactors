@@ -19,10 +19,8 @@ package org.elasticsoftware.elasticactors.messaging;
 import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.tracing.RealSenderData;
-import org.elasticsoftware.elasticactors.tracing.TraceData;
-import org.elasticsoftware.elasticactors.tracing.TraceDataHolder;
-import org.elasticsoftware.elasticactors.util.TracingHelper;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -33,14 +31,13 @@ import java.util.UUID;
 /**
  * @author Joost van de Wijgerd
  */
-public final class TransientInternalMessage implements InternalMessage,Serializable {
+public final class TransientInternalMessage extends AbstractTracedMessage
+        implements InternalMessage, Serializable {
     private final ActorRef sender;
     private final ImmutableList<ActorRef> receivers;
     private final UUID id;
     private final Object payload;
     private final boolean undeliverable;
-    private final RealSenderData realSenderData;
-    private final TraceData traceData;
 
     public TransientInternalMessage(ActorRef sender, ActorRef receiver, Object payload) {
         this(sender,receiver,payload,false);
@@ -59,13 +56,11 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
             ImmutableList<ActorRef> receivers,
             Object payload,
             boolean undeliverable) {
-        this(
-                sender,
-                receivers,
-                payload,
-                undeliverable,
-                TracingHelper.findRealSender(),
-                new TraceData(TraceDataHolder.currentTraceData()));
+        this.sender = sender;
+        this.receivers = receivers;
+        this.id = UUIDTools.createTimeBasedUUID();
+        this.payload = payload;
+        this.undeliverable = undeliverable;
     }
 
     public TransientInternalMessage(
@@ -73,19 +68,25 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
             ImmutableList<ActorRef> receivers,
             Object payload,
             boolean undeliverable,
-            RealSenderData realSenderData,
-            TraceData traceData) {
+            TraceContext traceContext,
+            CreationContext creationContext) {
+        super(traceContext, creationContext);
         this.sender = sender;
         this.receivers = receivers;
         this.id = UUIDTools.createTimeBasedUUID();
         this.payload = payload;
         this.undeliverable = undeliverable;
-        this.realSenderData = realSenderData;
-        this.traceData = traceData;
     }
 
+    @Override
+    @Nullable
     public ActorRef getSender() {
         return sender;
+    }
+
+    @Override
+    public String getType() {
+        return payload.getClass().getName();
     }
 
     @Override
@@ -134,17 +135,5 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
     @Override
     public InternalMessage copyOf() {
         return this;
-    }
-
-    @Nullable
-    @Override
-    public RealSenderData getRealSenderData() {
-        return realSenderData;
-    }
-
-    @Nullable
-    @Override
-    public TraceData getTraceData() {
-        return traceData;
     }
 }

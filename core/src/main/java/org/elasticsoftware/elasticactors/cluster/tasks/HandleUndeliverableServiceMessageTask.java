@@ -23,9 +23,9 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
-import org.elasticsoftware.elasticactors.cluster.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.enter;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
@@ -104,17 +105,17 @@ public final class HandleUndeliverableServiceMessageTask implements ThreadBoundR
     public final void run() {
         Exception executionException = null;
         InternalActorContext.setContext(this);
-        TraceContext.enter(internalMessage);
-        try {
-            Object message = deserializeMessage(actorSystem, internalMessage);
-            serviceActor.onUndeliverable(internalMessage.getSender(), message);
-        } catch(Exception e) {
-            // @todo: send an error message to the sender
-            logger.error("Exception while handling message for service [{}]",serviceRef,e);
-            executionException = e;
+        try (MessagingContextManager.MessagingScope ignored = enter(this, internalMessage)) {
+            try {
+                Object message = deserializeMessage(actorSystem, internalMessage);
+                serviceActor.onUndeliverable(internalMessage.getSender(), message);
+            } catch (Exception e) {
+                // @todo: send an error message to the sender
+                logger.error("Exception while handling message for service [{}]", serviceRef, e);
+                executionException = e;
+            }
         } finally {
             InternalActorContext.getAndClearContext();
-            TraceContext.leave();
         }
         if(messageHandlerEventListener != null) {
             if(executionException == null) {

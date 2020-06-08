@@ -22,7 +22,6 @@ import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
-import org.elasticsoftware.elasticactors.cluster.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
@@ -32,6 +31,7 @@ import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +40,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.enter;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
@@ -95,9 +97,8 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         Exception executionException = null;
         InternalActorContext.setContext(persistentActor);
         SerializationContext.initialize();
-        TraceContext.enter(internalMessage);
         boolean shouldUpdateState = false;
-        try {
+        try (MessagingScope ignored = enter(persistentActor, internalMessage)) {
             shouldUpdateState = doInActorContext(actorSystem, receiver, receiverRef, internalMessage);
             executeLifecycleListeners();
         } catch (Exception e) {
@@ -108,7 +109,6 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             SerializationContext.reset();
             // clear the state from the thread
             InternalActorContext.getAndClearContext();
-            TraceContext.leave();
             // marks the end of the execution path
             if(this.measurement != null) {
                 this.measurement.setExecutionEnd(System.nanoTime());

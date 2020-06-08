@@ -17,8 +17,7 @@
 package org.elasticsoftware.elasticactors.cluster.scheduler;
 
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.tracing.RealSenderData;
-import org.elasticsoftware.elasticactors.tracing.TraceData;
+import org.elasticsoftware.elasticactors.tracing.TracedMessage;
 
 import javax.annotation.Nullable;
 import java.util.UUID;
@@ -28,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author Joost van de Wijgerd
  */
-public interface ScheduledMessage extends Delayed {
+public interface ScheduledMessage extends Delayed, TracedMessage {
 
     ScheduledMessageKey getKey();
 
@@ -58,6 +57,8 @@ public interface ScheduledMessage extends Delayed {
      *
      * @return
      */
+    @Override
+    @Nullable
     ActorRef getSender();
 
     /**
@@ -69,10 +70,4 @@ public interface ScheduledMessage extends Delayed {
     long getFireTime(TimeUnit timeUnit);
 
     Class getMessageClass();
-
-    @Nullable
-    RealSenderData getRealSenderData();
-
-    @Nullable
-    TraceData getTraceData();
 }
