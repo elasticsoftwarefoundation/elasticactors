@@ -64,7 +64,7 @@ public class GreetingTest {
                 new TraceContext(TEST_TRACE_ID, TEST_TRACE_ID, null),
                 new CreationContext(
                         this.getClass().getSimpleName(),
-                        this.getClass().getName(),
+                        this.getClass(),
                         method)));
     }
 

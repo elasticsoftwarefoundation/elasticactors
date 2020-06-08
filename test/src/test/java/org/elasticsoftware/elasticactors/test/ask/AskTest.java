@@ -52,7 +52,7 @@ public class AskTest {
                 new TraceContext(),
                 new CreationContext(
                         this.getClass().getSimpleName(),
-                        this.getClass().getName(),
+                        this.getClass(),
                         method)));
     }
 

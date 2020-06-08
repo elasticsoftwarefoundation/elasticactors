@@ -26,6 +26,18 @@ public final class CreationContext {
         return null;
     }
 
+    /**
+     * Creates a new CreationContext. The strings provided are not shortened. For external usage,
+     * it's highly recommended to use {@link CreationContext#CreationContext(String, Class, Method)}
+     * instead.
+     *
+     * <br>
+     * If you use this method, however, be sure to provide short strings as to not overload the log
+     * aggregator and keep the message sizes small.
+     *
+     * <br>
+     * See {@link MessagingContextManager#shorten(String)}.
+     */
     public CreationContext(
             @Nullable String creator,
             @Nullable String creatorType,
@@ -33,9 +45,28 @@ public final class CreationContext {
         this(creator, creatorType, creatorMethod, null);
     }
 
+    /**
+     * Creates a new CreationContext. The strings provided are not shortened. For external usage,
+     * it's highly recommended to use {@link CreationContext#CreationContext(String, Class, Method)}
+     * instead.
+     *
+     * <br>
+     * If you use this method, however, be sure to provide short strings as to not overload the log
+     * aggregator and keep the message sizes small.
+     *
+     * <br>
+     * See {@link MessagingContextManager#shorten(String)}.
+     */
     public CreationContext(
             @Nullable String creator,
             @Nullable String creatorType,
+            @Nullable Method creatorMethod) {
+        this(creator, creatorType, shorten(creatorMethod), null);
+    }
+
+    public CreationContext(
+            @Nullable String creator,
+            @Nullable Class<?> creatorType,
             @Nullable Method creatorMethod) {
         this(creator, shorten(creatorType), shorten(creatorMethod), null);
     }
