@@ -98,6 +98,7 @@ public final class MessagingContextManager {
         private final ContextManager[] contextManagers;
         private final TraceContext traceContext;
 
+        @Nullable
         public TraceContext getTraceContext() {
             return traceContext;
         }
