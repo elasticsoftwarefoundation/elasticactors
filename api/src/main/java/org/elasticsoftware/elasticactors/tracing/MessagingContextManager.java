@@ -96,9 +96,15 @@ public final class MessagingContextManager {
     public final static class MessagingScope implements AutoCloseable {
 
         private final ContextManager[] contextManagers;
+        private final TraceContext traceContext;
+
+        public TraceContext getTraceContext() {
+            return traceContext;
+        }
 
         public MessagingScope(@Nonnull ContextManager... contextManagers) {
             this.contextManagers = Objects.requireNonNull(contextManagers);
+            this.traceContext = currentTraceContext();
         }
 
         @Override

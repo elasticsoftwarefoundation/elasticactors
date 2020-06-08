@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
     <Properties>
-        <Property name="pattern">%d{HH:mm:ss.SSS} [%t%notEmpty{,%X{X-B3-SpanId}}%notEmpty{,%X{X-B3-TraceId}}%notEmpty{,%X{X-B3-ParentSpanId}}] %-5level %logger{1.} - %msg%n</Property>
+        <Property name="pattern">%d [%t%notEmpty{,%X{X-B3-SpanId}}%notEmpty{,%X{X-B3-TraceId}}%notEmpty{,%X{X-B3-ParentSpanId}}] %-5level %logger{1.} - %msg%n</Property>
     </Properties>
     <Appenders>
         <Console name="STDOUT" target="SYSTEM_OUT">
