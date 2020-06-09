@@ -55,22 +55,22 @@ import static org.testng.Assert.assertTrue;
  */
 public class GreetingTest {
 
-    private static MessagingScope testScope;
+    private static final ThreadLocal<MessagingScope> testScope = new ThreadLocal<>();
     public static final TraceContext TEST_TRACE = new TraceContext();
 
     @BeforeMethod
     public void addExternalCreatorData(Method method) {
-        testScope = MessagingContextManager.enter(
+        testScope.set(MessagingContextManager.enter(
                 TEST_TRACE,
                 new CreationContext(
                         this.getClass().getSimpleName(),
                         this.getClass(),
-                        method));
+                        method)));
     }
 
     @AfterMethod
     public void removeExternalCreatorData() {
-        testScope.close();
+        testScope.get();
     }
 
     private static final Logger logger = LoggerFactory.getLogger(GreetingTest.class);
