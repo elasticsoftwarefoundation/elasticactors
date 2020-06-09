@@ -65,7 +65,7 @@ public final class MessagingContextManager {
             @Nullable TracedMessage message) {
         return new MessagingScope(
                 MessageHandlingContextManager.enter(new MessageHandlingContext(context, message)),
-                TraceContextManager.enter(new TraceContext(message != null
+                TraceContextManager.replace(new TraceContext(message != null
                         ? message.getTraceContext()
                         : null)),
                 message != null && message.getCreationContext() != null
@@ -85,6 +85,11 @@ public final class MessagingContextManager {
     @Nonnull
     public static MessagingScope enter(@Nonnull Method context) {
         return new MessagingScope(MethodContextManager.enter(context));
+    }
+
+    @Nonnull
+    public static MessagingScope enter(@Nonnull TraceContext traceContext) {
+        return new MessagingScope(TraceContextManager.enter(traceContext));
     }
 
     private interface ContextManager extends AutoCloseable {
@@ -127,9 +132,11 @@ public final class MessagingContextManager {
         private static final ThreadLocal<TraceContextManager> threadContext = new ThreadLocal<>();
 
         private final TraceContext context;
+        private final TraceContextManager previousManager;
 
         private TraceContextManager(@Nonnull TraceContext context) {
             this.context = Objects.requireNonNull(context);
+            this.previousManager = threadContext.get();
         }
 
         @Nonnull
@@ -138,12 +145,38 @@ public final class MessagingContextManager {
             return context;
         }
 
+        @Nullable
+        public TraceContextManager getPreviousManager() {
+            return previousManager;
+        }
+
         @Nonnull
         private static TraceContextManager enter(@Nonnull TraceContext context) {
             TraceContextManager newManager = new TraceContextManager(context);
             logEnter(threadContext, newManager);
             addToLogContext(SPAN_ID_HEADER, context, TraceContext::getSpanId);
             addToLogContext(TRACE_ID_HEADER, context, TraceContext::getTraceId);
+            removeFromLogContext(PARENT_SPAN_ID_HEADER);
+            addToLogContext(PARENT_SPAN_ID_HEADER, context, TraceContext::getParentSpanId);
+            threadContext.set(newManager);
+            return newManager;
+        }
+
+        @Nonnull
+        private static TraceContextManager replace(@Nonnull TraceContext context) {
+            TraceContextManager newManager = new TraceContextManager(context);
+            logger.debug(
+                    "Putting {} in scope. Previous was {}.",
+                    newManager.getContext(),
+                    newManager.getPreviousManager() != null
+                            ? newManager.getPreviousManager().context
+                            : null);
+            if (newManager.previousManager == null) {
+                logger.warn("Tried to replace a Trace Context, but none is active");
+            }
+            addToLogContext(SPAN_ID_HEADER, context, TraceContext::getSpanId);
+            addToLogContext(TRACE_ID_HEADER, context, TraceContext::getTraceId);
+            removeFromLogContext(PARENT_SPAN_ID_HEADER);
             addToLogContext(PARENT_SPAN_ID_HEADER, context, TraceContext::getParentSpanId);
             threadContext.set(newManager);
             return newManager;
@@ -152,10 +185,18 @@ public final class MessagingContextManager {
         @Override
         public void close() {
             logClose(threadContext, this);
-            removeFromLogContext(SPAN_ID_HEADER);
-            removeFromLogContext(TRACE_ID_HEADER);
-            removeFromLogContext(PARENT_SPAN_ID_HEADER);
-            threadContext.set(null);
+            if (previousManager == null) {
+                removeFromLogContext(SPAN_ID_HEADER);
+                removeFromLogContext(TRACE_ID_HEADER);
+                removeFromLogContext(PARENT_SPAN_ID_HEADER);
+            } else {
+                TraceContext previous = previousManager.getContext();
+                addToLogContext(SPAN_ID_HEADER, previous, TraceContext::getSpanId);
+                addToLogContext(TRACE_ID_HEADER, previous, TraceContext::getTraceId);
+                removeFromLogContext(PARENT_SPAN_ID_HEADER);
+                addToLogContext(PARENT_SPAN_ID_HEADER, previous, TraceContext::getParentSpanId);
+            }
+            threadContext.set(previousManager);
         }
 
     }

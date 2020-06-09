@@ -55,22 +55,22 @@ import static org.testng.Assert.assertTrue;
  */
 public class GreetingTest {
 
-    private final static ThreadLocal<MessagingScope> testScope = new ThreadLocal<>();
-    public static final String TEST_TRACE_ID = "abcdefabcdefabcd";
+    private static MessagingScope testScope;
+    public static final TraceContext TEST_TRACE = new TraceContext();
 
     @BeforeMethod
     public void addExternalCreatorData(Method method) {
-        testScope.set(MessagingContextManager.enter(
-                new TraceContext(TEST_TRACE_ID, TEST_TRACE_ID, null),
+        testScope = MessagingContextManager.enter(
+                TEST_TRACE,
                 new CreationContext(
                         this.getClass().getSimpleName(),
                         this.getClass(),
-                        method)));
+                        method));
     }
 
     @AfterMethod
     public void removeExternalCreatorData() {
-        testScope.get().close();
+        testScope.close();
     }
 
     private static final Logger logger = LoggerFactory.getLogger(GreetingTest.class);
@@ -131,9 +131,9 @@ public class GreetingTest {
                     assertEquals(creationContext.getCreatorType(), shorten(GreetingActor.class));
                     TraceContext traceContext = currentTraceContext();
                     assertNotNull(traceContext);
-                    assertNotEquals(traceContext.getParentSpanId(), TEST_TRACE_ID);
-                    assertEquals(traceContext.getTraceId(), TEST_TRACE_ID);
-                    assertNotEquals(traceContext.getSpanId(), TEST_TRACE_ID);
+                    assertNotEquals(traceContext.getParentSpanId(), TEST_TRACE.getTraceId());
+                    assertEquals(traceContext.getTraceId(), TEST_TRACE.getTraceId());
+                    assertNotEquals(traceContext.getSpanId(), TEST_TRACE.getTraceId());
                 })
                 .onReceive(Greeting.class, m -> {
                     logger.info("Got Greeting from {}", m.getWho());
@@ -145,9 +145,9 @@ public class GreetingTest {
                     assertEquals(creationContext.getCreatorType(), shorten(GreetingActor.class));
                     TraceContext traceContext = currentTraceContext();
                     assertNotNull(traceContext);
-                    assertNotEquals(traceContext.getParentSpanId(), TEST_TRACE_ID);
-                    assertEquals(traceContext.getTraceId(), TEST_TRACE_ID);
-                    assertNotEquals(traceContext.getSpanId(), TEST_TRACE_ID);
+                    assertNotEquals(traceContext.getParentSpanId(), TEST_TRACE.getTraceId());
+                    assertEquals(traceContext.getTraceId(), TEST_TRACE.getTraceId());
+                    assertNotEquals(traceContext.getSpanId(), TEST_TRACE.getTraceId());
                 })
                 .orElse(MessageConsumer.noop())
                 .postReceive(countDownLatch::countDown)

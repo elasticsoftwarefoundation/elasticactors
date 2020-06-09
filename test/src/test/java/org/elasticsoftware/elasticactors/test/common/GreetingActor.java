@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.elasticsoftware.elasticactors.test.common.GreetingTest.TEST_TRACE_ID;
+import static org.elasticsoftware.elasticactors.test.common.GreetingTest.TEST_TRACE;
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.currentCreationContext;
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.currentMethodContext;
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.shorten;
@@ -56,9 +56,9 @@ public class GreetingActor extends TypedActor<Greeting> {
         assertEquals(creationContext.getCreatorType(), shorten(GreetingTest.class.getName()));
         TraceContext current = MessagingContextManager.currentTraceContext();
         assertNotNull(current);
-        assertNotEquals(current.getSpanId(), TEST_TRACE_ID);
-        assertEquals(current.getTraceId(), TEST_TRACE_ID);
-        assertEquals(current.getParentSpanId(), TEST_TRACE_ID);
+        assertNotEquals(current.getSpanId(), TEST_TRACE.getTraceId());
+        assertEquals(current.getTraceId(), TEST_TRACE.getTraceId());
+        assertEquals(current.getParentSpanId(), TEST_TRACE.getTraceId());
         ScheduledMessageRef messageRef = getSystem().getScheduler().scheduleOnce(getSelf(),new Greeting("Greeting Actor"),sender,1, TimeUnit.SECONDS);
         sender.tell(new ScheduledGreeting(messageRef));
     }

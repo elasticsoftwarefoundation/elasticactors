@@ -196,6 +196,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <artifactId>elasticactors-tracing</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>javax.inject</groupId>
                 <artifactId>javax.inject</artifactId>
                 <version>1</version>
@@ -549,6 +554,7 @@
         <module>messaging</module>
         <module>client-spring-amqp</module>
         <module>client-rabbitmq</module>
+        <module>tracing</module>
     </modules>
 
     <build>

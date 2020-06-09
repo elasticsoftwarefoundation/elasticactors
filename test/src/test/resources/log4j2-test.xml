@@ -1,26 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
-    <Properties>
-        <Property name="pattern">%d [%t%notEmpty{,%X{X-B3-SpanId}}%notEmpty{,%X{X-B3-TraceId}}%notEmpty{,%X{X-B3-ParentSpanId}}] %-5level %logger{1.} - %msg%n</Property>
-    </Properties>
     <Appenders>
         <Console name="STDOUT" target="SYSTEM_OUT">
-            <PatternLayout pattern="${pattern}"/>
+            <PatternLayout pattern="%date %highlight{%5level}%notEmpty{ [%MDC{X-B3-TraceId},%MDC{X-B3-SpanId}]} %style{%pid{-}}{magenta} --- [%15.15thread] %style{%-40.40logger{1.}}{cyan}: %message%n"/>
             <!-- Uncomment this to enable JSON output with full context map -->
             <!-- <JsonLayout compact="true" eventEol="true" properties="true"/>-->
-            <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="ACCEPT"/>
-        </Console>
-        <Console name="STDERR" target="SYSTEM_ERR">
-            <PatternLayout pattern="${pattern}"/>
-            <!-- Uncomment this to enable JSON output with full context map -->
-            <!-- <JsonLayout compact="true" eventEol="true" properties="true"/>-->
-            <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
         </Console>
     </Appenders>
     <Loggers>
         <Root level="INFO"> <!-- set to ERROR for cleaner look when testing -->
             <AppenderRef ref="STDOUT"/>
-            <AppenderRef ref="STDERR"/>
         </Root>
         <Logger name="org.elasticsoftware.elasticactors.test" level="INFO"/>
     </Loggers>
