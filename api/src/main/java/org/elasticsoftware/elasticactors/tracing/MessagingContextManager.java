@@ -185,11 +185,6 @@ public final class MessagingContextManager {
             return context;
         }
 
-        @Nullable
-        public TraceContextManager getPreviousManager() {
-            return previousManager;
-        }
-
         @Nonnull
         private static TraceContextManager enter(@Nonnull TraceContext context) {
             TraceContextManager newManager = new TraceContextManager(context, Strategy.ENTER);
