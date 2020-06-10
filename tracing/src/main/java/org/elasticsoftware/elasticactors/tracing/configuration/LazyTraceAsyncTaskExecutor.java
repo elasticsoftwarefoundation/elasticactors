@@ -5,12 +5,11 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
-public class LazyTraceAsyncTaskExecutor implements AsyncTaskExecutor {
-
+class LazyTraceAsyncTaskExecutor implements AsyncTaskExecutor {
 
 	private final AsyncTaskExecutor delegate;
 
-	public LazyTraceAsyncTaskExecutor(AsyncTaskExecutor delegate) {
+	LazyTraceAsyncTaskExecutor(AsyncTaskExecutor delegate) {
 		this.delegate = delegate;
 	}
 

@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.test.common.EchoGreetingActor;
 import org.elasticsoftware.elasticactors.test.common.Greeting;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,7 @@ public class AskTest {
 
     private final static Logger logger = LoggerFactory.getLogger(AskTest.class);
 
-    private final static ThreadLocal<MessagingContextManager.MessagingScope> testScope = new ThreadLocal<>();
+    private final static ThreadLocal<MessagingScope> testScope = new ThreadLocal<>();
 
     @BeforeMethod
     public void addExternalCreatorData(Method method) {

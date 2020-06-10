@@ -25,7 +25,6 @@ import static org.springframework.util.ReflectionUtils.invokeMethod;
 
 class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 
-
     private final ThreadPoolTaskScheduler delegate;
 
     private final Method initializeExecutor;

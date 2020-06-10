@@ -89,6 +89,12 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
 
     @Override
     public final void run() {
+        try (MessagingScope ignored = enter(persistentActor, internalMessage)) {
+            runInContext();
+        }
+    }
+
+    private void runInContext() {
         // measure start of the execution
         if(this.measurement != null) {
             this.measurement.setExecutionStart(System.nanoTime());
@@ -98,7 +104,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         InternalActorContext.setContext(persistentActor);
         SerializationContext.initialize();
         boolean shouldUpdateState = false;
-        try (MessagingScope ignored = enter(persistentActor, internalMessage)) {
+        try {
             shouldUpdateState = doInActorContext(actorSystem, receiver, receiverRef, internalMessage);
             executeLifecycleListeners();
         } catch (Exception e) {

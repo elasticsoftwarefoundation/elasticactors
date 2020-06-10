@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.state;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
@@ -40,4 +41,7 @@ public interface ActorStateUpdate {
 
     @Nullable
     ByteBuffer getSerializedState();
+
+    @Nullable
+    TraceContext getTraceContext();
 }

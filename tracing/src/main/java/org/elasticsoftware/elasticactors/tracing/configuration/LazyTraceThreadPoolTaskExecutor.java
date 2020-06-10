@@ -10,11 +10,11 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 
-public class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
+class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
     private final ThreadPoolTaskExecutor delegate;
 
-    public LazyTraceThreadPoolTaskExecutor(ThreadPoolTaskExecutor delegate) {
+    LazyTraceThreadPoolTaskExecutor(ThreadPoolTaskExecutor delegate) {
         this.delegate = delegate;
     }
 

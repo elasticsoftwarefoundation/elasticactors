@@ -9,6 +9,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 public final class MessagingContextManager {
@@ -102,19 +103,26 @@ public final class MessagingContextManager {
 
         private final ContextManager[] contextManagers;
         private final TraceContext traceContext;
+        private final AtomicBoolean closed;
 
         @Nullable
         public TraceContext getTraceContext() {
             return traceContext;
         }
 
+        public boolean isClosed() {
+            return closed.get();
+        }
+
         public MessagingScope(@Nonnull ContextManager... contextManagers) {
             this.contextManagers = Objects.requireNonNull(contextManagers);
             this.traceContext = currentTraceContext();
+            this.closed = new AtomicBoolean();
         }
 
         @Override
         public void close() {
+            closed.set(true);
             for (ContextManager cm : contextManagers) {
                 if (cm != null) {
                     try {

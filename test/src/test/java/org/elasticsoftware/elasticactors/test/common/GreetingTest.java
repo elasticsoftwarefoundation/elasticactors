@@ -70,7 +70,7 @@ public class GreetingTest {
 
     @AfterMethod
     public void removeExternalCreatorData() {
-        testScope.get();
+        testScope.get().close();
     }
 
     private static final Logger logger = LoggerFactory.getLogger(GreetingTest.class);

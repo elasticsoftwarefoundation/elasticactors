@@ -18,10 +18,13 @@ package org.elasticsoftware.elasticactors.state;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
+
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.currentTraceContext;
 
 /**
  * @author Joost van de Wijgerd
@@ -33,17 +36,40 @@ public final class ActorStateUpdateEvent implements ThreadBoundEvent<String>, Ac
     private final String version;
     private final ActorLifecycleStep lifecycleStep;
     private final Class messageClass;
+    private final TraceContext traceContext;
 
-    public ActorStateUpdateEvent(Class<? extends ElasticActor> actorClass,
-                                 ActorRef actorRef, ByteBuffer serializedState,
-                                 String version, ActorLifecycleStep lifecycleStep,
-                                 Class messageClass) {
+    public ActorStateUpdateEvent(
+            Class<? extends ElasticActor> actorClass,
+            ActorRef actorRef,
+            ByteBuffer serializedState,
+            String version,
+            ActorLifecycleStep lifecycleStep,
+            Class messageClass) {
+        this(
+                actorClass,
+                actorRef,
+                serializedState,
+                version,
+                lifecycleStep,
+                messageClass,
+                currentTraceContext());
+    }
+
+    private ActorStateUpdateEvent(
+            Class<? extends ElasticActor> actorClass,
+            ActorRef actorRef,
+            ByteBuffer serializedState,
+            String version,
+            ActorLifecycleStep lifecycleStep,
+            Class messageClass,
+            TraceContext traceContext) {
         this.actorClass = actorClass;
         this.actorRef = actorRef;
         this.serializedState = serializedState;
         this.version = version;
         this.lifecycleStep = lifecycleStep;
         this.messageClass = messageClass;
+        this.traceContext = traceContext;
     }
 
 
@@ -85,7 +111,20 @@ public final class ActorStateUpdateEvent implements ThreadBoundEvent<String>, Ac
         return serializedState;
     }
 
+    @Nullable
+    @Override
+    public TraceContext getTraceContext() {
+        return traceContext;
+    }
+
     public ActorStateUpdateEvent copyOf() {
-        return new ActorStateUpdateEvent(actorClass, actorRef, serializedState.duplicate(), version, lifecycleStep, messageClass);
+        return new ActorStateUpdateEvent(
+                actorClass,
+                actorRef,
+                serializedState.duplicate(),
+                version,
+                lifecycleStep,
+                messageClass,
+                traceContext);
     }
 }

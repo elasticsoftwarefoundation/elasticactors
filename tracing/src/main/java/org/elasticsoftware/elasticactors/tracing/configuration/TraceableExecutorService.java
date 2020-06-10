@@ -12,7 +12,7 @@ import java.util.concurrent.TimeoutException;
 
 public class TraceableExecutorService implements ExecutorService {
 
-    final ExecutorService delegate;
+    protected final ExecutorService delegate;
 
     public TraceableExecutorService(final ExecutorService delegate) {
         this.delegate = delegate;
