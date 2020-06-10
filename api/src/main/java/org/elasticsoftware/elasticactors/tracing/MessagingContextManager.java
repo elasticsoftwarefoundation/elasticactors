@@ -200,7 +200,7 @@ public final class MessagingContextManager {
         @Nonnull
         private static TraceContextManager replace(@Nonnull TraceContext context) {
             TraceContextManager newManager = new TraceContextManager(context, Strategy.REPLACE);
-            logger.debug("Putting {} in scope", newManager.getContext());
+            logger.trace("Putting {} in scope", newManager.getContext());
             if (newManager.previousManager == null) {
                 logger.warn("Tried to replace a Trace Context, but none is active");
             }
@@ -419,7 +419,7 @@ public final class MessagingContextManager {
     private static <T extends ContextManager> void logEnter(
             @Nonnull ThreadLocal<T> threadContext,
             @Nonnull T contextManager) {
-        logger.debug("Putting {} in scope", contextManager);
+        logger.trace("Putting {} in scope", contextManager);
         T current = threadContext.get();
         if (current != null) {
             logger.error(
@@ -433,7 +433,7 @@ public final class MessagingContextManager {
     private static <T extends ContextManager> void logClose(
             @Nonnull ThreadLocal<T> threadContext,
             @Nonnull T closingScope) {
-        logger.debug("Removing {} from scope", closingScope.getContext());
+        logger.trace("Removing {} from scope", closingScope.getContext());
         T current = threadContext.get();
         if (current != closingScope) {
             logger.error(
