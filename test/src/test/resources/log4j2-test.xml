@@ -11,6 +11,6 @@
         <Root level="INFO"> <!-- set to ERROR for cleaner look when testing -->
             <AppenderRef ref="STDOUT"/>
         </Root>
-        <Logger name="org.elasticsoftware.elasticactors.test" level="INFO"/>
+        <!-- <Logger name="org.elasticsoftware.elasticactors.test" level="INFO"/>-->
     </Loggers>
 </Configuration>
