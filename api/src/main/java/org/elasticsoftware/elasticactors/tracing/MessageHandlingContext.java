@@ -66,7 +66,7 @@ public final class MessageHandlingContext {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", MessageHandlingContext.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", MessageHandlingContext.class.getSimpleName() + "{", "}")
                 .add("messageType='" + messageType + "'")
                 .add("sender='" + sender + "'")
                 .add("receiver='" + receiver + "'")

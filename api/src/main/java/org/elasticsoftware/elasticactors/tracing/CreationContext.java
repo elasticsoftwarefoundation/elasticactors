@@ -123,7 +123,7 @@ public final class CreationContext {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", CreationContext.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", CreationContext.class.getSimpleName() + "{", "}")
                 .add("creator='" + creator + "'")
                 .add("creatorType='" + creatorType + "'")
                 .add("creatorMethod='" + creatorMethod + "'")

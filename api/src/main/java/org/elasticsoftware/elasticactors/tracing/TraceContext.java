@@ -71,7 +71,7 @@ public final class TraceContext {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", TraceContext.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", TraceContext.class.getSimpleName() + "{", "}")
                 .add("spanId='" + spanId + "'")
                 .add("traceId='" + traceId + "'")
                 .add("parentSpanId='" + parentSpanId + "'")

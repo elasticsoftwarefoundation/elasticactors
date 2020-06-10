@@ -8,7 +8,9 @@ import org.slf4j.MDC;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
@@ -64,7 +66,7 @@ public final class MessagingContextManager {
     public static MessagingScope enter(
             @Nullable ActorContext context,
             @Nullable TracedMessage message) {
-        return new MessagingScope(
+        MessagingScope messagingScope = new MessagingScope(
                 MessageHandlingContextManager.enter(new MessageHandlingContext(context, message)),
                 TraceContextManager.replace(new TraceContext(message != null
                         ? message.getTraceContext()
@@ -72,25 +74,41 @@ public final class MessagingContextManager {
                 message != null && message.getCreationContext() != null
                         ? CreationContextManager.enter(message.getCreationContext())
                         : null);
+        logger.debug("Entering {}", messagingScope);
+        return messagingScope;
     }
 
     @Nonnull
     public static MessagingScope enter(
             @Nullable TraceContext traceContext,
             @Nullable CreationContext creationContext) {
-        return new MessagingScope(
+        MessagingScope messagingScope = new MessagingScope(
                 traceContext != null ? TraceContextManager.enter(traceContext) : null,
                 creationContext != null ? CreationContextManager.enter(creationContext) : null);
+        logger.debug("Entering {}", messagingScope);
+        return messagingScope;
     }
 
     @Nonnull
     public static MessagingScope enter(@Nonnull Method context) {
-        return new MessagingScope(MethodContextManager.enter(context));
+        MessagingScope messagingScope = new MessagingScope(MethodContextManager.enter(context));
+        logger.debug("Entering {}", messagingScope);
+        return messagingScope;
     }
 
     @Nonnull
     public static MessagingScope enter(@Nonnull TraceContext traceContext) {
-        return new MessagingScope(TraceContextManager.enter(traceContext));
+        MessagingScope messagingScope = new MessagingScope(TraceContextManager.enter(traceContext));
+        logger.debug("Entering {}", messagingScope);
+        return messagingScope;
+    }
+
+    @Nonnull
+    public static MessagingScope replace(@Nonnull TraceContext traceContext) {
+        MessagingScope messagingScope =
+                new MessagingScope(TraceContextManager.replace(traceContext));
+        logger.debug("Entering {}", messagingScope);
+        return messagingScope;
     }
 
     private interface ContextManager extends AutoCloseable {
@@ -123,6 +141,7 @@ public final class MessagingContextManager {
         @Override
         public void close() {
             closed.set(true);
+            logger.debug("Closing {}", this);
             for (ContextManager cm : contextManagers) {
                 if (cm != null) {
                     try {
@@ -133,18 +152,31 @@ public final class MessagingContextManager {
                 }
             }
         }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", MessagingScope.class.getSimpleName() + "{", "}")
+                    .add("contextManagers=" + Arrays.toString(contextManagers))
+                    .toString();
+        }
     }
 
     private final static class TraceContextManager implements ContextManager {
 
         private static final ThreadLocal<TraceContextManager> threadContext = new ThreadLocal<>();
 
+        private enum Strategy {
+            ENTER, REPLACE
+        }
+
         private final TraceContext context;
         private final TraceContextManager previousManager;
+        private final Strategy strategy;
 
-        private TraceContextManager(@Nonnull TraceContext context) {
+        private TraceContextManager(@Nonnull TraceContext context, Strategy strategy) {
             this.context = Objects.requireNonNull(context);
             this.previousManager = threadContext.get();
+            this.strategy = strategy;
         }
 
         @Nonnull
@@ -160,25 +192,20 @@ public final class MessagingContextManager {
 
         @Nonnull
         private static TraceContextManager enter(@Nonnull TraceContext context) {
-            TraceContextManager newManager = new TraceContextManager(context);
-            logEnter(threadContext, newManager);
+            TraceContextManager newManager = new TraceContextManager(context, Strategy.ENTER);
             addToLogContext(SPAN_ID_HEADER, context, TraceContext::getSpanId);
             addToLogContext(TRACE_ID_HEADER, context, TraceContext::getTraceId);
             removeFromLogContext(PARENT_SPAN_ID_HEADER);
             addToLogContext(PARENT_SPAN_ID_HEADER, context, TraceContext::getParentSpanId);
+            logEnter(threadContext, newManager);
             threadContext.set(newManager);
             return newManager;
         }
 
         @Nonnull
         private static TraceContextManager replace(@Nonnull TraceContext context) {
-            TraceContextManager newManager = new TraceContextManager(context);
-            logger.debug(
-                    "Putting {} in scope. Previous was {}.",
-                    newManager.getContext(),
-                    newManager.getPreviousManager() != null
-                            ? newManager.getPreviousManager().context
-                            : null);
+            TraceContextManager newManager = new TraceContextManager(context, Strategy.REPLACE);
+            logger.debug("Putting {} in scope", newManager.getContext());
             if (newManager.previousManager == null) {
                 logger.warn("Tried to replace a Trace Context, but none is active");
             }
@@ -207,6 +234,13 @@ public final class MessagingContextManager {
             threadContext.set(previousManager);
         }
 
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", TraceContextManager.class.getSimpleName() + "{", "}")
+                    .add("context=" + context)
+                    .add("strategy=" + strategy)
+                    .toString();
+        }
     }
 
     private final static class MessageHandlingContextManager implements ContextManager {
@@ -230,11 +264,11 @@ public final class MessagingContextManager {
         private static MessageHandlingContextManager enter(
                 @Nonnull MessageHandlingContext context) {
             MessageHandlingContextManager newManager = new MessageHandlingContextManager(context);
-            logEnter(threadContext, newManager);
             addToLogContext(MESSAGE_TYPE_KEY, context, MessageHandlingContext::getMessageType);
             addToLogContext(SENDER_KEY, context, MessageHandlingContext::getSender);
             addToLogContext(RECEIVER_KEY, context, MessageHandlingContext::getReceiver);
             addToLogContext(RECEIVER_TYPE_KEY, context, MessageHandlingContext::getReceiverType);
+            logEnter(threadContext, newManager);
             threadContext.set(newManager);
             return newManager;
         }
@@ -247,6 +281,16 @@ public final class MessagingContextManager {
             removeFromLogContext(RECEIVER_KEY);
             removeFromLogContext(RECEIVER_TYPE_KEY);
             threadContext.set(null);
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(
+                    ", ",
+                    MessageHandlingContextManager.class.getSimpleName() + "{",
+                    "}")
+                    .add("context=" + context)
+                    .toString();
         }
     }
 
@@ -270,11 +314,11 @@ public final class MessagingContextManager {
         @Nonnull
         private static CreationContextManager enter(@Nonnull CreationContext context) {
             CreationContextManager newManager = new CreationContextManager(context);
-            logEnter(threadContext, newManager);
             addToLogContext(CREATOR_KEY, context, CreationContext::getCreator);
             addToLogContext(CREATOR_TYPE_KEY, context, CreationContext::getCreatorType);
             addToLogContext(CREATOR_METHOD_KEY, context, CreationContext::getCreatorMethod);
             addToLogContext(SCHEDULED_KEY, context, CreationContext::getScheduled);
+            logEnter(threadContext, newManager);
             threadContext.set(newManager);
             return newManager;
         }
@@ -289,6 +333,12 @@ public final class MessagingContextManager {
             threadContext.set(null);
         }
 
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", CreationContextManager.class.getSimpleName() + "{", "}")
+                    .add("context=" + context)
+                    .toString();
+        }
     }
 
     private final static class MethodContextManager implements ContextManager {
@@ -310,8 +360,8 @@ public final class MessagingContextManager {
         @Nonnull
         private static MethodContextManager enter(@Nonnull Method context) {
             MethodContextManager newManager = new MethodContextManager(context);
-            logEnter(threadContext, newManager);
             addToLogContext(RECEIVER_METHOD_KEY, context, MessagingContextManager::shorten);
+            logEnter(threadContext, newManager);
             threadContext.set(newManager);
             return newManager;
         }
@@ -323,6 +373,12 @@ public final class MessagingContextManager {
             threadContext.set(null);
         }
 
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", MethodContextManager.class.getSimpleName() + "{", "}")
+                    .add("context=" + shorten(context))
+                    .toString();
+        }
     }
 
     @Nullable
@@ -368,14 +424,14 @@ public final class MessagingContextManager {
     private static <T extends ContextManager> void logEnter(
             @Nonnull ThreadLocal<T> threadContext,
             @Nonnull T contextManager) {
-        logger.debug("Putting {} in scope", contextManager.getContext());
+        logger.debug("Putting {} in scope", contextManager);
         T current = threadContext.get();
         if (current != null) {
             logger.error(
                     "Putting {} in scope, but {} is already in scope. "
                             + "Context in scope likely incorrect.",
-                    contextManager.getContext(),
-                    current.getContext());
+                    contextManager,
+                    current);
         }
     }
 
