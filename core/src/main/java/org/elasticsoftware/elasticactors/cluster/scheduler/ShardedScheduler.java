@@ -233,10 +233,16 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
 
         @Override
         public void run() {
-            boolean executionInterruptedByResharding = false;
             try (MessagingScope ignored = enter(
                     message.getTraceContext(),
                     forScheduling(message.getCreationContext()))) {
+                runInContext();
+            }
+        }
+
+        public void runInContext() {
+            boolean executionInterruptedByResharding = false;
+            try {
                 final MessageDeserializer messageDeserializer = actorSystem.getDeserializer(message.getMessageClass());
                 if(messageDeserializer != null) {
                     Object deserializedMessage = messageDeserializer.deserialize(ByteBuffer.wrap(message.getMessageBytes()));

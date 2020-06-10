@@ -102,24 +102,28 @@ public final class ActivateServiceActorTask implements ThreadBoundRunnable<Strin
 
     @Override
     public void run() {
+        try (MessagingScope ignored = enter(this, internalMessage)) {
+            runInContext();
+        }
+    }
+
+    private void runInContext() {
         Exception executionException = null;
         InternalActorContext.setContext(this);
-        try (MessagingScope ignored = enter(this, internalMessage)) {
-            try {
-                serviceActor.postActivate(null);
-            } catch (Exception e) {
-                // @todo: send an error message to the sender
-                logger.error("Exception while handling message for service [{}]", serviceRef, e);
-                executionException = e;
-            }
+        try {
+            serviceActor.postActivate(null);
+        } catch (Exception e) {
+            // @todo: send an error message to the sender
+            logger.error("Exception while handling message for service [{}]", serviceRef, e);
+            executionException = e;
         } finally {
             InternalActorContext.getAndClearContext();
         }
-        if(messageHandlerEventListener != null) {
-            if(executionException == null) {
+        if (messageHandlerEventListener != null) {
+            if (executionException == null) {
                 messageHandlerEventListener.onDone(internalMessage);
             } else {
-                messageHandlerEventListener.onError(internalMessage,executionException);
+                messageHandlerEventListener.onError(internalMessage, executionException);
             }
         }
     }

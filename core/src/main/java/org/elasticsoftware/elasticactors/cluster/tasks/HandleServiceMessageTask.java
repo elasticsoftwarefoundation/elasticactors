@@ -28,7 +28,7 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
-import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.slf4j.Logger;
@@ -111,14 +111,20 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     }
 
     @Override
-    public final void run() {
+    public void run() {
+        try (MessagingScope ignored = enter(this, internalMessage)) {
+            runInContext();
+        }
+    }
+
+    private void runInContext() {
         // measure start of the execution
         if(this.measurement != null) {
             this.measurement.setExecutionStart(System.nanoTime());
         }
         Exception executionException = null;
         InternalActorContext.setContext(this);
-        try (MessagingContextManager.MessagingScope ignored = enter(this, internalMessage)) {
+        try {
             Object message = deserializeMessage(actorSystem, internalMessage);
             MessageToStringSerializer messageToStringSerializer = getStringSerializer(message);
             try {

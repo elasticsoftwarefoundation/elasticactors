@@ -57,7 +57,7 @@ public final class SimpleScheduler implements SchedulerService,ScheduledMessageR
 
     @PreDestroy
     public void destroy() {
-        scheduledExecutorService.shutdown();
+        scheduledExecutorService.shutdownNow();
     }
 
     @Override
@@ -108,6 +108,12 @@ public final class SimpleScheduler implements SchedulerService,ScheduledMessageR
             try (MessagingScope ignored = enter(
                     getTraceContext(),
                     forScheduling(getCreationContext()))) {
+                runInContext();
+            }
+        }
+
+        private void runInContext() {
+            try {
                 receiver.tell(message, sender);
                 scheduledFutures.remove(id);
             } catch (Exception e) {
