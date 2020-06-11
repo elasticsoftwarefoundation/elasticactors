@@ -131,9 +131,9 @@ public class GreetingTest {
                     assertEquals(creationContext.getCreatorType(), shorten(GreetingActor.class));
                     TraceContext traceContext = currentTraceContext();
                     assertNotNull(traceContext);
-                    assertNotEquals(traceContext.getParentSpanId(), TEST_TRACE.getTraceId());
+                    assertNotEquals(traceContext.getParentSpanId(), TEST_TRACE.getSpanId());
                     assertEquals(traceContext.getTraceId(), TEST_TRACE.getTraceId());
-                    assertNotEquals(traceContext.getSpanId(), TEST_TRACE.getTraceId());
+                    assertNotEquals(traceContext.getSpanId(), TEST_TRACE.getSpanId());
                 })
                 .onReceive(Greeting.class, m -> {
                     logger.info("Got Greeting from {}", m.getWho());
@@ -145,9 +145,9 @@ public class GreetingTest {
                     assertEquals(creationContext.getCreatorType(), shorten(GreetingActor.class));
                     TraceContext traceContext = currentTraceContext();
                     assertNotNull(traceContext);
-                    assertNotEquals(traceContext.getParentSpanId(), TEST_TRACE.getTraceId());
+                    assertNotEquals(traceContext.getParentSpanId(), TEST_TRACE.getSpanId());
                     assertEquals(traceContext.getTraceId(), TEST_TRACE.getTraceId());
-                    assertNotEquals(traceContext.getSpanId(), TEST_TRACE.getTraceId());
+                    assertNotEquals(traceContext.getSpanId(), TEST_TRACE.getSpanId());
                 })
                 .orElse(MessageConsumer.noop())
                 .postReceive(countDownLatch::countDown)
