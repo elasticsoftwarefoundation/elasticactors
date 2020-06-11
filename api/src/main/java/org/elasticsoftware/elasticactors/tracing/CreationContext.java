@@ -97,6 +97,7 @@ public final class CreationContext {
         return creatorMethod;
     }
 
+    @Nullable
     public Boolean getScheduled() {
         return scheduled;
     }

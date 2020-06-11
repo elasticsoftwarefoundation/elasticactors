@@ -18,12 +18,14 @@ package org.elasticsoftware.elasticactors.state;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.creationContextFromScope;
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.currentTraceContext;
 
 /**
@@ -37,6 +39,7 @@ public final class ActorStateUpdateEvent implements ThreadBoundEvent<String>, Ac
     private final ActorLifecycleStep lifecycleStep;
     private final Class messageClass;
     private final TraceContext traceContext;
+    private final CreationContext creationContext;
 
     public ActorStateUpdateEvent(
             Class<? extends ElasticActor> actorClass,
@@ -52,7 +55,8 @@ public final class ActorStateUpdateEvent implements ThreadBoundEvent<String>, Ac
                 version,
                 lifecycleStep,
                 messageClass,
-                currentTraceContext());
+                currentTraceContext(),
+                creationContextFromScope());
     }
 
     private ActorStateUpdateEvent(
@@ -62,7 +66,8 @@ public final class ActorStateUpdateEvent implements ThreadBoundEvent<String>, Ac
             String version,
             ActorLifecycleStep lifecycleStep,
             Class messageClass,
-            TraceContext traceContext) {
+            TraceContext traceContext,
+            CreationContext creationContext) {
         this.actorClass = actorClass;
         this.actorRef = actorRef;
         this.serializedState = serializedState;
@@ -70,6 +75,7 @@ public final class ActorStateUpdateEvent implements ThreadBoundEvent<String>, Ac
         this.lifecycleStep = lifecycleStep;
         this.messageClass = messageClass;
         this.traceContext = traceContext;
+        this.creationContext = creationContext;
     }
 
 
@@ -117,6 +123,12 @@ public final class ActorStateUpdateEvent implements ThreadBoundEvent<String>, Ac
         return traceContext;
     }
 
+    @Nullable
+    @Override
+    public CreationContext getCreationContext() {
+        return creationContext;
+    }
+
     public ActorStateUpdateEvent copyOf() {
         return new ActorStateUpdateEvent(
                 actorClass,
@@ -125,6 +137,7 @@ public final class ActorStateUpdateEvent implements ThreadBoundEvent<String>, Ac
                 version,
                 lifecycleStep,
                 messageClass,
-                traceContext);
+                traceContext,
+                creationContext);
     }
 }

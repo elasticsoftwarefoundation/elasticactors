@@ -62,6 +62,19 @@ public final class MessagingContextManager {
         return currentManager != null ? currentManager.context : null;
     }
 
+    @Nullable
+    public static CreationContext creationContextFromScope() {
+        MessageHandlingContext messageHandlingContext = currentMessageHandlingContext();
+        if (messageHandlingContext != null) {
+            return new CreationContext(
+                    messageHandlingContext.getReceiver(),
+                    messageHandlingContext.getReceiverType(),
+                    currentMethodContext());
+        } else {
+            return currentCreationContext();
+        }
+    }
+
     @Nonnull
     public static MessagingScope enter(
             @Nullable ActorContext context,
@@ -72,7 +85,7 @@ public final class MessagingContextManager {
                         ? message.getTraceContext()
                         : null)),
                 message != null && message.getCreationContext() != null
-                        ? CreationContextManager.enter(message.getCreationContext())
+                        ? CreationContextManager.replace(message.getCreationContext())
                         : null);
         logger.debug("Entering {}", messagingScope);
         return messagingScope;
@@ -92,21 +105,6 @@ public final class MessagingContextManager {
     @Nonnull
     public static MessagingScope enter(@Nonnull Method context) {
         MessagingScope messagingScope = new MessagingScope(MethodContextManager.enter(context));
-        logger.debug("Entering {}", messagingScope);
-        return messagingScope;
-    }
-
-    @Nonnull
-    public static MessagingScope enter(@Nonnull TraceContext traceContext) {
-        MessagingScope messagingScope = new MessagingScope(TraceContextManager.enter(traceContext));
-        logger.debug("Entering {}", messagingScope);
-        return messagingScope;
-    }
-
-    @Nonnull
-    public static MessagingScope replace(@Nonnull TraceContext traceContext) {
-        MessagingScope messagingScope =
-                new MessagingScope(TraceContextManager.replace(traceContext));
         logger.debug("Entering {}", messagingScope);
         return messagingScope;
     }
@@ -166,17 +164,18 @@ public final class MessagingContextManager {
         private static final ThreadLocal<TraceContextManager> threadContext = new ThreadLocal<>();
 
         private enum Strategy {
-            ENTER, REPLACE
+            ENTER,
+            REPLACE
         }
 
         private final TraceContext context;
         private final TraceContextManager previousManager;
         private final Strategy strategy;
 
-        private TraceContextManager(@Nonnull TraceContext context, Strategy strategy) {
+        private TraceContextManager(@Nonnull TraceContext context, @Nonnull Strategy strategy) {
             this.context = Objects.requireNonNull(context);
             this.previousManager = threadContext.get();
-            this.strategy = strategy;
+            this.strategy = Objects.requireNonNull(strategy);
         }
 
         @Nonnull
@@ -188,10 +187,8 @@ public final class MessagingContextManager {
         @Nonnull
         private static TraceContextManager enter(@Nonnull TraceContext context) {
             TraceContextManager newManager = new TraceContextManager(context, Strategy.ENTER);
-            addToLogContext(SPAN_ID_HEADER, context, TraceContext::getSpanId);
-            addToLogContext(TRACE_ID_HEADER, context, TraceContext::getTraceId);
-            removeFromLogContext(PARENT_SPAN_ID_HEADER);
-            addToLogContext(PARENT_SPAN_ID_HEADER, context, TraceContext::getParentSpanId);
+            clearContext();
+            fillContext(context);
             logEnter(threadContext, newManager);
             threadContext.set(newManager);
             return newManager;
@@ -204,10 +201,8 @@ public final class MessagingContextManager {
             if (newManager.previousManager == null) {
                 logger.warn("Tried to replace a Trace Context, but none is active");
             }
-            addToLogContext(SPAN_ID_HEADER, context, TraceContext::getSpanId);
-            addToLogContext(TRACE_ID_HEADER, context, TraceContext::getTraceId);
-            removeFromLogContext(PARENT_SPAN_ID_HEADER);
-            addToLogContext(PARENT_SPAN_ID_HEADER, context, TraceContext::getParentSpanId);
+            clearContext();
+            fillContext(context);
             threadContext.set(newManager);
             return newManager;
         }
@@ -215,18 +210,26 @@ public final class MessagingContextManager {
         @Override
         public void close() {
             logClose(threadContext, this);
-            if (previousManager == null) {
-                removeFromLogContext(SPAN_ID_HEADER);
-                removeFromLogContext(TRACE_ID_HEADER);
-                removeFromLogContext(PARENT_SPAN_ID_HEADER);
-            } else {
+            clearContext();
+            if (previousManager != null) {
                 TraceContext previous = previousManager.getContext();
-                addToLogContext(SPAN_ID_HEADER, previous, TraceContext::getSpanId);
-                addToLogContext(TRACE_ID_HEADER, previous, TraceContext::getTraceId);
-                removeFromLogContext(PARENT_SPAN_ID_HEADER);
-                addToLogContext(PARENT_SPAN_ID_HEADER, previous, TraceContext::getParentSpanId);
+                fillContext(previous);
+                threadContext.set(previousManager);
+            } else {
+                threadContext.remove();
             }
-            threadContext.set(previousManager);
+        }
+
+        private static void fillContext(TraceContext previous) {
+            addToLogContext(SPAN_ID_HEADER, previous, TraceContext::getSpanId);
+            addToLogContext(TRACE_ID_HEADER, previous, TraceContext::getTraceId);
+            addToLogContext(PARENT_SPAN_ID_HEADER, previous, TraceContext::getParentSpanId);
+        }
+
+        private static void clearContext() {
+            removeFromLogContext(SPAN_ID_HEADER);
+            removeFromLogContext(TRACE_ID_HEADER);
+            removeFromLogContext(PARENT_SPAN_ID_HEADER);
         }
 
         @Override
@@ -259,10 +262,8 @@ public final class MessagingContextManager {
         private static MessageHandlingContextManager enter(
                 @Nonnull MessageHandlingContext context) {
             MessageHandlingContextManager newManager = new MessageHandlingContextManager(context);
-            addToLogContext(MESSAGE_TYPE_KEY, context, MessageHandlingContext::getMessageType);
-            addToLogContext(SENDER_KEY, context, MessageHandlingContext::getSender);
-            addToLogContext(RECEIVER_KEY, context, MessageHandlingContext::getReceiver);
-            addToLogContext(RECEIVER_TYPE_KEY, context, MessageHandlingContext::getReceiverType);
+            clearContext();
+            fillContext(context);
             logEnter(threadContext, newManager);
             threadContext.set(newManager);
             return newManager;
@@ -271,11 +272,22 @@ public final class MessagingContextManager {
         @Override
         public void close() {
             logClose(threadContext, this);
+            clearContext();
+            threadContext.remove();
+        }
+
+        private static void fillContext(@Nonnull MessageHandlingContext context) {
+            addToLogContext(MESSAGE_TYPE_KEY, context, MessageHandlingContext::getMessageType);
+            addToLogContext(SENDER_KEY, context, MessageHandlingContext::getSender);
+            addToLogContext(RECEIVER_KEY, context, MessageHandlingContext::getReceiver);
+            addToLogContext(RECEIVER_TYPE_KEY, context, MessageHandlingContext::getReceiverType);
+        }
+
+        private static void clearContext() {
             removeFromLogContext(MESSAGE_TYPE_KEY);
             removeFromLogContext(SENDER_KEY);
             removeFromLogContext(RECEIVER_KEY);
             removeFromLogContext(RECEIVER_TYPE_KEY);
-            threadContext.set(null);
         }
 
         @Override
@@ -294,7 +306,14 @@ public final class MessagingContextManager {
         private static final ThreadLocal<CreationContextManager> threadContext =
                 new ThreadLocal<>();
 
+        private enum Strategy {
+            ENTER,
+            REPLACE
+        }
+
         private final CreationContext context;
+        private final CreationContextManager previousManager;
+        private final Strategy strategy;
 
         @Nonnull
         @Override
@@ -302,18 +321,34 @@ public final class MessagingContextManager {
             return context;
         }
 
-        private CreationContextManager(@Nonnull CreationContext context) {
+        private CreationContextManager(
+                @Nonnull CreationContext context,
+                @Nonnull Strategy strategy) {
             this.context = Objects.requireNonNull(context);
+            this.previousManager = threadContext.get();
+            this.strategy = Objects.requireNonNull(strategy);
         }
 
         @Nonnull
         private static CreationContextManager enter(@Nonnull CreationContext context) {
-            CreationContextManager newManager = new CreationContextManager(context);
-            addToLogContext(CREATOR_KEY, context, CreationContext::getCreator);
-            addToLogContext(CREATOR_TYPE_KEY, context, CreationContext::getCreatorType);
-            addToLogContext(CREATOR_METHOD_KEY, context, CreationContext::getCreatorMethod);
-            addToLogContext(SCHEDULED_KEY, context, CreationContext::getScheduled);
+            CreationContextManager newManager = new CreationContextManager(context, Strategy.ENTER);
+            clearContext();
+            fillContext(context);
             logEnter(threadContext, newManager);
+            threadContext.set(newManager);
+            return newManager;
+        }
+
+        @Nonnull
+        private static CreationContextManager replace(@Nonnull CreationContext context) {
+            CreationContextManager newManager =
+                    new CreationContextManager(context, Strategy.REPLACE);
+            logger.trace("Putting {} in scope", newManager.getContext());
+            if (newManager.previousManager == null) {
+                logger.warn("Tried to replace a Creation Context, but none is active");
+            }
+            clearContext();
+            fillContext(context);
             threadContext.set(newManager);
             return newManager;
         }
@@ -321,17 +356,36 @@ public final class MessagingContextManager {
         @Override
         public void close() {
             logClose(threadContext, this);
+            clearContext();
+            if (previousManager != null) {
+                CreationContext previous = previousManager.getContext();
+                fillContext(previous);
+                threadContext.set(previousManager);
+            } else {
+                threadContext.remove();
+            }
+        }
+
+        private static void clearContext() {
             removeFromLogContext(CREATOR_KEY);
             removeFromLogContext(CREATOR_TYPE_KEY);
             removeFromLogContext(CREATOR_METHOD_KEY);
             removeFromLogContext(SCHEDULED_KEY);
-            threadContext.set(null);
+        }
+
+        private static void fillContext(@Nonnull CreationContext context) {
+            addToLogContext(CREATOR_KEY, context, CreationContext::getCreator);
+            addToLogContext(CREATOR_TYPE_KEY, context, CreationContext::getCreatorType);
+            addToLogContext(CREATOR_METHOD_KEY, context, CreationContext::getCreatorMethod);
+            addToLogContext(SCHEDULED_KEY, context, CreationContext::getScheduled);
         }
 
         @Override
         public String toString() {
             return new StringJoiner(", ", CreationContextManager.class.getSimpleName() + "{", "}")
                     .add("context=" + context)
+                    .add("previousManager=" + previousManager)
+                    .add("strategy=" + strategy)
                     .toString();
         }
     }
@@ -355,6 +409,7 @@ public final class MessagingContextManager {
         @Nonnull
         private static MethodContextManager enter(@Nonnull Method context) {
             MethodContextManager newManager = new MethodContextManager(context);
+            removeFromLogContext(RECEIVER_METHOD_KEY);
             addToLogContext(RECEIVER_METHOD_KEY, context, MessagingContextManager::shorten);
             logEnter(threadContext, newManager);
             threadContext.set(newManager);
@@ -365,7 +420,7 @@ public final class MessagingContextManager {
         public void close() {
             logClose(threadContext, this);
             removeFromLogContext(RECEIVER_METHOD_KEY);
-            threadContext.set(null);
+            threadContext.remove();
         }
 
         @Override

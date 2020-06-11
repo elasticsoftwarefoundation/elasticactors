@@ -38,7 +38,9 @@ public final class LoggingActorStateUpdateListener implements ActorStateUpdateLi
     @Override
     public void onUpdate(List<? extends ActorStateUpdate> updates) {
         updates.forEach(update -> {
-            try (MessagingScope ignored = enter(new TraceContext(update.getTraceContext()))) {
+            try (MessagingScope ignored = enter(
+                    new TraceContext(update.getTraceContext()),
+                    update.getCreationContext())) {
                 logger.info(
                         "Got an ActorStateUpdate for actorId: {}",
                         update.getActorRef().getActorId());

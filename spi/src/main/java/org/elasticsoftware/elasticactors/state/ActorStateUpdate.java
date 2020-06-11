@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.state;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import javax.annotation.Nullable;
@@ -44,4 +45,7 @@ public interface ActorStateUpdate {
 
     @Nullable
     TraceContext getTraceContext();
+
+    @Nullable
+    CreationContext getCreationContext();
 }
