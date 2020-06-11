@@ -7,8 +7,6 @@ import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.tracing.TracedMessage;
 import org.elasticsoftware.elasticactors.tracing.TracingUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import javax.annotation.Nonnull;
@@ -23,9 +21,7 @@ import java.util.function.Function;
 import static org.elasticsoftware.elasticactors.tracing.TracingUtils.safeToString;
 import static org.elasticsoftware.elasticactors.tracing.TracingUtils.shorten;
 
-public final class MessagingContextManagerImpl implements MessagingContextManager {
-
-    private final static Logger logger = LoggerFactory.getLogger(MessagingContextManager.class);
+public final class MessagingContextManagerImpl extends MessagingContextManager {
 
     @Override
     @Nullable

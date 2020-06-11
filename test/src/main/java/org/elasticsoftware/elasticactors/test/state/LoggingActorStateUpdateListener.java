@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 
 /**
  * @author Joost van de Wijgerd

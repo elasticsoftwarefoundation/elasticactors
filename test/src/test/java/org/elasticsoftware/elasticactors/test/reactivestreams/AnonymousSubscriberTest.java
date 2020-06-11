@@ -36,8 +36,7 @@ import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
-
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 /**
  * @author Joost van de Wijgerd
  */

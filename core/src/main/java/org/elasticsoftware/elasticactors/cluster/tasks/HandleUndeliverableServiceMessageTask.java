@@ -35,7 +35,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**

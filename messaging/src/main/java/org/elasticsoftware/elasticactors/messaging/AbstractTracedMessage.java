@@ -6,7 +6,7 @@ import org.elasticsoftware.elasticactors.tracing.TracedMessage;
 
 import javax.annotation.Nullable;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 
 public abstract class AbstractTracedMessage implements TracedMessage {
 

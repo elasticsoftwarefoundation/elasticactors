@@ -38,7 +38,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.elasticsoftware.elasticactors.base.actors.ActorDelegate.Builder.stopActor;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 import static org.elasticsoftware.elasticactors.tracing.TracingUtils.shorten;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;

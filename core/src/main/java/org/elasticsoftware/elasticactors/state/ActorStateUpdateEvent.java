@@ -25,7 +25,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 
 /**
  * @author Joost van de Wijgerd

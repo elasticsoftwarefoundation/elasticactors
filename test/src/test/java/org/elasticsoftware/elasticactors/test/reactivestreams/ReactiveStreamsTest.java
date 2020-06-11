@@ -33,8 +33,7 @@ import org.testng.annotations.Test;
 import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
-
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 /**
  * @author Joost van de Wijgerd
  */

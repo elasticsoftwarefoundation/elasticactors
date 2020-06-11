@@ -6,7 +6,7 @@ import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import javax.annotation.Nonnull;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 
 public class TraceRunnable implements Runnable {
 

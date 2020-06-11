@@ -37,8 +37,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import static org.elasticsoftware.elasticactors.tracing.CreationContext.forScheduling;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
-
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 /**
  * Simple in-memory scheduler that is backed by a {@link java.util.concurrent.ScheduledExecutorService}
  *
