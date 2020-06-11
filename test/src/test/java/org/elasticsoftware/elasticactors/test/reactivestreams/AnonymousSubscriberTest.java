@@ -21,7 +21,7 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.PublisherNotFoundException;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
-import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -36,6 +36,8 @@ import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -43,11 +45,11 @@ public class AnonymousSubscriberTest {
 
     private final static Logger logger = LoggerFactory.getLogger(AnonymousSubscriberTest.class);
 
-    private final static ThreadLocal<MessagingContextManager.MessagingScope> testScope = new ThreadLocal<>();
+    private final static ThreadLocal<MessagingScope> testScope = new ThreadLocal<>();
 
     @BeforeMethod
     public void addExternalCreatorData(Method method) {
-        testScope.set(MessagingContextManager.enter(
+        testScope.set(getManager().enter(
                 new TraceContext(),
                 new CreationContext(
                         this.getClass().getSimpleName(),

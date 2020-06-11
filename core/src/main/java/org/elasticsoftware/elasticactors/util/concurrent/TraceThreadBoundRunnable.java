@@ -6,9 +6,7 @@ import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import javax.annotation.Nonnull;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.creationContextFromScope;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.currentTraceContext;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.enter;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
 
 public class TraceThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
 
@@ -25,13 +23,15 @@ public class TraceThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
 
     private TraceThreadBoundRunnable(@Nonnull ThreadBoundRunnable<T> delegate) {
         this.delegate = delegate;
-        this.parent = currentTraceContext();
-        this.creationContext = creationContextFromScope();
+        this.parent = getManager().currentTraceContext();
+        this.creationContext = getManager().creationContextFromScope();
     }
 
     @Override
     public void run() {
-        try (MessagingScope ignored = enter(new TraceContext(parent), creationContext)) {
+        try (MessagingScope ignored = getManager().enter(
+                new TraceContext(parent),
+                creationContext)) {
             this.delegate.run();
         }
     }

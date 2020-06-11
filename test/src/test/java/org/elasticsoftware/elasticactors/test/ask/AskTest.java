@@ -22,7 +22,6 @@ import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.elasticsoftware.elasticactors.test.common.EchoGreetingActor;
 import org.elasticsoftware.elasticactors.test.common.Greeting;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
-import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.slf4j.Logger;
@@ -36,6 +35,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -49,7 +49,7 @@ public class AskTest {
 
     @BeforeMethod
     public void addExternalCreatorData(Method method) {
-        testScope.set(MessagingContextManager.enter(
+        testScope.set(getManager().enter(
                 new TraceContext(),
                 new CreationContext(
                         this.getClass().getSimpleName(),

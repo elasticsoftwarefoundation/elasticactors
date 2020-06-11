@@ -567,6 +567,7 @@
                     <include>*.yaml</include>
                     <include>*.properties</include>
                     <include>META-INF/*</include>
+                    <include>META-INF/services/*</include>
                 </includes>
             </resource>
         </resources>

@@ -6,7 +6,8 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.shorten;
+import static org.elasticsoftware.elasticactors.tracing.TracingUtils.safeToString;
+import static org.elasticsoftware.elasticactors.tracing.TracingUtils.shorten;
 
 public final class MessageHandlingContext {
 
@@ -74,7 +75,4 @@ public final class MessageHandlingContext {
                 .toString();
     }
 
-    private static String safeToString(@Nullable Object o) {
-        return o != null ? o.toString() : null;
-    }
 }

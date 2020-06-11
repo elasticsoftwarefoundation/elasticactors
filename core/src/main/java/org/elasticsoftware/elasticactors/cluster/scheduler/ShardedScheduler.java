@@ -48,7 +48,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import static org.elasticsoftware.elasticactors.tracing.CreationContext.forScheduling;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.enter;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
 
 import static java.lang.String.format;
 
@@ -233,7 +233,7 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
 
         @Override
         public void run() {
-            try (MessagingScope ignored = enter(
+            try (MessagingScope ignored = getManager().enter(
                     message.getTraceContext(),
                     forScheduling(message.getCreationContext()))) {
                 runInContext();

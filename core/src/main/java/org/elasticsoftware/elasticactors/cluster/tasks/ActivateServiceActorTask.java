@@ -35,7 +35,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.enter;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
 
 /**
  * @author Joost van de Wijgerd
@@ -102,7 +102,7 @@ public final class ActivateServiceActorTask implements ThreadBoundRunnable<Strin
 
     @Override
     public void run() {
-        try (MessagingScope ignored = enter(this, internalMessage)) {
+        try (MessagingScope ignored = getManager().enter(this, internalMessage)) {
             runInContext();
         }
     }

@@ -37,7 +37,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import static org.elasticsoftware.elasticactors.tracing.CreationContext.forScheduling;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.enter;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
 
 /**
  * Simple in-memory scheduler that is backed by a {@link java.util.concurrent.ScheduledExecutorService}
@@ -105,7 +105,7 @@ public final class SimpleScheduler implements SchedulerService,ScheduledMessageR
 
         @Override
         public void run() {
-            try (MessagingScope ignored = enter(
+            try (MessagingScope ignored = getManager().enter(
                     getTraceContext(),
                     forScheduling(getCreationContext()))) {
                 runInContext();

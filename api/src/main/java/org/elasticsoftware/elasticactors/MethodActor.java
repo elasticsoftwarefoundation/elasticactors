@@ -35,7 +35,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.enter;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
 
 import static java.lang.String.format;
 
@@ -173,7 +173,7 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
         List<HandlerMethodDefinition> definitions = handlerCache.get(message.getClass());
         if (definitions != null) {
             for (HandlerMethodDefinition definition : definitions) {
-                try (MessagingScope ignored = enter(definition.handlerMethod)) {
+                try (MessagingScope ignored = getManager().enter(definition.handlerMethod)) {
                     handleMessage(sender, message, definition);
                 }
             }

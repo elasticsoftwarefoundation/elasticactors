@@ -39,7 +39,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.enter;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
@@ -112,7 +112,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
 
     @Override
     public void run() {
-        try (MessagingScope ignored = enter(this, internalMessage)) {
+        try (MessagingScope ignored = getManager().enter(this, internalMessage)) {
             runInContext();
         }
     }

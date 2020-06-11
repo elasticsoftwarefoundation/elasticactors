@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.enter;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
@@ -89,7 +89,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
 
     @Override
     public final void run() {
-        try (MessagingScope ignored = enter(persistentActor, internalMessage)) {
+        try (MessagingScope ignored = getManager().enter(persistentActor, internalMessage)) {
             runInContext();
         }
     }

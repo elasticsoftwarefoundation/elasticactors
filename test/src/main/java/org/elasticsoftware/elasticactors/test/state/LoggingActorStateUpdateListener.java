@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.enter;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
 
 /**
  * @author Joost van de Wijgerd
@@ -38,7 +38,7 @@ public final class LoggingActorStateUpdateListener implements ActorStateUpdateLi
     @Override
     public void onUpdate(List<? extends ActorStateUpdate> updates) {
         updates.forEach(update -> {
-            try (MessagingScope ignored = enter(
+            try (MessagingScope ignored = getManager().enter(
                     new TraceContext(update.getTraceContext()),
                     update.getCreationContext())) {
                 logger.info(

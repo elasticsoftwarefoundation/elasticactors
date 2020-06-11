@@ -24,8 +24,8 @@ import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.test.common.EchoGreetingActor;
 import org.elasticsoftware.elasticactors.test.common.Greeting;
-import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
 
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -39,7 +39,7 @@ public class AskForGreetingActor extends MethodActor {
             ActorRef echo = actorSystem.actorOf("echo", EchoGreetingActor.class);
             logger.info("Got REQUEST in Thread {}", Thread.currentThread().getName());
             assertEquals(
-                    MessagingContextManager.currentMethodContext(),
+                    getManager().currentMethodContext(),
                     AskForGreetingActor.class.getMethod(
                             "handle",
                             AskForGreeting.class,

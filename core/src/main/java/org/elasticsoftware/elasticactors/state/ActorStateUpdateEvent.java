@@ -25,8 +25,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.creationContextFromScope;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.currentTraceContext;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextService.getManager;
 
 /**
  * @author Joost van de Wijgerd
@@ -55,8 +54,8 @@ public final class ActorStateUpdateEvent implements ThreadBoundEvent<String>, Ac
                 version,
                 lifecycleStep,
                 messageClass,
-                currentTraceContext(),
-                creationContextFromScope());
+                getManager().currentTraceContext(),
+                getManager().creationContextFromScope());
     }
 
     private ActorStateUpdateEvent(

@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.shorten;
+import static org.elasticsoftware.elasticactors.tracing.TracingUtils.shorten;
 
 public final class CreationContext {
 
@@ -36,7 +36,7 @@ public final class CreationContext {
      * aggregator and keep the message sizes small.
      *
      * <br>
-     * See {@link MessagingContextManager#shorten(String)}.
+     * See {@link TracingUtils#shorten(String)}.
      */
     public CreationContext(
             @Nullable String creator,
@@ -55,7 +55,7 @@ public final class CreationContext {
      * aggregator and keep the message sizes small.
      *
      * <br>
-     * See {@link MessagingContextManager#shorten(String)}.
+     * See {@link TracingUtils#shorten(String)}.
      */
     public CreationContext(
             @Nullable String creator,
