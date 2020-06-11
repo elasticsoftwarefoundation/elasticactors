@@ -21,14 +21,14 @@ import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.messaging.ScheduledMessageImpl;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
+import org.elasticsoftware.elasticactors.serialization.internal.tracing.CreationContextDeserializer;
+import org.elasticsoftware.elasticactors.serialization.internal.tracing.TraceContextDeserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import java.io.IOException;
 import java.util.UUID;
-
-import static org.elasticsoftware.elasticactors.tracing.CreationContext.forScheduling;
 
 /**
  * @author Joost van de Wijgerd
@@ -50,23 +50,12 @@ public final class ScheduledMessageDeserializer implements Deserializer<byte[],S
             byte[] messageBytes = protobufMessage.getMessage().toByteArray();
             UUID id = UUIDTools.toUUID(protobufMessage.getId().toByteArray());
             long fireTime = protobufMessage.getFireTime();
-            TraceContext traceContext = new TraceContext(
-                    protobufMessage.getTraceContext().getSpanId(),
-                    protobufMessage.getTraceContext().getTraceId(),
-                    protobufMessage.getTraceContext().getParentSpanId());
-            if (traceContext.isEmpty()) {
-                traceContext = null;
-            }
-            CreationContext creationContext = new CreationContext(
-                    protobufMessage.getCreationContext().getCreator(),
-                    protobufMessage.getCreationContext().getCreatorType(),
-                    protobufMessage.getCreationContext().getCreatorMethod());
-            if (protobufMessage.getCreationContext().getScheduled()) {
-                creationContext = forScheduling(creationContext);
-            }
-            if (creationContext.isEmpty()) {
-                creationContext = null;
-            }
+            TraceContext traceContext = protobufMessage.hasTraceContext()
+                    ? TraceContextDeserializer.deserialize(protobufMessage.getTraceContext())
+                    : null;
+            CreationContext creationContext = protobufMessage.hasCreationContext()
+                    ? CreationContextDeserializer.deserialize(protobufMessage.getCreationContext())
+                    : null;
             return new ScheduledMessageImpl(
                     id,
                     fireTime,

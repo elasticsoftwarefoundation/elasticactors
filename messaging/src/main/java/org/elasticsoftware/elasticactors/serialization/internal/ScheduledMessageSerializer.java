@@ -20,6 +20,8 @@ import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
+import org.elasticsoftware.elasticactors.serialization.internal.tracing.CreationContextSerializer;
+import org.elasticsoftware.elasticactors.serialization.internal.tracing.TraceContextSerializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
 
 import java.util.concurrent.TimeUnit;
@@ -43,35 +45,14 @@ public final class ScheduledMessageSerializer implements Serializer<ScheduledMes
         builder.setSender(scheduledMessage.getSender().toString());
         builder.setReceiver(scheduledMessage.getReceiver().toString());
         builder.setMessage(ByteString.copyFrom(scheduledMessage.getMessageBytes()));
-        if (scheduledMessage.getTraceContext() != null
-                && !scheduledMessage.getTraceContext().isEmpty()) {
-            Messaging.TraceContext.Builder traceContext = Messaging.TraceContext.newBuilder();
-            traceContext.setSpanId(scheduledMessage.getTraceContext().getSpanId());
-            traceContext.setTraceId(scheduledMessage.getTraceContext().getTraceId());
-            if (scheduledMessage.getTraceContext().getParentSpanId() != null) {
-                traceContext.setParentSpanId(scheduledMessage.getTraceContext().getParentSpanId());
-            }
+        Messaging.TraceContext traceContext =
+                TraceContextSerializer.serialize(scheduledMessage.getTraceContext());
+        if (traceContext != null) {
             builder.setTraceContext(traceContext);
         }
-        if (scheduledMessage.getCreationContext() != null
-                && !scheduledMessage.getCreationContext().isEmpty()) {
-            Messaging.CreationContext.Builder creationContext =
-                    Messaging.CreationContext.newBuilder();
-            if (scheduledMessage.getCreationContext().getCreator() != null) {
-                creationContext.setCreator(scheduledMessage.getCreationContext().getCreator());
-            }
-            if (scheduledMessage.getCreationContext().getCreatorType() != null) {
-                creationContext.setCreatorType(
-                        scheduledMessage.getCreationContext().getCreatorType());
-            }
-            if (scheduledMessage.getCreationContext().getCreatorMethod() != null) {
-                creationContext.setCreatorMethod(
-                        scheduledMessage.getCreationContext().getCreatorMethod());
-            }
-            if (scheduledMessage.getCreationContext().getScheduled() != null) {
-                creationContext.setScheduled(
-                        scheduledMessage.getCreationContext().getScheduled());
-            }
+        Messaging.CreationContext creationContext =
+                CreationContextSerializer.serialize(scheduledMessage.getCreationContext());
+        if (creationContext != null) {
             builder.setCreationContext(creationContext);
         }
         return builder.build().toByteArray();
