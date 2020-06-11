@@ -60,6 +60,7 @@ public class AskTest {
     @AfterMethod
     public void removeExternalCreatorData() {
         testScope.get().close();
+        testScope.remove();
     }
 
     @Test

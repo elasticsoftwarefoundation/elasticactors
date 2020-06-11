@@ -18,7 +18,6 @@ package org.elasticsoftware.elasticactors.kafka;
 
 import org.elasticsoftware.elasticactors.ActorContext;
 import org.elasticsoftware.elasticactors.ActorContextHolder;
-import org.elasticsoftware.elasticactors.reactivestreams.ProcessorContext;
 
 /**
  * @author Joost van de Wijgerd
@@ -37,7 +36,7 @@ final class InternalActorContext extends ActorContextHolder {
 
     static ActorContext getAndClearContext() {
         ActorContext state = threadContext.get();
-        threadContext.set(null);
+        threadContext.remove();
         return state;
     }
 

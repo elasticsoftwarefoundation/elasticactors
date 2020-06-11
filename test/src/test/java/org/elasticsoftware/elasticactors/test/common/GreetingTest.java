@@ -68,6 +68,7 @@ public class GreetingTest {
     @AfterMethod
     public void removeExternalCreatorData() {
         testScope.get().close();
+        testScope.remove();
     }
 
     private static final Logger logger = LoggerFactory.getLogger(GreetingTest.class);

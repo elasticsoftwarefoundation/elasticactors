@@ -30,6 +30,6 @@ public final class KafkaTransactionContext {
     }
 
     static void clear() {
-        transactionalProducer.set(null);
+        transactionalProducer.remove();
     }
 }

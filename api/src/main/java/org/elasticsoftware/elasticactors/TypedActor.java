@@ -171,7 +171,7 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
             currentMessageToStringSerializer.set(messageToStringSerializer);
             onReceive(sender, message);
         } finally {
-            currentMessageToStringSerializer.set(null);
+            currentMessageToStringSerializer.remove();
         }
     }
 }

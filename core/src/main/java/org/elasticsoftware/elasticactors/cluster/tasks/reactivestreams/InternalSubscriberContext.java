@@ -35,7 +35,7 @@ public final class InternalSubscriberContext extends SubscriberContextHolder {
 
     protected static SubscriberContext getAndClearContext() {
         SubscriberContext state = threadContext.get();
-        threadContext.set(null);
+        threadContext.remove();
         return state;
     }
 }
