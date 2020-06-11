@@ -2,7 +2,7 @@
 <Configuration>
     <Appenders>
         <Console name="STDOUT" target="SYSTEM_OUT">
-            <PatternLayout pattern="%date %highlight{%5level}%notEmpty{ [%16.16MDC{X-B3-TraceId},%16.16MDC{X-B3-SpanId}]} %style{%pid{-}}{magenta} --- [%15.15thread] %style{%-40.40logger{1.}}{cyan}: %message%n"/>
+            <PatternLayout pattern="%date %highlight{%5level}%notEmpty{ [%.16MDC{X-B3-TraceId},%.16MDC{X-B3-SpanId}]} %style{%pid{-}}{magenta} --- [%15.15thread] %style{%-40.40logger{1.}}{cyan}: %message%n"/>
             <!-- Uncomment this to enable JSON output with full context map -->
             <!-- <JsonLayout compact="true" eventEol="true" properties="true"/>-->
         </Console>
