@@ -28,7 +28,7 @@ public final class TraceContext {
 
     public TraceContext(@Nullable TraceContext parent) {
         Random prng = ThreadLocalRandom.current();
-        this.spanId = nextTraceIdHigh(prng) + String.format("%016x", prng.nextLong());
+        this.spanId = String.format("%016x", prng.nextLong());
         this.traceId = parent == null || parent.getTraceId().trim().isEmpty()
                 ? nextTraceIdHigh(prng) + this.spanId
                 : parent.getTraceId();

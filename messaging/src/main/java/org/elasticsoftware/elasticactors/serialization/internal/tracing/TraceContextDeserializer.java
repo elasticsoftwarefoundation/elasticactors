@@ -15,7 +15,7 @@ public final class TraceContextDeserializer {
         TraceContext deserialized = new TraceContext(
                 traceContext.getSpanId(),
                 traceContext.getTraceId(),
-                traceContext.getParentSpanId());
+                traceContext.hasParentSpanId() ? traceContext.getParentSpanId() : null);
         return deserialized.isEmpty() ? null : deserialized;
     }
 
