@@ -12,6 +12,30 @@ option optimize_for = SPEED;
 //    you may add new optional or repeated fields but you must use fresh tag numbers (i.e. tag numbers that were never
 //        used in this protocol buffer, not even by deleted fields).
 
+message TraceContext {
+  required string spanId = 1;
+  required string traceId = 2;
+  optional string parentSpanId = 3;
+}
+
+message CreationContext {
+  optional string creator = 1;
+  optional string creatorType = 2;
+  optional string creatorMethod = 3;
+  optional bool scheduled = 4;
+}
+
+message ScheduledMessage {
+  optional bytes id = 1;
+  optional uint64 fireTime = 2;
+  optional string receiver = 3;
+  optional string sender = 4;
+  optional string messageClass = 5;
+  optional bytes message = 6;
+  optional TraceContext traceContext = 7;
+  optional CreationContext creationContext = 8;
+}
+
 message InternalMessage {
   optional string receiver = 1;
   optional string sender = 2;
@@ -22,6 +46,8 @@ message InternalMessage {
   optional bool undeliverable = 7;
   repeated string receivers = 8;
   optional uint32 timeout = 9;
+  optional TraceContext traceContext = 10;
+  optional CreationContext creationContext = 11;
 }
 
 enum ActorType {

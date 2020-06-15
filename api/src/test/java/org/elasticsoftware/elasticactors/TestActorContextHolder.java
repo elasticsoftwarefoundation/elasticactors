@@ -28,7 +28,7 @@ public class TestActorContextHolder extends ActorContextHolder {
 
     public static ActorContext getAndClearContext() {
         ActorContext state = threadContext.get();
-        threadContext.set(null);
+        threadContext.remove();
         return state;
     }
 }

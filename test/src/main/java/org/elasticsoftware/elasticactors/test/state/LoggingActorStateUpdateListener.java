@@ -18,15 +18,33 @@ package org.elasticsoftware.elasticactors.test.state;
 
 import org.elasticsoftware.elasticactors.state.ActorStateUpdate;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
+
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class LoggingActorStateUpdateListener implements ActorStateUpdateListener {
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(LoggingActorStateUpdateListener.class);
+
     @Override
     public void onUpdate(List<? extends ActorStateUpdate> updates) {
-        updates.forEach(update -> System.out.println(String.format("Got an ActorStateUpdate for actorId: %s", update.getActorRef().getActorId())));
+        updates.forEach(update -> {
+            try (MessagingScope ignored = getManager().enter(
+                    new TraceContext(update.getTraceContext()),
+                    update.getCreationContext())) {
+                logger.info(
+                        "Got an ActorStateUpdate for actorId: {}",
+                        update.getActorRef().getActorId());
+            }
+        });
     }
 }

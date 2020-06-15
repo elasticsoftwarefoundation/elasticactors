@@ -30,6 +30,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.elasticsoftware.elasticactors.util.concurrent.TraceThreadBoundRunnable.wrap;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -68,6 +70,9 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
     public void execute(ThreadBoundEvent event) {
         if (shuttingDown.get()) {
             throw new RejectedExecutionException("The system is shutting down.");
+        }
+        if (event instanceof ThreadBoundRunnable) {
+            event = wrap((ThreadBoundRunnable<?>) event);
         }
         int bucket = getBucket(event.getKey());
         BlockingQueue<ThreadBoundEvent> queue = queues.get(bucket);

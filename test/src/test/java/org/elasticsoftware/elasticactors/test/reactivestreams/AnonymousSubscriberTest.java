@@ -20,20 +20,48 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.PublisherNotFoundException;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.mockito.Mockito.mock;
-
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 /**
  * @author Joost van de Wijgerd
  */
 public class AnonymousSubscriberTest {
+
+    private final static Logger logger = LoggerFactory.getLogger(AnonymousSubscriberTest.class);
+
+    private final static ThreadLocal<MessagingScope> testScope = new ThreadLocal<>();
+
+    @BeforeMethod
+    public void addExternalCreatorData(Method method) {
+        testScope.set(getManager().enter(
+                new TraceContext(),
+                new CreationContext(
+                        this.getClass().getSimpleName(),
+                        this.getClass(),
+                        method)));
+    }
+
+    @AfterMethod
+    public void removeExternalCreatorData() {
+        testScope.get().close();
+        testScope.remove();
+    }
+
     @Test
     public void testStream() throws Exception {
         TestActorSystem testActorSystem = new TestActorSystem();
@@ -56,7 +84,7 @@ public class AnonymousSubscriberTest {
 
             @Override
             public void onNext(StreamedMessage streamedMessage) {
-                System.out.println(streamedMessage.getKey());
+                logger.info("Streamed message key: {}", streamedMessage.getKey());
                 if(streamedMessage.getSequenceNumber() >= 10) {
                     subscription.cancel();
                 }
@@ -64,7 +92,7 @@ public class AnonymousSubscriberTest {
 
             @Override
             public void onError(Throwable t) {
-                t.printStackTrace(System.err);
+                logger.error("Got error", t);
                 waitLatch.countDown();
             }
 
@@ -101,7 +129,7 @@ public class AnonymousSubscriberTest {
 
             @Override
             public void onNext(StreamedMessage streamedMessage) {
-                System.out.println("Subscriber 1: "+streamedMessage.getKey());
+                logger.info("Subscriber 1: {}", streamedMessage.getKey());
                 if(streamedMessage.getSequenceNumber() >= 10) {
                     subscription.cancel();
                 }
@@ -109,7 +137,7 @@ public class AnonymousSubscriberTest {
 
             @Override
             public void onError(Throwable t) {
-                t.printStackTrace(System.err);
+                logger.error("Got error", t);
                 waitLatch.countDown();
             }
 
@@ -130,7 +158,7 @@ public class AnonymousSubscriberTest {
 
             @Override
             public void onNext(StreamedMessage streamedMessage) {
-                System.out.println("Subscriber 2: "+streamedMessage.getKey());
+                logger.info("Subscriber 2: {}", streamedMessage.getKey());
                 if(streamedMessage.getSequenceNumber() >= 10) {
                     subscription.cancel();
                 }
@@ -138,7 +166,7 @@ public class AnonymousSubscriberTest {
 
             @Override
             public void onError(Throwable t) {
-                t.printStackTrace(System.err);
+                logger.error("Got error", t);
                 waitLatch.countDown();
             }
 

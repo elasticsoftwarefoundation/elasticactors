@@ -21,7 +21,10 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
@@ -30,7 +33,8 @@ import java.util.UUID;
 /**
  * @author Joost van de Wijgerd
  */
-public final class InternalMessageImpl implements InternalMessage,Serializable {
+public final class InternalMessageImpl extends AbstractTracedMessage
+        implements InternalMessage, Serializable {
     private final ActorRef sender;
     private final ImmutableList<ActorRef> receivers;
     private final UUID id;
@@ -65,14 +69,15 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
         this(id, sender, ImmutableList.of(receiver), payload, payloadClass, durable, undeliverable, NO_TIMEOUT);
     }
 
-    public InternalMessageImpl(UUID id,
-                               ActorRef sender,
-                               ImmutableList<ActorRef> receivers,
-                               ByteBuffer payload,
-                               String payloadClass,
-                               boolean durable,
-                               boolean undeliverable,
-                               int timeout) {
+    private InternalMessageImpl(
+            UUID id,
+            ActorRef sender,
+            ImmutableList<ActorRef> receivers,
+            ByteBuffer payload,
+            String payloadClass,
+            boolean durable,
+            boolean undeliverable,
+            int timeout) {
         this.sender = sender;
         this.receivers = receivers;
         this.id = id;
@@ -83,8 +88,36 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
         this.timeout = timeout;
     }
 
+    public InternalMessageImpl(UUID id,
+            ActorRef sender,
+            ImmutableList<ActorRef> receivers,
+            ByteBuffer payload,
+            String payloadClass,
+            boolean durable,
+            boolean undeliverable,
+            int timeout,
+            TraceContext traceContext,
+            CreationContext creationContext) {
+        super(traceContext, creationContext);
+        this.sender = sender;
+        this.receivers = receivers;
+        this.id = id;
+        this.payload = payload;
+        this.payloadClass = payloadClass;
+        this.durable = durable;
+        this.undeliverable = undeliverable;
+        this.timeout = timeout;
+    }
+
+    @Override
+    @Nullable
     public ActorRef getSender() {
         return sender;
+    }
+
+    @Override
+    public String getType() {
+        return payloadClass;
     }
 
     @Override
@@ -136,6 +169,16 @@ public final class InternalMessageImpl implements InternalMessage,Serializable {
 
     @Override
     public InternalMessage copyOf() {
-        return new InternalMessageImpl(id, sender, receivers, payload.asReadOnlyBuffer(), payloadClass, durable, undeliverable, timeout);
+        return new InternalMessageImpl(
+                id,
+                sender,
+                receivers,
+                payload.asReadOnlyBuffer(),
+                payloadClass,
+                durable,
+                undeliverable,
+                timeout,
+                getTraceContext(),
+                getCreationContext());
     }
 }

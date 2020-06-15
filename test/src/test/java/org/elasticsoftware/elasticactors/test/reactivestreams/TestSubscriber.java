@@ -16,15 +16,24 @@
 
 package org.elasticsoftware.elasticactors.test.reactivestreams;
 
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.Actor;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.MessageHandler;
+import org.elasticsoftware.elasticactors.MethodActor;
+import org.elasticsoftware.elasticactors.PublisherNotFoundException;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Joost van de Wijgerd
  */
 @Actor
 public final class TestSubscriber extends MethodActor {
+
+    private final static Logger logger = LoggerFactory.getLogger(TestSubscriber.class);
+
     @Override
     public void postCreate(ActorRef creator) throws Exception {
         getSystem().actorFor("testPublisher").publisherOf(StreamedMessage.class).subscribe(asSubscriber(StreamedMessage.class));
@@ -32,7 +41,7 @@ public final class TestSubscriber extends MethodActor {
 
     @MessageHandler
     public void handle(StreamedMessage streamedMessage, ActorRef publisherRef) {
-        System.out.println(getSelf().getActorId()+": "+streamedMessage.getKey());
+        logger.info("{}: {}", getSelf().getActorId(), streamedMessage.getKey());
         if(streamedMessage.getSequenceNumber() >= 10) {
             getSubscriptions().stream()
                     .filter(subscription -> subscription.getMessageName().equals(StreamedMessage.class.getName()) &&

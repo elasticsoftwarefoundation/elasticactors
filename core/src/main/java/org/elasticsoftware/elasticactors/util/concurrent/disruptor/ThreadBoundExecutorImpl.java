@@ -22,6 +22,7 @@ import com.lmax.disruptor.dsl.Disruptor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnableEventProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,8 @@ import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.elasticsoftware.elasticactors.util.concurrent.TraceThreadBoundRunnable.wrap;
 
 /**
  * @author Joost van de Wijgerd
@@ -65,6 +68,9 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
     public void execute(ThreadBoundEvent event) {
         if (shuttingDown.get()) {
             throw new RejectedExecutionException("The system is shutting down.");
+        }
+        if (event instanceof ThreadBoundRunnable) {
+            event = wrap((ThreadBoundRunnable<?>) event);
         }
         final RingBuffer<ThreadBoundEventWrapper> ringBuffer = this.disruptors.get(getBucket(event.getKey())).getRingBuffer();
         // this method will wait when the buffer is overflowing ( using Lock.parkNanos(1) )

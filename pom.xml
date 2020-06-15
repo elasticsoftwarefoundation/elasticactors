@@ -36,7 +36,7 @@
         <aspectj.version>1.9.5</aspectj.version>
         <protobuf.version>3.11.4</protobuf.version>
         <grizzly.version>2.4.4</grizzly.version>
-        <log4j.version>2.13.1</log4j.version>
+        <log4j.version>2.13.3</log4j.version>
         <!-- the cassandra driver has a hard dependency on this version -->
         <guava.version>19.0</guava.version>
         <jackson.version>2.10.3</jackson.version>
@@ -193,6 +193,11 @@
             <dependency>
                 <groupId>org.elasticsoftware.elasticactors</groupId>
                 <artifactId>elasticactors-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <artifactId>elasticactors-tracing</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -549,6 +554,7 @@
         <module>messaging</module>
         <module>client-spring-amqp</module>
         <module>client-rabbitmq</module>
+        <module>tracing</module>
     </modules>
 
     <build>
@@ -561,6 +567,7 @@
                     <include>*.yaml</include>
                     <include>*.properties</include>
                     <include>META-INF/*</include>
+                    <include>META-INF/services/*</include>
                 </includes>
             </resource>
         </resources>

@@ -27,6 +27,7 @@ public class EchoGreetingActor extends MethodActor {
 
     @MessageHandler
     public void handleGreeting(ActorRef sender, Greeting message) throws Exception {
+        logger.info("Echoing REQUEST in Thread {}", Thread.currentThread().getName());
         if (message.getWho().equals("Santa Claus")) {
             sender.tell(new SpecialGreeting("Santa Claus"));
         } else {

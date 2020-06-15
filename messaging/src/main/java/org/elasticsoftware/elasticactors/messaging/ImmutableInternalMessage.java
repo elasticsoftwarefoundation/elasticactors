@@ -20,7 +20,10 @@ import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
@@ -29,7 +32,8 @@ import java.util.UUID;
 /**
  * @author Joost van de Wijgerd
  */
-public final class ImmutableInternalMessage implements InternalMessage,Serializable {
+public final class ImmutableInternalMessage extends AbstractTracedMessage
+        implements InternalMessage, Serializable {
     private final ActorRef sender;
     private final ImmutableList<ActorRef> receivers;
     private final UUID id;
@@ -39,7 +43,6 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
     private final boolean undeliverable;
     private final int timeout;
     private transient byte[] serializedForm;
-
 
     public ImmutableInternalMessage(ActorRef sender, ActorRef receiver, ByteBuffer payload, Object payloadObject, boolean durable) {
         this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadObject,durable,false);
@@ -57,14 +60,14 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
         this(id, sender, ImmutableList.of(receiver), payload, payloadObject, durable, undeliverable, NO_TIMEOUT);
     }
 
-    public ImmutableInternalMessage(UUID id,
-                                    ActorRef sender,
-                                    ImmutableList<ActorRef> receivers,
-                                    ByteBuffer payload,
-                                    Object payloadObject,
-                                    boolean durable,
-                                    boolean undeliverable,
-                                    int timeout) {
+    private ImmutableInternalMessage(UUID id,
+            ActorRef sender,
+            ImmutableList<ActorRef> receivers,
+            ByteBuffer payload,
+            Object payloadObject,
+            boolean durable,
+            boolean undeliverable,
+            int timeout) {
         this.sender = sender;
         this.receivers = receivers;
         this.id = id;
@@ -75,8 +78,37 @@ public final class ImmutableInternalMessage implements InternalMessage,Serializa
         this.timeout = timeout;
     }
 
+    public ImmutableInternalMessage(
+            UUID id,
+            ActorRef sender,
+            ImmutableList<ActorRef> receivers,
+            ByteBuffer payload,
+            Object payloadObject,
+            boolean durable,
+            boolean undeliverable,
+            int timeout,
+            TraceContext traceContext,
+            CreationContext creationContext) {
+        super(traceContext, creationContext);
+        this.sender = sender;
+        this.receivers = receivers;
+        this.id = id;
+        this.payload = payload;
+        this.payloadObject = payloadObject;
+        this.durable = durable;
+        this.undeliverable = undeliverable;
+        this.timeout = timeout;
+    }
+
+    @Override
+    @Nullable
     public ActorRef getSender() {
         return sender;
+    }
+
+    @Override
+    public String getType() {
+        return payloadObject.getClass().getName();
     }
 
     @Override

@@ -31,6 +31,7 @@ import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
@@ -86,6 +89,12 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
 
     @Override
     public final void run() {
+        try (MessagingScope ignored = getManager().enter(persistentActor, internalMessage)) {
+            runInContext();
+        }
+    }
+
+    private void runInContext() {
         // measure start of the execution
         if(this.measurement != null) {
             this.measurement.setExecutionStart(System.nanoTime());

@@ -19,7 +19,10 @@ package org.elasticsoftware.elasticactors.messaging;
 import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
@@ -28,7 +31,8 @@ import java.util.UUID;
 /**
  * @author Joost van de Wijgerd
  */
-public final class TransientInternalMessage implements InternalMessage,Serializable {
+public final class TransientInternalMessage extends AbstractTracedMessage
+        implements InternalMessage, Serializable {
     private final ActorRef sender;
     private final ImmutableList<ActorRef> receivers;
     private final UUID id;
@@ -47,7 +51,11 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
         this(sender, ImmutableList.of(receiver), payload, undeliverable);
     }
 
-    public TransientInternalMessage(ActorRef sender, ImmutableList<ActorRef> receivers, Object payload, boolean undeliverable) {
+    private TransientInternalMessage(
+            ActorRef sender,
+            ImmutableList<ActorRef> receivers,
+            Object payload,
+            boolean undeliverable) {
         this.sender = sender;
         this.receivers = receivers;
         this.id = UUIDTools.createTimeBasedUUID();
@@ -55,8 +63,30 @@ public final class TransientInternalMessage implements InternalMessage,Serializa
         this.undeliverable = undeliverable;
     }
 
+    public TransientInternalMessage(
+            ActorRef sender,
+            ImmutableList<ActorRef> receivers,
+            Object payload,
+            boolean undeliverable,
+            TraceContext traceContext,
+            CreationContext creationContext) {
+        super(traceContext, creationContext);
+        this.sender = sender;
+        this.receivers = receivers;
+        this.id = UUIDTools.createTimeBasedUUID();
+        this.payload = payload;
+        this.undeliverable = undeliverable;
+    }
+
+    @Override
+    @Nullable
     public ActorRef getSender() {
         return sender;
+    }
+
+    @Override
+    public String getType() {
+        return payload.getClass().getName();
     }
 
     @Override

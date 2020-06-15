@@ -54,6 +54,12 @@ public interface ActorContext {
 
     /**
      *
+     * @return a String that identifies the current actor's type
+     */
+    String getSelfType();
+
+    /**
+     *
      * @param stateClass    the class that implements {@link ActorState}
      * @param <T>           generic type info
      * @return              the {@link} ActorState instance for this Actor

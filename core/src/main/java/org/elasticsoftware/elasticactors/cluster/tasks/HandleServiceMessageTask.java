@@ -28,6 +28,7 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.slf4j.Logger;
@@ -38,6 +39,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
@@ -74,6 +76,11 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     }
 
     @Override
+    public String getSelfType() {
+        return serviceActor != null ? serviceActor.getClass().getName() : null;
+    }
+
+    @Override
     public <T extends ActorState> T getState(Class<T> stateClass) {
         return null;
     }
@@ -104,7 +111,13 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     }
 
     @Override
-    public final void run() {
+    public void run() {
+        try (MessagingScope ignored = getManager().enter(this, internalMessage)) {
+            runInContext();
+        }
+    }
+
+    private void runInContext() {
         // measure start of the execution
         if(this.measurement != null) {
             this.measurement.setExecutionStart(System.nanoTime());

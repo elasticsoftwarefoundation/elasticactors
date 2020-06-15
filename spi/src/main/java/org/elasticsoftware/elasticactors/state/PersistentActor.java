@@ -149,6 +149,11 @@ public final class PersistentActor<K> implements ActorContext, ProcessorContext 
     }
 
     @Override
+    public String getSelfType() {
+        return actorClass != null ? actorClass.getName() : null;
+    }
+
+    @Override
     public <T extends ActorState> T getState(Class<T> stateClass) {
         return stateClass.cast(actorState);
     }

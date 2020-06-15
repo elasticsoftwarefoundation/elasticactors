@@ -21,6 +21,8 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
+import org.elasticsoftware.elasticactors.serialization.internal.tracing.CreationContextSerializer;
+import org.elasticsoftware.elasticactors.serialization.internal.tracing.TraceContextSerializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
 
 /**
@@ -55,6 +57,16 @@ public final class InternalMessageSerializer implements Serializer<InternalMessa
         builder.setDurable(internalMessage.isDurable());
         builder.setUndeliverable(internalMessage.isUndeliverable());
         builder.setTimeout(internalMessage.getTimeout());
+        Messaging.TraceContext traceContext =
+                TraceContextSerializer.serialize(internalMessage.getTraceContext());
+        if (traceContext != null) {
+            builder.setTraceContext(traceContext);
+        }
+        Messaging.CreationContext creationContext =
+                CreationContextSerializer.serialize(internalMessage.getCreationContext());
+        if (creationContext != null) {
+            builder.setCreationContext(creationContext);
+        }
         return builder.build().toByteArray();
     }
 

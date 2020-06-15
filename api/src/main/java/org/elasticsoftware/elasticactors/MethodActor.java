@@ -22,6 +22,7 @@ import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 import org.elasticsoftware.elasticactors.state.PersistenceConfigHelper;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -33,6 +34,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 
 import static java.lang.String.format;
 
@@ -170,17 +173,26 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
         List<HandlerMethodDefinition> definitions = handlerCache.get(message.getClass());
         if (definitions != null) {
             for (HandlerMethodDefinition definition : definitions) {
-                try {
-                    definition.handlerMethod.invoke(
-                            definition.targetInstance,
-                            definition.prepareParameters(sender, message));
-                } catch (InvocationTargetException e) {
-                    Throwable cause = e.getCause() instanceof Exception ? e.getCause() : e;
-                    logException(definition, message, sender, cause);
+                try (MessagingScope ignored = getManager().enter(definition.handlerMethod)) {
+                    handleMessage(sender, message, definition);
                 }
             }
         } else {
             onUnhandled(sender, message);
+        }
+    }
+
+    private void handleMessage(
+            ActorRef sender,
+            Object message,
+            HandlerMethodDefinition definition) throws IllegalAccessException {
+        try {
+            definition.handlerMethod.invoke(
+                    definition.targetInstance,
+                    definition.prepareParameters(sender, message));
+        } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause() instanceof Exception ? e.getCause() : e;
+            logException(definition, message, sender, cause);
         }
     }
 

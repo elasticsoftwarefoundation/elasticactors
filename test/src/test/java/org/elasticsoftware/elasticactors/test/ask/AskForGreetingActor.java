@@ -16,10 +16,17 @@
 
 package org.elasticsoftware.elasticactors.test.ask;
 
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.Actor;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.MessageHandler;
+import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.test.common.EchoGreetingActor;
 import org.elasticsoftware.elasticactors.test.common.Greeting;
+
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
+import static org.testng.Assert.assertEquals;
 
 /**
  * @author Joost van de Wijgerd
@@ -30,10 +37,16 @@ public class AskForGreetingActor extends MethodActor {
     public void handle(AskForGreeting greeting, ActorSystem actorSystem, ActorRef replyActor) {
         try {
             ActorRef echo = actorSystem.actorOf("echo", EchoGreetingActor.class);
-            System.out.println("Got REQUEST in Thread" + Thread.currentThread().getName());
-
+            logger.info("Got REQUEST in Thread {}", Thread.currentThread().getName());
+            assertEquals(
+                    getManager().currentMethodContext(),
+                    AskForGreetingActor.class.getMethod(
+                            "handle",
+                            AskForGreeting.class,
+                            ActorSystem.class,
+                            ActorRef.class));
             echo.ask(new Greeting("echo"), Greeting.class, greeting.getPersistOnResponse()).whenComplete((g, throwable) -> {
-                System.out.println("Got REPLY in Thread " + Thread.currentThread().getName());
+                logger.info("Got REPLY in Thread {}", Thread.currentThread().getName());
                 replyActor.tell(g);
             });
         } catch(Exception e) {

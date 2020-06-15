@@ -19,16 +19,45 @@ package org.elasticsoftware.elasticactors.test.reactivestreams;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 /**
  * @author Joost van de Wijgerd
  */
 public class ReactiveStreamsTest {
+
+    private final static Logger logger = LoggerFactory.getLogger(AnonymousSubscriberTest.class);
+
+    private final static ThreadLocal<MessagingScope> testScope = new ThreadLocal<>();
+
+    @BeforeMethod
+    public void addExternalCreatorData(Method method) {
+        testScope.set(getManager().enter(
+                new TraceContext(),
+                new CreationContext(
+                        this.getClass().getSimpleName(),
+                        this.getClass(),
+                        method)));
+    }
+
+    @AfterMethod
+    public void removeExternalCreatorData() {
+        testScope.get().close();
+    }
+
     @Test
     public void testPublisherAndSubscriber() throws Exception {
         TestActorSystem testActorSystem = new TestActorSystem();
@@ -84,7 +113,7 @@ public class ReactiveStreamsTest {
 
         @Override
         public void onError(Throwable t) {
-            t.printStackTrace(System.err);
+            logger.error("Got error", t);
             waitLatch.countDown();
         }
 

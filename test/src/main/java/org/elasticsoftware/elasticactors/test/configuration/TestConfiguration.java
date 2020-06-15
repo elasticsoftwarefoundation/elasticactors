@@ -48,6 +48,7 @@ import org.elasticsoftware.elasticactors.test.InternalActorSystemsImpl;
 import org.elasticsoftware.elasticactors.test.cluster.NoopActorSystemEventRegistryService;
 import org.elasticsoftware.elasticactors.test.cluster.SingleNodeClusterService;
 import org.elasticsoftware.elasticactors.test.state.LoggingActorStateUpdateListener;
+import org.elasticsoftware.elasticactors.tracing.configuration.TracingConfiguration;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
@@ -61,24 +62,44 @@ import org.springframework.context.annotation.aspectj.EnableSpringConfigured;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 /**
  * @author Joost van de Wijgerd
  */
 @Configuration
 @EnableSpringConfigured
-@Import({BackplaneConfiguration.class, MessagingConfiguration.class, ClientConfiguration.class})
-public class TestConfiguration {
+@Import({
+        BackplaneConfiguration.class,
+        MessagingConfiguration.class,
+        ClientConfiguration.class,
+        TracingConfiguration.class
+})
+public class TestConfiguration extends AsyncConfigurerSupport {
     @Autowired
     private Environment env;
     @Autowired
     private ResourceLoader resourceLoader;
     private final NodeSelectorFactory nodeSelectorFactory = new HashingNodeSelectorFactory();
     private final PhysicalNode localNode = new PhysicalNode(UUIDTools.createRandomUUID().toString(), InetAddress.getLoopbackAddress(), true);
+
+    @Override
+    @Bean(name = "asyncExecutor")
+    public Executor getAsyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(Runtime.getRuntime().availableProcessors());
+        executor.setMaxPoolSize(Runtime.getRuntime().availableProcessors() * 3);
+        executor.setQueueCapacity(1024);
+        executor.setThreadNamePrefix("ASYNCHRONOUS-ANNOTATION-EXECUTOR-");
+        executor.initialize();
+        return executor;
+    }
 
     @Bean(name = "systemInitializer")
     public SystemInitializer createSystemInitializer(LocalActorSystemInstance localActorSystemInstance, ClusterService clusterService) {

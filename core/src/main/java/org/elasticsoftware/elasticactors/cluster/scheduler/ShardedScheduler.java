@@ -24,9 +24,11 @@ import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.messaging.ScheduledMessageImpl;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +46,9 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import static org.elasticsoftware.elasticactors.tracing.CreationContext.forScheduling;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 
 import static java.lang.String.format;
 
@@ -228,6 +233,14 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
 
         @Override
         public void run() {
+            try (MessagingScope ignored = getManager().enter(
+                    message.getTraceContext(),
+                    forScheduling(message.getCreationContext()))) {
+                runInContext();
+            }
+        }
+
+        public void runInContext() {
             boolean executionInterruptedByResharding = false;
             try {
                 final MessageDeserializer messageDeserializer = actorSystem.getDeserializer(message.getMessageClass());

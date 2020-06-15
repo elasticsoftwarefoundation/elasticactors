@@ -34,7 +34,7 @@ public final class DaemonThreadFactory implements ThreadFactory {
     public Thread newThread(Runnable r) {
         Thread t = new Thread(r);
         t.setDaemon(true);
-        t.setName(String.format("%s - %d",name,threadCount.incrementAndGet()));
+        t.setName(String.format("%s-%d", name, threadCount.incrementAndGet()));
         return t;
     }
 

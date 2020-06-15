@@ -24,7 +24,11 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
+import org.elasticsoftware.elasticactors.serialization.internal.tracing.CreationContextDeserializer;
+import org.elasticsoftware.elasticactors.serialization.internal.tracing.TraceContextDeserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -64,15 +68,41 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
         boolean durable = protobufMessage.getDurable();
         boolean undeliverable = protobufMessage.getUndeliverable();
         int timeout = protobufMessage.getTimeout() != 0 ? protobufMessage.getTimeout() : InternalMessage.NO_TIMEOUT;
+        TraceContext traceContext = protobufMessage.hasTraceContext()
+                ? TraceContextDeserializer.deserialize(protobufMessage.getTraceContext())
+                : null;
+        CreationContext creationContext = protobufMessage.hasCreationContext()
+                ? CreationContextDeserializer.deserialize(protobufMessage.getCreationContext())
+                : null;
         //return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable);
         // optimize immutable message if possible
 
         Class<?> messageClass = isImmutableMessageClass(messageClassString);
         if(messageClass == null) {
-            return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable, timeout);
+            return new InternalMessageImpl(
+                    id,
+                    sender,
+                    receivers,
+                    protobufMessage.getPayload().asReadOnlyByteBuffer(),
+                    messageClassString,
+                    durable,
+                    undeliverable,
+                    timeout,
+                    traceContext,
+                    creationContext);
         } else {
             Object payloadObject = serializationAccessor.getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
-            return new ImmutableInternalMessage(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), payloadObject, durable, undeliverable, timeout);
+            return new ImmutableInternalMessage(
+                    id,
+                    sender,
+                    receivers,
+                    protobufMessage.getPayload().asReadOnlyByteBuffer(),
+                    payloadObject,
+                    durable,
+                    undeliverable,
+                    timeout,
+                    traceContext,
+                    creationContext);
         }
     }
 

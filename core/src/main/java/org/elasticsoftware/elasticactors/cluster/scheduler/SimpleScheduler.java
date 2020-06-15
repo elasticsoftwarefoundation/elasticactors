@@ -18,11 +18,14 @@ package org.elasticsoftware.elasticactors.cluster.scheduler;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.messaging.AbstractTracedMessage;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.UUID;
@@ -33,6 +36,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import static org.elasticsoftware.elasticactors.tracing.CreationContext.forScheduling;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 /**
  * Simple in-memory scheduler that is backed by a {@link java.util.concurrent.ScheduledExecutorService}
  *
@@ -41,7 +46,8 @@ import java.util.concurrent.TimeUnit;
 public final class SimpleScheduler implements SchedulerService,ScheduledMessageRefFactory {
     private static final Logger logger = LoggerFactory.getLogger(SimpleScheduler.class);
     private ScheduledExecutorService scheduledExecutorService;
-    private final ConcurrentMap<String,ScheduledFuture> scheduledFutures = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, ScheduledFuture<?>> scheduledFutures =
+            new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init() {
@@ -50,7 +56,7 @@ public final class SimpleScheduler implements SchedulerService,ScheduledMessageR
 
     @PreDestroy
     public void destroy() {
-        scheduledExecutorService.shutdown();
+        scheduledExecutorService.shutdownNow();
     }
 
     @Override
@@ -83,27 +89,46 @@ public final class SimpleScheduler implements SchedulerService,ScheduledMessageR
         return new SimpleScheduledMessageRef(refSpec,scheduledFuture);
     }
 
-    private final class TellActorTask implements Runnable {
+    private final class TellActorTask extends AbstractTracedMessage implements Runnable {
         private final String id;
         private final ActorRef sender;
-        private final ActorRef reciever;
+        private final ActorRef receiver;
         private final Object message;
 
-        private TellActorTask(String id, ActorRef sender, ActorRef reciever, Object message) {
+        private TellActorTask(String id, ActorRef sender, ActorRef receiver, Object message) {
             this.id = id;
             this.sender = sender;
-            this.reciever = reciever;
+            this.receiver = receiver;
             this.message = message;
         }
 
         @Override
         public void run() {
+            try (MessagingScope ignored = getManager().enter(
+                    getTraceContext(),
+                    forScheduling(getCreationContext()))) {
+                runInContext();
+            }
+        }
+
+        private void runInContext() {
             try {
-                reciever.tell(message,sender);
+                receiver.tell(message, sender);
                 scheduledFutures.remove(id);
             } catch (Exception e) {
-                logger.error("Exception sending scheduled messsage",e);
+                logger.error("Exception sending scheduled messsage", e);
             }
+        }
+
+        @Nullable
+        @Override
+        public ActorRef getSender() {
+            return sender;
+        }
+
+        @Override
+        public String getType() {
+            return message.getClass().getName();
         }
     }
 }

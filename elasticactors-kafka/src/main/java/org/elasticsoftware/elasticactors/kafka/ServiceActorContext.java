@@ -16,7 +16,11 @@
 
 package org.elasticsoftware.elasticactors.kafka;
 
-import org.elasticsoftware.elasticactors.*;
+import org.elasticsoftware.elasticactors.ActorContext;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.PersistentSubscription;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -35,6 +39,11 @@ public final class ServiceActorContext implements ActorContext {
     @Override
     public ActorRef getSelf() {
         return serviceRef;
+    }
+
+    @Override
+    public String getSelfType() {
+        return null;
     }
 
     @Override

@@ -21,22 +21,53 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.elasticsoftware.elasticactors.test.common.EchoGreetingActor;
 import org.elasticsoftware.elasticactors.test.common.Greeting;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 import static org.testng.Assert.assertEquals;
-
 /**
  * @author Joost van de Wijgerd
  */
 public class AskTest {
+
+    private final static Logger logger = LoggerFactory.getLogger(AskTest.class);
+
+    private final static ThreadLocal<MessagingScope> testScope = new ThreadLocal<>();
+
+    @BeforeMethod
+    public void addExternalCreatorData(Method method) {
+        testScope.set(getManager().enter(
+                new TraceContext(),
+                new CreationContext(
+                        this.getClass().getSimpleName(),
+                        this.getClass(),
+                        method)));
+    }
+
+    @AfterMethod
+    public void removeExternalCreatorData() {
+        testScope.get().close();
+        testScope.remove();
+    }
+
     @Test
     public void testAskGreeting() throws Exception {
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
+
+        logger.info("Starting testAskGreeting");
 
         ActorSystem actorSystem = testActorSystem.getActorSystem();
         ActorRef echo = actorSystem.actorOf("e", EchoGreetingActor.class);
@@ -54,6 +85,8 @@ public class AskTest {
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
 
+        logger.info("Starting testAskGreetingViaActor");
+
         ActorSystem actorSystem = testActorSystem.getActorSystem();
         ActorRef echo = actorSystem.actorOf("ask", AskForGreetingActor.class);
 
@@ -69,6 +102,8 @@ public class AskTest {
     public void testAskGreetingViaActorWithPersistOnReponse() throws Exception {
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
+
+        logger.info("Starting testAskGreetingViaActorWithPersistOnReponse");
 
         ActorSystem actorSystem = testActorSystem.getActorSystem();
         ActorRef echo = actorSystem.actorOf("ask", AskForGreetingActor.class);
@@ -87,6 +122,8 @@ public class AskTest {
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
 
+        logger.info("Starting testAskGreetingAsync");
+
         ActorSystem actorSystem = testActorSystem.getActorSystem();
         ActorRef echo = actorSystem.actorOf("e", EchoGreetingActor.class);
 
@@ -94,7 +131,7 @@ public class AskTest {
         final AtomicReference<String> response = new AtomicReference<>();
 
         echo.ask(new Greeting("echo"), Greeting.class).whenComplete((greeting, throwable) -> {
-            System.out.println(Thread.currentThread().getName());
+            logger.info(Thread.currentThread().getName());
             response.set(greeting.getWho());
             waitLatch.countDown();
         });
@@ -110,6 +147,8 @@ public class AskTest {
     public void testUnexpectedResponse() throws Exception {
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
+
+        logger.info("Starting testUnexpectedResponse");
 
         ActorSystem actorSystem = testActorSystem.getActorSystem();
         ActorRef echo = actorSystem.actorOf("e", EchoGreetingActor.class);

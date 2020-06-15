@@ -14,12 +14,16 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.cluster.scheduler;
+package org.elasticsoftware.elasticactors.messaging;
 
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.messaging.UUIDTools;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
+import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.UUID;
@@ -29,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author Joost van de Wijgerd
  */
-public final class ScheduledMessageImpl implements ScheduledMessage {
+public final class ScheduledMessageImpl extends AbstractTracedMessage implements ScheduledMessage {
     private final UUID id;
     private final long fireTime; // milliseconds since epoch
     private final ActorRef sender;
@@ -42,7 +46,32 @@ public final class ScheduledMessageImpl implements ScheduledMessage {
         this(UUIDTools.createTimeBasedUUID(),fireTime,sender,receiver, messageClass, messageBytes);
     }
 
-    public ScheduledMessageImpl(UUID id, long fireTime, ActorRef sender, ActorRef receiver, Class messageClass, byte[] messageBytes) {
+    private ScheduledMessageImpl(
+            UUID id,
+            long fireTime,
+            ActorRef sender,
+            ActorRef receiver,
+            Class messageClass,
+            byte[] messageBytes) {
+        this.id = id;
+        this.fireTime = fireTime;
+        this.sender = sender;
+        this.receiver = receiver;
+        this.messageClass = messageClass;
+        this.messageBytes = messageBytes;
+        this.key = new ScheduledMessageKey(id, fireTime);
+    }
+
+    public ScheduledMessageImpl(
+            UUID id,
+            long fireTime,
+            ActorRef sender,
+            ActorRef receiver,
+            Class messageClass,
+            byte[] messageBytes,
+            TraceContext traceContext,
+            CreationContext creationContext) {
+        super(traceContext, creationContext);
         this.id = id;
         this.fireTime = fireTime;
         this.sender = sender;
@@ -92,8 +121,14 @@ public final class ScheduledMessageImpl implements ScheduledMessage {
     }
 
     @Override
+    @Nullable
     public ActorRef getSender() {
         return sender;
+    }
+
+    @Override
+    public String getType() {
+        return messageClass.getName();
     }
 
     @Override
