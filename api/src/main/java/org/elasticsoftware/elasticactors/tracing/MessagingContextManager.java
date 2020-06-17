@@ -81,9 +81,6 @@ public abstract class MessagingContextManager {
     @Nonnull
     public abstract MessagingScope enter(@Nonnull Method context);
 
-    @Nonnull
-    public abstract MessagingScope replace(@Nonnull TraceContext traceContext);
-
     /*
      * Initialization-on-deman holder pattern (lazy-loaded singleton)
      * See: https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom
@@ -186,12 +183,6 @@ public abstract class MessagingContextManager {
         @Nonnull
         @Override
         public MessagingScope enter(@Nonnull Method context) {
-            return noopMessagingScope;
-        }
-
-        @Nonnull
-        @Override
-        public MessagingScope replace(@Nonnull TraceContext traceContext) {
             return noopMessagingScope;
         }
     }
