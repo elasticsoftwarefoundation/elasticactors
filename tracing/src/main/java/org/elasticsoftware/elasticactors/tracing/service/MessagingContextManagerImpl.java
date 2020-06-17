@@ -108,6 +108,15 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         return messagingScope;
     }
 
+    @Nonnull
+    @Override
+    public MessagingScope replace(@Nonnull TraceContext traceContext) {
+        MessagingScope messagingScope =
+                new MessagingScopeImpl(TraceContextManager.replace(traceContext));
+        logger.debug("Entering {}", messagingScope);
+        return messagingScope;
+    }
+
     private interface ContextManager extends AutoCloseable {
 
         @Nonnull
