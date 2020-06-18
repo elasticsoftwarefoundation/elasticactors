@@ -46,6 +46,11 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
     @Override
     @Nullable
     public CreationContext currentCreationContext() {
+        return staticCurrentCreationContext();
+    }
+
+    @Nullable
+    private static CreationContext staticCurrentCreationContext() {
         CreationContextManager currentManager = CreationContextManager.threadContext.get();
         return currentManager != null ? currentManager.context : null;
     }
@@ -118,12 +123,19 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
 
         private final ContextManager[] contextManagers;
         private final TraceContext traceContext;
+        private final CreationContext creationContext;
         private final AtomicBoolean closed;
 
         @Override
         @Nullable
         public TraceContext getTraceContext() {
             return traceContext;
+        }
+
+        @Nullable
+        @Override
+        public CreationContext getCreationContext() {
+            return creationContext;
         }
 
         @Override
@@ -134,6 +146,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         public MessagingScopeImpl(@Nonnull ContextManager... contextManagers) {
             this.contextManagers = Objects.requireNonNull(contextManagers);
             this.traceContext = staticCurrentTraceContext();
+            this.creationContext = staticCurrentCreationContext();
             this.closed = new AtomicBoolean();
         }
 

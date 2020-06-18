@@ -47,6 +47,9 @@ public abstract class MessagingContextManager {
         @Nullable
         TraceContext getTraceContext();
 
+        @Nullable
+        CreationContext getCreationContext();
+
         boolean isClosed();
 
         @Override
@@ -120,6 +123,12 @@ public abstract class MessagingContextManager {
             @Nullable
             @Override
             public TraceContext getTraceContext() {
+                return null;
+            }
+
+            @Nullable
+            @Override
+            public CreationContext getCreationContext() {
                 return null;
             }
 
