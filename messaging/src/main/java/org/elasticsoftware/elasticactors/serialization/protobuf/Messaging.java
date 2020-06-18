@@ -146,18 +146,18 @@ public final class Messaging {
         getTraceIdBytes();
 
     /**
-     * <code>optional string parentSpanId = 3;</code>
+     * <code>optional string parentId = 3;</code>
      */
-    boolean hasParentSpanId();
+    boolean hasParentId();
     /**
-     * <code>optional string parentSpanId = 3;</code>
+     * <code>optional string parentId = 3;</code>
      */
-    java.lang.String getParentSpanId();
+    java.lang.String getParentId();
     /**
-     * <code>optional string parentSpanId = 3;</code>
+     * <code>optional string parentId = 3;</code>
      */
     com.google.protobuf.ByteString
-        getParentSpanIdBytes();
+        getParentIdBytes();
   }
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.TraceContext}
@@ -174,7 +174,7 @@ public final class Messaging {
     private TraceContext() {
       spanId_ = "";
       traceId_ = "";
-      parentSpanId_ = "";
+      parentId_ = "";
     }
 
     @java.lang.Override
@@ -216,7 +216,7 @@ public final class Messaging {
             case 26: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000004;
-              parentSpanId_ = bs;
+              parentId_ = bs;
               break;
             }
             default: {
@@ -336,19 +336,19 @@ public final class Messaging {
       }
     }
 
-    public static final int PARENTSPANID_FIELD_NUMBER = 3;
-    private volatile java.lang.Object parentSpanId_;
+    public static final int PARENTID_FIELD_NUMBER = 3;
+    private volatile java.lang.Object parentId_;
     /**
-     * <code>optional string parentSpanId = 3;</code>
+     * <code>optional string parentId = 3;</code>
      */
-    public boolean hasParentSpanId() {
+    public boolean hasParentId() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>optional string parentSpanId = 3;</code>
+     * <code>optional string parentId = 3;</code>
      */
-    public java.lang.String getParentSpanId() {
-      java.lang.Object ref = parentSpanId_;
+    public java.lang.String getParentId() {
+      java.lang.Object ref = parentId_;
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
@@ -356,22 +356,22 @@ public final class Messaging {
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
-          parentSpanId_ = s;
+          parentId_ = s;
         }
         return s;
       }
     }
     /**
-     * <code>optional string parentSpanId = 3;</code>
+     * <code>optional string parentId = 3;</code>
      */
     public com.google.protobuf.ByteString
-        getParentSpanIdBytes() {
-      java.lang.Object ref = parentSpanId_;
+        getParentIdBytes() {
+      java.lang.Object ref = parentId_;
       if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        parentSpanId_ = b;
+        parentId_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
@@ -407,7 +407,7 @@ public final class Messaging {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, traceId_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, parentSpanId_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, parentId_);
       }
       unknownFields.writeTo(output);
     }
@@ -425,7 +425,7 @@ public final class Messaging {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, traceId_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, parentSpanId_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, parentId_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -453,10 +453,10 @@ public final class Messaging {
         result = result && getTraceId()
             .equals(other.getTraceId());
       }
-      result = result && (hasParentSpanId() == other.hasParentSpanId());
-      if (hasParentSpanId()) {
-        result = result && getParentSpanId()
-            .equals(other.getParentSpanId());
+      result = result && (hasParentId() == other.hasParentId());
+      if (hasParentId()) {
+        result = result && getParentId()
+            .equals(other.getParentId());
       }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
@@ -477,9 +477,9 @@ public final class Messaging {
         hash = (37 * hash) + TRACEID_FIELD_NUMBER;
         hash = (53 * hash) + getTraceId().hashCode();
       }
-      if (hasParentSpanId()) {
-        hash = (37 * hash) + PARENTSPANID_FIELD_NUMBER;
-        hash = (53 * hash) + getParentSpanId().hashCode();
+      if (hasParentId()) {
+        hash = (37 * hash) + PARENTID_FIELD_NUMBER;
+        hash = (53 * hash) + getParentId().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -618,7 +618,7 @@ public final class Messaging {
         bitField0_ = (bitField0_ & ~0x00000001);
         traceId_ = "";
         bitField0_ = (bitField0_ & ~0x00000002);
-        parentSpanId_ = "";
+        parentId_ = "";
         bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
@@ -659,7 +659,7 @@ public final class Messaging {
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000004;
         }
-        result.parentSpanId_ = parentSpanId_;
+        result.parentId_ = parentId_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -719,9 +719,9 @@ public final class Messaging {
           traceId_ = other.traceId_;
           onChanged();
         }
-        if (other.hasParentSpanId()) {
+        if (other.hasParentId()) {
           bitField0_ |= 0x00000004;
-          parentSpanId_ = other.parentSpanId_;
+          parentId_ = other.parentId_;
           onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
@@ -912,24 +912,24 @@ public final class Messaging {
         return this;
       }
 
-      private java.lang.Object parentSpanId_ = "";
+      private java.lang.Object parentId_ = "";
       /**
-       * <code>optional string parentSpanId = 3;</code>
+       * <code>optional string parentId = 3;</code>
        */
-      public boolean hasParentSpanId() {
+      public boolean hasParentId() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>optional string parentSpanId = 3;</code>
+       * <code>optional string parentId = 3;</code>
        */
-      public java.lang.String getParentSpanId() {
-        java.lang.Object ref = parentSpanId_;
+      public java.lang.String getParentId() {
+        java.lang.Object ref = parentId_;
         if (!(ref instanceof java.lang.String)) {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
-            parentSpanId_ = s;
+            parentId_ = s;
           }
           return s;
         } else {
@@ -937,53 +937,53 @@ public final class Messaging {
         }
       }
       /**
-       * <code>optional string parentSpanId = 3;</code>
+       * <code>optional string parentId = 3;</code>
        */
       public com.google.protobuf.ByteString
-          getParentSpanIdBytes() {
-        java.lang.Object ref = parentSpanId_;
+          getParentIdBytes() {
+        java.lang.Object ref = parentId_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b = 
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
-          parentSpanId_ = b;
+          parentId_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
       /**
-       * <code>optional string parentSpanId = 3;</code>
+       * <code>optional string parentId = 3;</code>
        */
-      public Builder setParentSpanId(
+      public Builder setParentId(
           java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000004;
-        parentSpanId_ = value;
+        parentId_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional string parentSpanId = 3;</code>
+       * <code>optional string parentId = 3;</code>
        */
-      public Builder clearParentSpanId() {
+      public Builder clearParentId() {
         bitField0_ = (bitField0_ & ~0x00000004);
-        parentSpanId_ = getDefaultInstance().getParentSpanId();
+        parentId_ = getDefaultInstance().getParentId();
         onChanged();
         return this;
       }
       /**
-       * <code>optional string parentSpanId = 3;</code>
+       * <code>optional string parentId = 3;</code>
        */
-      public Builder setParentSpanIdBytes(
+      public Builder setParentIdBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000004;
-        parentSpanId_ = value;
+        parentId_ = value;
         onChanged();
         return this;
       }
@@ -11291,47 +11291,47 @@ public final class Messaging {
   static {
     java.lang.String[] descriptorData = {
       "\n\017messaging.proto\0228org.elasticsoftware.e" +
-      "lasticactors.serialization.protobuf\"E\n\014T" +
+      "lasticactors.serialization.protobuf\"A\n\014T" +
       "raceContext\022\016\n\006spanId\030\001 \002(\t\022\017\n\007traceId\030\002" +
-      " \002(\t\022\024\n\014parentSpanId\030\003 \001(\t\"a\n\017CreationCo" +
-      "ntext\022\017\n\007creator\030\001 \001(\t\022\023\n\013creatorType\030\002 " +
-      "\001(\t\022\025\n\rcreatorMethod\030\003 \001(\t\022\021\n\tscheduled\030" +
-      "\004 \001(\010\"\273\002\n\020ScheduledMessage\022\n\n\002id\030\001 \001(\014\022\020" +
-      "\n\010fireTime\030\002 \001(\004\022\020\n\010receiver\030\003 \001(\t\022\016\n\006se" +
-      "nder\030\004 \001(\t\022\024\n\014messageClass\030\005 \001(\t\022\017\n\007mess" +
-      "age\030\006 \001(\014\022\\\n\014traceContext\030\007 \001(\0132F.org.el" +
-      "asticsoftware.elasticactors.serializatio" +
-      "n.protobuf.TraceContext\022b\n\017creationConte" +
-      "xt\030\010 \001(\0132I.org.elasticsoftware.elasticac" +
-      "tors.serialization.protobuf.CreationCont" +
-      "ext\"\364\002\n\017InternalMessage\022\020\n\010receiver\030\001 \001(" +
-      "\t\022\016\n\006sender\030\002 \001(\t\022\024\n\014payloadClass\030\003 \001(\t\022" +
-      "\017\n\007payload\030\004 \001(\014\022\n\n\002id\030\005 \001(\014\022\017\n\007durable\030" +
-      "\006 \001(\010\022\025\n\rundeliverable\030\007 \001(\010\022\021\n\treceiver" +
-      "s\030\010 \003(\t\022\017\n\007timeout\030\t \001(\r\022\\\n\014traceContext" +
-      "\030\n \001(\0132F.org.elasticsoftware.elasticacto" +
-      "rs.serialization.protobuf.TraceContext\022b" +
-      "\n\017creationContext\030\013 \001(\0132I.org.elasticsof" +
-      "tware.elasticactors.serialization.protob" +
-      "uf.CreationContext\"\314\001\n\022CreateActorMessag" +
-      "e\022\017\n\007actorId\030\001 \001(\t\022\024\n\014initialState\030\002 \001(\014" +
-      "\022\022\n\nactorClass\030\003 \001(\t\022\023\n\013actorSystem\030\004 \001(" +
-      "\t\022Q\n\004type\030\005 \001(\0162C.org.elasticsoftware.el" +
-      "asticactors.serialization.protobuf.Actor" +
-      "Type\022\023\n\013affinityKey\030\006 \001(\t\"\'\n\023DestroyActo" +
-      "rMessage\022\020\n\010actorRef\030\001 \001(\t\"\217\001\n\024ActivateA" +
-      "ctorMessage\022\023\n\013actorSystem\030\001 \001(\t\022\017\n\007acto" +
-      "rId\030\002 \001(\t\022Q\n\004type\030\003 \001(\0162C.org.elasticsof" +
-      "tware.elasticactors.serialization.protob" +
-      "uf.ActorType\"9\n\013WireMessage\022\021\n\tqueueName" +
-      "\030\001 \001(\t\022\027\n\017internalMessage\030\002 \001(\014\"D\n\035Cance" +
-      "lScheduledMessageMessage\022\021\n\tmessageId\030\001 " +
-      "\001(\014\022\020\n\010fireTime\030\002 \001(\004\"r\n\020ActorNodeMessag" +
-      "e\022\020\n\010receiver\030\001 \001(\t\022\016\n\006nodeId\030\002 \001(\t\022\024\n\014p" +
-      "ayloadClass\030\003 \001(\t\022\017\n\007payload\030\004 \001(\014\022\025\n\run" +
-      "deliverable\030\005 \001(\010\"\'\n\023PersistActorMessage" +
-      "\022\020\n\010actorRef\030\001 \001(\t*2\n\tActorType\022\016\n\nPERSI" +
-      "STENT\020\000\022\010\n\004TEMP\020\001\022\013\n\007SERVICE\020\002B\002H\001"
+      " \002(\t\022\020\n\010parentId\030\003 \001(\t\"a\n\017CreationContex" +
+      "t\022\017\n\007creator\030\001 \001(\t\022\023\n\013creatorType\030\002 \001(\t\022" +
+      "\025\n\rcreatorMethod\030\003 \001(\t\022\021\n\tscheduled\030\004 \001(" +
+      "\010\"\273\002\n\020ScheduledMessage\022\n\n\002id\030\001 \001(\014\022\020\n\010fi" +
+      "reTime\030\002 \001(\004\022\020\n\010receiver\030\003 \001(\t\022\016\n\006sender" +
+      "\030\004 \001(\t\022\024\n\014messageClass\030\005 \001(\t\022\017\n\007message\030" +
+      "\006 \001(\014\022\\\n\014traceContext\030\007 \001(\0132F.org.elasti" +
+      "csoftware.elasticactors.serialization.pr" +
+      "otobuf.TraceContext\022b\n\017creationContext\030\010" +
+      " \001(\0132I.org.elasticsoftware.elasticactors" +
+      ".serialization.protobuf.CreationContext\"" +
+      "\364\002\n\017InternalMessage\022\020\n\010receiver\030\001 \001(\t\022\016\n" +
+      "\006sender\030\002 \001(\t\022\024\n\014payloadClass\030\003 \001(\t\022\017\n\007p" +
+      "ayload\030\004 \001(\014\022\n\n\002id\030\005 \001(\014\022\017\n\007durable\030\006 \001(" +
+      "\010\022\025\n\rundeliverable\030\007 \001(\010\022\021\n\treceivers\030\010 " +
+      "\003(\t\022\017\n\007timeout\030\t \001(\r\022\\\n\014traceContext\030\n \001" +
+      "(\0132F.org.elasticsoftware.elasticactors.s" +
+      "erialization.protobuf.TraceContext\022b\n\017cr" +
+      "eationContext\030\013 \001(\0132I.org.elasticsoftwar" +
+      "e.elasticactors.serialization.protobuf.C" +
+      "reationContext\"\314\001\n\022CreateActorMessage\022\017\n" +
+      "\007actorId\030\001 \001(\t\022\024\n\014initialState\030\002 \001(\014\022\022\n\n" +
+      "actorClass\030\003 \001(\t\022\023\n\013actorSystem\030\004 \001(\t\022Q\n" +
+      "\004type\030\005 \001(\0162C.org.elasticsoftware.elasti" +
+      "cactors.serialization.protobuf.ActorType" +
+      "\022\023\n\013affinityKey\030\006 \001(\t\"\'\n\023DestroyActorMes" +
+      "sage\022\020\n\010actorRef\030\001 \001(\t\"\217\001\n\024ActivateActor" +
+      "Message\022\023\n\013actorSystem\030\001 \001(\t\022\017\n\007actorId\030" +
+      "\002 \001(\t\022Q\n\004type\030\003 \001(\0162C.org.elasticsoftwar" +
+      "e.elasticactors.serialization.protobuf.A" +
+      "ctorType\"9\n\013WireMessage\022\021\n\tqueueName\030\001 \001" +
+      "(\t\022\027\n\017internalMessage\030\002 \001(\014\"D\n\035CancelSch" +
+      "eduledMessageMessage\022\021\n\tmessageId\030\001 \001(\014\022" +
+      "\020\n\010fireTime\030\002 \001(\004\"r\n\020ActorNodeMessage\022\020\n" +
+      "\010receiver\030\001 \001(\t\022\016\n\006nodeId\030\002 \001(\t\022\024\n\014paylo" +
+      "adClass\030\003 \001(\t\022\017\n\007payload\030\004 \001(\014\022\025\n\rundeli" +
+      "verable\030\005 \001(\010\"\'\n\023PersistActorMessage\022\020\n\010" +
+      "actorRef\030\001 \001(\t*2\n\tActorType\022\016\n\nPERSISTEN" +
+      "T\020\000\022\010\n\004TEMP\020\001\022\013\n\007SERVICE\020\002B\002H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -11350,7 +11350,7 @@ public final class Messaging {
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceContext_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceContext_descriptor,
-        new java.lang.String[] { "SpanId", "TraceId", "ParentSpanId", });
+        new java.lang.String[] { "SpanId", "TraceId", "ParentId", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CreationContext_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CreationContext_fieldAccessorTable = new

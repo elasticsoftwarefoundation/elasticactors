@@ -129,7 +129,7 @@ public class GreetingTest {
                     assertEquals(creationContext.getCreatorType(), shorten(GreetingActor.class));
                     TraceContext traceContext = getManager().currentTraceContext();
                     assertNotNull(traceContext);
-                    assertNotEquals(traceContext.getParentSpanId(), TEST_TRACE.getSpanId());
+                    assertNotEquals(traceContext.getParentId(), TEST_TRACE.getSpanId());
                     assertEquals(traceContext.getTraceId(), TEST_TRACE.getTraceId());
                     assertNotEquals(traceContext.getSpanId(), TEST_TRACE.getSpanId());
                 })
@@ -143,7 +143,7 @@ public class GreetingTest {
                     assertEquals(creationContext.getCreatorType(), shorten(GreetingActor.class));
                     TraceContext traceContext = getManager().currentTraceContext();
                     assertNotNull(traceContext);
-                    assertNotEquals(traceContext.getParentSpanId(), TEST_TRACE.getSpanId());
+                    assertNotEquals(traceContext.getParentId(), TEST_TRACE.getSpanId());
                     assertEquals(traceContext.getTraceId(), TEST_TRACE.getTraceId());
                     assertNotEquals(traceContext.getSpanId(), TEST_TRACE.getSpanId());
                 })

@@ -16,8 +16,8 @@ public final class TraceContextSerializer {
             Messaging.TraceContext.Builder serialized = Messaging.TraceContext.newBuilder();
             serialized.setSpanId(traceContext.getSpanId());
             serialized.setTraceId(traceContext.getTraceId());
-            if (traceContext.getParentSpanId() != null) {
-                serialized.setParentSpanId(traceContext.getParentSpanId());
+            if (traceContext.getParentId() != null) {
+                serialized.setParentId(traceContext.getParentId());
             }
             return serialized.build();
         }

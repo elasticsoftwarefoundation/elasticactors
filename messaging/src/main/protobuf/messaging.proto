@@ -15,7 +15,7 @@ option optimize_for = SPEED;
 message TraceContext {
   required string spanId = 1;
   required string traceId = 2;
-  optional string parentSpanId = 3;
+  optional string parentId = 3;
 }
 
 message CreationContext {

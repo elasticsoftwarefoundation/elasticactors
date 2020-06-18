@@ -222,15 +222,15 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         }
 
         private static void fillContext(TraceContext previous) {
-            addToLogContext(SPAN_ID_HEADER, previous, TraceContext::getSpanId);
-            addToLogContext(TRACE_ID_HEADER, previous, TraceContext::getTraceId);
-            addToLogContext(PARENT_SPAN_ID_HEADER, previous, TraceContext::getParentSpanId);
+            addToLogContext(SPAN_ID_KEY, previous, TraceContext::getSpanId);
+            addToLogContext(TRACE_ID_KEY, previous, TraceContext::getTraceId);
+            addToLogContext(PARENT_SPAN_ID_KEY, previous, TraceContext::getParentId);
         }
 
         private static void clearContext() {
-            removeFromLogContext(SPAN_ID_HEADER);
-            removeFromLogContext(TRACE_ID_HEADER);
-            removeFromLogContext(PARENT_SPAN_ID_HEADER);
+            removeFromLogContext(SPAN_ID_KEY);
+            removeFromLogContext(TRACE_ID_KEY);
+            removeFromLogContext(PARENT_SPAN_ID_KEY);
         }
 
         @Override

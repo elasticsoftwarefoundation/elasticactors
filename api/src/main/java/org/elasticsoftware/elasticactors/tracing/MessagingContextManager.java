@@ -16,13 +16,13 @@ public abstract class MessagingContextManager {
     protected final static Logger logger = LoggerFactory.getLogger(MessagingContextManager.class);
 
     /*
-     * Headers for external usage and MDC keys
+     * MDC keys
      */
 
     // Tracing headers
-    public static final String SPAN_ID_HEADER = "X-B3-SpanId";
-    public static final String TRACE_ID_HEADER = "X-B3-TraceId";
-    public static final String PARENT_SPAN_ID_HEADER = "X-B3-ParentSpanId";
+    public static final String SPAN_ID_KEY = "spanId";
+    public static final String TRACE_ID_KEY = "traceId";
+    public static final String PARENT_SPAN_ID_KEY = "parentId";
 
     // Receiving-side headers
     public static final String MESSAGE_TYPE_KEY = "messageType";

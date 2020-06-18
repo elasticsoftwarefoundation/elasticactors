@@ -11,7 +11,7 @@ public final class TraceContext {
 
     private final String spanId;
     private final String traceId;
-    private final String parentSpanId;
+    private final String parentId;
 
     public TraceContext() {
         this(null);
@@ -20,10 +20,10 @@ public final class TraceContext {
     public TraceContext(
             @Nonnull String spanId,
             @Nonnull String traceId,
-            @Nullable String parentSpanId) {
+            @Nullable String parentId) {
         this.spanId = Objects.requireNonNull(spanId);
         this.traceId = Objects.requireNonNull(traceId);
-        this.parentSpanId = parentSpanId;
+        this.parentId = parentId;
     }
 
     public TraceContext(@Nullable TraceContext parent) {
@@ -32,7 +32,7 @@ public final class TraceContext {
         this.traceId = parent == null || parent.getTraceId().trim().isEmpty()
                 ? nextTraceIdHigh(prng) + this.spanId
                 : parent.getTraceId();
-        this.parentSpanId = parent == null || parent.getSpanId().trim().isEmpty()
+        this.parentId = parent == null || parent.getSpanId().trim().isEmpty()
                 ? null
                 : parent.getSpanId();
     }
@@ -56,8 +56,8 @@ public final class TraceContext {
     }
 
     @Nullable
-    public String getParentSpanId() {
-        return parentSpanId;
+    public String getParentId() {
+        return parentId;
     }
 
     @Override
@@ -71,12 +71,12 @@ public final class TraceContext {
         TraceContext that = (TraceContext) o;
         return spanId.equals(that.spanId) &&
                 traceId.equals(that.traceId) &&
-                Objects.equals(parentSpanId, that.parentSpanId);
+                Objects.equals(parentId, that.parentId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(spanId, traceId, parentSpanId);
+        return Objects.hash(spanId, traceId, parentId);
     }
 
     @Override
@@ -84,7 +84,7 @@ public final class TraceContext {
         return new StringJoiner(", ", TraceContext.class.getSimpleName() + "{", "}")
                 .add("spanId='" + spanId + "'")
                 .add("traceId='" + traceId + "'")
-                .add("parentSpanId='" + parentSpanId + "'")
+                .add("parentId='" + parentId + "'")
                 .toString();
     }
 

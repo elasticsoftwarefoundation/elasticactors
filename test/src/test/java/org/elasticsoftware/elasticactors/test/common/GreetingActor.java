@@ -56,7 +56,7 @@ public class GreetingActor extends TypedActor<Greeting> {
         assertNotNull(current);
         assertNotEquals(current.getSpanId(), TEST_TRACE.getSpanId());
         assertEquals(current.getTraceId(), TEST_TRACE.getTraceId());
-        assertEquals(current.getParentSpanId(), TEST_TRACE.getSpanId());
+        assertEquals(current.getParentId(), TEST_TRACE.getSpanId());
         ScheduledMessageRef messageRef = getSystem().getScheduler().scheduleOnce(getSelf(),new Greeting("Greeting Actor"),sender,1, TimeUnit.SECONDS);
         sender.tell(new ScheduledGreeting(messageRef));
     }
