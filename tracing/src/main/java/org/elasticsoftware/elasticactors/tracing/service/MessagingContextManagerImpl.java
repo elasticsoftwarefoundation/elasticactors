@@ -164,7 +164,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
                 @Nonnull ContextManager[] contextManagers) {
             for (ContextManager cm : contextManagers) {
                 if (cm != null && tClass.isInstance(cm.getContext())) {
-                    return tClass.cast(cm);
+                    return tClass.cast(cm.getContext());
                 }
             }
             return defaultSupplier.get();
