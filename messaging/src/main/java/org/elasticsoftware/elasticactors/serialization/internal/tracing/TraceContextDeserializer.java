@@ -13,8 +13,8 @@ public final class TraceContextDeserializer {
     @Nullable
     public static TraceContext deserialize(Messaging.TraceContext traceContext) {
         TraceContext deserialized = new TraceContext(
-                traceContext.getSpanId(),
-                traceContext.getTraceId(),
+                traceContext.hasSpanId() ? traceContext.getSpanId() : "",
+                traceContext.hasTraceId() ? traceContext.getTraceId() : "",
                 traceContext.hasParentId() ? traceContext.getParentId() : null);
         return deserialized.isEmpty() ? null : deserialized;
     }

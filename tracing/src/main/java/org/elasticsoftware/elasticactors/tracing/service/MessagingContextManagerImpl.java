@@ -4,6 +4,7 @@ import org.elasticsoftware.elasticactors.ActorContext;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.MessageHandlingContext;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
+import org.elasticsoftware.elasticactors.tracing.NoopMessagingScope;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.tracing.TracedMessage;
 import org.elasticsoftware.elasticactors.tracing.TracingUtils;
@@ -33,7 +34,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
     @Nullable
     private static TraceContext staticCurrentTraceContext() {
         TraceContextManager currentManager = TraceContextManager.threadContext.get();
-        return currentManager != null ? currentManager.context : null;
+        return currentManager != null ? currentManager.getContext() : null;
     }
 
     @Override
@@ -41,7 +42,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
     public MessageHandlingContext currentMessageHandlingContext() {
         MessageHandlingContextManager currentManager =
                 MessageHandlingContextManager.threadContext.get();
-        return currentManager != null ? currentManager.context : null;
+        return currentManager != null ? currentManager.getContext() : null;
     }
 
     @Override
@@ -53,7 +54,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
     @Nullable
     private static CreationContext staticCurrentCreationContext() {
         CreationContextManager currentManager = CreationContextManager.threadContext.get();
-        return currentManager != null ? currentManager.context : null;
+        return currentManager != null ? currentManager.getContext() : null;
     }
 
     @Nullable
@@ -74,7 +75,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
     @Nullable
     public Method currentMethodContext() {
         MethodContextManager currentManager = MethodContextManager.threadContext.get();
-        return currentManager != null ? currentManager.context : null;
+        return currentManager != null ? currentManager.getContext() : null;
     }
 
     @Override
@@ -82,16 +83,26 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
     public MessagingScope enter(
             @Nullable ActorContext context,
             @Nullable TracedMessage message) {
-        MessagingScope messagingScope = new MessagingScopeImpl(
-                MessageHandlingContextManager.enter(new MessageHandlingContext(context, message)),
-                TraceContextManager.replace(new TraceContext(message != null
-                        ? message.getTraceContext()
-                        : null)),
-                message != null && message.getCreationContext() != null
-                        ? CreationContextManager.replace(message.getCreationContext())
-                        : null);
-        logger.debug("Entering {}", messagingScope);
-        return messagingScope;
+        try {
+            MessagingScope messagingScope = new MessagingScopeImpl(
+                    MessageHandlingContextManager.enter(new MessageHandlingContext(
+                            context,
+                            message)),
+                    TraceContextManager.replace(new TraceContext(message != null
+                            ? message.getTraceContext()
+                            : null)),
+                    message != null && message.getCreationContext() != null
+                            ?
+                            (CreationContextManager.threadContext.get() != null
+                                    ? CreationContextManager.replace(message.getCreationContext())
+                                    : CreationContextManager.enter(message.getCreationContext()))
+                            : null);
+            logger.debug("Entering {}", messagingScope);
+            return messagingScope;
+        } catch (Exception e) {
+            logger.error("Exception thrown while creating messaging scope", e);
+            return NoopMessagingScope.INSTANCE;
+        }
     }
 
     @Override
@@ -99,19 +110,30 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
     public MessagingScope enter(
             @Nullable TraceContext traceContext,
             @Nullable CreationContext creationContext) {
-        MessagingScope messagingScope = new MessagingScopeImpl(
-                traceContext != null ? TraceContextManager.enter(traceContext) : null,
-                creationContext != null ? CreationContextManager.enter(creationContext) : null);
-        logger.debug("Entering {}", messagingScope);
-        return messagingScope;
+        try {
+            MessagingScope messagingScope = new MessagingScopeImpl(
+                    traceContext != null ? TraceContextManager.enter(traceContext) : null,
+                    creationContext != null ? CreationContextManager.enter(creationContext) : null);
+            logger.debug("Entering {}", messagingScope);
+            return messagingScope;
+        } catch (Exception e) {
+            logger.error("Exception thrown while creating messaging scope", e);
+            return NoopMessagingScope.INSTANCE;
+        }
     }
 
     @Override
     @Nonnull
     public MessagingScope enter(@Nonnull Method context) {
-        MessagingScope messagingScope = new MessagingScopeImpl(MethodContextManager.enter(context));
-        logger.debug("Entering {}", messagingScope);
-        return messagingScope;
+        try {
+            MessagingScope messagingScope =
+                    new MessagingScopeImpl(MethodContextManager.enter(context));
+            logger.debug("Entering {}", messagingScope);
+            return messagingScope;
+        } catch (Exception e) {
+            logger.error("Exception thrown while creating messaging scope", e);
+            return NoopMessagingScope.INSTANCE;
+        }
     }
 
     private interface ContextManager extends AutoCloseable {
@@ -154,7 +176,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
                     CreationContext.class,
                     MessagingContextManagerImpl::staticCurrentCreationContext,
                     contextManagers);
-            this.closed = new AtomicBoolean();
+            this.closed = new AtomicBoolean(false);
         }
 
         @Nullable
@@ -233,7 +255,9 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
             TraceContextManager newManager = new TraceContextManager(context, Strategy.REPLACE);
             logger.trace("Putting {} in scope", newManager.getContext());
             if (newManager.previousManager == null) {
-                logger.warn("Tried to replace a Trace Context, but none is active");
+                logger.error(
+                        "Tried to replace a Trace Context with {}, but none is active",
+                        context);
             }
             clearContext();
             fillContext(context);
@@ -246,8 +270,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
             logClose(threadContext, this);
             clearContext();
             if (previousManager != null) {
-                TraceContext previous = previousManager.getContext();
-                fillContext(previous);
+                fillContext(previousManager.getContext());
                 threadContext.set(previousManager);
             } else {
                 threadContext.remove();
@@ -379,7 +402,9 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
                     new CreationContextManager(context, Strategy.REPLACE);
             logger.trace("Putting {} in scope", newManager.getContext());
             if (newManager.previousManager == null) {
-                logger.warn("Tried to replace a Creation Context, but none is active");
+                logger.error(
+                        "Tried to replace a Creation Context with {}, but none is active",
+                        context);
             }
             clearContext();
             fillContext(context);
@@ -392,8 +417,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
             logClose(threadContext, this);
             clearContext();
             if (previousManager != null) {
-                CreationContext previous = previousManager.getContext();
-                fillContext(previous);
+                fillContext(previousManager.getContext());
                 threadContext.set(previousManager);
             } else {
                 threadContext.remove();

@@ -13,12 +13,10 @@ public final class CreationContextDeserializer {
     @Nullable
     public static CreationContext deserialize(Messaging.CreationContext creationContext) {
         CreationContext deserialized = new CreationContext(
-                creationContext.getCreator(),
-                creationContext.getCreatorType(),
-                creationContext.getCreatorMethod());
-        if (creationContext.hasScheduled() && creationContext.getScheduled()) {
-            deserialized = CreationContext.forScheduling(deserialized);
-        }
+                creationContext.hasCreator() ? creationContext.getCreator() : null,
+                creationContext.hasCreatorType() ? creationContext.getCreatorType() : null,
+                creationContext.hasCreatorMethod() ? creationContext.getCreatorMethod() : null,
+                creationContext.hasScheduled() ? creationContext.getScheduled() : null);
         return deserialized.isEmpty() ? null : deserialized;
     }
 

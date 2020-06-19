@@ -118,33 +118,6 @@ public abstract class MessagingContextManager {
      */
     private final static class NoopMessagingContextManager extends MessagingContextManager {
 
-        private final static class NoopMessagingScope implements MessagingScope {
-
-            @Nullable
-            @Override
-            public TraceContext getTraceContext() {
-                return null;
-            }
-
-            @Nullable
-            @Override
-            public CreationContext getCreationContext() {
-                return null;
-            }
-
-            @Override
-            public boolean isClosed() {
-                return false;
-            }
-
-            @Override
-            public void close() {
-
-            }
-        }
-
-        private final static MessagingScope noopMessagingScope = new NoopMessagingScope();
-
         @Nullable
         @Override
         public TraceContext currentTraceContext() {
@@ -178,21 +151,23 @@ public abstract class MessagingContextManager {
         @Nonnull
         @Override
         public MessagingScope enter(
-                @Nullable ActorContext context, @Nullable TracedMessage message) {
-            return noopMessagingScope;
+                @Nullable ActorContext context,
+                @Nullable TracedMessage message) {
+            return NoopMessagingScope.INSTANCE;
         }
 
         @Nonnull
         @Override
         public MessagingScope enter(
-                @Nullable TraceContext traceContext, @Nullable CreationContext creationContext) {
-            return noopMessagingScope;
+                @Nullable TraceContext traceContext,
+                @Nullable CreationContext creationContext) {
+            return NoopMessagingScope.INSTANCE;
         }
 
         @Nonnull
         @Override
         public MessagingScope enter(@Nonnull Method context) {
-            return noopMessagingScope;
+            return NoopMessagingScope.INSTANCE;
         }
     }
 

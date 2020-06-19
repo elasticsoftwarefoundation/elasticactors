@@ -71,7 +71,7 @@ public final class CreationContext {
         this(creator, shorten(creatorType), shorten(creatorMethod), null);
     }
 
-    private CreationContext(
+    public CreationContext(
             @Nullable String creator,
             @Nullable String creatorType,
             @Nullable String creatorMethod,
