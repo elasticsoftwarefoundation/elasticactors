@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static org.elasticsoftware.elasticactors.tracing.TracingUtils.safeToString;
 import static org.elasticsoftware.elasticactors.tracing.TracingUtils.shorten;
@@ -145,9 +146,28 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
 
         public MessagingScopeImpl(@Nonnull ContextManager... contextManagers) {
             this.contextManagers = Objects.requireNonNull(contextManagers);
-            this.traceContext = staticCurrentTraceContext();
-            this.creationContext = staticCurrentCreationContext();
+            this.traceContext = find(
+                    TraceContext.class,
+                    MessagingContextManagerImpl::staticCurrentTraceContext,
+                    contextManagers);
+            this.creationContext = find(
+                    CreationContext.class,
+                    MessagingContextManagerImpl::staticCurrentCreationContext,
+                    contextManagers);
             this.closed = new AtomicBoolean();
+        }
+
+        @Nullable
+        private <T> T find(
+                @Nonnull Class<T> tClass,
+                @Nonnull Supplier<T> defaultSupplier,
+                @Nonnull ContextManager[] contextManagers) {
+            for (ContextManager cm : contextManagers) {
+                if (cm != null && tClass.isInstance(cm.getContext())) {
+                    return tClass.cast(cm);
+                }
+            }
+            return defaultSupplier.get();
         }
 
         @Override
