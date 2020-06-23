@@ -34,6 +34,7 @@ import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
 import org.elasticsoftware.elasticactors.rabbitmq.ChannelListenerRegistry;
+import org.elasticsoftware.elasticactors.rabbitmq.LoggingShutdownListener;
 import org.elasticsoftware.elasticactors.rabbitmq.MessageAcker;
 import org.elasticsoftware.elasticactors.rabbitmq.RabbitMQMessagingServiceInterface;
 import org.elasticsoftware.elasticactors.rabbitmq.ack.AsyncMessageAcker;
@@ -148,6 +149,11 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
         // prepare the consumer channels
         for (int i = 0; i < queueExecutor.getThreadCount(); i++) {
             producerChannels.add(clientConnection.createChannel());
+        }
+        // add logging shutdown listener
+        consumerChannel.addShutdownListener(LoggingShutdownListener.INSTANCE);
+        for (Channel producerChannel : producerChannels) {
+            producerChannel.addShutdownListener(LoggingShutdownListener.INSTANCE);
         }
         // ensure the exchange is there
         consumerChannel.exchangeDeclare(exchangeName,"direct",true);

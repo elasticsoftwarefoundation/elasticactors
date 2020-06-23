@@ -136,6 +136,9 @@ public final class RabbitMQMessagingService implements RabbitMQMessagingServiceI
         consumerChannel = clientConnection.createChannel();
         consumerChannel.basicQos(prefetchCount);
         producerChannel = clientConnection.createChannel();
+        // add logging shutdown listener
+        consumerChannel.addShutdownListener(LoggingShutdownListener.INSTANCE);
+        producerChannel.addShutdownListener(LoggingShutdownListener.INSTANCE);
         // ensure the exchange is there
         consumerChannel.exchangeDeclare(exchangeName,"direct",true);
         if(ackType == BUFFERED) {
