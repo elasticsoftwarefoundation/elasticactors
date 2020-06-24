@@ -112,6 +112,10 @@ public final class DefaultConfiguration implements InternalActorSystemConfigurat
     @Override
     public <T> T getProperty(Class component, String key, Class<T> targetType) {
         Map<String,Object> componentProperties = (Map<String, Object>) properties.get(generateComponentName(component));
+        if (componentProperties == null) {
+            // try to look for the full class name
+            componentProperties = (Map<String, Object>) properties.get(component.getName());
+        }
         if(componentProperties != null) {
             Object value = componentProperties.get(key);
             if(value != null) {
