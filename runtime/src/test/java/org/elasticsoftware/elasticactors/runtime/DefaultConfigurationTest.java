@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.runtime;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.elasticsoftware.elasticactors.test.TestActor;
+import org.elasticsoftware.elasticactors.test.TestActorFullName;
 import org.springframework.util.ResourceUtils;
 import org.testng.annotations.Test;
 
@@ -29,7 +30,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
 
 //import org.elasticsoftware.elasticactors.http.actors.HttpService;
 
@@ -76,6 +79,26 @@ public class DefaultConfigurationTest {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         DefaultConfiguration configuration = objectMapper.readValue(new FileInputStream(configFile), DefaultConfiguration.class);
 
-        configuration.getProperty(TestActor.class, "pushConfigurations", List.class, Collections.emptyList());
+        assertFalse(configuration.getProperty(
+                TestActor.class,
+                "pushConfigurations",
+                List.class,
+                Collections.emptyList()).isEmpty());
+    }
+
+    @Test
+    public void testLoadComplexObject_fullClassName() throws IOException {
+        File configFile = ResourceUtils.getFile("classpath:ea-test.yaml");
+
+        // yaml mapper
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        DefaultConfiguration configuration =
+                objectMapper.readValue(new FileInputStream(configFile), DefaultConfiguration.class);
+
+        assertFalse(configuration.getProperty(
+                TestActorFullName.class,
+                "pushConfigurations",
+                List.class,
+                Collections.emptyList()).isEmpty());
     }
 }

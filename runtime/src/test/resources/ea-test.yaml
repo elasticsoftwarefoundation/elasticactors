@@ -18,3 +18,11 @@ elasticactors.test.TestActor:
     - clientId: 193382
       keystoreResource: classpath:test_1.p12
       keystorePassword: bladiebla
+org.elasticsoftware.elasticactors.test.TestActorFullName:
+  pushConfigurations:
+    - clientId: 123282
+      keystoreResource: classpath:test_1.p12
+      keystorePassword: bladiebla
+    - clientId: 193382
+      keystoreResource: classpath:test_1.p12
+      keystorePassword: bladiebla
