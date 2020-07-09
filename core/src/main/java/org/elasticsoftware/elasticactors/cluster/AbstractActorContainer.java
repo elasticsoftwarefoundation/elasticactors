@@ -77,9 +77,7 @@ public abstract class AbstractActorContainer implements ActorContainer, MessageH
     protected void handleUndeliverable(InternalMessage internalMessage, ActorRef receiverRef, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         // if a message-undeliverable is undeliverable, don't send an undeliverable message back!
         ActorRef senderRef = internalMessage.getSender();
-        try (MessagingScope ignored = getManager().withReplacedTrace(
-                internalMessage.getTraceContext(),
-                internalMessage.getCreationContext())) {
+        try (MessagingScope ignored = getManager().enter(internalMessage)) {
             if (senderRef instanceof ActorContainerRef && !internalMessage.isUndeliverable()) {
                 ((ActorContainerRef) senderRef).getActorContainer().undeliverableMessage(internalMessage, receiverRef);
             } else if (internalMessage.isUndeliverable()) {

@@ -82,9 +82,7 @@ public abstract class MessagingContextManager {
             @Nullable CreationContext creationContext);
 
     @Nonnull
-    public abstract MessagingScope withReplacedTrace(
-            @Nullable TraceContext traceContext,
-            @Nullable CreationContext creationContext);
+    public abstract MessagingScope enter(@Nullable TracedMessage message);
 
     @Nonnull
     public abstract MessagingScope enter(@Nonnull Method context);
@@ -171,8 +169,7 @@ public abstract class MessagingContextManager {
 
         @Nonnull
         @Override
-        public MessagingScope withReplacedTrace(
-                @Nullable TraceContext traceContext, @Nullable CreationContext creationContext) {
+        public MessagingScope enter(@Nullable TracedMessage message) {
             return NoopMessagingScope.INSTANCE;
         }
 

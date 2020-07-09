@@ -124,13 +124,18 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
 
     @Override
     @Nonnull
-    public MessagingScope withReplacedTrace(
-            @Nullable TraceContext traceContext,
-            @Nullable CreationContext creationContext) {
+    public MessagingScope enter(@Nullable TracedMessage message) {
         try {
             MessagingScope messagingScope = new MessagingScopeImpl(
-                    traceContext != null ? TraceContextManager.replace(traceContext) : null,
-                    creationContext != null ? CreationContextManager.enter(creationContext) : null);
+                    TraceContextManager.replace(new TraceContext(message != null
+                            ? message.getTraceContext()
+                            : null)),
+                    message != null && message.getCreationContext() != null
+                            ?
+                            (CreationContextManager.threadContext.get() != null
+                                    ? CreationContextManager.replace(message.getCreationContext())
+                                    : CreationContextManager.enter(message.getCreationContext()))
+                            : null);
             logger.debug("Entering {}", messagingScope);
             return messagingScope;
         } catch (Exception e) {
