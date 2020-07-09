@@ -26,8 +26,11 @@ import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 
 /**
  * @author Joost van de Wijgerd
@@ -74,7 +77,9 @@ public abstract class AbstractActorContainer implements ActorContainer, MessageH
     protected void handleUndeliverable(InternalMessage internalMessage, ActorRef receiverRef, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         // if a message-undeliverable is undeliverable, don't send an undeliverable message back!
         ActorRef senderRef = internalMessage.getSender();
-        try {
+        try (MessagingScope ignored = getManager().withReplacedTrade(
+                internalMessage.getTraceContext(),
+                internalMessage.getCreationContext())) {
             if (senderRef instanceof ActorContainerRef && !internalMessage.isUndeliverable()) {
                 ((ActorContainerRef) senderRef).getActorContainer().undeliverableMessage(internalMessage, receiverRef);
             } else if (internalMessage.isUndeliverable()) {

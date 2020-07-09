@@ -124,6 +124,23 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
 
     @Override
     @Nonnull
+    public MessagingScope withReplacedTrade(
+            @Nullable TraceContext traceContext,
+            @Nullable CreationContext creationContext) {
+        try {
+            MessagingScope messagingScope = new MessagingScopeImpl(
+                    traceContext != null ? TraceContextManager.replace(traceContext) : null,
+                    creationContext != null ? CreationContextManager.enter(creationContext) : null);
+            logger.debug("Entering {}", messagingScope);
+            return messagingScope;
+        } catch (Exception e) {
+            logger.error("Exception thrown while creating messaging scope", e);
+            return NoopMessagingScope.INSTANCE;
+        }
+    }
+
+    @Override
+    @Nonnull
     public MessagingScope enter(@Nonnull Method context) {
         try {
             MessagingScope messagingScope =
