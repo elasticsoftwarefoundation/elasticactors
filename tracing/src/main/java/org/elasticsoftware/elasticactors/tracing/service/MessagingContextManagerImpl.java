@@ -124,7 +124,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
 
     @Override
     @Nonnull
-    public MessagingScope withReplacedTrade(
+    public MessagingScope withReplacedTrace(
             @Nullable TraceContext traceContext,
             @Nullable CreationContext creationContext) {
         try {
