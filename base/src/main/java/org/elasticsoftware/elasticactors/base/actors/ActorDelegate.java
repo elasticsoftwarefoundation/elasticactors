@@ -27,7 +27,7 @@ import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramewor
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 
 import javax.annotation.Nonnull;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -304,7 +304,7 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
             ActorContextHolder.getSystem().stop(ActorContextHolder.getSelf());
         }
 
-        private Map<Class<?>, MessageConsumer<?>> onReceiveConsumers = new HashMap<>();
+        private final Map<Class<?>, MessageConsumer<?>> onReceiveConsumers = new LinkedHashMap<>();
         private MessageConsumer<D> orElseConsumer;
         private MessageConsumer<Object> onUndeliverableConsumer;
         private MessageConsumer<D> preReceiveConsumer;
