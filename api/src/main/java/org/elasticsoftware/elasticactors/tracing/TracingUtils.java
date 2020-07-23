@@ -17,13 +17,33 @@ public final class TracingUtils {
     @Nullable
     public static String shorten(@Nullable String s) {
         if (s != null) {
-            String[] parts = s.split("\\.");
-            for (int i = 0; i < parts.length - 1; i++) {
-                if (parts[i].length() > 0) {
-                    parts[i] = parts[i].substring(0, 1);
-                }
+            int lastIndex = s.lastIndexOf('.');
+            if (lastIndex == -1) {
+                return s;
             }
-            return String.join(".", parts);
+            StringBuilder sb = new StringBuilder();
+            char c;
+            int index = 0;
+            if ((c = s.charAt(0)) != '.') {
+                sb.append(c);
+                index += 1;
+            }
+            while ((index = s.indexOf('.', index)) > -1 && index < lastIndex) {
+                if ((c = s.charAt(index + 1)) != '.') {
+                    if (sb.length() > 0) {
+                        sb.append('.');
+                    }
+                    sb.append(c);
+                }
+                index += 1;
+            }
+            if (lastIndex < s.length() - 1) {
+                if (sb.length() > 0) {
+                    sb.append('.');
+                }
+                sb.append(s, lastIndex + 1, s.length());
+            }
+            return sb.toString();
         }
         return null;
     }
