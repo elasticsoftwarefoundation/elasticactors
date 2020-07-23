@@ -265,7 +265,6 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         @Nonnull
         private static TraceContextManager enter(@Nonnull TraceContext context) {
             TraceContextManager newManager = new TraceContextManager(context, Strategy.ENTER);
-            clearContext();
             fillContext(context);
             logEnter(threadContext, newManager);
             threadContext.set(newManager);
@@ -281,7 +280,6 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
                         "Tried to replace a Trace Context with {}, but none is active",
                         context);
             }
-            clearContext();
             fillContext(context);
             threadContext.set(newManager);
             return newManager;
@@ -290,25 +288,23 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         @Override
         public void close() {
             logClose(threadContext, this);
-            clearContext();
             if (previousManager != null) {
                 fillContext(previousManager.getContext());
                 threadContext.set(previousManager);
             } else {
+                clearContext();
                 threadContext.remove();
             }
         }
 
-        private static void fillContext(TraceContext previous) {
+        private static void fillContext(@Nullable TraceContext previous) {
             addToLogContext(SPAN_ID_KEY, previous, TraceContext::getSpanId);
             addToLogContext(TRACE_ID_KEY, previous, TraceContext::getTraceId);
             addToLogContext(PARENT_SPAN_ID_KEY, previous, TraceContext::getParentId);
         }
 
         private static void clearContext() {
-            removeFromLogContext(SPAN_ID_KEY);
-            removeFromLogContext(TRACE_ID_KEY);
-            removeFromLogContext(PARENT_SPAN_ID_KEY);
+            fillContext(null);
         }
 
         @Override
@@ -341,7 +337,6 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         private static MessageHandlingContextManager enter(
                 @Nonnull MessageHandlingContext context) {
             MessageHandlingContextManager newManager = new MessageHandlingContextManager(context);
-            clearContext();
             fillContext(context);
             logEnter(threadContext, newManager);
             threadContext.set(newManager);
@@ -355,7 +350,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
             threadContext.remove();
         }
 
-        private static void fillContext(@Nonnull MessageHandlingContext context) {
+        private static void fillContext(@Nullable MessageHandlingContext context) {
             addToLogContext(MESSAGE_TYPE_KEY, context, MessageHandlingContext::getMessageType);
             addToLogContext(SENDER_KEY, context, MessageHandlingContext::getSender);
             addToLogContext(RECEIVER_KEY, context, MessageHandlingContext::getReceiver);
@@ -363,10 +358,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         }
 
         private static void clearContext() {
-            removeFromLogContext(MESSAGE_TYPE_KEY);
-            removeFromLogContext(SENDER_KEY);
-            removeFromLogContext(RECEIVER_KEY);
-            removeFromLogContext(RECEIVER_TYPE_KEY);
+            fillContext(null);
         }
 
         @Override
@@ -411,7 +403,6 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         @Nonnull
         private static CreationContextManager enter(@Nonnull CreationContext context) {
             CreationContextManager newManager = new CreationContextManager(context, Strategy.ENTER);
-            clearContext();
             fillContext(context);
             logEnter(threadContext, newManager);
             threadContext.set(newManager);
@@ -428,7 +419,6 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
                         "Tried to replace a Creation Context with {}, but none is active",
                         context);
             }
-            clearContext();
             fillContext(context);
             threadContext.set(newManager);
             return newManager;
@@ -437,23 +427,20 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         @Override
         public void close() {
             logClose(threadContext, this);
-            clearContext();
             if (previousManager != null) {
                 fillContext(previousManager.getContext());
                 threadContext.set(previousManager);
             } else {
+                clearContext();
                 threadContext.remove();
             }
         }
 
         private static void clearContext() {
-            removeFromLogContext(CREATOR_KEY);
-            removeFromLogContext(CREATOR_TYPE_KEY);
-            removeFromLogContext(CREATOR_METHOD_KEY);
-            removeFromLogContext(SCHEDULED_KEY);
+            fillContext(null);
         }
 
-        private static void fillContext(@Nonnull CreationContext context) {
+        private static void fillContext(@Nullable CreationContext context) {
             addToLogContext(CREATOR_KEY, context, CreationContext::getCreator);
             addToLogContext(CREATOR_TYPE_KEY, context, CreationContext::getCreatorType);
             addToLogContext(CREATOR_METHOD_KEY, context, CreationContext::getCreatorMethod);
@@ -489,17 +476,24 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         @Nonnull
         private static MethodContextManager enter(@Nonnull Method context) {
             MethodContextManager newManager = new MethodContextManager(context);
-            removeFromLogContext(RECEIVER_METHOD_KEY);
-            addToLogContext(RECEIVER_METHOD_KEY, context, TracingUtils::shorten);
+            fillContext(context);
             logEnter(threadContext, newManager);
             threadContext.set(newManager);
             return newManager;
         }
 
+        private static void fillContext(@Nullable Method context) {
+            addToLogContext(RECEIVER_METHOD_KEY, context, TracingUtils::shorten);
+        }
+
+        private static void clearContext() {
+            fillContext(null);
+        }
+
         @Override
         public void close() {
             logClose(threadContext, this);
-            removeFromLogContext(RECEIVER_METHOD_KEY);
+            clearContext();
             threadContext.remove();
         }
 
@@ -541,16 +535,14 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
 
     private static <D, T> void addToLogContext(
             @Nonnull String key,
-            @Nonnull D object,
+            @Nullable D object,
             @Nonnull Function<D, T> getterFunction) {
-        String value = safeToString(getterFunction.apply(object));
+        String value = object == null ? null : safeToString(getterFunction.apply(object));
         if (value != null) {
             MDC.put(key, value);
+        } else {
+            MDC.remove(key);
         }
-    }
-
-    private static void removeFromLogContext(String key) {
-        MDC.remove(key);
     }
 
 }
