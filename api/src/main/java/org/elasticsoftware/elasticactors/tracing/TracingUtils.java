@@ -16,36 +16,33 @@ public final class TracingUtils {
 
     @Nullable
     public static String shorten(@Nullable String s) {
-        if (s != null) {
-            int lastIndex = s.lastIndexOf('.');
-            if (lastIndex == -1) {
-                return s;
-            }
-            StringBuilder sb = new StringBuilder();
-            char c;
-            int index = 0;
-            if ((c = s.charAt(0)) != '.') {
-                sb.append(c);
-                index += 1;
-            }
-            while ((index = s.indexOf('.', index)) > -1 && index < lastIndex) {
-                if ((c = s.charAt(index + 1)) != '.') {
-                    if (sb.length() > 0) {
-                        sb.append('.');
-                    }
-                    sb.append(c);
-                }
-                index += 1;
-            }
-            if (lastIndex < s.length() - 1) {
+        int lastIndex;
+        if (s == null || s.isEmpty() || (lastIndex = s.lastIndexOf('.')) == -1) {
+            return s;
+        }
+        StringBuilder sb = new StringBuilder();
+        int index = 0;
+        char c;
+        if ((c = s.charAt(0)) != '.') {
+            sb.append(c);
+            index += 1;
+        }
+        while ((index = s.indexOf('.', index)) > -1 && index < lastIndex) {
+            if ((c = s.charAt(index + 1)) != '.') {
                 if (sb.length() > 0) {
                     sb.append('.');
                 }
-                sb.append(s, lastIndex + 1, s.length());
+                sb.append(c);
             }
-            return sb.toString();
+            index += 1;
         }
-        return null;
+        if (lastIndex < s.length() - 1) {
+            if (sb.length() > 0) {
+                sb.append('.');
+            }
+            sb.append(s, lastIndex + 1, s.length());
+        }
+        return sb.toString();
     }
 
     @Nullable
@@ -57,12 +54,18 @@ public final class TracingUtils {
     }
 
     @Nonnull
-    public static String shorten(@Nonnull Class<?>[] p) {
-        String[] s = new String[p.length];
-        for (int i = 0; i < p.length; i++) {
-            s[i] = shorten(p[i]);
+    public static String shorten(@Nonnull Class<?>[] classes) {
+        if (classes.length == 0) {
+            return "";
         }
-        return String.join(",", s);
+        StringBuilder sb = new StringBuilder();
+        for (Class<?> aClass : classes) {
+            if (sb.length() > 0) {
+                sb.append(',');
+            }
+            sb.append(shorten(aClass));
+        }
+        return sb.toString();
     }
 
     @Nullable

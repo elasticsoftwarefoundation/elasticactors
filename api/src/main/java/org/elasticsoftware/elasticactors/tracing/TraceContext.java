@@ -28,21 +28,39 @@ public final class TraceContext {
 
     public TraceContext(@Nullable TraceContext parent) {
         Random prng = ThreadLocalRandom.current();
-        this.spanId = String.format("%016x", prng.nextLong());
-        this.traceId = parent == null || parent.getTraceId().trim().isEmpty()
+        this.spanId = toHexString(prng.nextLong());
+        this.traceId = parent == null || parent.getTraceId().isEmpty()
                 ? nextTraceIdHigh(prng) + this.spanId
                 : parent.getTraceId();
-        this.parentId = parent == null || parent.getSpanId().trim().isEmpty()
+        this.parentId = parent == null || parent.getSpanId().isEmpty()
                 ? null
                 : parent.getSpanId();
     }
 
-    // https://github.com/openzipkin/b3-propagation/issues/6
+    /**
+     * See https://github.com/openzipkin/b3-propagation/issues/6
+     */
+    @Nonnull
     private static String nextTraceIdHigh(Random prng) {
         long epochSeconds = System.currentTimeMillis() / 1000;
         int random = prng.nextInt();
         long traceIdHigh = (epochSeconds & 0xffffffffL) << 32 | (random & 0xffffffffL);
-        return String.format("%016x", traceIdHigh);
+        return toHexString(traceIdHigh);
+    }
+
+    @Nonnull
+    private static String toHexString(long number) {
+        String numberHex = Long.toHexString(number);
+        int zeroes = 16 - numberHex.length();
+        if (zeroes == 0) {
+            return numberHex;
+        }
+        StringBuilder sb = new StringBuilder(16);
+        for (int i = 0; i < zeroes; i++) {
+            sb.append('0');
+        }
+        sb.append(numberHex);
+        return sb.toString();
     }
 
     @Nonnull
@@ -89,7 +107,7 @@ public final class TraceContext {
     }
 
     public boolean isEmpty() {
-        return spanId == null || spanId.trim().isEmpty()
-                || traceId == null || traceId.trim().isEmpty();
+        return spanId == null || spanId.isEmpty()
+                || traceId == null || traceId.isEmpty();
     }
 }

@@ -133,9 +133,9 @@ public final class CreationContext {
     }
 
     public boolean isEmpty() {
-        return (creator == null || creator.trim().isEmpty())
-                && (creatorType == null || creatorType.trim().isEmpty())
-                && (creatorMethod == null || creatorMethod.trim().isEmpty())
+        return (creator == null || creator.isEmpty())
+                && (creatorType == null || creatorType.isEmpty())
+                && (creatorMethod == null || creatorMethod.isEmpty())
                 && (scheduled == null);
     }
 }
