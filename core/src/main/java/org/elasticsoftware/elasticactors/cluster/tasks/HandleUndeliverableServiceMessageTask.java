@@ -30,6 +30,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -66,9 +67,10 @@ public final class HandleUndeliverableServiceMessageTask implements ThreadBoundR
         return serviceRef;
     }
 
+    @Nullable
     @Override
-    public String getSelfType() {
-        return serviceActor != null ? serviceActor.getClass().getName() : null;
+    public Class<?> getSelfType() {
+        return serviceActor != null ? serviceActor.getClass() : null;
     }
 
     @Override

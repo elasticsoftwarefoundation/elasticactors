@@ -5,11 +5,15 @@ import org.elasticsoftware.elasticactors.ActorContext;
 import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static org.elasticsoftware.elasticactors.tracing.TracingUtils.safeToString;
 import static org.elasticsoftware.elasticactors.tracing.TracingUtils.shorten;
 
 public final class MessageHandlingContext {
+
+    private static final ConcurrentMap<String, String> shortenCache = new ConcurrentHashMap<>();
 
     private final String messageType;
     private final String sender;
@@ -19,10 +23,26 @@ public final class MessageHandlingContext {
     public MessageHandlingContext(
             @Nullable ActorContext actorContext,
             @Nullable TracedMessage tracedMessage) {
-        this.messageType = tracedMessage != null ? shorten(tracedMessage.getType()) : null;
+        this.messageType = getMessageType(tracedMessage);
         this.sender = tracedMessage != null ? safeToString(tracedMessage.getSender()) : null;
         this.receiver = actorContext != null ? safeToString(actorContext.getSelf()) : null;
         this.receiverType = actorContext != null ? shorten(actorContext.getSelfType()) : null;
+    }
+
+    @Nullable
+    private static String getMessageType(@Nullable TracedMessage tracedMessage) {
+        if (tracedMessage != null) {
+            if (tracedMessage.getType() != null) {
+                // Let the cache in TracingUtils cache this
+                return shorten(tracedMessage.getType());
+            } else {
+                String typeAsString = tracedMessage.getTypeAsString();
+                // This is used in InternalMessageImpl a lot
+                // Let's cache it here instead of in TracingUtils.
+                return shortenCache.computeIfAbsent(typeAsString, TracingUtils::shorten);
+            }
+        }
+        return null;
     }
 
     @Nullable

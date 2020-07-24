@@ -107,8 +107,14 @@ public final class ImmutableInternalMessage extends AbstractTracedMessage
     }
 
     @Override
-    public String getType() {
+    public String getTypeAsString() {
         return payloadObject.getClass().getName();
+    }
+
+    @Nullable
+    @Override
+    public Class<?> getType() {
+        return payloadObject.getClass();
     }
 
     @Override

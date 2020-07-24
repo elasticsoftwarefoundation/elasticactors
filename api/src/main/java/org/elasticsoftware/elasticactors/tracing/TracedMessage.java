@@ -9,7 +9,10 @@ public interface TracedMessage {
     @Nullable
     ActorRef getSender();
 
-    String getType();
+    String getTypeAsString();
+
+    @Nullable
+    Class<?> getType();
 
     @Nullable
     TraceContext getTraceContext();

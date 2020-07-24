@@ -116,8 +116,14 @@ public final class InternalMessageImpl extends AbstractTracedMessage
     }
 
     @Override
-    public String getType() {
+    public String getTypeAsString() {
         return payloadClass;
+    }
+
+    @Nullable
+    @Override
+    public Class<?> getType() {
+        return null;
     }
 
     @Override

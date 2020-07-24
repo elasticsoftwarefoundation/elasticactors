@@ -22,6 +22,7 @@ import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -41,8 +42,9 @@ public final class ServiceActorContext implements ActorContext {
         return serviceRef;
     }
 
+    @Nullable
     @Override
-    public String getSelfType() {
+    public Class<?> getSelfType() {
         return null;
     }
 

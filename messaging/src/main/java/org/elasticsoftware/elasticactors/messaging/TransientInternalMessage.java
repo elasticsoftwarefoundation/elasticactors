@@ -85,8 +85,14 @@ public final class TransientInternalMessage extends AbstractTracedMessage
     }
 
     @Override
-    public String getType() {
+    public String getTypeAsString() {
         return payload.getClass().getName();
+    }
+
+    @Nullable
+    @Override
+    public Class<?> getType() {
+        return payload.getClass();
     }
 
     @Override

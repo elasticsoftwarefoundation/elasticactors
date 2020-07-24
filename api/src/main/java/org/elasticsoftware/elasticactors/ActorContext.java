@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -54,9 +55,10 @@ public interface ActorContext {
 
     /**
      *
-     * @return a String that identifies the current actor's type
+     * @return the current actor's type
      */
-    String getSelfType();
+    @Nullable
+    Class<?> getSelfType();
 
     /**
      *

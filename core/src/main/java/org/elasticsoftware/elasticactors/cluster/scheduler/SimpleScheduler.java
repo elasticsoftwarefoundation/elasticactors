@@ -127,8 +127,14 @@ public final class SimpleScheduler implements SchedulerService,ScheduledMessageR
         }
 
         @Override
-        public String getType() {
+        public String getTypeAsString() {
             return message.getClass().getName();
+        }
+
+        @Nullable
+        @Override
+        public Class<?> getType() {
+            return message.getClass();
         }
     }
 }

@@ -148,9 +148,10 @@ public final class PersistentActor<K> implements ActorContext, ProcessorContext 
         return ref;
     }
 
+    @Nullable
     @Override
-    public String getSelfType() {
-        return actorClass != null ? actorClass.getName() : null;
+    public Class<?> getSelfType() {
+        return actorClass;
     }
 
     @Override

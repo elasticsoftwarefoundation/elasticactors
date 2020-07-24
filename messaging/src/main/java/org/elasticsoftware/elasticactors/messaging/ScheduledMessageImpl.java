@@ -127,8 +127,14 @@ public final class ScheduledMessageImpl extends AbstractTracedMessage implements
     }
 
     @Override
-    public String getType() {
+    public String getTypeAsString() {
         return messageClass.getName();
+    }
+
+    @Nullable
+    @Override
+    public Class<?> getType() {
+        return messageClass;
     }
 
     @Override

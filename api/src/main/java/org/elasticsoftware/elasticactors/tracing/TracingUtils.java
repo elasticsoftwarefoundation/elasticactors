@@ -3,8 +3,13 @@ package org.elasticsoftware.elasticactors.tracing;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.reflect.Method;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public final class TracingUtils {
+
+    private static final ConcurrentMap<Class<?>, String> classCache = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Method, String> methodCache = new ConcurrentHashMap<>();
 
     private TracingUtils() {
     }
@@ -21,20 +26,19 @@ public final class TracingUtils {
             return s;
         }
         StringBuilder sb = new StringBuilder();
-        int index = 0;
+        int i = 0;
         char c;
         if ((c = s.charAt(0)) != '.') {
             sb.append(c);
-            index += 1;
+            i += 1;
         }
-        while ((index = s.indexOf('.', index)) > -1 && index < lastIndex) {
-            if ((c = s.charAt(index + 1)) != '.') {
+        for (; (i = s.indexOf('.', i)) > -1 && i < lastIndex; i++) {
+            if ((c = s.charAt(i + 1)) != '.') {
                 if (sb.length() > 0) {
                     sb.append('.');
                 }
                 sb.append(c);
             }
-            index += 1;
         }
         if (lastIndex < s.length() - 1) {
             if (sb.length() > 0) {
@@ -46,9 +50,9 @@ public final class TracingUtils {
     }
 
     @Nullable
-    public static String shorten(@Nullable Class<?> c) {
-        if (c != null) {
-            return shorten(c.getName());
+    public static String shorten(@Nullable Class<?> aClass) {
+        if (aClass != null) {
+            return classCache.computeIfAbsent(aClass, c -> shorten(c.getName()));
         }
         return null;
     }
@@ -69,10 +73,16 @@ public final class TracingUtils {
     }
 
     @Nullable
-    public static String shorten(@Nullable Method m) {
-        if (m != null) {
-            return shorten(m.getDeclaringClass().getName()) + "." + m.getName() +
-                    "(" + shorten(m.getParameterTypes()) + ")";
+    public static String shorten(@Nullable Method method) {
+        if (method != null) {
+            return methodCache.computeIfAbsent(
+                    method,
+                    m -> shorten(m.getDeclaringClass())
+                            + '.'
+                            + m.getName()
+                            + '('
+                            + shorten(m.getParameterTypes())
+                            + ')');
         }
         return null;
     }
