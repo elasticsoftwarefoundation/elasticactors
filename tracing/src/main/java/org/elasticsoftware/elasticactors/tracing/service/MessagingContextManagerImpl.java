@@ -8,22 +8,51 @@ import org.elasticsoftware.elasticactors.tracing.NoopMessagingScope;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.tracing.TracedMessage;
 import org.elasticsoftware.elasticactors.tracing.TracingUtils;
-import org.slf4j.MDC;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.reflect.Method;
-import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.ServiceLoader;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static org.elasticsoftware.elasticactors.tracing.TracingUtils.safeToString;
 import static org.elasticsoftware.elasticactors.tracing.TracingUtils.shorten;
 
 public final class MessagingContextManagerImpl extends MessagingContextManager {
+
+    /*
+     * Initialization-on-deman holder pattern (lazy-loaded singleton)
+     * See: https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom
+     */
+    private static final class DiagnosticContextManagerHolder {
+
+        private static final DiagnosticContext INSTANCE = loadService();
+
+        private static DiagnosticContext loadService() {
+            try {
+                return Optional.of(ServiceLoader.load(DiagnosticContext.class))
+                        .map(ServiceLoader::iterator)
+                        .filter(Iterator::hasNext)
+                        .map(Iterator::next)
+                        .orElseGet(() -> {
+                            logger.info(
+                                    "No specific implementations of DiagnosticContext were found. "
+                                            + "Falling back to the generic SLF4J implementation.");
+                            return new Slf4jDiagnosticContext();
+                        });
+            } catch (Exception e) {
+                logger.error(
+                        "Exception thrown while loading DiagnosticContext implementation. "
+                                + "Falling back to no-op.", e);
+                return new Slf4jDiagnosticContext();
+            }
+        }
+    }
 
     @Override
     @Nullable
@@ -83,11 +112,9 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
     public MessagingScope enter(
             @Nullable ActorContext context,
             @Nullable TracedMessage message) {
+        DiagnosticContextManagerHolder.INSTANCE.init();
         try {
             MessagingScope messagingScope = new MessagingScopeImpl(
-                    MessageHandlingContextManager.enter(new MessageHandlingContext(
-                            context,
-                            message)),
                     TraceContextManager.replace(new TraceContext(message != null
                             ? message.getTraceContext()
                             : null)),
@@ -96,12 +123,18 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
                             (CreationContextManager.threadContext.get() != null
                                     ? CreationContextManager.replace(message.getCreationContext())
                                     : CreationContextManager.enter(message.getCreationContext()))
-                            : null);
+                            : null,
+                    MessageHandlingContextManager.enter(new MessageHandlingContext(
+                            context,
+                            message)),
+                    null);
             logger.debug("Entering {}", messagingScope);
             return messagingScope;
         } catch (Exception e) {
             logger.error("Exception thrown while creating messaging scope", e);
             return NoopMessagingScope.INSTANCE;
+        } finally {
+            DiagnosticContextManagerHolder.INSTANCE.finish();
         }
     }
 
@@ -110,21 +143,27 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
     public MessagingScope enter(
             @Nullable TraceContext traceContext,
             @Nullable CreationContext creationContext) {
+        DiagnosticContextManagerHolder.INSTANCE.init();
         try {
             MessagingScope messagingScope = new MessagingScopeImpl(
                     traceContext != null ? TraceContextManager.enter(traceContext) : null,
-                    creationContext != null ? CreationContextManager.enter(creationContext) : null);
+                    creationContext != null ? CreationContextManager.enter(creationContext) : null,
+                    null,
+                    null);
             logger.debug("Entering {}", messagingScope);
             return messagingScope;
         } catch (Exception e) {
             logger.error("Exception thrown while creating messaging scope", e);
             return NoopMessagingScope.INSTANCE;
+        } finally {
+            DiagnosticContextManagerHolder.INSTANCE.finish();
         }
     }
 
     @Override
     @Nonnull
     public MessagingScope enter(@Nullable TracedMessage message) {
+        DiagnosticContextManagerHolder.INSTANCE.init();
         try {
             MessagingScope messagingScope = new MessagingScopeImpl(
                     TraceContextManager.replace(new TraceContext(message != null
@@ -135,52 +174,57 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
                             (CreationContextManager.threadContext.get() != null
                                     ? CreationContextManager.replace(message.getCreationContext())
                                     : CreationContextManager.enter(message.getCreationContext()))
-                            : null);
+                            : null,
+                    null,
+                    null);
             logger.debug("Entering {}", messagingScope);
             return messagingScope;
         } catch (Exception e) {
             logger.error("Exception thrown while creating messaging scope", e);
             return NoopMessagingScope.INSTANCE;
+        } finally {
+            DiagnosticContextManagerHolder.INSTANCE.finish();
         }
     }
 
     @Override
     @Nonnull
     public MessagingScope enter(@Nonnull Method context) {
+        DiagnosticContextManagerHolder.INSTANCE.init();
         try {
             MessagingScope messagingScope =
-                    new MessagingScopeImpl(MethodContextManager.enter(context));
+                    new MessagingScopeImpl(null, null, null, MethodContextManager.enter(context));
             logger.debug("Entering {}", messagingScope);
             return messagingScope;
         } catch (Exception e) {
             logger.error("Exception thrown while creating messaging scope", e);
             return NoopMessagingScope.INSTANCE;
+        } finally {
+            DiagnosticContextManagerHolder.INSTANCE.finish();
         }
-    }
-
-    private interface ContextManager extends AutoCloseable {
-
-        @Nonnull
-        Object getContext();
     }
 
     public final static class MessagingScopeImpl implements MessagingScope {
 
-        private final ContextManager[] contextManagers;
-        private final TraceContext traceContext;
-        private final CreationContext creationContext;
+        private final TraceContextManager traceContextManager;
+        private final CreationContextManager creationContextManager;
+        private final MessageHandlingContextManager messageHandlingContextManager;
+        private final MethodContextManager methodContextManager;
+
+        private final TraceContext currentTraceContext;
+        private final CreationContext currentCreationContext;
         private final AtomicBoolean closed;
 
         @Override
         @Nullable
         public TraceContext getTraceContext() {
-            return traceContext;
+            return currentTraceContext;
         }
 
         @Nullable
         @Override
         public CreationContext getCreationContext() {
-            return creationContext;
+            return currentCreationContext;
         }
 
         @Override
@@ -188,56 +232,63 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
             return closed.get();
         }
 
-        public MessagingScopeImpl(@Nonnull ContextManager... contextManagers) {
-            this.contextManagers = Objects.requireNonNull(contextManagers);
-            this.traceContext = find(
-                    TraceContext.class,
-                    MessagingContextManagerImpl::staticCurrentTraceContext,
-                    contextManagers);
-            this.creationContext = find(
-                    CreationContext.class,
-                    MessagingContextManagerImpl::staticCurrentCreationContext,
-                    contextManagers);
-            this.closed = new AtomicBoolean(false);
-        }
-
-        @Nullable
-        private <T> T find(
-                @Nonnull Class<T> tClass,
-                @Nonnull Supplier<T> defaultSupplier,
-                @Nonnull ContextManager[] contextManagers) {
-            for (ContextManager cm : contextManagers) {
-                if (cm != null && tClass.isInstance(cm.getContext())) {
-                    return tClass.cast(cm.getContext());
-                }
-            }
-            return defaultSupplier.get();
+        public MessagingScopeImpl(
+                @Nullable TraceContextManager traceContextManager,
+                @Nullable CreationContextManager creationContextManager,
+                @Nullable MessageHandlingContextManager messageHandlingContextManager,
+                @Nullable MethodContextManager methodContextManager) {
+            this.traceContextManager = traceContextManager;
+            this.creationContextManager = creationContextManager;
+            this.messageHandlingContextManager = messageHandlingContextManager;
+            this.methodContextManager = methodContextManager;
+            this.currentTraceContext = traceContextManager != null
+                    ? traceContextManager.getContext()
+                    : staticCurrentTraceContext();
+            this.currentCreationContext = creationContextManager != null
+                    ? creationContextManager.getContext()
+                    : staticCurrentCreationContext();
+            this.closed = new AtomicBoolean();
         }
 
         @Override
         public void close() {
-            closed.set(true);
+            if (closed.getAndSet(true)) {
+                return;
+            }
             logger.debug("Closing {}", this);
-            for (ContextManager cm : contextManagers) {
-                if (cm != null) {
-                    try {
-                        cm.close();
-                    } catch (Exception e) {
-                        logger.error("Exception thrown while closing {}", cm.getContext(), e);
-                    }
+            DiagnosticContextManagerHolder.INSTANCE.init();
+            closeSafely(traceContextManager);
+            closeSafely(creationContextManager);
+            closeSafely(messageHandlingContextManager);
+            closeSafely(methodContextManager);
+            DiagnosticContextManagerHolder.INSTANCE.finish();
+        }
+
+        private static void closeSafely(@Nullable AutoCloseable object) {
+            try {
+                if (object != null) {
+                    object.close();
                 }
+            } catch (Exception e) {
+                logger.error("Exception thrown while closing {}", object, e);
             }
         }
 
         @Override
         public String toString() {
-            return new StringJoiner(", ", MessagingScope.class.getSimpleName() + "{", "}")
-                    .add("contextManagers=" + Arrays.toString(contextManagers))
+            return new StringJoiner(", ", MessagingScopeImpl.class.getSimpleName() + "{", "}")
+                    .add("traceContextManager=" + traceContextManager)
+                    .add("creationContextManager=" + creationContextManager)
+                    .add("messageHandlingContextManager=" + messageHandlingContextManager)
+                    .add("methodContextManager=" + methodContextManager)
+                    .add("currentTraceContext=" + currentTraceContext)
+                    .add("currentCreationContext=" + currentCreationContext)
+                    .add("closed=" + closed)
                     .toString();
         }
     }
 
-    private final static class TraceContextManager implements ContextManager {
+    private final static class TraceContextManager implements AutoCloseable {
 
         private static final ThreadLocal<TraceContextManager> threadContext = new ThreadLocal<>();
 
@@ -250,16 +301,15 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         private final TraceContextManager previousManager;
         private final Strategy strategy;
 
+        @Nonnull
+        public TraceContext getContext() {
+            return context;
+        }
+
         private TraceContextManager(@Nonnull TraceContext context, @Nonnull Strategy strategy) {
             this.context = Objects.requireNonNull(context);
             this.previousManager = threadContext.get();
             this.strategy = Objects.requireNonNull(strategy);
-        }
-
-        @Nonnull
-        @Override
-        public TraceContext getContext() {
-            return context;
         }
 
         @Nonnull
@@ -274,7 +324,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         @Nonnull
         private static TraceContextManager replace(@Nonnull TraceContext context) {
             TraceContextManager newManager = new TraceContextManager(context, Strategy.REPLACE);
-            logger.trace("Putting {} in scope", newManager.getContext());
+            logger.trace("Putting {} in scope", newManager);
             if (newManager.previousManager == null) {
                 logger.error(
                         "Tried to replace a Trace Context with {}, but none is active",
@@ -297,10 +347,10 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
             }
         }
 
-        private static void fillContext(@Nullable TraceContext previous) {
-            addToLogContext(SPAN_ID_KEY, previous, TraceContext::getSpanId);
-            addToLogContext(TRACE_ID_KEY, previous, TraceContext::getTraceId);
-            addToLogContext(PARENT_SPAN_ID_KEY, previous, TraceContext::getParentId);
+        private static void fillContext(@Nullable TraceContext context) {
+            addToLogContext(SPAN_ID_KEY, context, TraceContext::getSpanId);
+            addToLogContext(TRACE_ID_KEY, context, TraceContext::getTraceId);
+            addToLogContext(PARENT_SPAN_ID_KEY, context, TraceContext::getParentId);
         }
 
         private static void clearContext() {
@@ -316,7 +366,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         }
     }
 
-    private final static class MessageHandlingContextManager implements ContextManager {
+    private final static class MessageHandlingContextManager implements AutoCloseable {
 
         private static final ThreadLocal<MessageHandlingContextManager> threadContext =
                 new ThreadLocal<>();
@@ -328,7 +378,6 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         }
 
         @Nonnull
-        @Override
         public MessageHandlingContext getContext() {
             return context;
         }
@@ -372,7 +421,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         }
     }
 
-    private final static class CreationContextManager implements ContextManager {
+    private final static class CreationContextManager implements AutoCloseable {
 
         private static final ThreadLocal<CreationContextManager> threadContext =
                 new ThreadLocal<>();
@@ -387,7 +436,6 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         private final Strategy strategy;
 
         @Nonnull
-        @Override
         public CreationContext getContext() {
             return context;
         }
@@ -413,7 +461,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         private static CreationContextManager replace(@Nonnull CreationContext context) {
             CreationContextManager newManager =
                     new CreationContextManager(context, Strategy.REPLACE);
-            logger.trace("Putting {} in scope", newManager.getContext());
+            logger.trace("Putting {} in scope", newManager);
             if (newManager.previousManager == null) {
                 logger.error(
                         "Tried to replace a Creation Context with {}, but none is active",
@@ -436,15 +484,15 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
             }
         }
 
-        private static void clearContext() {
-            fillContext(null);
-        }
-
         private static void fillContext(@Nullable CreationContext context) {
             addToLogContext(CREATOR_KEY, context, CreationContext::getCreator);
             addToLogContext(CREATOR_TYPE_KEY, context, CreationContext::getCreatorType);
             addToLogContext(CREATOR_METHOD_KEY, context, CreationContext::getCreatorMethod);
             addToLogContext(SCHEDULED_KEY, context, CreationContext::getScheduled);
+        }
+
+        private static void clearContext() {
+            fillContext(null);
         }
 
         @Override
@@ -457,20 +505,19 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         }
     }
 
-    private final static class MethodContextManager implements ContextManager {
+    private final static class MethodContextManager implements AutoCloseable {
 
         private static final ThreadLocal<MethodContextManager> threadContext = new ThreadLocal<>();
 
         private final Method context;
 
-        @Nonnull
-        @Override
-        public Method getContext() {
-            return context;
-        }
-
         private MethodContextManager(@Nonnull Method context) {
             this.context = Objects.requireNonNull(context);
+        }
+
+        @Nonnull
+        public Method getContext() {
+            return context;
         }
 
         @Nonnull
@@ -505,7 +552,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         }
     }
 
-    private static <T extends ContextManager> void logEnter(
+    private static <T> void logEnter(
             @Nonnull ThreadLocal<T> threadContext,
             @Nonnull T contextManager) {
         logger.trace("Putting {} in scope", contextManager);
@@ -519,17 +566,17 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         }
     }
 
-    private static <T extends ContextManager> void logClose(
+    private static <T> void logClose(
             @Nonnull ThreadLocal<T> threadContext,
-            @Nonnull T closingScope) {
-        logger.trace("Removing {} from scope", closingScope.getContext());
+            @Nonnull T contextManager) {
+        logger.trace("Removing {} from scope", contextManager);
         T current = threadContext.get();
-        if (current != closingScope) {
+        if (current != contextManager) {
             logger.error(
                     "Removing {} from scope, but context in scope was actually {}. "
                             + "Context in scope likely incorrect.",
-                    closingScope.getContext(),
-                    current != null ? current.getContext() : null);
+                    contextManager,
+                    current);
         }
     }
 
@@ -537,12 +584,8 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
             @Nonnull String key,
             @Nullable D object,
             @Nonnull Function<D, T> getterFunction) {
-        String value = object == null ? null : safeToString(getterFunction.apply(object));
-        if (value != null) {
-            MDC.put(key, value);
-        } else {
-            MDC.remove(key);
-        }
+        String value = object != null ? safeToString(getterFunction.apply(object)) : null;
+        DiagnosticContextManagerHolder.INSTANCE.put(key, value);
     }
 
 }

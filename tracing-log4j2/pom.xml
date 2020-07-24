@@ -22,10 +22,10 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>elasticactors-tracing</artifactId>
+    <artifactId>elasticactors-tracing-log4j2</artifactId>
     <packaging>jar</packaging>
 
-    <name>Elastic Software Foundation :: ElasticActors :: Tracing</name>
+    <name>Elastic Software Foundation :: ElasticActors :: Tracing Optimized for Log4J2</name>
     <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
     <properties>
@@ -35,11 +35,11 @@
     <dependencies>
         <dependency>
             <groupId>org.elasticsoftware.elasticactors</groupId>
-            <artifactId>elasticactors-api</artifactId>
+            <artifactId>elasticactors-tracing</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
         </dependency>
     </dependencies>
 </project>
