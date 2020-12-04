@@ -1,5 +1,6 @@
 package org.elasticsoftware.elasticactors.base.serialization;
 
+import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
 import com.fasterxml.jackson.databind.ser.PropertyWriter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 
@@ -8,6 +9,11 @@ import java.util.Objects;
 final class JsonLogIgnoreFilter extends SimpleBeanPropertyFilter {
 
     final static String FILTER_NAME = "elasticactors.jsonLogIgnore";
+
+    @Override
+    protected boolean include(BeanPropertyWriter writer) {
+        return this.include((PropertyWriter) writer);
+    }
 
     @Override
     protected boolean include(PropertyWriter writer) {

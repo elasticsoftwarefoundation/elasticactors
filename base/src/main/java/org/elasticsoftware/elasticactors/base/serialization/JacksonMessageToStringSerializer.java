@@ -26,10 +26,12 @@ public final class JacksonMessageToStringSerializer<T> implements MessageToStrin
     private final int maxLength;
 
     public JacksonMessageToStringSerializer(ObjectMapper objectMapper, int maxLength) {
+        JsonLogIgnoreFilter logIgnoreFilter = new JsonLogIgnoreFilter();
         this.objectMapper = objectMapper.copy()
                 .setFilterProvider(new SimpleFilterProvider()
                         .setFailOnUnknownId(false)
-                        .addFilter(JsonLogIgnoreFilter.FILTER_NAME, new JsonLogIgnoreFilter()))
+                        .addFilter(JsonLogIgnoreFilter.FILTER_NAME, logIgnoreFilter)
+                        .setDefaultFilter(logIgnoreFilter))
                 .addMixIn(Object.class, JsonLogIgnoreMixin.class);
         this.maxLength = maxLength;
     }
