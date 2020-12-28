@@ -42,6 +42,7 @@ import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
+import org.elasticsoftware.elasticactors.runtime.SingletonActorsScanner;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
@@ -119,6 +120,11 @@ public class NodeConfiguration {
     @Bean(name = "systemSerializationFramework")
     public SystemSerializationFramework createSystemSerializationFramework(SerializationFrameworks serializationFrameworks) {
         return new SystemSerializationFramework(serializationFrameworks);
+    }
+
+    @Bean(name = {"singletonActorsScanner"})
+    public SingletonActorsScanner createSingletonActorsScanner() {
+        return new SingletonActorsScanner();
     }
 
     @Bean(name = {"messagesScanner"})

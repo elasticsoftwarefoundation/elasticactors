@@ -38,6 +38,7 @@ import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.SingletonActor;
 import org.elasticsoftware.elasticactors.TempActor;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
@@ -295,6 +296,13 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         if(actorClass.getAnnotation(Actor.class) == null) {
             throw new IllegalArgumentException("actorClass has to be annotated with @Actor");
         }
+        SingletonActor singletonActor = actorClass.getAnnotation(SingletonActor.class);
+        if (singletonActor != null && !singletonActor.value().equals(actorId)) {
+            throw new IllegalArgumentException(String.format(
+                    "Diverging ID for SingletonActor. Expected: '%s'. Found: '%s'",
+                    singletonActor.value(),
+                    actorId));
+        }
         return actorOf(actorId, actorClass.getName(), null);
     }
 
@@ -307,6 +315,13 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception {
         if(actorClass.getAnnotation(Actor.class) == null) {
             throw new IllegalArgumentException("actorClass has to be annotated with @Actor");
+        }
+        SingletonActor singletonActor = actorClass.getAnnotation(SingletonActor.class);
+        if (singletonActor != null && !singletonActor.value().equals(actorId)) {
+            throw new IllegalArgumentException(String.format(
+                    "Diverging ID for SingletonActor. Expected: '%s'. Found: '%s'",
+                    singletonActor.value(),
+                    actorId));
         }
         return actorOf(actorId, actorClass.getName(), initialState);
     }

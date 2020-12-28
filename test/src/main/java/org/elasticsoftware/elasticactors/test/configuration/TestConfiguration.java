@@ -22,6 +22,7 @@ import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.RemoteActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.SingletonActorsRegistry;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
@@ -38,6 +39,7 @@ import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.DefaultRemoteConfiguration;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
+import org.elasticsoftware.elasticactors.runtime.SingletonActorsScanner;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
@@ -108,13 +110,17 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     }
 
     @DependsOn("configuration") @Bean(name = {"internalActorSystem"})
-    public LocalActorSystemInstance createLocalActorSystemInstance(InternalActorSystems internalActorSystems, InternalActorSystemConfiguration configuration) {
+    public LocalActorSystemInstance createLocalActorSystemInstance(
+            InternalActorSystems internalActorSystems,
+            InternalActorSystemConfiguration configuration,
+            SingletonActorsRegistry singletonActorsRegistry) {
         return new LocalActorSystemInstance(
                 localNode,
                 internalActorSystems,
                 configuration,
                 nodeSelectorFactory,
-                LogLevel.WARN);
+                LogLevel.WARN,
+                singletonActorsRegistry);
     }
 
     @Bean(name = {"actorSystems", "actorRefFactory", "serializationFrameworks"})
@@ -149,6 +155,11 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     @Bean(name = {"objectMapper"})
     public ObjectMapper createObjectMapper(ObjectMapperBuilder builder) {
         return builder.build();
+    }
+
+    @Bean(name = {"singletonActorsScanner"})
+    public SingletonActorsScanner createSingletonActorsScanner() {
+        return new SingletonActorsScanner();
     }
 
     @Bean(name = {"messagesScanner"})
