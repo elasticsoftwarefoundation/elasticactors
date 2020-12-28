@@ -353,7 +353,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
                         "Could not create default actor state for singleton actor of type {}",
                         actorClass.getName(),
                         e);
-                //throw e;
+                throw e;
             }
         }
         // This needs to happen after we initialize the shards as services expect the system to be initialized and
