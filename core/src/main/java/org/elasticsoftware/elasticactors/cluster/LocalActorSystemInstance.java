@@ -505,12 +505,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
         if(actorClass.getAnnotation(Actor.class) == null) {
             throw new IllegalArgumentException("actorClass has to be annotated with @Actor");
         }
-        SingletonActor singletonActor = actorClass.getAnnotation(SingletonActor.class);
-        if (singletonActor != null && !singletonActor.value().equals(actorId)) {
-            throw new IllegalArgumentException(String.format(
-                    "Diverging ID for SingletonActor. Expected: '%s'. Found: '%s'",
-                    singletonActor.value(),
-                    actorId));
+        if (actorClass.getAnnotation(SingletonActor.class) != null) {
+            throw new IllegalArgumentException("actorClass is annotated with @SingletonActor");
         }
         return actorOf(actorId, actorClass.getName(), null);
     }
@@ -525,12 +521,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
         if(actorClass.getAnnotation(Actor.class) == null) {
             throw new IllegalArgumentException("actorClass has to be annotated with @Actor");
         }
-        SingletonActor singletonActor = actorClass.getAnnotation(SingletonActor.class);
-        if (singletonActor != null && !singletonActor.value().equals(actorId)) {
-            throw new IllegalArgumentException(String.format(
-                    "Diverging ID for SingletonActor. Expected: '%s'. Found: '%s'",
-                    singletonActor.value(),
-                    actorId));
+        if (actorClass.getAnnotation(SingletonActor.class) != null) {
+            throw new IllegalArgumentException("actorClass is annotated with @SingletonActor");
         }
         return actorOf(actorId, actorClass.getName(), initialState);
     }

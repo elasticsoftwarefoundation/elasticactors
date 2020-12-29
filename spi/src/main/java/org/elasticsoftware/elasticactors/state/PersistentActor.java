@@ -114,7 +114,8 @@ public final class PersistentActor<K> implements ActorContext, ProcessorContext 
             SingletonActor singletonActor = actorClass.getAnnotation(SingletonActor.class);
             if (singletonActor != null && !singletonActor.value().equals(ref.getActorId())) {
                 throw new IllegalArgumentException(String.format(
-                        "Diverging ID for SingletonActor. Expected: '%s'. Found: '%s'",
+                        "Diverging ID for SingletonActor of type '%s'. Expected: '%s'. Found: '%s'",
+                        actorClass.getName(),
                         singletonActor.value(),
                         ref.getActorId()));
             }
