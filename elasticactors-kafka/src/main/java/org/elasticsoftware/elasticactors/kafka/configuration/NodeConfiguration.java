@@ -24,6 +24,7 @@ import org.elasticsoftware.elasticactors.ActorLifecycleListenerRegistry;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.SingletonActorsRegistry;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
@@ -155,11 +156,14 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"internalActorSystem"})
-    public InternalActorSystem createLocalActorSystemInstance(ShardActorCacheManager shardActorCacheManager,
-                                                              NodeActorCacheManager nodeActorCacheManager,
-                                                              ActorLifecycleListenerRegistry actorLifecycleListenerRegistry,
-                                                              PersistentActorStoreFactory persistentActorStoreFactory) {
-        final int workers = env.getProperty("ea.shardThreads.workerCount",Integer.class,Runtime.getRuntime().availableProcessors());
+    public InternalActorSystem createLocalActorSystemInstance(
+            ShardActorCacheManager shardActorCacheManager,
+            NodeActorCacheManager nodeActorCacheManager,
+            ActorLifecycleListenerRegistry actorLifecycleListenerRegistry,
+            PersistentActorStoreFactory persistentActorStoreFactory,
+            SingletonActorsRegistry singletonActorsRegistry) {
+        final int workers = env.getProperty("ea.shardThreads.workerCount",Integer.class,
+                Runtime.getRuntime().availableProcessors());
         final String bootstrapServers = env.getRequiredProperty("ea.kafka.bootstrapServers");
         final Integer compressionThreshold = env.getProperty("ea.persistentActorRepository.compressionThreshold",Integer.class, 512);
         Serializer<PersistentActor<ShardKey>,byte[]> serializer = new CompressingSerializer<>(new PersistentActorSerializer(node),compressionThreshold);
@@ -183,7 +187,8 @@ public class NodeConfiguration {
                 deserializer,
                 actorLifecycleListenerRegistry,
                 persistentActorStoreFactory,
-                onUnhandledLogLevel);
+                onUnhandledLogLevel,
+                singletonActorsRegistry);
     }
 
     @Bean(name = {"internalActorSystemHealthCheck"})

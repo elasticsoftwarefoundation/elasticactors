@@ -604,8 +604,8 @@ public final class KafkaActorThread extends Thread {
         return completableFuture;
     }
 
-    CompletionStage<Integer> performRebalance() {
-        final CompletableFuture<Integer> completableFuture = new CompletableFuture<>();
+    CompletionStage<Set<Integer>> performRebalance() {
+        final CompletableFuture<Set<Integer>> completableFuture = new CompletableFuture<>();
         runCommand((kafkaConsumer, kafkaProducer) -> {
             List<ManagedActorShard> newManagedShards = new LinkedList<>();
             try {
@@ -634,7 +634,9 @@ public final class KafkaActorThread extends Thread {
                 // switch the state to ACTIVE
                 this.state = KafkaActorSystemState.ACTIVE;
                 // and signal success
-                completableFuture.complete(newLocalShards.size());
+                completableFuture.complete(newLocalShards.stream()
+                        .map(ShardKey::getShardId)
+                        .collect(Collectors.toSet()));
             } catch(Exception e) {
                 logger.error("FATAL Exception on performRebalance", e);
                 // @todo: this should signal some kind of fatal exception
@@ -889,7 +891,8 @@ public final class KafkaActorThread extends Thread {
         });
     }
 
-    void initializeServiceActors() {
+    CompletableFuture<Void> initializeServiceActors() {
+        final CompletableFuture<Void> completableFuture = new CompletableFuture<>();
         runCommand((kafkaConsumer, kafkaProducer) -> {
             Set<String> serviceActors = internalActorSystem.getConfiguration().getServices();
             if (serviceActors != null && !serviceActors.isEmpty()) {
@@ -914,7 +917,9 @@ public final class KafkaActorThread extends Thread {
                 });
 
             }
+            completableFuture.complete(null);
         });
+        return completableFuture;
     }
 
     private void runCommand(BiConsumer<KafkaConsumer<UUID, InternalMessage>, KafkaProducer<Object, Object>> command) {
