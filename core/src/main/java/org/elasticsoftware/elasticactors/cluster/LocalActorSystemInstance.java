@@ -322,6 +322,20 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
 
             this.stable.set(stable);
         }
+        // This needs to happen after we initialize the shards as services expect the system to be initialized and
+        // should be allowed to send messages to shards
+        if(initializing) {
+            // initialize the services
+            Set<String> serviceActors = configuration.getServices();
+            if (serviceActors != null && !serviceActors.isEmpty()) {
+                // initialize the service actors in the context
+                for (String elasticActorEntry : serviceActors) {
+                    localNodeAdapter.sendMessage(null,
+                            localNodeAdapter.myRef,
+                            new ActivateActorMessage(getName(), elasticActorEntry, ActorType.SERVICE));
+                }
+            }
+        }
         // initialize the singleton persistent actors
         for (Class<? extends ElasticActor<?>> actorClass : singletonActorsRegistry.getSingletonActorClasses()) {
             try {
@@ -340,13 +354,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
                                     actorClass.getName(),
                                     actorId,
                                     stateClass.newInstance()));
-                    shardAdapter.sendMessage(
-                            null,
-                            shardAdapter.myRef,
-                            new ActivateActorMessage(
-                                    getName(),
-                                    actorId,
-                                    ActorType.PERSISTENT));
                 }
             } catch (Exception e) {
                 logger.error(
@@ -354,20 +361,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
                         actorClass.getName(),
                         e);
                 throw e;
-            }
-        }
-        // This needs to happen after we initialize the shards as services expect the system to be initialized and
-        // should be allowed to send messages to shards
-        if(initializing) {
-            // initialize the services
-            Set<String> serviceActors = configuration.getServices();
-            if (serviceActors != null && !serviceActors.isEmpty()) {
-                // initialize the service actors in the context
-                for (String elasticActorEntry : serviceActors) {
-                    localNodeAdapter.sendMessage(null,
-                            localNodeAdapter.myRef,
-                            new ActivateActorMessage(getName(), elasticActorEntry, ActorType.SERVICE));
-                }
             }
         }
         // print out the shard distribution here
