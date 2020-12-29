@@ -506,7 +506,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
             throw new IllegalArgumentException("actorClass has to be annotated with @Actor");
         }
         if (actorClass.getAnnotation(SingletonActor.class) != null) {
-            throw new IllegalArgumentException("actorClass is annotated with @SingletonActor");
+            throw new IllegalArgumentException("actorClass is annotated with @SingletonActor and will be automatically created by the ActorSystem");
         }
         return actorOf(actorId, actorClass.getName(), null);
     }
@@ -522,7 +522,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
             throw new IllegalArgumentException("actorClass has to be annotated with @Actor");
         }
         if (actorClass.getAnnotation(SingletonActor.class) != null) {
-            throw new IllegalArgumentException("actorClass is annotated with @SingletonActor");
+            throw new IllegalArgumentException("actorClass is annotated with @SingletonActor and will be automatically created by the ActorSystem");
         }
         return actorOf(actorId, actorClass.getName(), initialState);
     }
