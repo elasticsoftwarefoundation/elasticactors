@@ -23,32 +23,38 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks a persistent actor as a Singleton Actor (i.e. one, and only one instance will exist).
+ * Marks a persistent actor as a Managed Actor (i.e. the framework will manage some instances).
  * <br/>
  * The framework will guarantee that:
  * <ol>
- * <li>If not created yet, an actor of this type and with this ID will be created</li>
- * <li>This actor will always be activated when its shard is initialized</li>
- * <li>No other actors of this type will be allowed to be created</li>
+ * <li>If not created yet, an actor of this type for each of the provided IDs will be created</li>
+ * <li>These actors will always be activated when its shard is initialized</li>
+ * <li>Other actors of this type with other IDs can only be created if {@link ManagedActor#exclusive()} is {@code false}</li>
  * </ol>
  * The initial state of this actor will be determined by the
- * {@link SingletonActor#initialStateProvider()} parameter.
+ * {@link ManagedActor#initialStateProvider()} parameter.
  * <br/>
  * The default implementation uses the default constructor of the state class.
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface SingletonActor {
+public @interface ManagedActor {
 
     /**
-     * The Actor ID
+     * The Actor IDs that must be managed by the framework.
      */
-    String value();
+    String[] value();
 
     /**
      * Implementation of {@link InitialStateProvider} used to create the initial actor state.
      * The default implementation uses the default no-args constructor in the state class.
      */
     Class<? extends InitialStateProvider> initialStateProvider() default InitialStateProvider.Default.class;
+
+    /**
+     * If true, ensures only the framework can create actors of these types.
+     * Set to false in order to allow other actors of this type to be created.
+     */
+    boolean exclusive() default true;
 }

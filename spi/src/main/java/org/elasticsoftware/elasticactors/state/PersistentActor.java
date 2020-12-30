@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.ManagedActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.SingletonActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
@@ -33,6 +34,7 @@ import org.reactivestreams.Subscription;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -117,6 +119,16 @@ public final class PersistentActor<K> implements ActorContext, ProcessorContext 
                         "Diverging ID for SingletonActor of type '%s'. Expected: '%s'. Found: '%s'",
                         actorClass.getName(),
                         singletonActor.value(),
+                        ref.getActorId()));
+            }
+            ManagedActor managedActor = actorClass.getAnnotation(ManagedActor.class);
+            if (managedActor != null
+                    && managedActor.exclusive()
+                    && !Arrays.asList(managedActor.value()).contains(ref.getActorId())) {
+                throw new IllegalArgumentException(String.format(
+                        "Diverging ID for SingletonActor of type '%s'. Expected one of: %s. Found: '%s'",
+                        actorClass.getName(),
+                        Arrays.toString(managedActor.value()),
                         ref.getActorId()));
             }
         }

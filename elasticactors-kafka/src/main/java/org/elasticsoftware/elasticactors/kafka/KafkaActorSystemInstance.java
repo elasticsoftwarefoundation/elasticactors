@@ -35,12 +35,14 @@ import org.elasticsoftware.elasticactors.ActorRefGroup;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.InitialStateProvider;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.ManagedActor;
+import org.elasticsoftware.elasticactors.ManagedActorsRegistry;
 import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.SingletonActor;
-import org.elasticsoftware.elasticactors.SingletonActorsRegistry;
 import org.elasticsoftware.elasticactors.TempActor;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
@@ -122,7 +124,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
     private final HashFunction hashFunction = Hashing.murmur3_32();
     private final ActorLifecycleListenerRegistry actorLifecycleListenerRegistry;
     private final LogLevel onUnhandledLogLevel;
-    private final SingletonActorsRegistry singletonActorsRegistry;
+    private final ManagedActorsRegistry managedActorsRegistry;
 
     public KafkaActorSystemInstance(
             ElasticActorsNode node,
@@ -138,7 +140,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
             ActorLifecycleListenerRegistry actorLifecycleListenerRegistry,
             PersistentActorStoreFactory persistentActorStoreFactory,
             LogLevel onUnhandledLogLevel,
-            SingletonActorsRegistry singletonActorsRegistry) {
+            ManagedActorsRegistry managedActorsRegistry) {
         this.actorLifecycleListenerRegistry = actorLifecycleListenerRegistry;
         this.schedulerService = new KafkaTopicScheduler(this);
         this.localNode = node;
@@ -174,7 +176,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
             shardThreads[i].assign(localActorNode, false);
         }
         this.onUnhandledLogLevel = onUnhandledLogLevel;
-        this.singletonActorsRegistry = singletonActorsRegistry;
+        this.managedActorsRegistry = managedActorsRegistry;
     }
 
     @PostConstruct
@@ -306,6 +308,10 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         if (actorClass.getAnnotation(SingletonActor.class) != null) {
             throw new IllegalArgumentException("actorClass is annotated with @SingletonActor and will be automatically created by the ActorSystem");
         }
+        ManagedActor managedActorAnnotation = actorClass.getAnnotation(ManagedActor.class);
+        if (managedActorAnnotation != null && managedActorAnnotation.exclusive()) {
+            throw new IllegalArgumentException("actorClass is annotated with @ManagedActor as exclusive and will be automatically created by the ActorSystem");
+        }
         return actorOf(actorId, actorClass.getName(), null);
     }
 
@@ -321,6 +327,10 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         }
         if (actorClass.getAnnotation(SingletonActor.class) != null) {
             throw new IllegalArgumentException("actorClass is annotated with @SingletonActor and will be automatically created by the ActorSystem");
+        }
+        ManagedActor managedActorAnnotation = actorClass.getAnnotation(ManagedActor.class);
+        if (managedActorAnnotation != null && managedActorAnnotation.exclusive()) {
+            throw new IllegalArgumentException("actorClass is annotated with @ManagedActor as exclusive and will be automatically created by the ActorSystem");
         }
         return actorOf(actorId, actorClass.getName(), initialState);
     }
@@ -554,28 +564,30 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
 
         serviceActorsInitilization.thenRun(() -> {
             // initialize the singleton persistent actors
-            for (Class<? extends ElasticActor<?>> actorClass : singletonActorsRegistry.getSingletonActorClasses()) {
-                try {
-                    String actorId = actorClass.getAnnotation(SingletonActor.class).value();
-                    Class<? extends ActorState> stateClass = actorClass.getAnnotation(Actor.class).stateClass();
+            for (Class<? extends ElasticActor<?>> actorClass : managedActorsRegistry.getSingletonActorClasses()) {
+                SingletonActor singletonActor = actorClass.getAnnotation(SingletonActor.class);
+                String actorId = singletonActor.value();
+                Class<? extends InitialStateProvider> initialStateProviderClass =
+                        singletonActor.initialStateProvider();
+                ActorShardRef actorRef = (ActorShardRef) actorFor(actorId);
+                ActorShard shard = (ActorShard) actorRef.getActorContainer();
+                if (newLocalShards.contains(shard.getKey().getShardId())) {
+                    createManagedActor(shard, actorClass, actorId, initialStateProviderClass);
+                }
+            }
+
+            // initialize the managed persistent actors
+            for (Class<? extends ElasticActor<?>> actorClass : managedActorsRegistry.getManagedActorClasses()) {
+                ManagedActor managedActor = actorClass.getAnnotation(ManagedActor.class);
+                String[] actorIds = managedActor.value();
+                for (String actorId : actorIds) {
+                    Class<? extends InitialStateProvider> initialStateProviderClass =
+                            managedActor.initialStateProvider();
                     ActorShardRef actorRef = (ActorShardRef) actorFor(actorId);
                     ActorShard shard = (ActorShard) actorRef.getActorContainer();
-                    int shardId = shard.getKey().getShardId();
-                    if (newLocalShards.contains(shardId)) {
-                        shard.sendMessage(
-                                null,
-                                shard.getActorRef(),
-                                new CreateActorMessage(
-                                        getName(),
-                                        actorClass.getName(),
-                                        actorId,
-                                        stateClass.newInstance()));
+                    if (newLocalShards.contains(shard.getKey().getShardId())) {
+                        createManagedActor(shard, actorClass, actorId, initialStateProviderClass);
                     }
-                } catch (Exception e) {
-                    logger.error(
-                            "Could not create default actor state for singleton actor of type {}",
-                            actorClass.getName(),
-                            e);
                 }
             }
         });
@@ -585,6 +597,33 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         logger.info("Cluster shard mapping summary:");
         for (Map.Entry<PhysicalNode, Collection<ShardKey>> entry : shardDistribution.asMap().entrySet()) {
             logger.info("\t{} has {} shards assigned", entry.getKey(), entry.getValue().size());
+        }
+    }
+
+    private void createManagedActor(
+            ActorShard shard,
+            Class<? extends ElasticActor<?>> actorClass,
+            String actorId,
+            Class<? extends InitialStateProvider> initialStateProviderClass) {
+        try {
+        Class<? extends ActorState> stateClass =
+                actorClass.getAnnotation(Actor.class).stateClass();
+        InitialStateProvider initialStateProvider = initialStateProviderClass.newInstance();
+        ActorState initialState = initialStateProvider.getInitialState(actorId, stateClass);
+        shard.sendMessage(
+                null,
+                shard.getActorRef(),
+                new CreateActorMessage(
+                        getName(),
+                        actorClass.getName(),
+                        actorId,
+                        initialState));
+        } catch (Exception e) {
+            logger.error(
+                    "Could not create default actor state for managed actor {} of type {}",
+                    actorId,
+                    actorClass.getName(),
+                    e);
         }
     }
 
