@@ -22,6 +22,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.SingletonActorsRegistry;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
@@ -40,6 +41,7 @@ import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
+import org.elasticsoftware.elasticactors.runtime.SingletonActorsScanner;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
@@ -130,6 +132,11 @@ public class NodeConfiguration {
         return new SystemSerializationFramework(serializationFrameworks);
     }
 
+    @Bean(name = {"singletonActorsScanner"})
+    public SingletonActorsScanner createSingletonActorsScanner() {
+        return new SingletonActorsScanner();
+    }
+
     @Bean(name = {"messagesScanner"})
     public MessagesScanner createMessageScanner() {
         return new MessagesScanner();
@@ -182,7 +189,8 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
-    public InternalActorSystem createLocalActorSystemInstance() {
+    public InternalActorSystem createLocalActorSystemInstance(
+            SingletonActorsRegistry singletonActorsRegistry) {
         LogLevel onUnhandledLogLevel = env.getProperty(
                 LOGGING_UNHANDLED_LEVEL_PROPERTY,
                 LogLevel.class,
@@ -192,7 +200,8 @@ public class NodeConfiguration {
                 node,
                 configuration,
                 nodeSelectorFactory,
-                onUnhandledLogLevel);
+                onUnhandledLogLevel,
+                singletonActorsRegistry);
     }
 
     @Bean(name = {"remoteActorSystems"})

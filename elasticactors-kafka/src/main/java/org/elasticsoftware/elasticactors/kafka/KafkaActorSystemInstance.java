@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.kafka;
 import com.google.common.cache.Cache;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -38,6 +39,8 @@ import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.SingletonActor;
+import org.elasticsoftware.elasticactors.SingletonActorsRegistry;
 import org.elasticsoftware.elasticactors.TempActor;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
@@ -83,12 +86,14 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -117,6 +122,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
     private final HashFunction hashFunction = Hashing.murmur3_32();
     private final ActorLifecycleListenerRegistry actorLifecycleListenerRegistry;
     private final LogLevel onUnhandledLogLevel;
+    private final SingletonActorsRegistry singletonActorsRegistry;
 
     public KafkaActorSystemInstance(
             ElasticActorsNode node,
@@ -131,7 +137,8 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
             Deserializer<byte[], PersistentActor<ShardKey>> stateDeserializer,
             ActorLifecycleListenerRegistry actorLifecycleListenerRegistry,
             PersistentActorStoreFactory persistentActorStoreFactory,
-            LogLevel onUnhandledLogLevel) {
+            LogLevel onUnhandledLogLevel,
+            SingletonActorsRegistry singletonActorsRegistry) {
         this.actorLifecycleListenerRegistry = actorLifecycleListenerRegistry;
         this.schedulerService = new KafkaTopicScheduler(this);
         this.localNode = node;
@@ -167,6 +174,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
             shardThreads[i].assign(localActorNode, false);
         }
         this.onUnhandledLogLevel = onUnhandledLogLevel;
+        this.singletonActorsRegistry = singletonActorsRegistry;
     }
 
     @PostConstruct
@@ -295,6 +303,9 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         if(actorClass.getAnnotation(Actor.class) == null) {
             throw new IllegalArgumentException("actorClass has to be annotated with @Actor");
         }
+        if (actorClass.getAnnotation(SingletonActor.class) != null) {
+            throw new IllegalArgumentException("actorClass is annotated with @SingletonActor and will be automatically created by the ActorSystem");
+        }
         return actorOf(actorId, actorClass.getName(), null);
     }
 
@@ -307,6 +318,9 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception {
         if(actorClass.getAnnotation(Actor.class) == null) {
             throw new IllegalArgumentException("actorClass has to be annotated with @Actor");
+        }
+        if (actorClass.getAnnotation(SingletonActor.class) != null) {
+            throw new IllegalArgumentException("actorClass is annotated with @SingletonActor and will be automatically created by the ActorSystem");
         }
         return actorOf(actorId, actorClass.getName(), initialState);
     }
@@ -498,21 +512,26 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
             stable = false;
         }
 
-        Integer newLocalShards = 0;
+        final Set<Integer> newLocalShards = new HashSet<>();
 
         // we are good to go
         if(stable) {
-            CompletionStage<Integer> performRebalanceResult = null;
+            CompletionStage<Set<Integer>> performRebalanceResult = null;
             for (KafkaActorThread shardThread : shardThreads) {
                 if (performRebalanceResult == null) {
                     performRebalanceResult = shardThread.performRebalance();
                 } else {
-                    performRebalanceResult = performRebalanceResult.thenCombine(shardThread.performRebalance(), (i1, i2) -> i1 + i2);
+                    performRebalanceResult = performRebalanceResult.thenCombine(
+                            shardThread.performRebalance(),
+                            (s1, s2) -> ImmutableSet.<Integer>builder()
+                                    .addAll(s1)
+                                    .addAll(s2)
+                                    .build());
                 }
             }
             // and wait for completion (this can take a while as state needs to be loaded)
             try {
-                newLocalShards = performRebalanceResult.toCompletableFuture().get();
+                newLocalShards.addAll(performRebalanceResult.toCompletableFuture().get());
             } catch(ExecutionException e) {
                 logger.error("FATAL Exception while executing performRebalance operation", e.getCause());
                 stable = false;
@@ -524,12 +543,43 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
 
         this.stable.set(stable);
 
+        CompletableFuture<Void> serviceActorsInitilization = CompletableFuture.completedFuture(null);
+
         // This needs to happen after we initialize the shards as services expect the system to be initialized and
         // should be allowed to send messages to shards
         if(initializing) {
             // initialize the services
-            localActorNode.initializeServiceActors();
+            serviceActorsInitilization = localActorNode.initializeServiceActors();
         }
+
+        serviceActorsInitilization.thenRun(() -> {
+            // initialize the singleton persistent actors
+            for (Class<? extends ElasticActor<?>> actorClass : singletonActorsRegistry.getSingletonActorClasses()) {
+                try {
+                    String actorId = actorClass.getAnnotation(SingletonActor.class).value();
+                    Class<? extends ActorState> stateClass = actorClass.getAnnotation(Actor.class).stateClass();
+                    ActorShardRef actorRef = (ActorShardRef) actorFor(actorId);
+                    ActorShard shard = (ActorShard) actorRef.getActorContainer();
+                    int shardId = shard.getKey().getShardId();
+                    if (newLocalShards.contains(shardId)) {
+                        shard.sendMessage(
+                                null,
+                                shard.getActorRef(),
+                                new CreateActorMessage(
+                                        getName(),
+                                        actorClass.getName(),
+                                        actorId,
+                                        stateClass.newInstance()));
+                    }
+                } catch (Exception e) {
+                    logger.error(
+                            "Could not create default actor state for singleton actor of type {}",
+                            actorClass.getName(),
+                            e);
+                }
+            }
+        });
+
         // print out the shard distribution here
 
         logger.info("Cluster shard mapping summary:");

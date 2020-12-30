@@ -36,6 +36,8 @@ import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.NodeKey;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.SingletonActor;
+import org.elasticsoftware.elasticactors.SingletonActorsRegistry;
 import org.elasticsoftware.elasticactors.TempActor;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
@@ -111,13 +113,15 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     private final HashFunction hashFunction = Hashing.murmur3_32();
     private final AtomicBoolean stable = new AtomicBoolean(false);
     private final LogLevel onUnhandledLogLevel;
+    private final SingletonActorsRegistry singletonActorsRegistry;
 
     public LocalActorSystemInstance(
             PhysicalNode localNode,
             InternalActorSystems cluster,
             InternalActorSystemConfiguration configuration,
             NodeSelectorFactory nodeSelectorFactory,
-            LogLevel onUnhandledLogLevel) {
+            LogLevel onUnhandledLogLevel,
+            SingletonActorsRegistry singletonActorsRegistry) {
         this.configuration = configuration;
         this.nodeSelectorFactory = nodeSelectorFactory;
         this.cluster = cluster;
@@ -130,6 +134,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
         }
         this.localNodeAdapter = new ActorNodeAdapter(new NodeKey(configuration.getName(), localNode.getId()));
         this.onUnhandledLogLevel = onUnhandledLogLevel;
+        this.singletonActorsRegistry = singletonActorsRegistry;
     }
 
     @Override
@@ -331,6 +336,33 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
                 }
             }
         }
+        // initialize the singleton persistent actors
+        for (Class<? extends ElasticActor<?>> actorClass : singletonActorsRegistry.getSingletonActorClasses()) {
+            try {
+                String actorId = actorClass.getAnnotation(SingletonActor.class).value();
+                Class<? extends ActorState> stateClass = actorClass.getAnnotation(Actor.class).stateClass();
+                ActorShardRef actorRef = (ActorShardRef) actorFor(actorId);
+                ActorShard shard = (ActorShard) actorRef.getActorContainer();
+                int shardId = shard.getKey().getShardId();
+                if (newLocalShards.contains(shardId)) {
+                    ActorShardAdapter shardAdapter = shardAdapters[shardId];
+                    shardAdapter.sendMessage(
+                            null,
+                            shardAdapter.myRef,
+                            new CreateActorMessage(
+                                    getName(),
+                                    actorClass.getName(),
+                                    actorId,
+                                    stateClass.newInstance()));
+                }
+            } catch (Exception e) {
+                logger.error(
+                        "Could not create default actor state for singleton actor of type {}",
+                        actorClass.getName(),
+                        e);
+                throw e;
+            }
+        }
         // print out the shard distribution here
         Map<String, Long> collect = nodeCount.stream().collect(groupingBy(Function.identity(), counting()));
         SortedMap<String, Long> sortedNodes = new TreeMap<>(collect);
@@ -466,6 +498,9 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
         if(actorClass.getAnnotation(Actor.class) == null) {
             throw new IllegalArgumentException("actorClass has to be annotated with @Actor");
         }
+        if (actorClass.getAnnotation(SingletonActor.class) != null) {
+            throw new IllegalArgumentException("actorClass is annotated with @SingletonActor and will be automatically created by the ActorSystem");
+        }
         return actorOf(actorId, actorClass.getName(), null);
     }
 
@@ -478,6 +513,9 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass,@Nullable ActorState initialState) throws Exception {
         if(actorClass.getAnnotation(Actor.class) == null) {
             throw new IllegalArgumentException("actorClass has to be annotated with @Actor");
+        }
+        if (actorClass.getAnnotation(SingletonActor.class) != null) {
+            throw new IllegalArgumentException("actorClass is annotated with @SingletonActor and will be automatically created by the ActorSystem");
         }
         return actorOf(actorId, actorClass.getName(), initialState);
     }

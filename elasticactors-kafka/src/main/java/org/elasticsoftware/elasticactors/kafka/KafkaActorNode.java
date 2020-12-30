@@ -31,6 +31,7 @@ import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public final class KafkaActorNode implements ActorNode {
     private final NodeKey key;
@@ -122,8 +123,8 @@ public final class KafkaActorNode implements ActorNode {
         return actorThread;
     }
 
-    void initializeServiceActors() {
-        this.actorThread.initializeServiceActors();
+    CompletableFuture<Void> initializeServiceActors() {
+        return this.actorThread.initializeServiceActors();
     }
 
     private InternalMessage createInternalMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws IOException {

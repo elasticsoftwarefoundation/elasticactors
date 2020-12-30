@@ -24,6 +24,7 @@ import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
+import org.elasticsoftware.elasticactors.SingletonActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.reactivestreams.InternalPersistentSubscription;
 import org.elasticsoftware.elasticactors.reactivestreams.ProcessorContext;
@@ -109,6 +110,16 @@ public final class PersistentActor<K> implements ActorContext, ProcessorContext 
                               ActorRef ref, @Nullable String affinityKey, byte[] serializedState, ActorState actorState,
                               HashMultimap<String, MessageSubscriber> messageSubscribers,
                               List<InternalPersistentSubscription> persistentSubscriptions) {
+        if (actorClass != null) {
+            SingletonActor singletonActor = actorClass.getAnnotation(SingletonActor.class);
+            if (singletonActor != null && !singletonActor.value().equals(ref.getActorId())) {
+                throw new IllegalArgumentException(String.format(
+                        "Diverging ID for SingletonActor of type '%s'. Expected: '%s'. Found: '%s'",
+                        actorClass.getName(),
+                        singletonActor.value(),
+                        ref.getActorId()));
+            }
+        }
         this.key = key;
         this.actorSystem = actorSystem;
         this.currentActorStateVersion = currentActorStateVersion;
