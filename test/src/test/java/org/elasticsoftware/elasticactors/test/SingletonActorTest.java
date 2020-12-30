@@ -14,13 +14,17 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.test.common;
+package org.elasticsoftware.elasticactors.test;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.base.actors.ActorDelegate;
 import org.elasticsoftware.elasticactors.base.actors.ReplyActor;
-import org.elasticsoftware.elasticactors.test.TestActorSystem;
+import org.elasticsoftware.elasticactors.test.common.CurrentActorName;
+import org.elasticsoftware.elasticactors.test.common.GetActorName;
+import org.elasticsoftware.elasticactors.test.common.NameActorState;
+import org.elasticsoftware.elasticactors.test.common.SetActorName;
+import org.elasticsoftware.elasticactors.test.common.SingletonNameActor;
 import org.elasticsoftware.elasticactors.test.messaging.LocalMessageQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,13 +43,13 @@ public class SingletonActorTest {
     @Test
     public void testGetActorName() throws Exception {
 
-        logger.info("Starting testGreeting");
+        logger.info("Starting singletonActorTest");
 
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
 
         ActorSystem actorSystem = testActorSystem.getActorSystem();
-        ActorRef singletonActor = actorSystem.actorFor(SingletonNameActorState.ACTOR_ID);
+        ActorRef singletonActor = actorSystem.actorFor(SingletonNameActor.ACTOR_ID);
 
         final CountDownLatch countDownLatch = new CountDownLatch(1);
 
@@ -54,7 +58,7 @@ public class SingletonActorTest {
                         CurrentActorName.class,
                         m -> {
                             logger.info("Got current actor name '{}'", m.getCurrentName());
-                            assertEquals(m.getCurrentName(), SingletonNameActorState.DEFAULT_NAME);
+                            assertEquals(m.getCurrentName(), NameActorState.DEFAULT_NAME);
                         })
                 .postReceive(countDownLatch::countDown)
                 .build());
@@ -70,13 +74,13 @@ public class SingletonActorTest {
     @Test
     public void testSetActorName() throws Exception {
 
-        logger.info("Starting testGreeting");
+        logger.info("Starting singletonActorTest");
 
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
 
         ActorSystem actorSystem = testActorSystem.getActorSystem();
-        ActorRef singletonActor = actorSystem.actorFor(SingletonNameActorState.ACTOR_ID);
+        ActorRef singletonActor = actorSystem.actorFor(SingletonNameActor.ACTOR_ID);
 
         final CountDownLatch countDownLatch = new CountDownLatch(1);
 
@@ -85,7 +89,7 @@ public class SingletonActorTest {
                         CurrentActorName.class,
                         m -> {
                             logger.info("Got current actor name '{}'", m.getCurrentName());
-                            assertEquals(m.getCurrentName(), SingletonNameActorState.DEFAULT_NAME);
+                            assertEquals(m.getCurrentName(), NameActorState.DEFAULT_NAME);
                         })
                 .postReceive(countDownLatch::countDown)
                 .build());
@@ -101,13 +105,13 @@ public class SingletonActorTest {
     @Test
     public void testGetActorNameAfterSet() throws Exception {
 
-        logger.info("Starting testGreeting");
+        logger.info("Starting singletonActorTest");
 
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
 
         ActorSystem actorSystem = testActorSystem.getActorSystem();
-        ActorRef singletonActor = actorSystem.actorFor(SingletonNameActorState.ACTOR_ID);
+        ActorRef singletonActor = actorSystem.actorFor(SingletonNameActor.ACTOR_ID);
         singletonActor.tell(new SetActorName("Test actor name"), null);
 
         final CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -133,7 +137,7 @@ public class SingletonActorTest {
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testThrowExceptionOnActorCreate() throws Exception {
 
-        logger.info("Starting testGreeting");
+        logger.info("Starting singletonActorTest");
 
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
@@ -142,7 +146,7 @@ public class SingletonActorTest {
         actorSystem.actorOf(
                 "someId",
                 SingletonNameActor.class,
-                new SingletonNameActorState("someName"));
+                new NameActorState("someName"));
 
         testActorSystem.destroy();
     }

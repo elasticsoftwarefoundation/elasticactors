@@ -19,15 +19,22 @@ package org.elasticsoftware.elasticactors;
 import java.util.List;
 
 /**
- * Implementations are used to build instances of classes annotated with {@link SingletonActor}
+ * Implementations are used to build instances of classes annotated with {@link SingletonActor} and {@link ManagedActor}
  */
-public interface SingletonActorsRegistry {
+public interface ManagedActorsRegistry {
+
     /**
-     * Initialize the registry, the framework will call {@link SingletonActorsRegistry#getSingletonActorClasses} next
+     * Initialize the registry, the framework will call {@link ManagedActorsRegistry#getSingletonActorClasses} next
      */
     void init();
+
     /**
      * Return classes that are annotated with {@link SingletonActor}
      */
     List<Class<? extends ElasticActor<?>>> getSingletonActorClasses();
+
+    /**
+     * Return classes that are annotated with {@link ManagedActor}
+     */
+    List<Class<? extends ElasticActor<?>>> getManagedActorClasses();
 }

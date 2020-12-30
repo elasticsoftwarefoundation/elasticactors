@@ -20,9 +20,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.ManagedActorsRegistry;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.RemoteActorSystemConfiguration;
-import org.elasticsoftware.elasticactors.SingletonActorsRegistry;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
@@ -37,9 +37,9 @@ import org.elasticsoftware.elasticactors.logging.LogLevel;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.DefaultRemoteConfiguration;
+import org.elasticsoftware.elasticactors.runtime.ManagedActorsScanner;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
-import org.elasticsoftware.elasticactors.runtime.SingletonActorsScanner;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
@@ -113,14 +113,14 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     public LocalActorSystemInstance createLocalActorSystemInstance(
             InternalActorSystems internalActorSystems,
             InternalActorSystemConfiguration configuration,
-            SingletonActorsRegistry singletonActorsRegistry) {
+            ManagedActorsRegistry managedActorsRegistry) {
         return new LocalActorSystemInstance(
                 localNode,
                 internalActorSystems,
                 configuration,
                 nodeSelectorFactory,
                 LogLevel.WARN,
-                singletonActorsRegistry);
+                managedActorsRegistry);
     }
 
     @Bean(name = {"actorSystems", "actorRefFactory", "serializationFrameworks"})
@@ -157,9 +157,9 @@ public class TestConfiguration extends AsyncConfigurerSupport {
         return builder.build();
     }
 
-    @Bean(name = {"singletonActorsScanner"})
-    public SingletonActorsScanner createSingletonActorsScanner() {
-        return new SingletonActorsScanner();
+    @Bean(name = {"managedActorsScanner"})
+    public ManagedActorsScanner createManagedActorsScanner() {
+        return new ManagedActorsScanner();
     }
 
     @Bean(name = {"messagesScanner"})

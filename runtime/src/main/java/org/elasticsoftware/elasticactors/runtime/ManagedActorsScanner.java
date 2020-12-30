@@ -18,9 +18,10 @@ package org.elasticsoftware.elasticactors.runtime;
 
 import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.ManagedActor;
+import org.elasticsoftware.elasticactors.ManagedActorsRegistry;
 import org.elasticsoftware.elasticactors.ServiceActor;
 import org.elasticsoftware.elasticactors.SingletonActor;
-import org.elasticsoftware.elasticactors.SingletonActorsRegistry;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
@@ -33,15 +34,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Find all classes annotated with {@link SingletonActor}
+ * Find all classes annotated with {@link SingletonActor} and {@link ManagedActor}
  */
 @Named
-public final class SingletonActorsScanner implements SingletonActorsRegistry {
+public final class ManagedActorsScanner implements ManagedActorsRegistry {
 
     @Inject
     private ApplicationContext applicationContext;
 
     private List<Class<? extends ElasticActor<?>>> singletonActorClasses;
+    private List<Class<? extends ElasticActor<?>>> managedActorClasses;
 
     @Override
     @PostConstruct
@@ -59,6 +61,16 @@ public final class SingletonActorsScanner implements SingletonActorsRegistry {
                 .stream()
                 .filter(ElasticActor.class::isAssignableFrom)
                 .filter(c -> c.isAnnotationPresent(Actor.class))
+                .filter(c -> !c.isAnnotationPresent(ManagedActor.class))
+                .filter(c -> !c.isAnnotationPresent(ServiceActor.class))
+                .map(c -> (Class<? extends ElasticActor<?>>) c)
+                .collect(Collectors.toList());
+
+        this.managedActorClasses = reflections.getTypesAnnotatedWith(ManagedActor.class)
+                .stream()
+                .filter(ElasticActor.class::isAssignableFrom)
+                .filter(c -> c.isAnnotationPresent(Actor.class))
+                .filter(c -> !c.isAnnotationPresent(SingletonActor.class))
                 .filter(c -> !c.isAnnotationPresent(ServiceActor.class))
                 .map(c -> (Class<? extends ElasticActor<?>>) c)
                 .collect(Collectors.toList());
@@ -67,5 +79,10 @@ public final class SingletonActorsScanner implements SingletonActorsRegistry {
     @Override
     public List<Class<? extends ElasticActor<?>>> getSingletonActorClasses() {
         return singletonActorClasses;
+    }
+
+    @Override
+    public List<Class<? extends ElasticActor<?>>> getManagedActorClasses() {
+        return managedActorClasses;
     }
 }

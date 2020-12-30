@@ -23,8 +23,8 @@ import com.google.common.cache.CacheBuilder;
 import org.elasticsoftware.elasticactors.ActorLifecycleListenerRegistry;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.ManagedActorsRegistry;
 import org.elasticsoftware.elasticactors.ShardKey;
-import org.elasticsoftware.elasticactors.SingletonActorsRegistry;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
@@ -41,9 +41,9 @@ import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory
 import org.elasticsoftware.elasticactors.logging.LogLevel;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
+import org.elasticsoftware.elasticactors.runtime.ManagedActorsScanner;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
-import org.elasticsoftware.elasticactors.runtime.SingletonActorsScanner;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
@@ -123,9 +123,9 @@ public class NodeConfiguration {
         return new SystemSerializationFramework(serializationFrameworks);
     }
 
-    @Bean(name = {"singletonActorsScanner"})
-    public SingletonActorsScanner createSingletonActorsScanner() {
-        return new SingletonActorsScanner();
+    @Bean(name = {"managedActorsScanner"})
+    public ManagedActorsScanner createManagedActorsScanner() {
+        return new ManagedActorsScanner();
     }
 
     @Bean(name = {"messagesScanner"})
@@ -161,7 +161,7 @@ public class NodeConfiguration {
             NodeActorCacheManager nodeActorCacheManager,
             ActorLifecycleListenerRegistry actorLifecycleListenerRegistry,
             PersistentActorStoreFactory persistentActorStoreFactory,
-            SingletonActorsRegistry singletonActorsRegistry) {
+            ManagedActorsRegistry managedActorsRegistry) {
         final int workers = env.getProperty("ea.shardThreads.workerCount",Integer.class,
                 Runtime.getRuntime().availableProcessors());
         final String bootstrapServers = env.getRequiredProperty("ea.kafka.bootstrapServers");
@@ -188,7 +188,7 @@ public class NodeConfiguration {
                 actorLifecycleListenerRegistry,
                 persistentActorStoreFactory,
                 onUnhandledLogLevel,
-                singletonActorsRegistry);
+                managedActorsRegistry);
     }
 
     @Bean(name = {"internalActorSystemHealthCheck"})

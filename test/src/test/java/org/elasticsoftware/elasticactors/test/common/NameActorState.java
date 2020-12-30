@@ -6,19 +6,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.elasticsoftware.elasticactors.base.state.JacksonActorState;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class SingletonNameActorState extends JacksonActorState<SingletonNameActorState> {
+public class NameActorState extends JacksonActorState<NameActorState> {
 
-    public final static String ACTOR_ID = "testSingletonActor";
     public static final String DEFAULT_NAME = "DEFAULT_NAME";
 
     private String name;
 
-    public SingletonNameActorState() {
+    public NameActorState() {
         this(DEFAULT_NAME);
     }
 
     @JsonCreator
-    public SingletonNameActorState(@JsonProperty("name") String name) {
+    public NameActorState(@JsonProperty("name") String name) {
         this.name = name;
     }
 
@@ -31,7 +30,7 @@ public class SingletonNameActorState extends JacksonActorState<SingletonNameActo
     }
 
     @Override
-    public SingletonNameActorState getBody() {
+    public NameActorState getBody() {
         return this;
     }
 }
