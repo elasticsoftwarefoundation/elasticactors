@@ -43,7 +43,7 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public abstract class MethodActor extends TypedActor<Object> implements PersistenceAdvisor {
-    private static final Comparator<HandlerMethodDefinition> ORDER_COMPARATOR = Comparator.comparing(m -> m.order);
+    private static final Comparator<HandlerMethodDefinition> ORDER_COMPARATOR = Comparator.comparingInt(m -> m.order);
     private final Map<Class<?>,List<HandlerMethodDefinition>> handlerCache = new HashMap<>();
     @Nullable private final Class<? extends ActorState> stateClass;
 

@@ -20,8 +20,10 @@ import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.MessageHandler;
+import org.elasticsoftware.elasticactors.MessageHandlers;
 import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
+import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersRegistry;
 import org.elasticsoftware.elasticactors.test.common.EchoGreetingActor;
 import org.elasticsoftware.elasticactors.test.common.Greeting;
 
@@ -32,25 +34,39 @@ import static org.testng.Assert.assertEquals;
  * @author Joost van de Wijgerd
  */
 @Actor(serializationFramework = JacksonSerializationFramework.class)
+@MessageHandlers(registryClass = PluggableMessageHandlersRegistry.class, value = {AfterHandlers.class, BeforeHandlers.class})
 public class AskForGreetingActor extends MethodActor {
-    @MessageHandler
-    public void handle(AskForGreeting greeting, ActorSystem actorSystem, ActorRef replyActor) {
-        try {
-            ActorRef echo = actorSystem.actorOf("echo", EchoGreetingActor.class);
-            logger.info("Got REQUEST in Thread {}", Thread.currentThread().getName());
-            assertEquals(
-                    getManager().currentMethodContext(),
-                    AskForGreetingActor.class.getMethod(
-                            "handle",
-                            AskForGreeting.class,
-                            ActorSystem.class,
-                            ActorRef.class));
-            echo.ask(new Greeting("echo"), Greeting.class, greeting.getPersistOnResponse()).whenComplete((g, throwable) -> {
-                logger.info("Got REPLY in Thread {}", Thread.currentThread().getName());
-                replyActor.tell(g);
-            });
-        } catch(Exception e) {
-            
-        }
+
+    static final ThreadLocal<Integer> messageHandlerCounter = ThreadLocal.withInitial(() -> 0);
+
+    @Override
+    public void onReceive(ActorRef sender, Object message) throws Exception {
+        messageHandlerCounter.remove();
+        super.onReceive(sender, message);
+    }
+
+    @MessageHandler(order = 0)
+    public void handle(AskForGreeting greeting, ActorSystem actorSystem, ActorRef replyActor) throws Exception {
+        ActorRef echo = actorSystem.actorOf("echo", EchoGreetingActor.class);
+        logger.info("Got REQUEST in Thread {}", Thread.currentThread().getName());
+        checkHandlerOrder(1);
+        assertEquals(
+                getManager().currentMethodContext(),
+                AskForGreetingActor.class.getMethod(
+                        "handle",
+                        AskForGreeting.class,
+                        ActorSystem.class,
+                        ActorRef.class));
+        echo.ask(new Greeting("echo"), Greeting.class, greeting.getPersistOnResponse())
+                .whenComplete((g, throwable) -> {
+                    logger.info("Got REPLY in Thread {}", Thread.currentThread().getName());
+                    replyActor.tell(g);
+                });
+    }
+
+    static void checkHandlerOrder(int i) {
+        int currentHandler = messageHandlerCounter.get();
+        assertEquals(i, currentHandler);
+        messageHandlerCounter.set(currentHandler + 1);
     }
 }
