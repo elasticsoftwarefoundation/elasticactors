@@ -30,11 +30,15 @@ public interface ManagedActorsRegistry {
 
     /**
      * Return classes that are annotated with {@link SingletonActor}
+     *
+     * @return the classes that are annotated with {@link SingletonActor}
      */
     List<Class<? extends ElasticActor<?>>> getSingletonActorClasses();
 
     /**
      * Return classes that are annotated with {@link ManagedActor}
+     *
+     * @return the classes that are annotated with {@link ManagedActor}
      */
     List<Class<? extends ElasticActor<?>>> getManagedActorClasses();
 }

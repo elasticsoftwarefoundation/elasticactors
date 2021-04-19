@@ -44,7 +44,8 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
     /**
      * Create an executor with numberOfThreads worker threads.
      *
-     * @param numberOfThreads
+     * @param threadFactory the thread factory to be used in this executor
+     * @param numberOfThreads the number of worker threads
      */
     public ThreadBoundExecutorImpl(ThreadFactory threadFactory, int numberOfThreads) {
         this(new ThreadBoundRunnableEventProcessor(),1,threadFactory,numberOfThreads);

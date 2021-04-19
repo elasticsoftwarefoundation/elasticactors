@@ -16,7 +16,11 @@
 
 package org.elasticsoftware.elasticactors;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author Joost van de Wijgerd
@@ -40,7 +44,7 @@ public @interface MessageHandler {
     /**
      * The order of this {@link MessageHandler} withing the chain of handlers. The lower the value, the higher the order.
      *
-     * @return
+     * @return the order of this {@link MessageHandler} withing the chain of handlers
      */
     int order() default LOWEST_PRECEDENCE;
 }

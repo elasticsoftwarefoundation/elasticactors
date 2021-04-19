@@ -26,50 +26,58 @@ public interface SerializationFramework {
     /**
      * Register a message class with the framework
      *
-     * @param messageClass
+     * @param messageClass the message class to be registered
      */
     void register(Class<?> messageClass);
 
     /**
      * Return the correct serializer for the passed in message class
      *
-     * @param messageClass
-     * @param <T>
-     * @return
+     * @param messageClass the message class for which to get the serializer
+     * @param <T> the message class for which to get the serializer
+     * @return the correct serializer for the given message class
      */
     <T> MessageSerializer<T> getSerializer(Class<T> messageClass);
 
     /**
      * Return the correct String serializer for the passed message class
-     * @param messageClass
-     * @return
+     *
+     * @param messageClass the message class for which to get the serializer
+     * @param <T> the message class for which to get the serializer
+     * @return the correct String serializer for the given message class
      */
     <T> MessageToStringSerializer<T> getToStringSerializer(Class<T> messageClass);
 
     /**
      * Return the correct deserializer for the specified message class
      *
-     * @param messageClass
-     * @param <T>
-     * @return
+     * @param messageClass the message class for which to get the deserializer
+     * @param <T> the message class for which to get the serializer
+     * @return the correct deserializer for the given message class
      */
     <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass);
 
     /**
      * Return the serializer for the actor state
      *
-     * @param actorClass
-     * @return
+     * @param actorClass the actor class for which to get the serializer
+     * @return the correct serializer for the given actor's state class
      */
     Serializer<ActorState, byte[]> getActorStateSerializer(Class<? extends ElasticActor> actorClass);
 
+    /**
+     * Return the serializer for the actor state
+     *
+     * @param actorState the state object for which to get a serializer
+     * @return the correct serializer for the given actor state object's type
+     */
     Serializer<ActorState, byte[]> getActorStateSerializer(ActorState actorState);
 
     /**
-     * Return the deserializer for the specified actor class
+     * Return the deserializer for the actor state
      *
-     * @param actorClass
-     * @return
+     * @param actorClass the actor class for which to get the deserializer
+     * @return the correct deserializer for the given actor's state class
      */
     Deserializer<byte[], ActorState> getActorStateDeserializer(Class<? extends ElasticActor> actorClass);
 }

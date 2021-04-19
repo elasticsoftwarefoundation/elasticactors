@@ -20,7 +20,7 @@ package org.elasticsoftware.elasticactors.serialization;
  * A serializer that converts a message to a String. Its primary usage is logging messages that
  * cause unexpected exceptions.
  *
- * <br/><br/>
+ * <br><br>
  * Implementations are required to:
  * <ol>
  *     <li>Use the {@link Object#toString()} method when {@value #LOGGING_USE_TO_STRING_PROPERTY}
@@ -30,7 +30,7 @@ package org.elasticsoftware.elasticactors.serialization;
  *     <li>Prefix overflowing content with {@value #CONTENT_TOO_BIG_PREFIX}.</li>
  * </ol>
  *
- * <br/><br/>
+ * <br><br>
  * <strong>IMPORTANT:</strong> due to the fact messages can potentially contain sensitive data,
  * implementations should be careful not to expose such data in the converted message body.
  */
@@ -43,6 +43,10 @@ public interface MessageToStringSerializer<T> {
 
     /**
      * Serializes a message into a String
+     *
+     * @param message the message object
+     * @return the message serialized into a String
+     * @throws Exception if something unexpected happens
      */
     String serialize(T message) throws Exception;
 }

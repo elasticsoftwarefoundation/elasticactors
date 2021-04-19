@@ -16,7 +16,11 @@
 
 package org.elasticsoftware.elasticactors;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Use this annotation to annotate methods of {@link ServiceActor} actors to make these methods run on a
@@ -30,9 +34,9 @@ import java.lang.annotation.*;
 @Documented
 public @interface Asynchronous {
     /**
-     * Can be used to qualify the executor used, by default set to asyncExecutor
+     * Can be used to qualify the executor used, by default set to {@code "asyncExecutor"}
      *
-     * @return
+     * @return the qualifier for the executed to be used, by default set to {@code "asyncExecutor"}
      */
     String value() default "asyncExecutor";
 }

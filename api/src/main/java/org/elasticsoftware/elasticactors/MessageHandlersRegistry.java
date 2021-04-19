@@ -32,8 +32,8 @@ public interface MessageHandlersRegistry {
      * Return classes that are annotated with {@link PluggableMessageHandlers} which have the
      * {@link org.elasticsoftware.elasticactors.PluggableMessageHandlers#value()} set to the given parameter type
      *
-     * @param methodActor
-     * @return
+     * @param methodActor actor type for which to get {@link PluggableMessageHandlers} for
+     * @return classes that are annotated with {@link PluggableMessageHandlers} for the actor type
      */
     public List<Class<?>> getMessageHandlers(Class<? extends MethodActor> methodActor);
 }

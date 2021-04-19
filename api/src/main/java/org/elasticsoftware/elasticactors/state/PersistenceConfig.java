@@ -16,7 +16,11 @@
 
 package org.elasticsoftware.elasticactors.state;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 import static org.elasticsoftware.elasticactors.state.ActorLifecycleStep.ACTIVATE;
 import static org.elasticsoftware.elasticactors.state.ActorLifecycleStep.CREATE;
@@ -34,10 +38,10 @@ import static org.elasticsoftware.elasticactors.state.ActorLifecycleStep.CREATE;
 public @interface PersistenceConfig {
     /**
      * Determine what persistence strategy is after a message is handled. This can be fine-tuned by using
-     * {@link #excluded()} array when {@link #persistOnMessages()} is true (the default) and {@link #included()}
+     * {@link #excluded()} array when {@code persistOnMessages} is true (the default) and {@link #included()}
      * when this field is false
      *
-     * @return
+     * @return true if the actor state is to be persisted after handling messages
      */
     boolean persistOnMessages() default true;
 
@@ -47,7 +51,8 @@ public @interface PersistenceConfig {
      *
      * Only used when {@link #persistOnMessages()} is true;
      *
-     * @return
+     * @return a list of message classes that will not lead to a state change in the actor so the
+     * state will not be saved after this message type is handled.
      */
     Class<?>[] excluded() default {};
 
@@ -57,7 +62,8 @@ public @interface PersistenceConfig {
      *
      * Only used when {@link #persistOnMessages()} is false;
      *
-     * @return
+     * @return a list of message classes that will always lead to a state change in the actor so the
+     * state will be saved after this message type is handled.
      */
     Class<?>[] included() default {};
 
@@ -68,8 +74,8 @@ public @interface PersistenceConfig {
      * @see org.elasticsoftware.elasticactors.ElasticActor#postCreate(org.elasticsoftware.elasticactors.ActorRef)
      * @see org.elasticsoftware.elasticactors.ElasticActor#postActivate(String)
      * @see org.elasticsoftware.elasticactors.ElasticActor#prePassivate()
-     * @see org.elasticsoftware.elasticactors.ElasticActor#preDestroy(org.elasticsoftware.elasticactors.ActorRef)  
-     * @return
+     * @see org.elasticsoftware.elasticactors.ElasticActor#preDestroy(org.elasticsoftware.elasticactors.ActorRef)
+     * @return a list of {@link ActorLifecycleStep} on which the actor's state will be persisted
      */
     ActorLifecycleStep[] persistOn() default {CREATE,ACTIVATE};
 }

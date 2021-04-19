@@ -30,7 +30,7 @@ public interface ActorSystems {
     /**
      * Retrieve the name of the local ElasticActors cluster
      *
-     * @return
+     * @return the name of the local ElasticActors cluster
      */
     String getClusterName();
 
@@ -66,7 +66,7 @@ public interface ActorSystems {
     /**
      * Register a {@link RebalancingEventListener} that can be used to listen to the rebalancing events (pre and post)
      *
-     * @param eventListener
+     * @param eventListener the {@link RebalancingEventListener} to be registered
      */
     void registerRebalancingEventListener(RebalancingEventListener eventListener);
 }

@@ -231,6 +231,8 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
 
     /**
      * This can only be set once, on actor initialization
+     *
+     * @param logLevel the {@link LogLevel} to be used for logging unhandled messages
      */
     public final void setOnUnhandledLogLevel(@Nonnull LogLevel logLevel) {
         if (this.onUnhandledLogLevel == null) {
@@ -242,6 +244,9 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
      * Method to execute when no handler method for a given message type is found.
      * The default implementation just logs it using the log level set using the {@value
      * #LOGGING_UNHANDLED_LEVEL_PROPERTY} property (default: {@value #DEFAULT_UNHANDLED_LEVEL_NAME})
+     *
+     * @param sender the sender of the message (as passed in {@link ActorRef#tell(Object, ActorRef)})
+     * @param message the message object
      */
     protected void onUnhandled(ActorRef sender, Object message) {
         LogLevel logLevel =

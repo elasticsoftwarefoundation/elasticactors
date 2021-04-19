@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 
 /**
  * Marks a persistent actor as a Singleton Actor (i.e. one, and only one instance will exist).
- * <br/>
+ * <br>
  * The framework will guarantee that:
  * <ol>
  * <li>If not created yet, an actor of this type and with this ID will be created</li>
@@ -33,7 +33,7 @@ import java.lang.annotation.Target;
  * </ol>
  * The initial state of this actor will be determined by the
  * {@link SingletonActor#initialStateProvider()} parameter.
- * <br/>
+ * <br>
  * The default implementation uses the default constructor of the state class.
  */
 @Documented
@@ -43,12 +43,16 @@ public @interface SingletonActor {
 
     /**
      * The Actor ID
+     *
+     * @return the Actor ID
      */
     String value();
 
     /**
      * Implementation of {@link InitialStateProvider} used to create the initial actor state.
      * The default implementation uses the default no-args constructor in the state class.
+     *
+     * @return the implementation of {@link InitialStateProvider} used to create the initial actor state.
      */
     Class<? extends InitialStateProvider> initialStateProvider() default InitialStateProvider.Default.class;
 }

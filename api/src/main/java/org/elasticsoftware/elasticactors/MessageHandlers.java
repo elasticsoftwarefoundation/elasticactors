@@ -16,7 +16,11 @@
 
 package org.elasticsoftware.elasticactors;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * This annotation can be used on an Actor class that extends {@link MethodActor}. The specified classed in {@link #value()} will
@@ -34,7 +38,7 @@ public @interface MessageHandlers {
      * Array of classes that will be inspected for {@link java.lang.reflect.Method}s that are annotated with
      * {@link MessageHandler}
      *
-     * @return
+     * @return the array of classes that will be inspected
      */
     Class<?>[] value();
     /**
@@ -44,7 +48,7 @@ public @interface MessageHandlers {
      * subsequently the {@link org.elasticsoftware.elasticactors.MessageHandlersRegistry#getMessageHandlers(Class)} will be
      * used to obtain a list of classes.
      *
-     * @return
+     * @return another extension point that can be used to load classes that have {@link MessageHandler} methods at runtime
      */
     Class<? extends  MessageHandlersRegistry> registryClass() default NoopMessageHandlersRegistry.class;
 

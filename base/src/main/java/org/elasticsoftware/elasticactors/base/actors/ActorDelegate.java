@@ -207,11 +207,11 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
 
         /**
          * Adds a message consumer for any message types not covered by the current consumers.
-         * <br/><br/>
+         * <br><br>
          *
          * Note that, if no consumer for unexpected types is provided, the actor will throw an
          * {@link UnexpectedResponseTypeException} if a message of an unknown type is received.
-         * <br/><br/>
+         * <br><br>
          *
          * A convenience constant for when such behavior is not desired is provided with
          * {@link MessageConsumer#noop()}
@@ -262,7 +262,7 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
     public interface OnUndeliverableStep<D> extends BuildStep<D> {
 
         /**
-         * Adds a message consumer for undeliverable messages. <br/>
+         * Adds a message consumer for undeliverable messages. <br>
          *
          * Note that, if no consumer for undeliverable messages is set, the actor will throw an
          * {@link ActorNotFoundException} if the message could not be delivered.
@@ -289,10 +289,10 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
 
         /**
          * Convenience function for stopping the actor.
-         * <br/><br/>
-         * <strong>This only works inside actor context.</strong><br/>
+         * <br><br>
+         * <strong>This only works inside actor context.</strong><br>
          * The point of this method is to make stopping an ActorDelegate cleaner.
-         * <br/><br/>
+         * <br><br>
          * Example:
          * <pre>{@code builder.onReceive(MessageClass.class, m -> {
          *     doSomething(m);

@@ -26,11 +26,11 @@ import java.util.concurrent.CompletionStage;
  * can be obtained by using the sender field from {@link ElasticActor#onReceive(ActorRef, Object)} or by getting an
  * {@link ActorRef} from the various methods on {@link ActorSystem}.
  *
- * An {@link ActorRef} in serialized form looks as follows:<br/>
+ * An {@link ActorRef} in serialized form looks as follows:<br>
  *
- * (Normal) Actors: actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId><br/>
- * Service Actors: actor://<cluster>/<actorSystem>/nodes/<nodeId>/<serviceId><br/>
- * Temporary Actors: actor://<cluster>/<actorSystem>/nodes/<nodeId>/<actorId><br/>
+ * (Normal) Actors: {@code actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId>}<br>
+ * Service Actors: {@code actor://<cluster>/<actorSystem>/nodes/<nodeId>/<serviceId>}<br>
+ * Temporary Actors: {@code actor://<cluster>/<actorSystem>/nodes/<nodeId>/<actorId>}<br>
  *
  *
  * @see     ActorSystem#actorFor(String)
@@ -44,9 +44,9 @@ public interface ActorRef {
     String getActorCluster();
     /**
      * The path of an actor is the Shard (or Node) where the actor is located. It looks like:
-     * <actorSystem>/shards/<shardId> or <actorSystem>/nodes/<nodeId>
+     * {@code <actorSystem>/shards/<shardId>} or {@code <actorSystem>/nodes/<nodeId>}
      *
-     * @return  the actor path
+     * @return  the actor path as a string
      */
     String getActorPath();
 
@@ -85,19 +85,20 @@ public interface ActorRef {
      *
      * @param message       the message to send (needs to be annotated with {@link org.elasticsoftware.elasticactors.serialization.Message}
      * @param responseType  the expected message type of the response
-     * @return              a CompletableFuture that completes with the response message
+     * @param <T>           the expected message type of the response
+     * @return              a {@link CompletionStage} that completes with the response message
      */
     <T> CompletionStage<T> ask(Object message, Class<T> responseType);
 
     /**
-     * Send a message to an {@link ElasticActor} and request a response. when {@param persistOnResponse} is {@link Boolean#TRUE}
+     * Send a message to an {@link ElasticActor} and request a response. When {@code persistOnResponse} is {@link Boolean#TRUE}
      * the calling actor's state (if it's a persistent actor) will be saved.
      *
-     * @param message
-     * @param responseType
-     * @param persistOnResponse
-     * @param <T>
-     * @return
+     * @param message the message to send (needs to be annotated with {@link org.elasticsoftware.elasticactors.serialization.Message}
+     * @param responseType the expected message type of the response
+     * @param persistOnResponse is true, the calling actor's state (if it's a persistent actor) will be saved
+     * @param <T> the expected message type of the response
+     * @return a {@link CompletionStage} that completes with the response message
      */
     <T> CompletionStage<T> ask(Object message, Class<T> responseType, Boolean persistOnResponse);
 
@@ -111,21 +112,21 @@ public interface ActorRef {
     boolean isLocal();
 
     /**
-     * Returns a view of the referenced Actor as a {@link Publisher} of messages of type T. When this method is called
+     * Returns a view of the referenced Actor as a {@link Publisher} of messages of type {@code T}. When this method is called
      * from within a {@link ActorContext} (i.e. when executing {@link ElasticActor#onReceive(ActorRef, Object)} or any
      * of the other {@link ElasticActor} lifecycle methods) the supplied {@link org.reactivestreams.Subscriber} should
-     * have been obtained by calling {@link ElasticActor#asSubscriber(Class)} on the calling actor.
+     * have been obtained by calling {@link ElasticActor#asSubscriber(Class)} on the calling actor.<br><br>
      *
      * Because the {@link org.reactivestreams.Subscription} is persistent, the framework will call
-     * {@link ElasticActor#asSubscriber(Class)} when deserializing the state of the calling actor.
+     * {@link ElasticActor#asSubscriber(Class)} when deserializing the state of the calling actor.<br><br>
      *
      * It is also required for the supplied {@link org.reactivestreams.Subscriber} to extend {@link TypedSubscriber} when
      * called within a {@link ActorContext} to ensure that the implementation has access to the correct
      * {@link SubscriberContext}
      *
-     * @param messageClass
-     * @param <T>
-     * @return
+     * @param messageClass the message type the actor is expected to publish
+     * @param <T> the message type the actor is expected to publish
+     * @return a view of the referenced Actor as a {@link Publisher} of messages of type {@code T}
      */
     <T> Publisher<T> publisherOf(Class<T> messageClass);
 }

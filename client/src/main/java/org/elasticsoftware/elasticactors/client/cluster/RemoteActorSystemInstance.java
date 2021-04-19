@@ -99,7 +99,7 @@ public final class RemoteActorSystemInstance
 
     /**
      * A specialization of {@link ActorSystem#actorOf(String, String, ActorState, ActorRef)} for a
-     * RemoteActorSystem. <br/><br/>
+     * RemoteActorSystem. <br><br>
      * <strong>
      * The creatorRef is always ignored.
      * </strong>

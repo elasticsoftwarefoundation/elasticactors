@@ -47,17 +47,17 @@ public interface ElasticActor<T> {
     /**
      * Called before an instance of the {@link ElasticActor} is loaded in to memory. This hook gives developers a chance to make changes to the
      * {@link ActorState} structure. The raw bytes are passed in as well as an instance of the {@link SerializationFramework}.
-     * This framework is configured via {@link org.elasticsoftware.elasticactors.Actor#serializationFramework()}.
+     * This framework is configured via {@link org.elasticsoftware.elasticactors.Actor#serializationFramework()}.<br><br>
      *
      * The versions are strings that passed in come from the {@link java.util.jar.Manifest} file, Implementation-Version attribute.
      * The version format is determined by the application and is set to UNKNOWN if it cannot be determined from the Manifest
      *
      * @param previousVersion           the previous version of the {@link ActorState}
      * @param currentVersion            the current version of the application
-     * @param serializedForm
-     * @param serializationFramework
-     * @return
-     * @throws Exception
+     * @param serializedForm            the serialized form of the actor's state object
+     * @param serializationFramework    the serialization framework used to deserialize this actor's state
+     * @return                          the {@link ActorState} object after being processed
+     * @throws Exception                when something unexpected happens
      */
     ActorState preActivate(String previousVersion,String currentVersion,byte[] serializedForm,SerializationFramework serializationFramework) throws Exception;
 
@@ -121,6 +121,7 @@ public interface ElasticActor<T> {
      * Will be called exactly once in the  lifecycle of an Actor.
      * Access to the {@link ActorContext} can be obtained by using the {@link ActorContextHolder} methods
      *
+     * @param destroyer     the {@link ActorRef} of the actor that requested this actor's destruction, if any
      * @throws Exception    when something unexpected happens
      * @see                 org.elasticsoftware.elasticactors.ActorContextHolder#getSelf()
      * @see                 ActorContextHolder#getState(Class)
@@ -133,16 +134,16 @@ public interface ElasticActor<T> {
      * implementation will return a {@link TypedActor.DefaultSubscriber} that will delegate the
      * {@link Subscriber#onNext(Object)} to {@link TypedActor#onReceive(ActorRef, Object)} so normal messaging
      * semantics can be observed. When custom handling is needed override this method and return an implementation
-     * that extends the {@link TypedSubscriber} abstract class.
+     * that extends the {@link TypedSubscriber} abstract class.<br><br>
      *
      * Similar to implementing an actor the {@link TypedSubscriber} should not have any state. Instead the
-     * {@link TypedSubscriber#getState(Class)} should be used to access the {@link ActorState}
+     * {@link TypedSubscriber#getState(Class)} should be used to access the {@link ActorState}<br><br>
      *
      * NOTE: calling this method will only work of the implementing class has the {@link Actor} annotation. Otherwise
      * this method will throw an {@link IllegalStateException}
      *
-     * @param messageClass
-     * @param <MT>
+     * @param messageClass  the message class to create a subscriber for
+     * @param <MT>          the message class to create a subscriber for
      * @return              A {@link Subscriber} implementation
      * @throws  IllegalStateException if the implementing class is not annotated with {@link Actor}
      */

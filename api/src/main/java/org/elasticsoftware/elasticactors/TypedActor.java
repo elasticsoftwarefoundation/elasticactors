@@ -137,6 +137,9 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
 
     /**
      * Safely serializes the contents of a message to a String
+     *
+     * @param message the message object
+     * @return the message object serialized to a String, or {@code null} if a {@link MessageToStringSerializer} is not set or an error occurs
      */
     protected final String serializeToString(T message) {
         MessageToStringSerializer<T> messageToStringSerializer =
@@ -159,8 +162,13 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
             new ThreadLocal<>();
 
     /**
-     * Internal implementation of {@link ElasticActor::onReceive} to enable logging offending
+     * Internal implementation of {@link ElasticActor#onReceive} to enable logging offending
      * messages when an unexpected exception occurs
+     *
+     * @param sender the sender of the message (as passed in {@link ActorRef#tell(Object, ActorRef)})
+     * @param message the message object
+     * @param messageToStringSerializer the serialized to use for serializing this message
+     * @throws Exception when something unexpected happens
      */
     public final void onReceive(
             ActorRef sender,

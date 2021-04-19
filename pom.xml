@@ -17,14 +17,37 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.elasticsoftware.elasticactors</groupId>
+    <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
     <artifactId>elasticactors-parent</artifactId>
     <version>2.7.1-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
     <name>Elastic Software Foundation :: ElasticActors</name>
+    <description>Persistent Stateful Actor System</description>
     <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Joost van de Wijgerd</name>
+            <email>jwijgerd@gmail.com</email>
+            <organization>Elastic Software Foundation</organization>
+            <organizationUrl>https://elasticsoftwarefoundation.org</organizationUrl>
+        </developer>
+        <developer>
+            <name>Andre Brait</name>
+            <email>andrebrait@gmail.com</email>
+            <organization>Elastic Software Foundation</organization>
+            <organizationUrl>https://elasticsoftwarefoundation.org</organizationUrl>
+        </developer>
+    </developers>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -82,12 +105,13 @@
     </scm>
 
     <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
         <repository>
-            <id>bintray</id>
-            <name>elasticsoftwarefoundation-maven-org.elasticsoftware.elasticactors</name>
-            <url>
-                https://api.bintray.com/maven/elasticsoftwarefoundation/maven/org.elasticsoftware.elasticactors
-            </url>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
 
@@ -115,77 +139,77 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>elasticactors-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>elasticactors-base</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>backplane-cassandra-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>backplane-cassandra</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>backplane-cassandra2</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>cluster-kubernetes</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>cluster-shoal</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>elasticactors-messaging</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>elasticactors-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>elasticactors-kafka</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>messaging-rabbitmq</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>elasticactors-runtime</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>elasticactors-spi</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>elasticactors-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.elasticsoftware.elasticactors</groupId>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>elasticactors-tracing</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -603,12 +627,17 @@
                     <version>3.2.2</version>
                 </plugin>
                 <plugin>
-                    <artifactId>maven-gpg-plugin</artifactId>
-                    <version>1.6</version>
+                    <groupId>org.simplify4u.plugins</groupId>
+                    <artifactId>sign-maven-plugin</artifactId>
+                    <version>0.3.1</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>3.1.1</version>
+                    <configuration>
+                        <source>8</source>
+                        <excludePackageNames>org.elasticsoftware.elasticactors.serialization.protobuf:org.elasticsoftware.elasticactors.cluster.protobuf</excludePackageNames>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -639,6 +668,11 @@
                     <groupId>com.googlecode.maven-download-plugin</groupId>
                     <artifactId>download-maven-plugin</artifactId>
                     <version>1.5.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>1.6.7</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -673,7 +707,7 @@
                         <id>attach-source</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>jar-no-fork</goal>
                         </goals>
                         <configuration>
                             <attach>true</attach>
@@ -743,8 +777,10 @@
                     </dependency>
                 </dependencies>
                 <configuration>
+                    <goals>install</goals>
+                    <!-- Prevents running the deploy goal during release:perform -->
                     <useReleaseProfile>false</useReleaseProfile>
-                    <releaseProfiles>release</releaseProfiles>
+                    <releaseProfiles>maven-release</releaseProfiles>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <tagNameFormat>v@{project.version}</tagNameFormat>
                     <!-- When running a release build from bamboo, maven forks the actual release build.
@@ -774,6 +810,9 @@
                         <requireMavenVersion>
                             <version>3.0.5</version>
                         </requireMavenVersion>
+                        <requireJavaVersion>
+                            <version>1.8</version>
+                        </requireJavaVersion>
                         <banDuplicatePomDependencyVersions />
                         <dependencyConvergence />
                     </rules>
@@ -783,10 +822,54 @@
     </build>
     <profiles>
         <profile>
+            <id>maven-release</id>
+        </profile>
+        <profile>
+            <id>ci</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>release</id>
             <build>
                 <plugins>
-                    <!-- attach sources -->
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.simplify4u.plugins</groupId>
+                        <artifactId>sign-maven-plugin</artifactId>
+                        <configuration>
+                            <skipNoKey>false</skipNoKey>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <artifactId>maven-source-plugin</artifactId>
                         <executions>
@@ -794,7 +877,7 @@
                                 <id>attach-source</id>
                                 <phase>package</phase>
                                 <goals>
-                                    <goal>jar</goal>
+                                    <goal>jar-no-fork</goal>
                                 </goals>
                                 <configuration>
                                     <attach>true</attach>
@@ -802,31 +885,16 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <!--<plugin>
-                      <artifactId>maven-javadoc-plugin</artifactId>
-                      <executions>
-                        <execution>
-                          <id>attach-javadocs</id>
-                          <goals>
-                            <goal>jar</goal>
-                          </goals>
-                        </execution>
-                      </executions>
-                    </plugin>-->
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>remote_mq</id>
-            <build>
-                <plugins>
                     <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <systemPropertyVariables>
-                                <host>bux_mq</host>
-                            </systemPropertyVariables>
-                        </configuration>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

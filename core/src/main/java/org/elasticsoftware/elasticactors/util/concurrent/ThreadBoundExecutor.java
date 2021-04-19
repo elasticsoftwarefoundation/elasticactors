@@ -19,7 +19,7 @@ package org.elasticsoftware.elasticactors.util.concurrent;
 /**
  * ThreadBoundExecutor
  *
- * <p/>
+ * <p>
  * A thread bound executor guarantees that a runnable executed on the executor that has the same key
  * will always be executed by the same thread.
  *

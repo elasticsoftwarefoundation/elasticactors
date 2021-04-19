@@ -216,7 +216,9 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     /**
      * Distribute the shards over the list of physical nodes
      *
-     * @param nodes
+     * @param nodes the list of current physical nodes
+     * @param strategy the shard distribution strategy
+     * @throws Exception if something unexpected happens
      */
     @Override
     public void distributeShards(List<PhysicalNode> nodes, ShardDistributionStrategy strategy) throws Exception {

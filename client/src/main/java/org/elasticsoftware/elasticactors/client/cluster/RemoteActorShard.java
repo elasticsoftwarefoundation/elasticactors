@@ -78,7 +78,7 @@ final class RemoteActorShard implements ActorShard, MessageHandler {
 
     /**
      * A specialization of {@link ActorShard#sendMessage(ActorRef, ActorRef, Object)} for a
-     * RemoteActorShard. <br/><br/>
+     * RemoteActorShard. <br><br>
      * <strong>
      * The sender is always ignored.
      * </strong>
@@ -90,7 +90,7 @@ final class RemoteActorShard implements ActorShard, MessageHandler {
 
     /**
      * A specialization of {@link ActorShard#sendMessage(ActorRef, List, Object)} for a
-     * RemoteActorShard. <br/><br/>
+     * RemoteActorShard. <br><br>
      * <strong>
      * The sender is always ignored.
      * </strong>

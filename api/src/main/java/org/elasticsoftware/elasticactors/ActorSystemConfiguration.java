@@ -23,7 +23,7 @@ public interface ActorSystemConfiguration {
     /**
      * The name of this {@link ActorSystem}. The name has to be unique within the same cluster
      *
-     * @return
+     * @return the name of this {@link ActorSystem}
      */
     String getName();
 
@@ -31,22 +31,26 @@ public interface ActorSystemConfiguration {
      * The number of shards. This determines how big an {@link org.elasticsoftware.elasticactors.ActorSystem} can scale. If a cluster
      * contains more nodes than shards then not every node will have a shard.
      *
-     * @return
+     * @return the number of shards
      */
     int getNumberOfShards();
 
     /**
      * The version of the ActorSystem
      *
-     * @return
+     * @return the version of the ActorSystem
      */
     String getVersion();
 
     /**
      * Return the property value associated with the given key, or {@code null}
      * if the key cannot be resolved.
+     *
+     * @param component the component class for which the key is resolved
      * @param key the property name to resolve
      * @param targetType the expected type of the property value
+     * @param <T> the expected type of the property value
+     * @return the property value associated with the given key, or {@code null} if the key cannot be resolved.
      * @see #getRequiredProperty(Class, String, Class)
      */
     <T> T getProperty(Class component,String key, Class<T> targetType);
@@ -54,16 +58,26 @@ public interface ActorSystemConfiguration {
     /**
      * Return the property value associated with the given key, or
      * {@code defaultValue} if the key cannot be resolved.
+     *
+     * @param component the component class for which the key is resolved
      * @param key the property name to resolve
      * @param targetType the expected type of the property value
      * @param defaultValue the default value to return if no value is found
+     * @param <T> the expected type of the property value
+     * @return the property value associated with the given key, or {@code defaultValue} if the key cannot be resolved.
      * @see #getRequiredProperty(Class,String, Class)
      */
     <T> T getProperty(Class component,String key, Class<T> targetType, T defaultValue);
 
    	/**
    	 * Return the property value associated with the given key, converted to the given
-   	 * targetType (never {@code null}).
+   	 * {@code targetType} (never {@code null}).
+     *
+     * @param component the component class for which the key is resolved
+     * @param key the property name to resolve
+     * @param targetType the expected type of the property value
+     * @param <T> the expected type of the property value
+     * @return the property value associated with the given key, converted to the given {@code targetType} (never {@code null}).
    	 * @throws IllegalStateException if the given key cannot be resolved
    	 */
    	<T> T getRequiredProperty(Class component,String key, Class<T> targetType) throws IllegalStateException;

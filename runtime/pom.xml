@@ -16,7 +16,7 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>org.elasticsoftware.elasticactors</groupId>
+        <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
         <artifactId>elasticactors-parent</artifactId>
         <version>2.7.1-SNAPSHOT</version>
     </parent>
@@ -47,27 +47,27 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
             <artifactId>elasticactors-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
             <artifactId>elasticactors-base</artifactId>
         </dependency>
         <!-- this dependency is only here for compilation purposes -->
         <dependency>
-            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
             <artifactId>messaging-rabbitmq</artifactId>
             <scope>provided</scope>
         </dependency>
         <!-- this dependency is only here for compilation purposes -->
         <dependency>
-            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
             <artifactId>backplane-cassandra</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
             <artifactId>cluster-shoal</artifactId>
         </dependency>
         <dependency>
@@ -163,92 +163,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>sign</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <configuration>
-                            <useAgent>true</useAgent>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>dist</id>
-            <build>
-                <finalName>elasticactors-${project.version}</finalName>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <configuration>
-                            <!-- <filters>
-                                 <filter>src/assemble/filter.properties</filter>
-                             </filters>-->
-                            <descriptors>
-                                <descriptor>src/assemble/dist.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>make-assembly</id>
-                                <!-- this is used for inheritance merges -->
-                                <phase>package</phase>
-                                <!-- bind to the packaging phase -->
-                                <goals>
-                                    <goal>single</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>com.googlecode.maven-download-plugin</groupId>
-                        <artifactId>download-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>download-cassandra</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>wget</goal>
-                                </goals>
-                                <configuration>
-                                    <url>
-                                        http://apache.proserve.nl/cassandra/${cassandra.version}/apache-cassandra-${cassandra.version}-bin.tar.gz
-                                    </url>
-                                    <unpack>true</unpack>
-                                    <outputDirectory>
-                                        ${project.build.directory}/cassandra-${cassandra.version}
-                                    </outputDirectory>
-                                    <!-- this is for 1.2.4, so it will fail if the version is updated -->
-
-                                    <md5>${cassandra.version.md5}</md5>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.codehaus.plexus</groupId>
-                                <artifactId>plexus-utils</artifactId>
-                                <version>${plexus-utils.version}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-    </profiles>
 </project>

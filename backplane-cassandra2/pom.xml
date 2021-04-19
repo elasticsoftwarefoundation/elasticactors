@@ -16,7 +16,7 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>org.elasticsoftware.elasticactors</groupId>
+        <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
         <artifactId>elasticactors-parent</artifactId>
         <version>2.7.1-SNAPSHOT</version>
     </parent>
@@ -38,15 +38,15 @@
             <artifactId>lz4-java</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
             <artifactId>elasticactors-spi</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
             <artifactId>elasticactors-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.elasticsoftware.elasticactors</groupId>
+            <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
             <artifactId>backplane-cassandra-common</artifactId>
         </dependency>
         <dependency>

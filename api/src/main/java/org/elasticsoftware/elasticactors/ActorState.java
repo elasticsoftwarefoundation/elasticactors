@@ -29,15 +29,16 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
  */
 public interface ActorState<Body> {
     /**
+     * The body (the actual state)
      *
-     * @return  the body (the actual state)
+     * @return the body (the actual state)
      */
     Body getBody();
 
     /**
-     * Returns the type of the SerializationFramework that should be used to serialize this state class
+     * The type of the SerializationFramework that should be used to serialize this state class
      *
-     * @return
+     * @return the type of the SerializationFramework that should be used to serialize this state class
      */
     Class<? extends SerializationFramework> getSerializationFramework();
 }

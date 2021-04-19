@@ -20,7 +20,11 @@ import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramewor
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.state.NullActorState;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Use this annotation to mark a class as an Actor. The runtime uses this to determine the
@@ -41,14 +45,14 @@ public @interface Actor {
     /**
      * The class that implements the {@link ActorState} for this Actor
      *
-     * @return
+     * @return the class that implements the {@link ActorState} for this Actor
      */
     Class<? extends ActorState> stateClass() default NullActorState.class;
 
     /**
      * The {@link SerializationFramework} used to serialize and deserialize the {@link ActorState}
      *
-     * @return
+     * @return the {@link SerializationFramework} used to serialize and deserialize the {@link ActorState}
      */
     Class<? extends SerializationFramework> serializationFramework() default NoopSerializationFramework.class;
 }

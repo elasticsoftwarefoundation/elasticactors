@@ -5,27 +5,17 @@ Persistent Stateful Actor System
 
 ### Current released version
 
-[ ![Download](https://api.bintray.com/packages/elasticsoftwarefoundation/maven/org.elasticsoftware.elasticactors/images/download.svg) ](https://bintray.com/elasticsoftwarefoundation/maven/org.elasticsoftware.elasticactors/_latestVersion)
+![CI](https://github.com/elasticsoftwarefoundation/elasticactors/workflows/CI/badge.svg)
+[![License: Apache 2](https://img.shields.io/badge/LICENSE-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.txt)
+[![Maven Central](https://img.shields.io/maven-central/v/org.elasticsoftwarefoundation/elasticactors.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22org.elasticsoftwarefoundation%22%20AND%20a:%22elasticactors%22)
+[![Download](https://api.bintray.com/packages/elasticsoftwarefoundation/maven/org.elasticsoftware.elasticactors/images/download.svg) ](https://bintray.com/elasticsoftwarefoundation/maven/org.elasticsoftware.elasticactors/_latestVersion)
 
 ### Add Elastic Actors to your Project
 
-repository:
-```xml
-<repositories>
-    <repository>
-        <snapshots>
-            <enabled>false</enabled>
-        </snapshots>
-        <id>elasticsoftwarefoundation</id>
-        <name>bintray</name>
-        <url>http://dl.bintray.com/elasticsoftwarefoundation/maven</url>
-    </repository>
-</repositories>
-```
 minimal dependency:
 ```xml
 <dependency>
-    <groupId>org.elasticsoftware.elasticactors</groupId>
+    <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
     <artifactId>elasticactors-api</artifactId>
     <version>${elasticactors.version}</version>
 </dependency>
@@ -33,7 +23,7 @@ minimal dependency:
 convenient base classes inclusing a Jackson 2 based serialization framework:
 ```xml
 <dependency>
-    <groupId>org.elasticsoftware.elasticactors</groupId>
+    <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
     <artifactId>elasticactors-base</artifactId>
     <version>${elasticactors.version}</version>
 </dependency>

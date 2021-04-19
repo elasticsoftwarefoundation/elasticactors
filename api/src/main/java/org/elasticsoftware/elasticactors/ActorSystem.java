@@ -37,7 +37,7 @@ public interface ActorSystem {
     /**
      * The name of this {@link ActorSystem}. The name is unique within the same cluster
      *
-     * @return
+     * @return the name of this {@link ActorSystem}
      */
     String getName();
 
@@ -45,7 +45,7 @@ public interface ActorSystem {
      * Create a new {@link ElasticActor} of the given type. There will be no state passed (null). This is
      * an asynchronous method that could potentially fail. However the {@link ActorRef} is fully functional
      * and can be used to send messages immediately. All messages are handled on the same thread and will be
-     * executed in order from the perspective of the receiving {@link ElasticActor}<br/>
+     * executed in order from the perspective of the receiving {@link ElasticActor}<br>
      * This is a idempotent method, when an actor with the same actorId already exists, the method will silently
      * succeed. However the {@link ActorState} will NOT be overwritten.
      *
@@ -62,10 +62,10 @@ public interface ActorSystem {
      * Create a new {@link ElasticActor} of the given type. There will be no state passed (null). This is
      * an asynchronous method that could potentially fail. However the {@link ActorRef} is fully functional
      * and can be used to send messages immediately. All messages are handled on the same thread and will be
-     * executed in order from the perspective of the receiving {@link ElasticActor}<br/>
+     * executed in order from the perspective of the receiving {@link ElasticActor}<br>
      * This is a idempotent method, when an actor with the same actorId already exists, the method will silently
-     * succeed. However the {@link ActorState} will NOT be overwritten.
-     *
+     * succeed. However the {@link ActorState} will NOT be overwritten.<br>
+     * <br>
      * This method takes the name of the actor class as a parameter. This is mainly handy in the case where actors need
      * to be created on a remote ActorSystem. There is no strong type checking on the actor class and also no exception
      * will be thrown if the class doesn't exist on the remote end.
@@ -83,7 +83,7 @@ public interface ActorSystem {
      * Create a new {@link ElasticActor} of the given type with the given initial {@link ActorState}. This is
      * an asynchronous method that could potentially fail. However the {@link ActorRef} is fully functional
      * and can be used to send messages immediately. All messages are handled on the same thread and will be
-     * executed in order from the perspective of the receiving {@link ElasticActor}<br/>
+     * executed in order from the perspective of the receiving {@link ElasticActor}<br>
      * This is a idempotent method, when an actor with the same actorId already exists, the method will silently
      * succeed. However the {@link ActorState} will NOT be overwritten.
      *
@@ -100,10 +100,10 @@ public interface ActorSystem {
      * Create a new {@link ElasticActor} of the given type with the given initial {@link ActorState}. This is
      * an asynchronous method that could potentially fail. However the {@link ActorRef} is fully functional
      * and can be used to send messages immediately. All messages are handled on the same thread and will be
-     * executed in order from the perspective of the receiving {@link ElasticActor}<br/>
+     * executed in order from the perspective of the receiving {@link ElasticActor}<br>
      * This is a idempotent method, when an actor with the same actorId already exists, the method will silently
-     * succeed. However the {@link ActorState} will NOT be overwritten.
-     *
+     * succeed. However the {@link ActorState} will NOT be overwritten.<br>
+     * <br>
      * This method takes the name of the actor class as a parameter. This is mainly handy in the case where actors need
      * to be created on a remote ActorSystem. There is no strong type checking on the actor class and also no exception
      * will be thrown if the class doesn't exist on the remote end.
@@ -124,7 +124,7 @@ public interface ActorSystem {
      * Create a Temporary Actor with the given initial {@link ActorState}. A Temp Actor is an {@link ElasticActor}
      * instance that is annotated with {@link TempActor}. Temporary Actors are located on the Local ElasticActors
      * node only and will not survive a restart of the Node. Temporary Actors are most commonly used to bridge between
-     * two systems, for instance within a Controller. It will implement a Reply Address.<br/>
+     * two systems, for instance within a Controller. It will implement a Reply Address.<br>
      * A Temporary Actor will get and actorId assigned by the Runtime. The resulting {@link ActorRef} can be stored however
      * due to the ephemeral nature of the Temporary Actor this is not advisable.
      *
@@ -140,7 +140,7 @@ public interface ActorSystem {
      * Return an {@link ActorRef} to a (Standard) Actor. There is no guarantee that the Actor actually exists. If you need
      * to be sure that the Actor exists call: {@link ActorSystem#actorOf(String, Class, ActorState)}. This is an idempotent
      * operation that won't overwrite the {@link ActorState} if it already exists so it's safe to use in all cases. However
-     * there is significant overhead to this so if you are sure the the Actor exists then it's better to use this method.<br/>
+     * there is significant overhead to this so if you are sure the the Actor exists then it's better to use this method.<br>
      * This can be used only to get an {@link ActorRef} to a (Standard) {@link ElasticActor}.
      * For Service Actors use {@link ActorSystem#serviceActorFor(String)}
      *
@@ -163,12 +163,12 @@ public interface ActorSystem {
      * Return an {@link ActorRef} to a Service Actor on a(nother) node in the cluster.
      * There is no guarantee that the Service exists. However if you have
      * annotated an {@link ElasticActor} class with the {@link ServiceActor} annotation than the Runtime will ensure that
-     * the Service Actor was created<br/>
+     * the Service Actor was created<br>
      * This method should normally not be used unless you know the id's of the nodes in the cluster.
      *
-     * @param nodeId
-     * @param actorId
-     * @return
+     * @param nodeId the id of the node
+     * @param actorId the id of the Service Actor to reference
+     * @return the {@link ActorRef} to the Service Actor
      */
     ActorRef serviceActorFor(String nodeId, String actorId);
 
@@ -184,7 +184,7 @@ public interface ActorSystem {
      * Return the parent of this {@link ActorSystem}. Can be used to get access to {@link ActorSystem} instances on remote
      * ElasticActor clusters
      *
-     * @return
+     * @return the parent of this {@link ActorSystem}
      */
     ActorSystems getParent();
 
@@ -207,7 +207,7 @@ public interface ActorSystem {
 
     /**
      * The {@link ActorSystemEventListenerRegistry} can be used to register messages that will be sent when an event
-     * (as defined in {@link org.elasticsoftware.elasticactors.cluster.ActorSystemEvent} enum is triggered.
+     * (as defined in {@link org.elasticsoftware.elasticactors.cluster.ActorSystemEvent} enum is triggered.<br><br>
      *
      * The most interesting use case is to ensure that a certain Actor will always be activated when it's shard gets
      * initialized (by subscribing to the {@link org.elasticsoftware.elasticactors.cluster.ActorSystemEvent#ACTOR_SHARD_INITIALIZED}
@@ -219,13 +219,13 @@ public interface ActorSystem {
 
     /**
      * Creates a group of {@link org.elasticsoftware.elasticactors.ActorRef} instances that will all receive the
-     * same message. Can be used to efficiently broadcast messages to large groups of Actors.
+     * same message. Can be used to efficiently broadcast messages to large groups of Actors.<br><br>
      *
      * Cannot be used to group {@link org.elasticsoftware.elasticactors.TempActor}s or {@link org.elasticsoftware.elasticactors.ServiceActor}s
      *
      * @param members   The members that compose this group
      *
-     * @return
+     * @return a {@link ActorRefGroup} view of the group of {@link ActorRef}
      * @throws IllegalArgumentException if one of the members is not a Persistent Actor
      * (i.e. not created with {@link #actorOf(String, Class, ActorState)}, {@link #actorOf(String, Class)} or {@link #actorFor(String)}   }
      */

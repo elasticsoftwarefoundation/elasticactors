@@ -23,7 +23,7 @@ import org.elasticsoftware.elasticactors.serialization.Message;
  * allow thinner clients to interface with actor system without having to create classes for each
  * message type.
  *
- * <br/><br/>
+ * <br><br>
  * <strong>
  * Classes implementing this interface should not be annotation with {@link Message}
  * </strong>

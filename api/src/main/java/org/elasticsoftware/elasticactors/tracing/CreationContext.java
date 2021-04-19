@@ -37,6 +37,10 @@ public final class CreationContext {
      *
      * <br>
      * See {@link TracingUtils#shorten(String)}.
+     *
+     * @param creator the creator of this context
+     * @param creatorType the type of the creator of this context
+     * @param creatorMethod the method on which this context was created
      */
     public CreationContext(
             @Nullable String creator,
@@ -56,6 +60,10 @@ public final class CreationContext {
      *
      * <br>
      * See {@link TracingUtils#shorten(String)}.
+     *
+     * @param creator the creator of this context
+     * @param creatorType the type of the creator of this context
+     * @param creatorMethod the method on which this context was created
      */
     public CreationContext(
             @Nullable String creator,

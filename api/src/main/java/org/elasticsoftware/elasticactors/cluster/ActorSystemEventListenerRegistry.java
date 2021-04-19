@@ -31,6 +31,7 @@ public interface ActorSystemEventListenerRegistry {
      * @param   event       The type of event to subscribe to
      * @param   message     The message to send to the receiver when the event is triggered. Needs to be annotated with {@link org.elasticsoftware.elasticactors.serialization.Message})
      * @throws java.lang.IllegalStateException when this method ios not called in the context of an actor
+     * @throws IOException  when the message serialization fails
      */
     public void register(ActorRef receiver, ActorSystemEvent event, Object message) throws IOException;
 
@@ -40,6 +41,8 @@ public interface ActorSystemEventListenerRegistry {
      *
      * If there is currently no activation hook registered this method will silently fail.
      *
+     * @param   receiver    An {@link org.elasticsoftware.elasticactors.ActorRef} to a Persistent Actor (i.e. annotated with {@link org.elasticsoftware.elasticactors.Actor})
+     * @param   event       The type of event to unsubscribe from
      * @throws java.lang.IllegalStateException when this method not called in the context of an actor
      */
     public void deregister(ActorRef receiver, ActorSystemEvent event);

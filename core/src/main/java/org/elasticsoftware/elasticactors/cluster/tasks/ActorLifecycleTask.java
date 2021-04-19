@@ -231,6 +231,9 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
      * Return the actual message class that is being handled. By default this method will return
      * {@link InternalMessage#getPayloadClass()} but it can be overridden to support other protocols
      * that wrap the ultimate message being delivered.
+     *
+     * @param internalMessage the internal representation of this message
+     * @return the actual message class that is being handled, empty if it cannot be resolved
      */
     protected Optional<Class> unwrapMessageClass(InternalMessage internalMessage) {
         try {

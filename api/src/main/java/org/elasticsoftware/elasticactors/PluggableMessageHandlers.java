@@ -16,7 +16,11 @@
 
 package org.elasticsoftware.elasticactors;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * This annotation should be used on a class that contains {@link MessageHandler} methods. The ElasticActors runtime will
@@ -35,7 +39,7 @@ public @interface PluggableMessageHandlers {
      * the {@link PluggableMessageHandlers} annotation should be applied to. This can be used to extend the message
      * handling of an actor at runtime.
      *
-     * @return
+     * @return the {@link MethodActor} implementation that the {@link MessageHandler} should be applied to.
      */
     Class<? extends MethodActor> value();
 }

@@ -17,3 +17,7 @@
 # Other stuff
 *.bat
 target/
+
+*.versionsBackup
+*.releaseBackup
+release.properties

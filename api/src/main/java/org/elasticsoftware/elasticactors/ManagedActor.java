@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 
 /**
  * Marks a persistent actor as a Managed Actor (i.e. the framework will manage some instances).
- * <br/>
+ * <br><br>
  * The framework will guarantee that:
  * <ol>
  * <li>If not created yet, an actor of this type for each of the provided IDs will be created</li>
@@ -33,7 +33,7 @@ import java.lang.annotation.Target;
  * </ol>
  * The initial state of this actor will be determined by the
  * {@link ManagedActor#initialStateProvider()} parameter.
- * <br/>
+ * <br><br>
  * The default implementation uses the default constructor of the state class.
  */
 @Documented
@@ -43,18 +43,24 @@ public @interface ManagedActor {
 
     /**
      * The Actor IDs that must be managed by the framework.
+     *
+     * @return the Actor IDs that must be managed by the framework.
      */
     String[] value();
 
     /**
      * Implementation of {@link InitialStateProvider} used to create the initial actor state.
      * The default implementation uses the default no-args constructor in the state class.
+     *
+     * @return the implementation of {@link InitialStateProvider} used to create the initial actor state.
      */
     Class<? extends InitialStateProvider> initialStateProvider() default InitialStateProvider.Default.class;
 
     /**
-     * If true, ensures only the framework can create actors of these types.
+     * If true, ensures only the framework can create actors of the annotated type.
      * Set to false in order to allow other actors of this type to be created.
+     *
+     * @return true if only the framework can create actors of the annotated type.
      */
     boolean exclusive() default true;
 }

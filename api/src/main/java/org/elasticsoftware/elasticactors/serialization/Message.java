@@ -34,7 +34,7 @@ public @interface Message {
     /**
      * Determines which framework will be used to serialize and deserialize this message
      *
-     * @return
+     * @return the framework that will be used to serialize and deserialize this message
      */
     Class<? extends SerializationFramework> serializationFramework();
 
@@ -62,7 +62,7 @@ public @interface Message {
 
     /**
      * Determines how long a message stays queued up in the underlying messaging service. If it isn't consumed within
-     * {@link #timeout()} seconds it will not be delivered to the receiver.
+     * this number of seconds it will not be delivered to the receiver.
      *
      * This is useful for cases where the ActorSystem gets overloaded and can't keep up. Defaults to -1 (NO_TIMEOUT)
      *
@@ -76,14 +76,14 @@ public @interface Message {
      * framework (unless the {@value MessageToStringSerializer#LOGGING_USE_TO_STRING_PROPERTY}
      * property is set to {@code true}, in which case the {@link Object#toString()} method is used).
      *
-     * <br/><br/>
+     * <br><br>
      * The maximum length of the message as a String can be controlled using the {@value
      * MessageToStringSerializer#LOGGING_MAXIMUM_LENGTH_PROPERTY} property
      * (default: {@value MessageToStringSerializer#DEFAULT_MAX_LENGTH}).
      * Content that's too big will be trimmed and prefixed with the
      * string {@value MessageToStringSerializer#CONTENT_TOO_BIG_PREFIX}.
      *
-     * <br/><br/>
+     * <br><br>
      * <strong>IMPORTANT:</strong> due to the fact messages can potentially contain sensitive data,
      * think very carefully about which messages should be logged and which data should be exposed.
      *
