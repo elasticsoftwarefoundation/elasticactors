@@ -52,6 +52,7 @@ jobs:
         --file pom.xml
         --settings $GITHUB_WORKSPACE/settings.xml
         deploy
+        -DskipTests
         -Dmaven.install.skip=true
       env:
         MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
