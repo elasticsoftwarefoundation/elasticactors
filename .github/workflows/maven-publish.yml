@@ -40,6 +40,7 @@ jobs:
         --settings $GITHUB_WORKSPACE/settings.xml
         clean
         verify
+        -DskipTests
       env:
         SIGN_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
         SIGN_KEY_PASS: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
