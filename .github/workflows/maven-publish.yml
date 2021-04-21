@@ -52,8 +52,3 @@ jobs:
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         prerelease: false
-        files: |
-          - LICENSE.txt
-          - README.md
-          - *.jar
-          - *.jar.asc
