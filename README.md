@@ -7,7 +7,7 @@ Persistent Stateful Actor System
 
 ![CI](https://github.com/elasticsoftwarefoundation/elasticactors/workflows/CI/badge.svg)
 [![License: Apache 2](https://img.shields.io/badge/LICENSE-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.txt)
-[![Maven Central](https://img.shields.io/maven-central/v/org.elasticsoftwarefoundation/elasticactors.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22org.elasticsoftwarefoundation%22%20AND%20a:%22elasticactors%22)
+[![Maven Central](https://img.shields.io/maven-central/v/org.elasticsoftwarefoundation.elasticactors/elasticactors.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22org.elasticsoftwarefoundation.elasticactors%22%20AND%20a:%22elasticactors%22)
 
 ### Add Elastic Actors to your Project
 
