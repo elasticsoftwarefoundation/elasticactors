@@ -41,6 +41,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static org.awaitility.Awaitility.await;
@@ -71,8 +72,7 @@ public class IndexerTest {
                 .put("path.home", tmpElasticsearchHomeDir)
                 .put("cluster.name", "indexer-test-cluster")
                 .put("transport.type", "netty4")
-                .put("http.type", "netty4")
-                .put("http.enabled", true);
+                .put("http.type", "netty4");
 
         testNode = new PluginConfigurableNode(settings.build(), Collections.singletonList(Netty4Plugin.class));
         testNode.start();
@@ -232,12 +232,7 @@ public class IndexerTest {
 
     private static class PluginConfigurableNode extends Node {
         PluginConfigurableNode(Settings settings, Collection<Class<? extends Plugin>> classpathPlugins) {
-            super(InternalSettingsPreparer.prepareEnvironment(settings, null), classpathPlugins, false);
-        }
-
-        @Override
-        protected void registerDerivedNodeNameWithLogger(String nodeName) {
-
+            super(InternalSettingsPreparer.prepareEnvironment(settings, new HashMap<>(), null, null), classpathPlugins, false);
         }
     }
 
