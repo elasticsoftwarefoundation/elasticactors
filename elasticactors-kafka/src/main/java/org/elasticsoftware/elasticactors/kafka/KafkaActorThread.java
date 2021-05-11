@@ -29,6 +29,7 @@ import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.IsolationLevel;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.InterruptException;
@@ -92,6 +93,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -111,7 +113,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-import static org.apache.kafka.common.requests.IsolationLevel.READ_COMMITTED;
 import static org.elasticsoftware.elasticactors.kafka.utils.TopicNamesHelper.getNodeMessagesTopic;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
@@ -183,7 +184,7 @@ public final class KafkaActorThread extends Thread {
         this.actorSystemEventListenersTopic = TopicNamesHelper.getActorsystemEventListenersTopic(internalActorSystem);
         this.persistentActorsTopic = TopicNamesHelper.getPersistentActorsTopic(internalActorSystem);
         final Map<String, Object> consumerConfig = new HashMap<>();
-        consumerConfig.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "50");
+        consumerConfig.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "100");
         consumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         consumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         consumerConfig.put("internal.leave.group.on.close", false);
@@ -194,7 +195,7 @@ public final class KafkaActorThread extends Thread {
         // are losing the ability to detect them by setting this value to large. Hopefully
         // deadlocks happen very rarely or never.
         consumerConfig.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, Integer.toString(Integer.MAX_VALUE));
-        consumerConfig.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, READ_COMMITTED.name().toLowerCase(Locale.ROOT));
+        consumerConfig.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, IsolationLevel.READ_COMMITTED.name().toLowerCase(Locale.ROOT));
         consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 
         consumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, clusterName);
@@ -204,7 +205,6 @@ public final class KafkaActorThread extends Thread {
         messageConsumer = new KafkaConsumer<>(consumerConfig, new UUIDDeserializer(), new KafkaInternalMessageDeserializer(internalMessageDeserializer));
 
         final Map<String, Object> producerConfig = new HashMap<>();
-        producerConfig.put(ProducerConfig.LINGER_MS_CONFIG, "10");
         producerConfig.put(ProducerConfig.RETRIES_CONFIG, Integer.MAX_VALUE);
         producerConfig.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
         producerConfig.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, 1);
@@ -231,12 +231,12 @@ public final class KafkaActorThread extends Thread {
         this.commands = new LinkedBlockingQueue<>();
 
         final Map<String, Object> stateConsumerConfig = new HashMap<>();
-        stateConsumerConfig.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "100");
+        stateConsumerConfig.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "1000");
         stateConsumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         stateConsumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         stateConsumerConfig.put("internal.leave.group.on.close", false);
         stateConsumerConfig.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, Integer.toString(Integer.MAX_VALUE));
-        stateConsumerConfig.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, READ_COMMITTED.name().toLowerCase(Locale.ROOT));
+        stateConsumerConfig.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, IsolationLevel.READ_COMMITTED.name().toLowerCase(Locale.ROOT));
         stateConsumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 
         stateConsumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, clusterName+"-state");
@@ -245,12 +245,12 @@ public final class KafkaActorThread extends Thread {
         stateConsumer = new KafkaConsumer<>(stateConsumerConfig, new StringDeserializer(), new ByteArrayDeserializer());
 
         final Map<String, Object> scheduledMessagesConsumerConfig = new HashMap<>();
-        scheduledMessagesConsumerConfig.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "100");
+        scheduledMessagesConsumerConfig.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "1000");
         scheduledMessagesConsumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         scheduledMessagesConsumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         scheduledMessagesConsumerConfig.put("internal.leave.group.on.close", false);
         scheduledMessagesConsumerConfig.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, Integer.toString(Integer.MAX_VALUE));
-        scheduledMessagesConsumerConfig.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, READ_COMMITTED.name().toLowerCase(Locale.ROOT));
+        scheduledMessagesConsumerConfig.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, IsolationLevel.READ_COMMITTED.name().toLowerCase(Locale.ROOT));
         scheduledMessagesConsumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 
         scheduledMessagesConsumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, clusterName+"-scheduledMessages");
@@ -262,12 +262,12 @@ public final class KafkaActorThread extends Thread {
         scheduledMessagesConsumer = new KafkaConsumer<>(scheduledMessagesConsumerConfig, new UUIDDeserializer(), scheduledMessageDeserializer);
 
         final Map<String, Object> actorSystemEventListenersConsumerConfig = new HashMap<>();
-        actorSystemEventListenersConsumerConfig.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "100");
+        actorSystemEventListenersConsumerConfig.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "1000");
         actorSystemEventListenersConsumerConfig.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         actorSystemEventListenersConsumerConfig.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         actorSystemEventListenersConsumerConfig.put("internal.leave.group.on.close", false);
         actorSystemEventListenersConsumerConfig.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, Integer.toString(Integer.MAX_VALUE));
-        actorSystemEventListenersConsumerConfig.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, READ_COMMITTED.name().toLowerCase(Locale.ROOT));
+        actorSystemEventListenersConsumerConfig.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, IsolationLevel.READ_COMMITTED.name().toLowerCase(Locale.ROOT));
         actorSystemEventListenersConsumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 
         actorSystemEventListenersConsumerConfig.put(ConsumerConfig.GROUP_ID_CONFIG, clusterName+"-actorSystemEventListeners");
@@ -330,69 +330,49 @@ public final class KafkaActorThread extends Thread {
 
     private void processMessages() {
         try {
-            ConsumerRecords<UUID, InternalMessage> consumerRecords = messageConsumer.poll(1);
+            ConsumerRecords<UUID, InternalMessage> consumerRecords = messageConsumer.poll(Duration.ofMillis(1));
             if (!consumerRecords.isEmpty()) {
                 if(logger.isDebugEnabled()) {
                     logger.debug("messageConsumer has {} records to process", consumerRecords.count());
                 }
+                // handle all messages in a single transaction
+                producer.beginTransaction();
+                // set this producer in the transactional context
+                KafkaTransactionContext.setTransactionalProducer(producer);
+                // the offset metadata to commit
+                Map<TopicPartition, OffsetAndMetadata> offset = new HashMap<>();
                 consumerRecords.partitions().forEach(topicPartition -> consumerRecords.records(topicPartition).forEach(consumerRecord -> {
-                    try {
                         if(logger.isDebugEnabled()) {
                             logger.debug("handling InternalMessage(sender:{}, receiver:{}, type:{})  with offset {} from topicPartition({})",
                                     consumerRecord.value().getSender(), consumerRecord.value().getReceivers().get(0),
                                     consumerRecord.value().getPayloadClass(), consumerRecord.offset(),
                                     topicPartition);
                         }
-                        // start a new transaction for each message
-                        producer.beginTransaction();
-                        try {
-                            // set this producer in the transactional context
-                            KafkaTransactionContext.setTransactionalProducer(producer);
-                            // handle the InternalMessage here
-                            handleInternalMessage(topicPartition, consumerRecord.value());
-                            // mark the message as read
-                            Map<TopicPartition, OffsetAndMetadata> offset = new HashMap<>();
-                            offset.put(topicPartition, new OffsetAndMetadata(consumerRecord.offset() + 1));
-                            // commit the offset
-                            producer.sendOffsetsToTransaction(offset, clusterName);
-                            // commit the transaction
-                            producer.commitTransaction();
-                        } catch (WakeupException | InterruptException e) {
-                            logger.warn("Recoverable exception while handling InternalMessage", e);
-                            // @todo: find out how to handle this
-                        } catch (KafkaException e) {
-                            logger.error("FATAL: Unrecoverable exception while handling InternalMessage", e);
-                            // @todo: this is an unrecoverable error
-                        } catch (Throwable t) {
-                            logger.error("Unexpected exception while handling InternalMessage", t);
-                        } finally {
-                            // clear the transaction context
-                            KafkaTransactionContext.clear();
-                        }
-                    } catch(ProducerFencedException e) {
-                        logger.error("FATAL: ProducerFenced while committing transaction, another Node seems to be handling the same shards", e);
-                    } catch(KafkaException e) {
-                        logger.error("FATAL: Unrecoverable exception while committing producer transaction", e);
-                        // @todo: this is an unrecoverable error
-                    } catch(Throwable t) {
-                        logger.error("Unexpected exception while handling InternalMessage", t);
-                    }
+                        // handle the InternalMessage here
+                        handleInternalMessage(topicPartition, consumerRecord.value());
+                        // mark the message as read
+                        offset.put(topicPartition, new OffsetAndMetadata(consumerRecord.offset() + 1));
                 }));
+                // commit the offsets
+                producer.sendOffsetsToTransaction(offset, clusterName);
+                // commit the transaction
+                producer.commitTransaction();
             }
         } catch(WakeupException | InterruptException e) {
             logger.warn("Recoverable exception while polling for Messages", e);
         } catch(KafkaException e) {
             logger.error("FATAL: Unrecoverable exception while polling for Messages", e);
-            // @todo: this is an unrecoverable error
+            System.exit(1);
         } catch(Throwable t) {
             logger.error("Unexpected exception while polling for Messages", t);
+            System.exit(1);
         }
     }
 
     private void updateScheduledMessages() {
         try {
             // first see if we have new messages
-            ConsumerRecords<UUID, ScheduledMessage> consumerRecords = scheduledMessagesConsumer.poll(0);
+            ConsumerRecords<UUID, ScheduledMessage> consumerRecords = scheduledMessagesConsumer.poll(Duration.ZERO);
             if (!consumerRecords.isEmpty()) {
                 consumerRecords.partitions().forEach(topicPartition -> consumerRecords.records(topicPartition).forEach(consumerRecord -> {
                     // can be null (for deleted messages)
