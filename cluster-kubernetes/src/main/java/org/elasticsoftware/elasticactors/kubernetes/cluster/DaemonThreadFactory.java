@@ -16,6 +16,10 @@
 
 package org.elasticsoftware.elasticactors.kubernetes.cluster;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -23,11 +27,24 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Joost van de Wijgerd
  */
 public final class DaemonThreadFactory implements ThreadFactory {
+
+    private final static Logger logger = LoggerFactory.getLogger(DaemonThreadFactory.class);
+
     private final String name;
     private final AtomicInteger threadCount = new AtomicInteger(0);
+    private final UncaughtExceptionHandler uncaughtExceptionHandler;
 
     public DaemonThreadFactory(String name) {
+        this(name, logger);
+    }
+
+    public DaemonThreadFactory(String name, Logger logger) {
+        this(name, (t, e) -> logger.error("Uncaught exception thrown", e));
+    }
+
+    public DaemonThreadFactory(String name, UncaughtExceptionHandler uncaughtExceptionHandler) {
         this.name = name;
+        this.uncaughtExceptionHandler = uncaughtExceptionHandler;
     }
 
     @Override
@@ -35,6 +52,7 @@ public final class DaemonThreadFactory implements ThreadFactory {
         Thread t = new Thread(r);
         t.setDaemon(true);
         t.setName(String.format("%s-%d", name, threadCount.incrementAndGet()));
+        t.setUncaughtExceptionHandler(uncaughtExceptionHandler);
         return t;
     }
 
