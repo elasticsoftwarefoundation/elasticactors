@@ -16,6 +16,12 @@
 
 package org.elasticsoftware.elasticactors.kafka.cluster;
 
+import org.elasticsoftware.elasticactors.ActorContainer;
+import org.elasticsoftware.elasticactors.ActorContainerRef;
+import org.elasticsoftware.elasticactors.ActorContextHolder;
+import org.elasticsoftware.elasticactors.ActorNode;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.cluster.BaseActorRef;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.kafka.KafkaActorNode;
@@ -29,7 +35,8 @@ import java.util.List;
  *
  * @author  Joost van de Wijgerd
  */
-public final class LocalClusterPartitionedActorNodeRef extends BaseActorRef implements ActorContainerRef {
+public final class LocalClusterPartitionedActorNodeRef extends BaseActorRef implements
+        ActorContainerRef {
     private final KafkaActorNode node;
     private final int partition;
     private final ActorContainerWrapper actorContainer;

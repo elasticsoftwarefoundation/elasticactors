@@ -33,6 +33,8 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.String.format;
+
 public final class KafkaTopicScheduler implements Scheduler {
     private final InternalActorSystem actorSystem;
 

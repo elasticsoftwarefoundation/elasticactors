@@ -16,6 +16,11 @@
 
 package org.elasticsoftware.elasticactors.kafka.cluster;
 
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorState;
+import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.PersistentSubscription;
+import org.elasticsoftware.elasticactors.SubscriberContext;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 
 public final class SubscriberContextImpl implements SubscriberContext {

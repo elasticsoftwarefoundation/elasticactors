@@ -29,20 +29,28 @@ import org.elasticsoftware.elasticactors.indexing.elasticsearch.IndexConfig;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdate;
 import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.UUID;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Durations.FIVE_SECONDS;
 import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
@@ -57,8 +65,24 @@ import static org.testng.Assert.assertTrue;
 public class IndexerTest {
 
     private Node testNode;
-    private String tmpElasticsearchDataDir = System.getProperty("java.io.tmpdir") + "/es-test-data/" + System.currentTimeMillis();
-    private String tmpElasticsearchHomeDir = System.getProperty("java.io.tmpdir") + "/es-test-home/" + System.currentTimeMillis();
+
+    private final Path tmpElasticsearchHomeDir = Paths.get(System.getProperty("java.io.tmpdir"))
+            .resolve("es-test-home")
+            .resolve(String.format(
+                    "%d_%s_%s",
+                    System.currentTimeMillis(),
+                    getClass().getSimpleName(),
+                    UUID.randomUUID()))
+            .toAbsolutePath();
+
+    private final Path tmpElasticsearchDataDir = Paths.get(System.getProperty("java.io.tmpdir"))
+            .resolve("es-test-data")
+            .resolve(String.format(
+                    "%d_%s_%s",
+                    System.currentTimeMillis(),
+                    getClass().getSimpleName(),
+                    UUID.randomUUID()))
+            .toAbsolutePath();
 
     private Client client;
     private Indexer indexer;
@@ -205,14 +229,14 @@ public class IndexerTest {
     private ActorStateUpdate createActorStateUpdateNoneVersioning() {
         ActorStateUpdate update = createBasicActorStateUpdate();
 
-        when(update.getActorClass()).thenAnswer((Answer<Object>) invocation -> NoneVersioningMockActorClass.class);
+        when(update.getActorClass()).thenAnswer(invocation -> NoneVersioningMockActorClass.class);
         return update;
     }
 
     private ActorStateUpdate createActorStateUpdateReindexing(String version) {
         ActorStateUpdate update = createBasicActorStateUpdate();
 
-        when(update.getActorClass()).thenAnswer((Answer<Object>) invocation -> ReindexingVersioningMockActorClass.class);
+        when(update.getActorClass()).thenAnswer(invocation -> ReindexingVersioningMockActorClass.class);
         when(update.getVersion()).thenReturn(version);
         return update;
     }
@@ -264,8 +288,32 @@ public class IndexerTest {
                 testNode.close();
             }
         } finally {
-            new File(tmpElasticsearchDataDir).delete();
-            new File(tmpElasticsearchHomeDir).delete();
+            recursiveDelete(tmpElasticsearchDataDir);
+            recursiveDelete(tmpElasticsearchHomeDir);
+        }
+    }
+
+    private void recursiveDelete(Path directory) throws IOException {
+        try {
+            Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(
+                        Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(file);
+                    return super.visitFile(file, attrs);
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+                        throws IOException {
+                    Files.delete(dir);
+                    return super.postVisitDirectory(dir, exc);
+                }
+            });
+        } catch (NoSuchFileException e) {
+            if (!directory.equals(tmpElasticsearchHomeDir)) {
+                throw e;
+            }
         }
     }
 

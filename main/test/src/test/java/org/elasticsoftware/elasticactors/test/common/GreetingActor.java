@@ -32,6 +32,8 @@ import java.util.concurrent.TimeUnit;
 import static org.elasticsoftware.elasticactors.test.common.GreetingTest.TEST_TRACE;
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 import static org.elasticsoftware.elasticactors.tracing.TracingUtils.shorten;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 

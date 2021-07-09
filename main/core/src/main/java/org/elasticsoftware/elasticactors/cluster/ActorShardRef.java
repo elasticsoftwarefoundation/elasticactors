@@ -16,6 +16,13 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
+import org.elasticsoftware.elasticactors.ActorContainer;
+import org.elasticsoftware.elasticactors.ActorContainerRef;
+import org.elasticsoftware.elasticactors.ActorContextHolder;
+import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorShard;
+import org.elasticsoftware.elasticactors.MessageDeliveryException;
+
 import javax.annotation.Nullable;
 
 /**

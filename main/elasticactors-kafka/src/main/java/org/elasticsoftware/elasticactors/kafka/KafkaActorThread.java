@@ -116,6 +116,8 @@ import java.util.stream.Collectors;
 import static org.elasticsoftware.elasticactors.kafka.utils.TopicNamesHelper.getNodeMessagesTopic;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
+import static java.lang.String.format;
+
 public final class KafkaActorThread extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(KafkaActorSystemInstance.class);
     private static final AtomicInteger THREAD_ID_SEQUENCE = new AtomicInteger(0);

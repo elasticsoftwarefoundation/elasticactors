@@ -24,6 +24,8 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.testng.Assert.assertEquals;
+
 /**
  * @author Joost van de Wijgerd
  */

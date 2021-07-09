@@ -18,6 +18,8 @@ package org.elasticsoftware.elasticactors.kafka.utils;
 
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 
+import static java.lang.String.format;
+
 public final class TopicNamesHelper {
     private static final String PERSISTENT_ACTORS = "ElasticActors_PersistentActors-%s-%s";
     private static final String SCHEDULED_MESSAGES = "ElasticActors_ScheduledMessages-%s-%s";

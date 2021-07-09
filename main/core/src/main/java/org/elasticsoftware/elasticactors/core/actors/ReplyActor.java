@@ -16,7 +16,11 @@
 
 package org.elasticsoftware.elasticactors.core.actors;
 
+import org.elasticsoftware.elasticactors.ActorContainer;
+import org.elasticsoftware.elasticactors.ActorContainerRef;
+import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.TempActor;
+import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.messaging.internal.PersistActorMessage;
 
 /**

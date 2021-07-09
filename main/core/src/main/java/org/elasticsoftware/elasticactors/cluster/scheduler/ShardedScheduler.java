@@ -50,6 +50,8 @@ import java.util.concurrent.TimeUnit;
 import static org.elasticsoftware.elasticactors.tracing.CreationContext.forScheduling;
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 
+import static java.lang.String.format;
+
 /**
  * @author Joost van de Wijgerd
  */

@@ -22,6 +22,8 @@ import org.elasticsoftware.elasticactors.UnexpectedResponseTypeException;
 
 import java.util.concurrent.CompletableFuture;
 
+import static java.lang.String.format;
+
 /**
  * @author Joost van de Wijgerd
  */

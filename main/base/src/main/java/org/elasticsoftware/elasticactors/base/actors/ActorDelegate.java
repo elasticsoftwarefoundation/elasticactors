@@ -31,6 +31,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import static java.lang.String.format;
+
 /**
  * @author Joost van de Wijgerd
  */
