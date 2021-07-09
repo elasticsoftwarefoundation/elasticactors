@@ -11,20 +11,36 @@ Persistent Stateful Actor System
 
 ### Add Elastic Actors to your Project
 
-minimal dependency:
+For convenience and guaranteed compatiblity across versions, it's advisable to use our BOM in 
+your `dependencyManagement` section:
+```xml
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
+            <artifactId>elasticactors-bom</artifactId>
+            <version>${elasticactors.version}</version>
+            <scope>import</scope>
+            <type>pom</type>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+Minimal dependency:
 ```xml
 <dependency>
     <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
     <artifactId>elasticactors-api</artifactId>
-    <version>${elasticactors.version}</version>
+    <version>${elasticactors.version}</version> <!-- Can be ommitted when using the BOM -->
 </dependency>
 ```
-convenient base classes inclusing a Jackson 2 based serialization framework:
+Convenient base classes inclusing a Jackson 2 based serialization framework:
 ```xml
 <dependency>
     <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
     <artifactId>elasticactors-base</artifactId>
-    <version>${elasticactors.version}</version>
+    <version>${elasticactors.version}</version> <!-- Can be ommitted when using the BOM -->
 </dependency>
 ```
 
