@@ -130,6 +130,13 @@
                 <type>pom</type>
             </dependency>
             <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>kubernetes-client-bom</artifactId>
+                <version>${kubernetes-client.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <dependency>
                 <groupId>javax.inject</groupId>
                 <artifactId>javax.inject</artifactId>
                 <version>1</version>
@@ -306,11 +313,6 @@
                 <groupId>net.jodah</groupId>
                 <artifactId>typetools</artifactId>
                 <version>${typetools.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.fabric8</groupId>
-                <artifactId>kubernetes-client</artifactId>
-                <version>${kubernetes-client.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.shoal</groupId>
