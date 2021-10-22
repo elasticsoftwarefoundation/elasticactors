@@ -56,14 +56,15 @@ public final class CreateActorMessageSerializer implements MessageSerializer<Cre
 
     private byte[] serializeState(String actorClass,ActorState state) throws IOException {
         return SerializationTools.serializeActorState(serializationFrameworks, state);
-        /**
+        /*
          * to support creating actors on remote actor systems (without having to link all the code) we are now
          * using the SerializationFramework as it is specified in the ActorState implementation instead of on the
          * Actor annotation
         try {
-            return SerializationTools.serializeActorState(actorSystems,
-                                                          (Class<? extends ElasticActor>) Class.forName(actorClass),
-                                                          state);
+            return SerializationTools.serializeActorState(
+                actorSystems,
+                (Class<? extends ElasticActor>) getClassHelper().forName(actorClass),
+                state);
         } catch (ClassNotFoundException e) {
             throw new IOException(e);
         } */

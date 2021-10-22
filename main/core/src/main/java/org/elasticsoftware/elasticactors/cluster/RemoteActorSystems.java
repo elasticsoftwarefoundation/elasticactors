@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import javax.annotation.PreDestroy;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 public final class RemoteActorSystems {
     private static final Logger logger = LoggerFactory.getLogger(RemoteActorSystems.class);
     private final Map<String,RemoteActorSystemInstance> remoteActorSystems;
+    private final Map<String, RemoteActorSystemInstance> remoteActorSystemsCache;
 
     public RemoteActorSystems(InternalActorSystemConfiguration configuration,
                               InternalActorSystems cluster,
@@ -49,6 +51,7 @@ public final class RemoteActorSystems {
                                 cluster,
                                 remoteActorSystemMessageQueueFactoryFactory.create(
                                         remoteConfiguration.getClusterName()))));
+        remoteActorSystemsCache = new ConcurrentHashMap<>();
     }
 
 
@@ -79,18 +82,22 @@ public final class RemoteActorSystems {
     }
 
     public ActorSystem get(String actorSystemName) {
-        List<RemoteActorSystemInstance> instances = remoteActorSystems.values().stream()
-                .filter(remoteActorSystemInstance -> remoteActorSystemInstance.getName().equals(actorSystemName))
+        return remoteActorSystemsCache.computeIfAbsent(actorSystemName, name -> {
+            List<RemoteActorSystemInstance> instances = remoteActorSystems.values().stream()
+                .filter(instance -> instance.getName().equals(name))
                 .collect(Collectors.toList());
-        if(!instances.isEmpty()) {
-            if(instances.size() > 1) {
-                // cannot determine which one to use,
-                throw new IllegalArgumentException("Found multiple matching Remote ActorSystems, please use ActorSystems.get(clusterName, actorSystemName");
+            if (!instances.isEmpty()) {
+                if (instances.size() > 1) {
+                    // cannot determine which one to use,
+                    throw new IllegalArgumentException(
+                        "Found multiple matching Remote ActorSystems, please use ActorSystems.get"
+                            + "(clusterName, actorSystemName");
+                } else {
+                    return instances.get(0);
+                }
             } else {
-                return instances.get(0);
+                return null;
             }
-        } else {
-            return null;
-        }
+        });
     }
 }

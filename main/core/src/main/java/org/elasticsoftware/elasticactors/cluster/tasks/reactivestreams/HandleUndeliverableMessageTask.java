@@ -136,7 +136,7 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask imp
                                         currentSubscription.getSubscriber().getClass().getSimpleName() : null,
                                 receiverRef, e);
                     } finally {
-                        InternalSubscriberContext.getAndClearContext();
+                        InternalSubscriberContext.clearContext();
                     }
                     return true;
                 } else {

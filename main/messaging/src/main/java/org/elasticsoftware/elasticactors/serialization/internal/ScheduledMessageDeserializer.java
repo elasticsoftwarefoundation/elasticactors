@@ -30,6 +30,8 @@ import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import java.io.IOException;
 import java.util.UUID;
 
+import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -46,7 +48,7 @@ public final class ScheduledMessageDeserializer implements Deserializer<byte[],S
             Messaging.ScheduledMessage protobufMessage = Messaging.ScheduledMessage.parseFrom(serializedObject);
             ActorRef sender = protobufMessage.getSender() != null && !protobufMessage.getSender().isEmpty() ? actorRefDeserializer.deserialize(protobufMessage.getSender()) : null;
             ActorRef receiver = actorRefDeserializer.deserialize(protobufMessage.getReceiver());
-            Class messageClass = Class.forName(protobufMessage.getMessageClass());
+            Class messageClass = getClassHelper().forName(protobufMessage.getMessageClass());
             byte[] messageBytes = protobufMessage.getMessage().toByteArray();
             UUID id = UUIDTools.toUUID(protobufMessage.getId().toByteArray());
             long fireTime = protobufMessage.getFireTime();

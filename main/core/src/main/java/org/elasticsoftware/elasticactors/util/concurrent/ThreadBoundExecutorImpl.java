@@ -147,7 +147,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
                             ListIterator<ThreadBoundEvent> itr = batch.listIterator();
                             while (itr.hasNext()) {
                                 ThreadBoundEvent next = itr.next();
-                                if (next.getClass().equals(ShutdownTask.class)) {
+                                if (next instanceof ShutdownTask) {
                                     running = false;
                                     ((ShutdownTask)next).latch.countDown();
                                     itr.remove();
@@ -156,7 +156,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
                             eventProcessor.process(batch);
                         } else {
                             // just the one event, no need to iterate
-                            if(event.getClass().equals(ShutdownTask.class)) {
+                            if (event instanceof ShutdownTask) {
                                 running = false;
                                 ((ShutdownTask)event).latch.countDown();
                             } else {

@@ -71,23 +71,33 @@ public @interface Message {
     int timeout() default NO_TIMEOUT;
 
     /**
-     * Determines whether or not a message's contents can be included in the logs. The format
-     * depends on the {@link MessageToStringSerializer} implementation used by the serialization
-     * framework (unless the {@value MessageToStringSerializer#LOGGING_USE_TO_STRING_PROPERTY}
-     * property is set to {@code true}, in which case the {@link Object#toString()} method is used).
-     *
-     * <br><br>
-     * The maximum length of the message as a String can be controlled using the {@value
-     * MessageToStringSerializer#LOGGING_MAXIMUM_LENGTH_PROPERTY} property
-     * (default: {@value MessageToStringSerializer#DEFAULT_MAX_LENGTH}).
-     * Content that's too big will be trimmed and prefixed with the
-     * string {@value MessageToStringSerializer#CONTENT_TOO_BIG_PREFIX}.
-     *
-     * <br><br>
-     * <strong>IMPORTANT:</strong> due to the fact messages can potentially contain sensitive data,
-     * think very carefully about which messages should be logged and which data should be exposed.
-     *
-     * @return true if the message can be logged, false otherwise.
+     * Representation of sets of data to be logged when an actor receives a message of this type.
      */
-    boolean loggable() default false;
+    enum LogFeature {
+        /**
+         * Timing information is recorded when the message is handled by an actor.
+         */
+        TIMING,
+        /**
+         * Logs the contents of the received message.
+         * The String representation will depend on the {@link SerializationFramework} used.
+         * <br><br>
+         * IMPORTANT: the contents of a message can contain sensitive information.
+         * Use this with caution.
+         */
+        CONTENTS
+    }
+
+    /**
+     * Determines the level of detail to be used for logs when an actor receives a message of this type.
+     */
+    LogFeature[] logOnReceive() default {};
+
+    /**
+     * Determines if it's ok to log the body of this message when an unexpected error occurs.
+     *
+     * IMPORTANT: the contents of a message can contain sensitive information.
+     * Use this with caution.
+     */
+    boolean logBodyOnError() default false;
 }

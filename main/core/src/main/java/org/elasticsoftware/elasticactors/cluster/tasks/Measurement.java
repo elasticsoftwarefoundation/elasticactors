@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.cluster.tasks;
 
-import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
@@ -25,57 +24,62 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
  * @author Joost van de Wijgerd
  */
 public final class Measurement {
-    private final Long creationTime;
-    private Long executionStart;
-    private Long executionEnd;
-    @Nullable
-    private Long serializationEnd = null;
-    @Nullable
-    private Long ackEnd = null;
+    private final long creationTime;
+    private long executionStart;
+    private long executionEnd;
+    private long serializationEnd;
+    private long ackEnd;
 
-
-    public Measurement(Long creationTime) {
+    public Measurement(long creationTime) {
         this.creationTime = creationTime;
     }
 
-    public void setExecutionStart(Long executionStart) {
+    public void setExecutionStart(long executionStart) {
         this.executionStart = executionStart;
     }
 
-    public void setExecutionEnd(Long executionEnd) {
+    public void setExecutionEnd(long executionEnd) {
         this.executionEnd = executionEnd;
     }
 
-    public void setSerializationEnd(@Nullable Long serializationEnd) {
+    public void setSerializationEnd(long serializationEnd) {
         this.serializationEnd = serializationEnd;
     }
 
-    public void setAckEnd(@Nullable Long ackEnd) {
+    public void setAckEnd(long ackEnd) {
         this.ackEnd = ackEnd;
     }
 
     public boolean isSerialized() {
-        return serializationEnd != null;
+        return serializationEnd != 0L;
     }
 
-    public Long getQueueDuration(final TimeUnit unit) {
-        return unit.convert(executionStart-creationTime, NANOSECONDS);
+    public long getQueueDuration(TimeUnit unit) {
+        return unit.convert(executionStart - creationTime, NANOSECONDS);
     }
 
-    public Long getExecutionDuration(final TimeUnit unit) {
-        return unit.convert(executionEnd-executionStart, NANOSECONDS);
+    public long getExecutionDuration(TimeUnit unit) {
+        return unit.convert(executionEnd - executionStart, NANOSECONDS);
     }
 
-    public Long getSerializationDuration(final TimeUnit unit) {
-        return (serializationEnd != null) ? unit.convert(serializationEnd-executionEnd, NANOSECONDS) : 0L;
+    public long getSerializationDuration(TimeUnit unit) {
+        return (serializationEnd != 0)
+            ? unit.convert(serializationEnd - executionEnd, NANOSECONDS)
+            : 0L;
     }
 
-    public Long getAckDuration(final TimeUnit unit) {
-        return (ackEnd != null) ? unit.convert(ackEnd-executionEnd, NANOSECONDS) : 0L;
+    public long getAckDuration(TimeUnit unit) {
+        return (ackEnd != 0) ? unit.convert(ackEnd - executionEnd, NANOSECONDS) : 0L;
     }
 
-    public Long getTotalDuration(final TimeUnit unit) {
-        Long endTime = (ackEnd != null) ? ackEnd : (serializationEnd != null) ? serializationEnd : creationTime;
-        return unit.convert(endTime-creationTime,NANOSECONDS);
+    public long getTotalDuration(TimeUnit unit) {
+        long endTime = (ackEnd != 0)
+            ? ackEnd
+            : (serializationEnd != 0)
+                ? serializationEnd
+                : (executionEnd != 0)
+                    ? executionEnd
+                    : creationTime;
+        return unit.convert(endTime - creationTime, NANOSECONDS);
     }
 }

@@ -100,10 +100,12 @@ public final class TransientInternalMessage extends AbstractTracedMessage
         return receivers;
     }
 
+    @Override
     public UUID getId() {
         return id;
     }
 
+    @Override
     public ByteBuffer getPayload() {
         throw new UnsupportedOperationException(String.format("This implementation is intended to be used local only, for remote use [%s]",InternalMessageImpl.class.getSimpleName()));
     }
@@ -131,6 +133,11 @@ public final class TransientInternalMessage extends AbstractTracedMessage
     @Override
     public int getTimeout() {
         return NO_TIMEOUT;
+    }
+
+    @Override
+    public boolean hasSerializedPayload() {
+        return false;
     }
 
     @Override

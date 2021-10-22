@@ -35,6 +35,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -53,7 +55,8 @@ public final class PersistentActorDeserializer implements Deserializer<byte[], P
         Elasticactors.PersistentActor protobufMessage = Elasticactors.PersistentActor.parseFrom(serializedObject);
         final ShardKey shardKey = ShardKey.fromString(protobufMessage.getShardKey());
         try {
-            Class<? extends ElasticActor> actorClass = (Class<? extends ElasticActor>) Class.forName(protobufMessage.getActorClass());
+            Class<? extends ElasticActor> actorClass =
+                (Class<? extends ElasticActor>) getClassHelper().forName(protobufMessage.getActorClass());
             final String currentActorStateVersion = actorSystems.getActorStateVersion(actorClass);
             final ActorRef selfRef = actorRefFactory.create(protobufMessage.getActorRef());
             HashMultimap<String, MessageSubscriber> messageSubscribers = protobufMessage.getSubscribersCount() > 0 ? HashMultimap.create() : null;
@@ -89,7 +92,7 @@ public final class PersistentActorDeserializer implements Deserializer<byte[], P
         ElasticActor elasticActor = actorSystems.get(null).getActorInstance(actorRef, actorClass);
         // currently the messageName == messageClassName
         try {
-            return elasticActor.asSubscriber(Class.forName(messageName));
+            return elasticActor.asSubscriber(getClassHelper().forName(messageName));
         } catch (ClassNotFoundException e) {
             // did not find the message class, this should not happen but we now return the generic subscriber
             return elasticActor.asSubscriber(null);

@@ -29,15 +29,16 @@ import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
  * @author Joost van de Wijgerd
  */
 public interface ProtocolFactory {
-    ActorLifecycleTask createHandleMessageTask(InternalActorSystem actorSystem,
-                                               ElasticActor receiver,
-                                               ActorRef receiverRef,
-                                               InternalMessage internalMessage,
-                                               PersistentActor persistentActor,
-                                               PersistentActorRepository persistentActorRepository,
-                                               ActorStateUpdateProcessor actorStateUpdateProcessor,
-                                               MessageHandlerEventListener messageHandlerEventListener,
-                                               Long serializationWarnThreshold);
+
+    ActorLifecycleTask createHandleMessageTask(
+        InternalActorSystem actorSystem,
+        ElasticActor receiver,
+        ActorRef receiverRef,
+        InternalMessage internalMessage,
+        PersistentActor persistentActor,
+        PersistentActorRepository persistentActorRepository,
+        ActorStateUpdateProcessor actorStateUpdateProcessor,
+        MessageHandlerEventListener messageHandlerEventListener);
 
     ActorLifecycleTask createHandleUndeliverableMessageTask(InternalActorSystem actorSystem,
                                                             ElasticActor receiver,

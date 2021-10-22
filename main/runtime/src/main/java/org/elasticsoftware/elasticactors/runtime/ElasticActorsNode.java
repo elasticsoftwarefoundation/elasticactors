@@ -57,8 +57,10 @@ import org.elasticsoftware.elasticactors.util.ManifestTools;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -77,7 +79,13 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * @author Joost van de Wijgerd
  */
-public final class ElasticActorsNode extends PhysicalNode implements InternalActorSystems, ActorRefFactory, ClusterEventListener, ClusterMessageHandler {
+public final class ElasticActorsNode extends PhysicalNode implements
+    InternalActorSystems,
+    ActorRefFactory,
+    ClusterEventListener,
+    ClusterMessageHandler,
+    ApplicationContextAware
+{
     private static final Logger logger = LoggerFactory.getLogger(ElasticActorsNode.class);
     private final String clusterName;
     private final SystemSerializers systemSerializers = new MessagingSystemSerializers(this);
@@ -87,7 +95,6 @@ public final class ElasticActorsNode extends PhysicalNode implements InternalAct
     private final Cache<Class<? extends ElasticActor>,String> actorStateVersionCache = CacheBuilder.newBuilder().maximumSize(1024).build();
     private final Cache<String,ActorRef> actorRefCache;
     private final Map<Class<? extends SerializationFramework>,SerializationFramework> serializationFrameworks = new ConcurrentHashMap<>();
-    @Autowired
     private ApplicationContext applicationContext;
     private ClusterService clusterService;
     private final LinkedBlockingQueue<ShardReleasedMessage> shardReleasedMessages = new LinkedBlockingQueue<>();
@@ -95,6 +102,8 @@ public final class ElasticActorsNode extends PhysicalNode implements InternalAct
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("CLUSTER_SCHEDULER"));
     private final List<RebalancingEventListener> rebalancingEventListeners = new CopyOnWriteArrayList<>();
     private final ActorRefTools actorRefTools;
+    private InternalActorSystem internalActorSystem;
+    private RemoteActorSystems remoteActorSystems;
 
     public ElasticActorsNode(String clusterName,
                              String nodeId,
@@ -225,18 +234,25 @@ public final class ElasticActorsNode extends PhysicalNode implements InternalAct
 
     @Override
     public InternalActorSystem get(String name) {
-        return applicationContext.getBean(InternalActorSystem.class);
+        if (internalActorSystem == null) {
+            internalActorSystem = applicationContext.getBean(InternalActorSystem.class);
+        }
+        return internalActorSystem;
     }
 
     @Override
     public ActorSystem getRemote(String clusterName, String actorSystemName) {
-        RemoteActorSystems remoteActorSystems = applicationContext.getBean(RemoteActorSystems.class);
-        return remoteActorSystems.get(clusterName,actorSystemName);
+        if (remoteActorSystems == null) {
+            remoteActorSystems = applicationContext.getBean(RemoteActorSystems.class);
+        }
+        return remoteActorSystems.get(clusterName, actorSystemName);
     }
 
     @Override
     public ActorSystem getRemote(String actorSystemName) {
-        RemoteActorSystems remoteActorSystems = applicationContext.getBean(RemoteActorSystems.class);
+        if (remoteActorSystems == null) {
+            remoteActorSystems = applicationContext.getBean(RemoteActorSystems.class);
+        }
         return remoteActorSystems.get(actorSystemName);
     }
 
@@ -301,6 +317,11 @@ public final class ElasticActorsNode extends PhysicalNode implements InternalAct
             actorStateVersionCache.put(actorClass,version);
         }
         return version;
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
     }
 
     private final class RebalancingRunnable implements Runnable {

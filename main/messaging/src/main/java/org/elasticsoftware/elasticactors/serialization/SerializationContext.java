@@ -30,8 +30,8 @@ public final class SerializationContext {
     private static final ThreadLocal<EvictingMap<DeserializationKey,Object>> deserializationCache = new ThreadLocal<>();
     // keypool to avoid too much garbage being generated
     private static final ThreadLocal<DeserializationKey> keyPool = ThreadLocal.withInitial(() -> new DeserializationKey(null,null));
-    private static final boolean deserializationCacheEnabled = Boolean.valueOf(System.getProperty("ea.deserializationCache.enabled", "false"));
-    private static final boolean serializationCacheEnabled = Boolean.valueOf(System.getProperty("ea.serializationCache.enabled", "false"));
+    private static final boolean deserializationCacheEnabled = Boolean.parseBoolean(System.getProperty("ea.deserializationCache.enabled", "false"));
+    private static final boolean serializationCacheEnabled = Boolean.parseBoolean(System.getProperty("ea.serializationCache.enabled", "false"));
 
     private SerializationContext() {}
 

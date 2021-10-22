@@ -31,23 +31,28 @@ import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
  * @author Joost van de Wijgerd
  */
 public final class ApplicationProtocolFactory implements ProtocolFactory {
+
     @Override
-    public ActorLifecycleTask createHandleMessageTask(InternalActorSystem actorSystem,
-                                                      ElasticActor receiver,
-                                                      ActorRef receiverRef,
-                                                      InternalMessage internalMessage,
-                                                      PersistentActor persistentActor,
-                                                      PersistentActorRepository persistentActorRepository,
-                                                      ActorStateUpdateProcessor actorStateUpdateProcessor,
-                                                      MessageHandlerEventListener messageHandlerEventListener,
-                                                      Long serializationWarnThreshold) {
-        if (serializationWarnThreshold == null) {
-            return new HandleMessageTask(actorSystem, receiver, receiverRef, internalMessage, persistentActor,
-                    persistentActorRepository, actorStateUpdateProcessor, messageHandlerEventListener);
-        } else {
-            return new HandleMessageTask(actorSystem, receiver, receiverRef, internalMessage, persistentActor,
-                    persistentActorRepository, actorStateUpdateProcessor, messageHandlerEventListener, serializationWarnThreshold);
-        }
+    public ActorLifecycleTask createHandleMessageTask(
+        InternalActorSystem actorSystem,
+        ElasticActor receiver,
+        ActorRef receiverRef,
+        InternalMessage internalMessage,
+        PersistentActor persistentActor,
+        PersistentActorRepository persistentActorRepository,
+        ActorStateUpdateProcessor actorStateUpdateProcessor,
+        MessageHandlerEventListener messageHandlerEventListener)
+    {
+        return new HandleMessageTask(
+            actorSystem,
+            receiver,
+            receiverRef,
+            internalMessage,
+            persistentActor,
+            persistentActorRepository,
+            actorStateUpdateProcessor,
+            messageHandlerEventListener
+        );
     }
 
     @Override

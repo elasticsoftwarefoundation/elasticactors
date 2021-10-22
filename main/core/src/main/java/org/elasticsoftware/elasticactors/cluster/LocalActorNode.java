@@ -45,8 +45,6 @@ import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -56,6 +54,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.elasticsoftware.elasticactors.cluster.tasks.ProtocolFactoryFactory.getProtocolFactory;
+import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
@@ -63,7 +62,6 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  */
 @Configurable
 public final class LocalActorNode extends AbstractActorContainer implements ActorNode, EvictionListener<PersistentActor<NodeKey>> {
-    private static final Logger logger = LoggerFactory.getLogger(LocalActorNode.class);
     private final InternalActorSystem actorSystem;
     private final NodeKey nodeKey;
     private ThreadBoundExecutor actorExecutor;
@@ -178,14 +176,14 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                                                                           messageHandlerEventListener));
                         } else {
                             actorExecutor.execute(getProtocolFactory(internalMessage.getPayloadClass())
-                                    .createHandleMessageTask(actorSystem,
-                                                             actorInstance,
-                                                             receiverRef,
-                                                             internalMessage,
-                                                             actor,
-                                                            null,null,
-                                                             messageHandlerEventListener,
-                                                             null));
+                                .createHandleMessageTask(actorSystem,
+                                    actorInstance,
+                                    receiverRef,
+                                    internalMessage,
+                                    actor,
+                                    null, null,
+                                    messageHandlerEventListener
+                                ));
                         }
 
                     } else {
@@ -279,10 +277,15 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     private void createActor(CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         ActorRef ref = actorSystem.tempActorFor(createMessage.getActorId());
         PersistentActor<NodeKey> persistentActor =
-                new PersistentActor<>(nodeKey, actorSystem, actorSystem.getConfiguration().getVersion(), ref,
-                                        createMessage.getAffinityKey(),
-                                       (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass()),
-                                       createMessage.getInitialState());
+            new PersistentActor<>(
+                nodeKey,
+                actorSystem,
+                actorSystem.getConfiguration().getVersion(),
+                ref,
+                createMessage.getAffinityKey(),
+                (Class<? extends ElasticActor>) getClassHelper().forName(createMessage.getActorClass()),
+                createMessage.getInitialState()
+            );
         actorCache.put(ref,persistentActor);
         // find actor class behind receiver ActorRef
         ElasticActor actorInstance = actorSystem.getActorInstance(ref,persistentActor.getActorClass());

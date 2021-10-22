@@ -23,6 +23,8 @@ import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
 
 import java.io.IOException;
 
+import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -37,7 +39,7 @@ public final class ActorSystemEventListenerDeserializer implements Deserializer<
     public ActorSystemEventListener deserialize(byte[] serializedObject) throws IOException {
         try {
             Elasticactors.ActorSystemEventListener protobufMessage = Elasticactors.ActorSystemEventListener.parseFrom(serializedObject);
-            Class messageClass = Class.forName(protobufMessage.getMessageClass());
+            Class messageClass = getClassHelper().forName(protobufMessage.getMessageClass());
             byte[] messageBytes = protobufMessage.getMessage().toByteArray();
             String actorId = protobufMessage.getActorId();
             return new ActorSystemEventListenerImpl(actorId, messageClass, messageBytes);

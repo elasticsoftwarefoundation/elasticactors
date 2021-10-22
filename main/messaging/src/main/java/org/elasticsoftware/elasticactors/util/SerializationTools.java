@@ -22,19 +22,21 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
+import org.elasticsoftware.elasticactors.serialization.MessageToStringConverter;
 import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 
 import java.io.IOException;
 
+import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
+
 /**
  * @author Joost van de Wijgerd
  */
 public final class SerializationTools {
     public static Object deserializeMessage(SerializationAccessor serializationAccessor, InternalMessage internalMessage) throws Exception {
-        Class<?> messageClass = Class.forName(internalMessage.getPayloadClass());
+        Class<?> messageClass = getClassHelper().forName(internalMessage.getPayloadClass());
         MessageDeserializer<?> deserializer = serializationAccessor.getDeserializer(messageClass);
 
         if(deserializer != null) {
@@ -46,15 +48,16 @@ public final class SerializationTools {
 
     }
 
-    public static <T> MessageToStringSerializer<T> getStringSerializer(
-            SerializationFrameworks serializationFrameworks,
-            Class<T> messageClass) {
+    public static MessageToStringConverter getStringConverter(
+        SerializationFrameworks serializationFrameworks,
+        Class<?> messageClass)
+    {
         Message messageAnnotation = messageClass.getAnnotation(Message.class);
         if (messageAnnotation != null) {
             SerializationFramework serializationFramework = serializationFrameworks
                     .getSerializationFramework(messageAnnotation.serializationFramework());
             if (serializationFramework != null) {
-                return serializationFramework.getToStringSerializer(messageClass);
+                return serializationFramework.getToStringConverter();
             }
         }
         return null;

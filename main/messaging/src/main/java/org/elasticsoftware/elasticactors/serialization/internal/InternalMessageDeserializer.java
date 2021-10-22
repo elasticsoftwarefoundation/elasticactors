@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 import static org.elasticsoftware.elasticactors.messaging.UUIDTools.toUUID;
+import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 
 /**
  * @author Joost van de Wijgerd
@@ -108,7 +109,7 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
 
     private Class<?> isImmutableMessageClass(String messageClassString) {
         try {
-            Class<?> messageClass = Class.forName(messageClassString);
+            Class<?> messageClass = getClassHelper().forName(messageClassString);
             Message messageAnnotation = messageClass.getAnnotation(Message.class);
             if(messageAnnotation != null &&  messageAnnotation.immutable()) {
                 return messageClass;

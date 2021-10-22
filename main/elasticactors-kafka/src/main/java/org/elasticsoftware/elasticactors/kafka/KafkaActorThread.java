@@ -114,6 +114,7 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import static org.elasticsoftware.elasticactors.kafka.utils.TopicNamesHelper.getNodeMessagesTopic;
+import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 import static java.lang.String.format;
@@ -890,7 +891,7 @@ public final class KafkaActorThread extends Thread {
                             // @todo: send an error message to the sender
                             logger.error("Exception while handling message for service [{}]", serviceRef, e);
                         } finally {
-                            InternalActorContext.getAndClearContext();
+                            InternalActorContext.clearContext();
                             this.localActorNode.initializedActors.add(serviceRef);
                         }
                     }
@@ -956,7 +957,7 @@ public final class KafkaActorThread extends Thread {
                     // @todo: send an error message to the sender
                     logger.error("Exception while handling message for service [{}]",receiverRef,e);
                 } finally {
-                    InternalActorContext.getAndClearContext();
+                    InternalActorContext.clearContext();
                 }
             } else {
                 sendUndeliverable(internalMessage, receiverRef);
@@ -1052,7 +1053,7 @@ public final class KafkaActorThread extends Thread {
             // reset the serialization context
             SerializationContext.reset();
             // clear the state from the thread
-            InternalActorContext.getAndClearContext();
+            InternalActorContext.clearContext();
         }
         if(shouldUpdateState) {
             managedActorContainer.persistActor(persistentActor);
@@ -1079,7 +1080,8 @@ public final class KafkaActorThread extends Thread {
                              CreateActorMessage createMessage,
                              ActorRef ref,
                              InternalMessage internalMessage) throws ClassNotFoundException {
-        final Class<? extends ElasticActor> actorClass = (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass());
+        final Class<? extends ElasticActor> actorClass =
+            (Class<? extends ElasticActor>) getClassHelper().forName(createMessage.getActorClass());
         final String actorStateVersion = ManifestTools.extractActorStateVersion(actorClass);
         PersistentActor<?> persistentActor =
                 new PersistentActor<>(managedActorContainer.getKey(), internalActorSystem, actorStateVersion, ref,

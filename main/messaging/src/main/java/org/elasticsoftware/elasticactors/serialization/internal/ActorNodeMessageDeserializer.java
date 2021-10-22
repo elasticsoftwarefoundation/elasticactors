@@ -26,6 +26,8 @@ import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -44,7 +46,7 @@ public final class ActorNodeMessageDeserializer implements MessageDeserializer<A
             Messaging.ActorNodeMessage protobufMessage = Messaging.ActorNodeMessage.parseFrom(ByteString.copyFrom(serializedObject));
             ActorRef receiverRef = protobufMessage.getReceiver()!=null && !protobufMessage.getReceiver().isEmpty() ? actorRefDeserializer.deserialize(protobufMessage.getReceiver()) : null;
             String messageClassString = protobufMessage.getPayloadClass();
-            Class<?> messageClass = Class.forName(messageClassString);
+            Class<?> messageClass = getClassHelper().forName(messageClassString);
             Object payloadObject = cluster.get(null).getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
             return new ActorNodeMessage(protobufMessage.getNodeId(), receiverRef, payloadObject, protobufMessage.getUndeliverable());
         } catch(Exception e) {

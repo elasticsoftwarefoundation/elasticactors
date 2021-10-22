@@ -35,7 +35,6 @@ import org.elasticsoftware.elasticactors.InitialStateProvider;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.ManagedActor;
 import org.elasticsoftware.elasticactors.ManagedActorsRegistry;
-import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.NodeKey;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
@@ -45,7 +44,6 @@ import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.scheduler.InternalScheduler;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
-import org.elasticsoftware.elasticactors.logging.LogLevel;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
@@ -114,7 +112,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     private final ActorNodeAdapter localNodeAdapter;
     private final HashFunction hashFunction = Hashing.murmur3_32();
     private final AtomicBoolean stable = new AtomicBoolean(false);
-    private final LogLevel onUnhandledLogLevel;
     private final ManagedActorsRegistry managedActorsRegistry;
 
     public LocalActorSystemInstance(
@@ -122,7 +119,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
             InternalActorSystems cluster,
             InternalActorSystemConfiguration configuration,
             NodeSelectorFactory nodeSelectorFactory,
-            LogLevel onUnhandledLogLevel,
             ManagedActorsRegistry managedActorsRegistry) {
         this.configuration = configuration;
         this.nodeSelectorFactory = nodeSelectorFactory;
@@ -135,7 +131,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
             shardAdapters[i] = new ActorShardAdapter(new ShardKey(configuration.getName(), i));
         }
         this.localNodeAdapter = new ActorNodeAdapter(new NodeKey(configuration.getName(), localNode.getId()));
-        this.onUnhandledLogLevel = onUnhandledLogLevel;
         this.managedActorsRegistry = managedActorsRegistry;
     }
 
@@ -446,11 +441,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
         // ensure the actor instance is created
         return actorInstances.computeIfAbsent(actorClass, k -> {
             try {
-                ElasticActor actorInstance = actorClass.newInstance();
-                if (actorInstance instanceof MethodActor) {
-                    ((MethodActor) actorInstance).setOnUnhandledLogLevel(onUnhandledLogLevel);
-                }
-                return actorInstance;
+                return actorClass.newInstance();
             } catch (Exception e) {
                 logger.error(
                         "Exception creating actor instance for actorClass [{}]",

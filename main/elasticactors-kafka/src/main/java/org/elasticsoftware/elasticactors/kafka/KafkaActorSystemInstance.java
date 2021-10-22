@@ -39,7 +39,6 @@ import org.elasticsoftware.elasticactors.InitialStateProvider;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.ManagedActor;
 import org.elasticsoftware.elasticactors.ManagedActorsRegistry;
-import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.SingletonActor;
@@ -64,7 +63,6 @@ import org.elasticsoftware.elasticactors.kafka.cluster.KafkaInternalActorSystems
 import org.elasticsoftware.elasticactors.kafka.scheduler.KafkaTopicScheduler;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory;
 import org.elasticsoftware.elasticactors.kafka.utils.TopicHelper;
-import org.elasticsoftware.elasticactors.logging.LogLevel;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
@@ -123,7 +121,6 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
     private final KafkaTopicScheduler schedulerService;
     private final HashFunction hashFunction = Hashing.murmur3_32();
     private final ActorLifecycleListenerRegistry actorLifecycleListenerRegistry;
-    private final LogLevel onUnhandledLogLevel;
     private final ManagedActorsRegistry managedActorsRegistry;
 
     public KafkaActorSystemInstance(
@@ -139,7 +136,6 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
             Deserializer<byte[], PersistentActor<ShardKey>> stateDeserializer,
             ActorLifecycleListenerRegistry actorLifecycleListenerRegistry,
             PersistentActorStoreFactory persistentActorStoreFactory,
-            LogLevel onUnhandledLogLevel,
             ManagedActorsRegistry managedActorsRegistry) {
         this.actorLifecycleListenerRegistry = actorLifecycleListenerRegistry;
         this.schedulerService = new KafkaTopicScheduler(this);
@@ -175,7 +171,6 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         for (int i = 1; i < shardThreads.length; i++) {
             shardThreads[i].assign(localActorNode, false);
         }
-        this.onUnhandledLogLevel = onUnhandledLogLevel;
         this.managedActorsRegistry = managedActorsRegistry;
     }
 
@@ -231,11 +226,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         // ensure the actor instance is created
         return actorInstances.computeIfAbsent(actorClass, k -> {
             try {
-                ElasticActor actorInstance = actorClass.newInstance();
-                if (actorInstance instanceof MethodActor) {
-                    ((MethodActor) actorInstance).setOnUnhandledLogLevel(onUnhandledLogLevel);
-                }
-                return actorInstance;
+                return actorClass.newInstance();
             } catch (Exception e) {
                 logger.error(
                         "Exception creating actor instance for actorClass [{}]",

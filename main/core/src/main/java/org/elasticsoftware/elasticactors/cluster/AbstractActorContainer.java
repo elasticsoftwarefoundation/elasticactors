@@ -36,7 +36,7 @@ import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.
  * @author Joost van de Wijgerd
  */
 public abstract class AbstractActorContainer implements ActorContainer, MessageHandler {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
     private final ActorRef myRef;
     private final MessageQueueFactory messageQueueFactory;
     protected MessageQueue messageQueue;

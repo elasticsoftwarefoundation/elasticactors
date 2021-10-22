@@ -35,7 +35,6 @@ import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.RemoteActorSystems;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ShardedScheduler;
 import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
-import org.elasticsoftware.elasticactors.logging.LogLevel;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
@@ -64,9 +63,6 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Map;
-
-import static org.elasticsoftware.elasticactors.MethodActor.DEFAULT_UNHANDLED_LEVEL;
-import static org.elasticsoftware.elasticactors.MethodActor.LOGGING_UNHANDLED_LEVEL_PROPERTY;
 
 import static java.lang.Boolean.FALSE;
 
@@ -190,17 +186,12 @@ public class NodeConfiguration {
 
     @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
     public InternalActorSystem createLocalActorSystemInstance(
-            ManagedActorsRegistry managedActorsRegistry) {
-        LogLevel onUnhandledLogLevel = env.getProperty(
-                LOGGING_UNHANDLED_LEVEL_PROPERTY,
-                LogLevel.class,
-                DEFAULT_UNHANDLED_LEVEL);
+                ManagedActorsRegistry managedActorsRegistry) {
         return new LocalActorSystemInstance(
                 node,
                 node,
                 configuration,
                 nodeSelectorFactory,
-                onUnhandledLogLevel,
                 managedActorsRegistry);
     }
 

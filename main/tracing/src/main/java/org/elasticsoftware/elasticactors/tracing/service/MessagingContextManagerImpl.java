@@ -241,19 +241,12 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
 
         private static final ThreadLocal<TraceContextManager> threadContext = new ThreadLocal<>();
 
-        private enum Strategy {
-            ENTER,
-            REPLACE
-        }
-
         private final TraceContext context;
         private final TraceContextManager previousManager;
-        private final Strategy strategy;
 
-        private TraceContextManager(@Nonnull TraceContext context, @Nonnull Strategy strategy) {
+        private TraceContextManager(@Nonnull TraceContext context) {
             this.context = Objects.requireNonNull(context);
             this.previousManager = threadContext.get();
-            this.strategy = Objects.requireNonNull(strategy);
         }
 
         @Nonnull
@@ -264,7 +257,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
 
         @Nonnull
         private static TraceContextManager enter(@Nonnull TraceContext context) {
-            TraceContextManager newManager = new TraceContextManager(context, Strategy.ENTER);
+            TraceContextManager newManager = new TraceContextManager(context);
             fillContext(context);
             logEnter(threadContext, newManager);
             threadContext.set(newManager);
@@ -273,7 +266,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
 
         @Nonnull
         private static TraceContextManager replace(@Nonnull TraceContext context) {
-            TraceContextManager newManager = new TraceContextManager(context, Strategy.REPLACE);
+            TraceContextManager newManager = new TraceContextManager(context);
             logger.trace("Putting {} in scope", newManager.getContext());
             if (newManager.previousManager == null) {
                 logger.error(
@@ -311,7 +304,6 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         public String toString() {
             return new StringJoiner(", ", TraceContextManager.class.getSimpleName() + "{", "}")
                     .add("context=" + context)
-                    .add("strategy=" + strategy)
                     .toString();
         }
     }

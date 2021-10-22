@@ -38,7 +38,6 @@ import org.elasticsoftware.elasticactors.kafka.KafkaActorSystemInstance;
 import org.elasticsoftware.elasticactors.kafka.serialization.CompressingSerializer;
 import org.elasticsoftware.elasticactors.kafka.serialization.DecompressingDeserializer;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory;
-import org.elasticsoftware.elasticactors.logging.LogLevel;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.ManagedActorsScanner;
@@ -61,8 +60,7 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.InetAddress;
 
-import static org.elasticsoftware.elasticactors.MethodActor.DEFAULT_UNHANDLED_LEVEL;
-import static org.elasticsoftware.elasticactors.MethodActor.LOGGING_UNHANDLED_LEVEL_PROPERTY;
+import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 
 public class NodeConfiguration {
     @Autowired
@@ -170,10 +168,6 @@ public class NodeConfiguration {
         Deserializer<byte[],PersistentActor<ShardKey>> deserializer = new DecompressingDeserializer<>(new PersistentActorDeserializer(node, node));
         // NOTE: the node topic will be created with ea.shardThreads.workerCount number of partitions, changing this
         // value will require you to update the topic or face serious issues otherwise
-        LogLevel onUnhandledLogLevel = env.getProperty(
-                LOGGING_UNHANDLED_LEVEL_PROPERTY,
-                LogLevel.class,
-                DEFAULT_UNHANDLED_LEVEL);
         return new KafkaActorSystemInstance(
                 node,
                 configuration,
@@ -187,7 +181,6 @@ public class NodeConfiguration {
                 deserializer,
                 actorLifecycleListenerRegistry,
                 persistentActorStoreFactory,
-                onUnhandledLogLevel,
                 managedActorsRegistry);
     }
 
@@ -201,9 +194,10 @@ public class NodeConfiguration {
         String className = env.getProperty("ea.kafka.persistentActorStore.factoryClass", String.class, "InMemoryPeristentActorStoreFactory");
         // if it is a simple classname then we need to append the default package
         if(!className.contains(".")) {
-            return (PersistentActorStoreFactory) Class.forName("org.elasticsoftware.elasticactors.kafka.state."+className).newInstance();
+            return (PersistentActorStoreFactory) getClassHelper().forName(
+                "org.elasticsoftware.elasticactors.kafka.state." + className).newInstance();
         } else {
-            return (PersistentActorStoreFactory) Class.forName(className).newInstance();
+            return (PersistentActorStoreFactory) getClassHelper().forName(className).newInstance();
         }
     }
 }

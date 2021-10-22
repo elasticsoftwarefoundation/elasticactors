@@ -131,10 +131,12 @@ public final class InternalMessageImpl extends AbstractTracedMessage
         return receivers;
     }
 
+    @Override
     public UUID getId() {
         return id;
     }
 
+    @Override
     public ByteBuffer getPayload() {
         return payload;
     }
@@ -163,6 +165,11 @@ public final class InternalMessageImpl extends AbstractTracedMessage
     @Override
     public int getTimeout() {
         return timeout;
+    }
+
+    @Override
+    public boolean hasSerializedPayload() {
+        return payload != null;
     }
 
     @Override
