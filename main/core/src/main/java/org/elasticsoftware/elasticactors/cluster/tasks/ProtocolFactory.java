@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.cluster.tasks;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
@@ -38,7 +39,8 @@ public interface ProtocolFactory {
         PersistentActor persistentActor,
         PersistentActorRepository persistentActorRepository,
         ActorStateUpdateProcessor actorStateUpdateProcessor,
-        MessageHandlerEventListener messageHandlerEventListener);
+        MessageHandlerEventListener messageHandlerEventListener,
+        MetricsSettings metricsSettings);
 
     ActorLifecycleTask createHandleUndeliverableMessageTask(InternalActorSystem actorSystem,
                                                             ElasticActor receiver,

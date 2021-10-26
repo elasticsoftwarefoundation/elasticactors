@@ -38,7 +38,7 @@ public final class TestSerializationFramework implements SerializationFramework 
     }
 
     @Override
-    public <T> MessageToStringConverter<T> getToStringSerializer(Class<T> messageClass) {
+    public MessageToStringConverter getToStringConverter() {
         return null;
     }
 

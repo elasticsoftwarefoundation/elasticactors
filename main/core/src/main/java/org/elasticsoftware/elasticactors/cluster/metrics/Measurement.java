@@ -14,7 +14,7 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.cluster.tasks;
+package org.elasticsoftware.elasticactors.cluster.metrics;
 
 import java.util.concurrent.TimeUnit;
 
@@ -81,5 +81,25 @@ public final class Measurement {
                     ? executionEnd
                     : creationTime;
         return unit.convert(endTime - creationTime, NANOSECONDS);
+    }
+
+    public String summary(TimeUnit timeUnit) {
+        String timeUnitStr = timeUnit.name().toLowerCase();
+        return String.format(
+            "Measurement summary: took %d %s in queue, "
+                + "%d %s to execute, "
+                + "%d %s to serialize and "
+                + "%d %s to ack "
+                + "(state update: %b)",
+            getQueueDuration(timeUnit),
+            timeUnitStr,
+            getExecutionDuration(timeUnit),
+            timeUnitStr,
+            getSerializationDuration(timeUnit),
+            timeUnitStr,
+            getAckDuration(timeUnit),
+            timeUnitStr,
+            isSerialized()
+        );
     }
 }

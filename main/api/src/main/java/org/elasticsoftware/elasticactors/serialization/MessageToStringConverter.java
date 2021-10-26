@@ -40,7 +40,8 @@ public interface MessageToStringConverter {
     String convert(@Nonnull ByteBuffer byteBuffer) throws Exception;
 
     /**
-     * Converts a transient message into a String
+     * Converts a transient message into a String.
+     * This might incur a performance penalty if the message has to be serialized to be logged.
      *
      * @param message the message's payload object
      * @return the message converted into a String

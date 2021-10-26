@@ -25,6 +25,7 @@ import org.elasticsoftware.elasticactors.NodeKey;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
+import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActivateServiceActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.CreateActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.DestroyActorTask;
@@ -48,6 +49,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.env.Environment;
 
 import java.util.HashSet;
 import java.util.List;
@@ -68,6 +70,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     private final NodeActorCacheManager actorCacheManager;
     private Cache<ActorRef,PersistentActor<NodeKey>> actorCache;
     private final Set<ElasticActor> initializedActors = new HashSet<>();
+    private MetricsSettings metricsSettings;
 
     public LocalActorNode(PhysicalNode node,
                           InternalActorSystem actorSystem,
@@ -176,13 +179,16 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                                                                           messageHandlerEventListener));
                         } else {
                             actorExecutor.execute(getProtocolFactory(internalMessage.getPayloadClass())
-                                .createHandleMessageTask(actorSystem,
+                                .createHandleMessageTask(
+                                    actorSystem,
                                     actorInstance,
                                     receiverRef,
                                     internalMessage,
                                     actor,
-                                    null, null,
-                                    messageHandlerEventListener
+                                    null,
+                                    null,
+                                    messageHandlerEventListener,
+                                    metricsSettings
                                 ));
                         }
 
@@ -199,11 +205,14 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                             }
                             // ok, now it can handle the message
                             if(!internalMessage.isUndeliverable()) {
-                            actorExecutor.execute(new HandleServiceMessageTask(actorSystem,
-                                                                               receiverRef,
-                                                                               serviceInstance,
-                                                                               internalMessage,
-                                                                               messageHandlerEventListener));
+                                actorExecutor.execute(new HandleServiceMessageTask(
+                                    actorSystem,
+                                    receiverRef,
+                                    serviceInstance,
+                                    internalMessage,
+                                    messageHandlerEventListener,
+                                    metricsSettings
+                                ));
                             } else {
                                 actorExecutor.execute(new HandleUndeliverableServiceMessageTask(actorSystem,
                                                                                                 receiverRef,
@@ -328,6 +337,28 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     @Autowired
     public void setActorExecutor(@Qualifier("actorExecutor") ThreadBoundExecutor actorExecutor) {
         this.actorExecutor = actorExecutor;
+    }
+
+    @Autowired
+    public void setEnvionment(Environment environment) {
+        boolean loggingEnabled =
+            environment.getProperty("ea.logging.node.messaging.enabled", Boolean.class, false);
+        boolean metricsEnabled =
+            environment.getProperty("ea.metrics.node.messaging.enabled", Boolean.class, false);
+        Long messageDeliveryWarnThreshold =
+            environment.getProperty("ea.metrics.node.messaging.delivery.warn.threshold", Long.class);
+        Long messageHandlingWarnThreshold =
+            environment.getProperty("ea.metrics.node.messaging.handling.warn.threshold", Long.class);
+        Long serializationWarnThreshold =
+            environment.getProperty("ea.metrics.node.serialization.warn.threshold", Long.class);
+
+        this.metricsSettings = new MetricsSettings(
+            loggingEnabled,
+            metricsEnabled,
+            messageDeliveryWarnThreshold,
+            messageHandlingWarnThreshold,
+            serializationWarnThreshold
+        );
     }
 
     @Override

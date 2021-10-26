@@ -210,7 +210,7 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                         definition.handlerMethod,
                         getSelf(),
                         senderRef,
-                        serializeToString(),
+                        getStringBody(),
                         e);
             } else {
                 logger.error(
@@ -323,7 +323,7 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
      *
      * @return the message object serialized to a String, or {@code "N/A"} if a {@link MessageToStringConverter} is not set or an error occurs
      */
-    protected final String serializeToString() {
+    private String getStringBody() {
         Supplier<String> messageToStringConverter =
             currentMessageToStringConverter.get();
         if (messageToStringConverter == null) {

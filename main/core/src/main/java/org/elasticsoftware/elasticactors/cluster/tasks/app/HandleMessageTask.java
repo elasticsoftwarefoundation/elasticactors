@@ -21,8 +21,8 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
-import org.elasticsoftware.elasticactors.cluster.tasks.SystemPropertiesResolver;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
@@ -33,7 +33,6 @@ import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
-import org.elasticsoftware.elasticactors.util.SerializationTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +40,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Set;
 
+import static org.elasticsoftware.elasticactors.tracing.TracingUtils.shorten;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
@@ -52,9 +52,6 @@ public final class HandleMessageTask extends ActorLifecycleTask {
 
     private static final Logger logger = LoggerFactory.getLogger(HandleMessageTask.class);
 
-    private final static boolean loggingEnabled =
-        SystemPropertiesResolver.getProperty("ea.logging.messaging.enabled", Boolean.class, false);
-
     public HandleMessageTask(
         InternalActorSystem actorSystem,
         ElasticActor receiver,
@@ -63,7 +60,8 @@ public final class HandleMessageTask extends ActorLifecycleTask {
         PersistentActor persistentActor,
         PersistentActorRepository persistentActorRepository,
         ActorStateUpdateProcessor actorStateUpdateProcessor,
-        MessageHandlerEventListener messageHandlerEventListener)
+        MessageHandlerEventListener messageHandlerEventListener,
+        MetricsSettings metricsSettings)
     {
         super(
             actorStateUpdateProcessor,
@@ -73,34 +71,9 @@ public final class HandleMessageTask extends ActorLifecycleTask {
             receiver,
             receiverRef,
             messageHandlerEventListener,
-            internalMessage
+            internalMessage,
+            metricsSettings
         );
-    }
-
-    @Override
-    protected boolean isMeasurementEnabled() {
-        if (!super.isMeasurementEnabled()) {
-            return false;
-        }
-        if (metricsEnabled) {
-            Class<?> messageClass = unwrapMessageClass(internalMessage);
-            if (messageClass != null) {
-                Message messageAnnotation = messageClass.getAnnotation(Message.class);
-                if (messageAnnotation != null) {
-                    return contains(messageAnnotation.logOnReceive(), Message.LogFeature.TIMING);
-                }
-            }
-        }
-        return false;
-    }
-
-    private static <T> boolean contains(T[] array, T object) {
-        for (T current : array) {
-            if (current.equals(object)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override
@@ -110,26 +83,13 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                                        InternalMessage internalMessage) {
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
-            MessageToStringConverter messageToStringConverter = getStringSerializer(message);
-            if (loggingEnabled) {
-
-            }
+            logMessageContents(message);
             try {
                 if (receiver instanceof MethodActor) {
                     ((MethodActor) receiver).onReceive(
-                            internalMessage.getSender(),
-                            message,
-                         () -> {
-                            try {
-                                if (internalMessage.hasSerializedPayload()) {
-                                    return messageToStringConverter.convert(internalMessage.getPayload());
-                                } else {
-                                    return messageToStringConverter.convert(message);
-                                }
-                            } catch (Exception e) {
-                                return null;
-                            }
-                        }
+                        internalMessage.getSender(),
+                        message,
+                        () -> getStringBody(message)
                     );
                 } else {
                     receiver.onReceive(internalMessage.getSender(), message);
@@ -146,7 +106,7 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                 // the state
                 return shouldUpdateState(receiver, message);
             } catch (Exception e) {
-                logException(message, receiverRef, internalMessage, messageToStringConverter, e);
+                logException(message, receiverRef, internalMessage, e);
                 return false;
             }
         } catch (Exception e) {
@@ -163,70 +123,39 @@ public final class HandleMessageTask extends ActorLifecycleTask {
             Object message,
             ActorRef receiverRef,
             InternalMessage internalMessage,
-            MessageToStringConverter messageToStringConverter,
             Exception e) {
         if (logger.isErrorEnabled()) {
             Message messageAnnotation = message.getClass().getAnnotation(Message.class);
             if (messageAnnotation != null && messageAnnotation.logBodyOnError()) {
                 logger.error(
-                        "Exception while handling message of type [{}]. "
-                                + "Actor [{}]. "
-                                + "Sender [{}]. "
-                                + "Message payload [{}].",
-                        internalMessage.getPayloadClass(),
-                        receiverRef,
-                        internalMessage.getSender(),
-                        serializeToString(message, messageToStringConverter),
-                        e);
+                    "Exception while handling message of type [{}]. "
+                        + "Actor [{}]. "
+                        + "Sender [{}]. "
+                        + "Message payload [{}].",
+                    shorten(message.getClass()),
+                    receiverRef,
+                    internalMessage.getSender(),
+                    getStringBody(message),
+                    e
+                );
             } else {
                 logger.error(
-                        "Exception while handling message of type [{}]. "
-                                + "Actor [{}]. "
-                                + "Sender [{}].",
-                        internalMessage.getPayloadClass(),
-                        receiverRef,
-                        internalMessage.getSender(),
-                        e);
+                    "Exception while handling message of type [{}]. "
+                        + "Actor [{}]. "
+                        + "Sender [{}].",
+                    shorten(message.getClass()),
+                    receiverRef,
+                    internalMessage.getSender(),
+                    e
+                );
             }
         }
     }
 
-    /**
-     * Safely serializes the contents of a message to a String
-     */
-    private String serializeToString(
-            Object message,
-            MessageToStringConverter messageToStringConverter) {
-        if (messageToStringConverter == null) {
-            return null;
-        }
-        try {
-            if (internalMessage.hasSerializedPayload()) {
-                return messageToStringConverter.convert(internalMessage.getPayload());
-            } else {
-                return messageToStringConverter.convert(message);
-            }
-        } catch (Exception e) {
-            logger.error(
-                    "Exception thrown while serializing message of type [{}] to String",
-                    message.getClass().getName(),
-                    e);
-            return null;
-        }
-    }
-
-    private MessageToStringConverter getStringSerializer(Object message) {
-        try {
-            return SerializationTools.getStringConverter(
-                    actorSystem.getParent(),
-                    message.getClass());
-        } catch (Exception e) {
-            logger.error(
-                    "Unexpected exception resolving message string serializer for type [{}]",
-                    message.getClass().getName(),
-                    e);
-            return null;
-        }
+    private String getStringBody(Object message) {
+        MessageToStringConverter messageToStringConverter =
+            getMessageToStringConverter(logger, actorSystem, message.getClass());
+        return convertToString(logger, message, internalMessage, messageToStringConverter);
     }
 
     private void notifySubscribers(InternalMessage internalMessage) {

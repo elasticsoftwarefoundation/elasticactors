@@ -21,10 +21,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.Message;
 
+import static org.elasticsoftware.elasticactors.serialization.Message.LogFeature.CONTENTS;
+import static org.elasticsoftware.elasticactors.serialization.Message.LogFeature.TIMING;
+
 /**
  * @author Joost van de Wijgerd
  */
-@Message(serializationFramework = JacksonSerializationFramework.class, immutable = true, durable = false)
+@Message(
+    serializationFramework = JacksonSerializationFramework.class,
+    immutable = true,
+    durable = false,
+    logBodyOnError = true,
+    logOnReceive = {TIMING, CONTENTS})
 public final class StreamedMessage {
     private final String key;
     private final Long sequenceNumber;

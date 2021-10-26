@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.SubscriberContext;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
@@ -68,7 +69,8 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
         PersistentActor persistentActor,
         PersistentActorRepository persistentActorRepository,
         ActorStateUpdateProcessor actorStateUpdateProcessor,
-        MessageHandlerEventListener messageHandlerEventListener)
+        MessageHandlerEventListener messageHandlerEventListener,
+        MetricsSettings metricsSettings)
     {
         super(
             actorStateUpdateProcessor,
@@ -78,7 +80,8 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
             receiver,
             receiverRef,
             messageHandlerEventListener,
-            internalMessage
+            internalMessage,
+            metricsSettings
         );
     }
 
@@ -112,18 +115,25 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
     @Override
     @Nullable
     protected Class unwrapMessageClass(InternalMessage internalMessage)  {
+        if (unwrappedMessageClass != null) {
+            return unwrappedMessageClass;
+        }
         if(NextMessage.class.getName().equals(internalMessage.getPayloadClass())) {
             try {
                 Class<?> payloadClass = getClassHelper().forName(internalMessage.getPayloadClass());
                 NextMessage nextMessage = (NextMessage) internalMessage.getPayload(actorSystem.getDeserializer(payloadClass));
-                return getClassHelper().forName(nextMessage.getMessageName());
-            } catch(IOException | ClassNotFoundException e) {
+                unwrappedMessageClass = getClassHelper().forName(nextMessage.getMessageName());
+                return unwrappedMessageClass;
+            } catch(IOException e) {
+                log.error("Class [{}] could not be loaded", internalMessage.getPayloadClass(), e);
+                return null;
+            } catch(ClassNotFoundException e) {
+                log.error("Class [{}] not found", internalMessage.getPayloadClass());
                 return null;
             }
         } else {
             return null;
         }
-
     }
 
     @Override

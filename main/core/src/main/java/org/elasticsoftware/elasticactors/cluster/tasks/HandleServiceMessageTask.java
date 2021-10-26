@@ -23,15 +23,14 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
-import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.metrics.Measurement;
+import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
-import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageToStringConverter;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
-import org.elasticsoftware.elasticactors.util.SerializationTools;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,12 +41,11 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import static org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask.convertToString;
+import static org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask.getMessageToStringConverter;
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
-import static org.elasticsoftware.elasticactors.tracing.TracingUtils.shorten;
 import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
-
-import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 /**
  * @author Joost van de Wijgerd
@@ -60,56 +58,33 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     private final InternalMessage internalMessage;
     private final MessageHandlerEventListener messageHandlerEventListener;
     private final Measurement measurement;
+    private final MetricsSettings metricsSettings;
+    private Class<?> unwrappedMessageClass;
 
-    private final static boolean loggingEnabled =
-        SystemPropertiesResolver.getProperty("ea.logging.messaging.enabled", Boolean.class, false);
-    private final static boolean metricsEnabled =
-        SystemPropertiesResolver.getProperty("ea.metrics.messaging.enabled", Boolean.class, false);
-    private final static Long messageDeliveryWarnThreshold =
-        SystemPropertiesResolver.getProperty("ea.metrics.messaging.delivery.warn.threshold", Long.class);
-    private final static Long messageHandlingWarnThreshold =
-        SystemPropertiesResolver.getProperty("ea.metrics.messaging.handling.warn.threshold", Long.class);
-
-    public HandleServiceMessageTask(InternalActorSystem actorSystem,
-                                    ActorRef serviceRef,
-                                    ElasticActor serviceActor,
-                                    InternalMessage internalMessage,
-                                    MessageHandlerEventListener messageHandlerEventListener) {
+    public HandleServiceMessageTask(
+        InternalActorSystem actorSystem,
+        ActorRef serviceRef,
+        ElasticActor serviceActor,
+        InternalMessage internalMessage,
+        MessageHandlerEventListener messageHandlerEventListener,
+        MetricsSettings metricsSettings)
+    {
         this.serviceRef = serviceRef;
         this.actorSystem = actorSystem;
         this.serviceActor = serviceActor;
         this.internalMessage = internalMessage;
         this.messageHandlerEventListener = messageHandlerEventListener;
+        this.metricsSettings = metricsSettings != null ? metricsSettings : MetricsSettings.disabled();
         this.measurement = isMeasurementEnabled() ? new Measurement(System.nanoTime()) : null;
     }
 
     private boolean isMeasurementEnabled() {
-        if (logger.isTraceEnabled()
-            || messageDeliveryWarnThreshold != null
-            || messageHandlingWarnThreshold != null)
-        {
-            return true;
-        }
-        if (metricsEnabled) {
-            try {
-                Class<?> messageClass = getClassHelper().forName(internalMessage.getPayloadClass());
-                Message messageAnnotation = messageClass.getAnnotation(Message.class);
-                if (messageAnnotation != null) {
-                    return contains(messageAnnotation.logOnReceive(), Message.LogFeature.TIMING);
-                }
-            } catch (ClassNotFoundException ignored) {
-            }
-        }
-        return false;
-    }
-
-    private static <T> boolean contains(T[] array, T object) {
-        for (T current : array) {
-            if (current.equals(object)) {
-                return true;
-            }
-        }
-        return false;
+        return ActorLifecycleTask.isMeasurementEnabled(
+            logger,
+            internalMessage,
+            metricsSettings,
+            this::unwrapMessageClass
+        );
     }
 
     @Override
@@ -162,7 +137,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
 
     private void runInContext() {
         // measure start of the execution
-        checkDeliveryThresholdExceeded(internalMessage);
+        checkDeliveryThresholdExceeded();
         if(this.measurement != null) {
             this.measurement.setExecutionStart(System.nanoTime());
         }
@@ -170,21 +145,18 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         InternalActorContext.setContext(this);
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
-            MessageToStringConverter messageToStringConverter = getStringConverter(message);
-            if (loggingEnabled) {
-
-            }
+            logMessageContents(message);
             try {
-                if (serviceActor instanceof TypedActor) {
+                if (serviceActor instanceof MethodActor) {
                     ((MethodActor) serviceActor).onReceive(
                             internalMessage.getSender(),
                             message,
-                            messageToStringConverter);
+                            () -> getStringBody(message));
                 } else {
                     serviceActor.onReceive(internalMessage.getSender(), message);
                 }
             } catch (Exception e) {
-                logException(message, messageToStringConverter, e);
+                logException(message, e);
                 executionException = e;
             }
         } catch (Exception e) {
@@ -214,30 +186,86 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         }
         // do some trace logging
         if(this.measurement != null) {
-            if (logger.isTraceEnabled()) {
-                logger.trace(
-                    "({}) Message of type [{}] with id [{}] for actor [{}] took {} microsecs in queue, {} microsecs to execute, 0 microsecs to serialize and {} microsecs to ack (state update false)",
-                    this.getClass().getSimpleName(),
-                    internalMessage.getPayloadClass(),
-                    internalMessage.getId(),
-                    serviceRef.getActorId(),
-                    measurement.getQueueDuration(MICROSECONDS),
-                    measurement.getExecutionDuration(MICROSECONDS),
-                    measurement.getAckDuration(MICROSECONDS));
-            }
-
-            if (metricsEnabled) {
-                if (messageHandlingWarnThreshold != null) {
-
-                }
-            }
+            logMessageTimingInformationForTraces();
+            checkSerializationThresholdExceeded();
+            checkMessageHandlingThresholdExceeded();
         }
     }
 
-    private void logException(
-            Object message,
-            MessageToStringConverter messageToStringConverter,
-            Exception e) {
+    @Nullable
+    private Class unwrapMessageClass(InternalMessage internalMessage) {
+        try {
+            if (unwrappedMessageClass == null) {
+                unwrappedMessageClass = getClassHelper().forName(internalMessage.getPayloadClass());
+            }
+            return unwrappedMessageClass;
+        } catch (ClassNotFoundException e) {
+            logger.error("Class [{}] not found", internalMessage.getPayloadClass());
+            return null;
+        }
+    }
+
+    private void logMessageContents(Object message) {
+        ActorLifecycleTask.logMessageContents(
+            logger,
+            this.getClass(),
+            internalMessage,
+            actorSystem,
+            message,
+            metricsSettings,
+            serviceActor,
+            serviceRef,
+            this::unwrapMessageClass
+        );
+    }
+
+    private void logMessageTimingInformationForTraces() {
+        ActorLifecycleTask.logMessageTimingInformationForTraces(
+            logger,
+            this.getClass(),
+            internalMessage,
+            measurement,
+            serviceActor,
+            serviceRef
+        );
+    }
+
+    private void checkMessageHandlingThresholdExceeded() {
+        ActorLifecycleTask.checkMessageHandlingThresholdExceeded(
+            logger,
+            this.getClass(),
+            internalMessage,
+            metricsSettings,
+            measurement,
+            serviceActor,
+            serviceRef
+        );
+    }
+
+    private void checkSerializationThresholdExceeded() {
+        ActorLifecycleTask.checkSerializationThresholdExceeded(
+            logger,
+            this.getClass(),
+            internalMessage,
+            metricsSettings,
+            measurement,
+            serviceActor,
+            serviceRef
+        );
+    }
+
+    private void checkDeliveryThresholdExceeded() {
+        ActorLifecycleTask.checkDeliveryThresholdExceeded(
+            logger,
+            this.getClass(),
+            internalMessage,
+            metricsSettings,
+            serviceActor,
+            serviceRef
+        );
+    }
+
+    private void logException(Object message, Exception e) {
         if (logger.isErrorEnabled()) {
             Message messageAnnotation = message.getClass().getAnnotation(Message.class);
             if (messageAnnotation != null && messageAnnotation.logBodyOnError()) {
@@ -249,7 +277,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
                         internalMessage.getPayloadClass(),
                         serviceRef,
                         internalMessage.getSender(),
-                        serializeToString(message, messageToStringConverter),
+                        getStringBody(message),
                         e);
             } else {
                 logger.error(
@@ -264,71 +292,9 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         }
     }
 
-    /**
-     * Safely serializes the contents of a message to a String
-     */
-    private String serializeToString(
-            Object message,
-            MessageToStringConverter messageToStringConverter) {
-        if (messageToStringConverter == null) {
-            return null;
-        }
-        try {
-            return messageToStringConverter.convert(message);
-        } catch (Exception e) {
-            logger.error(
-                    "Exception thrown while serializing message of type [{}] to String",
-                    message.getClass().getName(),
-                    e);
-            return null;
-        }
-    }
-
-    private MessageToStringConverter getStringConverter(Object message) {
-        try {
-            return SerializationTools.getStringConverter(
-                    actorSystem.getParent(),
-                    message.getClass());
-        } catch (Exception e) {
-            logger.error(
-                    "Unexpected exception resolving message string serializer for type [{}]",
-                    message.getClass().getName(),
-                    e);
-            return null;
-        }
-    }
-
-    private void checkDeliveryThresholdExceeded() {
-        if (internalMessage != null
-            && metricsEnabled
-            && messageDeliveryWarnThreshold != null
-            && logger.isWarnEnabled())
-        {
-            long timestamp = UUIDTools.toUnixTimestamp(internalMessage.getId());
-            long delay = timestamp - System.currentTimeMillis();
-            if (delay > messageDeliveryWarnThreshold) {
-                logger.warn(
-                    "Message delivery delay of {} ms exceeds the threshold of {} ms. "
-                        + "Receivers [{}]. "
-                        + "Sender [{}]. "
-                        + "Message type [{}]. "
-                        + "Message envelope type [{}]. "
-                        + "Trace context: [{}]"
-                        + "Creation context: [{}]"
-                        + "Message payload size (in bytes): {}",
-                    delay,
-                    messageDeliveryWarnThreshold,
-                    internalMessage.getReceivers(),
-                    internalMessage.getSender(),
-                    shorten(internalMessage.getPayloadClass()),
-                    shorten(internalMessage.getClass()),
-                    internalMessage.getTraceContext(),
-                    internalMessage.getCreationContext(),
-                    internalMessage.hasSerializedPayload()
-                        ? internalMessage.getPayload().limit()
-                        : "N/A"
-                );
-            }
-        }
+    private String getStringBody(Object message) {
+        MessageToStringConverter messageToStringConverter =
+            getMessageToStringConverter(logger, actorSystem, message.getClass());
+        return convertToString(logger, message, internalMessage, messageToStringConverter);
     }
 }

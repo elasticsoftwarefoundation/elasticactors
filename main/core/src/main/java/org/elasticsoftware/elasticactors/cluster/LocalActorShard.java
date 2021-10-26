@@ -27,6 +27,7 @@ import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
+import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActivateActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.CreateActorTask;
@@ -55,6 +56,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.env.Environment;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.io.IOException;
@@ -81,6 +83,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     private final ShardActorCacheManager actorCacheManager;
     // the cacheloader instance that is reused to avoid garbage being created on each call
     private final CacheLoader cacheLoader = new CacheLoader();
+    private MetricsSettings metricsSettings;
 
     public LocalActorShard(PhysicalNode node,
                            InternalActorSystem actorSystem,
@@ -214,7 +217,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                                     actor,
                                     persistentActorRepository,
                                     actorStateUpdateProcessor,
-                                    messageHandlerEventListener
+                                    messageHandlerEventListener,
+                                    metricsSettings
                                 ));
                         }
                     }
@@ -422,6 +426,28 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     @Autowired
     public void setActorStateUpdateProcessor(ActorStateUpdateProcessor actorStateUpdateProcessor) {
         this.actorStateUpdateProcessor = actorStateUpdateProcessor;
+    }
+
+    @Autowired
+    public void setEnvironment(Environment environment) {
+        boolean loggingEnabled =
+            environment.getProperty("ea.logging.shard.messaging.enabled", Boolean.class, false);
+        boolean metricsEnabled =
+            environment.getProperty("ea.metrics.shard.messaging.enabled", Boolean.class, false);
+        Long messageDeliveryWarnThreshold =
+            environment.getProperty("ea.metrics.shard.messaging.delivery.warn.threshold", Long.class);
+        Long messageHandlingWarnThreshold =
+            environment.getProperty("ea.metrics.shard.messaging.handling.warn.threshold", Long.class);
+        Long serializationWarnThreshold =
+                environment.getProperty("ea.metrics.shard.serialization.warn.threshold", Long.class);
+
+        this.metricsSettings = new MetricsSettings(
+            loggingEnabled,
+            metricsEnabled,
+            messageDeliveryWarnThreshold,
+            messageHandlingWarnThreshold,
+            serializationWarnThreshold
+        );
     }
 
     /**

@@ -19,9 +19,17 @@ package org.elasticsoftware.elasticactors.test.reactivestreams;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.Message;
 
+import static org.elasticsoftware.elasticactors.serialization.Message.LogFeature.CONTENTS;
+import static org.elasticsoftware.elasticactors.serialization.Message.LogFeature.TIMING;
+
 /**
  * @author Joost van de Wijgerd
  */
-@Message(serializationFramework = JacksonSerializationFramework.class, immutable = true, durable = false)
+@Message(
+    serializationFramework = JacksonSerializationFramework.class,
+    immutable = true,
+    durable = false,
+    logBodyOnError = true,
+    logOnReceive = {TIMING, CONTENTS})
 public final class StreamFinishedMessage {
 }
