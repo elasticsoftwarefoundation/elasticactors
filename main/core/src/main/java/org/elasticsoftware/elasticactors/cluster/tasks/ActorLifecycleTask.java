@@ -126,27 +126,29 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
     {
         if (isLoggingEnabledForMessage(logger, internalMessage, metricsSettings)) {
             Class<?> messageClass = messageClassUnwrapper.apply(internalMessage);
-            return isTimingLoggingEnabledFor(messageClass);
+            return isTimingLoggingEnabledFor(messageClass, metricsSettings);
         }
         return false;
     }
 
-    private static boolean isTimingLoggingEnabledFor(Class<?> messageClass) {
+    private static boolean isTimingLoggingEnabledFor(
+        Class<?> messageClass,
+        MetricsSettings metricsSettings)
+    {
         if (messageClass != null) {
-            Message messageAnnotation = messageClass.getAnnotation(Message.class);
-            if (messageAnnotation != null) {
-                return contains(messageAnnotation.logOnReceive(), Message.LogFeature.TIMING);
-            }
+            Message.LogFeature[] logFeatures = metricsSettings.processOverrides(messageClass);
+            return contains(logFeatures, Message.LogFeature.TIMING);
         }
         return false;
     }
 
-    private static boolean isContentLoggingEnabledFor(Class<?> messageClass) {
+    private static boolean isContentLoggingEnabledFor(
+        Class<?> messageClass,
+        MetricsSettings metricsSettings)
+    {
         if (messageClass != null) {
-            Message messageAnnotation = messageClass.getAnnotation(Message.class);
-            if (messageAnnotation != null) {
-                return contains(messageAnnotation.logOnReceive(), Message.LogFeature.CONTENTS);
-            }
+            Message.LogFeature[] logFeatures = metricsSettings.processOverrides(messageClass);
+            return contains(logFeatures, Message.LogFeature.CONTENTS);
         }
         return false;
     }
@@ -406,7 +408,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
     {
         if (isLoggingEnabledForMessage(logger, internalMessage, metricsSettings)) {
             Class<?> messageClass = messageClassUnwrapper.apply(internalMessage);
-            if (isTimingLoggingEnabledFor(messageClass)) {
+            if (isTimingLoggingEnabledFor(messageClass, metricsSettings)) {
                 logger.info(
                     "[TIMING ({})] Message of type [{}] received by actor [{}] of type [{}], wrapped in an [{}]. {}",
                     taskClass.getSimpleName(),
@@ -434,7 +436,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         if (isLoggingEnabledForMessage(logger, internalMessage, metricsSettings)) {
             Class<?> messageClass =
                 message != null ? message.getClass() : messageClassUnwrapper.apply(internalMessage);
-            if (isContentLoggingEnabledFor(messageClass)) {
+            if (isContentLoggingEnabledFor(messageClass, metricsSettings)) {
                 MessageToStringConverter messageToStringConverter =
                     getMessageToStringConverter(logger, internalActorSystem, messageClass);
                 logger.info(

@@ -32,7 +32,9 @@ import org.elasticsoftware.elasticactors.cluster.HashingNodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.cluster.LocalActorSystemInstance;
 import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
+import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler;
+import org.elasticsoftware.elasticactors.configuration.NodeConfiguration;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.DefaultRemoteConfiguration;
@@ -91,6 +93,7 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     private ResourceLoader resourceLoader;
     private final NodeSelectorFactory nodeSelectorFactory = new HashingNodeSelectorFactory();
     private final PhysicalNode localNode = new PhysicalNode(UUIDTools.createRandomUUID().toString(), InetAddress.getLoopbackAddress(), true);
+    private final NodeConfiguration nodeConfiguration = new NodeConfiguration();
 
     @Override
     @Bean(name = "asyncExecutor")
@@ -235,6 +238,16 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     @Bean(name = "systemSerializationFramework")
     public SystemSerializationFramework createSystemSerializationFramework(SerializationFrameworks serializationFrameworks) {
         return new SystemSerializationFramework(serializationFrameworks);
+    }
+
+    @Bean(name = "nodeMetricsSettings")
+    public MetricsSettings nodeMetricsSettings(Environment environment) {
+        return nodeConfiguration.nodeMetricsSettings(environment);
+    }
+
+    @Bean(name = "shardMetricsSettings")
+    public MetricsSettings shardMetricsSettings(Environment environment) {
+        return nodeConfiguration.shardMetricsSettings(environment);
     }
 
 }

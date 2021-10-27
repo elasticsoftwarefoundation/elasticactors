@@ -56,7 +56,6 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.env.Environment;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.io.IOException;
@@ -429,25 +428,10 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     }
 
     @Autowired
-    public void setEnvironment(Environment environment) {
-        boolean loggingEnabled =
-            environment.getProperty("ea.logging.shard.messaging.enabled", Boolean.class, false);
-        boolean metricsEnabled =
-            environment.getProperty("ea.metrics.shard.messaging.enabled", Boolean.class, false);
-        Long messageDeliveryWarnThreshold =
-            environment.getProperty("ea.metrics.shard.messaging.delivery.warn.threshold", Long.class);
-        Long messageHandlingWarnThreshold =
-            environment.getProperty("ea.metrics.shard.messaging.handling.warn.threshold", Long.class);
-        Long serializationWarnThreshold =
-                environment.getProperty("ea.metrics.shard.serialization.warn.threshold", Long.class);
-
-        this.metricsSettings = new MetricsSettings(
-            loggingEnabled,
-            metricsEnabled,
-            messageDeliveryWarnThreshold,
-            messageHandlingWarnThreshold,
-            serializationWarnThreshold
-        );
+    public void setMetricsSettings(
+        @Qualifier("shardMetricsSettings") MetricsSettings metricsSettings)
+    {
+        this.metricsSettings = metricsSettings;
     }
 
     /**

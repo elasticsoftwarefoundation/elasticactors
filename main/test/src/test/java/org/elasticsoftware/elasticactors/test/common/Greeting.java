@@ -21,17 +21,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.Message;
 
-import static org.elasticsoftware.elasticactors.serialization.Message.LogFeature.CONTENTS;
-import static org.elasticsoftware.elasticactors.serialization.Message.LogFeature.TIMING;
-
 /**
  * @author Joost van de Wijgerd
  */
 @Message(
     serializationFramework = JacksonSerializationFramework.class,
     durable = true,
-    logBodyOnError = true,
-    logOnReceive = {TIMING, CONTENTS})
+    logBodyOnError = true)
 public class Greeting {
     private final String who;
 

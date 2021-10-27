@@ -49,7 +49,6 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.env.Environment;
 
 import java.util.HashSet;
 import java.util.List;
@@ -340,25 +339,10 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     }
 
     @Autowired
-    public void setEnvionment(Environment environment) {
-        boolean loggingEnabled =
-            environment.getProperty("ea.logging.node.messaging.enabled", Boolean.class, false);
-        boolean metricsEnabled =
-            environment.getProperty("ea.metrics.node.messaging.enabled", Boolean.class, false);
-        Long messageDeliveryWarnThreshold =
-            environment.getProperty("ea.metrics.node.messaging.delivery.warn.threshold", Long.class);
-        Long messageHandlingWarnThreshold =
-            environment.getProperty("ea.metrics.node.messaging.handling.warn.threshold", Long.class);
-        Long serializationWarnThreshold =
-            environment.getProperty("ea.metrics.node.serialization.warn.threshold", Long.class);
-
-        this.metricsSettings = new MetricsSettings(
-            loggingEnabled,
-            metricsEnabled,
-            messageDeliveryWarnThreshold,
-            messageHandlingWarnThreshold,
-            serializationWarnThreshold
-        );
+    public void setMetricsSettings(
+        @Qualifier("nodeMetricsSettings") MetricsSettings metricsSettings)
+    {
+        this.metricsSettings = metricsSettings;
     }
 
     @Override
