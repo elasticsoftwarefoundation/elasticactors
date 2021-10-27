@@ -117,8 +117,12 @@ ea.metrics.shard.serialization.warn.threshold=0
 # The value is a list of comma-separated features
 ea.metrics.messages.overrides.{{class_name}}=TIMING,CONTENTS
 
-ea.logging.message.maxLength=10
-ea.logging.message.transient.useToString=true
+# The maximum number of characters when logging message contents 
+ea.logging.message.maxLength=5000
+
+# If set to true, transient messages will use the toString() method 
+# instead of being serialized for logging purposes
+ea.logging.message.transient.useToString=false
 ```
 
 ### Class loading cache
