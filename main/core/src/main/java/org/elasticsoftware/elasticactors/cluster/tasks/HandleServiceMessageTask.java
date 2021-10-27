@@ -25,6 +25,7 @@ import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.metrics.Measurement;
+import org.elasticsoftware.elasticactors.cluster.metrics.MessageLogger;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
@@ -41,8 +42,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import static org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask.convertToString;
-import static org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask.getMessageToStringConverter;
+import static org.elasticsoftware.elasticactors.cluster.metrics.MessageLogger.convertToString;
+import static org.elasticsoftware.elasticactors.cluster.metrics.MessageLogger.getMessageToStringConverter;
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
@@ -79,8 +80,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     }
 
     private boolean isMeasurementEnabled() {
-        return ActorLifecycleTask.isMeasurementEnabled(
-            logger,
+        return MessageLogger.isMeasurementEnabled(
             internalMessage,
             metricsSettings,
             this::unwrapMessageClass
@@ -206,8 +206,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     }
 
     private void logMessageContents(Object message) {
-        ActorLifecycleTask.logMessageContents(
-            logger,
+        MessageLogger.logMessageContents(
             this.getClass(),
             internalMessage,
             actorSystem,
@@ -220,8 +219,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     }
 
     private void logMessageTimingInformationForTraces() {
-        ActorLifecycleTask.logMessageTimingInformationForTraces(
-            logger,
+        MessageLogger.logMessageTimingInformationForTraces(
             this.getClass(),
             internalMessage,
             measurement,
@@ -231,8 +229,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     }
 
     private void checkMessageHandlingThresholdExceeded() {
-        ActorLifecycleTask.checkMessageHandlingThresholdExceeded(
-            logger,
+        MessageLogger.checkMessageHandlingThresholdExceeded(
             this.getClass(),
             internalMessage,
             metricsSettings,
@@ -243,8 +240,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     }
 
     private void checkSerializationThresholdExceeded() {
-        ActorLifecycleTask.checkSerializationThresholdExceeded(
-            logger,
+        MessageLogger.checkSerializationThresholdExceeded(
             this.getClass(),
             internalMessage,
             metricsSettings,
@@ -255,8 +251,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     }
 
     private void checkDeliveryThresholdExceeded() {
-        ActorLifecycleTask.checkDeliveryThresholdExceeded(
-            logger,
+        MessageLogger.checkDeliveryThresholdExceeded(
             this.getClass(),
             internalMessage,
             metricsSettings,
@@ -294,7 +289,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
 
     private String getStringBody(Object message) {
         MessageToStringConverter messageToStringConverter =
-            getMessageToStringConverter(logger, actorSystem, message.getClass());
-        return convertToString(logger, message, internalMessage, messageToStringConverter);
+            getMessageToStringConverter(actorSystem, message.getClass());
+        return convertToString(message, internalMessage, messageToStringConverter);
     }
 }

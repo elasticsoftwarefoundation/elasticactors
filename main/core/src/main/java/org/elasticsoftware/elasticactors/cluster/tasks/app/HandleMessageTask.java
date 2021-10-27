@@ -21,6 +21,7 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.metrics.MessageLogger;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
@@ -154,8 +155,12 @@ public final class HandleMessageTask extends ActorLifecycleTask {
 
     private String getStringBody(Object message) {
         MessageToStringConverter messageToStringConverter =
-            getMessageToStringConverter(logger, actorSystem, message.getClass());
-        return convertToString(logger, message, internalMessage, messageToStringConverter);
+            MessageLogger.getMessageToStringConverter(actorSystem, message.getClass());
+        return MessageLogger.convertToString(
+            message,
+            internalMessage,
+            messageToStringConverter
+        );
     }
 
     private void notifySubscribers(InternalMessage internalMessage) {
