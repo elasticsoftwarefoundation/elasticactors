@@ -247,15 +247,13 @@ public class NodeConfiguration {
             environment.getProperty("ea.metrics.node.messaging.delivery.warn.threshold", Long.class);
         Long messageHandlingWarnThreshold =
             environment.getProperty("ea.metrics.node.messaging.handling.warn.threshold", Long.class);
-        Long serializationWarnThreshold =
-            environment.getProperty("ea.metrics.node.serialization.warn.threshold", Long.class);
 
         return new MetricsSettings(
             loggingEnabled,
             metricsEnabled,
             messageDeliveryWarnThreshold,
             messageHandlingWarnThreshold,
-            serializationWarnThreshold,
+            null,
             buildOverridesMap(environment)
         );
     }
@@ -293,17 +291,15 @@ public class NodeConfiguration {
                             Object property = propertySource.getProperty(key);
                             if (property != null) {
                                 String value = property.toString();
-                                if (!value.isEmpty()) {
-                                    Message.LogFeature[] features = Arrays.stream(value.split(","))
-                                        .map(String::trim)
-                                        .filter(s -> !s.isEmpty())
-                                        .map(String::toUpperCase)
-                                        .map(Message.LogFeature::valueOf)
-                                        .distinct()
-                                        .toArray(Message.LogFeature[]::new);
-                                    String className = key.substring(EA_METRICS_OVERRIDES.length());
-                                    mapBuilder.put(className, features);
-                                }
+                                Message.LogFeature[] features = Arrays.stream(value.split(","))
+                                    .map(String::trim)
+                                    .filter(s -> !s.isEmpty())
+                                    .map(String::toUpperCase)
+                                    .map(Message.LogFeature::valueOf)
+                                    .distinct()
+                                    .toArray(Message.LogFeature[]::new);
+                                String className = key.substring(EA_METRICS_OVERRIDES.length());
+                                mapBuilder.put(className, features);
                             }
                         }
                     }

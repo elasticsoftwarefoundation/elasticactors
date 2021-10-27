@@ -188,7 +188,6 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         if(this.measurement != null) {
             logMessageTimingInformationForTraces();
             logMessageTimingInformation();
-            checkSerializationThresholdExceeded();
             checkMessageHandlingThresholdExceeded();
         }
     }
@@ -241,19 +240,6 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
 
     private void checkMessageHandlingThresholdExceeded() {
         MessageLogger.checkMessageHandlingThresholdExceeded(
-            this.getClass(),
-            internalMessage,
-            actorSystem,
-            metricsSettings,
-            measurement,
-            serviceActor,
-            serviceRef,
-            this::unwrapMessageClass
-        );
-    }
-
-    private void checkSerializationThresholdExceeded() {
-        MessageLogger.checkSerializationThresholdExceeded(
             this.getClass(),
             internalMessage,
             actorSystem,

@@ -81,8 +81,63 @@ greeter.tell(new Greeting("Joost van de Wijgerd"),null);
 testActorSystem.destroy();
 ```
 
+### Configuration keys
 
+```properties
+# Toggles logging for messages in node queues
+ea.logging.node.messaging.enabled=false
 
+# Toggles metrics for messages in node queues
+ea.metrics.node.messaging.enabled=false
+
+# Configures the threshold for message delivery (total time spent in broker + local queues)
+# in microseconds
+ea.metrics.node.messaging.delivery.warn.threshold=0
+
+# Configures the threshold for message handling in microseconds
+ea.metrics.node.messaging.handling.warn.threshold=0
+
+# Toggles logging for messages in shard queues
+ea.logging.shard.messaging.enabled=false
+
+# Toggles metrics for messages in shard queues
+ea.metrics.shard.messaging.enabled=false
+
+# Configures the threshold for message delivery (total time spent in broker + local queues)
+# in microseconds
+ea.metrics.shard.messaging.delivery.warn.threshold=0
+
+# Configures the threshold for message handling in microseconds
+ea.metrics.shard.messaging.handling.warn.threshold=0
+
+# Configures the threshold for actor state serialization
+ea.metrics.shard.serialization.warn.threshold=0
+
+# Configures LogFeature overrides for specific message types
+# The value is a list of comma-separated features
+ea.metrics.messages.overrides.{{class_name}}=TIMING,CONTENTS
+
+ea.logging.message.maxLength=10
+ea.logging.message.transient.useToString=true
+```
+
+### Class loading cache
+
+Elastic Actors dynamically loads classes during message handling.
+That hasn't been a performance issue so far, but if you're making use 
+of the logging facilities above, the number of times a class is dynamically 
+loaded can increase. Since these operations can introduce some level of 
+contention due to synchronization, a class loading cache is available
+if that happens to impact the performance of your application. Just add 
+the following dependency to your build:
+
+```xml
+<dependency>
+    <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
+    <artifactId>elasticactors-caching</artifactId>
+    <scope>runtime</scope>
+</dependency>
+```
 
 
 
