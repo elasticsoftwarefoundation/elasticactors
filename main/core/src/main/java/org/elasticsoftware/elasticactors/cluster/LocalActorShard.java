@@ -34,8 +34,8 @@ import org.elasticsoftware.elasticactors.cluster.tasks.CreateActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.DestroyActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.PassivateActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.PersistActorTask;
+import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MultiMessageHandlerEventListener;
@@ -147,7 +147,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
         final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-        return new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message),message.getClass().getName(),durable, timeout);
+        return new DefaultInternalMessage(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message),message.getClass().getName(),durable, timeout);
     }
 
     @Override
@@ -157,7 +157,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         if (message instanceof TransientInternalMessage) {
             undeliverableMessage = new TransientInternalMessage(receiverRef, message.getSender(), message.getPayload(null), true);
         } else {
-            undeliverableMessage = new InternalMessageImpl( receiverRef,
+            undeliverableMessage = new DefaultInternalMessage( receiverRef,
                                                             message.getSender(),
                                                             message.getPayload(),
                                                             message.getPayloadClass(),

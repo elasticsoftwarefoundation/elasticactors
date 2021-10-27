@@ -107,7 +107,10 @@ public final class TransientInternalMessage extends AbstractTracedMessage
 
     @Override
     public ByteBuffer getPayload() {
-        throw new UnsupportedOperationException(String.format("This implementation is intended to be used local only, for remote use [%s]",InternalMessageImpl.class.getSimpleName()));
+        throw new UnsupportedOperationException(String.format(
+            "This implementation is intended to be used local only, for remote use [%s]",
+            DefaultInternalMessage.class.getSimpleName()
+        ));
     }
 
     @Override
@@ -142,7 +145,9 @@ public final class TransientInternalMessage extends AbstractTracedMessage
 
     @Override
     public byte[] toByteArray() {
-        throw new UnsupportedOperationException(String.format("This implementation is intended to be used local only, for remote use [%s]",InternalMessageImpl.class.getSimpleName()));
+        throw new UnsupportedOperationException(String.format(
+            "This implementation is intended to be used local only, for remote use [%s]",
+            DefaultInternalMessage.class.getSimpleName()));
     }
 
     @Override

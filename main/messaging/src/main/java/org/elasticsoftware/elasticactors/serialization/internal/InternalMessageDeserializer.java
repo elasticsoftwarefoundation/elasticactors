@@ -18,9 +18,9 @@ package org.elasticsoftware.elasticactors.serialization.internal;
 
 import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.ImmutableInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
@@ -80,7 +80,7 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
 
         Class<?> messageClass = isImmutableMessageClass(messageClassString);
         if(messageClass == null) {
-            return new InternalMessageImpl(
+            return new DefaultInternalMessage(
                     id,
                     sender,
                     receivers,

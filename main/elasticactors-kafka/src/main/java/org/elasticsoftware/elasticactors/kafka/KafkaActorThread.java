@@ -69,8 +69,8 @@ import org.elasticsoftware.elasticactors.kafka.serialization.UUIDDeserializer;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStore;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory;
 import org.elasticsoftware.elasticactors.kafka.utils.TopicNamesHelper;
+import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
@@ -412,7 +412,7 @@ public final class KafkaActorThread extends Thread {
                 messagesToFire.forEach(scheduledMessage -> {
                     // send the message (first to the shard so it will be picked up by the normal processMessages for that shard)
                     InternalMessage internalMessage =
-                            new InternalMessageImpl(scheduledMessage.getSender(), scheduledMessage.getReceiver(),
+                            new DefaultInternalMessage(scheduledMessage.getSender(), scheduledMessage.getReceiver(),
                                     ByteBuffer.wrap(scheduledMessage.getMessageBytes()),
                                     scheduledMessage.getMessageClass().getName(), false);
                     // find out which shard to send it to (this has to be and ActorShard)
@@ -820,7 +820,7 @@ public final class KafkaActorThread extends Thread {
                         ManagedActorShard managedActorShard = partitionsToShards.get(consumerRecord.partition());
                         ActorRef receiverRef = internalActorSystem.actorFor(eventListener.getActorId());
                         PersistentActor<ShardKey> persistentActor = managedActorShard.getPersistentActor(receiverRef);
-                        InternalMessage internalMessage = new InternalMessageImpl(null, receiverRef,
+                        InternalMessage internalMessage = new DefaultInternalMessage(null, receiverRef,
                                 ByteBuffer.wrap(eventListener.getMessageBytes()),
                                 eventListener.getMessageClass().getName(), false);
                         // start a new transaction for each message
@@ -1132,7 +1132,7 @@ public final class KafkaActorThread extends Thread {
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
         final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-        return new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message),message.getClass().getName(),durable, timeout);
+        return new DefaultInternalMessage(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message),message.getClass().getName(),durable, timeout);
     }
 
     private final class ManagedActorShard implements EvictionListener<PersistentActor<ShardKey>>, ManagedActorContainer<ShardKey> {

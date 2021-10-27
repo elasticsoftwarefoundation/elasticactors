@@ -191,7 +191,6 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
 
     protected void logMessageContents(Object message) {
         MessageLogger.logMessageContents(
-            this.getClass(),
             internalMessage,
             actorSystem,
             message,
@@ -204,7 +203,6 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
 
     private void logMessageTimingInformation() {
         MessageLogger.logMessageTimingInformation(
-            this.getClass(),
             internalMessage,
             metricsSettings,
             measurement,
@@ -228,10 +226,12 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         MessageLogger.checkMessageHandlingThresholdExceeded(
             this.getClass(),
             internalMessage,
+            actorSystem,
             metricsSettings,
             measurement,
             receiver,
-            receiverRef
+            receiverRef,
+            this::unwrapMessageClass
         );
     }
 
@@ -239,10 +239,12 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         MessageLogger.checkSerializationThresholdExceeded(
             this.getClass(),
             internalMessage,
+            actorSystem,
             metricsSettings,
             measurement,
             receiver,
-            receiverRef
+            receiverRef,
+            this::unwrapMessageClass
         );
     }
 
@@ -250,9 +252,11 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         MessageLogger.checkDeliveryThresholdExceeded(
             this.getClass(),
             internalMessage,
+            actorSystem,
             metricsSettings,
             receiver,
-            receiverRef
+            receiverRef,
+            this::unwrapMessageClass
         );
     }
 

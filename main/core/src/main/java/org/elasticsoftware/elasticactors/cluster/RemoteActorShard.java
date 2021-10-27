@@ -21,8 +21,8 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.serialization.Message;
@@ -66,13 +66,13 @@ public final class RemoteActorShard extends AbstractActorContainer implements Ac
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
         final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-        messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable,timeout));
+        messageQueue.offer(new DefaultInternalMessage(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable,timeout));
     }
 
     @Override
     public void undeliverableMessage(InternalMessage message, ActorRef receiverRef) throws Exception {
         // input is the message that cannot be delivered
-        InternalMessageImpl undeliverableMessage = new InternalMessageImpl(receiverRef,
+        DefaultInternalMessage undeliverableMessage = new DefaultInternalMessage(receiverRef,
                                                                            message.getSender(),
                                                                            message.getPayload(),
                                                                            message.getPayloadClass(),

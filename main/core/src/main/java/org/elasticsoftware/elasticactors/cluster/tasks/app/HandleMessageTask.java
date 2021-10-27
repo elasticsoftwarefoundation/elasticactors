@@ -158,6 +158,7 @@ public final class HandleMessageTask extends ActorLifecycleTask {
             MessageLogger.getMessageToStringConverter(actorSystem, message.getClass());
         return MessageLogger.convertToString(
             message,
+            actorSystem,
             internalMessage,
             messageToStringConverter
         );

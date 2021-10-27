@@ -3,14 +3,18 @@ package org.elasticsoftware.elasticactors.cluster.metrics;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.messaging.ImmutableInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.messaging.TransientInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageToStringConverter;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.util.function.Function;
 
 import static org.elasticsoftware.elasticactors.tracing.TracingUtils.shorten;
@@ -77,6 +81,16 @@ public final class MessageLogger {
         return false;
     }
 
+    private static boolean isContentLoggingEnabledOnError(Class<?> messageClass) {
+        if (messageClass != null) {
+            Message message = messageClass.getAnnotation(Message.class);
+            if (message != null) {
+                return message.logBodyOnError();
+            }
+        }
+        return false;
+    }
+
     private static <T> boolean contains(T[] array, T object) {
         for (T currentObject : array) {
             if (currentObject.equals(object)) {
@@ -87,7 +101,6 @@ public final class MessageLogger {
     }
 
     public static void logMessageTimingInformation(
-        Class<?> taskClass,
         InternalMessage internalMessage,
         MetricsSettings metricsSettings,
         Measurement measurement,
@@ -99,8 +112,7 @@ public final class MessageLogger {
             Class<?> messageClass = messageClassUnwrapper.apply(internalMessage);
             if (isTimingLoggingEnabledFor(messageClass, metricsSettings)) {
                 logger.info(
-                    "[TIMING ({})] Message of type [{}] received by actor [{}] of type [{}], wrapped in an [{}]. {}",
-                    taskClass.getSimpleName(),
+                    "Message of type [{}] received by actor [{}] of type [{}], wrapped in an [{}]. {}",
                     shorten(messageClass),
                     receiverRef,
                     shorten(receiver.getClass()),
@@ -112,7 +124,6 @@ public final class MessageLogger {
     }
 
     public static void logMessageContents(
-        Class<?> taskClass,
         InternalMessage internalMessage,
         InternalActorSystem internalActorSystem,
         Object message,
@@ -128,13 +139,17 @@ public final class MessageLogger {
                 MessageToStringConverter messageToStringConverter =
                     getMessageToStringConverter(internalActorSystem, messageClass);
                 logger.info(
-                    "[CONTENT ({})] Message of type [{}] received by actor [{}] of type [{}], wrapped in an [{}]. Contents: [{}]",
-                    taskClass.getSimpleName(),
+                    "Message of type [{}] received by actor [{}] of type [{}], wrapped in an [{}]. Contents: [{}]",
                     shorten(messageClass),
                     receiverRef,
                     shorten(receiver.getClass()),
                     shorten(internalMessage.getClass()),
-                    convertToString(message, internalMessage, messageToStringConverter)
+                    convertToString(
+                        message,
+                        internalActorSystem,
+                        internalMessage,
+                        messageToStringConverter
+                    )
                 );
             }
         }
@@ -149,7 +164,7 @@ public final class MessageLogger {
     {
         if (measurement != null && logger.isTraceEnabled()) {
             logger.trace(
-                "### [TRACE ({})] Message of type [{}] with id [{}] for actor [{}] of type [{}]. {}",
+                "[TRACE ({})] Message of type [{}] with id [{}] for actor [{}] of type [{}]. {}",
                 taskClass.getSimpleName(),
                 (internalMessage != null) ? internalMessage.getPayloadClass() : null,
                 (internalMessage != null) ? internalMessage.getId() : null,
@@ -163,10 +178,12 @@ public final class MessageLogger {
     public static void checkMessageHandlingThresholdExceeded(
         Class<?> taskClass,
         InternalMessage internalMessage,
+        InternalActorSystem internalActorSystem,
         MetricsSettings metricsSettings,
         Measurement measurement,
         ElasticActor receiver,
-        ActorRef receiverRef)
+        ActorRef receiverRef,
+        Function<InternalMessage, Class<?>> messageClassUnwrapper)
     {
         if (logger.isWarnEnabled()
             && metricsSettings.isMessageHandlingWarnThresholdEnabled()
@@ -174,18 +191,17 @@ public final class MessageLogger {
             && measurement.getTotalDuration(MICROSECONDS)
             > metricsSettings.getMessageHandlingWarnThreshold())
         {
-            logger.warn(
-                "### [THRESHOLD (HANDLING) ({})] Message of type [{}] with id [{}] for actor"
-                    + " [{}] of type [{}] took {} microsecs in total to be handled, exceeding the "
-                    + "configured threshold of {} microsecs. {}",
-                taskClass.getSimpleName(),
-                (internalMessage != null) ? shorten(internalMessage.getPayloadClass()) : "null",
-                (internalMessage != null) ? internalMessage.getId() : "null",
+            logDelay(
+                "HANDLING",
+                taskClass,
+                internalMessage,
+                internalActorSystem,
+                metricsSettings,
+                measurement,
+                receiver,
                 receiverRef,
-                shorten(receiver.getClass()),
-                measurement.getTotalDuration(MICROSECONDS),
-                metricsSettings.getMessageHandlingWarnThreshold(),
-                measurement.summary(MICROSECONDS)
+                messageClassUnwrapper,
+                measurement.getTotalDuration(MICROSECONDS)
             );
         }
     }
@@ -193,10 +209,12 @@ public final class MessageLogger {
     public static void checkSerializationThresholdExceeded(
         Class<?> taskClass,
         InternalMessage internalMessage,
+        InternalActorSystem internalActorSystem,
         MetricsSettings metricsSettings,
         Measurement measurement,
         ElasticActor receiver,
-        ActorRef receiverRef)
+        ActorRef receiverRef,
+        Function<InternalMessage, Class<?>> messageClassUnwrapper)
     {
         if (logger.isWarnEnabled()
             && metricsSettings.isSerializationWarnThresholdEnabled()
@@ -204,18 +222,17 @@ public final class MessageLogger {
             && measurement.getSerializationDuration(MICROSECONDS)
             > metricsSettings.getSerializationWarnThreshold())
         {
-            logger.warn(
-                "### [THRESHOLD (SERIALIZATION) ({})] Message of type [{}] with id [{}] triggered "
-                    + "serialization for actor [{}] of type [{}] which took {} microsecs, "
-                    + "exceeding the configured threshold of {} microsecs. {}",
-                taskClass.getSimpleName(),
-                (internalMessage != null) ? shorten(internalMessage.getPayloadClass()) : "null",
-                (internalMessage != null) ? internalMessage.getId() : "null",
+            logDelay(
+                "SERIALIZATION",
+                taskClass,
+                internalMessage,
+                internalActorSystem,
+                metricsSettings,
+                measurement,
+                receiver,
                 receiverRef,
-                shorten(receiver.getClass()),
-                measurement.getSerializationDuration(MICROSECONDS),
-                metricsSettings.getSerializationWarnThreshold(),
-                measurement.summary(MICROSECONDS)
+                messageClassUnwrapper,
+                measurement.getSerializationDuration(MICROSECONDS)
             );
         }
     }
@@ -223,9 +240,11 @@ public final class MessageLogger {
     public static void checkDeliveryThresholdExceeded(
         Class<?> taskClass,
         InternalMessage internalMessage,
+        InternalActorSystem internalActorSystem,
         MetricsSettings metricsSettings,
         ElasticActor receiver,
-        ActorRef receiverRef)
+        ActorRef receiverRef,
+        Function<InternalMessage, Class<?>> messageClassUnwrapper)
     {
         if (internalMessage != null
             && logger.isWarnEnabled()
@@ -234,37 +253,116 @@ public final class MessageLogger {
             long timestamp = UUIDTools.toUnixTimestamp(internalMessage.getId());
             long delay = (System.currentTimeMillis() - timestamp) * 1000;
             if (delay > metricsSettings.getMessageDeliveryWarnThreshold()) {
-                logger.warn(
-                    "### [THRESHOLD (DELIVERY) ({})] Message delivery delay of {} microsecs exceeds "
-                        + "the threshold of {} microsecs. "
-                        + "Actor type [{}]. "
-                        + "Receiver [{}]. "
-                        + "Sender [{}]. "
-                        + "Message type [{}]. "
-                        + "Message envelope type [{}]. "
-                        + "Trace context: [{}]. "
-                        + "Creation context: [{}]. "
-                        + "Message payload size: {} bytes",
-                    taskClass.getSimpleName(),
-                    delay,
-                    metricsSettings.getMessageDeliveryWarnThreshold(),
-                    shorten(receiver.getClass()),
+                logDelay(
+                    "DELIVERY",
+                    taskClass,
+                    internalMessage,
+                    internalActorSystem,
+                    metricsSettings,
+                    null,
+                    receiver,
                     receiverRef,
-                    internalMessage.getSender(),
-                    shorten(internalMessage.getPayloadClass()),
-                    shorten(internalMessage.getClass()),
-                    internalMessage.getTraceContext(),
-                    internalMessage.getCreationContext(),
-                    internalMessage.hasSerializedPayload()
-                        ? internalMessage.getPayload().limit()
-                        : "N/A"
+                    messageClassUnwrapper,
+                    delay
                 );
             }
         }
     }
 
+    private static void logDelay(
+        String delayType,
+        Class<?> taskClass,
+        InternalMessage internalMessage,
+        InternalActorSystem internalActorSystem,
+        MetricsSettings metricsSettings,
+        Measurement measurement,
+        ElasticActor receiver,
+        ActorRef receiverRef,
+        Function<InternalMessage, Class<?>> messageClassUnwrapper,
+        long delay)
+    {
+        Class<?> messageClass = messageClassUnwrapper.apply(internalMessage);
+        if (isContentLoggingEnabledOnError(messageClass)) {
+            MessageToStringConverter messageToStringConverter =
+                getMessageToStringConverter(internalActorSystem, messageClass);
+            logger.warn(
+                "[THRESHOLD EXCEEDED: {} ({})] "
+                    + "Delay of {} microsecs exceeds "
+                    + "the threshold of {} microsecs. "
+                    + "Actor type [{}]. "
+                    + "Receiver [{}]. "
+                    + "Sender [{}]. "
+                    + "Message type [{}]. "
+                    + "Message envelope type [{}]. "
+                    + "{}"
+                    + "{}"
+                    + "{}"
+                    + "Message payload: [{}].",
+                delayType,
+                taskClass.getSimpleName(),
+                delay,
+                metricsSettings.getMessageDeliveryWarnThreshold(),
+                shorten(receiver.getClass()),
+                receiverRef,
+                internalMessage.getSender(),
+                shorten(messageClass),
+                shorten(internalMessage.getClass()),
+                internalMessage.getTraceContext() != null
+                    ? internalMessage.getTraceContext() + ". "
+                    : "",
+                internalMessage.getCreationContext() != null
+                    ? internalMessage.getCreationContext() + ". "
+                    : "",
+                measurement != null ? measurement.summary(MICROSECONDS) + ". " : "",
+                convertToString(
+                    null,
+                    internalActorSystem,
+                    internalMessage,
+                    messageToStringConverter
+                )
+            );
+        } else {
+            logger.warn(
+                "[THRESHOLD EXCEEDED: {} ({})] "
+                    + "Delay of {} microsecs exceeds "
+                    + "the threshold of {} microsecs. "
+                    + "Actor type [{}]. "
+                    + "Receiver [{}]. "
+                    + "Sender [{}]. "
+                    + "Message type [{}]. "
+                    + "Message envelope type [{}]. "
+                    + "{}"
+                    + "{}"
+                    + "{}"
+                    + "Message payload size: {} bytes",
+                delayType,
+                taskClass.getSimpleName(),
+                delay,
+                metricsSettings.getMessageDeliveryWarnThreshold(),
+                shorten(receiver.getClass()),
+                receiverRef,
+                internalMessage.getSender(),
+                messageClass != null
+                    ? shorten(messageClass)
+                    : shorten(internalMessage.getPayloadClass()),
+                shorten(internalMessage.getClass()),
+                internalMessage.getTraceContext() != null
+                    ? internalMessage.getTraceContext() + ". "
+                    : "",
+                internalMessage.getCreationContext() != null
+                    ? internalMessage.getCreationContext() + ". "
+                    : "",
+                measurement != null ? measurement.summary(MICROSECONDS) + ". " : "",
+                internalMessage.hasSerializedPayload()
+                    ? internalMessage.getPayload().limit()
+                    : "N/A"
+            );
+        }
+    }
+
     public static String convertToString(
         Object message,
+        InternalActorSystem actorSystem,
         InternalMessage internalMessage,
         MessageToStringConverter messageToStringConverter)
     {
@@ -272,15 +370,23 @@ public final class MessageLogger {
             return null;
         }
         try {
+            if (NextMessage.class.getName().equals(internalMessage.getPayloadClass())) {
+                NextMessage nextMessage = internalMessage.getPayload(actorSystem.getDeserializer(NextMessage.class));
+                return messageToStringConverter.convert(ByteBuffer.wrap(nextMessage.getMessageBytes()));
+            }
             if (internalMessage.hasSerializedPayload()) {
                 return messageToStringConverter.convert(internalMessage.getPayload());
             } else if (message != null) {
                 return messageToStringConverter.convert(message);
+            } else if (internalMessage instanceof TransientInternalMessage
+                || internalMessage instanceof ImmutableInternalMessage) {
+                return messageToStringConverter.convert((Object) internalMessage.getPayload(null));
             }
         } catch (Exception e) {
             logger.error(
-                "Exception thrown while serializing message of type [{}] to String",
-                message.getClass().getName(),
+                "Exception thrown while serializing message of type [{}] wrapped in a [{}] to String",
+                internalMessage.getPayloadClass(),
+                internalMessage.getClass().getSimpleName(),
                 e
             );
         }

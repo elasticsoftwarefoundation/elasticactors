@@ -120,15 +120,14 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
         }
         if(NextMessage.class.getName().equals(internalMessage.getPayloadClass())) {
             try {
-                Class<?> payloadClass = getClassHelper().forName(internalMessage.getPayloadClass());
-                NextMessage nextMessage = (NextMessage) internalMessage.getPayload(actorSystem.getDeserializer(payloadClass));
+                NextMessage nextMessage = internalMessage.getPayload(actorSystem.getDeserializer(NextMessage.class));
                 unwrappedMessageClass = getClassHelper().forName(nextMessage.getMessageName());
                 return unwrappedMessageClass;
             } catch(IOException e) {
                 log.error("Class [{}] could not be loaded", internalMessage.getPayloadClass(), e);
                 return null;
             } catch(ClassNotFoundException e) {
-                log.error("Class [{}] not found", internalMessage.getPayloadClass());
+                log.error("Class [{}] not found", internalMessage.getPayloadClass(), e);
                 return null;
             }
         } else {

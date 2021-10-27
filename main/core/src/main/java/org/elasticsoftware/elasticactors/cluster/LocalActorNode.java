@@ -31,8 +31,8 @@ import org.elasticsoftware.elasticactors.cluster.tasks.CreateActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.DestroyActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.HandleServiceMessageTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.HandleUndeliverableServiceMessageTask;
+import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MultiMessageHandlerEventListener;
@@ -118,11 +118,11 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
             if(durable) {
                 // durable so it will go over the bus and needs to be serialized
                 MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), true, timeout));
+                messageQueue.offer(new DefaultInternalMessage(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), true, timeout));
             } else if(!immutable) {
                 // it's not durable, but it's mutable so we need to serialize here
                 MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                messageQueue.offer(new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), false, timeout));
+                messageQueue.offer(new DefaultInternalMessage(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), false, timeout));
             } else {
                 // as the message is immutable we can safely send it as a TransientInternalMessage
                 messageQueue.offer(new TransientInternalMessage(from,ImmutableList.copyOf(to),message));
@@ -136,7 +136,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
         if (message instanceof TransientInternalMessage) {
             undeliverableMessage = new TransientInternalMessage(receiverRef, message.getSender(), message.getPayload(null), true);
         } else {
-            undeliverableMessage = new InternalMessageImpl(receiverRef,
+            undeliverableMessage = new DefaultInternalMessage(receiverRef,
                     message.getSender(),
                     message.getPayload(),
                     message.getPayloadClass(),

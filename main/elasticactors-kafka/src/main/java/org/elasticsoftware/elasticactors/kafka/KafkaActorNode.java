@@ -23,8 +23,8 @@ import org.elasticsoftware.elasticactors.NodeKey;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.LocalClusterActorNodeRef;
+import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
@@ -87,7 +87,7 @@ public final class KafkaActorNode implements ActorNode {
 
     @Override
     public void undeliverableMessage(InternalMessage message, ActorRef receiverRef) throws Exception {
-        InternalMessage undeliverableMessage = new InternalMessageImpl( receiverRef,
+        InternalMessage undeliverableMessage = new DefaultInternalMessage( receiverRef,
                 message.getSender(),
                 message.getPayload(),
                 message.getPayloadClass(),
@@ -136,6 +136,6 @@ public final class KafkaActorNode implements ActorNode {
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
         final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-        return new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message),message.getClass().getName(),durable, timeout);
+        return new DefaultInternalMessage(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message),message.getClass().getName(),durable, timeout);
     }
 }

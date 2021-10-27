@@ -94,7 +94,8 @@ public @interface Message {
     LogFeature[] logOnReceive() default {};
 
     /**
-     * Determines if it's ok to log the body of this message when an unexpected error occurs.
+     * Determines if it's ok to log the body of this message when an unexpected error
+     * and/or warning in the messaging layer occurs.
      *
      * IMPORTANT: the contents of a message can contain sensitive information.
      * Use this with caution.

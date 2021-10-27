@@ -44,9 +44,6 @@ public final class JacksonMessageToStringConverter implements MessageToStringCon
     @Override
     @Nonnull
     public String convert(@Nonnull ByteBuffer message) throws Exception {
-        if (message.position() > 0) {
-            message.rewind();
-        }
         CharSequence s = StandardCharsets.UTF_8.decode(message);
         return trim(s);
     }

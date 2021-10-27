@@ -33,7 +33,7 @@ import java.util.UUID;
 /**
  * @author Joost van de Wijgerd
  */
-public final class InternalMessageImpl extends AbstractTracedMessage
+public final class DefaultInternalMessage extends AbstractTracedMessage
         implements InternalMessage, Serializable {
     private final ActorRef sender;
     private final ImmutableList<ActorRef> receivers;
@@ -45,31 +45,31 @@ public final class InternalMessageImpl extends AbstractTracedMessage
     private final int timeout;
     private transient byte[] serializedForm;
 
-    public InternalMessageImpl(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass,boolean durable) {
+    public DefaultInternalMessage(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass,boolean durable) {
         this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass, durable, false);
     }
 
-    public InternalMessageImpl(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass,boolean durable) {
+    public DefaultInternalMessage(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass,boolean durable) {
         this(UUIDTools.createTimeBasedUUID(), sender, receivers, payload, payloadClass, durable, false, NO_TIMEOUT);
     }
 
-    public InternalMessageImpl(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass,boolean durable, int timeout) {
+    public DefaultInternalMessage(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass,boolean durable, int timeout) {
         this(UUIDTools.createTimeBasedUUID(), sender, receivers, payload, payloadClass, durable, false, timeout);
     }
 
-    public InternalMessageImpl(ActorRef sender, ActorRef receiver,ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
+    public DefaultInternalMessage(ActorRef sender, ActorRef receiver,ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
         this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass, durable, undeliverable);
     }
 
-    public InternalMessageImpl(ActorRef sender, ActorRef receiver,ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable, int timeout) {
+    public DefaultInternalMessage(ActorRef sender, ActorRef receiver,ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable, int timeout) {
         this(UUIDTools.createTimeBasedUUID(), sender, ImmutableList.of(receiver), payload, payloadClass, durable, undeliverable, timeout);
     }
 
-    public InternalMessageImpl(UUID id, ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
+    public DefaultInternalMessage(UUID id, ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
         this(id, sender, ImmutableList.of(receiver), payload, payloadClass, durable, undeliverable, NO_TIMEOUT);
     }
 
-    private InternalMessageImpl(
+    private DefaultInternalMessage(
             UUID id,
             ActorRef sender,
             ImmutableList<ActorRef> receivers,
@@ -88,7 +88,7 @@ public final class InternalMessageImpl extends AbstractTracedMessage
         this.timeout = timeout;
     }
 
-    public InternalMessageImpl(UUID id,
+    public DefaultInternalMessage(UUID id,
             ActorRef sender,
             ImmutableList<ActorRef> receivers,
             ByteBuffer payload,
@@ -138,13 +138,13 @@ public final class InternalMessageImpl extends AbstractTracedMessage
 
     @Override
     public ByteBuffer getPayload() {
-        return payload;
+        return payload != null ? payload.asReadOnlyBuffer() : null;
     }
 
     @Override
     public <T> T getPayload(MessageDeserializer<T> deserializer) throws IOException {
         //return deserializer.deserialize(payload);
-        return SerializationContext.deserialize(deserializer, payload);
+        return SerializationContext.deserialize(deserializer, payload.asReadOnlyBuffer());
     }
 
     @Override
@@ -182,7 +182,7 @@ public final class InternalMessageImpl extends AbstractTracedMessage
 
     @Override
     public InternalMessage copyOf() {
-        return new InternalMessageImpl(
+        return new DefaultInternalMessage(
                 id,
                 sender,
                 receivers,

@@ -129,7 +129,7 @@ public final class ImmutableInternalMessage extends AbstractTracedMessage
 
     @Override
     public ByteBuffer getPayload() {
-        return payload;
+        return payload != null ? payload.asReadOnlyBuffer() : null;
     }
 
     @Override
