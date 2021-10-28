@@ -131,7 +131,7 @@ public class AskTest {
         final AtomicReference<String> response = new AtomicReference<>();
 
         echo.ask(new Greeting("echo"), Greeting.class).whenComplete((greeting, throwable) -> {
-            logger.info(Thread.currentThread().getName());
+            logger.info("Running whenComplete");
             response.set(greeting.getWho());
             waitLatch.countDown();
         });

@@ -147,6 +147,7 @@ public class GreetingTest {
                         assertNull(getManager().currentMethodContext());
                         CreationContext creationContext = getManager().currentCreationContext();
                         assertNotNull(creationContext);
+                        assertNotNull(creationContext.getScheduled());
                         assertTrue(creationContext.getScheduled());
                         assertEquals(
                             creationContext.getCreator(),
