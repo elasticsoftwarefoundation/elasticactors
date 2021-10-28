@@ -149,6 +149,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
         return configuration;
     }
 
+    @Override
     public void shutdown() {
         // The Messaging subsystem is closed before this instance
         // Need to sort out the order
@@ -575,7 +576,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
         // if we have state we need to wrap it
         String actorId = UUID.randomUUID().toString();
         // see if we are being called in the context of another actor (and set the affinity key)
-        String affinityKey = ActorContextHolder.hasActorContext() ? ActorContextHolder.getSelf().getActorId() : null;
+        ActorRef self = ActorContextHolder.getSelf();
+        String affinityKey = self != null ? self.getActorId() : null;
         CreateActorMessage createActorMessage = new CreateActorMessage(getName(),
                                                                        actorClass.getName(),
                                                                        actorId,

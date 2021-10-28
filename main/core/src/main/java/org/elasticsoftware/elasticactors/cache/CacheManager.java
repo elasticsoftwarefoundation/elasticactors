@@ -27,6 +27,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -38,15 +40,19 @@ import java.util.concurrent.ExecutionException;
  * @author Joost van de Wijgerd
  */
 public class CacheManager<K,V> {
+
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
+
     private final Cache<CacheKey,V> backingCache;
     private final Multimap<Object,CacheKey> segmentIndex;
-    private final GlobalRemovalListener globalRemovalListener = new GlobalRemovalListener();
     private final ConcurrentMap<Object,EvictionListener<V>> evictionListeners = new ConcurrentHashMap<>();
 
     public CacheManager(int maximumSize) {
-        backingCache = CacheBuilder.newBuilder().maximumSize(maximumSize)
-                                                .removalListener(globalRemovalListener).build();
-        segmentIndex = Multimaps.synchronizedSetMultimap(HashMultimap.<Object,CacheKey>create());
+        backingCache = CacheBuilder.newBuilder()
+            .maximumSize(maximumSize)
+            .removalListener(new GlobalRemovalListener())
+            .build();
+        segmentIndex = Multimaps.synchronizedSetMultimap(HashMultimap.create());
     }
 
     public final Cache<K,V> create(Object cacheKey,EvictionListener<V> evictionListener) {
@@ -160,15 +166,17 @@ public class CacheManager<K,V> {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof CacheKey)) {
+                return false;
+            }
 
             CacheKey cacheKey1 = (CacheKey) o;
 
-            if (!cacheKey.equals(cacheKey1.cacheKey)) return false;
-            if (!segmentKey.equals(cacheKey1.segmentKey)) return false;
-
-            return true;
+            return cacheKey.equals(cacheKey1.cacheKey)
+                && segmentKey.equals(cacheKey1.segmentKey);
         }
 
         @Override
@@ -186,6 +194,13 @@ public class CacheManager<K,V> {
             EvictionListener<V> evictionListener = evictionListeners.get(notification.getKey().segmentKey);
             // only notify when it was not evicted explicitly (when a entry was deleted)
             // otherwise the prePassivate will run
+            if (logger.isDebugEnabled()) {
+                logger.debug(
+                    "Removing [{}] from cache. Cause: [{}]",
+                    notification.getValue(),
+                    notification.getCause()
+                );
+            }
             if(evictionListener != null && notification.wasEvicted()) {
                 evictionListener.onEvicted(notification.getValue());
             }

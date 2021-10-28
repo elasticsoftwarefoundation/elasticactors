@@ -98,7 +98,23 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
 
     @Override
     public void onEvicted(PersistentActor<NodeKey> value) {
-        // @todo: a temporary actor that gets evicted is actually being destroyed
+        logger.error(
+            "CRITICAL WARNING: Actor [{}] of type [{}] got evicted from the cache. "
+                + "This can lead to issues using temporary actors. "
+                + "Please increase the maximum size of the actor cache for this node.",
+            value.getSelf(),
+            value.getActorClass().getName()
+        );
+        try {
+            actorSystem.stop(value.getSelf());
+        } catch (Exception e) {
+            logger.error(
+                "Could not stop evicted actor [{}] of type [{}]",
+                value.getSelf(),
+                value.getActorClass().getName(),
+                e
+            );
+        }
     }
 
     @Override
@@ -109,8 +125,8 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     @Override
     public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
         // we need some special handling for the CreateActorMessage in case of Temp Actor
-        if(CreateActorMessage.class.equals(message.getClass()) && ActorType.TEMP.equals(CreateActorMessage.class.cast(message).getType())) {
-            messageQueue.offer(new TransientInternalMessage(from, ImmutableList.copyOf(to),message));
+        if(message instanceof CreateActorMessage && ActorType.TEMP.equals(((CreateActorMessage) message).getType())) {
+            messageQueue.offer(new TransientInternalMessage(from, ImmutableList.copyOf(to), message));
         } else {
             // get the durable flag
             Message messageAnnotation = message.getClass().getAnnotation(Message.class);

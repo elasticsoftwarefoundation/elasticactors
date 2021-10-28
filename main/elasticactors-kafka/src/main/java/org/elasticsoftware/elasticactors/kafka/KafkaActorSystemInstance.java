@@ -354,7 +354,8 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         }
         String actorId = UUID.randomUUID().toString();
         // see if we are being called in the context of another actor (and set the affinity key)
-        String affinityKey = ActorContextHolder.hasActorContext() ? ActorContextHolder.getSelf().getActorId() : null;
+        ActorRef self = ActorContextHolder.getSelf();
+        String affinityKey = self != null ? self.getActorId() : null;
         CreateActorMessage createActorMessage = new CreateActorMessage(getName(),
                 actorClass.getName(),
                 actorId,

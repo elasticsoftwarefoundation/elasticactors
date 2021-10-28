@@ -54,15 +54,17 @@ public final class ShardKey implements Comparable<ShardKey> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ShardKey)) {
+            return false;
+        }
 
         ShardKey that = (ShardKey) o;
 
-        if (shardId != that.shardId) return false;
-        if (!actorSystemName.equals(that.actorSystemName)) return false;
-
-        return true;
+        return (shardId == that.shardId)
+            && (actorSystemName.equals(that.actorSystemName));
     }
 
     @Override
