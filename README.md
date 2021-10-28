@@ -144,7 +144,16 @@ the following dependency to your build:
 </dependency>
 ```
 
+### Tracing and Log4j2
 
+If running a web application while using Log4j2 for logging, using tracing can generate
+a big amount of garbage objects due to Log4j2 using a different implementation of the map
+that backs the MDC. In order to avoid performance issues, run your application with the following
+system properties set to:
 
+```properties
+log4j2.is.webapp=false
+log4j2.garbagefree.threadContextMap=true
+```
 
 

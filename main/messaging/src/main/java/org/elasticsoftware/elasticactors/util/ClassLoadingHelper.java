@@ -42,7 +42,7 @@ public abstract class ClassLoadingHelper {
                 return Optional.of(ServiceLoader.load(ClassLoadingHelper.class))
                     .map(ServiceLoader::iterator)
                     .filter(Iterator::hasNext)
-                    .map(Iterator::next)
+                    .map(ClassLoadingHelperHolder::loadFirst)
                     .orElseGet(() -> {
                         logger.warn(
                             "No implementations of ClassLoadingHelper were found. "
@@ -55,6 +55,15 @@ public abstract class ClassLoadingHelper {
                         + "Using the simple, non-caching implementation.", e);
                 return new SimpleClassLoadingHelper();
             }
+        }
+
+        private static ClassLoadingHelper loadFirst(Iterator<ClassLoadingHelper> iter) {
+            ClassLoadingHelper service = iter.next();
+            logger.info(
+                "Loaded ClassLoadingHelper implementation: {}",
+                service.getClass().getName()
+            );
+            return service;
         }
     }
 

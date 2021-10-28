@@ -100,7 +100,7 @@ public abstract class MessagingContextManager {
                 return Optional.of(ServiceLoader.load(MessagingContextManager.class))
                         .map(ServiceLoader::iterator)
                         .filter(Iterator::hasNext)
-                        .map(Iterator::next)
+                        .map(MessagingContextManagerHolder::loadFirst)
                         .orElseGet(() -> {
                             logger.warn(
                                     "No implementations of MessagingContextManager were found. "
@@ -113,6 +113,15 @@ public abstract class MessagingContextManager {
                                 + "Falling back to no-op.", e);
                 return new NoopMessagingContextManager();
             }
+        }
+
+        private static MessagingContextManager loadFirst(Iterator<MessagingContextManager> iter) {
+            MessagingContextManager service = iter.next();
+            logger.info(
+                "Loaded MessagingContextManager implementation: {}",
+                service.getClass().getName()
+            );
+            return service;
         }
     }
 
