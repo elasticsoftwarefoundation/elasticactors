@@ -50,13 +50,17 @@ public class AskForGreetingActor extends MethodActor {
         ActorRef echo = actorSystem.actorOf("echo", EchoGreetingActor.class);
         logger.info("Got REQUEST in Thread {}", Thread.currentThread().getName());
         checkHandlerOrder(1);
-        assertEquals(
+        if (getManager().isTracingEnabled()) {
+            assertEquals(
                 getManager().currentMethodContext(),
                 AskForGreetingActor.class.getMethod(
-                        "handle",
-                        AskForGreeting.class,
-                        ActorSystem.class,
-                        ActorRef.class));
+                    "handle",
+                    AskForGreeting.class,
+                    ActorSystem.class,
+                    ActorRef.class
+                )
+            );
+        }
         echo.ask(new Greeting("echo"), Greeting.class, greeting.getPersistOnResponse())
                 .whenComplete((g, throwable) -> {
                     logger.info("Got REPLY in Thread {}", Thread.currentThread().getName());
