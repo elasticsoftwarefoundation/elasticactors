@@ -106,10 +106,10 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
             value.getActorClass().getName()
         );
         try {
-            actorSystem.stop(value.getSelf());
+            destroyActor(value, null, null);
         } catch (Exception e) {
             logger.error(
-                "Could not stop evicted actor [{}] of type [{}]",
+                "Could not destroy evicted actor [{}] of type [{}]",
                 value.getSelf(),
                 value.getActorClass().getName(),
                 e
