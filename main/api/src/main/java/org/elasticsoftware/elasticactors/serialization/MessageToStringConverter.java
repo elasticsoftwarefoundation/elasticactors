@@ -25,8 +25,8 @@ import java.nio.ByteBuffer;
  */
 public interface MessageToStringConverter {
 
-    String LOGGING_USE_TO_STRING_PROPERTY = "ea.logging.message.transient.useToString";
-    String LOGGING_MAXIMUM_LENGTH_PROPERTY = "ea.logging.message.maxLength";
+    String LOGGING_USE_TO_STRING_PROPERTY = "ea.logging.messages.transient.useToString";
+    String LOGGING_MAXIMUM_LENGTH_PROPERTY = "ea.logging.messages.maxLength";
     String CONTENT_TOO_BIG_PREFIX = "[CONTENT_TOO_BIG]: ";
     int DEFAULT_MAX_LENGTH = 5_000;
 

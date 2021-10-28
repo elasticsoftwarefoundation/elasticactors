@@ -59,7 +59,18 @@ public final class CreateActorTask extends ActorLifecycleTask {
                            ActorRef receiverRef,
                            InternalMessage createActorMessage,
                            MessageHandlerEventListener messageHandlerEventListener) {
-        super(actorStateUpdateProcessor, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef,messageHandlerEventListener, createActorMessage, null);
+        super(
+            actorStateUpdateProcessor,
+            persistentActorRepository,
+            persistentActor,
+            actorSystem,
+            receiver,
+            receiverRef,
+            messageHandlerEventListener,
+            createActorMessage,
+            null,
+            null
+        );
         this.persistentActor = (persistentActorRepository != null) ? persistentActor : null;
     }
 

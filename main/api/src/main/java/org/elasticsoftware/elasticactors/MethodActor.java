@@ -48,7 +48,7 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
     private final Map<Class<?>,List<HandlerMethodDefinition>> handlerCache = new HashMap<>();
     @Nullable private final Class<? extends ActorState> stateClass;
     private final static LogLevel onUnhandledLogLevel =
-        LogLevel.valueOf(System.getProperty("ea.logging.unhandled.level", "WARN").toUpperCase());
+        LogLevel.valueOf(System.getProperty("ea.logging.messages.unhandled.level", "WARN").toUpperCase());
 
     protected MethodActor() {
         this.stateClass = resolveActorStateClass();

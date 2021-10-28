@@ -32,6 +32,7 @@ import org.elasticsoftware.elasticactors.cluster.HashingNodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.cluster.LocalActorSystemInstance;
 import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler;
 import org.elasticsoftware.elasticactors.configuration.NodeConfiguration;
@@ -250,4 +251,13 @@ public class TestConfiguration extends AsyncConfigurerSupport {
         return nodeConfiguration.shardMetricsSettings(environment);
     }
 
+    @Bean(name = "nodeLoggingSettings")
+    public LoggingSettings nodeLoggingSettings(Environment environment) {
+        return nodeConfiguration.nodeLoggingSettings(environment);
+    }
+
+    @Bean(name = "shardLoggingSettings")
+    public LoggingSettings shardLoggingSettings(Environment environment) {
+        return nodeConfiguration.shardLoggingSettings(environment);
+    }
 }

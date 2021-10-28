@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.SubscriberContext;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
@@ -70,7 +71,8 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
         PersistentActorRepository persistentActorRepository,
         ActorStateUpdateProcessor actorStateUpdateProcessor,
         MessageHandlerEventListener messageHandlerEventListener,
-        MetricsSettings metricsSettings)
+        MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings)
     {
         super(
             actorStateUpdateProcessor,
@@ -81,7 +83,8 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
             receiverRef,
             messageHandlerEventListener,
             internalMessage,
-            metricsSettings
+            metricsSettings,
+            loggingSettings
         );
     }
 

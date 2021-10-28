@@ -27,6 +27,7 @@ import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActivateActorTask;
@@ -83,6 +84,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     // the cacheloader instance that is reused to avoid garbage being created on each call
     private final CacheLoader cacheLoader = new CacheLoader();
     private MetricsSettings metricsSettings;
+    private LoggingSettings loggingSettings;
 
     public LocalActorShard(PhysicalNode node,
                            InternalActorSystem actorSystem,
@@ -217,7 +219,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                                     persistentActorRepository,
                                     actorStateUpdateProcessor,
                                     messageHandlerEventListener,
-                                    metricsSettings
+                                    metricsSettings,
+                                    loggingSettings
                                 ));
                         }
                     }
@@ -432,6 +435,13 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         @Qualifier("shardMetricsSettings") MetricsSettings metricsSettings)
     {
         this.metricsSettings = metricsSettings;
+    }
+
+    @Autowired
+    public void setLoggingSettings(
+        @Qualifier("shardLoggingSettings") LoggingSettings loggingSettings)
+    {
+        this.loggingSettings = loggingSettings;
     }
 
     /**

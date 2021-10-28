@@ -34,6 +34,7 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.LocalActorSystemInstance;
 import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.RemoteActorSystems;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ShardedScheduler;
 import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
@@ -239,8 +240,6 @@ public class NodeConfiguration {
 
     @Bean(name = "nodeMetricsSettings")
     public MetricsSettings nodeMetricsSettings(Environment environment) {
-        boolean loggingEnabled =
-            environment.getProperty("ea.logging.node.messaging.enabled", Boolean.class, false);
         boolean metricsEnabled =
             environment.getProperty("ea.metrics.node.messaging.enabled", Boolean.class, false);
         Long messageDeliveryWarnThreshold =
@@ -249,19 +248,15 @@ public class NodeConfiguration {
             environment.getProperty("ea.metrics.node.messaging.handling.warn.threshold", Long.class);
 
         return new MetricsSettings(
-            loggingEnabled,
             metricsEnabled,
             messageDeliveryWarnThreshold,
             messageHandlingWarnThreshold,
-            null,
-            buildOverridesMap(environment)
+            null
         );
     }
 
     @Bean(name = "shardMetricsSettings")
     public MetricsSettings shardMetricsSettings(Environment environment) {
-        boolean loggingEnabled =
-            environment.getProperty("ea.logging.shard.messaging.enabled", Boolean.class, false);
         boolean metricsEnabled =
             environment.getProperty("ea.metrics.shard.messaging.enabled", Boolean.class, false);
         Long messageDeliveryWarnThreshold =
@@ -272,11 +267,31 @@ public class NodeConfiguration {
             environment.getProperty("ea.metrics.shard.serialization.warn.threshold", Long.class);
 
         return new MetricsSettings(
-            loggingEnabled,
             metricsEnabled,
             messageDeliveryWarnThreshold,
             messageHandlingWarnThreshold,
-            serializationWarnThreshold,
+            serializationWarnThreshold
+        );
+    }
+
+    @Bean(name = "nodeLoggingSettings")
+    public LoggingSettings nodeLoggingSettings(Environment environment) {
+        boolean loggingEnabled =
+            environment.getProperty("ea.logging.node.messaging.enabled", Boolean.class, false);
+
+        return new LoggingSettings(
+            loggingEnabled,
+            buildOverridesMap(environment)
+        );
+    }
+
+    @Bean(name = "shardLoggingSettings")
+    public LoggingSettings shardLoggingSettings(Environment environment) {
+        boolean loggingEnabled =
+            environment.getProperty("ea.logging.shard.messaging.enabled", Boolean.class, false);
+
+        return new LoggingSettings(
+            loggingEnabled,
             buildOverridesMap(environment)
         );
     }

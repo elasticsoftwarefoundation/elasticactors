@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.cluster.tasks.app;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.ProtocolFactory;
@@ -43,7 +44,8 @@ public final class ApplicationProtocolFactory implements ProtocolFactory {
         PersistentActorRepository persistentActorRepository,
         ActorStateUpdateProcessor actorStateUpdateProcessor,
         MessageHandlerEventListener messageHandlerEventListener,
-        MetricsSettings metricsSettings)
+        MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings)
     {
         return new HandleMessageTask(
             actorSystem,
@@ -54,7 +56,8 @@ public final class ApplicationProtocolFactory implements ProtocolFactory {
             persistentActorRepository,
             actorStateUpdateProcessor,
             messageHandlerEventListener,
-            metricsSettings
+            metricsSettings,
+            loggingSettings
         );
     }
 

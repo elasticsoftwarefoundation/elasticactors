@@ -24,8 +24,9 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
+import org.elasticsoftware.elasticactors.cluster.logging.MessageLogger;
 import org.elasticsoftware.elasticactors.cluster.metrics.Measurement;
-import org.elasticsoftware.elasticactors.cluster.metrics.MessageLogger;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
@@ -42,8 +43,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import static org.elasticsoftware.elasticactors.cluster.metrics.MessageLogger.convertToString;
-import static org.elasticsoftware.elasticactors.cluster.metrics.MessageLogger.getMessageToStringConverter;
+import static org.elasticsoftware.elasticactors.cluster.logging.MessageLogger.convertToString;
+import static org.elasticsoftware.elasticactors.cluster.logging.MessageLogger.getMessageToStringConverter;
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
@@ -60,6 +61,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     private final MessageHandlerEventListener messageHandlerEventListener;
     private final Measurement measurement;
     private final MetricsSettings metricsSettings;
+    private final LoggingSettings loggingSettings;
     private Class<?> unwrappedMessageClass;
 
     public HandleServiceMessageTask(
@@ -68,7 +70,8 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         ElasticActor serviceActor,
         InternalMessage internalMessage,
         MessageHandlerEventListener messageHandlerEventListener,
-        MetricsSettings metricsSettings)
+        MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings)
     {
         this.serviceRef = serviceRef;
         this.actorSystem = actorSystem;
@@ -76,6 +79,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         this.internalMessage = internalMessage;
         this.messageHandlerEventListener = messageHandlerEventListener;
         this.metricsSettings = metricsSettings != null ? metricsSettings : MetricsSettings.disabled();
+        this.loggingSettings = loggingSettings != null ? loggingSettings : LoggingSettings.disabled();
         this.measurement = isMeasurementEnabled() ? new Measurement(System.nanoTime()) : null;
     }
 
@@ -83,6 +87,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         return MessageLogger.isMeasurementEnabled(
             internalMessage,
             metricsSettings,
+            loggingSettings,
             this::unwrapMessageClass
         );
     }
@@ -210,7 +215,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
             internalMessage,
             actorSystem,
             message,
-            metricsSettings,
+            loggingSettings,
             serviceActor,
             serviceRef,
             this::unwrapMessageClass
@@ -220,7 +225,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     private void logMessageTimingInformation() {
         MessageLogger.logMessageTimingInformation(
             internalMessage,
-            metricsSettings,
+            loggingSettings,
             measurement,
             serviceActor,
             serviceRef,

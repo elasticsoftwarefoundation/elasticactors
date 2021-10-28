@@ -22,8 +22,9 @@ import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
+import org.elasticsoftware.elasticactors.cluster.logging.MessageLogger;
 import org.elasticsoftware.elasticactors.cluster.metrics.Measurement;
-import org.elasticsoftware.elasticactors.cluster.metrics.MessageLogger;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
@@ -61,6 +62,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
     private final Measurement measurement;
     private final ActorStateUpdateProcessor actorStateUpdateProcessor;
     protected final MetricsSettings metricsSettings;
+    protected final LoggingSettings loggingSettings;
     protected Class<?> unwrappedMessageClass;
 
     protected ActorLifecycleTask(
@@ -72,7 +74,8 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         ActorRef receiverRef,
         MessageHandlerEventListener messageHandlerEventListener,
         InternalMessage internalMessage,
-        MetricsSettings metricsSettings)
+        MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings)
     {
         this.actorStateUpdateProcessor = actorStateUpdateProcessor;
         this.persistentActorRepository = persistentActorRepository;
@@ -83,6 +86,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         this.messageHandlerEventListener = messageHandlerEventListener;
         this.internalMessage = internalMessage;
         this.metricsSettings = metricsSettings != null ? metricsSettings : MetricsSettings.disabled();
+        this.loggingSettings = loggingSettings != null ? loggingSettings : LoggingSettings.disabled();
         this.measurement = isMeasurementEnabled() ? new Measurement(System.nanoTime()) : null;
     }
 
@@ -90,6 +94,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         return MessageLogger.isMeasurementEnabled(
             internalMessage,
             metricsSettings,
+            loggingSettings,
             this::unwrapMessageClass
         );
     }
@@ -194,7 +199,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             internalMessage,
             actorSystem,
             message,
-            metricsSettings,
+            loggingSettings,
             receiver,
             receiverRef,
             this::unwrapMessageClass
@@ -204,7 +209,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
     private void logMessageTimingInformation() {
         MessageLogger.logMessageTimingInformation(
             internalMessage,
-            metricsSettings,
+            loggingSettings,
             measurement,
             receiver,
             receiverRef,

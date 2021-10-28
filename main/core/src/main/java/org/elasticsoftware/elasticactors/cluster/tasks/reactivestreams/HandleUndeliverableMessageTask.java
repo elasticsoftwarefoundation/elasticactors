@@ -60,7 +60,18 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask imp
                                           PersistentActor persistentActor,
                                           PersistentActorRepository persistentActorRepository,
                                           MessageHandlerEventListener messageHandlerEventListener) {
-        super(null, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, null);
+        super(
+            null,
+            persistentActorRepository,
+            persistentActor,
+            actorSystem,
+            receiver,
+            receiverRef,
+            messageHandlerEventListener,
+            internalMessage,
+            null,
+            null
+        );
     }
 
     // SubscriberContext implementation

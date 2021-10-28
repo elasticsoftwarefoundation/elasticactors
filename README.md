@@ -84,9 +84,6 @@ testActorSystem.destroy();
 ### Configuration keys
 
 ```properties
-# Toggles logging for messages in node queues
-ea.logging.node.messaging.enabled=false
-
 # Toggles metrics for messages in node queues
 ea.metrics.node.messaging.enabled=false
 
@@ -96,12 +93,6 @@ ea.metrics.node.messaging.delivery.warn.threshold=0
 
 # Configures the threshold for message handling in microseconds
 ea.metrics.node.messaging.handling.warn.threshold=0
-
-# Toggles logging for messages in shard queues
-ea.logging.shard.messaging.enabled=false
-
-# Toggles metrics for messages in shard queues
-ea.metrics.shard.messaging.enabled=false
 
 # Configures the threshold for message delivery (total time spent in broker + local queues)
 # in microseconds
@@ -113,16 +104,26 @@ ea.metrics.shard.messaging.handling.warn.threshold=0
 # Configures the threshold for actor state serialization
 ea.metrics.shard.serialization.warn.threshold=0
 
+# Toggles logging for messages in shard queues
+ea.logging.shard.messaging.enabled=false
+
+# Toggles logging for messages in node queues
+ea.logging.node.messaging.enabled=false
+
 # Configures LogFeature overrides for specific message types
 # The value is a list of comma-separated features
-ea.metrics.messages.overrides.{{class_name}}=TIMING,CONTENTS
+ea.logging.messages.overrides.{{class_name}}=TIMING,CONTENTS
 
 # The maximum number of characters when logging message contents 
-ea.logging.message.maxLength=5000
+ea.logging.messages.maxLength=5000
 
 # If set to true, transient messages will use the toString() method 
 # instead of being serialized for logging purposes
-ea.logging.message.transient.useToString=false
+ea.logging.messages.transient.useToString=false
+
+# Changes the logging level used when logging unhandled message types in MethodActor
+# this must be entered as a system property
+ea.logging.messages.unhandled.level=WARN
 ```
 
 ### Class loading cache

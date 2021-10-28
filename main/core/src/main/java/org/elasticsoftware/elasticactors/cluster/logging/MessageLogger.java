@@ -1,8 +1,10 @@
-package org.elasticsoftware.elasticactors.cluster.metrics;
+package org.elasticsoftware.elasticactors.cluster.logging;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.metrics.Measurement;
+import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.messaging.ImmutableInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.TransientInternalMessage;
@@ -31,40 +33,29 @@ public final class MessageLogger {
     public static boolean isMeasurementEnabled(
         InternalMessage internalMessage,
         MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings,
         Function<InternalMessage, Class<?>> messageClassUnwrapper)
     {
         return logger.isTraceEnabled()
             || metricsSettings.requiresMeasurement()
-            || shouldLogTimingForThisMessage(internalMessage, metricsSettings, messageClassUnwrapper);
+            || shouldLogTimingForThisMessage(internalMessage, loggingSettings, messageClassUnwrapper);
     }
 
     private static boolean isLoggingEnabledForMessage(
         InternalMessage internalMessage,
-        MetricsSettings metricsSettings)
+        LoggingSettings loggingSettings)
     {
         return internalMessage != null
             && logger.isInfoEnabled()
-            && metricsSettings.isLoggingEnabled();
-    }
-
-    private static boolean shouldLogTimingForThisMessage(
-        InternalMessage internalMessage,
-        MetricsSettings metricsSettings,
-        Function<InternalMessage, Class<?>> messageClassUnwrapper)
-    {
-        if (isLoggingEnabledForMessage(internalMessage, metricsSettings)) {
-            Class<?> messageClass = messageClassUnwrapper.apply(internalMessage);
-            return isTimingLoggingEnabledFor(messageClass, metricsSettings);
-        }
-        return false;
+            && loggingSettings.isEnabled();
     }
 
     private static boolean isTimingLoggingEnabledFor(
         Class<?> messageClass,
-        MetricsSettings metricsSettings)
+        LoggingSettings loggingSettings)
     {
         if (messageClass != null) {
-            Message.LogFeature[] logFeatures = metricsSettings.processOverrides(messageClass);
+            Message.LogFeature[] logFeatures = loggingSettings.processOverrides(messageClass);
             return contains(logFeatures, Message.LogFeature.TIMING);
         }
         return false;
@@ -72,11 +63,32 @@ public final class MessageLogger {
 
     private static boolean isContentLoggingEnabledFor(
         Class<?> messageClass,
-        MetricsSettings metricsSettings)
+        LoggingSettings loggingSettings)
     {
         if (messageClass != null) {
-            Message.LogFeature[] logFeatures = metricsSettings.processOverrides(messageClass);
+            Message.LogFeature[] logFeatures = loggingSettings.processOverrides(messageClass);
             return contains(logFeatures, Message.LogFeature.CONTENTS);
+        }
+        return false;
+    }
+
+    private static <T> boolean contains(T[] array, T object) {
+        for (T currentObject : array) {
+            if (currentObject.equals(object)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean shouldLogTimingForThisMessage(
+        InternalMessage internalMessage,
+        LoggingSettings loggingSettings,
+        Function<InternalMessage, Class<?>> messageClassUnwrapper)
+    {
+        if (isLoggingEnabledForMessage(internalMessage, loggingSettings)) {
+            Class<?> messageClass = messageClassUnwrapper.apply(internalMessage);
+            return isContentLoggingEnabledFor(messageClass, loggingSettings);
         }
         return false;
     }
@@ -91,26 +103,17 @@ public final class MessageLogger {
         return false;
     }
 
-    private static <T> boolean contains(T[] array, T object) {
-        for (T currentObject : array) {
-            if (currentObject.equals(object)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public static void logMessageTimingInformation(
         InternalMessage internalMessage,
-        MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings,
         Measurement measurement,
         ElasticActor receiver,
         ActorRef receiverRef,
         Function<InternalMessage, Class<?>> messageClassUnwrapper)
     {
-        if (isLoggingEnabledForMessage(internalMessage, metricsSettings)) {
+        if (isLoggingEnabledForMessage(internalMessage, loggingSettings)) {
             Class<?> messageClass = messageClassUnwrapper.apply(internalMessage);
-            if (isTimingLoggingEnabledFor(messageClass, metricsSettings)) {
+            if (isTimingLoggingEnabledFor(messageClass, loggingSettings)) {
                 logger.info(
                     "Message of type [{}] received by actor [{}] of type [{}], wrapped in an [{}]. {}",
                     shorten(messageClass),
@@ -127,15 +130,15 @@ public final class MessageLogger {
         InternalMessage internalMessage,
         InternalActorSystem internalActorSystem,
         Object message,
-        MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings,
         ElasticActor receiver,
         ActorRef receiverRef,
         Function<InternalMessage, Class<?>> messageClassUnwrapper)
     {
-        if (isLoggingEnabledForMessage(internalMessage, metricsSettings)) {
+        if (isLoggingEnabledForMessage(internalMessage, loggingSettings)) {
             Class<?> messageClass =
                 message != null ? message.getClass() : messageClassUnwrapper.apply(internalMessage);
-            if (isContentLoggingEnabledFor(messageClass, metricsSettings)) {
+            if (isContentLoggingEnabledFor(messageClass, loggingSettings)) {
                 MessageToStringConverter messageToStringConverter =
                     getMessageToStringConverter(internalActorSystem, messageClass);
                 logger.info(

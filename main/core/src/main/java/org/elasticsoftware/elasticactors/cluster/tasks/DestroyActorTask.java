@@ -70,7 +70,18 @@ public final class DestroyActorTask extends ActorLifecycleTask {
                             ActorRef receiverRef,
                             InternalMessage internalMessage,
                             MessageHandlerEventListener messageHandlerEventListener) {
-        super(actorStateUpdateProcessor, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef,messageHandlerEventListener, internalMessage, null);
+        super(
+            actorStateUpdateProcessor,
+            persistentActorRepository,
+            persistentActor,
+            actorSystem,
+            receiver,
+            receiverRef,
+            messageHandlerEventListener,
+            internalMessage,
+            null,
+            null
+        );
         // the shardkey is only needed when there is a persistentActorRepository set
         this.shardKey = (persistentActorRepository != null) ? (ShardKey) persistentActor.getKey() : null;
     }

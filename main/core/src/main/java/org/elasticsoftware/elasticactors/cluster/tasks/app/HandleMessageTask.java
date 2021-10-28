@@ -21,7 +21,8 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
-import org.elasticsoftware.elasticactors.cluster.metrics.MessageLogger;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
+import org.elasticsoftware.elasticactors.cluster.logging.MessageLogger;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
@@ -62,7 +63,8 @@ public final class HandleMessageTask extends ActorLifecycleTask {
         PersistentActorRepository persistentActorRepository,
         ActorStateUpdateProcessor actorStateUpdateProcessor,
         MessageHandlerEventListener messageHandlerEventListener,
-        MetricsSettings metricsSettings)
+        MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings)
     {
         super(
             actorStateUpdateProcessor,
@@ -73,7 +75,8 @@ public final class HandleMessageTask extends ActorLifecycleTask {
             receiverRef,
             messageHandlerEventListener,
             internalMessage,
-            metricsSettings
+            metricsSettings,
+            loggingSettings
         );
     }
 

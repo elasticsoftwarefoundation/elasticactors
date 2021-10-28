@@ -25,6 +25,7 @@ import org.elasticsoftware.elasticactors.NodeKey;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActivateServiceActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.CreateActorTask;
@@ -70,6 +71,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     private Cache<ActorRef,PersistentActor<NodeKey>> actorCache;
     private final Set<ElasticActor> initializedActors = new HashSet<>();
     private MetricsSettings metricsSettings;
+    private LoggingSettings loggingSettings;
 
     public LocalActorNode(PhysicalNode node,
                           InternalActorSystem actorSystem,
@@ -187,7 +189,8 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                                     null,
                                     null,
                                     messageHandlerEventListener,
-                                    metricsSettings
+                                    metricsSettings,
+                                    loggingSettings
                                 ));
                         }
 
@@ -210,7 +213,8 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                                     serviceInstance,
                                     internalMessage,
                                     messageHandlerEventListener,
-                                    metricsSettings
+                                    metricsSettings,
+                                    loggingSettings
                                 ));
                             } else {
                                 actorExecutor.execute(new HandleUndeliverableServiceMessageTask(actorSystem,
@@ -343,6 +347,13 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
         @Qualifier("nodeMetricsSettings") MetricsSettings metricsSettings)
     {
         this.metricsSettings = metricsSettings;
+    }
+
+    @Autowired
+    public void setLoggingSettings(
+        @Qualifier("nodeLoggingSettings") LoggingSettings loggingSettings)
+    {
+        this.loggingSettings = loggingSettings;
     }
 
     @Override

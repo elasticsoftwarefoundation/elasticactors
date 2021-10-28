@@ -1,49 +1,34 @@
 package org.elasticsoftware.elasticactors.cluster.metrics;
 
-import com.google.common.collect.ImmutableMap;
-import org.elasticsoftware.elasticactors.serialization.Message;
-
 public final class MetricsSettings {
 
-    private static final Message.LogFeature[] EMPTY = new Message.LogFeature[0];
-
-    private final boolean loggingEnabled;
-    private final boolean metricsEnabled;
+    private final boolean enabled;
     private final Long messageDeliveryWarnThreshold;
     private final Long messageHandlingWarnThreshold;
     private final Long serializationWarnThreshold;
-    private final ImmutableMap<String, Message.LogFeature[]> overrides;
 
     public static MetricsSettings disabled() {
-        return new MetricsSettings(false, false, null, null, null, ImmutableMap.of());
+        return new MetricsSettings(false, null, null, null);
     }
 
     public MetricsSettings(
-        boolean loggingEnabled,
-        boolean metricsEnabled,
+        boolean enabled,
         Long messageDeliveryWarnThreshold,
         Long messageHandlingWarnThreshold,
-        Long serializationWarnThreshold,
-        ImmutableMap<String, Message.LogFeature[]> overrides)
+        Long serializationWarnThreshold)
     {
-        this.loggingEnabled = loggingEnabled;
-        this.metricsEnabled = metricsEnabled;
+        this.enabled = enabled;
         this.messageDeliveryWarnThreshold = messageDeliveryWarnThreshold;
         this.messageHandlingWarnThreshold = messageHandlingWarnThreshold;
         this.serializationWarnThreshold = serializationWarnThreshold;
-        this.overrides = overrides;
     }
 
-    public boolean isMetricsEnabled() {
-        return metricsEnabled;
-    }
-
-    public boolean isLoggingEnabled() {
-        return loggingEnabled;
+    public boolean isEnabled() {
+        return enabled;
     }
 
     public boolean isMessageDeliveryWarnThresholdEnabled() {
-        return metricsEnabled && messageDeliveryWarnThreshold != null;
+        return enabled && messageDeliveryWarnThreshold != null;
     }
 
     public long getMessageDeliveryWarnThreshold() {
@@ -51,7 +36,7 @@ public final class MetricsSettings {
     }
 
     public boolean isMessageHandlingWarnThresholdEnabled() {
-        return metricsEnabled && messageHandlingWarnThreshold != null;
+        return enabled && messageHandlingWarnThreshold != null;
     }
 
     public long getMessageHandlingWarnThreshold() {
@@ -59,7 +44,7 @@ public final class MetricsSettings {
     }
 
     public boolean isSerializationWarnThresholdEnabled() {
-        return metricsEnabled && serializationWarnThreshold != null;
+        return enabled && serializationWarnThreshold != null;
     }
 
     public long getSerializationWarnThreshold() {
@@ -72,17 +57,5 @@ public final class MetricsSettings {
 
     public boolean requiresMeasurement() {
         return isMessageHandlingWarnThresholdEnabled() || isSerializationWarnThresholdEnabled();
-    }
-
-    public Message.LogFeature[] processOverrides(Class<?> messageClass) {
-        Message.LogFeature[] overriden = overrides.get(messageClass.getName());
-        if (overriden != null) {
-            return overriden;
-        }
-        Message messageAnnotation = messageClass.getAnnotation(Message.class);
-        if (messageAnnotation != null) {
-            return messageAnnotation.logOnReceive();
-        }
-        return EMPTY;
     }
 }
