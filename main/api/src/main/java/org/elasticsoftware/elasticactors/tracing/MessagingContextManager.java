@@ -56,6 +56,8 @@ public abstract class MessagingContextManager {
         void close();
     }
 
+    public abstract boolean isTracingEnabled();
+
     @Nullable
     public abstract TraceContext currentTraceContext();
 
@@ -104,13 +106,13 @@ public abstract class MessagingContextManager {
                         .orElseGet(() -> {
                             logger.warn(
                                     "No implementations of MessagingContextManager were found. "
-                                            + "Falling back to no-op.");
+                                            + "Falling back to no-op. Tracing disabled.");
                             return new NoopMessagingContextManager();
                         });
             } catch (Exception e) {
                 logger.error(
                         "Exception thrown while loading MessagingContextManager implementation. "
-                                + "Falling back to no-op.", e);
+                                + "Falling back to no-op. Tracing disabled.", e);
                 return new NoopMessagingContextManager();
             }
         }
@@ -118,8 +120,9 @@ public abstract class MessagingContextManager {
         private static MessagingContextManager loadFirst(Iterator<MessagingContextManager> iter) {
             MessagingContextManager service = iter.next();
             logger.info(
-                "Loaded MessagingContextManager implementation: {}",
-                service.getClass().getName()
+                "Loaded MessagingContextManager implementation: {}. Tracing enabled: {}",
+                service.getClass().getName(),
+                service.isTracingEnabled()
             );
             return service;
         }
@@ -129,6 +132,11 @@ public abstract class MessagingContextManager {
      * NO-OP implementation for when an implementation of the managet cannot be found
      */
     private final static class NoopMessagingContextManager extends MessagingContextManager {
+
+        @Override
+        public boolean isTracingEnabled() {
+            return false;
+        }
 
         @Nullable
         @Override

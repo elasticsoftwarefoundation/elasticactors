@@ -25,6 +25,8 @@ public abstract class ClassLoadingHelper {
     @Nonnull
     public abstract Class<?> forName(@Nonnull String className) throws ClassNotFoundException;
 
+    public abstract boolean isCachingEnabled();
+
     public static ClassLoadingHelper getClassHelper() {
         return ClassLoadingHelperHolder.INSTANCE;
     }
@@ -60,8 +62,9 @@ public abstract class ClassLoadingHelper {
         private static ClassLoadingHelper loadFirst(Iterator<ClassLoadingHelper> iter) {
             ClassLoadingHelper service = iter.next();
             logger.info(
-                "Loaded ClassLoadingHelper implementation: {}",
-                service.getClass().getName()
+                "Loaded ClassLoadingHelper implementation: {}. Caching enabled: {}",
+                service.getClass().getName(),
+                service.isCachingEnabled()
             );
             return service;
         }
@@ -79,6 +82,11 @@ public abstract class ClassLoadingHelper {
         @Override
         public Class<?> forName(@Nonnull String className) throws ClassNotFoundException {
             return Class.forName(className);
+        }
+
+        @Override
+        public boolean isCachingEnabled() {
+            return false;
         }
     }
 }

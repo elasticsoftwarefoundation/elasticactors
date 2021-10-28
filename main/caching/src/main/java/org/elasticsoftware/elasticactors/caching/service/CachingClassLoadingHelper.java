@@ -48,4 +48,9 @@ public final class CachingClassLoadingHelper extends ClassLoadingHelper {
             throw e.getCause();
         }
     }
+
+    @Override
+    public boolean isCachingEnabled() {
+        return true;
+    }
 }

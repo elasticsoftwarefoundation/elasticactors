@@ -121,31 +121,47 @@ public class GreetingTest {
                 .deleteAfterReceive(false)
                 .onReceive(ScheduledGreeting.class, () -> {
                     logger.info("Got Scheduled Greeting");
-                    assertNull(getManager().currentMethodContext());
-                    CreationContext creationContext = getManager().currentCreationContext();
-                    assertNotNull(creationContext);
-                    assertNull(creationContext.getScheduled());
-                    assertEquals(creationContext.getCreator(), "actor://testcluster/test/shards/1/greeter");
-                    assertEquals(creationContext.getCreatorType(), shorten(GreetingActor.class));
-                    TraceContext traceContext = getManager().currentTraceContext();
-                    assertNotNull(traceContext);
-                    assertNotEquals(traceContext.getParentId(), TEST_TRACE.getSpanId());
-                    assertEquals(traceContext.getTraceId(), TEST_TRACE.getTraceId());
-                    assertNotEquals(traceContext.getSpanId(), TEST_TRACE.getSpanId());
+                    if (getManager().isTracingEnabled()) {
+                        assertNull(getManager().currentMethodContext());
+                        CreationContext creationContext = getManager().currentCreationContext();
+                        assertNotNull(creationContext);
+                        assertNull(creationContext.getScheduled());
+                        assertEquals(
+                            creationContext.getCreator(),
+                            "actor://testcluster/test/shards/1/greeter"
+                        );
+                        assertEquals(
+                            creationContext.getCreatorType(),
+                            shorten(GreetingActor.class)
+                        );
+                        TraceContext traceContext = getManager().currentTraceContext();
+                        assertNotNull(traceContext);
+                        assertNotEquals(traceContext.getParentId(), TEST_TRACE.getSpanId());
+                        assertEquals(traceContext.getTraceId(), TEST_TRACE.getTraceId());
+                        assertNotEquals(traceContext.getSpanId(), TEST_TRACE.getSpanId());
+                    }
                 })
                 .onReceive(Greeting.class, m -> {
                     logger.info("Got Greeting from {}", m.getWho());
-                    assertNull(getManager().currentMethodContext());
-                    CreationContext creationContext = getManager().currentCreationContext();
-                    assertNotNull(creationContext);
-                    assertTrue(creationContext.getScheduled());
-                    assertEquals(creationContext.getCreator(), "actor://testcluster/test/shards/1/greeter");
-                    assertEquals(creationContext.getCreatorType(), shorten(GreetingActor.class));
-                    TraceContext traceContext = getManager().currentTraceContext();
-                    assertNotNull(traceContext);
-                    assertNotEquals(traceContext.getParentId(), TEST_TRACE.getSpanId());
-                    assertEquals(traceContext.getTraceId(), TEST_TRACE.getTraceId());
-                    assertNotEquals(traceContext.getSpanId(), TEST_TRACE.getSpanId());
+                    if (getManager().isTracingEnabled()) {
+                        assertNull(getManager().currentMethodContext());
+                        CreationContext creationContext = getManager().currentCreationContext();
+                        assertNotNull(creationContext);
+                        assertTrue(creationContext.getScheduled());
+                        assertEquals(
+                            creationContext.getCreator(),
+                            "actor://testcluster/test/shards/1/greeter"
+                        );
+                        assertEquals(
+                            creationContext.getCreatorType(),
+                            shorten(GreetingActor.class)
+                        );
+                        TraceContext traceContext = getManager().currentTraceContext();
+                        assertNotNull(traceContext);
+                        assertNotEquals(traceContext.getParentId(), TEST_TRACE.getSpanId());
+                        assertEquals(traceContext.getTraceId(), TEST_TRACE.getTraceId());
+                        assertNotEquals(traceContext.getSpanId(), TEST_TRACE.getSpanId());
+                    }
                 })
                 .orElse(MessageConsumer.noop())
                 .postReceive(countDownLatch::countDown)

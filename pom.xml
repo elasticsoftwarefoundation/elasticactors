@@ -176,6 +176,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <systemProperties>
+                        <log4j2.is.webapp>false</log4j2.is.webapp>
+                        <log4j2.garbagefree.threadContextMap>true</log4j2.garbagefree.threadContextMap>
                     </systemProperties>
                     <threadCount>1</threadCount>
                     <reportFormat>plain</reportFormat>

@@ -23,7 +23,12 @@ import java.util.function.Supplier;
 import static org.elasticsoftware.elasticactors.tracing.TracingUtils.safeToString;
 import static org.elasticsoftware.elasticactors.tracing.TracingUtils.shorten;
 
-public final class MessagingContextManagerImpl extends MessagingContextManager {
+public final class TracingMessagingContextManager extends MessagingContextManager {
+
+    @Override
+    public boolean isTracingEnabled() {
+        return true;
+    }
 
     @Override
     @Nullable
@@ -192,11 +197,11 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
             this.contextManagers = Objects.requireNonNull(contextManagers);
             this.traceContext = find(
                     TraceContext.class,
-                    MessagingContextManagerImpl::staticCurrentTraceContext,
+                    TracingMessagingContextManager::staticCurrentTraceContext,
                     contextManagers);
             this.creationContext = find(
                     CreationContext.class,
-                    MessagingContextManagerImpl::staticCurrentCreationContext,
+                    TracingMessagingContextManager::staticCurrentCreationContext,
                     contextManagers);
             this.closed = new AtomicBoolean(false);
         }
@@ -241,12 +246,19 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
 
         private static final ThreadLocal<TraceContextManager> threadContext = new ThreadLocal<>();
 
+        private enum Strategy {
+            ENTER,
+            REPLACE
+        }
+
         private final TraceContext context;
         private final TraceContextManager previousManager;
+        private final Strategy strategy;
 
-        private TraceContextManager(@Nonnull TraceContext context) {
+        private TraceContextManager(@Nonnull TraceContext context, @Nonnull Strategy strategy) {
             this.context = Objects.requireNonNull(context);
             this.previousManager = threadContext.get();
+            this.strategy = Objects.requireNonNull(strategy);
         }
 
         @Nonnull
@@ -257,7 +269,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
 
         @Nonnull
         private static TraceContextManager enter(@Nonnull TraceContext context) {
-            TraceContextManager newManager = new TraceContextManager(context);
+            TraceContextManager newManager = new TraceContextManager(context, Strategy.ENTER);
             fillContext(context);
             logEnter(threadContext, newManager);
             threadContext.set(newManager);
@@ -266,7 +278,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
 
         @Nonnull
         private static TraceContextManager replace(@Nonnull TraceContext context) {
-            TraceContextManager newManager = new TraceContextManager(context);
+            TraceContextManager newManager = new TraceContextManager(context, Strategy.REPLACE);
             logger.trace("Putting {} in scope", newManager.getContext());
             if (newManager.previousManager == null) {
                 logger.error(
@@ -304,6 +316,7 @@ public final class MessagingContextManagerImpl extends MessagingContextManager {
         public String toString() {
             return new StringJoiner(", ", TraceContextManager.class.getSimpleName() + "{", "}")
                     .add("context=" + context)
+                    .add("strategy=" + strategy)
                     .toString();
         }
     }
