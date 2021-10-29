@@ -1278,7 +1278,8 @@ public final class KafkaActorThread extends Thread {
             logger.error(
                 "CRITICAL WARNING: Actor [{}] of type [{}] got evicted from the cache. "
                     + "This can lead to issues using temporary actors. "
-                    + "Please increase the maximum size of the actor cache for this node.",
+                    + "Please increase the maximum size of the node actor cache "
+                    + "by using the 'ea.nodeCache.maximumSize' property.",
                 value.getSelf(),
                 value.getActorClass().getName()
             );
