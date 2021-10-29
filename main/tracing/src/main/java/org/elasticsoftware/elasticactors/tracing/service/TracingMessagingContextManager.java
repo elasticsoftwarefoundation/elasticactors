@@ -60,22 +60,12 @@ public final class TracingMessagingContextManager extends MessagingContextManage
                 new MessageHandlingContext(context, message),
                 currentScope != null ? currentScope.getMethod() : null
             );
-            enter(currentStack, currentScope, newScope);
-            logger.debug("Entering {}", newScope);
+            enterScope(currentStack, currentScope, newScope);
             return newScope;
         } catch (Exception e) {
             logger.error("Exception thrown while creating messaging scope", e);
             return NoopMessagingScope.INSTANCE;
         }
-    }
-
-    private static void enter(
-        Deque<MessagingScope> currentStack,
-        MessagingScope currentScope,
-        MessagingScope newScope)
-    {
-        currentStack.push(newScope);
-        fillContext(currentScope, newScope);
     }
 
     @Override
@@ -93,8 +83,7 @@ public final class TracingMessagingContextManager extends MessagingContextManage
                 currentScope != null ? currentScope.getMessageHandlingContext() : null,
                 currentScope != null ? currentScope.getMethod() : null
             );
-            enter(currentStack, currentScope, newScope);
-            logger.debug("Entering {}", newScope);
+            enterScope(currentStack, currentScope, newScope);
             return newScope;
         } catch (Exception e) {
             logger.error("Exception thrown while creating messaging scope", e);
@@ -120,8 +109,7 @@ public final class TracingMessagingContextManager extends MessagingContextManage
                 currentScope != null ? currentScope.getMessageHandlingContext() : null,
                 currentScope != null ? currentScope.getMethod() : null
             );
-            enter(currentStack, currentScope, newScope);
-            logger.debug("Entering {}", newScope);
+            enterScope(currentStack, currentScope, newScope);
             return newScope;
         } catch (Exception e) {
             logger.error("Exception thrown while creating messaging scope", e);
@@ -141,13 +129,24 @@ public final class TracingMessagingContextManager extends MessagingContextManage
                 currentScope != null ? currentScope.getMessageHandlingContext() : null,
                 context
             );
-            enter(currentStack, currentScope, newScope);
-            logger.debug("Entering {}", newScope);
+            enterScope(currentStack, currentScope, newScope);
             return newScope;
         } catch (Exception e) {
             logger.error("Exception thrown while creating messaging scope", e);
             return NoopMessagingScope.INSTANCE;
         }
+    }
+
+    private static void enterScope(
+        Deque<MessagingScope> currentStack,
+        MessagingScope currentScope,
+        MessagingScope newScope)
+    {
+        logger.debug("Current number of stacked scopes: {}", currentStack.size());
+        logger.debug("Current scope: {}", currentScope);
+        currentStack.push(newScope);
+        fillContext(currentScope, newScope);
+        logger.debug("Entering new scope: {}", newScope);
     }
 
     private final static class TracingMessagingScope implements MessagingScope {
@@ -218,12 +217,16 @@ public final class TracingMessagingContextManager extends MessagingContextManage
         @Override
         public void close() {
             if (closed.compareAndSet(false, true)) {
-                logger.debug("Closing {}", this);
+                logger.debug("Closing scope: {}", this);
                 Deque<MessagingScope> currentStack = scopes.get();
+                logger.debug("Current number of stacked scopes: {}", currentStack.size());
                 MessagingScope currentScope = currentStack.peek();
                 if (currentScope == this) {
                     currentStack.pop();
-                    fillContext(this, currentStack.peek());
+                    MessagingScope previousScope = currentStack.peek();
+                    logger.debug("Number of scopes left in the stack: {}", currentStack.size());
+                    logger.debug("Rolling back to scope: {}", previousScope);
+                    fillContext(this, previousScope);
                 } else {
                     logger.error(
                         "Removing {} from scope, but context in scope was actually {}. "
