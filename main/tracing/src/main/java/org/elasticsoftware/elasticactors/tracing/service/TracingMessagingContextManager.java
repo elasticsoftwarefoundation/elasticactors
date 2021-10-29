@@ -232,6 +232,8 @@ public final class TracingMessagingContextManager extends MessagingContextManage
                         currentScope
                     );
                 }
+            } else {
+                logger.warn("Trying to close on an already closed scope: {}", this);
             }
         }
 
