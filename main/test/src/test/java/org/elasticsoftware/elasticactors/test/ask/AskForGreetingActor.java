@@ -26,9 +26,11 @@ import org.elasticsoftware.elasticactors.base.serialization.JacksonSerialization
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersRegistry;
 import org.elasticsoftware.elasticactors.test.common.EchoGreetingActor;
 import org.elasticsoftware.elasticactors.test.common.Greeting;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 /**
  * @author Joost van de Wijgerd
@@ -51,8 +53,10 @@ public class AskForGreetingActor extends MethodActor {
         logger.info("Got REQUEST in Thread {}", Thread.currentThread().getName());
         checkHandlerOrder(1);
         if (getManager().isTracingEnabled()) {
+            MessagingScope scope = getManager().currentScope();
+            assertNotNull(scope);
             assertEquals(
-                getManager().currentMethodContext(),
+                scope.getMethod(),
                 AskForGreetingActor.class.getMethod(
                     "handle",
                     AskForGreeting.class,

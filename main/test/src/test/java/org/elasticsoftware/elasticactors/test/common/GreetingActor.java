@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.base.serialization.JacksonSerialization
 import org.elasticsoftware.elasticactors.base.state.StringState;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,13 +48,15 @@ public class GreetingActor extends TypedActor<Greeting> {
     public void onReceive(ActorRef sender, Greeting message) throws Exception {
         logger.info("Hello, {}", message.getWho());
         if (getManager().isTracingEnabled()) {
-            assertNull(getManager().currentMethodContext());
-            CreationContext creationContext = getManager().currentCreationContext();
+            MessagingScope scope = getManager().currentScope();
+            assertNotNull(scope);
+            assertNull(scope.getMethod());
+            CreationContext creationContext = scope.getCreationContext();
             assertNotNull(creationContext);
             assertNull(creationContext.getScheduled());
             assertEquals(creationContext.getCreator(), GreetingTest.class.getSimpleName());
             assertEquals(creationContext.getCreatorType(), shorten(GreetingTest.class.getName()));
-            TraceContext current = getManager().currentTraceContext();
+            TraceContext current = scope.getTraceContext();
             assertNotNull(current);
             assertNotEquals(current.getSpanId(), TEST_TRACE.getSpanId());
             assertEquals(current.getTraceId(), TEST_TRACE.getTraceId());

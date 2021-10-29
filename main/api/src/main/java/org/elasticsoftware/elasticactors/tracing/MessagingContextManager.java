@@ -50,6 +50,15 @@ public abstract class MessagingContextManager {
         @Nullable
         CreationContext getCreationContext();
 
+        @Nullable
+        CreationContext creationContextFromScope();
+
+        @Nullable
+        MessageHandlingContext getMessageHandlingContext();
+
+        @Nullable
+        Method getMethod();
+
         boolean isClosed();
 
         @Override
@@ -58,20 +67,13 @@ public abstract class MessagingContextManager {
 
     public abstract boolean isTracingEnabled();
 
+    /**
+     * Retrieves the current context for the current thread.
+     * The implementations will likely use a ThreadLocal for this.
+     * It's therefore recommended to only call this method once and reuse the object as much as possible.
+     */
     @Nullable
-    public abstract TraceContext currentTraceContext();
-
-    @Nullable
-    public abstract MessageHandlingContext currentMessageHandlingContext();
-
-    @Nullable
-    public abstract CreationContext currentCreationContext();
-
-    @Nullable
-    public abstract CreationContext creationContextFromScope();
-
-    @Nullable
-    public abstract Method currentMethodContext();
+    public abstract MessagingScope currentScope();
 
     @Nonnull
     public abstract MessagingScope enter(
@@ -140,32 +142,8 @@ public abstract class MessagingContextManager {
 
         @Nullable
         @Override
-        public TraceContext currentTraceContext() {
-            return null;
-        }
-
-        @Nullable
-        @Override
-        public MessageHandlingContext currentMessageHandlingContext() {
-            return null;
-        }
-
-        @Nullable
-        @Override
-        public CreationContext currentCreationContext() {
-            return null;
-        }
-
-        @Nullable
-        @Override
-        public CreationContext creationContextFromScope() {
-            return null;
-        }
-
-        @Nullable
-        @Override
-        public Method currentMethodContext() {
-            return null;
+        public MessagingScope currentScope() {
+            return NoopMessagingScope.INSTANCE;
         }
 
         @Nonnull

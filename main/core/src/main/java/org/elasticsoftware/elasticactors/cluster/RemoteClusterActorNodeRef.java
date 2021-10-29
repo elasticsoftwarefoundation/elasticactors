@@ -50,20 +50,16 @@ public final class RemoteClusterActorNodeRef extends BaseActorRef implements Act
 
     public static String generateRefSpec(String clusterName, ActorShard delegatingShard, String nodeId, String actorId) {
         if(actorId != null) {
-            return String.format("actor://%s/%s/nodes/%s/%s",
-                    clusterName,delegatingShard.getKey().getActorSystemName(),
-                    nodeId,actorId);
+            return "actor://" + clusterName + "/" + delegatingShard.getKey().getActorSystemName() + "/nodes/" + nodeId + "/" + actorId;
         } else {
-            return String.format("actor://%s/%s/nodes/%s",
-                    clusterName,delegatingShard.getKey().getActorSystemName(),
-                    nodeId);
+            return "actor://" + clusterName + "/" + delegatingShard.getKey().getActorSystemName() + "/nodes/" + nodeId;
         }
     }
 
 
     @Override
     public String getActorPath() {
-        return String.format("%s/nodes/%s",delegatingShard.getKey().getActorSystemName(),nodeId);
+        return delegatingShard.getKey().getActorSystemName() + "/nodes/" + nodeId;
     }
 
 

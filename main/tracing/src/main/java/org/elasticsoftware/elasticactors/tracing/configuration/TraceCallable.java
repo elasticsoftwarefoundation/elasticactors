@@ -24,8 +24,9 @@ public class TraceCallable<V> implements Callable<V> {
 
     private TraceCallable(Callable<V> delegate) {
         this.delegate = delegate;
-        this.parent = getManager().currentTraceContext();
-        this.creationContext = getManager().creationContextFromScope();
+        MessagingScope scope = getManager().currentScope();
+        this.parent = scope != null ? scope.getTraceContext() : null;
+        this.creationContext = scope != null ? scope.creationContextFromScope() : null;
     }
 
     @Override

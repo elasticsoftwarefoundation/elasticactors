@@ -43,20 +43,15 @@ final class DisconnectedRemoteActorNodeRef extends BaseDisconnectedActorRef {
             String nodeId,
             String actorId) {
         if (actorId != null) {
-            return format(
-                    "actor://%s/%s/nodes/%s/%s",
-                    clusterName,
-                    actorSystemName,
-                    nodeId,
-                    actorId);
+            return "actor://" + clusterName + "/" + actorSystemName + "/nodes/" + nodeId + "/" + actorId;
         } else {
-            return format("actor://%s/%s/nodes/%s", clusterName, actorSystemName, nodeId);
+            return "actor://" + clusterName + "/" + actorSystemName + "/nodes/" + nodeId;
         }
     }
 
     @Override
     public String getActorPath() {
-        return format("%s/nodes/%s", actorSystemName, nodeId);
+        return actorSystemName + "/nodes/" + nodeId;
     }
 
     @Override

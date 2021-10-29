@@ -68,6 +68,7 @@ public class GreetingTest {
     @AfterMethod
     public void removeExternalCreatorData() {
         testScope.get().close();
+        assertNull(getManager().currentScope());
         testScope.remove();
     }
 
@@ -122,8 +123,10 @@ public class GreetingTest {
                 .onReceive(ScheduledGreeting.class, () -> {
                     logger.info("Got Scheduled Greeting");
                     if (getManager().isTracingEnabled()) {
-                        assertNull(getManager().currentMethodContext());
-                        CreationContext creationContext = getManager().currentCreationContext();
+                        MessagingScope scope = getManager().currentScope();
+                        assertNotNull(scope);
+                        assertNull(scope.getMethod());
+                        CreationContext creationContext = scope.getCreationContext();
                         assertNotNull(creationContext);
                         assertNull(creationContext.getScheduled());
                         assertEquals(
@@ -134,7 +137,7 @@ public class GreetingTest {
                             creationContext.getCreatorType(),
                             shorten(GreetingActor.class)
                         );
-                        TraceContext traceContext = getManager().currentTraceContext();
+                        TraceContext traceContext = scope.getTraceContext();
                         assertNotNull(traceContext);
                         assertNotEquals(traceContext.getParentId(), TEST_TRACE.getSpanId());
                         assertEquals(traceContext.getTraceId(), TEST_TRACE.getTraceId());
@@ -144,8 +147,10 @@ public class GreetingTest {
                 .onReceive(Greeting.class, m -> {
                     logger.info("Got Greeting from {}", m.getWho());
                     if (getManager().isTracingEnabled()) {
-                        assertNull(getManager().currentMethodContext());
-                        CreationContext creationContext = getManager().currentCreationContext();
+                        MessagingScope scope = getManager().currentScope();
+                        assertNotNull(scope);
+                        assertNull(scope.getMethod());
+                        CreationContext creationContext = scope.getCreationContext();
                         assertNotNull(creationContext);
                         assertNotNull(creationContext.getScheduled());
                         assertTrue(creationContext.getScheduled());
@@ -157,7 +162,7 @@ public class GreetingTest {
                             creationContext.getCreatorType(),
                             shorten(GreetingActor.class)
                         );
-                        TraceContext traceContext = getManager().currentTraceContext();
+                        TraceContext traceContext = scope.getTraceContext();
                         assertNotNull(traceContext);
                         assertNotEquals(traceContext.getParentId(), TEST_TRACE.getSpanId());
                         assertEquals(traceContext.getTraceId(), TEST_TRACE.getTraceId());

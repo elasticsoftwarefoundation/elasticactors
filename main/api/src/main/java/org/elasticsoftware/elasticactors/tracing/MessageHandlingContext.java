@@ -37,7 +37,7 @@ public final class MessageHandlingContext {
                 return shorten(tracedMessage.getType());
             } else {
                 String typeAsString = tracedMessage.getTypeAsString();
-                // This is used in InternalMessageImpl a lot
+                // This is used in DefaultInternalMessage a lot
                 // Let's cache it here instead of in TracingUtils.
                 return shortenCache.computeIfAbsent(typeAsString, TracingUtils::shorten);
             }

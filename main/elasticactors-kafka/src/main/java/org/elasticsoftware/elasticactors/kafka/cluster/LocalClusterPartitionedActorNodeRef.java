@@ -54,19 +54,15 @@ public final class LocalClusterPartitionedActorNodeRef extends BaseActorRef impl
 
     public static String generateRefSpec(String clusterName, ActorNode node, int partition, String actorId) {
         if(actorId != null) {
-            return String.format("actor://%s/%s/nodes/%s/%d/%s",
-                    clusterName,node.getKey().getActorSystemName(),
-                    node.getKey().getNodeId(), partition, actorId);
+            return "actor://" + clusterName + "/" + node.getKey().getActorSystemName() + "/nodes/" + node.getKey().getNodeId() + "/" + partition + "/" + actorId;
         } else {
-            return String.format("actor://%s/%s/nodes/%s/%d",
-                    clusterName,node.getKey().getActorSystemName(),
-                    node.getKey().getNodeId(), partition);
+            return "actor://" + clusterName + "/" + node.getKey().getActorSystemName() + "/nodes/" + node.getKey().getNodeId() + "/" + partition;
         }
     }
 
     @Override
     public String getActorPath() {
-        return String.format("%s/nodes/%s/%d",node.getKey().getActorSystemName(),node.getKey().getNodeId(), partition);
+        return node.getKey().getActorSystemName() + "/nodes/" + node.getKey().getNodeId() + "/" + partition;
     }
 
     @Override

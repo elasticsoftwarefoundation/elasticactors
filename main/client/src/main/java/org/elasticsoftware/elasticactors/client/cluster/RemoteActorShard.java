@@ -57,7 +57,7 @@ final class RemoteActorShard implements ActorShard, MessageHandler {
         this.key = key;
         this.messageQueueFactory = messageQueueFactory;
         this.serializationFrameworks = serializationFrameworks;
-        this.actorPath = String.format("%s/shards/%d", key.getActorSystemName(), key.getShardId());
+        this.actorPath = key.getActorSystemName() + "/shards/" + key.getShardId();
         this.myRef = new RemoteActorShardRef(clusterName, this, null);
     }
 

@@ -24,8 +24,6 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.reactivestreams.Publisher;
 
-import static java.lang.String.format;
-
 /**
  * {@link org.elasticsoftware.elasticactors.ActorRef} that references an actor in the local cluster
  *
@@ -40,13 +38,13 @@ public final class ServiceActorRef extends BaseActorRef implements ActorContaine
     }
 
     public static String generateRefSpec(String clusterName,ActorNode node,String serviceId) {
-        return format("actor://%s/%s/services/%s/%s", clusterName, node.getKey().getActorSystemName(), node.getKey().getNodeId(), serviceId);
+        return "actor://" + clusterName + "/" + node.getKey().getActorSystemName() + "/services/" + node.getKey().getNodeId() + "/" + serviceId;
     }
 
 
     @Override
     public String getActorPath() {
-        return format("%s/services/%s", node.getKey().getActorSystemName(), node.getKey().getNodeId());
+        return node.getKey().getActorSystemName() + "/services/" + node.getKey().getNodeId();
     }
 
     @Override

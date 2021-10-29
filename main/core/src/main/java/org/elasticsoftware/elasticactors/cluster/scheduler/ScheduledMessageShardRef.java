@@ -24,8 +24,6 @@ import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 
-import static java.lang.String.format;
-
 /**
  * @author Joost van de Wijgerd
  */
@@ -37,7 +35,7 @@ public final class ScheduledMessageShardRef implements ScheduledMessageRef, Acto
     public ScheduledMessageShardRef(String clusterName, ActorShard shard, ScheduledMessageKey scheduledMessageKey) {
         this.shard = shard;
         this.scheduledMessageKey = scheduledMessageKey;
-        this.refSpec = format(REFSPEC_FORMAT,clusterName,shard.getKey().getActorSystemName(),shard.getKey().getShardId(),scheduledMessageKey.getFireTime(),scheduledMessageKey.getId().toString());
+        this.refSpec = "message://" + clusterName + "/" + shard.getKey().getActorSystemName() + "/shards/" + shard.getKey().getShardId() + "/" + scheduledMessageKey.getFireTime() + "/" + scheduledMessageKey.getId().toString();
     }
 
     @Override

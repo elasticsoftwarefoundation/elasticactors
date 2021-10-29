@@ -37,6 +37,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -59,6 +61,7 @@ public class AskTest {
     @AfterMethod
     public void removeExternalCreatorData() {
         testScope.get().close();
+        assertNull(getManager().currentScope());
         testScope.remove();
     }
 

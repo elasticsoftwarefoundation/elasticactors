@@ -38,7 +38,7 @@ public final class NodeKey {
 
     @Override
     public String toString() {
-        return String.format("%s/nodes/%s",actorSystemName,nodeId);
+        return actorSystemName + "/nodes/" + nodeId;
     }
 
     public static NodeKey fromString(String shardKey) {

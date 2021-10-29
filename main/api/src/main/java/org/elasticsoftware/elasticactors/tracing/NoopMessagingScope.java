@@ -3,7 +3,7 @@ package org.elasticsoftware.elasticactors.tracing;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 
 import javax.annotation.Nullable;
-import java.util.StringJoiner;
+import java.lang.reflect.Method;
 
 public final class NoopMessagingScope implements MessagingScope {
 
@@ -21,6 +21,24 @@ public final class NoopMessagingScope implements MessagingScope {
         return null;
     }
 
+    @Nullable
+    @Override
+    public CreationContext creationContextFromScope() {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public MessageHandlingContext getMessageHandlingContext() {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public Method getMethod() {
+        return null;
+    }
+
     @Override
     public boolean isClosed() {
         return false;
@@ -33,9 +51,6 @@ public final class NoopMessagingScope implements MessagingScope {
 
     @Override
     public String toString() {
-        return new StringJoiner(
-                ", ",
-                NoopMessagingScope.class.getSimpleName() + "{",
-                "}").toString();
+        return NoopMessagingScope.class.getSimpleName() + "{}";
     }
 }

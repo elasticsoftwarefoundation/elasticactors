@@ -49,18 +49,9 @@ final class RemoteActorShardRef implements ActorRef, ActorContainerRef {
             ActorShard shard,
             @Nullable String actorId) {
         if (actorId != null) {
-            return String.format(
-                    "actor://%s/%s/shards/%d/%s",
-                    clusterName,
-                    shard.getKey().getActorSystemName(),
-                    shard.getKey().getShardId(),
-                    actorId);
+            return "actor://" + clusterName + "/" + shard.getKey().getActorSystemName() + "/shards/" + shard.getKey().getShardId() + "/" + actorId;
         } else {
-            return String.format(
-                    "actor://%s/%s/shards/%d",
-                    clusterName,
-                    shard.getKey().getActorSystemName(),
-                    shard.getKey().getShardId());
+            return "actor://" + clusterName + "/" + shard.getKey().getActorSystemName() + "/shards/" + shard.getKey().getShardId();
         }
     }
 
@@ -71,10 +62,7 @@ final class RemoteActorShardRef implements ActorRef, ActorContainerRef {
 
     @Override
     public String getActorPath() {
-        return String.format(
-                "%s/shards/%s",
-                shard.getKey().getActorSystemName(),
-                shard.getKey().getShardId());
+        return shard.getKey().getActorSystemName() + "/shards/" + shard.getKey().getShardId();
     }
 
     @Override

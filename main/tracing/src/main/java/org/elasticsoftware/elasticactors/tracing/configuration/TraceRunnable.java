@@ -23,15 +23,14 @@ public class TraceRunnable implements Runnable {
 
     private TraceRunnable(@Nonnull Runnable delegate) {
         this.delegate = delegate;
-        this.parent = getManager().currentTraceContext();
-        this.creationContext = getManager().creationContextFromScope();
+        MessagingScope scope = getManager().currentScope();
+        this.parent = scope != null ? scope.getTraceContext() : null;
+        this.creationContext = scope != null ? scope.creationContextFromScope() : null;
     }
 
     @Override
     public void run() {
-        try (MessagingScope ignored = getManager().enter(
-                new TraceContext(parent),
-                creationContext)) {
+        try (MessagingScope ignored = getManager().enter(new TraceContext(parent), creationContext)) {
             this.delegate.run();
         }
     }

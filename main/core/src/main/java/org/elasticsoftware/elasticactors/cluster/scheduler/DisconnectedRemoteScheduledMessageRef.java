@@ -33,7 +33,7 @@ public final class DisconnectedRemoteScheduledMessageRef implements ScheduledMes
     public DisconnectedRemoteScheduledMessageRef(String clusterName, String actorSystemName, int shardId, ScheduledMessageKey scheduledMessageKey) {
         this.clusterName = clusterName;
         this.scheduledMessageKey = scheduledMessageKey;
-        this.refSpec = format(REFSPEC_FORMAT,clusterName,actorSystemName,shardId,scheduledMessageKey.getFireTime(),scheduledMessageKey.getId().toString());
+        this.refSpec = "message://" + clusterName + "/" + actorSystemName + "/shards/" + shardId + "/" + scheduledMessageKey.getFireTime() + "/" + scheduledMessageKey.getId().toString();
     }
 
     @Override

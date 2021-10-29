@@ -52,6 +52,7 @@ import org.elasticsoftware.elasticactors.test.InternalActorSystemsImpl;
 import org.elasticsoftware.elasticactors.test.cluster.NoopActorSystemEventRegistryService;
 import org.elasticsoftware.elasticactors.test.cluster.SingleNodeClusterService;
 import org.elasticsoftware.elasticactors.test.state.LoggingActorStateUpdateListener;
+import org.elasticsoftware.elasticactors.tracing.configuration.TracingConfiguration;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
@@ -83,7 +84,7 @@ import java.util.concurrent.Executor;
         BackplaneConfiguration.class,
         MessagingConfiguration.class,
         ClientConfiguration.class,
-//        TracingConfiguration.class
+        TracingConfiguration.class
 })
 @PropertySource("classpath:/system.properties")
 public class TestConfiguration extends AsyncConfigurerSupport {

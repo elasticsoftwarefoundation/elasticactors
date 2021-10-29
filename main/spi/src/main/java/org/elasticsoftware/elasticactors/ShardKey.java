@@ -27,7 +27,7 @@ public final class ShardKey implements Comparable<ShardKey> {
     public ShardKey(String actorSystemName, int shardId) {
         this.actorSystemName = actorSystemName;
         this.shardId = shardId;
-        this.spec = String.format("%s/shards/%d",actorSystemName,shardId);
+        this.spec = actorSystemName + "/shards/" + shardId;
     }
 
     public int getShardId() {

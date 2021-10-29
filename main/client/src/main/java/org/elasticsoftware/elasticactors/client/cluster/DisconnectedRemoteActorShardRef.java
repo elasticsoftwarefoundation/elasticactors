@@ -41,20 +41,15 @@ final class DisconnectedRemoteActorShardRef extends BaseDisconnectedActorRef {
             int shardId,
             String actorId) {
         if (actorId != null) {
-            return format(
-                    "actor://%s/%s/shards/%s/%s",
-                    clusterName,
-                    actorSystemName,
-                    shardId,
-                    actorId);
+            return "actor://" + clusterName + "/" + actorSystemName + "/shards/" + shardId + "/" + actorId;
         } else {
-            return format("actor://%s/%s/shards/%s", clusterName, actorSystemName, shardId);
+            return "actor://" + clusterName + "/" + actorSystemName + "/shards/" + shardId;
         }
     }
 
     @Override
     public String getActorPath() {
-        return format("%s/shards/%d", actorSystemName, shardId);
+        return actorSystemName + "/shards/" + shardId;
     }
 
     @Override

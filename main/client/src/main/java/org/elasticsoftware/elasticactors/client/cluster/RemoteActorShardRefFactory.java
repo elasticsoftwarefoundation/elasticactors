@@ -117,7 +117,7 @@ public final class RemoteActorShardRefFactory implements ActorRefFactory {
         }
         return new RemoteActorShardRef(
                 clusterName,
-                remoteActorSystem.getShard(format("%s/shards/%d", actorSystemName, shardId)),
+                remoteActorSystem.getShard(actorSystemName + "/shards/" + shardId),
                 actorId);
     }
 
