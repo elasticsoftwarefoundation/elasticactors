@@ -23,6 +23,11 @@ import java.util.Set;
  * @author Joost van de Wijgerd
  */
 public interface InternalActorSystemConfiguration extends ActorSystemConfiguration {
+
+    int getNumberOfNodeQueues();
+
+    boolean isNodeMessageQueueHashingEnabled();
+
     /**
      * Return the singleton service instance
      *

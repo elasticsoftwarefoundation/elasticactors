@@ -35,7 +35,7 @@ import java.util.List;
  * @author Joost van de Wijgerd
  */
 
-public final class RemoteActorShard extends AbstractActorContainer implements ActorShard {
+public final class RemoteActorShard extends SingleQueueAbstractActorContainer implements ActorShard {
     private final InternalActorSystem actorSystem;
     private final ShardKey shardKey;
 
@@ -66,7 +66,14 @@ public final class RemoteActorShard extends AbstractActorContainer implements Ac
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
         final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-        messageQueue.offer(new DefaultInternalMessage(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable,timeout));
+        offerInternalMessage(new DefaultInternalMessage(
+            from,
+            ImmutableList.copyOf(to),
+            SerializationContext.serialize(messageSerializer, message),
+            message.getClass().getName(),
+            durable,
+            timeout
+        ));
     }
 
     @Override
@@ -79,7 +86,7 @@ public final class RemoteActorShard extends AbstractActorContainer implements Ac
                                                                            message.isDurable(),
                                                                            true,
                                                                            message.getTimeout());
-        messageQueue.offer(undeliverableMessage);
+        offerInternalMessage(undeliverableMessage);
     }
 
     @Override

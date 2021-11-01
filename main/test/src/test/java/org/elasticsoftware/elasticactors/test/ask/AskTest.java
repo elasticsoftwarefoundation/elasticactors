@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.test.ask;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.base.state.StringState;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.elasticsoftware.elasticactors.test.common.EchoGreetingActor;
 import org.elasticsoftware.elasticactors.test.common.Greeting;
@@ -31,8 +32,11 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
+import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
@@ -97,6 +101,48 @@ public class AskTest {
         Greeting response = echo.ask(new AskForGreeting(), Greeting.class).toCompletableFuture().get();
 
         assertEquals(response.getWho(), "echo");
+
+        testActorSystem.destroy();
+    }
+
+    @Test(enabled = false)
+    public void testAskGreetingViaActor_stressTest() throws Exception {
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        logger.info("Starting testAskGreetingViaActor");
+
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+        ActorRef echo = actorSystem.actorOf("ask", AskForGreetingActor.class);
+
+        ActorRef[] actors = new ActorRef[1_000];
+
+        for (int i = 0; i < actors.length; i++) {
+            actors[i] = actorSystem.actorOf("ask" + i, AskForGreetingActor.class, new StringState(Integer.toString(i)));
+        }
+
+        CompletableFuture<Greeting> response = echo.ask(new AskForGreeting(), Greeting.class).toCompletableFuture();
+
+        CompletableFuture<?>[] futures = new CompletableFuture<?>[1_000_000];
+        Random rand = ThreadLocalRandom.current();
+        for (int i = 0; i < futures.length; i++) {
+            futures[i] =
+                actors[rand.nextInt(actors.length)].ask(new AskForGreeting(), Greeting.class)
+                    .thenAccept(m -> logger.info(
+                        "TEMP ACTOR got REPLY from {} in Thread {}",
+                        m.getWho(),
+                        Thread.currentThread().getName()
+                    ))
+                    .toCompletableFuture();
+        }
+
+        CompletableFuture.allOf(futures).get();
+
+        assertEquals(response.get().getWho(), "echo");
+
+        // If we don't wait, DestroyActor messages will still be in the queue when it gets destroyed
+        // Nothing bad actually happens because of this, but it spams the logs and ruins profiling
+        Thread.sleep(10_000);
 
         testActorSystem.destroy();
     }

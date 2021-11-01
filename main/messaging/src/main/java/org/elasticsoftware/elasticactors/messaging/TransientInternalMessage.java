@@ -23,7 +23,6 @@ import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.UUID;
@@ -114,7 +113,7 @@ public final class TransientInternalMessage extends AbstractTracedMessage
     }
 
     @Override
-    public <T> T getPayload(MessageDeserializer<T> deserializer) throws IOException {
+    public <T> T getPayload(MessageDeserializer<T> deserializer) {
         return (T) payload;
     }
 

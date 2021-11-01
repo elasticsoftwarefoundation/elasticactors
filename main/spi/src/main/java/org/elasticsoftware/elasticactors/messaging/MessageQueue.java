@@ -20,6 +20,10 @@ package org.elasticsoftware.elasticactors.messaging;
  * @author Joost van de Wijgerd
  */
 public interface MessageQueue {
+    default boolean offer(String key, InternalMessage message) {
+        return offer(message);
+    }
+
     boolean offer(InternalMessage message);
 
     boolean add(InternalMessage message);

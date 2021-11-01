@@ -71,7 +71,8 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  * @author Joost van de Wijgerd
  */
 @Configurable
-public final class LocalActorShard extends AbstractActorContainer implements ActorShard, EvictionListener<PersistentActor<ShardKey>> {
+public final class LocalActorShard extends SingleQueueAbstractActorContainer
+    implements ActorShard, EvictionListener<PersistentActor<ShardKey>> {
     // this instance acts as a tombstone for stopped actors
     private static final PersistentActor<ShardKey> TOMBSTONE = new PersistentActor<>(null,null,null,null,null,null);
     private final InternalActorSystem actorSystem;
@@ -135,7 +136,9 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     @Override
     public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
         InternalMessage internalMessage = createInternalMessage(from, to, message);
-        if (internalMessage != null) messageQueue.offer(internalMessage);
+        if (internalMessage != null) {
+            offerInternalMessage(internalMessage);
+        }
     }
 
     private InternalMessage createInternalMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws IOException {
@@ -167,7 +170,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                                                             true,
                                                             message.getTimeout());
         }
-        messageQueue.offer(undeliverableMessage);
+        offerInternalMessage(undeliverableMessage);
     }
 
     @Override

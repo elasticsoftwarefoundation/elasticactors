@@ -24,39 +24,28 @@ import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
-import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
-import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 
-/**
- * @author Joost van de Wijgerd
- */
 public abstract class AbstractActorContainer implements ActorContainer, MessageHandler {
+
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    private final ActorRef myRef;
-    private final MessageQueueFactory messageQueueFactory;
-    protected MessageQueue messageQueue;
-    private final PhysicalNode localNode;
+    protected final ActorRef myRef;
+    protected final MessageQueueFactory messageQueueFactory;
+    protected final PhysicalNode localNode;
 
-    public AbstractActorContainer(MessageQueueFactory messageQueueFactory, ActorRef myRef, PhysicalNode node) {
-        this.messageQueueFactory = messageQueueFactory;
+    public AbstractActorContainer(
+        ActorRef myRef,
+        MessageQueueFactory messageQueueFactory,
+        PhysicalNode node)
+    {
         this.myRef = myRef;
+        this.messageQueueFactory = messageQueueFactory;
         this.localNode = node;
-    }
-
-    @Override
-    public void init() throws Exception {
-        this.messageQueue = messageQueueFactory.create(myRef.getActorPath(), this);
-    }
-
-    @Override
-    public void destroy() {
-        // release all resources
-        this.messageQueue.destroy();
     }
 
     @Override
@@ -65,39 +54,41 @@ public abstract class AbstractActorContainer implements ActorContainer, MessageH
     }
 
     @Override
-    public final void offerInternalMessage(InternalMessage message) {
-        messageQueue.add(message);
-    }
-
-    @Override
     public final PhysicalNode getPhysicalNode() {
         return localNode;
     }
 
-    protected void handleUndeliverable(InternalMessage internalMessage, ActorRef receiverRef, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
+    protected void handleUndeliverable(
+        InternalMessage internalMessage,
+        ActorRef receiverRef,
+        MessageHandlerEventListener messageHandlerEventListener) throws Exception
+    {
         // if a message-undeliverable is undeliverable, don't send an undeliverable message back!
         ActorRef senderRef = internalMessage.getSender();
-        try (MessagingScope ignored = getManager().enter(internalMessage)) {
+        try (MessagingContextManager.MessagingScope ignored = getManager().enter(internalMessage)) {
             if (senderRef instanceof ActorContainerRef && !internalMessage.isUndeliverable()) {
-                ((ActorContainerRef) senderRef).getActorContainer().undeliverableMessage(internalMessage, receiverRef);
+                ((ActorContainerRef) senderRef).getActorContainer()
+                    .undeliverableMessage(internalMessage, receiverRef);
             } else if (internalMessage.isUndeliverable()) {
                 logger.error(
-                        "Receiver for undeliverable message not found. "
-                                + "Message type [{}]. "
-                                + "Receiver [{}]. "
-                                + "Sender [{}].",
-                        internalMessage.getPayloadClass(),
-                        receiverRef,
-                        senderRef);
+                    "Receiver for undeliverable message not found. "
+                        + "Message type [{}]. "
+                        + "Receiver [{}]. "
+                        + "Sender [{}].",
+                    internalMessage.getPayloadClass(),
+                    receiverRef,
+                    senderRef
+                );
             } else {
                 logger.warn(
-                        "Could not send message undeliverable. "
-                                + "Original message type [{}]. "
-                                + "Receiver [{}]. "
-                                + "Sender [{}].",
-                        internalMessage.getPayloadClass(),
-                        receiverRef,
-                        senderRef);
+                    "Could not send message undeliverable. "
+                        + "Original message type [{}]. "
+                        + "Receiver [{}]. "
+                        + "Sender [{}].",
+                    internalMessage.getPayloadClass(),
+                    receiverRef,
+                    senderRef
+                );
             }
         } finally {
             // ack anyway

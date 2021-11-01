@@ -63,7 +63,8 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  * @author Joost van de Wijgerd
  */
 @Configurable
-public final class LocalActorNode extends AbstractActorContainer implements ActorNode, EvictionListener<PersistentActor<NodeKey>> {
+public final class LocalActorNode extends MultiQueueAbstractActorContainer
+    implements ActorNode, EvictionListener<PersistentActor<NodeKey>> {
     private final InternalActorSystem actorSystem;
     private final NodeKey nodeKey;
     private ThreadBoundExecutor actorExecutor;
@@ -78,7 +79,13 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                           ActorRef myRef,
                           MessageQueueFactory messageQueueFactory,
                           NodeActorCacheManager actorCacheManager) {
-        super(messageQueueFactory, myRef, node);
+        super(
+            messageQueueFactory,
+            myRef,
+            node,
+            actorSystem.getNumberOfNodeQueues(),
+            actorSystem.isNodeMessageQueueHashingEnabled()
+        );
         this.actorSystem = actorSystem;
         this.actorCacheManager = actorCacheManager;
         this.nodeKey = new NodeKey(actorSystem.getName(), node.getId());
@@ -117,7 +124,11 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
         // we need some special handling for the CreateActorMessage in case of Temp Actor
         if(message instanceof CreateActorMessage && ActorType.TEMP.equals(((CreateActorMessage) message).getType())) {
-            messageQueue.offer(new TransientInternalMessage(from, ImmutableList.copyOf(to), message));
+            offerInternalMessage(new TransientInternalMessage(
+                from,
+                ImmutableList.copyOf(to),
+                message
+            ));
         } else {
             // get the durable flag
             Message messageAnnotation = message.getClass().getAnnotation(Message.class);
@@ -127,14 +138,32 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
             if(durable) {
                 // durable so it will go over the bus and needs to be serialized
                 MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                messageQueue.offer(new DefaultInternalMessage(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), true, timeout));
+                offerInternalMessage(new DefaultInternalMessage(
+                    from,
+                    ImmutableList.copyOf(to),
+                    SerializationContext.serialize(messageSerializer, message),
+                    message.getClass().getName(),
+                    true,
+                    timeout
+                ));
             } else if(!immutable) {
                 // it's not durable, but it's mutable so we need to serialize here
                 MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                messageQueue.offer(new DefaultInternalMessage(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message), message.getClass().getName(), false, timeout));
+                offerInternalMessage(new DefaultInternalMessage(
+                    from,
+                    ImmutableList.copyOf(to),
+                    SerializationContext.serialize(messageSerializer, message),
+                    message.getClass().getName(),
+                    false,
+                    timeout
+                ));
             } else {
                 // as the message is immutable we can safely send it as a TransientInternalMessage
-                messageQueue.offer(new TransientInternalMessage(from,ImmutableList.copyOf(to),message));
+                offerInternalMessage(new TransientInternalMessage(
+                    from,
+                    ImmutableList.copyOf(to),
+                    message
+                ));
             }
         }
     }
@@ -153,7 +182,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                     true,
                     message.getTimeout());
         }
-        messageQueue.offer(undeliverableMessage);
+        offerInternalMessage(undeliverableMessage);
     }
 
     @Override
@@ -282,7 +311,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                 } catch(Exception e) {
                     // @todo: determine if this is a recoverable error case or just a programming error
                     messageHandlerEventListener.onError(internalMessage,e);
-                    logger.error("Exception while handling InternalMessage for Shard [{}]; senderRef [{}], messageType [{}]", nodeKey, internalMessage.getSender(), internalMessage.getPayloadClass(),e);
+                    logger.error("Exception while handling InternalMessage for Node [{}]; senderRef [{}], messageType [{}]", nodeKey, internalMessage.getSender(), internalMessage.getPayloadClass(),e);
                 }
 
             }

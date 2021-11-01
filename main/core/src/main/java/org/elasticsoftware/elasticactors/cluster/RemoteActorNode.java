@@ -35,7 +35,7 @@ import java.util.List;
  * @author Joost van de Wijgerd
  */
 
-public final class RemoteActorNode extends AbstractActorContainer implements ActorNode {
+public final class RemoteActorNode extends MultiQueueAbstractActorContainer implements ActorNode {
     private final InternalActorSystem actorSystem;
     private final NodeKey nodeKey;
 
@@ -43,7 +43,7 @@ public final class RemoteActorNode extends AbstractActorContainer implements Act
                            InternalActorSystem actorSystem,
                            ActorRef myRef,
                            MessageQueueFactory messageQueueFactory) {
-        super(messageQueueFactory,myRef,remoteNode);
+        super(messageQueueFactory, myRef, remoteNode, actorSystem.getNumberOfNodeQueues(), false);
         this.actorSystem = actorSystem;
         this.nodeKey = new NodeKey(actorSystem.getName(), remoteNode.getId());
     }
@@ -60,7 +60,14 @@ public final class RemoteActorNode extends AbstractActorContainer implements Act
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
         final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-        messageQueue.offer(new DefaultInternalMessage(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable,timeout));
+        offerInternalMessage(new DefaultInternalMessage(
+            from,
+            ImmutableList.copyOf(to),
+            SerializationContext.serialize(messageSerializer, message),
+            message.getClass().getName(),
+            durable,
+            timeout
+        ));
     }
 
     @Override
@@ -73,7 +80,7 @@ public final class RemoteActorNode extends AbstractActorContainer implements Act
                                                                            message.isDurable(),
                                                                            true,
                                                                            message.getTimeout());
-        messageQueue.offer(undeliverableMessage);
+        offerInternalMessage(undeliverableMessage);
     }
 
     @Override

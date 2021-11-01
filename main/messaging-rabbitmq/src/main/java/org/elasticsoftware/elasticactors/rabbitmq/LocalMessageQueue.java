@@ -81,14 +81,22 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
     }
 
     @Override
-    public boolean offer(final InternalMessage message) {
+    public boolean offer(String key, final InternalMessage message) {
         // see if we are recovering first
         if(this.recovering.get()) {
             throw new MessageDeliveryException("MessagingService is recovering",true);
         }
         if(!message.isDurable()) {
             // execute on a separate (thread bound) executor
-            queueExecutor.execute(new InternalMessageHandler(queueName,message,messageHandler,transientAck,logger));
+            queueExecutor.execute(new InternalMessageHandler(
+                // optimization for better load balancing for temp and service actors
+                key,
+                queueName,
+                message,
+                messageHandler,
+                transientAck,
+                logger
+            ));
             return true;
         } else {
             try {
@@ -102,6 +110,11 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
                 throw new MessageDeliveryException("MessagingService is recovering",true);
             }
         }
+    }
+
+    @Override
+    public boolean offer(InternalMessage message) {
+        return offer(null, message);
     }
 
     private AMQP.BasicProperties createProps(InternalMessage message) {
@@ -291,6 +304,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
     }
 
     private static final class InternalMessageHandler implements ThreadBoundRunnable<String> {
+        private final String key;
         private final String queueName;
         private final InternalMessage message;
         private final MessageHandler messageHandler;
@@ -298,7 +312,15 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
         private final Logger logger;
         private final long startTime;
 
-        private InternalMessageHandler(String queueName, InternalMessage message, MessageHandler messageHandler, MessageHandlerEventListener listener, Logger logger) {
+        private InternalMessageHandler(
+            String key,
+            String queueName,
+            InternalMessage message,
+            MessageHandler messageHandler,
+            MessageHandlerEventListener listener,
+            Logger logger)
+        {
+            this.key = key;
             this.queueName = queueName;
             this.message = message;
             this.messageHandler = messageHandler;
@@ -309,7 +331,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
 
         @Override
         public String getKey() {
-            return queueName;
+            return key != null ? key : queueName;
         }
 
         @Override

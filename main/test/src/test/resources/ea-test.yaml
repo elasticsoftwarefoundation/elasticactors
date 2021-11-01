@@ -1,3 +1,5 @@
 ---
 name: test
 shards: 8
+#nodeQueues: 4
+#nodeMessageQueueHashing: true
