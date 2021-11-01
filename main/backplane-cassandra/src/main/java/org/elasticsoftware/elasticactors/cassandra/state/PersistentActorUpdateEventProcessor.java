@@ -25,8 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
-
-import static java.lang.System.currentTimeMillis;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Joost van de Wijgerd
@@ -42,7 +41,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
     @Override
     public void process(List<PersistentActorUpdateEvent> events) {
         Exception executionException = null;
-        final long startTime = currentTimeMillis();
+        final long startTime = logger.isTraceEnabled() ? System.nanoTime() : 0L;
         try {
             ColumnFamilyUpdater<Composite, String> updater = columnFamilyTemplate.createUpdater();
             for (PersistentActorUpdateEvent event : events) {
@@ -70,8 +69,11 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
             }
             // add some trace info
             if(logger.isTraceEnabled()) {
-                final long endTime = currentTimeMillis();
-                logger.trace("Updating {} Actor state entrie(s) took {} msecs", events.size(), endTime - startTime);
+                logger.trace(
+                    "Updating {} Actor state entrie(s) took {} microsecs",
+                    events.size(),
+                    TimeUnit.NANOSECONDS.toMicros(System.nanoTime() - startTime)
+                );
             }
         }
     }

@@ -31,11 +31,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.datastax.driver.core.BatchStatement.Type.UNLOGGED;
 import static org.elasticsoftware.elasticactors.cassandra2.util.ExecutionUtils.executeWithRetry;
-
-import static java.lang.System.currentTimeMillis;
 
 /**
  * @author Joost van de Wijgerd
@@ -93,7 +92,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
     @Override
     public void process(List<PersistentActorUpdateEvent> events) {
         Exception executionException = null;
-        final long startTime = currentTimeMillis();
+        final long startTime = logger.isTraceEnabled() ? System.nanoTime() : 0L;
         try {
             // optimized to use the prepared statement
             if(events.size() == 1) {
@@ -134,8 +133,12 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
             }
             // add some trace info
             if(logger.isTraceEnabled()) {
-                final long endTime = currentTimeMillis();
-                logger.trace("Updating {} Actor state entrie(s) took {} msecs", events.size(), endTime - startTime);
+                final long duration = TimeUnit.NANOSECONDS.toMicros(System.nanoTime() - startTime);
+                logger.trace(
+                    "Updating {} Actor state entrie(s) took {} microsecs",
+                    events.size(),
+                    duration
+                );
             }
         }
     }

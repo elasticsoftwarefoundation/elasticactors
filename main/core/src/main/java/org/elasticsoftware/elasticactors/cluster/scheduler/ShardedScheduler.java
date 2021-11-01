@@ -144,7 +144,7 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
         scheduledFutures.computeIfAbsent(shardKey, key -> {
             // fetch block from repository
             // @todo: for now we'll fetch all, this obviously has memory issues
-            long startTime = System.nanoTime();
+            long startTime = logger.isInfoEnabled() ? System.nanoTime() : 0L;
             List<ScheduledMessage> scheduledMessages = scheduledMessageRepository.getAll(shardKey);
             if (logger.isInfoEnabled()) {
                 logger.info(
