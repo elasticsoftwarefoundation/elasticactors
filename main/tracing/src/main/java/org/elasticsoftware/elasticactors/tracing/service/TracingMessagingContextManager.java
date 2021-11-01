@@ -301,53 +301,74 @@ public final class TracingMessagingContextManager extends MessagingContextManage
         }
 
         if (currentTraceContext != nextTraceContext) {
-            fillContext(nextTraceContext);
+            fillContext(currentTraceContext, nextTraceContext);
         }
         if (currentCreationContext != nextCreationContext) {
-            fillContext(nextCreationContext);
+            fillContext(currentCreationContext, nextCreationContext);
         }
         if (currentMessagingContext != nextMessagingContext) {
-            fillContext(nextMessagingContext);
+            fillContext(currentMessagingContext, nextMessagingContext);
         }
         if (currentMethod != nextMethod) {
             fillContext(nextMethod);
         }
     }
 
-    private static void fillContext(@Nullable TraceContext context) {
-        addToLogContext(SPAN_ID_KEY, context, TraceContext::getSpanId);
-        addToLogContext(TRACE_ID_KEY, context, TraceContext::getTraceId);
-        addToLogContext(PARENT_SPAN_ID_KEY, context, TraceContext::getParentId);
+    private static void fillContext(@Nullable TraceContext current, @Nullable TraceContext next) {
+        addToLogContext(SPAN_ID_KEY, current, next, TraceContext::getSpanId);
+        addToLogContext(TRACE_ID_KEY, current, next, TraceContext::getTraceId);
+        addToLogContext(PARENT_SPAN_ID_KEY, current, next, TraceContext::getParentId);
     }
 
-    private static void fillContext(@Nullable MessageHandlingContext context) {
-        addToLogContext(MESSAGE_TYPE_KEY, context, MessageHandlingContext::getMessageType);
-        addToLogContext(SENDER_KEY, context, MessageHandlingContext::getSender);
-        addToLogContext(RECEIVER_KEY, context, MessageHandlingContext::getReceiver);
-        addToLogContext(RECEIVER_TYPE_KEY, context, MessageHandlingContext::getReceiverType);
+    private static void fillContext(
+        @Nullable MessageHandlingContext current,
+        @Nullable MessageHandlingContext next)
+    {
+        addToLogContext(MESSAGE_TYPE_KEY, current, next, MessageHandlingContext::getMessageType);
+        addToLogContext(SENDER_KEY, current, next, MessageHandlingContext::getSender);
+        addToLogContext(RECEIVER_KEY, current, next, MessageHandlingContext::getReceiver);
+        addToLogContext(RECEIVER_TYPE_KEY, current, next, MessageHandlingContext::getReceiverType);
     }
 
-    private static void fillContext(@Nullable CreationContext context) {
-        addToLogContext(CREATOR_KEY, context, CreationContext::getCreator);
-        addToLogContext(CREATOR_TYPE_KEY, context, CreationContext::getCreatorType);
-        addToLogContext(CREATOR_METHOD_KEY, context, CreationContext::getCreatorMethod);
-        addToLogContext(SCHEDULED_KEY, context, CreationContext::getScheduled);
+    private static void fillContext(
+        @Nullable CreationContext current,
+        @Nullable CreationContext next)
+    {
+        addToLogContext(CREATOR_KEY, current, next, CreationContext::getCreator);
+        addToLogContext(CREATOR_TYPE_KEY, current, next, CreationContext::getCreatorType);
+        addToLogContext(CREATOR_METHOD_KEY, current, next, CreationContext::getCreatorMethod);
+        addToLogContext(SCHEDULED_KEY, current, next, CreationContext::getScheduled);
     }
 
-    private static void fillContext(@Nullable Method context) {
-        addToLogContext(RECEIVER_METHOD_KEY, context, TracingUtils::shorten);
+    private static void fillContext(@Nullable Method next) {
+        putOnMDC(RECEIVER_METHOD_KEY, getValue(next, TracingUtils::shorten));
     }
 
     private static <D, T> void addToLogContext(
         @Nonnull String key,
-        @Nullable D object,
+        @Nullable D oldObject,
+        @Nullable D newObject,
         @Nonnull Function<D, T> getterFunction)
     {
-        String value = object != null ? safeToString(getterFunction.apply(object)) : null;
-        if (value != null) {
-            MDC.put(key, value);
+        String oldValue = getValue(oldObject, getterFunction);
+        String newValue = getValue(newObject, getterFunction);
+        if (!(Objects.equals(oldValue, newValue))) {
+            putOnMDC(key, newValue);
+        }
+    }
+
+    private static void putOnMDC(@Nonnull String key, String newValue) {
+        if (newValue != null) {
+            MDC.put(key, newValue);
         } else {
             MDC.remove(key);
         }
+    }
+
+    private static <D, T> String getValue(
+        @Nullable D oldObject,
+        @Nonnull Function<D, T> getterFunction)
+    {
+        return oldObject != null ? safeToString(getterFunction.apply(oldObject)) : null;
     }
 }
