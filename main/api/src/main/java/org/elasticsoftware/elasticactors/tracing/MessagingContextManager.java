@@ -143,7 +143,7 @@ public abstract class MessagingContextManager {
         @Nullable
         @Override
         public MessagingScope currentScope() {
-            return NoopMessagingScope.INSTANCE;
+            return null;
         }
 
         @Nonnull
