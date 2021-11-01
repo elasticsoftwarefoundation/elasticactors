@@ -37,6 +37,13 @@ public abstract class MultiQueueAbstractActorContainer extends AbstractActorCont
             messageQueues[i] =
                 messageQueueFactory.create(myRef.getActorPath() + "-queue-" + i, this);
         }
+        logger.info(
+            "Starting up [{}] on node [{}] with {} queues. Message queue hashing is {}.",
+            myRef.getActorPath(),
+            localNode,
+            messageQueues.length,
+            messageQueueHashingEnabled ? "ENABLED" : "DISABLED"
+        );
     }
 
     @Override
