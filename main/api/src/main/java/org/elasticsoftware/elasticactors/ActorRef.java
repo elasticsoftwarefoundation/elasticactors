@@ -82,7 +82,8 @@ public interface ActorRef {
     /**
      * Send a message to an {@link ElasticActor} and request a response.
      *
-     * If you're calling this from a Persistent Actor and want to persist changes made to the state inside the chain returned by this method, run {@link }
+     * If you're calling this from a Persistent Actor and want to persist changes made to the state
+     * inside the chain returned by this method, run {@link ActorRef#ask(Object, Class, Boolean)} instead.
      *
      * @param message       the message to send (needs to be annotated with {@link org.elasticsoftware.elasticactors.serialization.Message}
      * @param responseType  the expected message type of the response
