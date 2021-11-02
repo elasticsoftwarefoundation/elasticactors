@@ -43,7 +43,7 @@ public final class RemoteActorNode extends MultiQueueAbstractActorContainer impl
                            InternalActorSystem actorSystem,
                            ActorRef myRef,
                            MessageQueueFactory messageQueueFactory) {
-        super(messageQueueFactory, myRef, remoteNode, actorSystem.getNumberOfNodeQueues(), false);
+        super(messageQueueFactory, myRef, remoteNode, actorSystem.getNumberOfNodeQueues());
         this.actorSystem = actorSystem;
         this.nodeKey = new NodeKey(actorSystem.getName(), remoteNode.getId());
     }

@@ -59,4 +59,5 @@ public interface InternalMessage extends TracedMessage {
 
     boolean hasSerializedPayload();
 
+    boolean hasPayloadObject();
 }

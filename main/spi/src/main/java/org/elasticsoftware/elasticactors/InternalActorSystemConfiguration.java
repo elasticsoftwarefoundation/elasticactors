@@ -26,8 +26,6 @@ public interface InternalActorSystemConfiguration extends ActorSystemConfigurati
 
     int getNumberOfNodeQueues();
 
-    boolean isNodeMessageQueueHashingEnabled();
-
     /**
      * Return the singleton service instance
      *

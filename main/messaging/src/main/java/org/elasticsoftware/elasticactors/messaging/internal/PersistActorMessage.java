@@ -20,6 +20,7 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 
 /**
@@ -28,7 +29,7 @@ import java.io.Serializable;
  * @author Joost van de Wijgerd
  */
 @Message(immutable = true, durable = false, serializationFramework = SystemSerializationFramework.class)
-public final class PersistActorMessage implements Serializable {
+public final class PersistActorMessage implements Serializable, Hashable<String> {
     private final ActorRef actorRef;
 
     public PersistActorMessage(ActorRef actorRef) {
@@ -37,5 +38,11 @@ public final class PersistActorMessage implements Serializable {
 
     public ActorRef getActorRef() {
         return actorRef;
+    }
+
+    @Nullable
+    @Override
+    public String getHashKey() {
+        return actorRef.getActorId();
     }
 }

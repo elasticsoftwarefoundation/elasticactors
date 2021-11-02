@@ -20,13 +20,15 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 
+import javax.annotation.Nullable;
+
 /**
  * This message is used to call a Temp or a Service actor ref from a remote cluster
  *
  * @author Joost van de Wijgerd
  */
 @Message(immutable = true, durable = false, serializationFramework = SystemSerializationFramework.class)
-public final class ActorNodeMessage {
+public final class ActorNodeMessage implements Hashable<String> {
     private final String nodeId;
     private final ActorRef receiverRef;
     private final Object message;
@@ -57,5 +59,11 @@ public final class ActorNodeMessage {
 
     public boolean isUndeliverable() {
         return undeliverable;
+    }
+
+    @Nullable
+    @Override
+    public String getHashKey() {
+        return receiverRef != null ? receiverRef.getActorId() : null;
     }
 }

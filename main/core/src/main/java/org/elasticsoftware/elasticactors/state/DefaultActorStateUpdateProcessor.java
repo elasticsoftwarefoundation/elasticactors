@@ -28,6 +28,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -69,6 +70,11 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
     @Override
     public void process(ActorStateUpdateEvent... events) {
         process(Arrays.asList(events));
+    }
+
+    @Override
+    public void process(ActorStateUpdateEvent event) {
+        process(Collections.singletonList(event));
     }
 
     private void processWithoutCopy(List<ActorStateUpdateEvent> events) {

@@ -422,12 +422,6 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
     }
 
     @Override
-    public boolean isNodeMessageQueueHashingEnabled() {
-        // Not supported in this implementation, so always return false
-        return false;
-    }
-
-    @Override
     public boolean isStable() {
         return stable.get();
     }

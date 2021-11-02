@@ -83,8 +83,7 @@ public final class LocalActorNode extends MultiQueueAbstractActorContainer
             messageQueueFactory,
             myRef,
             node,
-            actorSystem.getNumberOfNodeQueues(),
-            actorSystem.isNodeMessageQueueHashingEnabled()
+            actorSystem.getNumberOfNodeQueues()
         );
         this.actorSystem = actorSystem;
         this.actorCacheManager = actorCacheManager;

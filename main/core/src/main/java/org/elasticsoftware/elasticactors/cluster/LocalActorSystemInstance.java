@@ -523,11 +523,6 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     }
 
     @Override
-    public boolean isNodeMessageQueueHashingEnabled() {
-        return configuration.isNodeMessageQueueHashingEnabled();
-    }
-
-    @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass) throws Exception {
         if(actorClass.getAnnotation(Actor.class) == null) {
             throw new IllegalArgumentException("actorClass has to be annotated with @Actor");

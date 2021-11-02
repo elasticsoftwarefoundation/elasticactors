@@ -27,8 +27,6 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnableEven
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,7 +40,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
     private static final Logger logger = LoggerFactory.getLogger(ThreadBoundExecutorImpl.class);
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
     private final ThreadFactory threadFactory;
-    private final List<Disruptor<ThreadBoundEventWrapper>> disruptors;
+    private final Disruptor<ThreadBoundEventWrapper>[] disruptors;
     private final ThreadBoundEventTranslator translator = new ThreadBoundEventTranslator();
 
     public ThreadBoundExecutorImpl(ThreadFactory threadFactory, int workers) {
@@ -51,7 +49,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
 
     public ThreadBoundExecutorImpl(ThreadBoundEventProcessor eventProcessor, int bufferSize, ThreadFactory threadFactory, int workers) {
         this.threadFactory = threadFactory;
-        this.disruptors = new ArrayList<>(workers);
+        this.disruptors = new Disruptor[workers];
 
         logger.info("Initializing (Disruptor)ThreadBoundExecutor[{}]",threadFactory);
         ThreadBoundEventWrapperFactory eventFactory = new ThreadBoundEventWrapperFactory();
@@ -59,7 +57,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
         for (int i = 0; i < workers; i++) {
             Disruptor<ThreadBoundEventWrapper> disruptor = new Disruptor<>(eventFactory,bufferSize,threadFactory);
             disruptor.handleEventsWith(new ThreadBoundEventHandler(eventProcessor, bufferSize));
-            this.disruptors.add(disruptor);
+            disruptors[i] = disruptor;
             disruptor.start();
         }
     }
@@ -72,7 +70,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
         if (event instanceof ThreadBoundRunnable) {
             event = wrap((ThreadBoundRunnable<?>) event);
         }
-        final RingBuffer<ThreadBoundEventWrapper> ringBuffer = this.disruptors.get(getBucket(event.getKey())).getRingBuffer();
+        final RingBuffer<ThreadBoundEventWrapper> ringBuffer = disruptors[getBucket(event.getKey())].getRingBuffer();
         // this method will wait when the buffer is overflowing ( using Lock.parkNanos(1) )
         ringBuffer.publishEvent(translator, event);
     }
@@ -91,11 +89,11 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
 
     @Override
     public int getThreadCount() {
-        return disruptors.size();
+        return disruptors.length;
     }
 
     private int getBucket(Object key) {
-        return Math.abs(key.hashCode()) % disruptors.size();
+        return Math.abs(key.hashCode()) % disruptors.length;
     }
 
     private static final class ThreadBoundEventTranslator implements EventTranslatorOneArg<ThreadBoundEventWrapper,ThreadBoundEvent> {

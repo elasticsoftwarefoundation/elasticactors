@@ -23,6 +23,7 @@ public abstract class MessagingContextManager {
     public static final String SPAN_ID_KEY = "spanId";
     public static final String TRACE_ID_KEY = "traceId";
     public static final String PARENT_SPAN_ID_KEY = "parentId";
+    public static final String BAGGAGE_PREFIX_KEY = "baggage";
 
     // Receiving-side headers
     public static final String MESSAGE_TYPE_KEY = "messageType";

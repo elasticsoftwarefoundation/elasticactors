@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.messaging;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
@@ -24,16 +25,21 @@ import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+
+import static org.elasticsoftware.elasticactors.messaging.SplittableUtils.calculateHash;
+import static org.elasticsoftware.elasticactors.messaging.SplittableUtils.groupByHashValue;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class ImmutableInternalMessage extends AbstractTracedMessage
-        implements InternalMessage, Serializable {
+        implements InternalMessage, Serializable, Splittable<String, InternalMessage> {
     private final ActorRef sender;
     private final ImmutableList<ActorRef> receivers;
     private final UUID id;
@@ -133,7 +139,7 @@ public final class ImmutableInternalMessage extends AbstractTracedMessage
     }
 
     @Override
-    public <T> T getPayload(MessageDeserializer<T> deserializer) throws IOException {
+    public <T> T getPayload(MessageDeserializer<T> deserializer) {
         return (T) payloadObject;
     }
 
@@ -163,6 +169,11 @@ public final class ImmutableInternalMessage extends AbstractTracedMessage
     }
 
     @Override
+    public boolean hasPayloadObject() {
+        return payloadObject != null;
+    }
+
+    @Override
     public byte[] toByteArray() {
         if(serializedForm == null) {
             serializedForm = InternalMessageSerializer.get().serialize(this);
@@ -173,5 +184,35 @@ public final class ImmutableInternalMessage extends AbstractTracedMessage
     @Override
     public InternalMessage copyOf() {
         return this;
+    }
+
+    @Override
+    public ImmutableMap<Integer, InternalMessage> splitFor(Function<String, Integer> hashFunction) {
+        return receivers.size() <= 1
+            ? ImmutableMap.of(calculateHash(receivers, hashFunction), this)
+            : groupByReceiverHash(hashFunction);
+    }
+
+    private ImmutableMap<Integer, InternalMessage> groupByReceiverHash(Function<String, Integer> hashFunction) {
+        Map<Integer, List<ActorRef>> grouped = groupByHashValue(receivers, hashFunction);
+        ImmutableMap.Builder<Integer, InternalMessage> builder = ImmutableMap.builder();
+        for (Map.Entry<Integer, List<ActorRef>> e : grouped.entrySet()) {
+            builder.put(
+                e.getKey(),
+                new ImmutableInternalMessage(
+                    UUIDTools.createTimeBasedUUID(),
+                    sender,
+                    ImmutableList.copyOf(e.getValue()),
+                    payload,
+                    payloadObject,
+                    durable,
+                    undeliverable,
+                    timeout,
+                    getTraceContext(),
+                    getCreationContext()
+                )
+            );
+        }
+        return builder.build();
     }
 }

@@ -25,4 +25,6 @@ public interface ThreadBoundEventProcessor<T extends ThreadBoundEvent> {
     void process(List<T> events);
 
     void process(T... events);
+
+    void process(T event);
 }

@@ -88,8 +88,6 @@ public interface InternalActorSystem extends ActorSystem, ShardAccessor, Seriali
 
     int getNumberOfNodeQueues();
 
-    boolean isNodeMessageQueueHashingEnabled();
-
     /**
      * Returns whether or not the actor system is currently stable, i.e. if all shards have been assigned and initialized
      * properly.

@@ -43,7 +43,6 @@ public final class DefaultConfiguration implements InternalActorSystemConfigurat
     private final String name;
     private final int numberOfShards;
     private final int numberOfNodeQueues;
-    private final boolean nodeMessageQueueHasingEnabled;
     private final List<DefaultRemoteConfiguration> remoteConfigurations;
     private final Map<String,Object> properties = new LinkedHashMap<>();
     private final ConversionService conversionService = new DefaultConversionService();
@@ -55,13 +54,11 @@ public final class DefaultConfiguration implements InternalActorSystemConfigurat
         @JsonProperty("name") String name,
         @JsonProperty("shards") int numberOfShards,
         @JsonProperty("nodeQueues") Integer numberOfNodeQueues,
-        @JsonProperty("nodeMessageQueueHashing") Boolean nodeMessageQueueHasingEnabled,
         @JsonProperty("remoteActorSystems") List<DefaultRemoteConfiguration> remoteConfigurations)
     {
         this.name = name;
         this.numberOfShards = numberOfShards;
         this.numberOfNodeQueues = numberOfNodeQueues != null ? numberOfNodeQueues : 1;
-        this.nodeMessageQueueHasingEnabled = Boolean.TRUE.equals(nodeMessageQueueHasingEnabled);
         this.remoteConfigurations =
             (remoteConfigurations != null) ? remoteConfigurations : Collections.emptyList();
     }
@@ -93,12 +90,6 @@ public final class DefaultConfiguration implements InternalActorSystemConfigurat
     @Override
     public int getNumberOfNodeQueues() {
         return numberOfNodeQueues;
-    }
-
-    @JsonProperty("nodeMessageQueueHashing")
-    @Override
-    public boolean isNodeMessageQueueHashingEnabled() {
-        return nodeMessageQueueHasingEnabled;
     }
 
     @Override
