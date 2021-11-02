@@ -158,6 +158,40 @@ public final class Messaging {
      */
     com.google.protobuf.ByteString
         getParentIdBytes();
+
+    /**
+     * <code>map&lt;string, string&gt; baggage = 4;</code>
+     */
+    int getBaggageCount();
+    /**
+     * <code>map&lt;string, string&gt; baggage = 4;</code>
+     */
+    boolean containsBaggage(
+        java.lang.String key);
+    /**
+     * Use {@link #getBaggageMap()} instead.
+     */
+    @java.lang.Deprecated
+    java.util.Map<java.lang.String, java.lang.String>
+    getBaggage();
+    /**
+     * <code>map&lt;string, string&gt; baggage = 4;</code>
+     */
+    java.util.Map<java.lang.String, java.lang.String>
+    getBaggageMap();
+    /**
+     * <code>map&lt;string, string&gt; baggage = 4;</code>
+     */
+
+    java.lang.String getBaggageOrDefault(
+        java.lang.String key,
+        java.lang.String defaultValue);
+    /**
+     * <code>map&lt;string, string&gt; baggage = 4;</code>
+     */
+
+    java.lang.String getBaggageOrThrow(
+        java.lang.String key);
   }
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.TraceContext}
@@ -219,6 +253,19 @@ public final class Messaging {
               parentId_ = bs;
               break;
             }
+            case 34: {
+              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+                baggage_ = com.google.protobuf.MapField.newMapField(
+                    BaggageDefaultEntryHolder.defaultEntry);
+                mutable_bitField0_ |= 0x00000008;
+              }
+              com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
+              baggage__ = input.readMessage(
+                  BaggageDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
+              baggage_.getMutableMap().put(
+                  baggage__.getKey(), baggage__.getValue());
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -243,6 +290,18 @@ public final class Messaging {
       return org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceContext_descriptor;
     }
 
+    @SuppressWarnings({"rawtypes"})
+    @java.lang.Override
+    protected com.google.protobuf.MapField internalGetMapField(
+        int number) {
+      switch (number) {
+        case 4:
+          return internalGetBaggage();
+        default:
+          throw new RuntimeException(
+              "Invalid map field number: " + number);
+      }
+    }
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
@@ -378,6 +437,82 @@ public final class Messaging {
       }
     }
 
+    public static final int BAGGAGE_FIELD_NUMBER = 4;
+    private static final class BaggageDefaultEntryHolder {
+      static final com.google.protobuf.MapEntry<
+          java.lang.String, java.lang.String> defaultEntry =
+              com.google.protobuf.MapEntry
+              .<java.lang.String, java.lang.String>newDefaultInstance(
+                  org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceContext_BaggageEntry_descriptor, 
+                  com.google.protobuf.WireFormat.FieldType.STRING,
+                  "",
+                  com.google.protobuf.WireFormat.FieldType.STRING,
+                  "");
+    }
+    private com.google.protobuf.MapField<
+        java.lang.String, java.lang.String> baggage_;
+    private com.google.protobuf.MapField<java.lang.String, java.lang.String>
+    internalGetBaggage() {
+      if (baggage_ == null) {
+        return com.google.protobuf.MapField.emptyMapField(
+            BaggageDefaultEntryHolder.defaultEntry);
+      }
+      return baggage_;
+    }
+
+    public int getBaggageCount() {
+      return internalGetBaggage().getMap().size();
+    }
+    /**
+     * <code>map&lt;string, string&gt; baggage = 4;</code>
+     */
+
+    public boolean containsBaggage(
+        java.lang.String key) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      return internalGetBaggage().getMap().containsKey(key);
+    }
+    /**
+     * Use {@link #getBaggageMap()} instead.
+     */
+    @java.lang.Deprecated
+    public java.util.Map<java.lang.String, java.lang.String> getBaggage() {
+      return getBaggageMap();
+    }
+    /**
+     * <code>map&lt;string, string&gt; baggage = 4;</code>
+     */
+
+    public java.util.Map<java.lang.String, java.lang.String> getBaggageMap() {
+      return internalGetBaggage().getMap();
+    }
+    /**
+     * <code>map&lt;string, string&gt; baggage = 4;</code>
+     */
+
+    public java.lang.String getBaggageOrDefault(
+        java.lang.String key,
+        java.lang.String defaultValue) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      java.util.Map<java.lang.String, java.lang.String> map =
+          internalGetBaggage().getMap();
+      return map.containsKey(key) ? map.get(key) : defaultValue;
+    }
+    /**
+     * <code>map&lt;string, string&gt; baggage = 4;</code>
+     */
+
+    public java.lang.String getBaggageOrThrow(
+        java.lang.String key) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      java.util.Map<java.lang.String, java.lang.String> map =
+          internalGetBaggage().getMap();
+      if (!map.containsKey(key)) {
+        throw new java.lang.IllegalArgumentException();
+      }
+      return map.get(key);
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -409,6 +544,12 @@ public final class Messaging {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 3, parentId_);
       }
+      com.google.protobuf.GeneratedMessageV3
+        .serializeStringMapTo(
+          output,
+          internalGetBaggage(),
+          BaggageDefaultEntryHolder.defaultEntry,
+          4);
       unknownFields.writeTo(output);
     }
 
@@ -426,6 +567,16 @@ public final class Messaging {
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, parentId_);
+      }
+      for (java.util.Map.Entry<java.lang.String, java.lang.String> entry
+           : internalGetBaggage().getMap().entrySet()) {
+        com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
+        baggage__ = BaggageDefaultEntryHolder.defaultEntry.newBuilderForType()
+            .setKey(entry.getKey())
+            .setValue(entry.getValue())
+            .build();
+        size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(4, baggage__);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -458,6 +609,8 @@ public final class Messaging {
         result = result && getParentId()
             .equals(other.getParentId());
       }
+      result = result && internalGetBaggage().equals(
+          other.internalGetBaggage());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -480,6 +633,10 @@ public final class Messaging {
       if (hasParentId()) {
         hash = (37 * hash) + PARENTID_FIELD_NUMBER;
         hash = (53 * hash) + getParentId().hashCode();
+      }
+      if (!internalGetBaggage().getMap().isEmpty()) {
+        hash = (37 * hash) + BAGGAGE_FIELD_NUMBER;
+        hash = (53 * hash) + internalGetBaggage().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -588,6 +745,28 @@ public final class Messaging {
         return org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceContext_descriptor;
       }
 
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapField internalGetMapField(
+          int number) {
+        switch (number) {
+          case 4:
+            return internalGetBaggage();
+          default:
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
+        }
+      }
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapField internalGetMutableMapField(
+          int number) {
+        switch (number) {
+          case 4:
+            return internalGetMutableBaggage();
+          default:
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
+        }
+      }
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
@@ -620,6 +799,7 @@ public final class Messaging {
         bitField0_ = (bitField0_ & ~0x00000002);
         parentId_ = "";
         bitField0_ = (bitField0_ & ~0x00000004);
+        internalGetMutableBaggage().clear();
         return this;
       }
 
@@ -660,6 +840,8 @@ public final class Messaging {
           to_bitField0_ |= 0x00000004;
         }
         result.parentId_ = parentId_;
+        result.baggage_ = internalGetBaggage();
+        result.baggage_.makeImmutable();
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -724,6 +906,8 @@ public final class Messaging {
           parentId_ = other.parentId_;
           onChanged();
         }
+        internalGetMutableBaggage().mergeFrom(
+            other.internalGetBaggage());
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -985,6 +1169,129 @@ public final class Messaging {
   bitField0_ |= 0x00000004;
         parentId_ = value;
         onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.MapField<
+          java.lang.String, java.lang.String> baggage_;
+      private com.google.protobuf.MapField<java.lang.String, java.lang.String>
+      internalGetBaggage() {
+        if (baggage_ == null) {
+          return com.google.protobuf.MapField.emptyMapField(
+              BaggageDefaultEntryHolder.defaultEntry);
+        }
+        return baggage_;
+      }
+      private com.google.protobuf.MapField<java.lang.String, java.lang.String>
+      internalGetMutableBaggage() {
+        onChanged();;
+        if (baggage_ == null) {
+          baggage_ = com.google.protobuf.MapField.newMapField(
+              BaggageDefaultEntryHolder.defaultEntry);
+        }
+        if (!baggage_.isMutable()) {
+          baggage_ = baggage_.copy();
+        }
+        return baggage_;
+      }
+
+      public int getBaggageCount() {
+        return internalGetBaggage().getMap().size();
+      }
+      /**
+       * <code>map&lt;string, string&gt; baggage = 4;</code>
+       */
+
+      public boolean containsBaggage(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        return internalGetBaggage().getMap().containsKey(key);
+      }
+      /**
+       * Use {@link #getBaggageMap()} instead.
+       */
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, java.lang.String> getBaggage() {
+        return getBaggageMap();
+      }
+      /**
+       * <code>map&lt;string, string&gt; baggage = 4;</code>
+       */
+
+      public java.util.Map<java.lang.String, java.lang.String> getBaggageMap() {
+        return internalGetBaggage().getMap();
+      }
+      /**
+       * <code>map&lt;string, string&gt; baggage = 4;</code>
+       */
+
+      public java.lang.String getBaggageOrDefault(
+          java.lang.String key,
+          java.lang.String defaultValue) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        java.util.Map<java.lang.String, java.lang.String> map =
+            internalGetBaggage().getMap();
+        return map.containsKey(key) ? map.get(key) : defaultValue;
+      }
+      /**
+       * <code>map&lt;string, string&gt; baggage = 4;</code>
+       */
+
+      public java.lang.String getBaggageOrThrow(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        java.util.Map<java.lang.String, java.lang.String> map =
+            internalGetBaggage().getMap();
+        if (!map.containsKey(key)) {
+          throw new java.lang.IllegalArgumentException();
+        }
+        return map.get(key);
+      }
+
+      public Builder clearBaggage() {
+        internalGetMutableBaggage().getMutableMap()
+            .clear();
+        return this;
+      }
+      /**
+       * <code>map&lt;string, string&gt; baggage = 4;</code>
+       */
+
+      public Builder removeBaggage(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        internalGetMutableBaggage().getMutableMap()
+            .remove(key);
+        return this;
+      }
+      /**
+       * Use alternate mutation accessors instead.
+       */
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, java.lang.String>
+      getMutableBaggage() {
+        return internalGetMutableBaggage().getMutableMap();
+      }
+      /**
+       * <code>map&lt;string, string&gt; baggage = 4;</code>
+       */
+      public Builder putBaggage(
+          java.lang.String key,
+          java.lang.String value) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        if (value == null) { throw new java.lang.NullPointerException(); }
+        internalGetMutableBaggage().getMutableMap()
+            .put(key, value);
+        return this;
+      }
+      /**
+       * <code>map&lt;string, string&gt; baggage = 4;</code>
+       */
+
+      public Builder putAllBaggage(
+          java.util.Map<java.lang.String, java.lang.String> values) {
+        internalGetMutableBaggage().getMutableMap()
+            .putAll(values);
         return this;
       }
       @java.lang.Override
@@ -11232,6 +11539,11 @@ public final class Messaging {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceContext_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceContext_BaggageEntry_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceContext_BaggageEntry_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CreationContext_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -11291,47 +11603,51 @@ public final class Messaging {
   static {
     java.lang.String[] descriptorData = {
       "\n\017messaging.proto\0228org.elasticsoftware.e" +
-      "lasticactors.serialization.protobuf\"A\n\014T" +
-      "raceContext\022\016\n\006spanId\030\001 \002(\t\022\017\n\007traceId\030\002" +
-      " \002(\t\022\020\n\010parentId\030\003 \001(\t\"a\n\017CreationContex" +
-      "t\022\017\n\007creator\030\001 \001(\t\022\023\n\013creatorType\030\002 \001(\t\022" +
-      "\025\n\rcreatorMethod\030\003 \001(\t\022\021\n\tscheduled\030\004 \001(" +
-      "\010\"\273\002\n\020ScheduledMessage\022\n\n\002id\030\001 \001(\014\022\020\n\010fi" +
-      "reTime\030\002 \001(\004\022\020\n\010receiver\030\003 \001(\t\022\016\n\006sender" +
-      "\030\004 \001(\t\022\024\n\014messageClass\030\005 \001(\t\022\017\n\007message\030" +
-      "\006 \001(\014\022\\\n\014traceContext\030\007 \001(\0132F.org.elasti" +
-      "csoftware.elasticactors.serialization.pr" +
-      "otobuf.TraceContext\022b\n\017creationContext\030\010" +
-      " \001(\0132I.org.elasticsoftware.elasticactors" +
-      ".serialization.protobuf.CreationContext\"" +
-      "\364\002\n\017InternalMessage\022\020\n\010receiver\030\001 \001(\t\022\016\n" +
-      "\006sender\030\002 \001(\t\022\024\n\014payloadClass\030\003 \001(\t\022\017\n\007p" +
-      "ayload\030\004 \001(\014\022\n\n\002id\030\005 \001(\014\022\017\n\007durable\030\006 \001(" +
-      "\010\022\025\n\rundeliverable\030\007 \001(\010\022\021\n\treceivers\030\010 " +
-      "\003(\t\022\017\n\007timeout\030\t \001(\r\022\\\n\014traceContext\030\n \001" +
-      "(\0132F.org.elasticsoftware.elasticactors.s" +
-      "erialization.protobuf.TraceContext\022b\n\017cr" +
-      "eationContext\030\013 \001(\0132I.org.elasticsoftwar" +
-      "e.elasticactors.serialization.protobuf.C" +
-      "reationContext\"\314\001\n\022CreateActorMessage\022\017\n" +
-      "\007actorId\030\001 \001(\t\022\024\n\014initialState\030\002 \001(\014\022\022\n\n" +
-      "actorClass\030\003 \001(\t\022\023\n\013actorSystem\030\004 \001(\t\022Q\n" +
-      "\004type\030\005 \001(\0162C.org.elasticsoftware.elasti" +
-      "cactors.serialization.protobuf.ActorType" +
-      "\022\023\n\013affinityKey\030\006 \001(\t\"\'\n\023DestroyActorMes" +
-      "sage\022\020\n\010actorRef\030\001 \001(\t\"\217\001\n\024ActivateActor" +
-      "Message\022\023\n\013actorSystem\030\001 \001(\t\022\017\n\007actorId\030" +
-      "\002 \001(\t\022Q\n\004type\030\003 \001(\0162C.org.elasticsoftwar" +
-      "e.elasticactors.serialization.protobuf.A" +
-      "ctorType\"9\n\013WireMessage\022\021\n\tqueueName\030\001 \001" +
-      "(\t\022\027\n\017internalMessage\030\002 \001(\014\"D\n\035CancelSch" +
-      "eduledMessageMessage\022\021\n\tmessageId\030\001 \001(\014\022" +
-      "\020\n\010fireTime\030\002 \001(\004\"r\n\020ActorNodeMessage\022\020\n" +
-      "\010receiver\030\001 \001(\t\022\016\n\006nodeId\030\002 \001(\t\022\024\n\014paylo" +
-      "adClass\030\003 \001(\t\022\017\n\007payload\030\004 \001(\014\022\025\n\rundeli" +
-      "verable\030\005 \001(\010\"\'\n\023PersistActorMessage\022\020\n\010" +
-      "actorRef\030\001 \001(\t*2\n\tActorType\022\016\n\nPERSISTEN" +
-      "T\020\000\022\010\n\004TEMP\020\001\022\013\n\007SERVICE\020\002B\002H\001"
+      "lasticactors.serialization.protobuf\"\327\001\n\014" +
+      "TraceContext\022\016\n\006spanId\030\001 \002(\t\022\017\n\007traceId\030" +
+      "\002 \002(\t\022\020\n\010parentId\030\003 \001(\t\022d\n\007baggage\030\004 \003(\013" +
+      "2S.org.elasticsoftware.elasticactors.ser" +
+      "ialization.protobuf.TraceContext.Baggage" +
+      "Entry\032.\n\014BaggageEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005va" +
+      "lue\030\002 \001(\t:\0028\001\"a\n\017CreationContext\022\017\n\007crea" +
+      "tor\030\001 \001(\t\022\023\n\013creatorType\030\002 \001(\t\022\025\n\rcreato" +
+      "rMethod\030\003 \001(\t\022\021\n\tscheduled\030\004 \001(\010\"\273\002\n\020Sch" +
+      "eduledMessage\022\n\n\002id\030\001 \001(\014\022\020\n\010fireTime\030\002 " +
+      "\001(\004\022\020\n\010receiver\030\003 \001(\t\022\016\n\006sender\030\004 \001(\t\022\024\n" +
+      "\014messageClass\030\005 \001(\t\022\017\n\007message\030\006 \001(\014\022\\\n\014" +
+      "traceContext\030\007 \001(\0132F.org.elasticsoftware" +
+      ".elasticactors.serialization.protobuf.Tr" +
+      "aceContext\022b\n\017creationContext\030\010 \001(\0132I.or" +
+      "g.elasticsoftware.elasticactors.serializ" +
+      "ation.protobuf.CreationContext\"\364\002\n\017Inter" +
+      "nalMessage\022\020\n\010receiver\030\001 \001(\t\022\016\n\006sender\030\002" +
+      " \001(\t\022\024\n\014payloadClass\030\003 \001(\t\022\017\n\007payload\030\004 " +
+      "\001(\014\022\n\n\002id\030\005 \001(\014\022\017\n\007durable\030\006 \001(\010\022\025\n\runde" +
+      "liverable\030\007 \001(\010\022\021\n\treceivers\030\010 \003(\t\022\017\n\007ti" +
+      "meout\030\t \001(\r\022\\\n\014traceContext\030\n \001(\0132F.org." +
+      "elasticsoftware.elasticactors.serializat" +
+      "ion.protobuf.TraceContext\022b\n\017creationCon" +
+      "text\030\013 \001(\0132I.org.elasticsoftware.elastic" +
+      "actors.serialization.protobuf.CreationCo" +
+      "ntext\"\314\001\n\022CreateActorMessage\022\017\n\007actorId\030" +
+      "\001 \001(\t\022\024\n\014initialState\030\002 \001(\014\022\022\n\nactorClas" +
+      "s\030\003 \001(\t\022\023\n\013actorSystem\030\004 \001(\t\022Q\n\004type\030\005 \001" +
+      "(\0162C.org.elasticsoftware.elasticactors.s" +
+      "erialization.protobuf.ActorType\022\023\n\013affin" +
+      "ityKey\030\006 \001(\t\"\'\n\023DestroyActorMessage\022\020\n\010a" +
+      "ctorRef\030\001 \001(\t\"\217\001\n\024ActivateActorMessage\022\023" +
+      "\n\013actorSystem\030\001 \001(\t\022\017\n\007actorId\030\002 \001(\t\022Q\n\004" +
+      "type\030\003 \001(\0162C.org.elasticsoftware.elastic" +
+      "actors.serialization.protobuf.ActorType\"" +
+      "9\n\013WireMessage\022\021\n\tqueueName\030\001 \001(\t\022\027\n\017int" +
+      "ernalMessage\030\002 \001(\014\"D\n\035CancelScheduledMes" +
+      "sageMessage\022\021\n\tmessageId\030\001 \001(\014\022\020\n\010fireTi" +
+      "me\030\002 \001(\004\"r\n\020ActorNodeMessage\022\020\n\010receiver" +
+      "\030\001 \001(\t\022\016\n\006nodeId\030\002 \001(\t\022\024\n\014payloadClass\030\003" +
+      " \001(\t\022\017\n\007payload\030\004 \001(\014\022\025\n\rundeliverable\030\005" +
+      " \001(\010\"\'\n\023PersistActorMessage\022\020\n\010actorRef\030" +
+      "\001 \001(\t*2\n\tActorType\022\016\n\nPERSISTENT\020\000\022\010\n\004TE" +
+      "MP\020\001\022\013\n\007SERVICE\020\002B\002H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -11350,7 +11666,13 @@ public final class Messaging {
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceContext_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceContext_descriptor,
-        new java.lang.String[] { "SpanId", "TraceId", "ParentId", });
+        new java.lang.String[] { "SpanId", "TraceId", "ParentId", "Baggage", });
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceContext_BaggageEntry_descriptor =
+      internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceContext_descriptor.getNestedTypes().get(0);
+    internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceContext_BaggageEntry_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceContext_BaggageEntry_descriptor,
+        new java.lang.String[] { "Key", "Value", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CreationContext_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CreationContext_fieldAccessorTable = new

@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors.test.ask;
 
+import com.google.common.collect.ImmutableMap;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.base.state.StringState;
@@ -27,6 +28,7 @@ import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.Messagi
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -55,7 +57,10 @@ public class AskTest {
     @BeforeMethod
     public void addExternalCreatorData(Method method) {
         testScope.set(getManager().enter(
-                new TraceContext(),
+            new TraceContext(ImmutableMap.of(
+                "testOriginalCreator",
+                this.getClass().getSimpleName()
+            )),
                 new CreationContext(
                         this.getClass().getSimpleName(),
                         this.getClass(),
@@ -64,8 +69,10 @@ public class AskTest {
 
     @AfterMethod
     public void removeExternalCreatorData() {
+        assertEquals(MDC.get("testOriginalCreator"), this.getClass().getSimpleName());
         testScope.get().close();
         assertNull(getManager().currentScope());
+        assertNull(MDC.get("testOriginalCreator"));
         testScope.remove();
     }
 

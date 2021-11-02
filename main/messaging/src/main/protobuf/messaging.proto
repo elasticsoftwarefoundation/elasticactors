@@ -16,6 +16,7 @@ message TraceContext {
   required string spanId = 1;
   required string traceId = 2;
   optional string parentId = 3;
+  map<string, string> baggage = 4;
 }
 
 message CreationContext {
