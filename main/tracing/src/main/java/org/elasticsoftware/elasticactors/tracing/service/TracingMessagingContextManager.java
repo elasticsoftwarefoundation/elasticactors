@@ -15,6 +15,7 @@ import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -315,9 +316,49 @@ public final class TracingMessagingContextManager extends MessagingContextManage
     }
 
     private static void fillContext(@Nullable TraceContext current, @Nullable TraceContext next) {
+        updateBaggage(current, next);
         addToLogContext(SPAN_ID_KEY, current, next, TraceContext::getSpanId);
         addToLogContext(TRACE_ID_KEY, current, next, TraceContext::getTraceId);
         addToLogContext(PARENT_SPAN_ID_KEY, current, next, TraceContext::getParentId);
+    }
+
+    private static void updateBaggage(TraceContext current, TraceContext next) {
+        try {
+            Map<String, String> oldBaggage = current != null ? current.getBaggage() : null;
+            Map<String, String> nextBaggage = next != null ? next.getBaggage() : null;
+            if (oldBaggage != null) {
+                for (Map.Entry<String, String> oldEntry : oldBaggage.entrySet()) {
+                    String key = oldEntry.getKey();
+                    String value = oldEntry.getValue();
+                    String nextValue = nextBaggage != null ? nextBaggage.get(key) : null;
+                    // Will set the new value if present, and remove it if absent
+                    if (!Objects.equals(value, nextValue)) {
+                        putOnMDC(key, nextValue);
+                    }
+                }
+            }
+            if (nextBaggage != null) {
+                for (Map.Entry<String, String> nextEntry : nextBaggage.entrySet()) {
+                    String key = nextEntry.getKey();
+                    String value = nextEntry.getValue();
+                    String oldValue = oldBaggage != null ? oldBaggage.get(key) : null;
+                    // Would have been processed when processing oldBaggage
+                    if (oldValue != null) {
+                        continue;
+                    }
+                    // Only insert if the old value was null and the new one isn't
+                    if (value != null) {
+                        putOnMDC(key, value);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.error(
+                "Could not add trace baggage to the MDC. "
+                    + "Baggage fields on the MDC might be corrupted.",
+                e
+            );
+        }
     }
 
     private static void fillContext(
