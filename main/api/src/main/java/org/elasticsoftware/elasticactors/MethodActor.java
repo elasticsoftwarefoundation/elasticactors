@@ -24,6 +24,8 @@ import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 import org.elasticsoftware.elasticactors.state.PersistenceConfigHelper;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
@@ -44,11 +46,17 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public abstract class MethodActor extends TypedActor<Object> implements PersistenceAdvisor {
+
     private static final Comparator<HandlerMethodDefinition> ORDER_COMPARATOR = Comparator.comparingInt(m -> m.order);
     private final Map<Class<?>,List<HandlerMethodDefinition>> handlerCache = new HashMap<>();
     @Nullable private final Class<? extends ActorState> stateClass;
     private final static LogLevel onUnhandledLogLevel =
         LogLevel.valueOf(System.getProperty("ea.logging.messages.unhandled.level", "WARN").toUpperCase());
+
+    @Override
+    protected final Logger initLogger() {
+        return LoggerFactory.getLogger(getClass());
+    }
 
     protected MethodActor() {
         this.stateClass = resolveActorStateClass();

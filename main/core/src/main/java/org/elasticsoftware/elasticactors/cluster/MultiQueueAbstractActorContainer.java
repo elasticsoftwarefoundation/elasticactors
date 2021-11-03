@@ -6,7 +6,7 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.Splittable;
-import org.elasticsoftware.elasticactors.messaging.internal.Hashable;
+import org.elasticsoftware.elasticactors.messaging.internal.InternalHashKeyUtils;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -57,60 +57,57 @@ public abstract class MultiQueueAbstractActorContainer extends AbstractActorCont
     @Override
     public final void offerInternalMessage(InternalMessage message) {
         if (messageQueues.length == 1) {
-            messageQueues[0].offer(message);
+            sendToBucket(0, message);
         } else {
-            String key = determineKey(message);
-            if (key != null) {
+            String messageQueueKey = determineMessageQueueKey(message);
+            if (messageQueueKey != null) {
                 // Compute a queue for this message
-                messageQueues[getBucket(key)].offer(message);
+                sendToBucket(getBucket(messageQueueKey), message);
             } else {
                 if (message.getReceivers() != null && message.getReceivers().size() <= 1) {
                     // Optimizing for the most common case in which we only have one receiver
                     int bucket = calculateHash(message.getReceivers(), this::getBucket);
                     // Compute a queue for this message
-                    messageQueues[bucket].offer(message);
+                    sendToBucket(bucket, message);
                 } else if (message instanceof Splittable) {
                     Map<Integer, InternalMessage> messagesPerBucket =
                         ((Splittable<String, InternalMessage>) message).splitFor(this::getBucket);
-                    for (Map.Entry<Integer, InternalMessage> entry : messagesPerBucket.entrySet()) {
-                        Integer bucket = entry.getKey();
-                        InternalMessage splittedMessage = entry.getValue();
-                        // Compute a queue for each split message
-                        messageQueues[bucket].offer(splittedMessage);
-                    }
+                    messagesPerBucket.forEach(this::sendToBucket);
                 }
             }
         }
+    }
+
+    private void sendToBucket(int bucket, InternalMessage message) {
+        messageQueues[bucket].offer(message);
     }
 
     private int getBucket(String key) {
         return Math.abs(key.hashCode()) % messageQueues.length;
     }
 
-    private String determineKey(InternalMessage message) {
+    private String determineMessageQueueKey(InternalMessage message) {
         if (message.getReceivers() != null && message.getReceivers().size() > 1) {
-            Hashable<String> payload = getPayload(message);
+            String payload = getMessageQueueKey(message);
             if (payload != null) {
                 logger.error(
-                    "Received a message of type [{}] that implements [{}] wrapped in a [{}] but "
-                        + "has multiple receivers",
+                    "Received a message of type [{}] that should be hashed to a specific queue, "
+                        + "wrapped in a [{}] but has multiple receivers",
                     message.getPayloadClass(),
-                    Hashable.class.getName(),
                     message.getClass().getName()
                 );
             }
             return null;
         } else {
-            Hashable<String> payload = getPayload(message);
-            return payload != null ? payload.getHashKey() : null;
+            return getMessageQueueKey(message);
         }
     }
 
     @Nullable
-    private Hashable<String> getPayload(InternalMessage message) {
+    private String getMessageQueueKey(InternalMessage message) {
         if (message.hasPayloadObject()) {
             try {
-                return Hashable.getIfHashable(message.getPayload(null));
+                return InternalHashKeyUtils.getMessageQueueAffinityKey(message.getPayload(null));
             } catch (Exception e) {
                 logger.error(
                     "Could not determine hashing key for message of type [{}] wrapped in [{}]",

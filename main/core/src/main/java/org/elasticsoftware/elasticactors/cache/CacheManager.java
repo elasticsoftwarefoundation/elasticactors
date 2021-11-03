@@ -24,7 +24,6 @@ import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import org.slf4j.Logger;
@@ -108,21 +107,19 @@ public class CacheManager<K,V> {
 
         @Override
         public ImmutableMap<K, V> getAllPresent(Iterable<?> keys) {
-            Map<K,V> result = Maps.newLinkedHashMap();
+            ImmutableMap.Builder<K,V> result = ImmutableMap.builder();
             for (Object key : keys) {
                 V value = backingCache.getIfPresent(new CacheKey(segmentKey,key));
                 if(value != null) {
                     result.put((K) key, value);
                 }
             }
-            return ImmutableMap.copyOf(result);
+            return result.build();
         }
 
         @Override
         public void putAll(Map<? extends K, ? extends V> m) {
-            for (Map.Entry<? extends K, ? extends V> entry : m.entrySet()) {
-                put(entry.getKey(),entry.getValue());
-            }
+            m.forEach(this::put);
         }
 
         @Override

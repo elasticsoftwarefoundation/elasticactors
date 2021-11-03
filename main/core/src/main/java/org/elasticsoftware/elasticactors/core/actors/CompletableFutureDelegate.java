@@ -19,6 +19,8 @@ package org.elasticsoftware.elasticactors.core.actors;
 import org.elasticsoftware.elasticactors.ActorNotFoundException;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.UnexpectedResponseTypeException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -28,6 +30,9 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public final class CompletableFutureDelegate<T> extends ActorDelegate<T> {
+
+    private static final Logger staticLogger = LoggerFactory.getLogger(CompletableFutureDelegate.class);
+
     private final CompletableFuture<T> future;
     private final Class<T> responseType;
 
@@ -35,6 +40,11 @@ public final class CompletableFutureDelegate<T> extends ActorDelegate<T> {
         super(true, callerRef);
         this.future = future;
         this.responseType = responseType;
+    }
+
+    @Override
+    protected Logger initLogger() {
+        return staticLogger;
     }
 
     @Override

@@ -42,8 +42,15 @@ import static org.testng.Assert.assertNull;
  * @author Joost van de Wijgerd
  */
 @Actor(stateClass = StringState.class,serializationFramework = JacksonSerializationFramework.class)
-public class GreetingActor extends TypedActor<Greeting> {
-    private static final Logger logger = LoggerFactory.getLogger(GreetingActor.class);
+public final class GreetingActor extends TypedActor<Greeting> {
+
+    private static final Logger staticLogger = LoggerFactory.getLogger(GreetingActor.class);
+
+    @Override
+    protected Logger initLogger() {
+        return staticLogger;
+    }
+
     @Override
     public void onReceive(ActorRef sender, Greeting message) throws Exception {
         logger.info("Hello, {}", message.getWho());

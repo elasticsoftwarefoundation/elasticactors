@@ -175,20 +175,19 @@ public final class TransientInternalMessage extends AbstractTracedMessage
 
     private ImmutableMap<Integer, InternalMessage> groupByReceiverHash(Function<String, Integer> hashFunction) {
         Map<Integer, List<ActorRef>> grouped = groupByHashValue(receivers, hashFunction);
-        ImmutableMap.Builder<Integer, InternalMessage> builder = ImmutableMap.builder();
-        for (Map.Entry<Integer, List<ActorRef>> e : grouped.entrySet()) {
-            builder.put(
-                e.getKey(),
-                new TransientInternalMessage(
-                    sender,
-                    ImmutableList.copyOf(e.getValue()),
-                    payload,
-                    undeliverable,
-                    getTraceContext(),
-                    getCreationContext()
-                )
-            );
-        }
+        ImmutableMap.Builder<Integer, InternalMessage> builder =
+            ImmutableMap.builderWithExpectedSize(grouped.size());
+        grouped.forEach((key, receivers) -> builder.put(
+            key,
+            new TransientInternalMessage(
+                sender,
+                ImmutableList.copyOf(receivers),
+                payload,
+                undeliverable,
+                getTraceContext(),
+                getCreationContext()
+            )
+        ));
         return builder.build();
     }
 }

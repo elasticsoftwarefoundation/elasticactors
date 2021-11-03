@@ -25,6 +25,8 @@ import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.UnexpectedResponseTypeException;
 import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.LinkedHashMap;
@@ -37,6 +39,19 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorState<ActorDelegate<T>> {
+
+    private final static Logger staticLogger = LoggerFactory.getLogger(ActorDelegate.class);
+
+    /**
+     * Default implementation that uses the static logger for {@link ActorDelegate}.
+     * Although the user can override it, {@link ActorDelegate}  is often used for anonymous
+     * subclassing, so this is a valuable optimization.
+     */
+    @Override
+    protected Logger initLogger() {
+        return staticLogger;
+    }
+
     private final boolean deleteAfterReceive;
 
     protected ActorDelegate() {
@@ -65,7 +80,14 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
         return new Builder<>();
     }
 
-    private static class FunctionalActorDelegate<D> extends ActorDelegate<D> {
+    private static final class FunctionalActorDelegate<D> extends ActorDelegate<D> {
+
+        private final static Logger staticLogger = LoggerFactory.getLogger(FunctionalActorDelegate.class);
+
+        @Override
+        protected Logger initLogger() {
+            return staticLogger;
+        }
 
         private final Map<Class<?>, MessageConsumer<?>> onReceiveConsumers;
         private final MessageConsumer<D> orElseConsumer;
@@ -93,9 +115,9 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
             Class<?> messageClass = message.getClass();
             MessageConsumer consumer = onReceiveConsumers.get(messageClass);
             if (consumer == null) {
-                for (Map.Entry<Class<?>, MessageConsumer<?>> e : onReceiveConsumers.entrySet()) {
-                    if (e.getKey().isAssignableFrom(messageClass)) {
-                        consumer = e.getValue();
+                for (Class<?> key : onReceiveConsumers.keySet()) {
+                    if (key.isAssignableFrom(messageClass)) {
+                        consumer = onReceiveConsumers.get(key);
                         break;
                     }
                 }

@@ -27,30 +27,68 @@ public final class TraceContext {
         @Nullable String parentId,
         @Nullable Map<String, String> baggage)
     {
+        this(spanId, traceId, parentId, baggage, false);
+    }
+
+    /**
+     * Constructor that allows the user to inform if the provided baggage map is immutable,
+     * preventing unnecessary copies if so.
+     *
+     * This is provided for optimization purposes.
+     * Passing a map that is not mutable here and changing it afterwards may
+     * (and very likely will) corrupt the thread's MDC.
+     */
+    public TraceContext(
+        @Nonnull String spanId,
+        @Nonnull String traceId,
+        @Nullable String parentId,
+        @Nullable Map<String, String> baggage,
+        boolean immutableBaggageMap)
+    {
         this.spanId = Objects.requireNonNull(spanId);
         this.traceId = Objects.requireNonNull(traceId);
         this.parentId = parentId;
-        this.baggage = baggage;
+        this.baggage = !immutableBaggageMap && baggage != null
+            ? Collections.unmodifiableMap(new HashMap<>(baggage))
+            : baggage;
     }
 
     public TraceContext(@Nullable TraceContext parent) {
-        this(parent, parent == null ? null : parent.baggage);
+        this(parent, parent == null ? null : parent.baggage, true);
     }
 
     public TraceContext(@Nullable Map<String, String> baggage) {
-        this(null, baggage);
+        this(null, baggage, false);
     }
 
-    private TraceContext(@Nullable TraceContext parent, @Nullable Map<String, String> baggage) {
+    public TraceContext(@Nullable TraceContext parent, @Nullable Map<String, String> baggage) {
+        this(parent, baggage, false);
+    }
+
+    /**
+     * Constructor that allows the user to inform if the provided baggage map is immutable,
+     * preventing unnecessary copies if so.
+     *
+     * This is provided for optimization purposes.
+     * Passing a map that is not mutable here and changing it afterwards may
+     * (and very likely will) corrupt the thread's MDC.
+     */
+    public TraceContext(
+        @Nullable TraceContext parent,
+        @Nullable Map<String, String> baggage,
+        boolean immutableBaggageMap)
+    {
         Random prng = ThreadLocalRandom.current();
         this.spanId = toHexString(prng.nextLong());
         this.traceId = parent == null || parent.getTraceId().isEmpty()
-                ? nextTraceIdHigh(prng) + this.spanId
-                : parent.getTraceId();
+            ? nextTraceIdHigh(prng) + this.spanId
+            : parent.getTraceId();
         this.parentId = parent == null || parent.getSpanId().isEmpty()
-                ? null
-                : parent.getSpanId();
-        this.baggage = baggage == null ? null : Collections.unmodifiableMap(new HashMap<>(baggage));
+            ? null
+            : parent.getSpanId();
+        this.baggage = !immutableBaggageMap && baggage != null
+            ? Collections.unmodifiableMap(new HashMap<>(baggage))
+            : baggage;
     }
 
     /**

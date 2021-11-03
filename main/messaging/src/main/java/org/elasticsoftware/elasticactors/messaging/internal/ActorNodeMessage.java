@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
  * @author Joost van de Wijgerd
  */
 @Message(immutable = true, durable = false, serializationFramework = SystemSerializationFramework.class)
-public final class ActorNodeMessage implements Hashable<String> {
+public final class ActorNodeMessage implements MessageQueueBoundPayload {
     private final String nodeId;
     private final ActorRef receiverRef;
     private final Object message;
@@ -63,7 +63,7 @@ public final class ActorNodeMessage implements Hashable<String> {
 
     @Nullable
     @Override
-    public String getHashKey() {
+    public String getMessageQueueAffinityKey() {
         return receiverRef != null ? receiverRef.getActorId() : null;
     }
 }

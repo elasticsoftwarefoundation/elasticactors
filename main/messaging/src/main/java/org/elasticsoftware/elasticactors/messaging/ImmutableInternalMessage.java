@@ -195,24 +195,23 @@ public final class ImmutableInternalMessage extends AbstractTracedMessage
 
     private ImmutableMap<Integer, InternalMessage> groupByReceiverHash(Function<String, Integer> hashFunction) {
         Map<Integer, List<ActorRef>> grouped = groupByHashValue(receivers, hashFunction);
-        ImmutableMap.Builder<Integer, InternalMessage> builder = ImmutableMap.builder();
-        for (Map.Entry<Integer, List<ActorRef>> e : grouped.entrySet()) {
-            builder.put(
-                e.getKey(),
-                new ImmutableInternalMessage(
-                    UUIDTools.createTimeBasedUUID(),
-                    sender,
-                    ImmutableList.copyOf(e.getValue()),
-                    payload,
-                    payloadObject,
-                    durable,
-                    undeliverable,
-                    timeout,
-                    getTraceContext(),
-                    getCreationContext()
-                )
-            );
-        }
+        ImmutableMap.Builder<Integer, InternalMessage> builder =
+            ImmutableMap.builderWithExpectedSize(grouped.size());
+        grouped.forEach((key, receivers) -> builder.put(
+            key,
+            new ImmutableInternalMessage(
+                UUIDTools.createTimeBasedUUID(),
+                sender,
+                ImmutableList.copyOf(receivers),
+                payload,
+                payloadObject,
+                durable,
+                undeliverable,
+                timeout,
+                getTraceContext(),
+                getCreationContext()
+            )
+        ));
         return builder.build();
     }
 }

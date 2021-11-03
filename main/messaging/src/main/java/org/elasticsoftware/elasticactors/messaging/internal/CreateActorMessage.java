@@ -27,7 +27,7 @@ import java.io.Serializable;
  * @author Joost van de Wijgerd
  */
 @Message(immutable = true, durable = false, serializationFramework = SystemSerializationFramework.class)
-public final class CreateActorMessage implements Serializable, Hashable<String> {
+public final class CreateActorMessage implements Serializable, MessageQueueBoundPayload {
     private final String actorSystem;
     private final String actorId;
     private final String actorClass;
@@ -78,7 +78,7 @@ public final class CreateActorMessage implements Serializable, Hashable<String> 
 
     @Nullable
     @Override
-    public String getHashKey() {
+    public String getMessageQueueAffinityKey() {
         return actorId;
     }
 }
