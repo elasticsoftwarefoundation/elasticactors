@@ -6,5 +6,5 @@ import java.util.function.Function;
 
 public interface Splittable<T, D> {
 
-    ImmutableMap<Integer, D> splitFor(Function<T, Integer> hashFunction);
+    ImmutableMap<Integer, D> splitInBuckets(Function<T, Integer> hashFunction, int buckets);
 }

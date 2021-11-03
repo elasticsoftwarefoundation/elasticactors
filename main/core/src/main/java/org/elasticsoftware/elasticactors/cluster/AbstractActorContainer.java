@@ -27,25 +27,33 @@ import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 
+/**
+ * @author Joost van de Wijgerd
+ */
 public abstract class AbstractActorContainer implements ActorContainer, MessageHandler {
 
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
+    protected final Logger logger = initLogger();
     protected final ActorRef myRef;
-    protected final MessageQueueFactory messageQueueFactory;
     protected final PhysicalNode localNode;
 
+    private final MessageQueueProxy messageQueueProxy;
+
+    protected abstract Logger initLogger();
+
     public AbstractActorContainer(
-        ActorRef myRef,
         MessageQueueFactory messageQueueFactory,
-        PhysicalNode node)
+        ActorRef myRef,
+        PhysicalNode node,
+        int numberOfQueues)
     {
         this.myRef = myRef;
-        this.messageQueueFactory = messageQueueFactory;
         this.localNode = node;
+        this.messageQueueProxy = numberOfQueues <= 1
+            ? new SingleMessageQueueProxy(messageQueueFactory, this, myRef)
+            : new MultiMessageQueueProxy(messageQueueFactory, this, myRef, numberOfQueues);
     }
 
     @Override
@@ -99,5 +107,20 @@ public abstract class AbstractActorContainer implements ActorContainer, MessageH
     @Override
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
         sendMessage(from, ImmutableList.of(to), message);
+    }
+
+    @Override
+    public final void offerInternalMessage(InternalMessage message) {
+        messageQueueProxy.offerInternalMessage(message);
+    }
+
+    @Override
+    public void init() throws Exception {
+        messageQueueProxy.init();
+    }
+
+    @Override
+    public void destroy() {
+        messageQueueProxy.destroy();
     }
 }

@@ -17,25 +17,40 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- * @author Joost van de Wijgerd
- */
-public abstract class SingleQueueAbstractActorContainer extends AbstractActorContainer {
+public final class SingleMessageQueueProxy implements MessageQueueProxy {
+
+    private final static Logger logger = LoggerFactory.getLogger(SingleMessageQueueProxy.class);
+
+    private final MessageQueueFactory messageQueueFactory;
+    private final MessageHandler messageHandler;
+    private final ActorRef actorRef;
 
     private MessageQueue messageQueue;
 
-    public SingleQueueAbstractActorContainer(MessageQueueFactory messageQueueFactory, ActorRef myRef, PhysicalNode node) {
-        super(myRef, messageQueueFactory, node);
+    public SingleMessageQueueProxy(
+        MessageQueueFactory messageQueueFactory,
+        MessageHandler messageHandler,
+        ActorRef actorRef)
+    {
+        this.messageQueueFactory = messageQueueFactory;
+        this.messageHandler = messageHandler;
+        this.actorRef = actorRef;
     }
 
     @Override
-    public void init() throws Exception {
-        this.messageQueue = messageQueueFactory.create(myRef.getActorPath(), this);
+    public synchronized void init() throws Exception {
+        this.messageQueue = messageQueueFactory.create(actorRef.getActorPath(), messageHandler);
+        logger.info(
+            "Starting up queue proxy for [{}] in Single-Queue mode",
+            actorRef.getActorPath()
+        );
     }
 
     @Override
@@ -45,7 +60,7 @@ public abstract class SingleQueueAbstractActorContainer extends AbstractActorCon
     }
 
     @Override
-    public final void offerInternalMessage(InternalMessage message) {
+    public void offerInternalMessage(InternalMessage message) {
         messageQueue.add(message);
     }
 }

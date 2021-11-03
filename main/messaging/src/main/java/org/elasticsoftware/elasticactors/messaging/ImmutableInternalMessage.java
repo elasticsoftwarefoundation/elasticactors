@@ -28,12 +28,11 @@ import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
-import static org.elasticsoftware.elasticactors.messaging.SplittableUtils.calculateHash;
-import static org.elasticsoftware.elasticactors.messaging.SplittableUtils.groupByHashValue;
+import static org.elasticsoftware.elasticactors.messaging.SplittableUtils.calculateBucketForEmptyOrSingleActor;
+import static org.elasticsoftware.elasticactors.messaging.SplittableUtils.groupByBucket;
 
 /**
  * @author Joost van de Wijgerd
@@ -187,31 +186,24 @@ public final class ImmutableInternalMessage extends AbstractTracedMessage
     }
 
     @Override
-    public ImmutableMap<Integer, InternalMessage> splitFor(Function<String, Integer> hashFunction) {
+    public ImmutableMap<Integer, InternalMessage> splitInBuckets(Function<String, Integer> hashFunction, int buckets) {
         return receivers.size() <= 1
-            ? ImmutableMap.of(calculateHash(receivers, hashFunction), this)
-            : groupByReceiverHash(hashFunction);
+            ? ImmutableMap.of(calculateBucketForEmptyOrSingleActor(receivers, hashFunction, buckets), this)
+            : groupByBucket(receivers, hashFunction, buckets, this::copyForReceivers);
     }
 
-    private ImmutableMap<Integer, InternalMessage> groupByReceiverHash(Function<String, Integer> hashFunction) {
-        Map<Integer, List<ActorRef>> grouped = groupByHashValue(receivers, hashFunction);
-        ImmutableMap.Builder<Integer, InternalMessage> builder =
-            ImmutableMap.builderWithExpectedSize(grouped.size());
-        grouped.forEach((key, receivers) -> builder.put(
-            key,
-            new ImmutableInternalMessage(
-                UUIDTools.createTimeBasedUUID(),
-                sender,
-                ImmutableList.copyOf(receivers),
-                payload,
-                payloadObject,
-                durable,
-                undeliverable,
-                timeout,
-                getTraceContext(),
-                getCreationContext()
-            )
-        ));
-        return builder.build();
+    private InternalMessage copyForReceivers(List<ActorRef> receivers) {
+        return new ImmutableInternalMessage(
+            UUIDTools.createTimeBasedUUID(),
+            sender,
+            ImmutableList.copyOf(receivers),
+            payload,
+            payloadObject,
+            durable,
+            undeliverable,
+            timeout,
+            getTraceContext(),
+            getCreationContext()
+        );
     }
 }

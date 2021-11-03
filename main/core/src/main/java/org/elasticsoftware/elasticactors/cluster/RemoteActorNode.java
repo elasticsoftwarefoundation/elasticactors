@@ -28,6 +28,8 @@ import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -35,7 +37,10 @@ import java.util.List;
  * @author Joost van de Wijgerd
  */
 
-public final class RemoteActorNode extends MultiQueueAbstractActorContainer implements ActorNode {
+public final class RemoteActorNode extends AbstractActorContainer implements ActorNode {
+
+    private final static Logger staticLogger = LoggerFactory.getLogger(RemoteActorNode.class);
+
     private final InternalActorSystem actorSystem;
     private final NodeKey nodeKey;
 
@@ -43,7 +48,7 @@ public final class RemoteActorNode extends MultiQueueAbstractActorContainer impl
                            InternalActorSystem actorSystem,
                            ActorRef myRef,
                            MessageQueueFactory messageQueueFactory) {
-        super(messageQueueFactory, myRef, remoteNode, actorSystem.getNumberOfNodeQueues());
+        super(messageQueueFactory, myRef, remoteNode, actorSystem.getQueuesPerNode());
         this.actorSystem = actorSystem;
         this.nodeKey = new NodeKey(actorSystem.getName(), remoteNode.getId());
     }
@@ -91,5 +96,10 @@ public final class RemoteActorNode extends MultiQueueAbstractActorContainer impl
     @Override
     public boolean isLocal() {
         return false;
+    }
+
+    @Override
+    protected Logger initLogger() {
+        return staticLogger;
     }
 }

@@ -47,13 +47,13 @@ import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.elasticsoftware.elasticactors.cluster.tasks.ProtocolFactoryFactory.getProtocolFactory;
 import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
@@ -62,36 +62,45 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
 /**
  * @author Joost van de Wijgerd
  */
-@Configurable
-public final class LocalActorNode extends MultiQueueAbstractActorContainer
-    implements ActorNode, EvictionListener<PersistentActor<NodeKey>> {
+public final class LocalActorNode extends AbstractActorContainer implements ActorNode, EvictionListener<PersistentActor<NodeKey>> {
+
+    private final static Logger staticLogger = LoggerFactory.getLogger(LocalActorNode.class);
+
     private final InternalActorSystem actorSystem;
     private final NodeKey nodeKey;
-    private ThreadBoundExecutor actorExecutor;
+    private final ThreadBoundExecutor actorExecutor;
     private final NodeActorCacheManager actorCacheManager;
     private Cache<ActorRef,PersistentActor<NodeKey>> actorCache;
-    private final Set<ElasticActor> initializedActors = new HashSet<>();
-    private MetricsSettings metricsSettings;
-    private LoggingSettings loggingSettings;
+    private final Set<ElasticActor> initializedActors = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final MetricsSettings metricsSettings;
+    private final LoggingSettings loggingSettings;
 
-    public LocalActorNode(PhysicalNode node,
-                          InternalActorSystem actorSystem,
-                          ActorRef myRef,
-                          MessageQueueFactory messageQueueFactory,
-                          NodeActorCacheManager actorCacheManager) {
-        super(
-            messageQueueFactory,
-            myRef,
-            node,
-            actorSystem.getNumberOfNodeQueues()
-        );
+    public LocalActorNode(
+        PhysicalNode node,
+        InternalActorSystem actorSystem,
+        ActorRef myRef,
+        MessageQueueFactory messageQueueFactory,
+        ThreadBoundExecutor actorExecutor,
+        NodeActorCacheManager actorCacheManager,
+        MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings)
+    {
+        super(messageQueueFactory, myRef, node, actorSystem.getQueuesPerNode());
         this.actorSystem = actorSystem;
+        this.actorExecutor = actorExecutor;
         this.actorCacheManager = actorCacheManager;
+        this.metricsSettings = metricsSettings;
+        this.loggingSettings = loggingSettings;
         this.nodeKey = new NodeKey(actorSystem.getName(), node.getId());
     }
 
     @Override
-    public void init() throws Exception {
+    protected Logger initLogger() {
+        return staticLogger;
+    }
+
+    @Override
+    public synchronized void init() throws Exception {
         this.actorCache = actorCacheManager.create(nodeKey,this);
         super.init();
     }
@@ -369,26 +378,6 @@ public final class LocalActorNode extends MultiQueueAbstractActorContainer
                                                         persistentActor.getSelf(),
                                                         internalMessage,
                                                         messageHandlerEventListener));
-    }
-
-
-    @Autowired
-    public void setActorExecutor(@Qualifier("actorExecutor") ThreadBoundExecutor actorExecutor) {
-        this.actorExecutor = actorExecutor;
-    }
-
-    @Autowired
-    public void setMetricsSettings(
-        @Qualifier("nodeMetricsSettings") MetricsSettings metricsSettings)
-    {
-        this.metricsSettings = metricsSettings;
-    }
-
-    @Autowired
-    public void setLoggingSettings(
-        @Qualifier("nodeLoggingSettings") LoggingSettings loggingSettings)
-    {
-        this.loggingSettings = loggingSettings;
     }
 
     @Override

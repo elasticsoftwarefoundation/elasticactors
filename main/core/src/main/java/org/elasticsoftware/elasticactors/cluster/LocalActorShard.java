@@ -54,9 +54,8 @@ import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.elasticsoftware.elasticactors.util.ManifestTools;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.io.IOException;
@@ -67,40 +66,58 @@ import static org.elasticsoftware.elasticactors.cluster.tasks.ProtocolFactoryFac
 import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * @author Joost van de Wijgerd
  */
-@Configurable
-public final class LocalActorShard extends SingleQueueAbstractActorContainer
-    implements ActorShard, EvictionListener<PersistentActor<ShardKey>> {
+public final class LocalActorShard extends AbstractActorContainer implements ActorShard, EvictionListener<PersistentActor<ShardKey>> {
+
+    private static final Logger staticLogger = LoggerFactory.getLogger(LocalActorShard.class);
+
     // this instance acts as a tombstone for stopped actors
     private static final PersistentActor<ShardKey> TOMBSTONE = new PersistentActor<>(null,null,null,null,null,null);
     private final InternalActorSystem actorSystem;
     private final ShardKey shardKey;
-    private ThreadBoundExecutor actorExecutor;
+    private final ThreadBoundExecutor actorExecutor;
     private Cache<ActorRef,PersistentActor<ShardKey>> actorCache;
-    private PersistentActorRepository persistentActorRepository;
-    private ActorStateUpdateProcessor actorStateUpdateProcessor;
+    private final PersistentActorRepository persistentActorRepository;
+    private final ActorStateUpdateProcessor actorStateUpdateProcessor;
     private final ShardActorCacheManager actorCacheManager;
-    // the cacheloader instance that is reused to avoid garbage being created on each call
-    private final CacheLoader cacheLoader = new CacheLoader();
-    private MetricsSettings metricsSettings;
-    private LoggingSettings loggingSettings;
+    private final MetricsSettings metricsSettings;
+    private final LoggingSettings loggingSettings;
 
-    public LocalActorShard(PhysicalNode node,
-                           InternalActorSystem actorSystem,
-                           int shard,
-                           ActorRef myRef,
-                           MessageQueueFactory messageQueueFactory,
-                           ShardActorCacheManager actorCacheManager) {
-        super(messageQueueFactory, myRef, node);
+    public LocalActorShard(
+        PhysicalNode node,
+        InternalActorSystem actorSystem,
+        int shard,
+        ActorRef myRef,
+        MessageQueueFactory messageQueueFactory,
+        ThreadBoundExecutor actorExecutor,
+        PersistentActorRepository persistentActorRepository,
+        ActorStateUpdateProcessor actorStateUpdateProcessor,
+        ShardActorCacheManager actorCacheManager,
+        MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings)
+    {
+        super(messageQueueFactory, myRef, node, actorSystem.getQueuesPerShard());
         this.actorSystem = actorSystem;
+        this.actorExecutor = actorExecutor;
+        this.persistentActorRepository = persistentActorRepository;
+        this.actorStateUpdateProcessor = actorStateUpdateProcessor;
         this.actorCacheManager = actorCacheManager;
+        this.metricsSettings = metricsSettings;
+        this.loggingSettings = loggingSettings;
         this.shardKey = new ShardKey(actorSystem.getName(), shard);
     }
 
     @Override
-    public void init() throws Exception {
+    protected Logger initLogger() {
+        return staticLogger;
+    }
+
+    @Override
+    public synchronized void init() throws Exception {
         // create cache
         this.actorCache = actorCacheManager.create(shardKey,this);
         // initialize queue
@@ -130,6 +147,8 @@ public final class LocalActorShard extends SingleQueueAbstractActorContainer
             ElasticActor actorInstance = actorSystem.getActorInstance(value.getSelf(), value.getActorClass());
             actorExecutor.execute(new PassivateActorTask(actorStateUpdateProcessor, persistentActorRepository, value,
                     actorSystem, actorInstance, value.getSelf()));
+        } else {
+            logger.debug("Evicted [{}] of type [{}]", value.getSelf(), value.getActorClass());
         }
     }
 
@@ -186,11 +205,10 @@ public final class LocalActorShard extends SingleQueueAbstractActorContainer
         for (ActorRef receiverRef : im.getReceivers()) {
             InternalMessage internalMessage = (needsCopy) ? im.copyOf() : im;
             if (receiverRef.getActorId() != null) {
-                // make sure we load the right value from the cache
-                cacheLoader.initialize(receiverRef);
                 try {
                     // load persistent actor from cache or persistent store
-                    PersistentActor<ShardKey> actor = actorCache.get(receiverRef, cacheLoader);
+                    PersistentActor<ShardKey> actor =
+                        actorCache.get(receiverRef, cacheLoaderFor(receiverRef));
                     // see if we don't have a recently destroyed actor
                     if (TOMBSTONE == actor) {
                         try {
@@ -243,9 +261,6 @@ public final class LocalActorShard extends SingleQueueAbstractActorContainer
                     // we ack the message anyway
                     messageHandlerEventListener.onError(internalMessage, e);
                     logger.error("Exception while handling InternalMessage for Actor [{}]; senderRef [{}], messageType [{}]", receiverRef.getActorId(), internalMessage.getSender(), internalMessage.getPayloadClass(), e.getCause());
-                } finally {
-                    // ensure the cacheLoader is reset
-                    this.cacheLoader.reset();
                 }
             } else {
                 // the internalMessage is intended for the shard, this means it's about creating or destroying an actor
@@ -357,113 +372,99 @@ public final class LocalActorShard extends SingleQueueAbstractActorContainer
 
     private void activateActor(final ActorRef actorRef) throws Exception {
         // prepare the cache loader
-        this.cacheLoader.initialize(actorRef);
-        try {
-            actorCache.get(actorRef,cacheLoader);
-        } finally{
-            this.cacheLoader.reset();
-        }
+        actorCache.get(actorRef, cacheLoaderFor(actorRef));
+    }
+
+    private CacheLoader cacheLoaderFor(ActorRef actorRef) {
+        return new CacheLoader(
+            actorStateUpdateProcessor,
+            actorExecutor,
+            actorSystem,
+            actorRef,
+            persistentActorRepository,
+            shardKey
+        );
     }
 
     private void destroyActor(DestroyActorMessage destroyMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         final ActorRef actorRef = destroyMessage.getActorRef();
-        this.cacheLoader.initialize(actorRef);
-        try {
-            // need to load it here to know the ActorClass!
-            PersistentActor<ShardKey> persistentActor = actorCache.get(actorRef,cacheLoader);
-            // we used to delete actor state here to avoid race condition
+        // need to load it here to know the ActorClass!
+        PersistentActor<ShardKey> persistentActor =
+            actorCache.get(actorRef, cacheLoaderFor(actorRef));
+        // we used to delete actor state here to avoid race condition
             /*
             persistentActorRepository.delete(this.shardKey,actorRef.getActorId());
             actorCache.invalidate(actorRef);
             // seems like we need to call an explicit cleanup for the cache to clear
             actorCache.cleanUp();
             */
-            // now we handle it in the destroy task, but mark the actor as destroyed
-            actorCache.put(actorRef,TOMBSTONE);
-            // find actor class behind receiver ActorRef
-            ElasticActor actorInstance = actorSystem.getActorInstance(actorRef,persistentActor.getActorClass());
-            // call preDestroy
-            actorExecutor.execute(new DestroyActorTask( actorStateUpdateProcessor,
-                                                        persistentActorRepository,
-                                                        persistentActor,
-                                                        actorSystem,
-                                                        actorInstance,
-                                                        actorRef,
-                                                        internalMessage,
-                                                        messageHandlerEventListener));
-        } finally {
-            this.cacheLoader.reset();
-        }
+        // now we handle it in the destroy task, but mark the actor as destroyed
+        actorCache.put(actorRef, TOMBSTONE);
+        // find actor class behind receiver ActorRef
+        ElasticActor actorInstance =
+            actorSystem.getActorInstance(actorRef, persistentActor.getActorClass());
+        // call preDestroy
+        actorExecutor.execute(new DestroyActorTask(
+            actorStateUpdateProcessor,
+            persistentActorRepository,
+            persistentActor,
+            actorSystem,
+            actorInstance,
+            actorRef,
+            internalMessage,
+            messageHandlerEventListener
+        ));
     }
 
-    private void persistActor(PersistActorMessage persistMessage, InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
+    private void persistActor(PersistActorMessage persistMessage, InternalMessage internalMessage
+        , MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         final ActorRef actorRef = persistMessage.getActorRef();
-        this.cacheLoader.initialize(actorRef);
-        try {
-            // need to load it here to know the ActorClass!
-            PersistentActor<ShardKey> persistentActor = actorCache.get(actorRef,cacheLoader);
-            // find actor class behind receiver ActorRef
-            ElasticActor actorInstance = actorSystem.getActorInstance(actorRef,persistentActor.getActorClass());
-            // call preDestroy
-            actorExecutor.execute(new PersistActorTask( actorStateUpdateProcessor,
-                                                        persistentActorRepository,
-                                                        persistentActor,
-                                                        actorSystem,
-                                                        actorInstance,
-                                                        actorRef,
-                                                        internalMessage,
-                                                        messageHandlerEventListener));
-        } finally {
-            this.cacheLoader.reset();
-        }
-    }
-
-    @Autowired
-    public void setActorExecutor(@Qualifier("actorExecutor") ThreadBoundExecutor actorExecutor) {
-        this.actorExecutor = actorExecutor;
-    }
-
-    @Autowired
-    public void setPersistentActorRepository(PersistentActorRepository persistentActorRepository) {
-        this.persistentActorRepository = persistentActorRepository;
-    }
-
-    @Autowired
-    public void setActorStateUpdateProcessor(ActorStateUpdateProcessor actorStateUpdateProcessor) {
-        this.actorStateUpdateProcessor = actorStateUpdateProcessor;
-    }
-
-    @Autowired
-    public void setMetricsSettings(
-        @Qualifier("shardMetricsSettings") MetricsSettings metricsSettings)
-    {
-        this.metricsSettings = metricsSettings;
-    }
-
-    @Autowired
-    public void setLoggingSettings(
-        @Qualifier("shardLoggingSettings") LoggingSettings loggingSettings)
-    {
-        this.loggingSettings = loggingSettings;
+        // need to load it here to know the ActorClass!
+        PersistentActor<ShardKey> persistentActor =
+            actorCache.get(actorRef, cacheLoaderFor(actorRef));
+        // find actor class behind receiver ActorRef
+        ElasticActor actorInstance =
+            actorSystem.getActorInstance(actorRef, persistentActor.getActorClass());
+        // call preDestroy
+        actorExecutor.execute(new PersistActorTask(
+            actorStateUpdateProcessor,
+            persistentActorRepository,
+            persistentActor,
+            actorSystem,
+            actorInstance,
+            actorRef,
+            internalMessage,
+            messageHandlerEventListener
+        ));
     }
 
     /**
      * To avoid creation of these callable, we cache it at the Shard instance, setting the values as necesser
      *
      */
-    private final class CacheLoader implements Callable<PersistentActor<ShardKey>> {
-        // @todo: don't think this needs to be volatile as all access will happen in one thread only
-        private ActorRef actorRef = null;
+    private final static class CacheLoader implements Callable<PersistentActor<ShardKey>> {
 
-        public CacheLoader() {
-        }
+        private final ActorStateUpdateProcessor actorStateUpdateProcessor;
+        private final ThreadBoundExecutor actorExecutor;
+        private final InternalActorSystem actorSystem;
+        private final ActorRef actorRef;
+        private final PersistentActorRepository persistentActorRepository;
+        private final ShardKey shardKey;
 
-        public void initialize(ActorRef actorRef) {
-            this.actorRef = actorRef;
-        }
-
-        public void reset() {
-            this.actorRef = null;
+        public CacheLoader(
+            ActorStateUpdateProcessor actorStateUpdateProcessor,
+            ThreadBoundExecutor actorExecutor,
+            InternalActorSystem actorSystem,
+            ActorRef actorRef,
+            PersistentActorRepository persistentActorRepository,
+            ShardKey shardKey)
+        {
+            this.actorStateUpdateProcessor = requireNonNull(actorStateUpdateProcessor);
+            this.actorExecutor = requireNonNull(actorExecutor);
+            this.actorSystem = requireNonNull(actorSystem);
+            this.actorRef = requireNonNull(actorRef);
+            this.persistentActorRepository = requireNonNull(persistentActorRepository);
+            this.shardKey = requireNonNull(shardKey);
         }
 
         @Override

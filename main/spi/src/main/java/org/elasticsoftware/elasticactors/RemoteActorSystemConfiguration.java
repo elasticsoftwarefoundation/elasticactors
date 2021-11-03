@@ -24,5 +24,7 @@ public interface RemoteActorSystemConfiguration {
 
     int getNumberOfShards();
 
+    int getQueuesPerShard();
+
     String getClusterName();
 }

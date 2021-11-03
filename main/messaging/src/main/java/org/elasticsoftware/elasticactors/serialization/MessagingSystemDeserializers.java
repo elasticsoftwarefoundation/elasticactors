@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors.serialization;
 
+import com.google.common.collect.ImmutableMap;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
@@ -44,31 +45,30 @@ import org.elasticsoftware.elasticactors.serialization.reactivestreams.RequestMe
 import org.elasticsoftware.elasticactors.serialization.reactivestreams.SubscribeMessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.reactivestreams.SubscriptionMessageDeserializer;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * @author Joost van de Wijgerd
  */
 public final class MessagingSystemDeserializers implements SystemDeserializers {
-    private final Map<Class,MessageDeserializer> systemDeserializers = new HashMap<>();
+
+    private final ImmutableMap<Class, MessageDeserializer> systemDeserializers;
 
     public MessagingSystemDeserializers(InternalActorSystems cluster,ActorRefFactory actorRefFactory) {
+        ImmutableMap.Builder<Class, MessageDeserializer> builder = ImmutableMap.builder();
         ActorRefDeserializer actorRefDeserializer = new ActorRefDeserializer(actorRefFactory);
-        systemDeserializers.put(CreateActorMessage.class,new CreateActorMessageDeserializer(cluster));
-        systemDeserializers.put(DestroyActorMessage.class,new DestroyActorMessageDeserializer(actorRefDeserializer));
-        systemDeserializers.put(ActivateActorMessage.class,new ActivateActorMessageDeserializer());
-        systemDeserializers.put(CancelScheduledMessageMessage.class,new CancelScheduledMessageMessageDeserializer());
-        systemDeserializers.put(ActorNodeMessage.class, new ActorNodeMessageDeserializer(actorRefDeserializer, cluster));
-        systemDeserializers.put(PersistActorMessage.class, new PersistActorMessageDeserializer(actorRefDeserializer));
+        builder.put(CreateActorMessage.class,new CreateActorMessageDeserializer(cluster));
+        builder.put(DestroyActorMessage.class,new DestroyActorMessageDeserializer(actorRefDeserializer));
+        builder.put(ActivateActorMessage.class,new ActivateActorMessageDeserializer());
+        builder.put(CancelScheduledMessageMessage.class,new CancelScheduledMessageMessageDeserializer());
+        builder.put(ActorNodeMessage.class, new ActorNodeMessageDeserializer(actorRefDeserializer, cluster));
+        builder.put(PersistActorMessage.class, new PersistActorMessageDeserializer(actorRefDeserializer));
         // reactive streams protocol
-        systemDeserializers.put(CancelMessage.class, new CancelMessageDeserializer(actorRefDeserializer));
-        systemDeserializers.put(CompletedMessage.class, new CompletedMessageDeserializer());
-        systemDeserializers.put(SubscribeMessage.class, new SubscribeMessageDeserializer(actorRefDeserializer));
-        systemDeserializers.put(RequestMessage.class, new RequestMessageDeserializer());
-        systemDeserializers.put(SubscriptionMessage.class, new SubscriptionMessageDeserializer());
-        systemDeserializers.put(NextMessage.class, new NextMessageDeserializer());
-
+        builder.put(CancelMessage.class, new CancelMessageDeserializer(actorRefDeserializer));
+        builder.put(CompletedMessage.class, new CompletedMessageDeserializer());
+        builder.put(SubscribeMessage.class, new SubscribeMessageDeserializer(actorRefDeserializer));
+        builder.put(RequestMessage.class, new RequestMessageDeserializer());
+        builder.put(SubscriptionMessage.class, new SubscriptionMessageDeserializer());
+        builder.put(NextMessage.class, new NextMessageDeserializer());
+        this.systemDeserializers = builder.build();
     }
 
     @Override

@@ -42,7 +42,8 @@ public final class DefaultConfiguration implements InternalActorSystemConfigurat
     private ApplicationContext applicationContext;
     private final String name;
     private final int numberOfShards;
-    private final int numberOfNodeQueues;
+    private final int queuesPerShard;
+    private final int queuesPerNode;
     private final List<DefaultRemoteConfiguration> remoteConfigurations;
     private final Map<String,Object> properties = new LinkedHashMap<>();
     private final ConversionService conversionService = new DefaultConversionService();
@@ -53,12 +54,14 @@ public final class DefaultConfiguration implements InternalActorSystemConfigurat
     public DefaultConfiguration(
         @JsonProperty("name") String name,
         @JsonProperty("shards") int numberOfShards,
-        @JsonProperty("nodeQueues") Integer numberOfNodeQueues,
+        @JsonProperty("queuesPerShard") Integer queuesPerShard,
+        @JsonProperty("queuesPerNode") Integer queuesPerNode,
         @JsonProperty("remoteActorSystems") List<DefaultRemoteConfiguration> remoteConfigurations)
     {
         this.name = name;
         this.numberOfShards = numberOfShards;
-        this.numberOfNodeQueues = numberOfNodeQueues != null ? numberOfNodeQueues : 1;
+        this.queuesPerShard = queuesPerShard != null ? queuesPerShard : 1;
+        this.queuesPerNode = queuesPerNode != null ? queuesPerNode : 1;
         this.remoteConfigurations =
             (remoteConfigurations != null) ? remoteConfigurations : Collections.emptyList();
     }
@@ -86,10 +89,16 @@ public final class DefaultConfiguration implements InternalActorSystemConfigurat
         return "1.0.0";
     }
 
-    @JsonProperty("nodeQueues")
+    @JsonProperty("queuesPerShard")
     @Override
-    public int getNumberOfNodeQueues() {
-        return numberOfNodeQueues;
+    public int getQueuesPerShard() {
+        return queuesPerShard;
+    }
+
+    @JsonProperty("queuesPerNode")
+    @Override
+    public int getQueuesPerNode() {
+        return queuesPerNode;
     }
 
     @Override

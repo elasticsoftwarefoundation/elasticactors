@@ -27,14 +27,19 @@ public final class DefaultRemoteConfiguration implements RemoteActorSystemConfig
     private final String clusterName;
     private final String name;
     private final int numberOfShards;
+    private final int queuesPerShard;
 
     @JsonCreator
-    public DefaultRemoteConfiguration(@JsonProperty("clusterName") String clusterName,
-                                      @JsonProperty("name") String name,
-                                      @JsonProperty("shards") int numberOfShards) {
+    public DefaultRemoteConfiguration(
+        @JsonProperty("clusterName") String clusterName,
+        @JsonProperty("name") String name,
+        @JsonProperty("shards") int numberOfShards,
+        @JsonProperty("queuesPerShard") Integer queuesPerShard)
+    {
         this.clusterName = clusterName;
         this.name = name;
         this.numberOfShards = numberOfShards;
+        this.queuesPerShard = queuesPerShard != null ? queuesPerShard : 1;
     }
 
     @Override
@@ -46,6 +51,12 @@ public final class DefaultRemoteConfiguration implements RemoteActorSystemConfig
     @Override
     public int getNumberOfShards() {
         return numberOfShards;
+    }
+
+    @JsonProperty("queuesPerShard")
+    @Override
+    public int getQueuesPerShard() {
+        return queuesPerShard;
     }
 
     @Override

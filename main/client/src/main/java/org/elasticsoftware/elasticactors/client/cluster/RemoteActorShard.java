@@ -180,7 +180,7 @@ final class RemoteActorShard implements ActorShard, MessageHandler {
     }
 
     @Override
-    public void init() throws Exception {
+    public synchronized void init() throws Exception {
         this.messageQueue = messageQueueFactory.create(actorPath, this);
     }
 

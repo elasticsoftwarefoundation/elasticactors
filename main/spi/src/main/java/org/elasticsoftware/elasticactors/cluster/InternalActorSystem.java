@@ -86,7 +86,9 @@ public interface InternalActorSystem extends ActorSystem, ShardAccessor, Seriali
 
     List<ActorLifecycleListener<?>> getActorLifecycleListeners(Class<? extends ElasticActor> actorClass);
 
-    int getNumberOfNodeQueues();
+    int getQueuesPerNode();
+
+    int getQueuesPerShard();
 
     /**
      * Returns whether or not the actor system is currently stable, i.e. if all shards have been assigned and initialized

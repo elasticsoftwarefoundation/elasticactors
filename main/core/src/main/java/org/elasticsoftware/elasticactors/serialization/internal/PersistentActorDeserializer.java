@@ -29,7 +29,6 @@ import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.reactivestreams.Subscriber;
-import org.springframework.beans.factory.annotation.Configurable;
 
 import java.io.IOException;
 import java.util.List;
@@ -40,7 +39,6 @@ import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClass
 /**
  * @author Joost van de Wijgerd
  */
-@Configurable
 public final class PersistentActorDeserializer implements Deserializer<byte[], PersistentActor<ShardKey>> {
     private final ActorRefFactory actorRefFactory;
     private final InternalActorSystems actorSystems;

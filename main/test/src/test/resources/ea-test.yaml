@@ -1,5 +1,6 @@
 ---
 name: test
-shards: 8
-#shards: 256
-#nodeQueues: 8
+#shards: 8
+shards: 128
+queuesPerNode: 8
+queuesPerShard: 256

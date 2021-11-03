@@ -145,7 +145,12 @@ public class TestConfiguration extends AsyncConfigurerSupport {
 
     @Bean(name = {"remoteConfiguration"})
     public RemoteActorSystemConfiguration getRemoteConfiguration(ActorSystemConfiguration configuration) throws IOException {
-        return new DefaultRemoteConfiguration("testCluster", configuration.getName(), configuration.getNumberOfShards());
+        return new DefaultRemoteConfiguration(
+            "testCluster",
+            configuration.getName(),
+            configuration.getNumberOfShards(),
+            configuration.getQueuesPerShard()
+        );
     }
 
     @Bean(name = {"objectMapperBuilder"})
@@ -172,8 +177,8 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     }
 
     @Bean(name = {"messageHandlersRegistry"})
-    public PluggableMessageHandlersScanner createPluggableMessagesHandlersScanner() {
-        return new PluggableMessageHandlersScanner();
+    public PluggableMessageHandlersScanner createPluggableMessagesHandlersScanner(ApplicationContext applicationContext) {
+        return new PluggableMessageHandlersScanner(applicationContext);
     }
 
     @Bean(name = {"nodeSelectorFactory"})

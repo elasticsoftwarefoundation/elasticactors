@@ -43,7 +43,7 @@ import java.util.Collection;
  * @author Joost van de Wijgerd
  */
 public final class  RemoteActorSystemInstance implements ActorSystem, ShardAccessor {
-    private final HashFunction hashFunction = Hashing.murmur3_32();
+    private final static HashFunction hashFunction = Hashing.murmur3_32();
     private final RemoteActorSystemConfiguration configuration;
     private final InternalActorSystems localActorSystems;
     private final ActorShard[] shards;
@@ -61,7 +61,14 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
     @PostConstruct
     public void init() throws Exception {
         for (int i = 0; i < shards.length; i++) {
-            shards[i] = new RemoteActorSystemActorShard(localActorSystems,configuration.getClusterName(),configuration.getName(),i,messageQueueFactory);
+            shards[i] = new RemoteActorSystemActorShard(
+                localActorSystems,
+                configuration.getClusterName(),
+                configuration.getName(),
+                i,
+                messageQueueFactory,
+                configuration.getQueuesPerShard()
+            );
         }
         for (ActorShard shard : shards) {
             shard.init();

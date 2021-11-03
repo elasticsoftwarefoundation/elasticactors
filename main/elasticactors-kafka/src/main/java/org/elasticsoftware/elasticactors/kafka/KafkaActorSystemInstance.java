@@ -416,7 +416,13 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
     }
 
     @Override
-    public int getNumberOfNodeQueues() {
+    public int getQueuesPerNode() {
+        // Not supported in this implementation, so always return 1
+        return 1;
+    }
+
+    @Override
+    public int getQueuesPerShard() {
         // Not supported in this implementation, so always return 1
         return 1;
     }

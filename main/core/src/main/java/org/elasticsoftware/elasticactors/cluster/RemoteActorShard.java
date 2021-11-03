@@ -28,6 +28,8 @@ import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -35,7 +37,10 @@ import java.util.List;
  * @author Joost van de Wijgerd
  */
 
-public final class RemoteActorShard extends SingleQueueAbstractActorContainer implements ActorShard {
+public final class RemoteActorShard extends AbstractActorContainer implements ActorShard {
+
+    private final static Logger staticLogger = LoggerFactory.getLogger(RemoteActorShard.class);
+
     private final InternalActorSystem actorSystem;
     private final ShardKey shardKey;
 
@@ -44,7 +49,7 @@ public final class RemoteActorShard extends SingleQueueAbstractActorContainer im
                             int vNodeKey,
                             ActorRef myRef,
                             MessageQueueFactory messageQueueFactory) {
-        super(messageQueueFactory,myRef,remoteNode);
+        super(messageQueueFactory,myRef,remoteNode, actorSystem.getQueuesPerShard());
         this.actorSystem = actorSystem;
         this.shardKey = new ShardKey(actorSystem.getName(), vNodeKey);
     }
@@ -92,5 +97,10 @@ public final class RemoteActorShard extends SingleQueueAbstractActorContainer im
     @Override
     public void handleMessage(InternalMessage message, MessageHandlerEventListener messageHandlerEventListener) {
         // nothing to do
+    }
+
+    @Override
+    protected Logger initLogger() {
+        return staticLogger;
     }
 }

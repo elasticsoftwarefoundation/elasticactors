@@ -28,12 +28,41 @@ public interface ActorSystemConfiguration {
     String getName();
 
     /**
-     * The number of shards. This determines how big an {@link org.elasticsoftware.elasticactors.ActorSystem} can scale. If a cluster
+     * The number of shards. This determines how big an {@link ActorSystem} can scale. If a cluster
      * contains more nodes than shards then not every node will have a shard.
      *
      * @return the number of shards
      */
     int getNumberOfShards();
+
+    /**
+     * The number of queues per shard.
+     * If an {@link ActorSystem} is required to scale beyond its original number of shards without
+     * resharding the persistence layer, this number can be increased.
+     * The effect is that more message queues will be used for each shard.
+     *
+     * Beware that this can introduce limitations on the message broke because this
+     * multiplies the number of queues used in it. For example, setting this to 2 will cause a
+     * 256-shard {@link ActorSystem} to produce 512 shard queues.
+     *
+     * This defaults to 1.
+     */
+    int getQueuesPerShard();
+
+    /**
+     * The number of queues per node.
+     *
+     * If an {@link ActorSystem} node or node-bound actors (such as {@link TempActor} or
+     * {@link ServiceActor}) are currently bottlenecking the performance of the {@link ActorSystem},
+     * increasing this number will cause more message queues to be used for each node.
+     *
+     * Beware that this can introduce limitations on the message broker because this
+     * multiplies the number of queues used in it. For example, setting this to 2 will cause a
+     * 5-node {@link ActorSystem} to produce 10 node queues.
+     *
+     * This defaults to 1.
+     */
+    int getQueuesPerNode();
 
     /**
      * The version of the ActorSystem

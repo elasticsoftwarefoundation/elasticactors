@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors.client.serialization;
 
+import com.google.common.collect.ImmutableMap;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
@@ -28,18 +29,17 @@ import org.elasticsoftware.elasticactors.serialization.internal.CancelScheduleMe
 import org.elasticsoftware.elasticactors.serialization.internal.CreateActorMessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.internal.DestroyActorMessageSerializer;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public final class ClientSystemSerializers implements SystemSerializers {
 
-    private final Map<Class, MessageSerializer> systemSerializers = new HashMap<>();
+    private final ImmutableMap<Class, MessageSerializer> systemSerializers;
 
     public ClientSystemSerializers(SerializationFrameworks serializationFrameworks) {
-        systemSerializers.put(CreateActorMessage.class, new CreateActorMessageSerializer(serializationFrameworks));
-        systemSerializers.put(DestroyActorMessage.class, new DestroyActorMessageSerializer());
-        systemSerializers.put(ActivateActorMessage.class, new ActivateActorMessageSerializer());
-        systemSerializers.put(CancelScheduledMessageMessage.class, new CancelScheduleMessageMessageSerializer());
+        ImmutableMap.Builder<Class, MessageSerializer> builder = ImmutableMap.builder();
+        builder.put(CreateActorMessage.class, new CreateActorMessageSerializer(serializationFrameworks));
+        builder.put(DestroyActorMessage.class, new DestroyActorMessageSerializer());
+        builder.put(ActivateActorMessage.class, new ActivateActorMessageSerializer());
+        builder.put(CancelScheduledMessageMessage.class, new CancelScheduleMessageMessageSerializer());
+        this.systemSerializers = builder.build();
     }
 
     @Override

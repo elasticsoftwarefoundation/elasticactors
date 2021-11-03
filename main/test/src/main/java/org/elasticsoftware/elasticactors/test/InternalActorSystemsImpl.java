@@ -42,6 +42,8 @@ import org.elasticsoftware.elasticactors.util.ManifestTools;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.PreDestroy;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Joost van de Wijgerd
@@ -49,6 +51,7 @@ import javax.annotation.PreDestroy;
 public final class InternalActorSystemsImpl implements InternalActorSystems, ActorRefFactory {
     private final SystemSerializers systemSerializers = new MessagingSystemSerializers(this);
     private final SystemDeserializers systemDeserializers = new MessagingSystemDeserializers(this,this);
+    private final Map<Class<? extends SerializationFramework>,SerializationFramework> serializationFrameworks = new ConcurrentHashMap<>();
     private final ApplicationContext applicationContext;
     private final ClusterService clusterService;
     private final PhysicalNode localNode;
@@ -134,6 +137,6 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
 
     @Override
     public SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass) {
-        return applicationContext.getBean(frameworkClass);
+        return serializationFrameworks.computeIfAbsent(frameworkClass, applicationContext::getBean);
     }
 }

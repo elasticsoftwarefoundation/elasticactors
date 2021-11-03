@@ -24,8 +24,6 @@ import java.util.Set;
  */
 public interface InternalActorSystemConfiguration extends ActorSystemConfiguration {
 
-    int getNumberOfNodeQueues();
-
     /**
      * Return the singleton service instance
      *
