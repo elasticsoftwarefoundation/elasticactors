@@ -16,8 +16,6 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorContextHolder;
@@ -29,6 +27,8 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.ActorSystems;
 import org.elasticsoftware.elasticactors.RemoteActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.messaging.ActorShardHasher;
+import org.elasticsoftware.elasticactors.messaging.Hasher;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
@@ -36,14 +36,13 @@ import org.elasticsoftware.elasticactors.scheduler.Scheduler;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class  RemoteActorSystemInstance implements ActorSystem, ShardAccessor {
-    private final static HashFunction hashFunction = Hashing.murmur3_32();
+    private final Hasher actorShardHasher;
     private final RemoteActorSystemConfiguration configuration;
     private final InternalActorSystems localActorSystems;
     private final ActorShard[] shards;
@@ -56,6 +55,7 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
         this.localActorSystems = localActorSystems;
         this.messageQueueFactory = messageQueueFactory;
         this.shards = new ActorShard[configuration.getNumberOfShards()];
+        this.actorShardHasher = new ActorShardHasher(configuration.getShardHashSeed());
     }
 
     @PostConstruct
@@ -67,7 +67,8 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
                 configuration.getName(),
                 i,
                 messageQueueFactory,
-                configuration.getQueuesPerShard()
+                configuration.getQueuesPerShard(),
+                configuration.getMultiQueueHashSeed()
             );
         }
         for (ActorShard shard : shards) {
@@ -199,6 +200,6 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
     }
 
     private ActorShard shardFor(String actorId) {
-        return shards[Math.abs(hashFunction.hashString(actorId, StandardCharsets.UTF_8).asInt()) % shards.length];
+        return shards[Math.abs(actorShardHasher.hashStringToInt(actorId)) % shards.length];
     }
 }

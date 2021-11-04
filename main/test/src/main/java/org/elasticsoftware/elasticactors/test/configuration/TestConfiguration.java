@@ -149,7 +149,9 @@ public class TestConfiguration extends AsyncConfigurerSupport {
             "testCluster",
             configuration.getName(),
             configuration.getNumberOfShards(),
-            configuration.getQueuesPerShard()
+            configuration.getQueuesPerShard(),
+            configuration.getShardHashSeed(),
+            configuration.getMultiQueueHashSeed()
         );
     }
 

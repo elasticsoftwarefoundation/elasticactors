@@ -85,7 +85,13 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
         MetricsSettings metricsSettings,
         LoggingSettings loggingSettings)
     {
-        super(messageQueueFactory, myRef, node, actorSystem.getQueuesPerNode());
+        super(
+            messageQueueFactory,
+            myRef,
+            node,
+            actorSystem.getQueuesPerNode(),
+            actorSystem.getMultiQueueHashSeed()
+        );
         this.actorSystem = actorSystem;
         this.actorExecutor = actorExecutor;
         this.actorCacheManager = actorCacheManager;

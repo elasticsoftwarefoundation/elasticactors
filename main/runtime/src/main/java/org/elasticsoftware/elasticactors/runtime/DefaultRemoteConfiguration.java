@@ -28,20 +28,27 @@ public final class DefaultRemoteConfiguration implements RemoteActorSystemConfig
     private final String name;
     private final int numberOfShards;
     private final int queuesPerShard;
+    private final int shardHashSeed;
+    private final int multiQueueHashSeed;
 
     @JsonCreator
     public DefaultRemoteConfiguration(
         @JsonProperty("clusterName") String clusterName,
         @JsonProperty("name") String name,
         @JsonProperty("shards") int numberOfShards,
-        @JsonProperty("queuesPerShard") Integer queuesPerShard)
+        @JsonProperty("queuesPerShard") Integer queuesPerShard,
+        @JsonProperty("shardHashSeed") Integer shardHashSeed,
+        @JsonProperty("multiQueueHashSeed") Integer multiQueueHashSeed)
     {
         this.clusterName = clusterName;
         this.name = name;
         this.numberOfShards = numberOfShards;
         this.queuesPerShard = queuesPerShard != null ? queuesPerShard : 1;
+        this.shardHashSeed = shardHashSeed != null ? shardHashSeed : 0;
+        this.multiQueueHashSeed = multiQueueHashSeed != null ? multiQueueHashSeed : 53;
     }
 
+    @JsonProperty("name")
     @Override
     public String getName() {
         return name;
@@ -62,5 +69,17 @@ public final class DefaultRemoteConfiguration implements RemoteActorSystemConfig
     @Override
     public String getClusterName() {
         return clusterName;
+    }
+
+    @JsonProperty("shardHashSeed")
+    @Override
+    public int getShardHashSeed() {
+        return shardHashSeed;
+    }
+
+    @JsonProperty("multiQueueHashSeed")
+    @Override
+    public int getMultiQueueHashSeed() {
+        return multiQueueHashSeed;
     }
 }

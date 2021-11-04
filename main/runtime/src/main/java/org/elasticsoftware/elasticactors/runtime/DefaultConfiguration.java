@@ -44,6 +44,9 @@ public final class DefaultConfiguration implements InternalActorSystemConfigurat
     private final int numberOfShards;
     private final int queuesPerShard;
     private final int queuesPerNode;
+    private final int shardHashSeed;
+    private final int multiQueueHashSeed;
+    private final int shardDistributionHashSeed;
     private final List<DefaultRemoteConfiguration> remoteConfigurations;
     private final Map<String,Object> properties = new LinkedHashMap<>();
     private final ConversionService conversionService = new DefaultConversionService();
@@ -56,12 +59,19 @@ public final class DefaultConfiguration implements InternalActorSystemConfigurat
         @JsonProperty("shards") int numberOfShards,
         @JsonProperty("queuesPerShard") Integer queuesPerShard,
         @JsonProperty("queuesPerNode") Integer queuesPerNode,
+        @JsonProperty("shardHashSeed") Integer shardHashSeed,
+        @JsonProperty("multiQueueHashSeed") Integer multiQueueHashSeed,
+        @JsonProperty("shardDistributionHashSeed") Integer shardDistributionHashSeed,
         @JsonProperty("remoteActorSystems") List<DefaultRemoteConfiguration> remoteConfigurations)
     {
         this.name = name;
         this.numberOfShards = numberOfShards;
         this.queuesPerShard = queuesPerShard != null ? queuesPerShard : 1;
         this.queuesPerNode = queuesPerNode != null ? queuesPerNode : 1;
+        this.shardHashSeed = shardHashSeed != null ? shardHashSeed : 0;
+        this.multiQueueHashSeed = multiQueueHashSeed != null ? multiQueueHashSeed : 53;
+        this.shardDistributionHashSeed =
+            shardDistributionHashSeed != null ? shardDistributionHashSeed : 0;
         this.remoteConfigurations =
             (remoteConfigurations != null) ? remoteConfigurations : Collections.emptyList();
     }
@@ -99,6 +109,24 @@ public final class DefaultConfiguration implements InternalActorSystemConfigurat
     @Override
     public int getQueuesPerNode() {
         return queuesPerNode;
+    }
+
+    @JsonProperty("shardHashSeed")
+    @Override
+    public int getShardHashSeed() {
+        return shardHashSeed;
+    }
+
+    @JsonProperty("multiQueueHashSeed")
+    @Override
+    public int getMultiQueueHashSeed() {
+        return multiQueueHashSeed;
+    }
+
+    @JsonProperty("shardDistributionHashSeed")
+    @Override
+    public int getShardDistributionHashSeed() {
+        return shardDistributionHashSeed;
     }
 
     @Override

@@ -16,8 +16,6 @@
 
 package org.elasticsoftware.elasticactors.client.cluster;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
@@ -33,6 +31,8 @@ import org.elasticsoftware.elasticactors.client.messaging.ActorSystemMessage;
 import org.elasticsoftware.elasticactors.client.serialization.ActorSystemMessageSerializer;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRegistry;
 import org.elasticsoftware.elasticactors.cluster.ShardAccessor;
+import org.elasticsoftware.elasticactors.messaging.ActorShardHasher;
+import org.elasticsoftware.elasticactors.messaging.Hasher;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
@@ -47,15 +47,14 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
 public final class RemoteActorSystemInstance
         implements ActorSystem, ShardAccessor, SerializationAccessor {
 
-    private final HashFunction hashFunction = Hashing.murmur3_32();
     private final RemoteActorSystemConfiguration configuration;
     private final ActorShard[] shards;
+    private final Hasher hasher;
 
     private final SerializationFrameworks serializationFrameworks;
     private final MessageQueueFactory messageQueueFactory;
@@ -68,6 +67,7 @@ public final class RemoteActorSystemInstance
         this.serializationFrameworks = serializationFrameworks;
         this.messageQueueFactory = messageQueueFactory;
         this.shards = new ActorShard[configuration.getNumberOfShards()];
+        this.hasher = new ActorShardHasher(configuration.getShardHashSeed());
     }
 
     @Override
@@ -134,8 +134,7 @@ public final class RemoteActorSystemInstance
     }
 
     private ActorShard shardFor(String actorId) {
-        return shards[Math.abs(hashFunction.hashString(actorId, StandardCharsets.UTF_8).asInt())
-                % shards.length];
+        return shards[Math.abs(hasher.hashStringToInt(actorId)) % shards.length];
     }
 
     @Override
@@ -193,7 +192,7 @@ public final class RemoteActorSystemInstance
     public void init() throws Exception {
         for (int i = 0; i < shards.length; i++) {
             this.shards[i] = new RemoteActorShard(
-                    configuration.getClusterName(),
+                    configuration,
                     new ShardKey(configuration.getName(), i),
                     messageQueueFactory,
                     serializationFrameworks);

@@ -1,6 +1,4 @@
-package org.elasticsoftware.elasticactors.cluster;
-
-import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+package org.elasticsoftware.elasticactors.messaging;
 
 public interface MessageQueueProxy {
 

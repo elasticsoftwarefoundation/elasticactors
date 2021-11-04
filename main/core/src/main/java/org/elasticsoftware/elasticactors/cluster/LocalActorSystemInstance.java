@@ -17,8 +17,6 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
@@ -46,6 +44,8 @@ import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.scheduler.InternalScheduler;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
+import org.elasticsoftware.elasticactors.messaging.ActorShardHasher;
+import org.elasticsoftware.elasticactors.messaging.Hasher;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
@@ -66,7 +66,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import javax.annotation.Nullable;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -115,7 +114,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     private final ConcurrentMap<String, ActorNode> activeNodes = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, ActorNodeAdapter> activeNodeAdapters = new ConcurrentHashMap<>();
     private final ActorNodeAdapter localNodeAdapter;
-    private final HashFunction hashFunction = Hashing.murmur3_32();
+    private final Hasher actorShardHasher;
+    private final Hasher nodeHasher;
     private final AtomicBoolean stable = new AtomicBoolean(false);
     private final ManagedActorsRegistry managedActorsRegistry;
     private ThreadBoundExecutor actorExecutor;
@@ -142,6 +142,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
         }
         this.localNodeAdapter = new ActorNodeAdapter(new NodeKey(configuration.getName(), localNode.getId()));
         this.managedActorsRegistry = managedActorsRegistry;
+        this.actorShardHasher = new ActorShardHasher(configuration.getShardHashSeed());
+        this.nodeHasher = new NodeSelectorHasher(configuration.getShardDistributionHashSeed());
     }
 
     @Override
@@ -239,7 +241,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
             logger.info("Initializing ActorSystem [{}]", getName());
         }
 
-        NodeSelector nodeSelector = nodeSelectorFactory.create(nodes);
+        NodeSelector nodeSelector = nodeSelectorFactory.create(nodeHasher, nodes);
         // fetch all writelocks
         final Lock[] writeLocks = new Lock[shardLocks.length];
         for (int j = 0; j < shardLocks.length; j++) {
@@ -554,6 +556,16 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     }
 
     @Override
+    public int getShardHashSeed() {
+        return configuration.getShardHashSeed();
+    }
+
+    @Override
+    public int getMultiQueueHashSeed() {
+        return configuration.getMultiQueueHashSeed();
+    }
+
+    @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass) throws Exception {
         if(actorClass.getAnnotation(Actor.class) == null) {
             throw new IllegalArgumentException("actorClass has to be annotated with @Actor");
@@ -625,7 +637,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     }
 
     private ActorShard shardFor(String actorId) {
-        return shardAdapters[Math.abs(hashFunction.hashString(actorId, StandardCharsets.UTF_8).asInt()) % shards.length];
+        return shardAdapters[Math.abs(actorShardHasher.hashStringToInt(actorId)) % shards.length];
     }
 
 

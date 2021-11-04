@@ -38,7 +38,8 @@ public class HashingNodeSelectorTest {
                         new PhysicalNode("3bf98a1a-3c43-4d90-86d3-20c8f22d96c0", InetAddress.getByName("192.168.56.1"), false),
                         new PhysicalNode("45a3fad3-c823-42f9-b0e5-90370b232698", InetAddress.getByName("192.168.56.1"), false));
 
-        HashingNodeSelector hashingNodeSelector = new HashingNodeSelector(clusterNodes);
+        HashingNodeSelector hashingNodeSelector =
+            new HashingNodeSelector(new NodeSelectorHasher(), clusterNodes);
 
         PhysicalNode node0 = hashingNodeSelector.getPrimary("default/shards/0");
         PhysicalNode node1 = hashingNodeSelector.getPrimary("default/shards/1");

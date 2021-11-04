@@ -14,13 +14,9 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.cluster;
+package org.elasticsoftware.elasticactors.messaging;
 
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.MessageHandler;
-import org.elasticsoftware.elasticactors.messaging.MessageQueue;
-import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,11 +42,11 @@ public final class SingleMessageQueueProxy implements MessageQueueProxy {
 
     @Override
     public synchronized void init() throws Exception {
-        this.messageQueue = messageQueueFactory.create(actorRef.getActorPath(), messageHandler);
         logger.info(
             "Starting up queue proxy for [{}] in Single-Queue mode",
             actorRef.getActorPath()
         );
+        this.messageQueue = messageQueueFactory.create(actorRef.getActorPath(), messageHandler);
     }
 
     @Override

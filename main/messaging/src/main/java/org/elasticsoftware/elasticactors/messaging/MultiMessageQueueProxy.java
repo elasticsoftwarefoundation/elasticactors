@@ -1,19 +1,11 @@
-package org.elasticsoftware.elasticactors.cluster;
+package org.elasticsoftware.elasticactors.messaging;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.MessageHandler;
-import org.elasticsoftware.elasticactors.messaging.MessageQueue;
-import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
-import org.elasticsoftware.elasticactors.messaging.Splittable;
 import org.elasticsoftware.elasticactors.messaging.internal.InternalHashKeyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import static org.elasticsoftware.elasticactors.messaging.SplittableUtils.calculateBucketForEmptyOrSingleActor;
@@ -23,14 +15,7 @@ public final class MultiMessageQueueProxy implements MessageQueueProxy {
     private final static Logger logger =
         LoggerFactory.getLogger(MultiMessageQueueProxy.class);
 
-    /*
-    Using MurmurHash here too for stability across nodes.
-    Hashing strings should be enough for that, but we need to make sure we're consistent, so let's
-    use the same algorithm we use for selecting a shard for a given actor.
-
-    Using a prime seed here. Without this, murmur3_32 has a heavy bias towards even numbers.
-     */
-    private final HashFunction hashFunction = Hashing.murmur3_32(53);
+    private final Hasher hasher;
 
     private final MessageQueueFactory messageQueueFactory;
     private final MessageHandler messageHandler;
@@ -38,11 +23,13 @@ public final class MultiMessageQueueProxy implements MessageQueueProxy {
     private final MessageQueue[] messageQueues;
 
     public MultiMessageQueueProxy(
+        Hasher hasher,
         MessageQueueFactory messageQueueFactory,
         MessageHandler messageHandler,
         ActorRef actorRef,
         int queueCount)
     {
+        this.hasher = hasher;
         this.messageQueueFactory = messageQueueFactory;
         this.messageHandler = messageHandler;
         this.actorRef = actorRef;
@@ -54,6 +41,11 @@ public final class MultiMessageQueueProxy implements MessageQueueProxy {
 
     @Override
     public synchronized void init() throws Exception {
+        logger.info(
+            "Starting up queue proxy for [{}] in Multi-Queue mode with {} queues",
+            actorRef.getActorPath(),
+            messageQueues.length
+        );
         // for backwards compatibility, the first node queue maintains the regular name
         messageQueues[0] = messageQueueFactory.create(actorRef.getActorPath(), messageHandler);
         for (int i = 1; i < messageQueues.length; i++) {
@@ -62,11 +54,6 @@ public final class MultiMessageQueueProxy implements MessageQueueProxy {
                 messageHandler
             );
         }
-        logger.info(
-            "Starting up queue proxy for [{}] in Multi-Queue mode with {} queues",
-            actorRef.getActorPath(),
-            messageQueues.length
-        );
     }
 
     @Override
@@ -91,7 +78,7 @@ public final class MultiMessageQueueProxy implements MessageQueueProxy {
                     // Optimizing for the most common case in which we only have one receiver
                     int bucket = calculateBucketForEmptyOrSingleActor(
                         message.getReceivers(),
-                        this::hashString,
+                        hasher,
                         messageQueues.length
                     );
                     // Compute a queue for this message
@@ -99,7 +86,7 @@ public final class MultiMessageQueueProxy implements MessageQueueProxy {
                 } else if (message instanceof Splittable) {
                     Map<Integer, InternalMessage> messagesPerBucket =
                         ((Splittable<String, InternalMessage>) message).splitInBuckets(
-                            this::hashString,
+                            hasher,
                             messageQueues.length
                         );
                     messagesPerBucket.forEach(this::sendToBucket);
@@ -109,13 +96,7 @@ public final class MultiMessageQueueProxy implements MessageQueueProxy {
     }
 
     private int getBucket(String messageQueueKey) {
-        return Math.abs(hashString(messageQueueKey)) % messageQueues.length;
-    }
-
-    private int hashString(String key) {
-        int hash = hashFunction.hashString(key, StandardCharsets.UTF_8).asInt();
-        logger.debug("Hashed value {} for key [{}]", hash, key);
-        return hash;
+        return Math.abs(hasher.hashStringToInt(messageQueueKey)) % messageQueues.length;
     }
 
     private void sendToBucket(int bucket, InternalMessage message) {

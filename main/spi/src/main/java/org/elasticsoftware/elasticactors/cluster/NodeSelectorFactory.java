@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.PhysicalNode;
+import org.elasticsoftware.elasticactors.messaging.Hasher;
 
 import java.util.List;
 
@@ -25,7 +26,7 @@ import java.util.List;
  */
 public interface NodeSelectorFactory {
 
-    NodeSelector create(List<PhysicalNode> nodes);
+    NodeSelector create(Hasher hasher, List<PhysicalNode> nodes);
 
     void start() throws Exception;
 }

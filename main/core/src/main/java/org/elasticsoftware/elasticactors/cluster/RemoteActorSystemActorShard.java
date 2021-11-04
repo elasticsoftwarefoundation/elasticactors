@@ -26,6 +26,10 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueProxy;
+import org.elasticsoftware.elasticactors.messaging.MultiMessageQueueProxy;
+import org.elasticsoftware.elasticactors.messaging.MultiMessageQueueProxyHasher;
+import org.elasticsoftware.elasticactors.messaging.SingleMessageQueueProxy;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
@@ -50,14 +54,21 @@ public final class RemoteActorSystemActorShard implements ActorShard, MessageHan
         String remoteActorSystemName,
         int vNodeKey,
         MessageQueueFactory messageQueueFactory,
-        int numberOfQueues)
+        int numberOfQueues,
+        int multiQueueHashSeed)
     {
         this.actorSystems = actorSystems;
         this.shardKey = new ShardKey(remoteActorSystemName, vNodeKey);
         this.myRef = new ActorShardRef(actorSystems.get(null), remoteClusterName, this);
         this.messageQueueProxy = numberOfQueues <= 1
             ? new SingleMessageQueueProxy(messageQueueFactory, this, myRef)
-            : new MultiMessageQueueProxy(messageQueueFactory, this, myRef, numberOfQueues);
+            : new MultiMessageQueueProxy(
+                new MultiMessageQueueProxyHasher(multiQueueHashSeed),
+                messageQueueFactory,
+                this,
+                myRef,
+                numberOfQueues
+            );
     }
 
     @Override

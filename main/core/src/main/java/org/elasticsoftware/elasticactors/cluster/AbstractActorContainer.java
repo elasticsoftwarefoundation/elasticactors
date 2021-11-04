@@ -25,6 +25,10 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueProxy;
+import org.elasticsoftware.elasticactors.messaging.MultiMessageQueueProxy;
+import org.elasticsoftware.elasticactors.messaging.MultiMessageQueueProxyHasher;
+import org.elasticsoftware.elasticactors.messaging.SingleMessageQueueProxy;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.slf4j.Logger;
 
@@ -43,17 +47,24 @@ public abstract class AbstractActorContainer implements ActorContainer, MessageH
 
     protected abstract Logger initLogger();
 
-    public AbstractActorContainer(
+    protected AbstractActorContainer(
         MessageQueueFactory messageQueueFactory,
         ActorRef myRef,
         PhysicalNode node,
-        int numberOfQueues)
+        int numberOfQueues,
+        int multiQueueHashSeed)
     {
         this.myRef = myRef;
         this.localNode = node;
         this.messageQueueProxy = numberOfQueues <= 1
             ? new SingleMessageQueueProxy(messageQueueFactory, this, myRef)
-            : new MultiMessageQueueProxy(messageQueueFactory, this, myRef, numberOfQueues);
+            : new MultiMessageQueueProxy(
+                new MultiMessageQueueProxyHasher(multiQueueHashSeed),
+                messageQueueFactory,
+                this,
+                myRef,
+                numberOfQueues
+            );
     }
 
     @Override

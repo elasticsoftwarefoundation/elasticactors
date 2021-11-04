@@ -12,9 +12,9 @@
             <AppenderRef ref="STDOUT"/>
         </Root>
          <Logger name="org.elasticsoftware.elasticactors.cluster" level="INFO"/>
-         <Logger name="org.elasticsoftware.elasticactors.cluster.LocalActorShard" level="DEBUG"/>
-         <Logger name="org.elasticsoftware.elasticactors.cluster.LocalActorNode" level="DEBUG"/>
-         <Logger name="org.elasticsoftware.elasticactors.cluster.MultiMessageQueueProxy" level="DEBUG"/>
+<!--         <Logger name="org.elasticsoftware.elasticactors.cluster.LocalActorShard" level="DEBUG"/>-->
+<!--         <Logger name="org.elasticsoftware.elasticactors.cluster.LocalActorNode" level="DEBUG"/>-->
+<!--         <Logger name="org.elasticsoftware.elasticactors.cluster.MultiMessageQueueProxy" level="DEBUG"/>-->
 <!--         <Logger name="org.elasticsoftware.elasticactors.tracing" level="DEBUG"/>-->
         <!-- <Logger name="org.elasticsoftware.elasticactors.test" level="INFO"/>-->
     </Loggers>

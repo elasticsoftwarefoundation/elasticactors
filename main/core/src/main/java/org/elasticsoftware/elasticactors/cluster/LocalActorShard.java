@@ -100,7 +100,13 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         MetricsSettings metricsSettings,
         LoggingSettings loggingSettings)
     {
-        super(messageQueueFactory, myRef, node, actorSystem.getQueuesPerShard());
+        super(
+            messageQueueFactory,
+            myRef,
+            node,
+            actorSystem.getQueuesPerShard(),
+            actorSystem.getMultiQueueHashSeed()
+        );
         this.actorSystem = actorSystem;
         this.actorExecutor = actorExecutor;
         this.persistentActorRepository = persistentActorRepository;

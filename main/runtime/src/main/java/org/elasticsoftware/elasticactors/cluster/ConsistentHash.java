@@ -16,51 +16,82 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import com.google.common.hash.HashFunction;
+import org.elasticsoftware.elasticactors.messaging.Hasher;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public final class ConsistentHash<T> {
 
-    private final HashFunction hashFunction;
+    private final Hasher hasher;
     private final int numberOfReplicas;
     private final SortedMap<Long, T> circle = new TreeMap<>();
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public ConsistentHash(HashFunction hashFunction, int numberOfReplicas,
-                          Collection<T> nodes) {
-        this.hashFunction = hashFunction;
+    public ConsistentHash(
+        Hasher hasher,
+        int numberOfReplicas,
+        Collection<T> nodes)
+    {
+        this.hasher = hasher;
         this.numberOfReplicas = numberOfReplicas;
 
         for (T node : nodes) {
-            add(node);
+            internalAdd(node);
         }
     }
 
     public void add(T node) {
+        Lock writeLock = lock.writeLock();
+        try {
+            writeLock.lock();
+            internalAdd(node);
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    private void internalAdd(T node) {
         for (int i = 0; i < numberOfReplicas; i++) {
-            circle.put(hashFunction.hashString(node.toString() + i, StandardCharsets.UTF_8).asLong(), node);
+            circle.put(hasher.hashStringToLong(node.toString() + i), node);
         }
     }
 
     public void remove(T node) {
+        Lock writeLock = lock.writeLock();
+        try {
+            writeLock.lock();
+            internalRemove(node);
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    private void internalRemove(T node) {
         for (int i = 0; i < numberOfReplicas; i++) {
-            circle.remove(hashFunction.hashString(node.toString() + i, StandardCharsets.UTF_8).asLong());
+            circle.remove(hasher.hashStringToLong(node.toString() + i));
         }
     }
 
     public T get(String key) {
-        if (circle.isEmpty()) {
-            return null;
+        Lock readLock = lock.readLock();
+        try {
+            readLock.lock();
+            if (circle.isEmpty()) {
+                return null;
+            }
+            long hash = hasher.hashStringToLong(key);
+            if (!circle.containsKey(hash)) {
+                SortedMap<Long, T> tailMap = circle.tailMap(hash);
+                hash = tailMap.isEmpty() ? circle.firstKey() : tailMap.firstKey();
+            }
+            return circle.get(hash);
+        } finally {
+            readLock.unlock();
         }
-        long hash = hashFunction.hashString(key, StandardCharsets.UTF_8).asLong();
-        if (!circle.containsKey(hash)) {
-            SortedMap<Long, T> tailMap = circle.tailMap(hash);
-            hash = tailMap.isEmpty() ? circle.firstKey() : tailMap.firstKey();
-        }
-        return circle.get(hash);
     }
 
 }

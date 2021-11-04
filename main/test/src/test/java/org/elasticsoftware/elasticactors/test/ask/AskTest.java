@@ -120,7 +120,7 @@ public class AskTest {
         testActorSystem.destroy();
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     public void testAskGreetingViaActor_stressTest() throws Exception {
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();

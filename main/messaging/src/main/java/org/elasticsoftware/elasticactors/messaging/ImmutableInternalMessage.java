@@ -29,7 +29,6 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
 
 import static org.elasticsoftware.elasticactors.messaging.SplittableUtils.calculateBucketForEmptyOrSingleActor;
 import static org.elasticsoftware.elasticactors.messaging.SplittableUtils.groupByBucket;
@@ -186,10 +185,10 @@ public final class ImmutableInternalMessage extends AbstractTracedMessage
     }
 
     @Override
-    public ImmutableMap<Integer, InternalMessage> splitInBuckets(Function<String, Integer> hashFunction, int buckets) {
+    public ImmutableMap<Integer, InternalMessage> splitInBuckets(Hasher hasher, int buckets) {
         return receivers.size() <= 1
-            ? ImmutableMap.of(calculateBucketForEmptyOrSingleActor(receivers, hashFunction, buckets), this)
-            : groupByBucket(receivers, hashFunction, buckets, this::copyForReceivers);
+            ? ImmutableMap.of(calculateBucketForEmptyOrSingleActor(receivers, hasher, buckets), this)
+            : groupByBucket(receivers, hasher, buckets, this::copyForReceivers);
     }
 
     private InternalMessage copyForReceivers(List<ActorRef> receivers) {

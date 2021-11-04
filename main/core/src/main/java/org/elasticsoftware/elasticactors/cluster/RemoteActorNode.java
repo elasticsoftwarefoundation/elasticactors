@@ -48,7 +48,13 @@ public final class RemoteActorNode extends AbstractActorContainer implements Act
                            InternalActorSystem actorSystem,
                            ActorRef myRef,
                            MessageQueueFactory messageQueueFactory) {
-        super(messageQueueFactory, myRef, remoteNode, actorSystem.getQueuesPerNode());
+        super(
+            messageQueueFactory,
+            myRef,
+            remoteNode,
+            actorSystem.getQueuesPerNode(),
+            actorSystem.getMultiQueueHashSeed()
+        );
         this.actorSystem = actorSystem;
         this.nodeKey = new NodeKey(actorSystem.getName(), remoteNode.getId());
     }

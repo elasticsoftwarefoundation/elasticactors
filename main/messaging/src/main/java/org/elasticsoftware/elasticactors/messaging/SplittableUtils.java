@@ -16,7 +16,7 @@ public final class SplittableUtils {
 
     public static ImmutableMap<Integer, InternalMessage> groupByBucket(
         List<ActorRef> receivers,
-        Function<String, Integer> hashFunction,
+        Hasher hasher,
         int buckets,
         Function<List<ActorRef>, InternalMessage> messageCopyBuilder)
     {
@@ -25,7 +25,7 @@ public final class SplittableUtils {
         */
         if (buckets <= 16) {
             List<ActorRef>[] grouped =
-                SplittableUtils.groupByBucketAsArray(receivers, hashFunction, buckets);
+                SplittableUtils.groupByBucketAsArray(receivers, hasher, buckets);
             ImmutableMap.Builder<Integer, InternalMessage> builder =
                 ImmutableMap.builderWithExpectedSize(Math.min(receivers.size(), buckets));
             for (int i = 0; i < grouped.length; i++) {
@@ -37,7 +37,7 @@ public final class SplittableUtils {
             return builder.build();
         } else {
             Map<Integer, List<ActorRef>> grouped =
-                SplittableUtils.groupByBucket(receivers, hashFunction, buckets);
+                SplittableUtils.groupByBucket(receivers, hasher, buckets);
             ImmutableMap.Builder<Integer, InternalMessage> builder =
                 ImmutableMap.builderWithExpectedSize(grouped.size());
             grouped.forEach((key, refs) -> builder.put(key, messageCopyBuilder.apply(refs)));
@@ -47,12 +47,12 @@ public final class SplittableUtils {
 
     public static List<ActorRef>[] groupByBucketAsArray(
         List<ActorRef> actorRefs,
-        Function<String, Integer> hashFunction,
+        Hasher hasher,
         int buckets)
     {
         List<ActorRef>[] refs = new List[buckets];
         for (ActorRef ref : actorRefs) {
-            int bucket = calculateBucket(ref, hashFunction, buckets);
+            int bucket = calculateBucket(ref, hasher, buckets);
             List<ActorRef> refList = refs[bucket];
             if (refList == null) {
                 refList = new ArrayList<>();
@@ -65,13 +65,13 @@ public final class SplittableUtils {
 
     public static Map<Integer, List<ActorRef>> groupByBucket(
         List<ActorRef> actorRefs,
-        Function<String, Integer> hashFunction,
+        Hasher hasher,
         int buckets)
     {
         Map<Integer, List<ActorRef>> map = new HashMap<>();
         for (ActorRef ref : actorRefs) {
             map.computeIfAbsent(
-                bucketForHash(calculateHash(ref, hashFunction), buckets),
+                bucketForHash(calculateHash(ref, hasher), buckets),
                 k -> new ArrayList<>()
             ).add(ref);
         }
@@ -84,32 +84,29 @@ public final class SplittableUtils {
 
     public static int calculateBucketForEmptyOrSingleActor(
         List<ActorRef> actorRefs,
-        Function<String, Integer> hashFunction,
+        Hasher hasher,
         int buckets)
     {
         return bucketForHash(
-            calculateHashForEmptyOrSingleActor(actorRefs, hashFunction),
+            calculateHashForEmptyOrSingleActor(actorRefs, hasher),
             buckets
         );
     }
 
     public static int calculateBucket(
         ActorRef actorRef,
-        Function<String, Integer> hashFunction,
+        Hasher hasher,
         int buckets)
     {
-        return bucketForHash(calculateHash(actorRef, hashFunction), buckets);
+        return bucketForHash(calculateHash(actorRef, hasher), buckets);
     }
 
-    public static int calculateHashForEmptyOrSingleActor(
-        List<ActorRef> actorRefs,
-        Function<String, Integer> hashFunction)
-    {
-        return actorRefs.isEmpty() ? 0 : calculateHash(actorRefs.get(0), hashFunction);
+    public static int calculateHashForEmptyOrSingleActor(List<ActorRef> actorRefs, Hasher hasher) {
+        return actorRefs.isEmpty() ? 0 : calculateHash(actorRefs.get(0), hasher);
     }
 
-    public static int calculateHash(ActorRef actorRef, Function<String, Integer> hashFunction) {
+    public static int calculateHash(ActorRef actorRef, Hasher hasher) {
         String actorId = actorRef.getActorId();
-        return actorId == null ? 0 : hashFunction.apply(actorId);
+        return actorId == null ? 0 : hasher.hashStringToInt(actorId);
     }
 }

@@ -16,9 +16,8 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import org.elasticsoftware.elasticactors.PhysicalNode;
+import org.elasticsoftware.elasticactors.messaging.Hasher;
 
 import java.util.List;
 
@@ -30,9 +29,8 @@ public final class HashingNodeSelector implements NodeSelector {
     private final ConsistentHash<PhysicalNode> consistentHash;
     private final List<PhysicalNode> allNodes;
 
-    public HashingNodeSelector(List<PhysicalNode> nodes) {
-        final HashFunction hashFunction = Hashing.murmur3_128();
-        consistentHash = new ConsistentHash<>(hashFunction,REPLICAS,nodes);
+    public HashingNodeSelector(Hasher hasher, List<PhysicalNode> nodes) {
+        consistentHash = new ConsistentHash<>(hasher, REPLICAS, nodes);
         allNodes = nodes;
     }
 

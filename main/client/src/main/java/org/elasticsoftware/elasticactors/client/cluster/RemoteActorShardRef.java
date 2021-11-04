@@ -124,17 +124,17 @@ final class RemoteActorShardRef implements ActorRef, ActorContainerRef {
     }
 
     @Override
-    public final boolean equals(Object o) {
+    public boolean equals(Object o) {
         return this == o || o instanceof ActorRef && this.refSpec.equals(o.toString());
     }
 
     @Override
-    public final int hashCode() {
+    public int hashCode() {
         return this.refSpec.hashCode();
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return this.refSpec;
     }
 

@@ -49,7 +49,13 @@ public final class RemoteActorShard extends AbstractActorContainer implements Ac
                             int vNodeKey,
                             ActorRef myRef,
                             MessageQueueFactory messageQueueFactory) {
-        super(messageQueueFactory,myRef,remoteNode, actorSystem.getQueuesPerShard());
+        super(
+            messageQueueFactory,
+            myRef,
+            remoteNode,
+            actorSystem.getQueuesPerShard(),
+            actorSystem.getMultiQueueHashSeed()
+        );
         this.actorSystem = actorSystem;
         this.shardKey = new ShardKey(actorSystem.getName(), vNodeKey);
     }
