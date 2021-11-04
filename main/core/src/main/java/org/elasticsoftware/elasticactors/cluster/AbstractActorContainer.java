@@ -77,37 +77,30 @@ public abstract class AbstractActorContainer implements ActorContainer, MessageH
         return localNode;
     }
 
-    protected void handleUndeliverable(
-        InternalMessage internalMessage,
-        ActorRef receiverRef,
-        MessageHandlerEventListener messageHandlerEventListener) throws Exception
-    {
+    protected void handleUndeliverable(InternalMessage internalMessage, ActorRef receiverRef, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         // if a message-undeliverable is undeliverable, don't send an undeliverable message back!
         ActorRef senderRef = internalMessage.getSender();
         try (MessagingScope ignored = getManager().enter(internalMessage)) {
             if (senderRef instanceof ActorContainerRef && !internalMessage.isUndeliverable()) {
-                ((ActorContainerRef) senderRef).getActorContainer()
-                    .undeliverableMessage(internalMessage, receiverRef);
+                ((ActorContainerRef) senderRef).getActorContainer().undeliverableMessage(internalMessage, receiverRef);
             } else if (internalMessage.isUndeliverable()) {
                 logger.error(
-                    "Receiver for undeliverable message not found. "
-                        + "Message type [{}]. "
-                        + "Receiver [{}]. "
-                        + "Sender [{}].",
-                    internalMessage.getPayloadClass(),
-                    receiverRef,
-                    senderRef
-                );
+                        "Receiver for undeliverable message not found. "
+                                + "Message type [{}]. "
+                                + "Receiver [{}]. "
+                                + "Sender [{}].",
+                        internalMessage.getPayloadClass(),
+                        receiverRef,
+                        senderRef);
             } else {
                 logger.warn(
-                    "Could not send message undeliverable. "
-                        + "Original message type [{}]. "
-                        + "Receiver [{}]. "
-                        + "Sender [{}].",
-                    internalMessage.getPayloadClass(),
-                    receiverRef,
-                    senderRef
-                );
+                        "Could not send message undeliverable. "
+                                + "Original message type [{}]. "
+                                + "Receiver [{}]. "
+                                + "Sender [{}].",
+                        internalMessage.getPayloadClass(),
+                        receiverRef,
+                        senderRef);
             }
         } finally {
             // ack anyway
