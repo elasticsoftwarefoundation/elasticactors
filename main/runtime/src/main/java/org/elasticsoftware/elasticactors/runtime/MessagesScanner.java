@@ -21,8 +21,6 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.PostConstruct;
@@ -38,7 +36,7 @@ import java.util.Set;
  */
 @Named
 public final class MessagesScanner {
-    private static final Logger logger = LoggerFactory.getLogger(MessagesScanner.class);
+
     @Inject
     private ApplicationContext applicationContext;
 

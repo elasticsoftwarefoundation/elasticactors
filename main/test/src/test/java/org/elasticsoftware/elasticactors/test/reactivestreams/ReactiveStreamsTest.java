@@ -34,6 +34,8 @@ import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
+import static org.testng.Assert.assertNull;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -56,6 +58,8 @@ public class ReactiveStreamsTest {
     @AfterMethod
     public void removeExternalCreatorData() {
         testScope.get().close();
+        assertNull(getManager().currentScope());
+        testScope.remove();
     }
 
     @Test

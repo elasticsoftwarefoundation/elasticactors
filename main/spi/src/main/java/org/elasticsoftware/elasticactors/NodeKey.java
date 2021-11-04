@@ -38,7 +38,7 @@ public final class NodeKey {
 
     @Override
     public String toString() {
-        return String.format("%s/nodes/%s",actorSystemName,nodeId);
+        return actorSystemName + "/nodes/" + nodeId;
     }
 
     public static NodeKey fromString(String shardKey) {
@@ -52,15 +52,17 @@ public final class NodeKey {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof NodeKey)) {
+            return false;
+        }
 
         NodeKey that = (NodeKey) o;
 
-        if (nodeId != that.nodeId) return false;
-        if (!actorSystemName.equals(that.actorSystemName)) return false;
-
-        return true;
+        return nodeId.equals(that.nodeId)
+            && actorSystemName.equals(that.actorSystemName);
     }
 
     @Override

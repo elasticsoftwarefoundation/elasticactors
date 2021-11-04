@@ -43,7 +43,18 @@ public final class PersistActorTask extends ActorLifecycleTask {
                             ActorRef receiverRef,
                             InternalMessage internalMessage,
                             MessageHandlerEventListener messageHandlerEventListener) {
-        super(actorStateUpdateProcessor, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, null);
+        super(
+            actorStateUpdateProcessor,
+            persistentActorRepository,
+            persistentActor,
+            actorSystem,
+            receiver,
+            receiverRef,
+            messageHandlerEventListener,
+            internalMessage,
+            null,
+            null
+        );
     }
 
     @Override

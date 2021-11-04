@@ -92,7 +92,9 @@ public class ActorRefTools {
         if (shardId >= actorSystem.getConfiguration().getNumberOfShards()) {
             throw new IllegalArgumentException(format("Unknown shard %d for ActorSystem %s. Available shards: %d", shardId, actorSystemName, actorSystem.getConfiguration().getNumberOfShards()));
         }
-        return actorSystems.createPersistentActorRef(actorSystem.getShard(format("%s/shards/%d", actorSystemName, shardId)),actorId);
+        return actorSystems.createPersistentActorRef(
+            actorSystem.getShard(actorSystemName + "/shards/" + shardId),
+            actorId);
     }
 
     protected ActorRef handleNode(String[] components, String actorId) {
@@ -142,7 +144,12 @@ public class ActorRefTools {
             // even when the remote actor cannot be reached
             return new DisconnectedRemoteActorShardRef(clusterName,actorSystemName,actorId,shardId);
         }
-        return new ActorShardRef(clusterName, ((ShardAccessor) remoteActorSystem).getShard(format("%s/shards/%d", actorSystemName, shardId)), actorId, actorSystems.get(null));
+        return new ActorShardRef(
+            clusterName,
+            ((ShardAccessor) remoteActorSystem).getShard(actorSystemName + "/shards/" + shardId),
+            actorId,
+            actorSystems.get(null)
+        );
     }
 
     protected ActorRef handleRemoteNode(String[] components, String actorId) {

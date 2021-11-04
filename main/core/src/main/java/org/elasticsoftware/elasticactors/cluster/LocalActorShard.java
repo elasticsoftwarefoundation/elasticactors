@@ -27,14 +27,16 @@ import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cache.EvictionListener;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
+import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActivateActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.CreateActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.DestroyActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.PassivateActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.PersistActorTask;
+import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MultiMessageHandlerEventListener;
@@ -52,12 +54,9 @@ import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.elasticsoftware.elasticactors.util.ManifestTools;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.env.Environment;
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.io.IOException;
@@ -65,6 +64,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import static org.elasticsoftware.elasticactors.cluster.tasks.ProtocolFactoryFactory.getProtocolFactory;
+import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
@@ -72,7 +72,6 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  */
 @Configurable
 public final class LocalActorShard extends AbstractActorContainer implements ActorShard, EvictionListener<PersistentActor<ShardKey>> {
-    private static final Logger logger = LoggerFactory.getLogger(LocalActorShard.class);
     // this instance acts as a tombstone for stopped actors
     private static final PersistentActor<ShardKey> TOMBSTONE = new PersistentActor<>(null,null,null,null,null,null);
     private final InternalActorSystem actorSystem;
@@ -84,8 +83,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     private final ShardActorCacheManager actorCacheManager;
     // the cacheloader instance that is reused to avoid garbage being created on each call
     private final CacheLoader cacheLoader = new CacheLoader();
-
-    private Long serializationWarnThreshold;
+    private MetricsSettings metricsSettings;
+    private LoggingSettings loggingSettings;
 
     public LocalActorShard(PhysicalNode node,
                            InternalActorSystem actorSystem,
@@ -97,11 +96,6 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         this.actorSystem = actorSystem;
         this.actorCacheManager = actorCacheManager;
         this.shardKey = new ShardKey(actorSystem.getName(), shard);
-    }
-
-    @Autowired
-    public void setEnvironment(Environment environment) {
-        this.serializationWarnThreshold = environment.getProperty("ea.serialization.warn.threshold", Long.class);
     }
 
     @Override
@@ -155,7 +149,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
         final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-        return new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message),message.getClass().getName(),durable, timeout);
+        return new DefaultInternalMessage(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message),message.getClass().getName(),durable, timeout);
     }
 
     @Override
@@ -165,7 +159,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
         if (message instanceof TransientInternalMessage) {
             undeliverableMessage = new TransientInternalMessage(receiverRef, message.getSender(), message.getPayload(null), true);
         } else {
-            undeliverableMessage = new InternalMessageImpl( receiverRef,
+            undeliverableMessage = new DefaultInternalMessage( receiverRef,
                                                             message.getSender(),
                                                             message.getPayload(),
                                                             message.getPayloadClass(),
@@ -216,15 +210,18 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                                                                           messageHandlerEventListener));
                         } else {
                             actorExecutor.execute(getProtocolFactory(internalMessage.getPayloadClass())
-                                    .createHandleMessageTask(actorSystem,
-                                                             actorInstance,
-                                                             receiverRef,
-                                                             internalMessage,
-                                                             actor,
-                                                             persistentActorRepository,
-                                                             actorStateUpdateProcessor,
-                                                             messageHandlerEventListener,
-                                                             serializationWarnThreshold));
+                                .createHandleMessageTask(
+                                    actorSystem,
+                                    actorInstance,
+                                    receiverRef,
+                                    internalMessage,
+                                    actor,
+                                    persistentActorRepository,
+                                    actorStateUpdateProcessor,
+                                    messageHandlerEventListener,
+                                    metricsSettings,
+                                    loggingSettings
+                                ));
                         }
                     }
                 } catch (UncheckedExecutionException e) {
@@ -332,7 +329,8 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
 
     private void createActor(CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         ActorRef ref = actorSystem.actorFor(createMessage.getActorId());
-        final Class<? extends ElasticActor> actorClass = (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass());
+        final Class<? extends ElasticActor> actorClass =
+            (Class<? extends ElasticActor>) getClassHelper().forName(createMessage.getActorClass());
         final String actorStateVersion = ManifestTools.extractActorStateVersion(actorClass);
         PersistentActor<ShardKey> persistentActor =
                 new PersistentActor<>(shardKey, actorSystem, actorStateVersion, ref, actorClass, createMessage.getInitialState());
@@ -430,6 +428,20 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     @Autowired
     public void setActorStateUpdateProcessor(ActorStateUpdateProcessor actorStateUpdateProcessor) {
         this.actorStateUpdateProcessor = actorStateUpdateProcessor;
+    }
+
+    @Autowired
+    public void setMetricsSettings(
+        @Qualifier("shardMetricsSettings") MetricsSettings metricsSettings)
+    {
+        this.metricsSettings = metricsSettings;
+    }
+
+    @Autowired
+    public void setLoggingSettings(
+        @Qualifier("shardLoggingSettings") LoggingSettings loggingSettings)
+    {
+        this.loggingSettings = loggingSettings;
     }
 
     /**

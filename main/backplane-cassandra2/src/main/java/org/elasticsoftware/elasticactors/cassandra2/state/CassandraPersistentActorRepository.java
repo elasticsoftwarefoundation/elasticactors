@@ -34,10 +34,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.concurrent.TimeUnit;
 
 import static org.elasticsoftware.elasticactors.cassandra2.util.ExecutionUtils.executeWithRetry;
-
-import static java.lang.System.currentTimeMillis;
 
 
 /**
@@ -109,14 +108,19 @@ public final class CassandraPersistentActorRepository implements PersistentActor
 
     private Row internalGet(final ShardKey shard,final String actorId) {
         // log a warning when we exceed the readExecutionThreshold
-        final long startTime = currentTimeMillis();
+        final long startTime = System.nanoTime();
         try {
             ResultSet resultSet = executeWithRetry(cassandraSession, selectStatement.bind(clusterName, shard.toString(), actorId), logger);
             return resultSet.one();
         } finally {
-            final long endTime = currentTimeMillis();
-            if((endTime - startTime) > readExecutionThresholdMillis) {
-                logger.warn("Cassandra read operation took {} msecs for actorId [{}] on shard [{}]", (endTime - startTime), actorId, shard);
+            final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
+            if (duration > readExecutionThresholdMillis) {
+                logger.warn(
+                    "Cassandra read operation took {} msecs for actorId [{}] on shard [{}]",
+                    duration,
+                    actorId,
+                    shard
+                );
             }
         }
     }

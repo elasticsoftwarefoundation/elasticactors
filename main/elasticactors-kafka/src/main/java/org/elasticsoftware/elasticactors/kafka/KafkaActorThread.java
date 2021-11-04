@@ -69,8 +69,8 @@ import org.elasticsoftware.elasticactors.kafka.serialization.UUIDDeserializer;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStore;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory;
 import org.elasticsoftware.elasticactors.kafka.utils.TopicNamesHelper;
+import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
@@ -114,6 +114,7 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import static org.elasticsoftware.elasticactors.kafka.utils.TopicNamesHelper.getNodeMessagesTopic;
+import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 import static java.lang.String.format;
@@ -411,7 +412,7 @@ public final class KafkaActorThread extends Thread {
                 messagesToFire.forEach(scheduledMessage -> {
                     // send the message (first to the shard so it will be picked up by the normal processMessages for that shard)
                     InternalMessage internalMessage =
-                            new InternalMessageImpl(scheduledMessage.getSender(), scheduledMessage.getReceiver(),
+                            new DefaultInternalMessage(scheduledMessage.getSender(), scheduledMessage.getReceiver(),
                                     ByteBuffer.wrap(scheduledMessage.getMessageBytes()),
                                     scheduledMessage.getMessageClass().getName(), false);
                     // find out which shard to send it to (this has to be and ActorShard)
@@ -819,7 +820,7 @@ public final class KafkaActorThread extends Thread {
                         ManagedActorShard managedActorShard = partitionsToShards.get(consumerRecord.partition());
                         ActorRef receiverRef = internalActorSystem.actorFor(eventListener.getActorId());
                         PersistentActor<ShardKey> persistentActor = managedActorShard.getPersistentActor(receiverRef);
-                        InternalMessage internalMessage = new InternalMessageImpl(null, receiverRef,
+                        InternalMessage internalMessage = new DefaultInternalMessage(null, receiverRef,
                                 ByteBuffer.wrap(eventListener.getMessageBytes()),
                                 eventListener.getMessageClass().getName(), false);
                         // start a new transaction for each message
@@ -890,7 +891,7 @@ public final class KafkaActorThread extends Thread {
                             // @todo: send an error message to the sender
                             logger.error("Exception while handling message for service [{}]", serviceRef, e);
                         } finally {
-                            InternalActorContext.getAndClearContext();
+                            InternalActorContext.clearContext();
                             this.localActorNode.initializedActors.add(serviceRef);
                         }
                     }
@@ -956,7 +957,7 @@ public final class KafkaActorThread extends Thread {
                     // @todo: send an error message to the sender
                     logger.error("Exception while handling message for service [{}]",receiverRef,e);
                 } finally {
-                    InternalActorContext.getAndClearContext();
+                    InternalActorContext.clearContext();
                 }
             } else {
                 sendUndeliverable(internalMessage, receiverRef);
@@ -1052,7 +1053,7 @@ public final class KafkaActorThread extends Thread {
             // reset the serialization context
             SerializationContext.reset();
             // clear the state from the thread
-            InternalActorContext.getAndClearContext();
+            InternalActorContext.clearContext();
         }
         if(shouldUpdateState) {
             managedActorContainer.persistActor(persistentActor);
@@ -1079,7 +1080,8 @@ public final class KafkaActorThread extends Thread {
                              CreateActorMessage createMessage,
                              ActorRef ref,
                              InternalMessage internalMessage) throws ClassNotFoundException {
-        final Class<? extends ElasticActor> actorClass = (Class<? extends ElasticActor>) Class.forName(createMessage.getActorClass());
+        final Class<? extends ElasticActor> actorClass =
+            (Class<? extends ElasticActor>) getClassHelper().forName(createMessage.getActorClass());
         final String actorStateVersion = ManifestTools.extractActorStateVersion(actorClass);
         PersistentActor<?> persistentActor =
                 new PersistentActor<>(managedActorContainer.getKey(), internalActorSystem, actorStateVersion, ref,
@@ -1130,7 +1132,7 @@ public final class KafkaActorThread extends Thread {
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
         final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-        return new InternalMessageImpl(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message),message.getClass().getName(),durable, timeout);
+        return new DefaultInternalMessage(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message),message.getClass().getName(),durable, timeout);
     }
 
     private final class ManagedActorShard implements EvictionListener<PersistentActor<ShardKey>>, ManagedActorContainer<ShardKey> {
@@ -1273,7 +1275,14 @@ public final class KafkaActorThread extends Thread {
 
         @Override
         public void onEvicted(PersistentActor<NodeKey> value) {
-            // this is a TempActor being evicted
+            logger.error(
+                "CRITICAL WARNING: Actor [{}] of type [{}] got evicted from the cache. "
+                    + "This can lead to issues using temporary actors. "
+                    + "Please increase the maximum size of the node actor cache "
+                    + "by using the 'ea.nodeCache.maximumSize' property.",
+                value.getSelf(),
+                value.getActorClass().getName()
+            );
         }
 
         @Override

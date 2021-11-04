@@ -79,9 +79,11 @@ public interface ActorRef {
      */
     void tell(Object message) throws IllegalStateException, MessageDeliveryException;
 
-
     /**
      * Send a message to an {@link ElasticActor} and request a response.
+     *
+     * If you're calling this from a Persistent Actor and want to persist changes made to the state
+     * inside the chain returned by this method, run {@link ActorRef#ask(Object, Class, Boolean)} instead.
      *
      * @param message       the message to send (needs to be annotated with {@link org.elasticsoftware.elasticactors.serialization.Message}
      * @param responseType  the expected message type of the response
@@ -96,7 +98,7 @@ public interface ActorRef {
      *
      * @param message the message to send (needs to be annotated with {@link org.elasticsoftware.elasticactors.serialization.Message}
      * @param responseType the expected message type of the response
-     * @param persistOnResponse is true, the calling actor's state (if it's a persistent actor) will be saved
+     * @param persistOnResponse if true, the calling actor's state (if it's a persistent actor) will be saved
      * @param <T> the expected message type of the response
      * @return a {@link CompletionStage} that completes with the response message
      */

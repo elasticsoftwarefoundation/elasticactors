@@ -34,8 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-
-import static java.lang.System.currentTimeMillis;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -101,7 +100,7 @@ public final class CassandraPersistentActorRepository implements PersistentActor
 
     private HColumn<String,byte[]> querySingleColumnWithRetry(final ShardKey shard,final String actorId) {
         // try three times, and log a warning when we exceed the readExecutionThreshold
-        final long startTime = currentTimeMillis();
+        final long startTime = System.nanoTime();
         int attemptsRemaining = 3;
         try {
             while (true) {
@@ -115,9 +114,16 @@ public final class CassandraPersistentActorRepository implements PersistentActor
                 }
             }
         } finally {
-            final long endTime = currentTimeMillis();
-            if((endTime - startTime) > readExecutionThresholdMillis) {
-                logger.warn("Cassandra read operation took {} msecs ({} retries) for actorId [{}] on shard [{}]", (endTime - startTime), (2 - attemptsRemaining), actorId, shard);
+            final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
+            if(duration > readExecutionThresholdMillis) {
+                logger.warn(
+                    "Cassandra read operation took {} msecs ({} retries) for actorId [{}] on "
+                        + "shard [{}]",
+                    duration,
+                    (2 - attemptsRemaining),
+                    actorId,
+                    shard
+                );
             }
         }
     }

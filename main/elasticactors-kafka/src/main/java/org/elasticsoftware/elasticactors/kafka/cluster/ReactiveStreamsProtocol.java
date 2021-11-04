@@ -41,6 +41,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask.shouldUpdateState;
+import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 public final class ReactiveStreamsProtocol {
@@ -93,7 +94,7 @@ public final class ReactiveStreamsProtocol {
                                         currentSubscription.getSubscriber().getClass().getSimpleName() : null,
                                 receiverRef, e);
                     } finally {
-                        InternalSubscriberContext.getAndClearContext();
+                        InternalSubscriberContext.clearContext();
                     }
                     return true;
                 } else {
@@ -154,7 +155,7 @@ public final class ReactiveStreamsProtocol {
             InternalSubscriberContext.setContext(new SubscriberContextImpl(persistentActor, publisherRef, actorSystem, currentSubscription));
             try {
                 // @todo: for now the message name == messageClass
-                Class<?> messageClass = Class.forName(nextMessage.getMessageName());
+                Class<?> messageClass = getClassHelper().forName(nextMessage.getMessageName());
                 MessageDeserializer<?> deserializer = actorSystem.getDeserializer(messageClass);
                 Object message = SerializationContext.deserialize(deserializer, ByteBuffer.wrap(nextMessage.getMessageBytes()));
 
@@ -172,7 +173,7 @@ public final class ReactiveStreamsProtocol {
                                 currentSubscription.getSubscriber().getClass().getSimpleName() : null,
                         receiverRef, e);
             } finally {
-                InternalSubscriberContext.getAndClearContext();
+                InternalSubscriberContext.clearContext();
             }
         } else {
             // there is no corresponding persistent subscription related to this publisher/message combination
@@ -224,7 +225,7 @@ public final class ReactiveStreamsProtocol {
                                 currentSubscription.getSubscriber().getClass().getSimpleName() : null,
                         subscriberRef, e);
             } finally {
-                InternalSubscriberContext.getAndClearContext();
+                InternalSubscriberContext.clearContext();
             }
         } else {
             // we got a subscription message, but there is no corresponding PersistentSubscription ... this should not
@@ -254,7 +255,7 @@ public final class ReactiveStreamsProtocol {
                                 currentSubscription.getSubscriber().getClass().getSimpleName() : null,
                         subscriberRef, e);
             } finally {
-                InternalSubscriberContext.getAndClearContext();
+                InternalSubscriberContext.clearContext();
                 persistentActor.removeSubscription(completedMessage.getMessageName(), publisherRef);
             }
         } else {

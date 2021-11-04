@@ -1,1 +1,1 @@
-org.elasticsoftware.elasticactors.tracing.service.MessagingContextManagerImpl
+org.elasticsoftware.elasticactors.tracing.service.TracingMessagingContextManager

@@ -28,16 +28,12 @@ final class InternalActorContext extends ActorContextHolder {
         super();
     }
 
-    static ActorContext setContext(ActorContext context) {
-        final ActorContext currentContext = threadContext.get();
+    static void setContext(ActorContext context) {
         threadContext.set(context);
-        return currentContext;
     }
 
-    static ActorContext getAndClearContext() {
-        ActorContext state = threadContext.get();
+    static void clearContext() {
         threadContext.remove();
-        return state;
     }
 
 }

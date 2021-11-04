@@ -23,6 +23,8 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.SubscriberContext;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
+import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
@@ -42,11 +44,13 @@ import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
@@ -58,16 +62,30 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
     private static final Logger log = LoggerFactory.getLogger(HandleMessageTask.class);
     private InternalPersistentSubscription currentSubscription;
 
-    HandleMessageTask(InternalActorSystem actorSystem,
-                      ElasticActor receiver,
-                      ActorRef receiverRef,
-                      InternalMessage internalMessage,
-                      PersistentActor persistentActor,
-                      PersistentActorRepository persistentActorRepository,
-                      ActorStateUpdateProcessor actorStateUpdateProcessor,
-                      MessageHandlerEventListener messageHandlerEventListener,
-                      Long serializationWarningThreshold) {
-        super(actorStateUpdateProcessor,persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, serializationWarningThreshold);
+    HandleMessageTask(
+        InternalActorSystem actorSystem,
+        ElasticActor receiver,
+        ActorRef receiverRef,
+        InternalMessage internalMessage,
+        PersistentActor persistentActor,
+        PersistentActorRepository persistentActorRepository,
+        ActorStateUpdateProcessor actorStateUpdateProcessor,
+        MessageHandlerEventListener messageHandlerEventListener,
+        MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings)
+    {
+        super(
+            actorStateUpdateProcessor,
+            persistentActorRepository,
+            persistentActor,
+            actorSystem,
+            receiver,
+            receiverRef,
+            messageHandlerEventListener,
+            internalMessage,
+            metricsSettings,
+            loggingSettings
+        );
     }
 
     // SubscriberContext implementation
@@ -98,19 +116,26 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
     }
 
     @Override
-    protected Optional<Class> unwrapMessageClass(InternalMessage internalMessage)  {
+    @Nullable
+    protected Class unwrapMessageClass(InternalMessage internalMessage)  {
+        if (unwrappedMessageClass != null) {
+            return unwrappedMessageClass;
+        }
         if(NextMessage.class.getName().equals(internalMessage.getPayloadClass())) {
             try {
-                NextMessage nextMessage = (NextMessage) internalMessage.getPayload(
-                        actorSystem.getDeserializer(Class.forName(internalMessage.getPayloadClass())));
-                return Optional.of(Class.forName(nextMessage.getMessageName()));
-            } catch(IOException | ClassNotFoundException e) {
-                return Optional.empty();
+                NextMessage nextMessage = internalMessage.getPayload(actorSystem.getDeserializer(NextMessage.class));
+                unwrappedMessageClass = getClassHelper().forName(nextMessage.getMessageName());
+                return unwrappedMessageClass;
+            } catch(IOException e) {
+                log.error("Class [{}] could not be loaded", internalMessage.getPayloadClass(), e);
+                return null;
+            } catch(ClassNotFoundException e) {
+                log.error("Class [{}] not found", internalMessage.getPayloadClass(), e);
+                return null;
             }
         } else {
-            return Optional.empty();
+            return null;
         }
-
     }
 
     @Override
@@ -150,7 +175,7 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
                 currentSubscription = persistentSubscription.get();
                 InternalSubscriberContext.setContext(this);
                 // @todo: for now the message name == messageClass
-                Class<?> messageClass = Class.forName(nextMessage.getMessageName());
+                Class<?> messageClass = getClassHelper().forName(nextMessage.getMessageName());
                 MessageDeserializer<?> deserializer = actorSystem.getDeserializer(messageClass);
                 Object message = SerializationContext.deserialize(deserializer, ByteBuffer.wrap(nextMessage.getMessageBytes()));
 
@@ -168,7 +193,7 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
                                 currentSubscription.getSubscriber().getClass().getSimpleName() : null,
                         receiverRef, e);
             } finally {
-                InternalSubscriberContext.getAndClearContext();
+                InternalSubscriberContext.clearContext();
             }
         } else {
             // there is no corresponding persistent subscription related to this publisher/message combination
@@ -215,7 +240,7 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
                                 currentSubscription.getSubscriber().getClass().getSimpleName() : null,
                         receiverRef, e);
             } finally {
-                InternalSubscriberContext.getAndClearContext();
+                InternalSubscriberContext.clearContext();
             }
         } else {
             // we got a subscription message, but there is no corresponding PersistentSubscription ... this should not
@@ -241,7 +266,7 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
                             currentSubscription.getSubscriber().getClass().getSimpleName() : null,
                     receiverRef, e);
             } finally {
-                InternalSubscriberContext.getAndClearContext();
+                InternalSubscriberContext.clearContext();
                 persistentActor.removeSubscription(completedMessage.getMessageName(), publisherRef);
             }
         } else {

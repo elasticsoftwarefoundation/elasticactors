@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.base.serialization.JacksonSerialization
 import org.elasticsoftware.elasticactors.base.state.StringState;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,17 +47,21 @@ public class GreetingActor extends TypedActor<Greeting> {
     @Override
     public void onReceive(ActorRef sender, Greeting message) throws Exception {
         logger.info("Hello, {}", message.getWho());
-        assertNull(getManager().currentMethodContext());
-        CreationContext creationContext = getManager().currentCreationContext();
-        assertNotNull(creationContext);
-        assertNull(creationContext.getScheduled());
-        assertEquals(creationContext.getCreator(), GreetingTest.class.getSimpleName());
-        assertEquals(creationContext.getCreatorType(), shorten(GreetingTest.class.getName()));
-        TraceContext current = getManager().currentTraceContext();
-        assertNotNull(current);
-        assertNotEquals(current.getSpanId(), TEST_TRACE.getSpanId());
-        assertEquals(current.getTraceId(), TEST_TRACE.getTraceId());
-        assertEquals(current.getParentId(), TEST_TRACE.getSpanId());
+        if (getManager().isTracingEnabled()) {
+            MessagingScope scope = getManager().currentScope();
+            assertNotNull(scope);
+            assertNull(scope.getMethod());
+            CreationContext creationContext = scope.getCreationContext();
+            assertNotNull(creationContext);
+            assertNull(creationContext.getScheduled());
+            assertEquals(creationContext.getCreator(), GreetingTest.class.getSimpleName());
+            assertEquals(creationContext.getCreatorType(), shorten(GreetingTest.class.getName()));
+            TraceContext current = scope.getTraceContext();
+            assertNotNull(current);
+            assertNotEquals(current.getSpanId(), TEST_TRACE.getSpanId());
+            assertEquals(current.getTraceId(), TEST_TRACE.getTraceId());
+            assertEquals(current.getParentId(), TEST_TRACE.getSpanId());
+        }
         ScheduledMessageRef messageRef = getSystem().getScheduler().scheduleOnce(getSelf(),new Greeting("Greeting Actor"),sender,1, TimeUnit.SECONDS);
         sender.tell(new ScheduledGreeting(messageRef));
     }

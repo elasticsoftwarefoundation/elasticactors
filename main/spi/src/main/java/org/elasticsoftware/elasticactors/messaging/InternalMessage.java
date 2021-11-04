@@ -57,4 +57,6 @@ public interface InternalMessage extends TracedMessage {
 
     int getTimeout();
 
+    boolean hasSerializedPayload();
+
 }

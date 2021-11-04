@@ -19,7 +19,14 @@ package org.elasticsoftware.elasticactors.test.common;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.Message;
 
-@Message(serializationFramework = JacksonSerializationFramework.class, immutable = true)
+import static org.elasticsoftware.elasticactors.serialization.Message.LogFeature.CONTENTS;
+import static org.elasticsoftware.elasticactors.serialization.Message.LogFeature.TIMING;
+
+@Message(
+    serializationFramework = JacksonSerializationFramework.class,
+    immutable = true,
+    logBodyOnError = true,
+    logOnReceive = {TIMING, CONTENTS})
 public class GetActorName {
 
 }

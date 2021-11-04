@@ -23,8 +23,8 @@ import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.client.messaging.ActorSystemMessage;
 import org.elasticsoftware.elasticactors.client.serialization.ActorSystemMessageSerializer;
+import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.InternalMessageImpl;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
@@ -57,7 +57,7 @@ final class RemoteActorShard implements ActorShard, MessageHandler {
         this.key = key;
         this.messageQueueFactory = messageQueueFactory;
         this.serializationFrameworks = serializationFrameworks;
-        this.actorPath = String.format("%s/shards/%d", key.getActorSystemName(), key.getShardId());
+        this.actorPath = key.getActorSystemName() + "/shards/" + key.getShardId();
         this.myRef = new RemoteActorShardRef(clusterName, this, null);
     }
 
@@ -102,7 +102,7 @@ final class RemoteActorShard implements ActorShard, MessageHandler {
         final boolean durable = isDurable(message);
         final int timeout = getTimeout(message);
         String payloadClass = getPayloadClass(message);
-        messageQueue.offer(new InternalMessageImpl(
+        messageQueue.offer(new DefaultInternalMessage(
                 null,
                 ImmutableList.copyOf(receiver),
                 SerializationContext.serialize(messageSerializer, message),

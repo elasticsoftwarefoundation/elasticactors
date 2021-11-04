@@ -23,19 +23,15 @@ import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
+import org.elasticsoftware.elasticactors.serialization.MessageToStringConverter;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import static org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer.DEFAULT_MAX_LENGTH;
-import static org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer.LOGGING_MAXIMUM_LENGTH_PROPERTY;
-import static org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer.LOGGING_USE_TO_STRING_PROPERTY;
 
 /**
  * @author Joost van de Wijgerd
@@ -43,33 +39,21 @@ import static org.elasticsoftware.elasticactors.serialization.MessageToStringSer
 @Named
 public final class JacksonSerializationFramework implements SerializationFramework {
 
-    private static final String MAX_LENGTH_CONFIGURATION_KEY =
-            "${" + LOGGING_MAXIMUM_LENGTH_PROPERTY + ":" + DEFAULT_MAX_LENGTH + "}";
-    private static final String LOGGING_USE_TO_STRING_KEY =
-            "${" + LOGGING_USE_TO_STRING_PROPERTY + ":false}";
-
     private final ConcurrentMap<Class, JacksonMessageDeserializer> deserializers =
             new ConcurrentHashMap<>();
     private final JacksonMessageSerializer serializer;
-    private final MessageToStringSerializer toStringSerializer;
+    private final MessageToStringConverter toStringConverter;
     private final ObjectMapper objectMapper;
     private final JacksonActorStateSerializer actorStateSerializer;
     private final JacksonActorStateDeserializer actorStateDeserializer;
 
-    public JacksonSerializationFramework(ObjectMapper objectMapper) {
-        this(objectMapper, DEFAULT_MAX_LENGTH, false);
-    }
-
     @Inject
     public JacksonSerializationFramework(
             ObjectMapper objectMapper,
-            @Value(MAX_LENGTH_CONFIGURATION_KEY) int maxLength,
-            @Value(LOGGING_USE_TO_STRING_KEY) boolean useToString) {
+            Environment environment) {
         this.objectMapper = objectMapper;
         this.serializer = new JacksonMessageSerializer(objectMapper);
-        this.toStringSerializer = useToString
-                ? new PlainMessageToStringSerializer(maxLength)
-                : new JacksonMessageToStringSerializer(objectMapper, maxLength);
+        this.toStringConverter = new JacksonMessageToStringConverter(objectMapper, environment);
         this.actorStateSerializer = new JacksonActorStateSerializer(objectMapper);
         this.actorStateDeserializer = new JacksonActorStateDeserializer(objectMapper);
     }
@@ -77,9 +61,13 @@ public final class JacksonSerializationFramework implements SerializationFramewo
     @Override
     public void register(Class<?> messageClass) {
         Message messageAnnotation;
-        if((messageAnnotation = messageClass.getAnnotation(Message.class)) != null
-           && this.getClass().equals(messageAnnotation.serializationFramework()))  {
-            deserializers.putIfAbsent(messageClass,new JacksonMessageDeserializer(messageClass,objectMapper));
+        if ((messageAnnotation = messageClass.getAnnotation(Message.class)) != null
+            && this.getClass().equals(messageAnnotation.serializationFramework()))
+        {
+            deserializers.computeIfAbsent(
+                messageClass,
+                c -> new JacksonMessageDeserializer(c, objectMapper)
+            );
         }
     }
 
@@ -89,8 +77,8 @@ public final class JacksonSerializationFramework implements SerializationFramewo
     }
 
     @Override
-    public <T> MessageToStringSerializer<T> getToStringSerializer(Class<T> messageClass) {
-        return toStringSerializer;
+    public MessageToStringConverter getToStringConverter() {
+        return toStringConverter;
     }
 
     @Override

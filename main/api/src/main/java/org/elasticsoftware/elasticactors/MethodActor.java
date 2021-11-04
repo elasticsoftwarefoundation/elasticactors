@@ -18,13 +18,13 @@ package org.elasticsoftware.elasticactors;
 
 import org.elasticsoftware.elasticactors.logging.LogLevel;
 import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.MessageToStringConverter;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 import org.elasticsoftware.elasticactors.state.PersistenceConfigHelper;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 
@@ -46,11 +47,8 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
     private static final Comparator<HandlerMethodDefinition> ORDER_COMPARATOR = Comparator.comparingInt(m -> m.order);
     private final Map<Class<?>,List<HandlerMethodDefinition>> handlerCache = new HashMap<>();
     @Nullable private final Class<? extends ActorState> stateClass;
-
-    public static final String LOGGING_UNHANDLED_LEVEL_PROPERTY = "ea.logging.unhandled.level";
-    private static final String DEFAULT_UNHANDLED_LEVEL_NAME = "WARN";
-    public static final LogLevel DEFAULT_UNHANDLED_LEVEL =
-            LogLevel.valueOf(DEFAULT_UNHANDLED_LEVEL_NAME);
+    private final static LogLevel onUnhandledLogLevel =
+        LogLevel.valueOf(System.getProperty("ea.logging.messages.unhandled.level", "WARN").toUpperCase());
 
     protected MethodActor() {
         this.stateClass = resolveActorStateClass();
@@ -203,7 +201,7 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
             Throwable e) {
         if (logger.isErrorEnabled()) {
             Message messageAnnotation = message.getClass().getAnnotation(Message.class);
-            if (messageAnnotation != null && messageAnnotation.loggable()) {
+            if (messageAnnotation != null && messageAnnotation.logBodyOnError()) {
                 logger.error(
                         "Unexpected Exception in handler method [{}]. "
                                 + "Actor [{}]. "
@@ -212,7 +210,7 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                         definition.handlerMethod,
                         getSelf(),
                         senderRef,
-                        serializeToString(message),
+                        getStringBody(),
                         e);
             } else {
                 logger.error(
@@ -224,54 +222,27 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                         senderRef,
                         e);
             }
-        }
-    }
-
-    private LogLevel onUnhandledLogLevel;
-
-    /**
-     * This can only be set once, on actor initialization
-     *
-     * @param logLevel the {@link LogLevel} to be used for logging unhandled messages
-     */
-    public final void setOnUnhandledLogLevel(@Nonnull LogLevel logLevel) {
-        if (this.onUnhandledLogLevel == null) {
-            this.onUnhandledLogLevel = logLevel;
         }
     }
 
     /**
      * Method to execute when no handler method for a given message type is found.
-     * The default implementation just logs it using the log level set using the {@value
-     * #LOGGING_UNHANDLED_LEVEL_PROPERTY} property (default: {@value #DEFAULT_UNHANDLED_LEVEL_NAME})
+     * The default implementation just logs it using the log level set using the
+     * "ea.logging.unhandled.level" property (default: "WARN")
      *
      * @param sender the sender of the message (as passed in {@link ActorRef#tell(Object, ActorRef)})
      * @param message the message object
      */
     protected void onUnhandled(ActorRef sender, Object message) {
-        LogLevel logLevel =
-                onUnhandledLogLevel != null ? onUnhandledLogLevel : DEFAULT_UNHANDLED_LEVEL;
-        if (logLevel.isEnabled(logger)) {
-            Message messageAnnotation = message.getClass().getAnnotation(Message.class);
-            if (messageAnnotation != null && messageAnnotation.loggable()) {
-                logLevel.prepare(logger).log(
-                        "Unhandled message of type [{}] received. "
-                                + "Actor [{}]. "
-                                + "Sender [{}]. "
-                                + "Message payload [{}].",
-                        message.getClass().getName(),
-                        getSelf(),
-                        sender,
-                        serializeToString(message));
-            } else {
-                logLevel.prepare(logger).log(
-                        "Unhandled message of type [{}] received. "
-                                + "Actor [{}]. "
-                                + "Sender [{}].",
-                        message.getClass().getName(),
-                        getSelf(),
-                        sender);
-            }
+        if (onUnhandledLogLevel.isEnabled(logger)) {
+            onUnhandledLogLevel.prepare(logger).log(
+                "Unhandled message of type [{}] received. "
+                    + "Actor [{}]. "
+                    + "Sender [{}].",
+                message.getClass().getName(),
+                getSelf(),
+                sender
+            );
         }
     }
 
@@ -338,12 +309,56 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                         arguments[i] = getSystem();
                         continue;
                     default:
-                        throw new IllegalStateException(format("ParameterType %s not handled!",parameterType.toString()));
+                        throw new IllegalStateException(format("ParameterType %s not handled!",parameterType));
 
                 }
 
             }
             return arguments;
+        }
+    }
+
+    /**
+     * Safely serializes the contents of a message to a String
+     *
+     * @return the message object serialized to a String, or {@code "N/A"} if a {@link MessageToStringConverter} is not set or an error occurs
+     */
+    private String getStringBody() {
+        Supplier<String> messageToStringConverter =
+            currentMessageToStringConverter.get();
+        if (messageToStringConverter == null) {
+            return null;
+        }
+        try {
+            return messageToStringConverter.get();
+        } catch (Exception e) {
+            logger.error("Exception thrown while serializing message to String", e);
+            return "N/A";
+        }
+    }
+
+    private final ThreadLocal<Supplier<String>> currentMessageToStringConverter =
+        new ThreadLocal<>();
+
+    /**
+     * Internal implementation of {@link ElasticActor#onReceive} to enable logging offending
+     * messages when an unexpected exception occurs
+     *
+     * @param sender the sender of the message (as passed in {@link ActorRef#tell(Object, ActorRef)})
+     * @param message the message object
+     * @param messageToStringSupplier a function used to get a string representation of this message
+     * @throws Exception when something unexpected happens
+     */
+    public final void onReceive(
+        ActorRef sender,
+        Object message,
+        @Nullable Supplier<String> messageToStringSupplier) throws Exception
+    {
+        try {
+            currentMessageToStringConverter.set(messageToStringSupplier);
+            onReceive(sender, message);
+        } finally {
+            currentMessageToStringConverter.remove();
         }
     }
 }

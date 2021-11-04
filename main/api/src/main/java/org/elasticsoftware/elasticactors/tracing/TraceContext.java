@@ -2,6 +2,9 @@ package org.elasticsoftware.elasticactors.tracing;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.StringJoiner;
@@ -12,21 +15,33 @@ public final class TraceContext {
     private final String spanId;
     private final String traceId;
     private final String parentId;
+    private final Map<String, String> baggage;
 
     public TraceContext() {
-        this(null);
+        this(null, null);
     }
 
     public TraceContext(
-            @Nonnull String spanId,
-            @Nonnull String traceId,
-            @Nullable String parentId) {
+        @Nonnull String spanId,
+        @Nonnull String traceId,
+        @Nullable String parentId,
+        @Nullable Map<String, String> baggage)
+    {
         this.spanId = Objects.requireNonNull(spanId);
         this.traceId = Objects.requireNonNull(traceId);
         this.parentId = parentId;
+        this.baggage = baggage;
     }
 
     public TraceContext(@Nullable TraceContext parent) {
+        this(parent, parent == null ? null : parent.baggage);
+    }
+
+    public TraceContext(@Nullable Map<String, String> baggage) {
+        this(null, baggage);
+    }
+
+    private TraceContext(@Nullable TraceContext parent, @Nullable Map<String, String> baggage) {
         Random prng = ThreadLocalRandom.current();
         this.spanId = toHexString(prng.nextLong());
         this.traceId = parent == null || parent.getTraceId().isEmpty()
@@ -35,6 +50,7 @@ public final class TraceContext {
         this.parentId = parent == null || parent.getSpanId().isEmpty()
                 ? null
                 : parent.getSpanId();
+        this.baggage = baggage == null ? null : Collections.unmodifiableMap(new HashMap<>(baggage));
     }
 
     /**
@@ -100,14 +116,20 @@ public final class TraceContext {
     @Override
     public String toString() {
         return new StringJoiner(", ", TraceContext.class.getSimpleName() + "{", "}")
-                .add("spanId='" + spanId + "'")
-                .add("traceId='" + traceId + "'")
-                .add("parentId='" + parentId + "'")
-                .toString();
+            .add("spanId='" + spanId + "'")
+            .add("traceId='" + traceId + "'")
+            .add("parentId='" + parentId + "'")
+            .add("baggage=" + baggage)
+            .toString();
     }
 
     public boolean isEmpty() {
         return spanId == null || spanId.isEmpty()
                 || traceId == null || traceId.isEmpty();
+    }
+
+    @Nullable
+    public Map<String, String> getBaggage() {
+        return baggage;
     }
 }

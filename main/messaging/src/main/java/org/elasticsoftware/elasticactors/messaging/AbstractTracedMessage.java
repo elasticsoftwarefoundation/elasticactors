@@ -1,6 +1,7 @@
 package org.elasticsoftware.elasticactors.messaging;
 
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.tracing.TracedMessage;
 
@@ -14,9 +15,10 @@ public abstract class AbstractTracedMessage implements TracedMessage {
     private final CreationContext creationContext;
 
     protected AbstractTracedMessage() {
-        TraceContext traceContext = getManager().currentTraceContext();
+        MessagingContextManager.MessagingScope scope = getManager().currentScope();
+        TraceContext traceContext = scope != null ? scope.getTraceContext() : null;
         this.traceContext = traceContext != null ? traceContext : new TraceContext();
-        this.creationContext = getManager().creationContextFromScope();
+        this.creationContext = scope != null ? scope.creationContextFromScope() : null;
     }
 
     protected AbstractTracedMessage(

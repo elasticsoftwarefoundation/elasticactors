@@ -21,15 +21,18 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ElasticActor;
+import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
-import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
+import org.elasticsoftware.elasticactors.cluster.logging.MessageLogger;
+import org.elasticsoftware.elasticactors.cluster.metrics.Measurement;
+import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.serialization.Message;
-import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
+import org.elasticsoftware.elasticactors.serialization.MessageToStringConverter;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
-import org.elasticsoftware.elasticactors.util.SerializationTools;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,10 +43,11 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import static org.elasticsoftware.elasticactors.cluster.logging.MessageLogger.convertToString;
+import static org.elasticsoftware.elasticactors.cluster.logging.MessageLogger.getMessageToStringConverter;
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
+import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
-
-import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 /**
  * @author Joost van de Wijgerd
@@ -56,19 +60,36 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
     private final InternalMessage internalMessage;
     private final MessageHandlerEventListener messageHandlerEventListener;
     private final Measurement measurement;
+    private final MetricsSettings metricsSettings;
+    private final LoggingSettings loggingSettings;
+    private Class<?> unwrappedMessageClass;
 
-    public HandleServiceMessageTask(InternalActorSystem actorSystem,
-                                    ActorRef serviceRef,
-                                    ElasticActor serviceActor,
-                                    InternalMessage internalMessage,
-                                    MessageHandlerEventListener messageHandlerEventListener) {
+    public HandleServiceMessageTask(
+        InternalActorSystem actorSystem,
+        ActorRef serviceRef,
+        ElasticActor serviceActor,
+        InternalMessage internalMessage,
+        MessageHandlerEventListener messageHandlerEventListener,
+        MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings)
+    {
         this.serviceRef = serviceRef;
         this.actorSystem = actorSystem;
         this.serviceActor = serviceActor;
         this.internalMessage = internalMessage;
         this.messageHandlerEventListener = messageHandlerEventListener;
-        // only measure when trace is enabled
-        this.measurement = logger.isTraceEnabled() ? new Measurement(System.nanoTime()) : null;
+        this.metricsSettings = metricsSettings != null ? metricsSettings : MetricsSettings.disabled();
+        this.loggingSettings = loggingSettings != null ? loggingSettings : LoggingSettings.disabled();
+        this.measurement = isMeasurementEnabled() ? new Measurement(System.nanoTime()) : null;
+    }
+
+    private boolean isMeasurementEnabled() {
+        return MessageLogger.isMeasurementEnabled(
+            internalMessage,
+            metricsSettings,
+            loggingSettings,
+            this::unwrapMessageClass
+        );
     }
 
     @Override
@@ -121,6 +142,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
 
     private void runInContext() {
         // measure start of the execution
+        checkDeliveryThresholdExceeded();
         if(this.measurement != null) {
             this.measurement.setExecutionStart(System.nanoTime());
         }
@@ -128,18 +150,18 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         InternalActorContext.setContext(this);
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
-            MessageToStringSerializer messageToStringSerializer = getStringSerializer(message);
+            logMessageContents(message);
             try {
-                if (serviceActor instanceof TypedActor) {
-                    ((TypedActor) serviceActor).onReceive(
+                if (serviceActor instanceof MethodActor) {
+                    ((MethodActor) serviceActor).onReceive(
                             internalMessage.getSender(),
                             message,
-                            messageToStringSerializer);
+                            () -> getStringBody(message));
                 } else {
                     serviceActor.onReceive(internalMessage.getSender(), message);
                 }
             } catch (Exception e) {
-                logException(message, messageToStringSerializer, e);
+                logException(message, e);
                 executionException = e;
             }
         } catch (Exception e) {
@@ -150,7 +172,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
                     e);
             executionException = e;
         } finally {
-            InternalActorContext.getAndClearContext();
+            InternalActorContext.clearContext();
         }
         // marks the end of the execution path
         if(this.measurement != null) {
@@ -169,17 +191,87 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         }
         // do some trace logging
         if(this.measurement != null) {
-            logger.trace("({}) Message of type [{}] with id [{}] for actor [{}] took {} microsecs in queue, {} microsecs to execute, 0 microsecs to serialize and {} microsecs to ack (state update false)",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId() : "null",serviceRef.getActorId(),measurement.getQueueDuration(MICROSECONDS),measurement.getExecutionDuration(MICROSECONDS),measurement.getAckDuration(MICROSECONDS));
+            logMessageTimingInformationForTraces();
+            logMessageTimingInformation();
+            checkMessageHandlingThresholdExceeded();
         }
     }
 
-    private void logException(
-            Object message,
-            MessageToStringSerializer messageToStringSerializer,
-            Exception e) {
+    @Nullable
+    private Class unwrapMessageClass(InternalMessage internalMessage) {
+        try {
+            if (unwrappedMessageClass == null) {
+                unwrappedMessageClass = getClassHelper().forName(internalMessage.getPayloadClass());
+            }
+            return unwrappedMessageClass;
+        } catch (ClassNotFoundException e) {
+            logger.error("Class [{}] not found", internalMessage.getPayloadClass());
+            return null;
+        }
+    }
+
+    private void logMessageContents(Object message) {
+        MessageLogger.logMessageContents(
+            internalMessage,
+            actorSystem,
+            message,
+            loggingSettings,
+            serviceActor,
+            serviceRef,
+            this::unwrapMessageClass
+        );
+    }
+
+    private void logMessageTimingInformation() {
+        MessageLogger.logMessageTimingInformation(
+            internalMessage,
+            loggingSettings,
+            measurement,
+            serviceActor,
+            serviceRef,
+            this::unwrapMessageClass
+        );
+    }
+
+    private void logMessageTimingInformationForTraces() {
+        MessageLogger.logMessageTimingInformationForTraces(
+            this.getClass(),
+            internalMessage,
+            measurement,
+            serviceActor,
+            serviceRef
+        );
+    }
+
+    private void checkMessageHandlingThresholdExceeded() {
+        MessageLogger.checkMessageHandlingThresholdExceeded(
+            this.getClass(),
+            internalMessage,
+            actorSystem,
+            metricsSettings,
+            measurement,
+            serviceActor,
+            serviceRef,
+            this::unwrapMessageClass
+        );
+    }
+
+    private void checkDeliveryThresholdExceeded() {
+        MessageLogger.checkDeliveryThresholdExceeded(
+            this.getClass(),
+            internalMessage,
+            actorSystem,
+            metricsSettings,
+            serviceActor,
+            serviceRef,
+            this::unwrapMessageClass
+        );
+    }
+
+    private void logException(Object message, Exception e) {
         if (logger.isErrorEnabled()) {
             Message messageAnnotation = message.getClass().getAnnotation(Message.class);
-            if (messageAnnotation != null && messageAnnotation.loggable()) {
+            if (messageAnnotation != null && messageAnnotation.logBodyOnError()) {
                 logger.error(
                         "Exception while handling message of type [{}]. "
                                 + "Service [{}]. "
@@ -188,7 +280,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
                         internalMessage.getPayloadClass(),
                         serviceRef,
                         internalMessage.getSender(),
-                        serializeToString(message, messageToStringSerializer),
+                        getStringBody(message),
                         e);
             } else {
                 logger.error(
@@ -203,37 +295,9 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         }
     }
 
-    /**
-     * Safely serializes the contents of a message to a String
-     */
-    private String serializeToString(
-            Object message,
-            MessageToStringSerializer messageToStringSerializer) {
-        if (messageToStringSerializer == null) {
-            return null;
-        }
-        try {
-            return messageToStringSerializer.serialize(message);
-        } catch (Exception e) {
-            logger.error(
-                    "Exception thrown while serializing message of type [{}] to String",
-                    message.getClass().getName(),
-                    e);
-            return null;
-        }
-    }
-
-    private MessageToStringSerializer<?> getStringSerializer(Object message) {
-        try {
-            return SerializationTools.getStringSerializer(
-                    actorSystem.getParent(),
-                    message.getClass());
-        } catch (Exception e) {
-            logger.error(
-                    "Unexpected exception resolving message string serializer for type [{}]",
-                    message.getClass().getName(),
-                    e);
-            return null;
-        }
+    private String getStringBody(Object message) {
+        MessageToStringConverter messageToStringConverter =
+            getMessageToStringConverter(actorSystem, message.getClass());
+        return convertToString(message, actorSystem, internalMessage, messageToStringConverter);
     }
 }

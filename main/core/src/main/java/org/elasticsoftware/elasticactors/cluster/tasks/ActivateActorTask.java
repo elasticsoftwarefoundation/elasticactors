@@ -44,7 +44,18 @@ public final class ActivateActorTask extends ActorLifecycleTask {
                              InternalActorSystem actorSystem,
                              ElasticActor receiver,
                              ActorRef receiverRef) {
-        super(actorStateUpdateProcessor, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, null, null, null);
+        super(
+            actorStateUpdateProcessor,
+            persistentActorRepository,
+            persistentActor,
+            actorSystem,
+            receiver,
+            receiverRef,
+            null,
+            null,
+            null,
+            null
+        );
         this.persistentActor = persistentActor;
     }
 

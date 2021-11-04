@@ -39,17 +39,28 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
     private static final Logger log = LoggerFactory.getLogger(HandleUndeliverableMessageTask.class);
 
 
-    HandleUndeliverableMessageTask(InternalActorSystem actorSystem,
-                                          ElasticActor receiver,
-                                          ActorRef receiverRef,
-                                          InternalMessage internalMessage,
-                                          PersistentActor persistentActor,
-                                          PersistentActorRepository persistentActorRepository,
-                                          MessageHandlerEventListener messageHandlerEventListener) {
-        super(null, persistentActorRepository, persistentActor, actorSystem, receiver, receiverRef, messageHandlerEventListener, internalMessage, null);
+    HandleUndeliverableMessageTask(
+        InternalActorSystem actorSystem,
+        ElasticActor receiver,
+        ActorRef receiverRef,
+        InternalMessage internalMessage,
+        PersistentActor persistentActor,
+        PersistentActorRepository persistentActorRepository,
+        MessageHandlerEventListener messageHandlerEventListener)
+    {
+        super(
+            null,
+            persistentActorRepository,
+            persistentActor,
+            actorSystem,
+            receiver,
+            receiverRef,
+            messageHandlerEventListener,
+            internalMessage,
+            null,
+            null
+        );
     }
-
-
 
     @Override
     protected boolean doInActorContext(InternalActorSystem actorSystem,

@@ -229,7 +229,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
             this.messageHandler = messageHandler;
             this.listener = listener;
             this.logger = logger;
-            this.startTime = System.currentTimeMillis();
+            this.startTime = logger.isTraceEnabled() ? System.nanoTime() : 0L;
         }
 
         @Override
@@ -248,9 +248,16 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
                 logger.error("Unexpected exception on #handleMessage",e);
             } finally {
                 if(logger.isTraceEnabled()) {
-                    long endTime = System.currentTimeMillis();
+                    final long duration = TimeUnit.NANOSECONDS.toMicros(System.nanoTime() - startTime);
                     if(message != null) {
-                        logger.trace("(rabbit) Message of type [{}] with id [{}] took {} msecs to execute on queue [{}]", message.getPayloadClass(), message.getId(), endTime - startTime, queueName);
+                        logger.trace(
+                            "(rabbit) Message of type [{}] with id [{}] took {} microsecs to "
+                                + "execute on queue [{}]",
+                            message.getPayloadClass(),
+                            message.getId(),
+                            duration,
+                            queueName
+                        );
                     }
                 }
             }
@@ -290,7 +297,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
             this.messageHandler = messageHandler;
             this.listener = listener;
             this.logger = logger;
-            this.startTime = System.currentTimeMillis();
+            this.startTime = logger.isTraceEnabled() ? System.nanoTime() : 0L;
         }
 
         @Override
@@ -306,8 +313,15 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
                 logger.error("Unexpected exception on #handleMessage",e);
             } finally {
                 if(logger.isTraceEnabled()) {
-                    long endTime = System.currentTimeMillis();
-                    logger.trace("(local) Message of type [{}] with id [{}] took {} msecs to execute on queue [{}]",message.getPayloadClass(),message.getId(), endTime-startTime,queueName);
+                    final long duration = TimeUnit.NANOSECONDS.toMicros(System.nanoTime() - startTime);
+                    logger.trace(
+                        "(local) Message of type [{}] with id [{}] took {} microsecs to execute "
+                            + "on queue [{}]",
+                        message.getPayloadClass(),
+                        message.getId(),
+                        duration,
+                        queueName
+                    );
                 }
             }
         }

@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.state;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
 
@@ -48,14 +49,34 @@ public final class ActorStateUpdateEvent implements ThreadBoundEvent<String>, Ac
             ActorLifecycleStep lifecycleStep,
             Class messageClass) {
         this(
-                actorClass,
-                actorRef,
-                serializedState,
-                version,
-                lifecycleStep,
-                messageClass,
-                getManager().currentTraceContext(),
-                getManager().creationContextFromScope());
+            actorClass,
+            actorRef,
+            serializedState,
+            version,
+            lifecycleStep,
+            messageClass,
+            getManager().currentScope()
+        );
+    }
+
+    private ActorStateUpdateEvent(Class<? extends ElasticActor> actorClass,
+        ActorRef actorRef,
+        ByteBuffer serializedState,
+        String version,
+        ActorLifecycleStep lifecycleStep,
+        Class messageClass,
+        MessagingScope scope)
+    {
+        this(
+            actorClass,
+            actorRef,
+            serializedState,
+            version,
+            lifecycleStep,
+            messageClass,
+            scope != null ? scope.getTraceContext() : null,
+            scope != null ? scope.creationContextFromScope() : null
+        );
     }
 
     private ActorStateUpdateEvent(

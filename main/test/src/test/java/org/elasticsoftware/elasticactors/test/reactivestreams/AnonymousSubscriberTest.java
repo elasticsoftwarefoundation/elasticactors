@@ -37,6 +37,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
+import static org.testng.Assert.assertNull;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -59,6 +61,7 @@ public class AnonymousSubscriberTest {
     @AfterMethod
     public void removeExternalCreatorData() {
         testScope.get().close();
+        assertNull(getManager().currentScope());
         testScope.remove();
     }
 

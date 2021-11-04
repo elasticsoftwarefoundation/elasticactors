@@ -22,17 +22,21 @@ import static java.lang.String.format;
  * @author Joost van de Wijgerd
  */
 public final class DisconnectedRemoteActorShardRef extends BaseDisconnectedActorRef {
-    private static final String REFSPEC_FORMAT = "actor://%s/%s/shards/%d/%s";
     private final int shardId;
 
     DisconnectedRemoteActorShardRef(String clusterName, String actorSystemName, String actorId, int shardId) {
-        super(actorId, clusterName, format(REFSPEC_FORMAT, clusterName, actorSystemName, shardId, actorId), actorSystemName);
+        super(
+            actorId,
+            clusterName,
+            "actor://" + clusterName + "/" + actorSystemName + "/shards/" + shardId + "/" + actorId,
+            actorSystemName
+        );
         this.shardId = shardId;
     }
 
     @Override
     public String getActorPath() {
-        return format("%s/shards/%d", actorSystemName, shardId);
+        return actorSystemName + "/shards/" + shardId;
     }
 
     @Override

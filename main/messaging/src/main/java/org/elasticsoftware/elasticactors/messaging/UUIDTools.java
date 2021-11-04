@@ -31,7 +31,7 @@ public final class UUIDTools {
     private UUIDTools() {}
 
     /**
-     * Convert a UUID to it's byte[] representation. Will return a byte[] of length 16
+     * Convert a UUID to its byte[] representation. Will return a byte[] of length 16
      *
      * @param uuid the UUID to convert
      * @return the bytes of the UUID
@@ -84,7 +84,7 @@ public final class UUIDTools {
         // 0x01b21dd213814000 is the number of 100-ns intervals between the
         // UUID epoch 1582-10-15 00:00:00 and the Unix epoch 1970-01-01 00:00:00.
         t = t - 0x01b21dd213814000L;
-        t = (long) (t / 1e4); //Convert to ms
+        t = t / 10_000L; //Convert to ms
         return t;
     }
 

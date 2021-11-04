@@ -121,7 +121,7 @@ public final class HandleUndeliverableServiceMessageTask implements ThreadBoundR
             logger.error("Exception while handling message for service [{}]", serviceRef, e);
             executionException = e;
         } finally {
-            InternalActorContext.getAndClearContext();
+            InternalActorContext.clearContext();
         }
         if(messageHandlerEventListener != null) {
             if(executionException == null) {

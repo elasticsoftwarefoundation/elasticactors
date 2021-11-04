@@ -27,15 +27,11 @@ public final class InternalSubscriberContext extends SubscriberContextHolder {
         super();
     }
 
-    protected static SubscriberContext setContext(SubscriberContext context) {
-        final SubscriberContext currentContext = threadContext.get();
+    static void setContext(SubscriberContext context) {
         threadContext.set(context);
-        return currentContext;
     }
 
-    protected static SubscriberContext getAndClearContext() {
-        SubscriberContext state = threadContext.get();
+    static void clearContext() {
         threadContext.remove();
-        return state;
     }
 }

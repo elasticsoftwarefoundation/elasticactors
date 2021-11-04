@@ -19,6 +19,8 @@ package org.elasticsoftware.elasticactors.cluster.tasks.app;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
+import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.ProtocolFactory;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
@@ -31,23 +33,32 @@ import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
  * @author Joost van de Wijgerd
  */
 public final class ApplicationProtocolFactory implements ProtocolFactory {
+
     @Override
-    public ActorLifecycleTask createHandleMessageTask(InternalActorSystem actorSystem,
-                                                      ElasticActor receiver,
-                                                      ActorRef receiverRef,
-                                                      InternalMessage internalMessage,
-                                                      PersistentActor persistentActor,
-                                                      PersistentActorRepository persistentActorRepository,
-                                                      ActorStateUpdateProcessor actorStateUpdateProcessor,
-                                                      MessageHandlerEventListener messageHandlerEventListener,
-                                                      Long serializationWarnThreshold) {
-        if (serializationWarnThreshold == null) {
-            return new HandleMessageTask(actorSystem, receiver, receiverRef, internalMessage, persistentActor,
-                    persistentActorRepository, actorStateUpdateProcessor, messageHandlerEventListener);
-        } else {
-            return new HandleMessageTask(actorSystem, receiver, receiverRef, internalMessage, persistentActor,
-                    persistentActorRepository, actorStateUpdateProcessor, messageHandlerEventListener, serializationWarnThreshold);
-        }
+    public ActorLifecycleTask createHandleMessageTask(
+        InternalActorSystem actorSystem,
+        ElasticActor receiver,
+        ActorRef receiverRef,
+        InternalMessage internalMessage,
+        PersistentActor persistentActor,
+        PersistentActorRepository persistentActorRepository,
+        ActorStateUpdateProcessor actorStateUpdateProcessor,
+        MessageHandlerEventListener messageHandlerEventListener,
+        MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings)
+    {
+        return new HandleMessageTask(
+            actorSystem,
+            receiver,
+            receiverRef,
+            internalMessage,
+            persistentActor,
+            persistentActorRepository,
+            actorStateUpdateProcessor,
+            messageHandlerEventListener,
+            metricsSettings,
+            loggingSettings
+        );
     }
 
     @Override

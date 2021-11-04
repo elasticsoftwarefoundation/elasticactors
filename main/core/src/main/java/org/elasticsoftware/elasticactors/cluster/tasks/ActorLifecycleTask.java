@@ -22,6 +22,10 @@ import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
+import org.elasticsoftware.elasticactors.cluster.logging.MessageLogger;
+import org.elasticsoftware.elasticactors.cluster.metrics.Measurement;
+import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
@@ -29,6 +33,7 @@ import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistenceAdvisor;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
+import org.elasticsoftware.elasticactors.state.PersistenceConfigHelper;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
@@ -36,14 +41,11 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
+import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
-
-import static java.util.concurrent.TimeUnit.MICROSECONDS;
+import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 
 /**
  * @author Joost van de Wijgerd
@@ -59,17 +61,22 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
     private final MessageHandlerEventListener messageHandlerEventListener;
     private final Measurement measurement;
     private final ActorStateUpdateProcessor actorStateUpdateProcessor;
-    private final Long serializationWarnThreshold;
+    protected final MetricsSettings metricsSettings;
+    protected final LoggingSettings loggingSettings;
+    protected Class<?> unwrappedMessageClass;
 
-    protected ActorLifecycleTask(ActorStateUpdateProcessor actorStateUpdateProcessor,
-                                 PersistentActorRepository persistentActorRepository,
-                                 PersistentActor persistentActor,
-                                 InternalActorSystem actorSystem,
-                                 ElasticActor receiver,
-                                 ActorRef receiverRef,
-                                 MessageHandlerEventListener messageHandlerEventListener,
-                                 InternalMessage internalMessage,
-                                 Long serializationWarnThreshold) {
+    protected ActorLifecycleTask(
+        ActorStateUpdateProcessor actorStateUpdateProcessor,
+        PersistentActorRepository persistentActorRepository,
+        PersistentActor persistentActor,
+        InternalActorSystem actorSystem,
+        ElasticActor receiver,
+        ActorRef receiverRef,
+        MessageHandlerEventListener messageHandlerEventListener,
+        InternalMessage internalMessage,
+        MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings)
+    {
         this.actorStateUpdateProcessor = actorStateUpdateProcessor;
         this.persistentActorRepository = persistentActorRepository;
         this.receiverRef = receiverRef;
@@ -78,8 +85,18 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         this.receiver = receiver;
         this.messageHandlerEventListener = messageHandlerEventListener;
         this.internalMessage = internalMessage;
-        this.serializationWarnThreshold = serializationWarnThreshold;
-        this.measurement = this.serializationWarnThreshold == null ? null : new Measurement(System.nanoTime());
+        this.metricsSettings = metricsSettings != null ? metricsSettings : MetricsSettings.disabled();
+        this.loggingSettings = loggingSettings != null ? loggingSettings : LoggingSettings.disabled();
+        this.measurement = isMeasurementEnabled() ? new Measurement(System.nanoTime()) : null;
+    }
+
+    private boolean isMeasurementEnabled() {
+        return MessageLogger.isMeasurementEnabled(
+            internalMessage,
+            metricsSettings,
+            loggingSettings,
+            this::unwrapMessageClass
+        );
     }
 
     @Override
@@ -95,6 +112,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
     }
 
     private void runInContext() {
+        checkDeliveryThresholdExceeded();
         // measure start of the execution
         if(this.measurement != null) {
             this.measurement.setExecutionStart(System.nanoTime());
@@ -114,7 +132,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             // reset the serialization context
             SerializationContext.reset();
             // clear the state from the thread
-            InternalActorContext.getAndClearContext();
+            InternalActorContext.clearContext();
             // marks the end of the execution path
             if(this.measurement != null) {
                 this.measurement.setExecutionEnd(System.nanoTime());
@@ -135,12 +153,18 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                             // it's an incoming message so the messageClass in the internal message is what we need
                             // to support multiple internal message handling protocols (such as the reactive streams protocol)
                             // we need to unwrap here to find the actual message
-                            unwrapMessageClass(internalMessage).ifPresent(messageClass ->
-                                    actorStateUpdateProcessor.process(null, messageClass, persistentActor));
+                            Class messageClass = unwrapMessageClass(internalMessage);
+                            if (messageClass != null) {
+                                actorStateUpdateProcessor.process(
+                                    null,
+                                    messageClass,
+                                    persistentActor
+                                );
+                            }
                         }
                     }
                 } catch (Exception e) {
-                    log.error("Exception while serializing ActorState for actor [{}]", receiverRef.getActorId(), e);
+                    log.error("Exception while serializing ActorState for actor [{}]", receiverRef, e);
                 } finally {
                     // always ensure we release the memory of the serialized state
                      persistentActor.setSerializedState(null);
@@ -162,14 +186,83 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             }
             // do some trace logging
             if(this.measurement != null) {
-                // @todo: commenting this out for now, as in a real life scenario it would just spam the logs
-                //log.trace("({}) Message of type [{}] with id [{}] for actor [{}] took {} microsecs in queue, {} microsecs to execute, {} microsecs to serialize and {} microsecs to ack (state update {})",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId() : "null",receiverRef.getActorId(),measurement.getQueueDuration(MICROSECONDS),measurement.getExecutionDuration(MICROSECONDS),measurement.getSerializationDuration(MICROSECONDS),measurement.getAckDuration(MICROSECONDS),measurement.isSerialized());
-
-                if (serializationWarnThreshold != null && this.measurement.getSerializationDuration(TimeUnit.MICROSECONDS) > serializationWarnThreshold) {
-                    log.warn("({}) Message of type [{}] with id [{}] triggered serialization for actor [{}] which took {} microsecs to complete",this.getClass().getSimpleName(),(internalMessage != null) ? internalMessage.getPayloadClass() : "null",(internalMessage != null) ? internalMessage.getId() : "null",receiverRef.getActorId(),measurement.getSerializationDuration(MICROSECONDS));
-                }
+                logMessageTimingInformationForTraces();
+                logMessageTimingInformation();
+                checkSerializationThresholdExceeded();
+                checkMessageHandlingThresholdExceeded();
             }
         }
+    }
+
+    protected void logMessageContents(Object message) {
+        MessageLogger.logMessageContents(
+            internalMessage,
+            actorSystem,
+            message,
+            loggingSettings,
+            receiver,
+            receiverRef,
+            this::unwrapMessageClass
+        );
+    }
+
+    private void logMessageTimingInformation() {
+        MessageLogger.logMessageTimingInformation(
+            internalMessage,
+            loggingSettings,
+            measurement,
+            receiver,
+            receiverRef,
+            this::unwrapMessageClass
+        );
+    }
+
+    private void logMessageTimingInformationForTraces() {
+        MessageLogger.logMessageTimingInformationForTraces(
+            this.getClass(),
+            internalMessage,
+            measurement,
+            receiver,
+            receiverRef
+        );
+    }
+
+    private void checkMessageHandlingThresholdExceeded() {
+        MessageLogger.checkMessageHandlingThresholdExceeded(
+            this.getClass(),
+            internalMessage,
+            actorSystem,
+            metricsSettings,
+            measurement,
+            receiver,
+            receiverRef,
+            this::unwrapMessageClass
+        );
+    }
+
+    private void checkSerializationThresholdExceeded() {
+        MessageLogger.checkSerializationThresholdExceeded(
+            this.getClass(),
+            internalMessage,
+            actorSystem,
+            metricsSettings,
+            measurement,
+            receiver,
+            receiverRef,
+            this::unwrapMessageClass
+        );
+    }
+
+    private void checkDeliveryThresholdExceeded() {
+        MessageLogger.checkDeliveryThresholdExceeded(
+            this.getClass(),
+            internalMessage,
+            actorSystem,
+            metricsSettings,
+            receiver,
+            receiverRef,
+            this::unwrapMessageClass
+        );
     }
 
     protected abstract boolean doInActorContext(InternalActorSystem actorSystem,
@@ -199,48 +292,43 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
     }
 
     public static boolean shouldUpdateState(ElasticActor elasticActor,ActorLifecycleStep lifecycleStep) {
-        if(PersistenceAdvisor.class.isAssignableFrom(elasticActor.getClass())) {
+        if (elasticActor instanceof PersistenceAdvisor) {
             return ((PersistenceAdvisor)elasticActor).shouldUpdateState(lifecycleStep);
         } else {
             PersistenceConfig persistenceConfig = elasticActor.getClass().getAnnotation(PersistenceConfig.class);
-            return persistenceConfig == null || Arrays.asList(persistenceConfig.persistOn()).contains(lifecycleStep);
+            return PersistenceConfigHelper.shouldUpdateState(persistenceConfig,lifecycleStep);
         }
     }
 
     public static boolean shouldUpdateState(ElasticActor elasticActor, Object message) {
-        if(PersistenceAdvisor.class.isAssignableFrom(elasticActor.getClass())) {
+        if (elasticActor instanceof PersistenceAdvisor) {
             return ((PersistenceAdvisor)elasticActor).shouldUpdateState(message);
         } else {
             // look at the annotation on the actor class
             PersistenceConfig persistenceConfig = elasticActor.getClass().getAnnotation(PersistenceConfig.class);
-            if (persistenceConfig != null) {
-                // look for not excluded when persist all is on
-                if(persistenceConfig.persistOnMessages()) {
-                    return !Arrays.asList(persistenceConfig.excluded()).contains(message.getClass());
-                } else {
-                    // look for included otherwise
-                    return Arrays.asList(persistenceConfig.included()).contains(message.getClass());
-                }
-            } else {
-                return true;
-            }
+            return PersistenceConfigHelper.shouldUpdateState(persistenceConfig,message);
         }
     }
 
     /**
-     * Return the actual message class that is being handled. By default this method will return
+     * Return the actual message class that is being handled. By default, this method will return
      * {@link InternalMessage#getPayloadClass()} but it can be overridden to support other protocols
      * that wrap the ultimate message being delivered.
      *
      * @param internalMessage the internal representation of this message
-     * @return the actual message class that is being handled, empty if it cannot be resolved
+     * @return the actual message class that is being handled, null if it cannot be resolved
      */
-    protected Optional<Class> unwrapMessageClass(InternalMessage internalMessage) {
+    @Nullable
+    protected Class unwrapMessageClass(InternalMessage internalMessage) {
         try {
-            return Optional.of(Class.forName(internalMessage.getPayloadClass()));
+            if (unwrappedMessageClass == null) {
+                unwrappedMessageClass = getClassHelper().forName(internalMessage.getPayloadClass());
+            }
+            return unwrappedMessageClass;
         } catch (ClassNotFoundException e) {
             log.error("Class [{}] not found", internalMessage.getPayloadClass());
-            return Optional.empty();
+            return null;
         }
     }
+
 }

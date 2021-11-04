@@ -133,6 +133,11 @@
             </dependency>
             <dependency>
                 <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
+                <artifactId>elasticactors-caching</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>indexing-elasticsearch</artifactId>
                 <version>${project.version}</version>
             </dependency>

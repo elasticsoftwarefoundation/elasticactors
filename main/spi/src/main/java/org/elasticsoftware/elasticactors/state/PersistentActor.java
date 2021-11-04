@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.StringJoiner;
 
 /**
  * @author Joost van de Wijgerd
@@ -282,4 +283,11 @@ public final class PersistentActor<K> implements ActorContext, ProcessorContext 
                 .getActorStateSerializer(this.actorState).serialize(this.actorState);
     }
 
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", PersistentActor.class.getSimpleName() + "{", "}")
+            .add("actorClass='" + actorClass.getName() + "'")
+            .add("ref='" + ref + "'")
+            .toString();
+    }
 }

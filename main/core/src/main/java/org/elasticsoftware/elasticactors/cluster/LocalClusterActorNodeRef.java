@@ -42,19 +42,15 @@ public final class LocalClusterActorNodeRef extends BaseActorRef implements Acto
 
     public static String generateRefSpec(String clusterName, ActorNode node,String actorId) {
         if(actorId != null) {
-            return String.format("actor://%s/%s/nodes/%s/%s",
-                    clusterName,node.getKey().getActorSystemName(),
-                    node.getKey().getNodeId(),actorId);
+            return "actor://" + clusterName + "/" + node.getKey().getActorSystemName() + "/nodes/" + node.getKey().getNodeId() + "/" + actorId;
         } else {
-            return String.format("actor://%s/%s/nodes/%s",
-                    clusterName,node.getKey().getActorSystemName(),
-                    node.getKey().getNodeId());
+            return "actor://" + clusterName + "/" + node.getKey().getActorSystemName() + "/nodes/" + node.getKey().getNodeId();
         }
     }
 
     @Override
     public String getActorPath() {
-        return String.format("%s/nodes/%s",node.getKey().getActorSystemName(),node.getKey().getNodeId());
+        return node.getKey().getActorSystemName() + "/nodes/" + node.getKey().getNodeId();
     }
 
     @Override

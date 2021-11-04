@@ -20,15 +20,11 @@ package org.elasticsoftware.elasticactors;
  * @author Joost van de Wijgerd
  */
 public class TestActorContextHolder extends ActorContextHolder {
-    public static ActorContext setContext(ActorContext context) {
-        final ActorContext currentContext = threadContext.get();
+    public static void setContext(ActorContext context) {
         threadContext.set(context);
-        return currentContext;
     }
 
-    public static ActorContext getAndClearContext() {
-        ActorContext state = threadContext.get();
+    public static void clearContext() {
         threadContext.remove();
-        return state;
     }
 }

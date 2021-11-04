@@ -36,6 +36,8 @@ public final class TestActorSystem {
     //public static final String CONFIGURATION_BASEPACKAGE = "org.elasticsoftware.elasticactors.test.configuration";
 
     private AnnotationConfigApplicationContext applicationContext;
+    private ActorSystem actorSystem;
+    private RemoteActorSystems remoteActorSystems;
 
     private final Class customConfigurationClass;
 
@@ -48,7 +50,10 @@ public final class TestActorSystem {
     }
 
     public ActorSystem getActorSystem() {
-        return applicationContext.getBean("internalActorSystem", ActorSystem.class);
+        if (actorSystem == null) {
+            actorSystem = applicationContext.getBean("internalActorSystem", ActorSystem.class);
+        }
+        return actorSystem;
     }
 
     public ActorSystem getActorSystem(String name) {
@@ -56,7 +61,10 @@ public final class TestActorSystem {
     }
 
     public ActorSystem getRemoteActorSystem() {
-        return applicationContext.getBean(RemoteActorSystems.class).get("testCluster", "test");
+        if (remoteActorSystems == null) {
+            remoteActorSystems = applicationContext.getBean(RemoteActorSystems.class);
+        }
+        return remoteActorSystems.get("testCluster", "test");
     }
 
     @PostConstruct

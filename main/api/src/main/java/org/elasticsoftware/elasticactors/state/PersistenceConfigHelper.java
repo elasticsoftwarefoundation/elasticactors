@@ -16,8 +16,6 @@
 
 package org.elasticsoftware.elasticactors.state;
 
-import java.util.Arrays;
-
 /**
  * @author Joost van de Wijgerd
  */
@@ -28,17 +26,26 @@ public final class PersistenceConfigHelper {
         if (persistenceConfig != null) {
             // look for not excluded when persist all is on
             if(persistenceConfig.persistOnMessages()) {
-                return !Arrays.asList(persistenceConfig.excluded()).contains(message.getClass());
+                return !contains(persistenceConfig.excluded(), message.getClass());
             } else {
                 // look for included otherwise
-                return Arrays.asList(persistenceConfig.included()).contains(message.getClass());
+                return contains(persistenceConfig.included(), message.getClass());
             }
         } else {
             return true;
         }
     }
 
+    private static <T> boolean contains(T[] array, T object) {
+        for (T currentObject : array) {
+            if (currentObject.equals(object)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean shouldUpdateState(PersistenceConfig persistenceConfig,ActorLifecycleStep lifecycleStep) {
-        return persistenceConfig == null || Arrays.asList(persistenceConfig.persistOn()).contains(lifecycleStep);
+        return persistenceConfig == null || contains(persistenceConfig.persistOn(), lifecycleStep);
     }
 }

@@ -235,7 +235,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
             this.messageHandler = messageHandler;
             this.listener = listener;
             this.logger = logger;
-            this.startTime = System.currentTimeMillis();
+            this.startTime = logger.isTraceEnabled() ? System.nanoTime() : 0L;
         }
 
         @Override
@@ -253,10 +253,18 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
             } catch(Exception e) {
                 logger.error("Unexpected exception on #handleMessage",e);
             } finally {
-                if(logger.isTraceEnabled()) {
-                    long endTime = System.currentTimeMillis();
-                    if(message != null) {
-                        logger.trace("(rabbit) Message of type [{}] with id [{}] took {} msecs to execute on queue [{}]", message.getPayloadClass(), message.getId(), endTime - startTime, queueName);
+                if (logger.isTraceEnabled()) {
+                    final long duration =
+                        TimeUnit.NANOSECONDS.toMicros(System.nanoTime() - startTime);
+                    if (message != null) {
+                        logger.trace(
+                            "(rabbit) Message of type [{}] with id [{}] took {} microsecs to "
+                                + "execute on queue [{}]",
+                            message.getPayloadClass(),
+                            message.getId(),
+                            duration,
+                            queueName
+                        );
                     }
                 }
             }
@@ -296,7 +304,7 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
             this.messageHandler = messageHandler;
             this.listener = listener;
             this.logger = logger;
-            this.startTime = System.currentTimeMillis();
+            this.startTime = logger.isTraceEnabled() ? System.nanoTime() : 0L;
         }
 
         @Override
@@ -312,8 +320,15 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
                 logger.error("Unexpected exception on #handleMessage",e);
             } finally {
                 if(logger.isTraceEnabled()) {
-                    long endTime = System.currentTimeMillis();
-                    logger.trace("(local) Message of type [{}] with id [{}] took {} msecs to execute on queue [{}]",message.getPayloadClass(),message.getId(), endTime-startTime,queueName);
+                    long endTime = System.nanoTime();
+                    logger.trace(
+                        "(local) Message of type [{}] with id [{}] took {} microsecs to execute "
+                            + "on queue [{}]",
+                        message.getPayloadClass(),
+                        message.getId(),
+                        (endTime - startTime) / 1000L,
+                        queueName
+                    );
                 }
             }
         }

@@ -50,26 +50,30 @@ public abstract class MessagingContextManager {
         @Nullable
         CreationContext getCreationContext();
 
+        @Nullable
+        CreationContext creationContextFromScope();
+
+        @Nullable
+        MessageHandlingContext getMessageHandlingContext();
+
+        @Nullable
+        Method getMethod();
+
         boolean isClosed();
 
         @Override
         void close();
     }
 
-    @Nullable
-    public abstract TraceContext currentTraceContext();
+    public abstract boolean isTracingEnabled();
 
+    /**
+     * Retrieves the current context for the current thread.
+     * The implementations will likely use a ThreadLocal for this.
+     * It's therefore recommended to only call this method once and reuse the object as much as possible.
+     */
     @Nullable
-    public abstract MessageHandlingContext currentMessageHandlingContext();
-
-    @Nullable
-    public abstract CreationContext currentCreationContext();
-
-    @Nullable
-    public abstract CreationContext creationContextFromScope();
-
-    @Nullable
-    public abstract Method currentMethodContext();
+    public abstract MessagingScope currentScope();
 
     @Nonnull
     public abstract MessagingScope enter(
@@ -100,19 +104,29 @@ public abstract class MessagingContextManager {
                 return Optional.of(ServiceLoader.load(MessagingContextManager.class))
                         .map(ServiceLoader::iterator)
                         .filter(Iterator::hasNext)
-                        .map(Iterator::next)
+                        .map(MessagingContextManagerHolder::loadFirst)
                         .orElseGet(() -> {
                             logger.warn(
                                     "No implementations of MessagingContextManager were found. "
-                                            + "Falling back to no-op.");
+                                            + "Falling back to no-op. Tracing disabled.");
                             return new NoopMessagingContextManager();
                         });
             } catch (Exception e) {
                 logger.error(
                         "Exception thrown while loading MessagingContextManager implementation. "
-                                + "Falling back to no-op.", e);
+                                + "Falling back to no-op. Tracing disabled.", e);
                 return new NoopMessagingContextManager();
             }
+        }
+
+        private static MessagingContextManager loadFirst(Iterator<MessagingContextManager> iter) {
+            MessagingContextManager service = iter.next();
+            logger.info(
+                "Loaded MessagingContextManager implementation: {}. Tracing enabled: {}",
+                service.getClass().getName(),
+                service.isTracingEnabled()
+            );
+            return service;
         }
     }
 
@@ -121,33 +135,14 @@ public abstract class MessagingContextManager {
      */
     private final static class NoopMessagingContextManager extends MessagingContextManager {
 
-        @Nullable
         @Override
-        public TraceContext currentTraceContext() {
-            return null;
+        public boolean isTracingEnabled() {
+            return false;
         }
 
         @Nullable
         @Override
-        public MessageHandlingContext currentMessageHandlingContext() {
-            return null;
-        }
-
-        @Nullable
-        @Override
-        public CreationContext currentCreationContext() {
-            return null;
-        }
-
-        @Nullable
-        @Override
-        public CreationContext creationContextFromScope() {
-            return null;
-        }
-
-        @Nullable
-        @Override
-        public Method currentMethodContext() {
+        public MessagingScope currentScope() {
             return null;
         }
 

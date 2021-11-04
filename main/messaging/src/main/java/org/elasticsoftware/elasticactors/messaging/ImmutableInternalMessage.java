@@ -122,12 +122,14 @@ public final class ImmutableInternalMessage extends AbstractTracedMessage
         return receivers;
     }
 
+    @Override
     public UUID getId() {
         return id;
     }
 
+    @Override
     public ByteBuffer getPayload() {
-        return payload;
+        return payload != null ? payload.asReadOnlyBuffer() : null;
     }
 
     @Override
@@ -153,6 +155,11 @@ public final class ImmutableInternalMessage extends AbstractTracedMessage
     @Override
     public int getTimeout() {
         return timeout;
+    }
+
+    @Override
+    public boolean hasSerializedPayload() {
+        return payload != null;
     }
 
     @Override

@@ -21,7 +21,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.Message;
 
-@Message(serializationFramework = JacksonSerializationFramework.class, immutable = true)
+import static org.elasticsoftware.elasticactors.serialization.Message.LogFeature.CONTENTS;
+import static org.elasticsoftware.elasticactors.serialization.Message.LogFeature.TIMING;
+
+@Message(
+    serializationFramework = JacksonSerializationFramework.class,
+    immutable = true,
+    logBodyOnError = true,
+    logOnReceive = {TIMING, CONTENTS})
 public class SetActorName {
 
     private final String newName;

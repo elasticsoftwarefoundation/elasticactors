@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors;
 
-import org.elasticsoftware.elasticactors.serialization.MessageToStringSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -133,53 +132,5 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
 
     protected final Map<String, Set<ActorRef>> getSubscribers() {
         return ActorContextHolder.getSubscribers();
-    }
-
-    /**
-     * Safely serializes the contents of a message to a String
-     *
-     * @param message the message object
-     * @return the message object serialized to a String, or {@code null} if a {@link MessageToStringSerializer} is not set or an error occurs
-     */
-    protected final String serializeToString(T message) {
-        MessageToStringSerializer<T> messageToStringSerializer =
-                currentMessageToStringSerializer.get();
-        if (messageToStringSerializer == null) {
-            return null;
-        }
-        try {
-            return messageToStringSerializer.serialize(message);
-        } catch (Exception e) {
-            logger.error(
-                    "Exception thrown while serializing message of type [{}] to String",
-                    message.getClass().getName(),
-                    e);
-            return null;
-        }
-    }
-
-    private final ThreadLocal<MessageToStringSerializer<T>> currentMessageToStringSerializer =
-            new ThreadLocal<>();
-
-    /**
-     * Internal implementation of {@link ElasticActor#onReceive} to enable logging offending
-     * messages when an unexpected exception occurs
-     *
-     * @param sender the sender of the message (as passed in {@link ActorRef#tell(Object, ActorRef)})
-     * @param message the message object
-     * @param messageToStringSerializer the serialized to use for serializing this message
-     * @throws Exception when something unexpected happens
-     */
-    public final void onReceive(
-            ActorRef sender,
-            T message,
-            @Nullable MessageToStringSerializer<T> messageToStringSerializer)
-            throws Exception {
-        try {
-            currentMessageToStringSerializer.set(messageToStringSerializer);
-            onReceive(sender, message);
-        } finally {
-            currentMessageToStringSerializer.remove();
-        }
     }
 }

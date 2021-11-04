@@ -24,7 +24,10 @@ import org.elasticsoftware.elasticactors.serialization.Message;
 /**
  * @author Joost van de Wijgerd
  */
-@Message(serializationFramework = JacksonSerializationFramework.class,durable = true)
+@Message(
+    serializationFramework = JacksonSerializationFramework.class,
+    durable = true,
+    logBodyOnError = true)
 public class Greeting {
     private final String who;
 

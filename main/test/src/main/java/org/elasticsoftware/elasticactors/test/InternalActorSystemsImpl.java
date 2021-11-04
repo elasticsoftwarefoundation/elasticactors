@@ -53,6 +53,7 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
     private final ClusterService clusterService;
     private final PhysicalNode localNode;
     private final ActorRefTools actorRefTools;
+    private InternalActorSystem internalActorSystem;
 
     public InternalActorSystemsImpl(ApplicationContext applicationContext,
                                     ClusterService clusterService,
@@ -100,7 +101,10 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
 
     @Override
     public InternalActorSystem get(String name) {
-        return applicationContext.getBean(InternalActorSystem.class);
+        if (internalActorSystem == null) {
+            internalActorSystem = applicationContext.getBean(InternalActorSystem.class);
+        }
+        return internalActorSystem;
     }
 
     @Override

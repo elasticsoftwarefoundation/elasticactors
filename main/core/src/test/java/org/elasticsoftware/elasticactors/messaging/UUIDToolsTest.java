@@ -16,6 +16,8 @@
 
 package org.elasticsoftware.elasticactors.messaging;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import java.util.UUID;
@@ -26,6 +28,7 @@ import static org.testng.Assert.assertEquals;
  * @author Joost van de Wijgerd
  */
 public class UUIDToolsTest {
+    private final static Logger logger = LoggerFactory.getLogger(UUIDToolsTest.class);
     @Test
     public void testTimeBasedUUID() {
         UUID uuid = UUIDTools.createTimeBasedUUID();
@@ -43,11 +46,14 @@ public class UUIDToolsTest {
         }
         // now time
         long startTime = System.nanoTime();
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 10_000; i++) {
             UUIDTools.createTimeBasedUUID();
         }
         long runningTime = System.nanoTime() - startTime;
         //
-        System.out.println("New implementation took "+runningTime/10000+" nanos per invocation");
+        logger.info(
+            "New implementation took an average of {} nanos per invocation",
+            runningTime / 10_000
+        );
     }
 }

@@ -38,15 +38,15 @@ public final class DisconnectedPartitionedActorNodeRef extends BaseDisconnectedA
 
     public static String generateRefSpec(String clusterName, String actorSystemName, String nodeId, int partition, String actorId) {
         if(actorId != null) {
-            return format("actor://%s/%s/nodes/%s/%d/%s", clusterName, actorSystemName, nodeId, partition, actorId);
+            return "actor://" + clusterName + "/" + actorSystemName + "/nodes/" + nodeId + "/" + partition + "/" + actorId;
         } else {
-            return format("actor://%s/%s/nodes/%s/%d", clusterName, actorSystemName, nodeId, partition);
+            return "actor://" + clusterName + "/" + actorSystemName + "/nodes/" + nodeId + "/" + partition;
         }
     }
 
     @Override
     public String getActorPath() {
-        return format("%s/nodes/%s/%d", actorSystemName, nodeId, partition);
+        return actorSystemName + "/nodes/" + nodeId + "/" + partition;
     }
 
     @Override

@@ -29,6 +29,8 @@ import org.elasticsoftware.elasticactors.util.SerializationTools;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -60,7 +62,7 @@ public final class CreateActorMessageDeserializer implements MessageDeserializer
         try {
             return SerializationTools.deserializeActorState(
                     serializationFrameworks,
-                    (Class<? extends ElasticActor>) Class.forName(actorClass),
+                    (Class<? extends ElasticActor>) getClassHelper().forName(actorClass),
                     serializedState);
         } catch (ClassNotFoundException e) {
             throw new IOException(e);
