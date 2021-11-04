@@ -58,9 +58,5 @@ public class HashingNodeSelectorTest {
         assertEquals(node5.getId(),"3bf98a1a-3c43-4d90-86d3-20c8f22d96c0");
         assertEquals(node6.getId(),"45a3fad3-c823-42f9-b0e5-90370b232698");
         assertEquals(node7.getId(),"45a3fad3-c823-42f9-b0e5-90370b232698");
-
-
-
-
     }
 }
