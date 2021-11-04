@@ -2,5 +2,5 @@
 name: test
 shards: 8
 #shards: 128
-queuesPerNode: 8
-queuesPerShard: 2
+#queuesPerNode: 8
+#queuesPerShard: 2

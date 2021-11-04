@@ -43,6 +43,8 @@ import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
@@ -51,6 +53,8 @@ import java.util.Collection;
 
 public final class RemoteActorSystemInstance
         implements ActorSystem, ShardAccessor, SerializationAccessor {
+
+    private final static Logger logger = LoggerFactory.getLogger(RemoteActorSystemInstance.class);
 
     private final RemoteActorSystemConfiguration configuration;
     private final ActorShard[] shards;
@@ -190,6 +194,11 @@ public final class RemoteActorSystemInstance
 
     @PostConstruct
     public void init() throws Exception {
+        logger.info(
+            "Initializing Remote Actor System [{}/{}]",
+            configuration.getClusterName(),
+            configuration.getName()
+        );
         for (int i = 0; i < shards.length; i++) {
             this.shards[i] = new RemoteActorShard(
                     configuration,
@@ -204,6 +213,11 @@ public final class RemoteActorSystemInstance
 
     @PreDestroy
     public void destroy() {
+        logger.info(
+            "Destroying Remote Actor System [{}/{}]",
+            configuration.getClusterName(),
+            configuration.getName()
+        );
         for (ActorShard shard : shards) {
             shard.destroy();
         }

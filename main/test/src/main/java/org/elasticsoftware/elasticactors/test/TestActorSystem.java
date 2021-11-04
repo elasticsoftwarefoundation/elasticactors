@@ -23,6 +23,8 @@ import org.elasticsoftware.elasticactors.runtime.ScannerHelper;
 import org.elasticsoftware.elasticactors.spring.ActorAnnotationBeanNameGenerator;
 import org.elasticsoftware.elasticactors.spring.AnnotationConfigApplicationContext;
 import org.elasticsoftware.elasticactors.test.configuration.TestConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Component;
 
@@ -33,6 +35,9 @@ import javax.annotation.PreDestroy;
  * @author Joost van de Wijgerd
  */
 public final class TestActorSystem {
+
+    private final static Logger logger = LoggerFactory.getLogger(TestActorSystem.class);
+
     //public static final String CONFIGURATION_BASEPACKAGE = "org.elasticsoftware.elasticactors.test.configuration";
 
     private AnnotationConfigApplicationContext applicationContext;
@@ -69,6 +74,7 @@ public final class TestActorSystem {
 
     @PostConstruct
     public void initialize() {
+        logger.info("Starting up Test Actor System");
         // annotation configuration context
         applicationContext = new AnnotationConfigApplicationContext();
         // set the correct configurations
@@ -101,12 +107,13 @@ public final class TestActorSystem {
     @PreDestroy
     public void destroy() {
         try {
+            logger.info("Shutting down Test Actor System");
             // give the system some time to clean up
             Thread.sleep(1000);
         } catch(InterruptedException e) {
             // ignore
         } finally {
-            applicationContext.destroy();
+            applicationContext.close();
         }
     }
 }

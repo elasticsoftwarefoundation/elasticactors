@@ -107,12 +107,14 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
 
     @Override
     public synchronized void init() throws Exception {
+        logger.info("Initializing Local Actor Node [{}]", nodeKey);
         this.actorCache = actorCacheManager.create(nodeKey,this);
         super.init();
     }
 
     @Override
     public void destroy() {
+        logger.info("Destroying Local Actor Node [{}]", nodeKey);
         super.destroy();
         actorCacheManager.destroy(actorCache);
     }

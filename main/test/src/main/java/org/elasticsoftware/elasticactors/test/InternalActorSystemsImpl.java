@@ -39,6 +39,8 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SystemDeserializers;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializers;
 import org.elasticsoftware.elasticactors.util.ManifestTools;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.PreDestroy;
@@ -49,6 +51,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Joost van de Wijgerd
  */
 public final class InternalActorSystemsImpl implements InternalActorSystems, ActorRefFactory {
+
+    private final static Logger logger = LoggerFactory.getLogger(InternalActorSystemsImpl.class);
+
     private final SystemSerializers systemSerializers = new MessagingSystemSerializers(this);
     private final SystemDeserializers systemDeserializers = new MessagingSystemDeserializers(this,this);
     private final Map<Class<? extends SerializationFramework>,SerializationFramework> serializationFrameworks = new ConcurrentHashMap<>();

@@ -123,7 +123,7 @@ public abstract class MessagingContextManager {
         private static MessagingContextManager loadFirst(Iterator<MessagingContextManager> iter) {
             MessagingContextManager service = iter.next();
             logger.info(
-                "Loaded MessagingContextManager implementation: {}. Tracing enabled: {}",
+                "Loaded MessagingContextManager implementation [{}]. Tracing enabled: {}",
                 service.getClass().getName(),
                 service.isTracingEnabled()
             );

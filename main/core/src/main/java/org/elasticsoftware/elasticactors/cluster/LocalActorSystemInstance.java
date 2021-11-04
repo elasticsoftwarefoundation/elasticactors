@@ -163,6 +163,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
 
     @Override
     public void shutdown() {
+        logger.info("Shutting down ActorSystem [{}]", getName());
         // The Messaging subsystem is closed before this instance
         // Need to sort out the order
         /*

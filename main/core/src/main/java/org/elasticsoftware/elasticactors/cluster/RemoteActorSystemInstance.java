@@ -33,6 +33,8 @@ import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -41,7 +43,10 @@ import java.util.Collection;
 /**
  * @author Joost van de Wijgerd
  */
-public final class  RemoteActorSystemInstance implements ActorSystem, ShardAccessor {
+public final class RemoteActorSystemInstance implements ActorSystem, ShardAccessor {
+
+    private static final Logger logger = LoggerFactory.getLogger(RemoteActorSystemInstance.class);
+
     private final Hasher actorShardHasher;
     private final RemoteActorSystemConfiguration configuration;
     private final InternalActorSystems localActorSystems;
@@ -60,6 +65,11 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
 
     @PostConstruct
     public void init() throws Exception {
+        logger.info(
+            "Initializing Remote Actor System [{}/{}]",
+            configuration.getClusterName(),
+            configuration.getName()
+        );
         for (int i = 0; i < shards.length; i++) {
             shards[i] = new RemoteActorSystemActorShard(
                 localActorSystems,
@@ -78,6 +88,11 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
 
     @PreDestroy
     public void destroy() {
+        logger.info(
+            "Destroying Remote Actor System [{}/{}]",
+            configuration.getClusterName(),
+            configuration.getName()
+        );
         for (ActorShard shard : shards) {
             shard.destroy();
         }

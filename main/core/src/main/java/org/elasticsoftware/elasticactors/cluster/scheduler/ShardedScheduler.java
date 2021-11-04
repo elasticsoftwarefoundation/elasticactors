@@ -65,11 +65,13 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
 
     @PostConstruct
     public void init() {
+        logger.info("Initializing Sharded Cluster Scheduler with {} worker threads", numberOfWorkers);
         scheduledExecutorService = Executors.newScheduledThreadPool(numberOfWorkers, new DaemonThreadFactory("SCHEDULER"));
     }
 
     @PreDestroy
     public void destroy() {
+        logger.info("Destroying Sharded Cluster Scheduler");
         scheduledExecutorService.shutdownNow();
     }
 

@@ -34,6 +34,8 @@ import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -42,6 +44,9 @@ import java.util.List;
  */
 
 public final class RemoteActorSystemActorShard implements ActorShard, MessageHandler {
+
+    private final static Logger logger = LoggerFactory.getLogger(RemoteActorSystemActorShard.class);
+
     private static final PhysicalNode UNKNOWN_REMOTE_NODE = new PhysicalNode("UNKNOWN", null, false);
     private final InternalActorSystems actorSystems;
     private final ShardKey shardKey;
@@ -128,11 +133,13 @@ public final class RemoteActorSystemActorShard implements ActorShard, MessageHan
 
     @Override
     public void init() throws Exception {
+        logger.info("Initializing Remote Actor Shard [{}]", shardKey);
         messageQueueProxy.init();
     }
 
     @Override
     public void destroy() {
+        logger.info("Destroying Local Actor Shard [{}]", shardKey);
         messageQueueProxy.destroy();
     }
 

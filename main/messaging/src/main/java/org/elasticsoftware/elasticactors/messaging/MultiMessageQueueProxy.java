@@ -42,7 +42,8 @@ public final class MultiMessageQueueProxy implements MessageQueueProxy {
     @Override
     public synchronized void init() throws Exception {
         logger.info(
-            "Starting up queue proxy for [{}] in Multi-Queue mode with {} queues",
+            "Initializing queue proxy for [{}/{}] in Multi-Queue mode with {} queues",
+            actorRef.getActorCluster(),
             actorRef.getActorPath(),
             messageQueues.length
         );
@@ -58,6 +59,11 @@ public final class MultiMessageQueueProxy implements MessageQueueProxy {
 
     @Override
     public void destroy() {
+        logger.info(
+            "Destroying queue proxy for [{}/{}]",
+            actorRef.getActorCluster(),
+            actorRef.getActorPath()
+        );
         // release all resources
         for (MessageQueue messageQueue : messageQueues) {
             messageQueue.destroy();

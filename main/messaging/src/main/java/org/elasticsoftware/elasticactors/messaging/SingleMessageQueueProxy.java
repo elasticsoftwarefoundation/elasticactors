@@ -43,7 +43,8 @@ public final class SingleMessageQueueProxy implements MessageQueueProxy {
     @Override
     public synchronized void init() throws Exception {
         logger.info(
-            "Starting up queue proxy for [{}] in Single-Queue mode",
+            "Initializing queue proxy for [{}/{}] in in Single-Queue mode",
+            actorRef.getActorCluster(),
             actorRef.getActorPath()
         );
         this.messageQueue = messageQueueFactory.create(actorRef.getActorPath(), messageHandler);
@@ -51,6 +52,11 @@ public final class SingleMessageQueueProxy implements MessageQueueProxy {
 
     @Override
     public void destroy() {
+        logger.info(
+            "Destroying queue proxy for [{}/{}]",
+            actorRef.getActorCluster(),
+            actorRef.getActorPath()
+        );
         // release all resources
         this.messageQueue.destroy();
     }

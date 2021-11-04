@@ -56,7 +56,7 @@ public final class ElasticActorsBootstrapper {
         Runtime.getRuntime().addShutdownHook(new Thread("SHUTDOWN-HOOK") {
             @Override
             public void run() {
-                applicationContext.destroy();
+                applicationContext.close();
             }
         }
         );

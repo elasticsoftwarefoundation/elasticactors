@@ -187,6 +187,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
 
     @PreDestroy
     public void destroy() {
+        logger.info("Shutting down ActorSystem [{}]", getName());
         for (KafkaActorThread shardThread : shardThreads) {
             shardThread.stopRunning();
         }

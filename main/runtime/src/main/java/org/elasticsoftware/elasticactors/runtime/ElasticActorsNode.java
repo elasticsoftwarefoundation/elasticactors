@@ -137,11 +137,12 @@ public final class ElasticActorsNode extends PhysicalNode implements
 
     @PostConstruct
     public void init() throws Exception {
-
+        logger.info("Starting up Elastic Actors");
     }
 
     @PreDestroy
     public void destroy() {
+        logger.info("Stopping Elastic Actors");
         clusterService.reportPlannedShutdown();
         waitLatch.countDown();
     }

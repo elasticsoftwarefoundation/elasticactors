@@ -62,7 +62,7 @@ public abstract class ClassLoadingHelper {
         private static ClassLoadingHelper loadFirst(Iterator<ClassLoadingHelper> iter) {
             ClassLoadingHelper service = iter.next();
             logger.info(
-                "Loaded ClassLoadingHelper implementation: {}. Caching enabled: {}",
+                "Loaded ClassLoadingHelper implementation [{}]. Caching enabled: {}",
                 service.getClass().getName(),
                 service.isCachingEnabled()
             );

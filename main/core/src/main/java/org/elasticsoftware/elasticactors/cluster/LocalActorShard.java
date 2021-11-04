@@ -124,6 +124,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
 
     @Override
     public synchronized void init() throws Exception {
+        logger.info("Initializing Local Actor Shard [{}]", shardKey);
         // create cache
         this.actorCache = actorCacheManager.create(shardKey,this);
         // initialize queue
@@ -132,6 +133,7 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
 
     @Override
     public void destroy() {
+        logger.info("Destroying Local Actor Shard [{}]", shardKey);
         super.destroy();
         actorCacheManager.destroy(actorCache);
     }

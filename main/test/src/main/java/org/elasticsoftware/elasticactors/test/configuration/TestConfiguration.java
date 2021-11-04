@@ -113,7 +113,7 @@ public class TestConfiguration extends AsyncConfigurerSupport {
         return new SystemInitializer(localNode, localActorSystemInstance, clusterService);
     }
 
-    @DependsOn("configuration") @Bean(name = {"internalActorSystem"})
+    @DependsOn("configuration") @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
     public LocalActorSystemInstance createLocalActorSystemInstance(
             InternalActorSystems internalActorSystems,
             InternalActorSystemConfiguration configuration,
