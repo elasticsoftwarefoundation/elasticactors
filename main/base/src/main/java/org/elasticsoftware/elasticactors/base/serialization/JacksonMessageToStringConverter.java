@@ -18,7 +18,6 @@ package org.elasticsoftware.elasticactors.base.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsoftware.elasticactors.serialization.MessageToStringConverter;
-import org.springframework.core.env.Environment;
 
 import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
@@ -30,15 +29,14 @@ public final class JacksonMessageToStringConverter implements MessageToStringCon
     private final int maxLength;
     private final boolean useToStringForTransient;
 
-    public JacksonMessageToStringConverter(ObjectMapper objectMapper, Environment environment) {
+    public JacksonMessageToStringConverter(
+        ObjectMapper objectMapper,
+        int maxLength,
+        boolean useToStringForTransient)
+    {
         this.objectMapper = objectMapper;
-        this.maxLength = environment.getProperty(
-            LOGGING_MAXIMUM_LENGTH_PROPERTY,
-            Integer.class,
-            DEFAULT_MAX_LENGTH
-        );
-        this.useToStringForTransient =
-            environment.getProperty(LOGGING_USE_TO_STRING_PROPERTY, Boolean.class, false);
+        this.maxLength = maxLength;
+        this.useToStringForTransient = useToStringForTransient;
     }
 
     @Override

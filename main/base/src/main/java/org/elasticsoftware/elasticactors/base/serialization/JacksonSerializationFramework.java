@@ -33,6 +33,10 @@ import javax.inject.Named;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import static org.elasticsoftware.elasticactors.serialization.MessageToStringConverter.DEFAULT_MAX_LENGTH;
+import static org.elasticsoftware.elasticactors.serialization.MessageToStringConverter.LOGGING_MAXIMUM_LENGTH_PROPERTY;
+import static org.elasticsoftware.elasticactors.serialization.MessageToStringConverter.LOGGING_USE_TO_STRING_PROPERTY;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -53,7 +57,15 @@ public final class JacksonSerializationFramework implements SerializationFramewo
             Environment environment) {
         this.objectMapper = objectMapper;
         this.serializer = new JacksonMessageSerializer(objectMapper);
-        this.toStringConverter = new JacksonMessageToStringConverter(objectMapper, environment);
+        this.toStringConverter = new JacksonMessageToStringConverter(
+            objectMapper,
+            environment.getProperty(
+                LOGGING_MAXIMUM_LENGTH_PROPERTY,
+                Integer.class,
+                DEFAULT_MAX_LENGTH
+            ),
+            environment.getProperty(LOGGING_USE_TO_STRING_PROPERTY, Boolean.class, false)
+        );
         this.actorStateSerializer = new JacksonActorStateSerializer(objectMapper);
         this.actorStateDeserializer = new JacksonActorStateDeserializer(objectMapper);
     }
