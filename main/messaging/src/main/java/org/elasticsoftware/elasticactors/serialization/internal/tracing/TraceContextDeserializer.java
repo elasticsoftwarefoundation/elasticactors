@@ -18,7 +18,8 @@ public final class TraceContextDeserializer {
             traceContext.hasSpanId() ? traceContext.getSpanId() : "",
             traceContext.hasTraceId() ? traceContext.getTraceId() : "",
             traceContext.hasParentId() ? traceContext.getParentId() : null,
-            baggage != null && !baggage.isEmpty() ? baggage : null
+            baggage.isEmpty() ? null : baggage,
+            true
         );
         return deserialized.isEmpty() ? null : deserialized;
     }

@@ -326,31 +326,32 @@ public final class TracingMessagingContextManager extends MessagingContextManage
         try {
             Map<String, String> oldBaggage = current != null ? current.getBaggage() : null;
             Map<String, String> nextBaggage = next != null ? next.getBaggage() : null;
-            if (oldBaggage != null) {
-                for (Map.Entry<String, String> oldEntry : oldBaggage.entrySet()) {
-                    String key = oldEntry.getKey();
-                    String value = oldEntry.getValue();
-                    String nextValue = nextBaggage != null ? nextBaggage.get(key) : null;
+            if (oldBaggage == nextBaggage) {
+                return;
+            }
+            if (oldBaggage == null) {
+                nextBaggage.forEach(TracingMessagingContextManager::putOnMDC);
+            } else if (nextBaggage == null) {
+                oldBaggage.keySet().forEach(key -> putOnMDC(key, null));
+            } else {
+                oldBaggage.forEach((key, value) -> {
+                    String nextValue = nextBaggage.get(key);
                     // Will set the new value if present, and remove it if absent
                     if (!Objects.equals(value, nextValue)) {
                         putOnMDC(key, nextValue);
                     }
-                }
-            }
-            if (nextBaggage != null) {
-                for (Map.Entry<String, String> nextEntry : nextBaggage.entrySet()) {
-                    String key = nextEntry.getKey();
-                    String value = nextEntry.getValue();
-                    String oldValue = oldBaggage != null ? oldBaggage.get(key) : null;
+                });
+                nextBaggage.forEach((key, value) -> {
+                    String oldValue = oldBaggage.get(key);
                     // Would have been processed when processing oldBaggage
                     if (oldValue != null) {
-                        continue;
+                        return;
                     }
                     // Only insert if the old value was null and the new one isn't
                     if (value != null) {
                         putOnMDC(key, value);
                     }
-                }
+                });
             }
         } catch (Exception e) {
             logger.error(
