@@ -86,7 +86,7 @@ import java.util.concurrent.Executor;
         ClientConfiguration.class,
         TracingConfiguration.class
 })
-@PropertySource("classpath:/system.properties")
+@PropertySource(value = "classpath:/system.properties", ignoreResourceNotFound = true)
 public class TestConfiguration extends AsyncConfigurerSupport {
     @Autowired
     private Environment env;
