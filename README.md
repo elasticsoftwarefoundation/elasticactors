@@ -81,9 +81,119 @@ greeter.tell(new Greeting("Joost van de Wijgerd"),null);
 testActorSystem.destroy();
 ```
 
-### Configuration keys
+### Basic configuration
+
+The Actor System can be configured with a minimal YAML configuration file.
+Keys noted with an exclamation point mean they must not be changed after the Actor System has been
+put in production. They affect the communication between actors and changing them will cause
+the system not to communicate properly anymore. 
+
+The Actor System name is used in the formation of the Actor's path.\
+The shard hash seed is used to determine in which shard a persitent actor will be placed.\
+Changing either of them will cause the system not to find existing actors upon restart.
+
+Example: An actor that was in `actor://test.clusterName/test/shards/11/actorId` would now be 
+found in `actor://newName.clusterName/test/shards/23/actorId`. Changing the name would change
+the beginning of the path, causing issues with persisted `ActorRef` objects. Changing the
+shard hashing seed may change the shard in which the actor resides and thus it would not 
+be found anymore.
+
+```yaml
+---
+# The name and number of shards in this Actor System
+name: test
+shards: 8
+
+# Optional keys for performance tuning. 
+# Refer to ActorSystemConfiguration for more details.
+#queuesPerNode: 8
+#queuesPerShard: 2
+#shardHashSeed: 0
+#multiQueueHashSeed: 53
+#shardDistributionHashSeed: 0
+
+# Remote actor systems configuration
+# In order for Actor Systems to communicate with one another, they must know
+# how to find each other and how to map actor IDs to shards and queues on 
+# the other system
+remoteActorSystems:
+  - clusterName: test2.elasticsoftware.org
+    name: default
+    shards: 8
+    #queuesPerShard: 2
+  - clusterName: test3.elasticsoftware.org
+    name: default
+    shards: 8
+    #queuesPerShard: 3
+    
+# Any other objects will be read as properties for a given actor type. 
+# The General format is:
+actor.type:
+  keys: values
+  
+# These are accessible through ActorSystemConfiguration. Example:
+elasticactors.http.actors.HttpService:
+  listenPort: 8080
+elasticactors.test.TestActor:
+  pushConfigurations:
+    - clientId: 123282
+      keystoreResource: classpath:test_1.p12
+      keystorePassword: bladiebla
+    - clientId: 193382
+      keystoreResource: classpath:test_1.p12
+      keystorePassword: bladiebla
+org.elasticsoftware.elasticactors.test.TestActorFullName:
+  pushConfigurations:
+    - clientId: 123282
+      keystoreResource: classpath:test_1.p12
+      keystorePassword: bladiebla
+    - clientId: 193382
+      keystoreResource: classpath:test_1.p12
+      keystorePassword: bladiebla
+```
+
+### Configuration properties
 
 ```properties
+## Basic configuration
+ea.node.config.location=file:/etc/config.yaml
+ea.cluster=cluster.name
+
+## Jackson serialization framework
+ea.base.useAfterburner=true
+
+## Caching and tuning
+ea.nodeCache.maximumSize=10240
+ea.shardCache.maximumSize=10240
+ea.actorRefCache.maximumSize=10240
+ea.actorExecutor.workerCount=32
+ea.actorExecutor.useDisruptor=false
+ea.queueExecutor.workerCount=16
+ea.queueExecutor.useDisruptor=false
+ea.asyncUpdateExecutor.workerCount=10
+ea.asyncUpdateExecutor.batchSize=1
+ea.shardedScheduler.useNonBlockingWorker=true
+
+## K8s clustering library
+ea.cluster.kubernetes.statefulsetName=actor-system-set
+ea.cluster.kubernetes.useDesiredReplicas=false
+
+## RabbitMQ messaging layer
+ea.rabbitmq.hosts=127.0.0.1
+ea.rabbitmq.username=guest
+ea.rabbitmq.password=guest
+ea.rabbitmq.ack=ASYNC
+ea.rabbitmq.threadmodel=cpt
+ea.rabbitmq.prefetchCount=100
+
+## Cassandra backplane
+ea.cassandra.hosts=127.0.0.1
+ea.cassandra.hfactory.manageCluster=false
+ea.persistentActorRepository.compressionThreshold=4096
+
+
+## Metrics and Logging
+
 # Toggles metrics for messages in node queues
 ea.metrics.node.messaging.enabled=false
 
@@ -144,7 +254,44 @@ the following dependency to your build:
 </dependency>
 ```
 
-### Tracing and Log4j2
+### Tracing
+
+Elastic Actors has a distributed tracing implementation based on the [OpenTracing](https://opentracing.io) specification.\
+It supports trace ID propagation and custom baggage, including propagation. 
+
+There is currently no support for exporting traces or span sampling.
+The code is highly optimized, however, and there is little overhead in using it.
+
+Messages also carry data about where they were created.
+
+If in an Actor Context, the actor's type and ID will be used. If not, it's possible to define
+a custom creation context. \
+For example, when receiving a request from a web controller, you
+can set the current creation context which will get injected into any messages sent during the 
+handling of that request.
+
+In order to use distributed tracing, include the following dependency in your project:
+
+```xml
+<dependency>
+    <groupId>
+        <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
+        <artifactId>elasticactors-tracing</artifactId>
+        <scope>compile</scope> <!-- or runtime if you don't need the Spring bits-->
+    </groupId>
+</dependency>
+```
+
+In order to instrument asynchronous executor beans automatically, import `TracingConfiguration` to
+your Spring configuration. This includes a bean post-processor that wraps those facilities in ones
+that can automatically propagate the traces from Elastic Actors.
+
+`MessagingContextManager` is the main class responsible for managing trace context data.\
+It allows you to put a set of trace and creation contexts into scope. It also adds the trace
+and creation contexts, as well as some message handling information, to the logging library's 
+MDC (Mapped Diagnostic Context) through Slf4j. 
+
+#### Performance impact of tracing on applications using Log4j2
 
 If running a web application while using Log4j2 for logging, using tracing can generate
 a big amount of garbage objects due to Log4j2 using a different implementation of the map
