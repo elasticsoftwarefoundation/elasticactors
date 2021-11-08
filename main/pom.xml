@@ -481,6 +481,7 @@
         <module>client-spring-amqp</module>
         <module>client-rabbitmq</module>
         <module>tracing</module>
+        <module>tracing-log4j2</module>
         <module>caching</module>
     </modules>
 
