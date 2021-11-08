@@ -10,9 +10,8 @@ public final class NodeSelectorHasher implements Hasher {
 
     private final HashFunction hashFunction;
 
-    // Using 0 for backwards compatibility, but using a prime number would be better
     public NodeSelectorHasher() {
-        this(0);
+        this(53);
     }
 
     public NodeSelectorHasher(Integer seed) {

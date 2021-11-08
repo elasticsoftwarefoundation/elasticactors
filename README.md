@@ -81,6 +81,16 @@ greeter.tell(new Greeting("Joost van de Wijgerd"),null);
 testActorSystem.destroy();
 ```
 
+### Upgrading Elastic Actors
+
+Unless specified, Elastic Actors versions are backwards compatible at runtime and at the wire level.
+
+The following exceptions apply:
+
+* **1.x - 4.0.x** to **4.1.x** or later:
+  * Changes to the shard-to-node distribution algorithm require the actor system to be completely 
+    destroyed or scaled down to 1 node before deploying the new version.
+
 ### Basic configuration
 
 The Actor System can be configured with a minimal YAML configuration file.
@@ -150,8 +160,8 @@ multiQueueHashSeed: 53
 # to a single node before restarting it.
 # If two running nodes have different values, they might end up listening to the same shard
 # at the same time, which must be avoided.
-# Default: 0
-shardDistributionHashSeed: 0
+# Default: 53
+shardDistributionHashSeed: 53
 
 
 ## Remote actor systems configuration.
@@ -442,8 +452,7 @@ ea.serializationCache.enabled=false
 # Default: false
 ea.deserializationCache.enable=false
 
-# Changes the logging level used when logging unhandled message types in MethodActor
-# this must be entered as a system property. 
+# Changes the logging level used when logging unhandled message types in MethodActor.
 # Default: WARN
 ea.logging.messages.unhandled.level=WARN
 ```

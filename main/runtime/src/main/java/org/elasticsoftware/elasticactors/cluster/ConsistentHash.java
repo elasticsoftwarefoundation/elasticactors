@@ -17,6 +17,8 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.messaging.Hasher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.SortedMap;
@@ -25,6 +27,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public final class ConsistentHash<T> {
+
+    private final static Logger logger = LoggerFactory.getLogger(ConsistentHash.class);
 
     private final Hasher hasher;
     private final int numberOfReplicas;
@@ -56,7 +60,14 @@ public final class ConsistentHash<T> {
 
     private void internalAdd(T node) {
         for (int i = 0; i < numberOfReplicas; i++) {
-            circle.put(hasher.hashStringToLong(node.toString() + i), node);
+            T previous = circle.put(hasher.hashStringToLong(buildReplicaName(node, i)), node);
+            if (previous != null) {
+                logger.warn(
+                    "Detected collision between {} and {}. Distribution might be affected.",
+                    previous,
+                    node
+                );
+            }
         }
     }
 
@@ -72,8 +83,12 @@ public final class ConsistentHash<T> {
 
     private void internalRemove(T node) {
         for (int i = 0; i < numberOfReplicas; i++) {
-            circle.remove(hasher.hashStringToLong(node.toString() + i));
+            circle.remove(hasher.hashStringToLong(buildReplicaName(node, i)));
         }
+    }
+
+    private String buildReplicaName(T node, int i) {
+        return node.toString() + "-" + i;
     }
 
     public T get(String key) {

@@ -292,8 +292,14 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                     // check if the actor exists
                     if(message instanceof CreateActorMessage) {
                         CreateActorMessage createActorMessage = (CreateActorMessage) message;
-                        if(!actorExists(createActorMessage.getActorId())) {
-                            createActor(createActorMessage,internalMessage,messageHandlerEventListener);
+                        ActorRef actorRef = actorSystem.tempActorFor(createActorMessage.getActorId());
+                        if(!actorExists(actorRef)) {
+                            createActor(
+                                actorRef,
+                                createActorMessage,
+                                internalMessage,
+                                messageHandlerEventListener
+                            );
                         } else {
                             // ack message anyway
                             messageHandlerEventListener.onDone(internalMessage);
@@ -334,12 +340,11 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
         }
     }
 
-    private boolean actorExists(String actorId) {
-        return actorCache.getIfPresent(actorId) != null;
+    private boolean actorExists(ActorRef actorRef) {
+        return actorCache.getIfPresent(actorRef) != null;
     }
 
-    private void createActor(CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
-        ActorRef ref = actorSystem.tempActorFor(createMessage.getActorId());
+    private void createActor(ActorRef ref, CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {
         PersistentActor<NodeKey> persistentActor =
             new PersistentActor<>(
                 nodeKey,

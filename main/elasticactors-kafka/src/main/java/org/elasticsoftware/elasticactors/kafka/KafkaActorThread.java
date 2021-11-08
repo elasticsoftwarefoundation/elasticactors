@@ -986,12 +986,12 @@ public final class KafkaActorThread extends Thread {
             // check if the actor exists
             if (message instanceof CreateActorMessage) {
                 CreateActorMessage createActorMessage = (CreateActorMessage) message;
-                if (!managedActorContainer.containsKey(createActorMessage.getActorId())) {
-                    ActorRef ref = internalActorSystem.actorFor(createActorMessage.getActorId());
+                ActorRef ref = internalActorSystem.actorFor(createActorMessage.getActorId());
+                if (!managedActorContainer.containsKey(ref)) {
                     createActor(managedActorContainer, createActorMessage, ref, internalMessage);
                 } else {
                     // we need to load the actor since we need to run the postActivate logic
-                    managedActorContainer.getPersistentActor(internalActorSystem.actorFor(createActorMessage.getActorId()));
+                    managedActorContainer.getPersistentActor(ref);
                 }
             } else if (message instanceof DestroyActorMessage) {
                 DestroyActorMessage destroyActorMessage = (DestroyActorMessage) message;
@@ -1247,8 +1247,8 @@ public final class KafkaActorThread extends Thread {
         }
 
         @Override
-        public boolean containsKey(String actorId) {
-            return actorStore.containsKey(actorId);
+        public boolean containsKey(ActorRef actorRef) {
+            return actorExists(actorRef);
         }
 
         @Override
@@ -1302,8 +1302,8 @@ public final class KafkaActorThread extends Thread {
         }
 
         @Override
-        public boolean containsKey(String actorId) {
-            return actorCache.getIfPresent(actorId) != null;
+        public boolean containsKey(ActorRef actorRef) {
+            return actorCache.getIfPresent(actorRef) != null;
         }
 
         @Override

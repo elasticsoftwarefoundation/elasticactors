@@ -136,8 +136,6 @@ public class AskTest {
             actors[i] = actorSystem.actorOf("ask" + i, AskForGreetingActor.class, new StringState(Integer.toString(i)));
         }
 
-        ActorRefGroup group = actorSystem.groupOf(Arrays.asList(actors));
-
         CompletableFuture<Greeting> response = echo.ask(new AskForGreeting(), Greeting.class)
             .whenComplete((m, e) -> {
                 if (m != null) {
@@ -153,11 +151,13 @@ public class AskTest {
             }).toCompletableFuture();
 
         CompletableFuture<?>[] futures = new CompletableFuture<?>[1_000_000];
+        CountDownLatch tempLatch = new CountDownLatch(futures.length);
         Random rand = ThreadLocalRandom.current();
         for (int i = 0; i < futures.length; i++) {
             futures[i] =
                 actors[rand.nextInt(actors.length)].ask(new AskForGreeting(), Greeting.class)
                     .whenComplete((m, e) -> {
+                        tempLatch.countDown();
                         if (m != null) {
                             logger.info(
                                 "TEMP ACTOR got REPLY from {} in Thread {}",
@@ -172,6 +172,7 @@ public class AskTest {
                     .toCompletableFuture();
         }
 
+        ActorRefGroup group = actorSystem.groupOf(Arrays.asList(actors));
         CountDownLatch countDownLatch = new CountDownLatch(actors.length);
         ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
             .deleteAfterReceive(false)
@@ -197,6 +198,7 @@ public class AskTest {
 
         group.tell(new AskForGreeting(), replyActor);
 
+        assertTrue(tempLatch.await(60_000, TimeUnit.SECONDS));
         assertTrue(countDownLatch.await(60_000, TimeUnit.SECONDS));
 
         Arrays.stream(futures)
@@ -205,10 +207,6 @@ public class AskTest {
             .forEach(i -> logger.info("Got {}", i));
 
         assertEquals(response.get().getWho(), "echo");
-
-        // If we don't wait, DestroyActor messages will still be in the queue when it gets destroyed
-        // Nothing bad actually happens because of this, but it spams the logs and ruins profiling
-        Thread.sleep(10_000);
 
         testActorSystem.destroy();
     }

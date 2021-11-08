@@ -71,7 +71,7 @@ public final class DefaultConfiguration implements InternalActorSystemConfigurat
         this.shardHashSeed = shardHashSeed != null ? shardHashSeed : 0;
         this.multiQueueHashSeed = multiQueueHashSeed != null ? multiQueueHashSeed : 53;
         this.shardDistributionHashSeed =
-            shardDistributionHashSeed != null ? shardDistributionHashSeed : 0;
+            shardDistributionHashSeed != null ? shardDistributionHashSeed : 53;
         this.remoteConfigurations =
             (remoteConfigurations != null) ? remoteConfigurations : Collections.emptyList();
     }
