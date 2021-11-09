@@ -6,4 +6,4 @@ shards: 8
 #queuesPerShard: 2
 #shardHashSeed: 0
 #multiQueueHashSeed: 53
-#shardDistributionHashSeed: 0
+#shardDistributionHashSeed: 53

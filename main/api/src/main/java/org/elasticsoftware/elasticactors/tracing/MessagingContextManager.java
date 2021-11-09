@@ -23,7 +23,6 @@ public abstract class MessagingContextManager {
     public static final String SPAN_ID_KEY = "spanId";
     public static final String TRACE_ID_KEY = "traceId";
     public static final String PARENT_SPAN_ID_KEY = "parentId";
-    public static final String BAGGAGE_PREFIX_KEY = "baggage";
 
     // Receiving-side headers
     public static final String MESSAGE_TYPE_KEY = "messageType";
@@ -92,6 +91,8 @@ public abstract class MessagingContextManager {
     @Nonnull
     public abstract MessagingScope enter(@Nonnull Method context);
 
+    public abstract boolean isLogContextProcessingEnabled();
+
     /*
      * Initialization-on-deman holder pattern (lazy-loaded singleton)
      * See: https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom
@@ -132,7 +133,7 @@ public abstract class MessagingContextManager {
     }
 
     /**
-     * NO-OP implementation for when an implementation of the managet cannot be found
+     * NO-OP implementation for when an implementation of the manager cannot be found
      */
     private final static class NoopMessagingContextManager extends MessagingContextManager {
 
@@ -173,6 +174,11 @@ public abstract class MessagingContextManager {
         @Override
         public MessagingScope enter(@Nonnull Method context) {
             return NoopMessagingScope.INSTANCE;
+        }
+
+        @Override
+        public boolean isLogContextProcessingEnabled() {
+            return false;
         }
     }
 

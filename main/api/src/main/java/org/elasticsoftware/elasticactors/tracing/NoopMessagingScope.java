@@ -9,6 +9,9 @@ public final class NoopMessagingScope implements MessagingScope {
 
     public final static NoopMessagingScope INSTANCE = new NoopMessagingScope();
 
+    private NoopMessagingScope() {
+    }
+
     @Nullable
     @Override
     public TraceContext getTraceContext() {

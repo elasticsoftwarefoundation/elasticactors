@@ -66,8 +66,8 @@ public class AskTest {
     public void addExternalCreatorData(Method method) {
         testScope.set(getManager().enter(
             new TraceContext(ImmutableMap.of(
-                "testOriginalCreator",
-                this.getClass().getSimpleName()
+                "testOriginalCreator", this.getClass().getSimpleName(),
+                "testAdditionalBaggage", "someValue"
             )),
                 new CreationContext(
                         this.getClass().getSimpleName(),
@@ -77,10 +77,14 @@ public class AskTest {
 
     @AfterMethod
     public void removeExternalCreatorData() {
-        assertEquals(MDC.get("testOriginalCreator"), this.getClass().getSimpleName());
+        if (getManager().isLogContextProcessingEnabled()) {
+            assertEquals(MDC.get("testOriginalCreator"), this.getClass().getSimpleName());
+            assertEquals(MDC.get("testAdditionalBaggage"), "someValue");
+        }
         testScope.get().close();
         assertNull(getManager().currentScope());
         assertNull(MDC.get("testOriginalCreator"));
+        assertNull(MDC.get("testAdditionalBaggage"));
         testScope.remove();
     }
 

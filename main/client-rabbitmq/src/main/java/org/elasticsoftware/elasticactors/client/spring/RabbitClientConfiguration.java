@@ -25,7 +25,7 @@ public class RabbitClientConfiguration {
                 Integer.class,
                 Runtime.getRuntime().availableProcessors() * 3);
         final Boolean useDisruptor =
-                env.getProperty("ea.actorExecutor.useDisruptor", Boolean.class, FALSE);
+                env.getProperty("ea.queueExecutor.useDisruptor", Boolean.class, FALSE);
         if (useDisruptor) {
             return new org.elasticsoftware.elasticactors.util.concurrent.disruptor.ThreadBoundExecutorImpl(
                     new DaemonThreadFactory("QUEUE-WORKER"),

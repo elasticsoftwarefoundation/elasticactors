@@ -3,13 +3,15 @@ Elastic Actors
 
 Persistent Stateful Actor System
 
-### Current released version
+
+## Current released version
 
 ![CI](https://github.com/elasticsoftwarefoundation/elasticactors/workflows/CI/badge.svg)
 [![License: Apache 2](https://img.shields.io/badge/LICENSE-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.txt)
 [![Maven Central](https://img.shields.io/maven-central/v/org.elasticsoftwarefoundation.elasticactors/elasticactors-parent.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22org.elasticsoftwarefoundation.elasticactors%22)
 
-### Add Elastic Actors to your Project
+
+## Add Elastic Actors to your Project
 
 For convenience and guaranteed compatiblity across versions, it's advisable to use our BOM in 
 your `dependencyManagement` section:
@@ -44,7 +46,8 @@ Convenient base classes inclusing a Jackson 2 based serialization framework:
 </dependency>
 ```
 
-### Example code
+
+## Example code
 
 Some example code (in java)
 
@@ -71,17 +74,22 @@ public class GreetingActor extends TypedActor<Greeting> {
     }
 }
 
-TestActorSystem testActorSystem = new TestActorSystem();
-testActorSystem.initialize();
+public class Main {
+    public static void main(String[] args) throws Exception {
+      TestActorSystem testActorSystem = new TestActorSystem();
+      testActorSystem.initialize();
 
-ActorSystem actorSystem = testActorSystem.getActorSystem();
-ActorRef greeter = actorSystem.actorOf("greeter",GreetingActor.class);
-greeter.tell(new Greeting("Joost van de Wijgerd"),null);
+      ActorSystem actorSystem = testActorSystem.getActorSystem();
+      ActorRef greeter = actorSystem.actorOf("greeter", GreetingActor.class);
+      greeter.tell(new Greeting("Joost van de Wijgerd"), null);
 
-testActorSystem.destroy();
+      testActorSystem.destroy();
+    }
+}
 ```
 
-### Upgrading Elastic Actors
+
+## Upgrading Elastic Actors
 
 Unless specified, Elastic Actors versions are backwards compatible at runtime and at the wire level.
 
@@ -91,7 +99,16 @@ The following exceptions apply:
   * Changes to the shard-to-node distribution algorithm require the actor system to be completely 
     destroyed or scaled down to 1 node before deploying the new version.
 
-### Basic configuration
+
+## Basic configuration
+
+Elastic Actors scans actor and message classes under the packages defined in the file
+`classpath:META-INF/elasticactors.properties`. This file is required and contains only the following
+property:
+
+```properties
+basePackage=your.actor.system.base.package
+```
 
 The Actor System can be configured with a minimal YAML configuration file.
 Keys noted with an exclamation point mean they must not be changed after the Actor System has been
@@ -208,17 +225,8 @@ org.elasticsoftware.elasticactors.test.TestActorFullName:
       keystorePassword: bladiebla
 ```
 
-### Configuration properties
 
-Elastic Actors scans actor and message classes under the packages defined in the file 
-`classpath:META-INF/elasticactors.properties`. This file is required and contains only the following
-property:
-
-```properties
-basePackage=org.elasticsoftware.elasticactors.base
-```
-
-### Configuration properties
+## Configuration properties
 
 These properties can be set per-environment using any property source accepted by Spring.
 
@@ -414,7 +422,7 @@ ea.metrics.shard.messaging.delivery.warn.threshold=0
 ea.metrics.shard.messaging.handling.warn.threshold=0
 
 # Configures the threshold for actor state serialization. 
-# Default: 0.
+# Default: 0
 ea.metrics.shard.serialization.warn.threshold=0
 
 # Toggles logging for messages in shard queues. 
@@ -427,7 +435,7 @@ ea.logging.node.messaging.enabled=false
 
 # Optional LogFeature overrides for specific message types.
 # The value is a list of comma-separated features
-ea.logging.messages.overrides.{{class_name}}=TIMING,CONTENTS
+ea.logging.messages.overrides.[class_name]=TIMING,CONTENTS
 
 # The maximum number of characters when logging message contents. 
 # Default: 5000
@@ -439,7 +447,8 @@ ea.logging.messages.maxLength=5000
 ea.logging.messages.transient.useToString=false
 ```
 
-### System properties
+
+## System properties
 
 The following properties must be provided as system properties, if changing them is desired.
 
@@ -457,7 +466,8 @@ ea.deserializationCache.enable=false
 ea.logging.messages.unhandled.level=WARN
 ```
 
-### Class loading cache
+
+## Class loading cache
 
 Elastic Actors dynamically loads classes during message handling.
 That hasn't been a performance issue so far, but if you're making use 
@@ -475,7 +485,8 @@ the following dependency to your build:
 </dependency>
 ```
 
-### Tracing
+
+## Tracing
 
 Elastic Actors has a distributed tracing implementation based on the [OpenTracing](https://opentracing.io) specification.\
 It supports trace ID propagation and custom baggage, including propagation. 
@@ -495,11 +506,9 @@ In order to use distributed tracing, include the following dependency in your pr
 
 ```xml
 <dependency>
-    <groupId>
-        <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
-        <artifactId>elasticactors-tracing</artifactId>
-        <scope>compile</scope> <!-- or runtime if you don't need the Spring bits-->
-    </groupId>
+    <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
+    <artifactId>elasticactors-tracing</artifactId>
+    <scope>compile</scope> <!-- or runtime if you don't need the Spring bits-->
 </dependency>
 ```
 
@@ -508,11 +517,26 @@ your Spring configuration. This includes a bean post-processor that wraps those 
 that can automatically propagate the traces from Elastic Actors.
 
 `MessagingContextManager` is the main class responsible for managing trace context data.\
-It allows you to put a set of trace and creation contexts into scope. It also adds the trace
-and creation contexts, as well as some message handling information, to the logging library's 
-MDC (Mapped Diagnostic Context) through Slf4j. 
+It allows you to put a set of trace and creation contexts into scope. 
 
-#### Performance impact of tracing on applications using Log4j2
+
+### Adding trace information to logs
+
+The `MessagingContextManager` also has the facilities to add the trace and creation contexts, 
+as well as some message handling information, to the logging library's MDC 
+(Mapped Diagnostic Context) through Slf4j. This is optional and can be enabled by adding the 
+following dependency in your project:
+
+```xml
+<dependency>
+    <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
+    <artifactId>elasticactors-tracing-slf4j</artifactId>
+    <scope>runtime</scope>
+</dependency>
+```
+
+
+### Performance impact of tracing with log context on applications using Log4j2
 
 If running a web application while using Log4j2 for logging, using tracing can generate
 a big amount of garbage objects due to Log4j2 using a different implementation of the map

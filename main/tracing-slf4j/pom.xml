@@ -18,14 +18,14 @@
     <parent>
         <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
         <artifactId>elasticactors-main</artifactId>
-        <version>3.2.2-SNAPSHOT</version>
+        <version>4.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>elasticactors-tracing-log4j2</artifactId>
+    <artifactId>elasticactors-tracing-slf4j</artifactId>
     <packaging>jar</packaging>
 
-    <name>Elastic Software Foundation :: ElasticActors :: Tracing :: Log4j2 Implementation</name>
+    <name>Elastic Software Foundation :: ElasticActors :: Tracing :: Slf4j Implementation</name>
     <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
     <properties>

@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
         <artifactId>elasticactors-parent</artifactId>
-        <version>3.2.2-SNAPSHOT</version>
+        <version>4.0.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>elasticactors-main</artifactId>
@@ -481,7 +481,7 @@
         <module>client-spring-amqp</module>
         <module>client-rabbitmq</module>
         <module>tracing</module>
-        <module>tracing-log4j2</module>
+        <module>tracing-slf4j</module>
         <module>caching</module>
     </modules>
 
