@@ -19,6 +19,9 @@ public final class TraceContextSerializer {
             if (traceContext.getParentId() != null) {
                 serialized.setParentId(traceContext.getParentId());
             }
+            if (traceContext.getBaggage() != null && !traceContext.getBaggage().isEmpty()) {
+                serialized.putAllBaggage(traceContext.getBaggage());
+            }
             return serialized.build();
         }
         return null;
