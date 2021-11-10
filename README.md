@@ -383,7 +383,7 @@ ea.cassandra.maxActive=12
 ea.asyncUpdateExecutor.batchSize=20
 
 # Whether or not to optimize v1 batches
-# Only backplane-cassandra2 (implemented) and backplane-cassandra4 (but not implemented yet).
+# Only backplane-cassandra2.
 # Default: true
 ea.asyncUpdateExecutor.optimizedV1Batches=true
 

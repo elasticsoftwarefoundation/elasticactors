@@ -27,9 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.datastax.oss.driver.api.core.cql.BatchType.UNLOGGED;
@@ -45,18 +43,11 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
     private final CqlSession cassandraSession;
     private final PreparedStatement insertStatement;
     private final PreparedStatement deleteStatement;
-    private final Map<Integer,PreparedStatement> batchStatements = new HashMap<>();
-    private final boolean optimizedV1Batches;
 
-    public PersistentActorUpdateEventProcessor(CqlSession cassandraSession, int maxBatchSize) {
-        this(cassandraSession, maxBatchSize, true);
-    }
-
-    public PersistentActorUpdateEventProcessor(CqlSession cassandraSession, int maxBatchSize, boolean optimizedV1Batches) {
+    public PersistentActorUpdateEventProcessor(CqlSession cassandraSession) {
         this.cassandraSession = cassandraSession;
         this.insertStatement = cassandraSession.prepare(INSERT_QUERY);
         this.deleteStatement = cassandraSession.prepare(DELETE_QUERY);
-        this.optimizedV1Batches = optimizedV1Batches;
     }
 
     @Override
