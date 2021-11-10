@@ -95,7 +95,7 @@ Unless specified, Elastic Actors versions are backwards compatible at runtime an
 
 The following exceptions apply:
 
-* **1.x - 4.0.x** to **4.1.x** or later:
+* **1.x - 4.x** to **5.x** or later:
   * Changes to the shard-to-node distribution algorithm require the actor system to be completely 
     destroyed or scaled down to 1 node before deploying the new version.
 
