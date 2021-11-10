@@ -12,12 +12,24 @@ public final class CreationContextDeserializer {
 
     @Nullable
     public static CreationContext deserialize(Messaging.CreationContext creationContext) {
-        CreationContext deserialized = new CreationContext(
+        if (hasAnyData(creationContext)) {
+            CreationContext deserialized = new CreationContext(
                 creationContext.hasCreator() ? creationContext.getCreator() : null,
                 creationContext.hasCreatorType() ? creationContext.getCreatorType() : null,
                 creationContext.hasCreatorMethod() ? creationContext.getCreatorMethod() : null,
-                creationContext.hasScheduled() ? creationContext.getScheduled() : null);
-        return deserialized.isEmpty() ? null : deserialized;
+                creationContext.hasScheduled() ? creationContext.getScheduled() : null
+            );
+            return deserialized.isEmpty() ? null : deserialized;
+        } else {
+            return null;
+        }
+    }
+
+    private static boolean hasAnyData(Messaging.CreationContext creationContext) {
+        return creationContext.hasCreator()
+            || creationContext.hasCreatorType()
+            || creationContext.hasCreatorMethod()
+            || creationContext.hasScheduled();
     }
 
 }

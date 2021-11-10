@@ -44,7 +44,7 @@ public final class ActorNodeMessageDeserializer implements MessageDeserializer<A
     public ActorNodeMessage deserialize(ByteBuffer serializedObject) throws IOException {
         try {
             Messaging.ActorNodeMessage protobufMessage = Messaging.ActorNodeMessage.parseFrom(ByteString.copyFrom(serializedObject));
-            ActorRef receiverRef = protobufMessage.getReceiver()!=null && !protobufMessage.getReceiver().isEmpty() ? actorRefDeserializer.deserialize(protobufMessage.getReceiver()) : null;
+            ActorRef receiverRef = getReceiver(protobufMessage);
             String messageClassString = protobufMessage.getPayloadClass();
             Class<?> messageClass = getClassHelper().forName(messageClassString);
             Object payloadObject = cluster.get(null).getDeserializer(messageClass).deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
@@ -52,6 +52,11 @@ public final class ActorNodeMessageDeserializer implements MessageDeserializer<A
         } catch(Exception e) {
             throw new IOException(e);
         }
+    }
+
+    private ActorRef getReceiver(Messaging.ActorNodeMessage protobufMessage) throws IOException {
+        String receiver = protobufMessage.getReceiver();
+        return receiver.isEmpty() ? null : actorRefDeserializer.deserialize(receiver);
     }
 
     @Override

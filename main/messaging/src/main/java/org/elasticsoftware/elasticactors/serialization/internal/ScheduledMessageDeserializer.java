@@ -46,7 +46,7 @@ public final class ScheduledMessageDeserializer implements Deserializer<byte[],S
     public ScheduledMessage deserialize(byte[] serializedObject) throws IOException {
         try {
             Messaging.ScheduledMessage protobufMessage = Messaging.ScheduledMessage.parseFrom(serializedObject);
-            ActorRef sender = protobufMessage.getSender() != null && !protobufMessage.getSender().isEmpty() ? actorRefDeserializer.deserialize(protobufMessage.getSender()) : null;
+            ActorRef sender = getSender(protobufMessage);
             ActorRef receiver = actorRefDeserializer.deserialize(protobufMessage.getReceiver());
             Class messageClass = getClassHelper().forName(protobufMessage.getMessageClass());
             byte[] messageBytes = protobufMessage.getMessage().toByteArray();
@@ -69,6 +69,17 @@ public final class ScheduledMessageDeserializer implements Deserializer<byte[],S
                     creationContext);
         } catch(ClassNotFoundException e) {
             throw new IOException(e);
+        }
+    }
+
+    private ActorRef getSender(Messaging.ScheduledMessage protobufMessage) throws IOException {
+        if (protobufMessage.hasSender()) {
+            String senderStr = protobufMessage.getSender();
+            return senderStr.isEmpty()
+                ? null
+                : actorRefDeserializer.deserialize(senderStr);
+        } else {
+            return null;
         }
     }
 }
