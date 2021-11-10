@@ -242,16 +242,16 @@ public class NodeConfiguration {
     public MetricsSettings nodeMetricsSettings(Environment environment) {
         boolean metricsEnabled =
             environment.getProperty("ea.metrics.node.messaging.enabled", Boolean.class, false);
-        Long messageDeliveryWarnThreshold =
-            environment.getProperty("ea.metrics.node.messaging.delivery.warn.threshold", Long.class);
-        Long messageHandlingWarnThreshold =
-            environment.getProperty("ea.metrics.node.messaging.handling.warn.threshold", Long.class);
+        long messageDeliveryWarnThreshold =
+            environment.getProperty("ea.metrics.node.messaging.delivery.warn.threshold", Long.class, 0L);
+        long messageHandlingWarnThreshold =
+            environment.getProperty("ea.metrics.node.messaging.handling.warn.threshold", Long.class, 0L);
 
         return new MetricsSettings(
             metricsEnabled,
             messageDeliveryWarnThreshold,
             messageHandlingWarnThreshold,
-            null
+            0L
         );
     }
 
@@ -259,12 +259,12 @@ public class NodeConfiguration {
     public MetricsSettings shardMetricsSettings(Environment environment) {
         boolean metricsEnabled =
             environment.getProperty("ea.metrics.shard.messaging.enabled", Boolean.class, false);
-        Long messageDeliveryWarnThreshold =
-            environment.getProperty("ea.metrics.shard.messaging.delivery.warn.threshold", Long.class);
-        Long messageHandlingWarnThreshold =
-            environment.getProperty("ea.metrics.shard.messaging.handling.warn.threshold", Long.class);
-        Long serializationWarnThreshold =
-            environment.getProperty("ea.metrics.shard.serialization.warn.threshold", Long.class);
+        long messageDeliveryWarnThreshold =
+            environment.getProperty("ea.metrics.shard.messaging.delivery.warn.threshold", Long.class, 0L);
+        long messageHandlingWarnThreshold =
+            environment.getProperty("ea.metrics.shard.messaging.handling.warn.threshold", Long.class, 0L);
+        long serializationWarnThreshold =
+            environment.getProperty("ea.metrics.shard.serialization.warn.threshold", Long.class, 0L);
 
         return new MetricsSettings(
             metricsEnabled,
