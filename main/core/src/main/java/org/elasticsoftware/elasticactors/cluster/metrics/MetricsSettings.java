@@ -28,7 +28,7 @@ public final class MetricsSettings {
     }
 
     public boolean isMessageDeliveryWarnThresholdEnabled() {
-        return enabled && messageDeliveryWarnThreshold != null;
+        return enabled && messageDeliveryWarnThreshold != null && messageDeliveryWarnThreshold > 0L;
     }
 
     public long getMessageDeliveryWarnThreshold() {
@@ -36,7 +36,7 @@ public final class MetricsSettings {
     }
 
     public boolean isMessageHandlingWarnThresholdEnabled() {
-        return enabled && messageHandlingWarnThreshold != null;
+        return enabled && messageHandlingWarnThreshold != null && messageHandlingWarnThreshold > 0L;
     }
 
     public long getMessageHandlingWarnThreshold() {
@@ -44,7 +44,7 @@ public final class MetricsSettings {
     }
 
     public boolean isSerializationWarnThresholdEnabled() {
-        return enabled && serializationWarnThreshold != null;
+        return enabled && serializationWarnThreshold != null && serializationWarnThreshold > 0L;
     }
 
     public long getSerializationWarnThreshold() {
