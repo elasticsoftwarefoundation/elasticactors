@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.cluster.scheduler;
 
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
+import org.elasticsoftware.elasticactors.ActorContextHolder;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
@@ -181,8 +182,14 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
     }
 
     @Override
-    public ScheduledMessageRef scheduleOnce(ActorRef sender, Object message, ActorRef receiver, long delay, TimeUnit timeUnit) {
+    public ScheduledMessageRef scheduleOnce(
+        Object message,
+        ActorRef receiver,
+        long delay,
+        TimeUnit timeUnit)
+    {
         // this method only works when sender is a local persistent actor (so no temp or service actor)
+        ActorRef sender = ActorContextHolder.getSelf();
         if(sender instanceof ActorContainerRef) {
             ActorContainer actorContainer = ((ActorContainerRef)sender).getActorContainer();
             if(actorContainer instanceof ActorShard) {
@@ -205,8 +212,9 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
                 }
             }
         }
-        // sender param didn't fit the criteria
-        throw new IllegalArgumentException(format("sender ref: %s needs to be a non-temp, non-service, locally sharded actor ref", sender));
+        throw new IllegalStateException(
+            "Cannot determine an appropriate ActorRef(self). Only use this method while inside an "
+                + "ElasticActor Lifecycle or on(Message) method on a Persistent Actor!");
     }
 
     @Override
