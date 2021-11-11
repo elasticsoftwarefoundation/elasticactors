@@ -2,7 +2,10 @@ package org.elasticsoftware.elasticactors.messaging.internal;
 
 import javax.annotation.Nullable;
 
-public class InternalHashKeyUtils {
+public final class InternalHashKeyUtils {
+
+    private InternalHashKeyUtils() {
+    }
 
     /**
      * Return the key of an object if it implements {@link MessageQueueBoundPayload}.

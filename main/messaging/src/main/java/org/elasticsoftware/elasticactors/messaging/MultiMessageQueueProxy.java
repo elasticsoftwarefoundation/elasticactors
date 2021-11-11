@@ -96,6 +96,15 @@ public final class MultiMessageQueueProxy implements MessageQueueProxy {
                             messageQueues.length
                         );
                     messagesPerBucket.forEach(this::sendToBucket);
+                } else {
+                    logger.error(
+                        "Could not detect to which queue to send message of type [{}] wrapped in "
+                            + "[{}] to [{}]. Sending it to the default queue.",
+                        message.getPayloadClass(),
+                        message.getClass().getName(),
+                        actorRef.getActorPath()
+                    );
+                    sendToBucket(0, message);
                 }
             }
         }
