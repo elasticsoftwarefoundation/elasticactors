@@ -44,18 +44,27 @@ public final class CreateActorMessageDeserializer implements MessageDeserializer
     @Override
     public CreateActorMessage deserialize(ByteBuffer serializedObject) throws IOException {
         Messaging.CreateActorMessage protobufMessage = Messaging.CreateActorMessage.parseFrom(ByteString.copyFrom(serializedObject));
-        return new CreateActorMessage(protobufMessage.getActorSystem(),
-                protobufMessage.getActorClass(),
-                protobufMessage.getActorId(),
-                protobufMessage.getInitialState() != null &&
-                        !protobufMessage.getInitialState().isEmpty()
-                        ? deserializeState(protobufMessage.getActorClass(),
-                        protobufMessage.getInitialState().toByteArray())
-                        : null,
-                protobufMessage.getType() != null
-                        ? ActorType.values()[protobufMessage.getType().getNumber()]
-                        : ActorType.PERSISTENT,
-                protobufMessage.getAffinityKey());
+        return new CreateActorMessage(
+            protobufMessage.getActorSystem(),
+            protobufMessage.getActorClass(),
+            protobufMessage.getActorId(),
+            getDeserializedState(protobufMessage),
+            ActorType.values()[protobufMessage.getType().getNumber()],
+            protobufMessage.getAffinityKey()
+        );
+    }
+
+    private ActorState getDeserializedState(Messaging.CreateActorMessage protobufMessage) throws IOException {
+        return !protobufMessage.getInitialState().isEmpty()
+            ? getDeserializeState(protobufMessage)
+            : null;
+    }
+
+    private ActorState getDeserializeState(Messaging.CreateActorMessage protobufMessage) throws IOException {
+        return deserializeState(
+            protobufMessage.getActorClass(),
+            protobufMessage.getInitialState().toByteArray()
+        );
     }
 
     private ActorState deserializeState(String actorClass, byte[] serializedState) throws IOException {

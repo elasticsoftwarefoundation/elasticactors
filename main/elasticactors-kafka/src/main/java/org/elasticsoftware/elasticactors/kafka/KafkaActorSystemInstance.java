@@ -90,7 +90,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -614,8 +613,9 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         // print out the shard distribution here
 
         logger.info("Cluster shard mapping summary:");
-        for (Map.Entry<PhysicalNode, Collection<ShardKey>> entry : shardDistribution.asMap().entrySet()) {
-            logger.info("\t{} has {} shards assigned", entry.getKey(), entry.getValue().size());
+        if (logger.isInfoEnabled()) {
+            shardDistribution.asMap()
+                .forEach((k, v) -> logger.info("\t{} has {} shards assigned", k, v.size()));
         }
     }
 
