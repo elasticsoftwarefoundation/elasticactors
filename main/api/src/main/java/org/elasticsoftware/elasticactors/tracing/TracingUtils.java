@@ -23,7 +23,7 @@ public final class TracingUtils {
     public static String nextTraceIdHigh(Clock clock, Random prng) {
         long epochSeconds = clock.millis() / 1000;
         int random = prng.nextInt();
-        long traceIdHigh = (epochSeconds & 0xffffffffL) << 32 | (random & 0xffffffffL);
+        long traceIdHigh = ((epochSeconds & 0xffffffffL) << 32) | (random & 0xffffffffL);
         return toHexString(traceIdHigh);
     }
 
