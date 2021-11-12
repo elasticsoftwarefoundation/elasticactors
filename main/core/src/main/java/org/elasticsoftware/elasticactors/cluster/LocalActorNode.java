@@ -50,6 +50,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -138,48 +139,51 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
 
     @Override
     public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
+        InternalMessage internalMessage = createInternalMessage(from, to, message);
+        if (internalMessage != null) {
+            offerInternalMessage(internalMessage);
+        }
+    }
+
+    private InternalMessage createInternalMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws IOException {
         // we need some special handling for the CreateActorMessage in case of Temp Actor
         if(message instanceof CreateActorMessage && ActorType.TEMP.equals(((CreateActorMessage) message).getType())) {
-            offerInternalMessage(new TransientInternalMessage(
+            return new TransientInternalMessage(
                 from,
                 ImmutableList.copyOf(to),
                 message
-            ));
+            );
         } else {
             // get the durable flag
             Message messageAnnotation = message.getClass().getAnnotation(Message.class);
             final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
             final boolean immutable = (messageAnnotation != null) && messageAnnotation.immutable();
             final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-            if(durable) {
+            if(durable || !immutable) {
                 // durable so it will go over the bus and needs to be serialized
                 MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                offerInternalMessage(new DefaultInternalMessage(
+                if(messageSerializer == null) {
+                    logger.error(
+                        "No message serializer found for class: {}. NOT sending message",
+                        message.getClass().getName()
+                    );
+                    return null;
+                }
+                return new DefaultInternalMessage(
                     from,
                     ImmutableList.copyOf(to),
                     SerializationContext.serialize(messageSerializer, message),
                     message.getClass().getName(),
-                    true,
+                    durable,
                     timeout
-                ));
-            } else if(!immutable) {
-                // it's not durable, but it's mutable so we need to serialize here
-                MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                offerInternalMessage(new DefaultInternalMessage(
-                    from,
-                    ImmutableList.copyOf(to),
-                    SerializationContext.serialize(messageSerializer, message),
-                    message.getClass().getName(),
-                    false,
-                    timeout
-                ));
+                );
             } else {
                 // as the message is immutable we can safely send it as a TransientInternalMessage
-                offerInternalMessage(new TransientInternalMessage(
+                return new TransientInternalMessage(
                     from,
                     ImmutableList.copyOf(to),
                     message
-                ));
+                );
             }
         }
     }

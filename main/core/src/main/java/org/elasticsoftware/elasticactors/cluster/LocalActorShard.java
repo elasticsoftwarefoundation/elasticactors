@@ -168,17 +168,38 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     }
 
     private InternalMessage createInternalMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws IOException {
-        MessageSerializer<Object> messageSerializer = (MessageSerializer<Object>) actorSystem.getSerializer(message.getClass());
-        if(messageSerializer == null) {
-            logger.error("No message serializer found for class: {}. NOT sending message",
-                    message.getClass().getSimpleName());
-            return null;
-        }
         // get the durable flag
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
+        final boolean immutable = (messageAnnotation != null) && messageAnnotation.immutable();
         final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-        return new DefaultInternalMessage(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message),message.getClass().getName(),durable, timeout);
+        if(durable || !immutable) {
+            // durable so it will go over the bus and needs to be serialized,
+            // or it's not durable, but it's mutable, so we need to serialize here
+            MessageSerializer<Object> messageSerializer = (MessageSerializer<Object>) actorSystem.getSerializer(message.getClass());
+            if(messageSerializer == null) {
+                logger.error(
+                    "No message serializer found for class: {}. NOT sending message",
+                    message.getClass().getName()
+                );
+                return null;
+            }
+            return new DefaultInternalMessage(
+                from,
+                ImmutableList.copyOf(to),
+                SerializationContext.serialize(messageSerializer, message),
+                message.getClass().getName(),
+                durable,
+                timeout
+            );
+        } else {
+            // as the message is immutable we can safely send it as a TransientInternalMessage
+            return new TransientInternalMessage(
+                from,
+                ImmutableList.copyOf(to),
+                message
+            );
+        }
     }
 
     @Override
