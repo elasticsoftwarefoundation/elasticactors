@@ -27,7 +27,7 @@ public interface ManagedActorContainer<K> {
 
     void deleteActor(PersistentActor<K> persistentActor);
 
-    boolean containsKey(String actorId);
+    boolean containsKey(ActorRef actorRef);
 
     K getKey();
 

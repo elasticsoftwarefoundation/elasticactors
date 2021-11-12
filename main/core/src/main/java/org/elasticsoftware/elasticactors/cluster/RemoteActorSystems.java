@@ -54,7 +54,6 @@ public final class RemoteActorSystems {
         remoteActorSystemsCache = new ConcurrentHashMap<>();
     }
 
-
     public void init() throws Exception {
         // initialize the remote systems
         remoteActorSystems.forEach((key, value) -> {

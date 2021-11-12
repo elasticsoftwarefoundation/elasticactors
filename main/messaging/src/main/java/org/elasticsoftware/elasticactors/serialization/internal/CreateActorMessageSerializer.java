@@ -44,8 +44,7 @@ public final class CreateActorMessageSerializer implements MessageSerializer<Cre
         builder.setActorClass(message.getActorClass());
         builder.setActorId(message.getActorId());
         if(message.getInitialState() != null) {
-            builder.setInitialState(ByteString.copyFrom(serializeState(message.getActorClass(),
-                                                                       message.getInitialState())));
+            builder.setInitialState(ByteString.copyFrom(serializeState(message.getInitialState())));
         }
         builder.setType(Messaging.ActorType.forNumber(message.getType().ordinal()));
         if(message.getAffinityKey() != null) {
@@ -54,7 +53,7 @@ public final class CreateActorMessageSerializer implements MessageSerializer<Cre
         return ByteBuffer.wrap(builder.build().toByteArray());
     }
 
-    private byte[] serializeState(String actorClass,ActorState state) throws IOException {
+    private byte[] serializeState(ActorState state) throws IOException {
         return SerializationTools.serializeActorState(serializationFrameworks, state);
         /*
          * to support creating actors on remote actor systems (without having to link all the code) we are now

@@ -51,11 +51,13 @@ public final class SimpleScheduler implements SchedulerService,ScheduledMessageR
 
     @PostConstruct
     public void init() {
+        logger.info("Initializing Simple Actor Cluster Scheduler");
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("SIMPLE-SCHEDULER"));
     }
 
     @PreDestroy
     public void destroy() {
+        logger.info("Destroying Simple Actor Cluster Scheduler");
         scheduledExecutorService.shutdownNow();
     }
 

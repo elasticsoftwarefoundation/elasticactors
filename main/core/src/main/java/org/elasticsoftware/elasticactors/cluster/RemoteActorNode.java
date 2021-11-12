@@ -28,6 +28,8 @@ import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -36,6 +38,9 @@ import java.util.List;
  */
 
 public final class RemoteActorNode extends AbstractActorContainer implements ActorNode {
+
+    private final static Logger staticLogger = LoggerFactory.getLogger(RemoteActorNode.class);
+
     private final InternalActorSystem actorSystem;
     private final NodeKey nodeKey;
 
@@ -43,7 +48,13 @@ public final class RemoteActorNode extends AbstractActorContainer implements Act
                            InternalActorSystem actorSystem,
                            ActorRef myRef,
                            MessageQueueFactory messageQueueFactory) {
-        super(messageQueueFactory,myRef,remoteNode);
+        super(
+            messageQueueFactory,
+            myRef,
+            remoteNode,
+            actorSystem.getQueuesPerNode(),
+            actorSystem.getMultiQueueHashSeed()
+        );
         this.actorSystem = actorSystem;
         this.nodeKey = new NodeKey(actorSystem.getName(), remoteNode.getId());
     }
@@ -60,7 +71,14 @@ public final class RemoteActorNode extends AbstractActorContainer implements Act
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
         final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-        messageQueue.offer(new DefaultInternalMessage(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable,timeout));
+        offerInternalMessage(new DefaultInternalMessage(
+            from,
+            ImmutableList.copyOf(to),
+            SerializationContext.serialize(messageSerializer, message),
+            message.getClass().getName(),
+            durable,
+            timeout
+        ));
     }
 
     @Override
@@ -73,7 +91,7 @@ public final class RemoteActorNode extends AbstractActorContainer implements Act
                                                                            message.isDurable(),
                                                                            true,
                                                                            message.getTimeout());
-        messageQueue.offer(undeliverableMessage);
+        offerInternalMessage(undeliverableMessage);
     }
 
     @Override
@@ -84,5 +102,10 @@ public final class RemoteActorNode extends AbstractActorContainer implements Act
     @Override
     public boolean isLocal() {
         return false;
+    }
+
+    @Override
+    protected Logger initLogger() {
+        return staticLogger;
     }
 }

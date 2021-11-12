@@ -17,8 +17,6 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
@@ -42,8 +40,12 @@ import org.elasticsoftware.elasticactors.SingletonActor;
 import org.elasticsoftware.elasticactors.TempActor;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
+import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.scheduler.InternalScheduler;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
+import org.elasticsoftware.elasticactors.messaging.ActorShardHasher;
+import org.elasticsoftware.elasticactors.messaging.Hasher;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
@@ -55,13 +57,15 @@ import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
+import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import javax.annotation.Nullable;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -110,9 +114,15 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     private final ConcurrentMap<String, ActorNode> activeNodes = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, ActorNodeAdapter> activeNodeAdapters = new ConcurrentHashMap<>();
     private final ActorNodeAdapter localNodeAdapter;
-    private final HashFunction hashFunction = Hashing.murmur3_32();
+    private final Hasher actorShardHasher;
+    private final Hasher nodeHasher;
     private final AtomicBoolean stable = new AtomicBoolean(false);
     private final ManagedActorsRegistry managedActorsRegistry;
+    private ThreadBoundExecutor actorExecutor;
+    private PersistentActorRepository persistentActorRepository;
+    private ActorStateUpdateProcessor actorStateUpdateProcessor;
+    private MetricsSettings metricsSettings;
+    private LoggingSettings loggingSettings;
 
     public LocalActorSystemInstance(
             PhysicalNode localNode,
@@ -132,6 +142,8 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
         }
         this.localNodeAdapter = new ActorNodeAdapter(new NodeKey(configuration.getName(), localNode.getId()));
         this.managedActorsRegistry = managedActorsRegistry;
+        this.actorShardHasher = new ActorShardHasher(configuration.getShardHashSeed());
+        this.nodeHasher = new NodeSelectorHasher(configuration.getShardDistributionHashSeed());
     }
 
     @Override
@@ -151,6 +163,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
 
     @Override
     public void shutdown() {
+        logger.info("Shutting down ActorSystem [{}]", getName());
         // The Messaging subsystem is closed before this instance
         // Need to sort out the order
         /*
@@ -188,11 +201,16 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
             if (!activeNodes.containsKey(node.getId())) {
                 if (node.isLocal()) {
                     LocalActorNode localActorNode =
-                            new LocalActorNode(node,
-                                                this,
-                                                localNodeAdapter.myRef,
-                                                localMessageQueueFactory,
-                                                nodeActorCacheManager);
+                        new LocalActorNode(
+                            node,
+                            this,
+                            localNodeAdapter.myRef,
+                            localMessageQueueFactory,
+                            actorExecutor,
+                            nodeActorCacheManager,
+                            metricsSettings,
+                            loggingSettings
+                        );
                     activeNodes.put(node.getId(), localActorNode);
                     activeNodeAdapters.put(node.getId(),localNodeAdapter);
                     localActorNode.init();
@@ -224,7 +242,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
             logger.info("Initializing ActorSystem [{}]", getName());
         }
 
-        NodeSelector nodeSelector = nodeSelectorFactory.create(nodes);
+        NodeSelector nodeSelector = nodeSelectorFactory.create(nodeHasher, nodes);
         // fetch all writelocks
         final Lock[] writeLocks = new Lock[shardLocks.length];
         for (int j = 0; j < shardLocks.length; j++) {
@@ -258,8 +276,19 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
                             currentShard.destroy();
                         }
                         // create a new local shard and swap it
-                        LocalActorShard newShard = new LocalActorShard(node,
-                                this, i, shardAdapters[i].myRef, localMessageQueueFactory, shardActorCacheManager);
+                        LocalActorShard newShard = new LocalActorShard(
+                            node,
+                            this,
+                            i,
+                            shardAdapters[i].myRef,
+                            localMessageQueueFactory,
+                            actorExecutor,
+                            persistentActorRepository,
+                            actorStateUpdateProcessor,
+                            shardActorCacheManager,
+                            metricsSettings,
+                            loggingSettings
+                        );
 
                         shards[i] = newShard;
                         try {
@@ -518,6 +547,26 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     }
 
     @Override
+    public int getQueuesPerNode() {
+        return configuration.getQueuesPerNode();
+    }
+
+    @Override
+    public int getQueuesPerShard() {
+        return configuration.getQueuesPerShard();
+    }
+
+    @Override
+    public int getShardHashSeed() {
+        return configuration.getShardHashSeed();
+    }
+
+    @Override
+    public int getMultiQueueHashSeed() {
+        return configuration.getMultiQueueHashSeed();
+    }
+
+    @Override
     public <T> ActorRef actorOf(String actorId, Class<T> actorClass) throws Exception {
         if(actorClass.getAnnotation(Actor.class) == null) {
             throw new IllegalArgumentException("actorClass has to be annotated with @Actor");
@@ -589,7 +638,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     }
 
     private ActorShard shardFor(String actorId) {
-        return shardAdapters[Math.abs(hashFunction.hashString(actorId, StandardCharsets.UTF_8).asInt()) % shards.length];
+        return shardAdapters[Math.abs(actorShardHasher.hashStringToInt(actorId)) % shards.length];
     }
 
 
@@ -684,6 +733,31 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
     @Autowired
     public void setActorLifecycleListenerRegistry(ActorLifecycleListenerRegistry actorLifecycleListenerRegistry) {
         this.actorLifecycleListenerRegistry = actorLifecycleListenerRegistry;
+    }
+
+    @Autowired
+    public void setActorExecutor(@Qualifier("actorExecutor") ThreadBoundExecutor actorExecutor) {
+        this.actorExecutor = actorExecutor;
+    }
+
+    @Autowired
+    public void setPersistentActorRepository(PersistentActorRepository persistentActorRepository) {
+        this.persistentActorRepository = persistentActorRepository;
+    }
+
+    @Autowired
+    public void setActorStateUpdateProcessor(ActorStateUpdateProcessor actorStateUpdateProcessor) {
+        this.actorStateUpdateProcessor = actorStateUpdateProcessor;
+    }
+
+    @Autowired
+    public void setMetricsSettings(@Qualifier("shardMetricsSettings") MetricsSettings metricsSettings) {
+        this.metricsSettings = metricsSettings;
+    }
+
+    @Autowired
+    public void setLoggingSettings(@Qualifier("shardLoggingSettings") LoggingSettings loggingSettings) {
+        this.loggingSettings = loggingSettings;
     }
 
     private final class ActorShardAdapter implements ActorShard {

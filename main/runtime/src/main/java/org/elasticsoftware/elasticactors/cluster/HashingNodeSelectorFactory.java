@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.PhysicalNode;
+import org.elasticsoftware.elasticactors.messaging.Hasher;
 
 import java.util.List;
 
@@ -25,8 +26,8 @@ import java.util.List;
  */
 public final class HashingNodeSelectorFactory implements NodeSelectorFactory {
     @Override
-    public NodeSelector create(List<PhysicalNode> nodes) {
-        return new HashingNodeSelector(nodes);
+    public NodeSelector create(Hasher hasher, List<PhysicalNode> nodes) {
+        return new HashingNodeSelector(hasher, nodes);
     }
 
     @Override

@@ -21,6 +21,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.List;
 
 /**
  * This annotation can be used on an Actor class that extends {@link MethodActor}. The specified classed in {@link #value()} will
@@ -55,5 +56,19 @@ public @interface MessageHandlers {
     /**
      * Default (null) MessageHandlersRegistry
      */
-    abstract class NoopMessageHandlersRegistry implements MessageHandlersRegistry {}
+    final class NoopMessageHandlersRegistry implements MessageHandlersRegistry {
+
+        // Cannot be instantiated
+        private NoopMessageHandlersRegistry() {
+        }
+
+        @Override
+        public void init() {
+        }
+
+        @Override
+        public List<Class<?>> getMessageHandlers(Class<? extends MethodActor> methodActor) {
+            return null;
+        }
+    }
 }

@@ -23,6 +23,8 @@ import org.elasticsoftware.elasticactors.messaging.reactivestreams.SubscribeMess
 import org.elasticsoftware.elasticactors.reactivestreams.PersistentSubscriptionImpl;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
@@ -33,6 +35,13 @@ import static org.elasticsoftware.elasticactors.cluster.tasks.InternalActorConte
  */
 @TempActor(stateClass = SubscriberState.class)
 public final class SubscriberActor<T> extends TypedActor<T> implements Subscriber<T> {
+
+    private final static Logger staticLogger = LoggerFactory.getLogger(SubscriberActor.class);
+
+    @Override
+    protected Logger initLogger() {
+        return staticLogger;
+    }
 
     @Override
     public void postCreate(ActorRef creator) throws Exception {

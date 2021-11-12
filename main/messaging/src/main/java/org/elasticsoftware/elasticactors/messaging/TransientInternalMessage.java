@@ -17,22 +17,26 @@
 package org.elasticsoftware.elasticactors.messaging;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.UUID;
+
+import static org.elasticsoftware.elasticactors.messaging.SplittableUtils.calculateBucketForEmptyOrSingleActor;
+import static org.elasticsoftware.elasticactors.messaging.SplittableUtils.groupByBucket;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class TransientInternalMessage extends AbstractTracedMessage
-        implements InternalMessage, Serializable {
+        implements InternalMessage, Serializable, Splittable<String, InternalMessage> {
     private final ActorRef sender;
     private final ImmutableList<ActorRef> receivers;
     private final UUID id;
@@ -114,7 +118,7 @@ public final class TransientInternalMessage extends AbstractTracedMessage
     }
 
     @Override
-    public <T> T getPayload(MessageDeserializer<T> deserializer) throws IOException {
+    public <T> T getPayload(MessageDeserializer<T> deserializer) {
         return (T) payload;
     }
 
@@ -144,6 +148,11 @@ public final class TransientInternalMessage extends AbstractTracedMessage
     }
 
     @Override
+    public boolean hasPayloadObject() {
+        return payload != null;
+    }
+
+    @Override
     public byte[] toByteArray() {
         throw new UnsupportedOperationException(String.format(
             "This implementation is intended to be used local only, for remote use [%s]",
@@ -153,5 +162,23 @@ public final class TransientInternalMessage extends AbstractTracedMessage
     @Override
     public InternalMessage copyOf() {
         return this;
+    }
+
+    @Override
+    public ImmutableMap<Integer, InternalMessage> splitInBuckets(Hasher hasher, int buckets) {
+        return receivers.size() <= 1
+            ? ImmutableMap.of(calculateBucketForEmptyOrSingleActor(receivers, hasher, buckets), this)
+            : groupByBucket(receivers, hasher, buckets, this::copyForReceivers);
+    }
+
+    private InternalMessage copyForReceivers(List<ActorRef> receivers) {
+        return new TransientInternalMessage(
+            sender,
+            ImmutableList.copyOf(receivers),
+            payload,
+            undeliverable,
+            getTraceContext(),
+            getCreationContext()
+        );
     }
 }

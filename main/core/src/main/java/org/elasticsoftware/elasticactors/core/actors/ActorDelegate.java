@@ -21,6 +21,8 @@ import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
@@ -28,6 +30,19 @@ import javax.annotation.Nullable;
  * @author Joost van de Wijgerd
  */
 public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorState<ActorDelegate<T>> {
+
+    private static final Logger staticLogger = LoggerFactory.getLogger(ActorDelegate.class);
+
+    /**
+     * Default implementation that uses the static logger for {@link ActorDelegate}.
+     * Although the user can override it, {@link ActorDelegate}  is often used for anonymous
+     * subclassing, so this is a valuable optimization.
+     */
+    @Override
+    protected Logger initLogger() {
+        return staticLogger;
+    }
+
     private final boolean deleteAfterReceive;
 
     private final ActorRef callerRef;

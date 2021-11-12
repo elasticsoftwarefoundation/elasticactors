@@ -22,7 +22,7 @@ import org.elasticsoftware.elasticactors.cluster.LocalActorSystemInstance;
 import org.elasticsoftware.elasticactors.cluster.strategies.SingleNodeScaleUpStrategy;
 
 import javax.annotation.PostConstruct;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -41,7 +41,7 @@ public final class SystemInitializer {
 
     @PostConstruct
     public void initialize() throws Exception {
-        final List<PhysicalNode> localNodes = Arrays.<PhysicalNode>asList(localNode);
+        final List<PhysicalNode> localNodes = Collections.singletonList(localNode);
         localActorSystemInstance.updateNodes(localNodes);
         localActorSystemInstance.distributeShards(localNodes,new SingleNodeScaleUpStrategy());
         // signal master elected

@@ -1,3 +1,9 @@
 ---
 name: test
 shards: 8
+#shards: 128
+#queuesPerNode: 8
+#queuesPerShard: 2
+#shardHashSeed: 0
+#multiQueueHashSeed: 53
+#shardDistributionHashSeed: 53

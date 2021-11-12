@@ -22,6 +22,8 @@ import org.elasticsoftware.elasticactors.UntypedActor;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.base.state.AliasActorState;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.elasticsoftware.elasticactors.state.ActorLifecycleStep.CREATE;
 
@@ -38,6 +40,14 @@ import static org.elasticsoftware.elasticactors.state.ActorLifecycleStep.CREATE;
 @Actor(stateClass = AliasActorState.class, serializationFramework = JacksonSerializationFramework.class)
 @PersistenceConfig(persistOnMessages = false,persistOn = {CREATE})
 public final class AliasActor extends UntypedActor {
+
+    private final static Logger staticLogger = LoggerFactory.getLogger(AliasActor.class);
+
+    @Override
+    protected Logger initLogger() {
+        return staticLogger;
+    }
+
     /**
      * Simply pass the message on to the {@link org.elasticsoftware.elasticactors.base.state.AliasActorState#getAliasedActor()}
      *

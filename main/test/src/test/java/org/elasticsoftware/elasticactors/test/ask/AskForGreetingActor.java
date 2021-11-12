@@ -23,7 +23,9 @@ import org.elasticsoftware.elasticactors.MessageHandler;
 import org.elasticsoftware.elasticactors.MessageHandlers;
 import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
+import org.elasticsoftware.elasticactors.base.state.StringState;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersRegistry;
+import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 import org.elasticsoftware.elasticactors.test.common.EchoGreetingActor;
 import org.elasticsoftware.elasticactors.test.common.Greeting;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
@@ -35,8 +37,9 @@ import static org.testng.Assert.assertNotNull;
 /**
  * @author Joost van de Wijgerd
  */
-@Actor(serializationFramework = JacksonSerializationFramework.class)
+@Actor(serializationFramework = JacksonSerializationFramework.class, stateClass = StringState.class)
 @MessageHandlers(registryClass = PluggableMessageHandlersRegistry.class, value = {AfterHandlers.class, BeforeHandlers.class})
+@PersistenceConfig(excluded = {AskForGreeting.class})
 public class AskForGreetingActor extends MethodActor {
 
     static final ThreadLocal<Integer> messageHandlerCounter = ThreadLocal.withInitial(() -> 0);
@@ -48,8 +51,11 @@ public class AskForGreetingActor extends MethodActor {
     }
 
     @MessageHandler(order = 0)
-    public void handle(AskForGreeting greeting, ActorSystem actorSystem, ActorRef replyActor) throws Exception {
-        ActorRef echo = actorSystem.actorOf("echo", EchoGreetingActor.class);
+    public void handle(AskForGreeting greeting, ActorSystem actorSystem, ActorRef replyActor, StringState state) throws Exception {
+        ActorRef echo = actorSystem.actorOf(
+            "echo" + (state != null && state.getBody() != null ? state.getBody() : ""),
+            EchoGreetingActor.class
+        );
         logger.info("Got REQUEST in Thread {}", Thread.currentThread().getName());
         checkHandlerOrder(1);
         if (getManager().isTracingEnabled()) {
@@ -61,7 +67,8 @@ public class AskForGreetingActor extends MethodActor {
                     "handle",
                     AskForGreeting.class,
                     ActorSystem.class,
-                    ActorRef.class
+                    ActorRef.class,
+                    StringState.class
                 )
             );
         }

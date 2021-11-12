@@ -24,11 +24,13 @@ import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
-import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueProxy;
+import org.elasticsoftware.elasticactors.messaging.MultiMessageQueueProxy;
+import org.elasticsoftware.elasticactors.messaging.MultiMessageQueueProxyHasher;
+import org.elasticsoftware.elasticactors.messaging.SingleMessageQueueProxy;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 
@@ -36,37 +38,38 @@ import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.
  * @author Joost van de Wijgerd
  */
 public abstract class AbstractActorContainer implements ActorContainer, MessageHandler {
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
-    private final ActorRef myRef;
-    private final MessageQueueFactory messageQueueFactory;
-    protected MessageQueue messageQueue;
-    private final PhysicalNode localNode;
 
-    public AbstractActorContainer(MessageQueueFactory messageQueueFactory, ActorRef myRef, PhysicalNode node) {
-        this.messageQueueFactory = messageQueueFactory;
+    protected final Logger logger = initLogger();
+    protected final ActorRef myRef;
+    protected final PhysicalNode localNode;
+
+    private final MessageQueueProxy messageQueueProxy;
+
+    protected abstract Logger initLogger();
+
+    protected AbstractActorContainer(
+        MessageQueueFactory messageQueueFactory,
+        ActorRef myRef,
+        PhysicalNode node,
+        int numberOfQueues,
+        int multiQueueHashSeed)
+    {
         this.myRef = myRef;
         this.localNode = node;
-    }
-
-    @Override
-    public void init() throws Exception {
-        this.messageQueue = messageQueueFactory.create(myRef.getActorPath(), this);
-    }
-
-    @Override
-    public void destroy() {
-        // release all resources
-        this.messageQueue.destroy();
+        this.messageQueueProxy = numberOfQueues <= 1
+            ? new SingleMessageQueueProxy(messageQueueFactory, this, myRef)
+            : new MultiMessageQueueProxy(
+                new MultiMessageQueueProxyHasher(multiQueueHashSeed),
+                messageQueueFactory,
+                this,
+                myRef,
+                numberOfQueues
+            );
     }
 
     @Override
     public final ActorRef getActorRef() {
         return myRef;
-    }
-
-    @Override
-    public final void offerInternalMessage(InternalMessage message) {
-        messageQueue.add(message);
     }
 
     @Override
@@ -108,5 +111,20 @@ public abstract class AbstractActorContainer implements ActorContainer, MessageH
     @Override
     public void sendMessage(ActorRef from, ActorRef to, Object message) throws Exception {
         sendMessage(from, ImmutableList.of(to), message);
+    }
+
+    @Override
+    public final void offerInternalMessage(InternalMessage message) {
+        messageQueueProxy.offerInternalMessage(message);
+    }
+
+    @Override
+    public void init() throws Exception {
+        messageQueueProxy.init();
+    }
+
+    @Override
+    public void destroy() {
+        messageQueueProxy.destroy();
     }
 }

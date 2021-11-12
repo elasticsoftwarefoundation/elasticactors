@@ -108,7 +108,7 @@ public final class PersistentActor<K> implements ActorContext, ProcessorContext 
                 serializedState, null, messageSubscribers, persistentSubscriptions);
     }
 
-    protected PersistentActor(K key, InternalActorSystem actorSystem, String currentActorStateVersion,
+    private PersistentActor(K key, InternalActorSystem actorSystem, String currentActorStateVersion,
                               String previousActorSystemVersion, Class<? extends ElasticActor> actorClass,
                               ActorRef ref, @Nullable String affinityKey, byte[] serializedState, ActorState actorState,
                               HashMultimap<String, MessageSubscriber> messageSubscribers,

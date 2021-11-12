@@ -111,10 +111,9 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     @Bean(name = "systemInitializer")
     public SystemInitializer createSystemInitializer(LocalActorSystemInstance localActorSystemInstance, ClusterService clusterService) {
         return new SystemInitializer(localNode, localActorSystemInstance, clusterService);
-
     }
 
-    @DependsOn("configuration") @Bean(name = {"internalActorSystem"})
+    @DependsOn("configuration") @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
     public LocalActorSystemInstance createLocalActorSystemInstance(
             InternalActorSystems internalActorSystems,
             InternalActorSystemConfiguration configuration,
@@ -146,7 +145,14 @@ public class TestConfiguration extends AsyncConfigurerSupport {
 
     @Bean(name = {"remoteConfiguration"})
     public RemoteActorSystemConfiguration getRemoteConfiguration(ActorSystemConfiguration configuration) throws IOException {
-        return new DefaultRemoteConfiguration("testCluster", configuration.getName(), configuration.getNumberOfShards());
+        return new DefaultRemoteConfiguration(
+            "testCluster",
+            configuration.getName(),
+            configuration.getNumberOfShards(),
+            configuration.getQueuesPerShard(),
+            configuration.getShardHashSeed(),
+            configuration.getMultiQueueHashSeed()
+        );
     }
 
     @Bean(name = {"objectMapperBuilder"})
@@ -173,8 +179,8 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     }
 
     @Bean(name = {"messageHandlersRegistry"})
-    public PluggableMessageHandlersScanner createPluggableMessagesHandlersScanner() {
-        return new PluggableMessageHandlersScanner();
+    public PluggableMessageHandlersScanner createPluggableMessagesHandlersScanner(ApplicationContext applicationContext) {
+        return new PluggableMessageHandlersScanner(applicationContext);
     }
 
     @Bean(name = {"nodeSelectorFactory"})

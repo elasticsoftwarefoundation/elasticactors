@@ -19,12 +19,22 @@ package org.elasticsoftware.elasticactors.test;
 import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.UntypedActor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Joost van de Wijgerd
  */
 @Actor
 public final class TestActorFullName extends UntypedActor {
+
+    private final static Logger staticLogger = LoggerFactory.getLogger(TestActorFullName.class);
+
+    @Override
+    protected Logger initLogger() {
+        return staticLogger;
+    }
+
     @Override
     public void onReceive(ActorRef sender, Object message) throws Exception {
         //To change body of implemented methods use File | Settings | File Templates.

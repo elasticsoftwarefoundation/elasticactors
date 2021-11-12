@@ -22,12 +22,22 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.TempActor;
 import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.messaging.internal.PersistActorMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Joost van de Wijgerd
  */
 @TempActor(stateClass = ActorDelegate.class)
 public final class ReplyActor<T> extends TypedActor<T> {
+
+    private final static Logger staticLogger = LoggerFactory.getLogger(ReplyActor.class);
+
+    @Override
+    protected Logger initLogger() {
+        return staticLogger;
+    }
+
     @Override
     public void onUndeliverable(ActorRef receiver, Object message) throws Exception {
         final ActorDelegate delegate = getState(ActorDelegate.class);

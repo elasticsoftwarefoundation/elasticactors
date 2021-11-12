@@ -16,8 +16,6 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorContextHolder;
@@ -29,21 +27,27 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.ActorSystems;
 import org.elasticsoftware.elasticactors.RemoteActorSystemConfiguration;
+import org.elasticsoftware.elasticactors.messaging.ActorShardHasher;
+import org.elasticsoftware.elasticactors.messaging.Hasher;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class  RemoteActorSystemInstance implements ActorSystem, ShardAccessor {
-    private final HashFunction hashFunction = Hashing.murmur3_32();
+public final class RemoteActorSystemInstance implements ActorSystem, ShardAccessor {
+
+    private static final Logger logger = LoggerFactory.getLogger(RemoteActorSystemInstance.class);
+
+    private final Hasher actorShardHasher;
     private final RemoteActorSystemConfiguration configuration;
     private final InternalActorSystems localActorSystems;
     private final ActorShard[] shards;
@@ -56,12 +60,26 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
         this.localActorSystems = localActorSystems;
         this.messageQueueFactory = messageQueueFactory;
         this.shards = new ActorShard[configuration.getNumberOfShards()];
+        this.actorShardHasher = new ActorShardHasher(configuration.getShardHashSeed());
     }
 
     @PostConstruct
     public void init() throws Exception {
+        logger.info(
+            "Initializing Remote Actor System [{}/{}]",
+            configuration.getClusterName(),
+            configuration.getName()
+        );
         for (int i = 0; i < shards.length; i++) {
-            shards[i] = new RemoteActorSystemActorShard(localActorSystems,configuration.getClusterName(),configuration.getName(),i,messageQueueFactory);
+            shards[i] = new RemoteActorSystemActorShard(
+                localActorSystems,
+                configuration.getClusterName(),
+                configuration.getName(),
+                i,
+                messageQueueFactory,
+                configuration.getQueuesPerShard(),
+                configuration.getMultiQueueHashSeed()
+            );
         }
         for (ActorShard shard : shards) {
             shard.init();
@@ -70,6 +88,11 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
 
     @PreDestroy
     public void destroy() {
+        logger.info(
+            "Destroying Remote Actor System [{}/{}]",
+            configuration.getClusterName(),
+            configuration.getName()
+        );
         for (ActorShard shard : shards) {
             shard.destroy();
         }
@@ -192,6 +215,6 @@ public final class  RemoteActorSystemInstance implements ActorSystem, ShardAcces
     }
 
     private ActorShard shardFor(String actorId) {
-        return shards[Math.abs(hashFunction.hashString(actorId, StandardCharsets.UTF_8).asInt()) % shards.length];
+        return shards[Math.abs(actorShardHasher.hashStringToInt(actorId)) % shards.length];
     }
 }

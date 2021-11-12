@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.PhysicalNode;
+import org.elasticsoftware.elasticactors.RemoteActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.client.messaging.ActorSystemMessage;
 import org.elasticsoftware.elasticactors.client.serialization.ActorSystemMessageSerializer;
@@ -27,8 +28,11 @@ import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
-import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueProxy;
+import org.elasticsoftware.elasticactors.messaging.MultiMessageQueueProxy;
+import org.elasticsoftware.elasticactors.messaging.MultiMessageQueueProxyHasher;
+import org.elasticsoftware.elasticactors.messaging.SingleMessageQueueProxy;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
@@ -42,23 +46,28 @@ final class RemoteActorShard implements ActorShard, MessageHandler {
     private static final PhysicalNode UNKNOWN_REMOTE_NODE = new PhysicalNode("UNKNOWN", null, false);
 
     private final ShardKey key;
-    private final String actorPath;
-    private final MessageQueueFactory messageQueueFactory;
+    private final MessageQueueProxy messageQueueProxy;
     private final SerializationFrameworks serializationFrameworks;
     private final ActorRef myRef;
 
-    private MessageQueue messageQueue;
-
     RemoteActorShard(
-            String clusterName,
-            ShardKey key,
-            MessageQueueFactory messageQueueFactory,
-            SerializationFrameworks serializationFrameworks) {
+        RemoteActorSystemConfiguration configuration,
+        ShardKey key,
+        MessageQueueFactory messageQueueFactory,
+        SerializationFrameworks serializationFrameworks)
+    {
         this.key = key;
-        this.messageQueueFactory = messageQueueFactory;
         this.serializationFrameworks = serializationFrameworks;
-        this.actorPath = key.getActorSystemName() + "/shards/" + key.getShardId();
-        this.myRef = new RemoteActorShardRef(clusterName, this, null);
+        this.myRef = new RemoteActorShardRef(configuration.getClusterName(), this, null);
+        this.messageQueueProxy = configuration.getQueuesPerShard() <= 1
+            ? new SingleMessageQueueProxy(messageQueueFactory, this, myRef)
+            : new MultiMessageQueueProxy(
+                new MultiMessageQueueProxyHasher(configuration.getMultiQueueHashSeed()),
+                messageQueueFactory,
+                this,
+                myRef,
+                configuration.getQueuesPerShard()
+            );
     }
 
     @Override
@@ -102,7 +111,7 @@ final class RemoteActorShard implements ActorShard, MessageHandler {
         final boolean durable = isDurable(message);
         final int timeout = getTimeout(message);
         String payloadClass = getPayloadClass(message);
-        messageQueue.offer(new DefaultInternalMessage(
+        messageQueueProxy.offerInternalMessage(new DefaultInternalMessage(
                 null,
                 ImmutableList.copyOf(receiver),
                 SerializationContext.serialize(messageSerializer, message),
@@ -163,7 +172,7 @@ final class RemoteActorShard implements ActorShard, MessageHandler {
 
     @Override
     public void offerInternalMessage(InternalMessage message) {
-        messageQueue.add(message);
+        messageQueueProxy.offerInternalMessage(message);
     }
 
     @Override
@@ -181,11 +190,11 @@ final class RemoteActorShard implements ActorShard, MessageHandler {
 
     @Override
     public void init() throws Exception {
-        this.messageQueue = messageQueueFactory.create(actorPath, this);
+        messageQueueProxy.init();
     }
 
     @Override
     public void destroy() {
-        this.messageQueue.destroy();
+        messageQueueProxy.destroy();
     }
 }

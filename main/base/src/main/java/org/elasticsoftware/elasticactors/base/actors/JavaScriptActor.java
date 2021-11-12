@@ -23,6 +23,8 @@ import org.elasticsoftware.elasticactors.base.serialization.JacksonSerialization
 import org.elasticsoftware.elasticactors.base.state.JavaScriptActorState;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.script.Compilable;
 import javax.script.CompiledScript;
@@ -37,6 +39,13 @@ import javax.script.ScriptException;
 @Actor(stateClass = JavaScriptActorState.class, serializationFramework = JacksonSerializationFramework.class)
 @PersistenceConfig(persistOnMessages = true)
 public final class JavaScriptActor extends UntypedActor {
+
+    private final static Logger staticLogger = LoggerFactory.getLogger(JavaScriptActor.class);
+
+    @Override
+    protected Logger initLogger() {
+        return staticLogger;
+    }
 
     @Override
     public void postActivate(String previousVersion) throws Exception {

@@ -58,9 +58,11 @@ public final class PersistentActorSerializer implements Serializer<PersistentAct
         }
 
         if(persistentActor.getMessageSubscribers() != null && !persistentActor.getMessageSubscribers().isEmpty()) {
-            persistentActor.getMessageSubscribers().asMap().forEach((messageName, messageSubscribers) ->
-                    messageSubscribers.forEach(m -> builder.addSubscribers(Elasticactors.Subscriber.newBuilder()
-                            .setMessageName(messageName).setSubscriberRef(m.getSubscriberRef().toString()).setLeases(m.getLeases()))));
+            persistentActor.getMessageSubscribers().forEach((messageName, messageSubscriber) ->
+                builder.addSubscribers(Elasticactors.Subscriber.newBuilder()
+                    .setMessageName(messageName)
+                    .setSubscriberRef(messageSubscriber.getSubscriberRef().toString())
+                    .setLeases(messageSubscriber.getLeases())));
         }
 
         return builder.build().toByteArray();
@@ -68,7 +70,12 @@ public final class PersistentActorSerializer implements Serializer<PersistentAct
 
     private byte[] getSerializedState(PersistentActor<ShardKey> persistentActor) throws IOException {
         // if the state was already serialized, assume it's the most recent to avoid duplicate serialization
-        return persistentActor.getSerializedState() != null ? persistentActor.getSerializedState() :
-                serializeActorState(serializationFrameworks,persistentActor.getActorClass(),persistentActor.getState());
+        return persistentActor.getSerializedState() != null
+            ? persistentActor.getSerializedState()
+            : serializeActorState(
+                serializationFrameworks,
+                persistentActor.getActorClass(),
+                persistentActor.getState()
+            );
     }
 }

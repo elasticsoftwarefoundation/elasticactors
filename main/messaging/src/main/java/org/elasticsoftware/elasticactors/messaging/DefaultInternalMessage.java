@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.messaging;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
@@ -28,13 +29,17 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.UUID;
+
+import static org.elasticsoftware.elasticactors.messaging.SplittableUtils.calculateBucketForEmptyOrSingleActor;
+import static org.elasticsoftware.elasticactors.messaging.SplittableUtils.groupByBucket;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class DefaultInternalMessage extends AbstractTracedMessage
-        implements InternalMessage, Serializable {
+        implements InternalMessage, Serializable, Splittable<String, InternalMessage> {
     private final ActorRef sender;
     private final ImmutableList<ActorRef> receivers;
     private final UUID id;
@@ -173,6 +178,11 @@ public final class DefaultInternalMessage extends AbstractTracedMessage
     }
 
     @Override
+    public boolean hasPayloadObject() {
+        return false;
+    }
+
+    @Override
     public byte[] toByteArray() {
         if(serializedForm == null) {
             serializedForm = InternalMessageSerializer.get().serialize(this);
@@ -193,5 +203,27 @@ public final class DefaultInternalMessage extends AbstractTracedMessage
                 timeout,
                 getTraceContext(),
                 getCreationContext());
+    }
+
+    @Override
+    public ImmutableMap<Integer, InternalMessage> splitInBuckets(Hasher hasher, int buckets) {
+        return receivers.size() <= 1
+            ? ImmutableMap.of(calculateBucketForEmptyOrSingleActor(receivers, hasher, buckets), this)
+            : groupByBucket(receivers, hasher, buckets, this::copyForReceivers);
+    }
+
+    private InternalMessage copyForReceivers(List<ActorRef> receivers) {
+        return new DefaultInternalMessage(
+            UUIDTools.createTimeBasedUUID(),
+            sender,
+            ImmutableList.copyOf(receivers),
+            payload.asReadOnlyBuffer(),
+            payloadClass,
+            durable,
+            undeliverable,
+            timeout,
+            getTraceContext(),
+            getCreationContext()
+        );
     }
 }

@@ -13,15 +13,23 @@ public final class TraceContextDeserializer {
 
     @Nullable
     public static TraceContext deserialize(Messaging.TraceContext traceContext) {
-        Map<String, String> baggage = traceContext.getBaggageMap();
-        TraceContext deserialized = new TraceContext(
-            traceContext.hasSpanId() ? traceContext.getSpanId() : "",
-            traceContext.hasTraceId() ? traceContext.getTraceId() : "",
-            traceContext.hasParentId() ? traceContext.getParentId() : null,
-            baggage.isEmpty() ? null : baggage,
-            true
-        );
-        return deserialized.isEmpty() ? null : deserialized;
+        if (hasMinimumAmountOfData(traceContext)) {
+            Map<String, String> baggage = traceContext.getBaggageMap();
+            TraceContext deserialized = new TraceContext(
+                traceContext.hasSpanId() ? traceContext.getSpanId() : "",
+                traceContext.hasTraceId() ? traceContext.getTraceId() : "",
+                traceContext.hasParentId() ? traceContext.getParentId() : null,
+                baggage.isEmpty() ? null : baggage,
+                true
+            );
+            return deserialized.isEmpty() ? null : deserialized;
+        } else {
+            return null;
+        }
+    }
+
+    private static boolean hasMinimumAmountOfData(Messaging.TraceContext traceContext) {
+        return traceContext.hasSpanId() && traceContext.hasTraceId();
     }
 
 }

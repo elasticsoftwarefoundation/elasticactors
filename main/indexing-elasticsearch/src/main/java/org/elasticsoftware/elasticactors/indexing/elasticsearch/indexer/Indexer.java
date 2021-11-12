@@ -63,7 +63,7 @@ public final class Indexer implements ActorStateUpdateListener {
     }
 
     @Override
-    public final void onUpdate(List<? extends ActorStateUpdate> updates) {
+    public void onUpdate(List<? extends ActorStateUpdate> updates) {
         updates.stream().filter(
                 update -> update.getActorClass().getAnnotation(IndexConfig.class) != null
         ).forEach(update ->

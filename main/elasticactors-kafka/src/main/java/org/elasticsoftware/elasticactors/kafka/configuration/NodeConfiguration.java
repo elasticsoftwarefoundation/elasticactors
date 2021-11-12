@@ -51,6 +51,7 @@ import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorD
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorSerializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
@@ -132,8 +133,8 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"messageHandlersRegistry"})
-    public PluggableMessageHandlersScanner createPluggableMessagesHandlersScanner() {
-        return new PluggableMessageHandlersScanner();
+    public PluggableMessageHandlersScanner createPluggableMessagesHandlersScanner(ApplicationContext applicationContext) {
+        return new PluggableMessageHandlersScanner(applicationContext);
     }
 
     @Bean(name = {"nodeSelectorFactory"})

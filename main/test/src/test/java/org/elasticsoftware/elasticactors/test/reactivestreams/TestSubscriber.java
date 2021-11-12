@@ -23,16 +23,12 @@ import org.elasticsoftware.elasticactors.MethodActor;
 import org.elasticsoftware.elasticactors.PublisherNotFoundException;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Joost van de Wijgerd
  */
 @Actor
 public final class TestSubscriber extends MethodActor {
-
-    private final static Logger logger = LoggerFactory.getLogger(TestSubscriber.class);
 
     @Override
     public void postCreate(ActorRef creator) throws Exception {

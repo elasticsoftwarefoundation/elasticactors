@@ -38,6 +38,33 @@ final class ActorSystemDelegateConfiguration implements ActorSystemConfiguration
     }
 
     @Override
+    public int getQueuesPerShard() {
+        return delegate.getQueuesPerShard();
+    }
+
+    @Override
+    public int getQueuesPerNode() {
+        // Actor Systems don't talk to one another over node queues
+        return 1;
+    }
+
+    @Override
+    public int getShardHashSeed() {
+        return delegate.getShardHashSeed();
+    }
+
+    @Override
+    public int getMultiQueueHashSeed() {
+        return delegate.getMultiQueueHashSeed();
+    }
+
+    @Override
+    public int getShardDistributionHashSeed() {
+        // Remote actor systems don't need to know this
+        return 0;
+    }
+
+    @Override
     public String getVersion() {
         return "1.0.0";
     }

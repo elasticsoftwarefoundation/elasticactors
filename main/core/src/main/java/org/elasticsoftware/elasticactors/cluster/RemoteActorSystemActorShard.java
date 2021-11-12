@@ -25,12 +25,17 @@ import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
-import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueProxy;
+import org.elasticsoftware.elasticactors.messaging.MultiMessageQueueProxy;
+import org.elasticsoftware.elasticactors.messaging.MultiMessageQueueProxyHasher;
+import org.elasticsoftware.elasticactors.messaging.SingleMessageQueueProxy;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -39,22 +44,36 @@ import java.util.List;
  */
 
 public final class RemoteActorSystemActorShard implements ActorShard, MessageHandler {
+
+    private final static Logger logger = LoggerFactory.getLogger(RemoteActorSystemActorShard.class);
+
     private static final PhysicalNode UNKNOWN_REMOTE_NODE = new PhysicalNode("UNKNOWN", null, false);
     private final InternalActorSystems actorSystems;
     private final ShardKey shardKey;
-    private final MessageQueueFactory messageQueueFactory;
+    private final MessageQueueProxy messageQueueProxy;
     private final ActorRef myRef;
-    private MessageQueue messageQueue;
 
-    public RemoteActorSystemActorShard(InternalActorSystems actorSystems,
-                                       String remoteClusterName,
-                                       String remoteActorSystemName,
-                                       int vNodeKey,
-                                       MessageQueueFactory messageQueueFactory) {
+    public RemoteActorSystemActorShard(
+        InternalActorSystems actorSystems,
+        String remoteClusterName,
+        String remoteActorSystemName,
+        int vNodeKey,
+        MessageQueueFactory messageQueueFactory,
+        int numberOfQueues,
+        int multiQueueHashSeed)
+    {
         this.actorSystems = actorSystems;
         this.shardKey = new ShardKey(remoteActorSystemName, vNodeKey);
         this.myRef = new ActorShardRef(actorSystems.get(null), remoteClusterName, this);
-        this.messageQueueFactory = messageQueueFactory;
+        this.messageQueueProxy = numberOfQueues <= 1
+            ? new SingleMessageQueueProxy(messageQueueFactory, this, myRef)
+            : new MultiMessageQueueProxy(
+                new MultiMessageQueueProxyHasher(multiQueueHashSeed),
+                messageQueueFactory,
+                this,
+                myRef,
+                numberOfQueues
+            );
     }
 
     @Override
@@ -84,7 +103,14 @@ public final class RemoteActorSystemActorShard implements ActorShard, MessageHan
         Message messageAnnotation = message.getClass().getAnnotation(Message.class);
         final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
         final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-        messageQueue.offer(new DefaultInternalMessage(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer,message),message.getClass().getName(),durable,timeout));
+        messageQueueProxy.offerInternalMessage(new DefaultInternalMessage(
+            from,
+            ImmutableList.copyOf(to),
+            SerializationContext.serialize(messageSerializer, message),
+            message.getClass().getName(),
+            durable,
+            timeout
+        ));
     }
 
     @Override
@@ -97,22 +123,24 @@ public final class RemoteActorSystemActorShard implements ActorShard, MessageHan
                                                                            message.isDurable(),
                                                                            true,
                                                                            message.getTimeout());
-        messageQueue.offer(undeliverableMessage);
+        messageQueueProxy.offerInternalMessage(undeliverableMessage);
     }
 
     @Override
     public void offerInternalMessage(InternalMessage message) {
-        messageQueue.add(message);
+        messageQueueProxy.offerInternalMessage(message);
     }
 
     @Override
     public void init() throws Exception {
-        this.messageQueue = messageQueueFactory.create(myRef.getActorPath(),this);
+        logger.info("Initializing Remote Actor Shard [{}]", shardKey);
+        messageQueueProxy.init();
     }
 
     @Override
     public void destroy() {
-        this.messageQueue.destroy();
+        logger.info("Destroying Local Actor Shard [{}]", shardKey);
+        messageQueueProxy.destroy();
     }
 
     @Override

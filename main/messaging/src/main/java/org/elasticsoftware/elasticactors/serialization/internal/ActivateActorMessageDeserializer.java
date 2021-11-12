@@ -38,11 +38,11 @@ public final class ActivateActorMessageDeserializer implements MessageDeserializ
     @Override
     public ActivateActorMessage deserialize(ByteBuffer serializedObject) throws IOException {
         Messaging.ActivateActorMessage protobufMessage = Messaging.ActivateActorMessage.parseFrom(ByteString.copyFrom(serializedObject));
-        return new ActivateActorMessage(protobufMessage.getActorSystem(),
-                                        protobufMessage.getActorId(),
-                                        protobufMessage.getType() != null
-                                              ? ActorType.values()[protobufMessage.getType().getNumber()]
-                                              : ActorType.PERSISTENT);
+        return new ActivateActorMessage(
+            protobufMessage.getActorSystem(),
+            protobufMessage.getActorId(),
+            ActorType.values()[protobufMessage.getType().getNumber()]
+        );
     }
 
     @Override

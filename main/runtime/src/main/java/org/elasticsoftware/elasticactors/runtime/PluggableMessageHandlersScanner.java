@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
 import java.util.Set;
@@ -45,11 +44,13 @@ import java.util.Set;
 @Named
 public final class PluggableMessageHandlersScanner implements MessageHandlersRegistry, ActorLifecycleListenerRegistry {
     private static final Logger logger = LoggerFactory.getLogger(PluggableMessageHandlersScanner.class);
-    @Inject
-    private ApplicationContext applicationContext;
+    private final ApplicationContext applicationContext;
     private final ListMultimap<Class<? extends MethodActor>,Class<?>> registry = LinkedListMultimap.create();
     private final ListMultimap<Class<? extends ElasticActor>,ActorLifecycleListener<?>> lifecycleListeners = LinkedListMultimap.create();
 
+    public PluggableMessageHandlersScanner(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
 
     @Override
     @PostConstruct

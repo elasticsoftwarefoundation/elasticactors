@@ -91,6 +91,8 @@ public abstract class MessagingContextManager {
     @Nonnull
     public abstract MessagingScope enter(@Nonnull Method context);
 
+    public abstract boolean isLogContextProcessingEnabled();
+
     /*
      * Initialization-on-deman holder pattern (lazy-loaded singleton)
      * See: https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom
@@ -122,7 +124,7 @@ public abstract class MessagingContextManager {
         private static MessagingContextManager loadFirst(Iterator<MessagingContextManager> iter) {
             MessagingContextManager service = iter.next();
             logger.info(
-                "Loaded MessagingContextManager implementation: {}. Tracing enabled: {}",
+                "Loaded MessagingContextManager implementation [{}]. Tracing enabled: {}",
                 service.getClass().getName(),
                 service.isTracingEnabled()
             );
@@ -131,7 +133,7 @@ public abstract class MessagingContextManager {
     }
 
     /**
-     * NO-OP implementation for when an implementation of the managet cannot be found
+     * NO-OP implementation for when an implementation of the manager cannot be found
      */
     private final static class NoopMessagingContextManager extends MessagingContextManager {
 
@@ -172,6 +174,11 @@ public abstract class MessagingContextManager {
         @Override
         public MessagingScope enter(@Nonnull Method context) {
             return NoopMessagingScope.INSTANCE;
+        }
+
+        @Override
+        public boolean isLogContextProcessingEnabled() {
+            return false;
         }
     }
 

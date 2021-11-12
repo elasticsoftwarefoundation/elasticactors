@@ -57,7 +57,7 @@ public final class RemoteActorShardRefFactory implements ActorRefFactory {
         return actorRef;
     }
 
-    public final ActorRef parse(String refSpec) {
+    public ActorRef parse(String refSpec) {
         // refSpec should look like: actor://<cluster>/<actorSystem>/shards/<shardId>/<actorId>
         if (refSpec.startsWith("actor://")) {
             int actorSeparatorIndex = 8;
@@ -100,7 +100,7 @@ public final class RemoteActorShardRefFactory implements ActorRefFactory {
         }
     }
 
-    protected ActorRef handleRemoteShard(String[] components, String actorId) {
+    private ActorRef handleRemoteShard(String[] components, String actorId) {
         String clusterName = components[0];
         String actorSystemName = components[1];
         RemoteActorSystemInstance remoteActorSystem =
@@ -121,7 +121,7 @@ public final class RemoteActorShardRefFactory implements ActorRefFactory {
                 actorId);
     }
 
-    protected ActorRef handleRemoteNode(String[] components, String actorId) {
+    private ActorRef handleRemoteNode(String[] components, String actorId) {
         String clusterName = components[0];
         String actorSystemName = components[1];
         String nodeId = components[3];
@@ -132,7 +132,7 @@ public final class RemoteActorShardRefFactory implements ActorRefFactory {
                 actorId);
     }
 
-    protected ActorRef handleRemoteService(String[] components, String actorId) {
+    private ActorRef handleRemoteService(String[] components, String actorId) {
         String clusterName = components[0];
         String actorSystemName = components[1];
         return new DisconnectedServiceActorRef(

@@ -17,8 +17,13 @@
 package org.elasticsoftware.elasticactors.test.ask;
 
 import com.google.common.collect.ImmutableMap;
+import org.elasticsoftware.elasticactors.ActorContextHolder;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorRefGroup;
 import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.base.actors.ActorDelegate;
+import org.elasticsoftware.elasticactors.base.actors.ReplyActor;
+import org.elasticsoftware.elasticactors.base.state.StringState;
 import org.elasticsoftware.elasticactors.test.TestActorSystem;
 import org.elasticsoftware.elasticactors.test.common.EchoGreetingActor;
 import org.elasticsoftware.elasticactors.test.common.Greeting;
@@ -33,13 +38,20 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 
 /**
  * @author Joost van de Wijgerd
@@ -54,8 +66,8 @@ public class AskTest {
     public void addExternalCreatorData(Method method) {
         testScope.set(getManager().enter(
             new TraceContext(ImmutableMap.of(
-                "testOriginalCreator",
-                this.getClass().getSimpleName()
+                "testOriginalCreator", this.getClass().getSimpleName(),
+                "testAdditionalBaggage", "someValue"
             )),
                 new CreationContext(
                         this.getClass().getSimpleName(),
@@ -65,10 +77,14 @@ public class AskTest {
 
     @AfterMethod
     public void removeExternalCreatorData() {
-        assertEquals(MDC.get("testOriginalCreator"), this.getClass().getSimpleName());
+        if (getManager().isLogContextProcessingEnabled()) {
+            assertEquals(MDC.get("testOriginalCreator"), this.getClass().getSimpleName());
+            assertEquals(MDC.get("testAdditionalBaggage"), "someValue");
+        }
         testScope.get().close();
         assertNull(getManager().currentScope());
         assertNull(MDC.get("testOriginalCreator"));
+        assertNull(MDC.get("testAdditionalBaggage"));
         testScope.remove();
     }
 
@@ -104,6 +120,97 @@ public class AskTest {
         Greeting response = echo.ask(new AskForGreeting(), Greeting.class).toCompletableFuture().get();
 
         assertEquals(response.getWho(), "echo");
+
+        testActorSystem.destroy();
+    }
+
+    @Test(enabled = false)
+    public void testAskGreetingViaActor_stressTest() throws Exception {
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        logger.info("Starting testAskGreetingViaActor");
+
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+        ActorRef echo = actorSystem.actorOf("ask", AskForGreetingActor.class);
+
+        ActorRef[] actors = new ActorRef[1_000];
+
+        for (int i = 0; i < actors.length; i++) {
+            actors[i] = actorSystem.actorOf("ask" + i, AskForGreetingActor.class, new StringState(Integer.toString(i)));
+        }
+
+        CompletableFuture<Greeting> response = echo.ask(new AskForGreeting(), Greeting.class)
+            .whenComplete((m, e) -> {
+                if (m != null) {
+                    logger.info(
+                        "TEMP ACTOR got REPLY from {} in Thread {}",
+                        m.getWho(),
+                        Thread.currentThread().getName()
+                    );
+                } else if (e != null) {
+                    logger.info("GOT ERROR", e);
+                    System.exit(1);
+                }
+            }).toCompletableFuture();
+
+        CompletableFuture<?>[] futures = new CompletableFuture<?>[1_000_000];
+        CountDownLatch tempLatch = new CountDownLatch(futures.length);
+        Random rand = ThreadLocalRandom.current();
+        for (int i = 0; i < futures.length; i++) {
+            futures[i] =
+                actors[rand.nextInt(actors.length)].ask(new AskForGreeting(), Greeting.class)
+                    .whenComplete((m, e) -> {
+                        tempLatch.countDown();
+                        if (m != null) {
+                            logger.info(
+                                "TEMP ACTOR got REPLY from {} in Thread {}",
+                                m.getWho(),
+                                Thread.currentThread().getName()
+                            );
+                        } else if (e != null) {
+                            logger.error("GOT ERROR", e);
+                            System.exit(1);
+                        }
+                    })
+                    .toCompletableFuture();
+        }
+
+        ActorRefGroup group = actorSystem.groupOf(Arrays.asList(actors));
+        CountDownLatch countDownLatch = new CountDownLatch(actors.length);
+        ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
+            .deleteAfterReceive(false)
+            .onReceive(
+                Greeting.class,
+                m -> logger.info(
+                    "Got GROUP count {} current actor name '{}'",
+                    actors.length - countDownLatch.getCount(),
+                    m.getWho()
+                )
+            )
+            .postReceive(() -> {
+                countDownLatch.countDown();
+                if (countDownLatch.getCount() == 0) {
+                    ActorDelegate.Builder.stopActor();
+                }
+            })
+            .onUndeliverable(() -> {
+                logger.error("Could not deliver message from {}", ActorContextHolder.getSelf());
+                System.exit(1);
+            })
+            .build());
+
+        group.tell(new AskForGreeting(), replyActor);
+
+        assertTrue(tempLatch.await(60_000, TimeUnit.SECONDS));
+        assertTrue(countDownLatch.await(60_000, TimeUnit.SECONDS));
+
+        Arrays.stream(futures)
+            .map(CompletableFuture::join)
+            .collect(Collectors.toList())
+            .forEach(i -> logger.info("Got {}", i));
+
+        assertEquals(response.get().getWho(), "echo");
 
         testActorSystem.destroy();
     }

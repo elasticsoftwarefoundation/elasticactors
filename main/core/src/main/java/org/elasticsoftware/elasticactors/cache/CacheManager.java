@@ -22,14 +22,14 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheStats;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multimaps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,7 +52,7 @@ public class CacheManager<K,V> {
             .maximumSize(maximumSize)
             .removalListener(new GlobalRemovalListener())
             .build();
-        segmentIndex = Multimaps.synchronizedSetMultimap(HashMultimap.create());
+        segmentIndex = Multimaps.synchronizedMultimap(MultimapBuilder.hashKeys().hashSetValues().build());
     }
 
     public final Cache<K,V> create(Object cacheKey,EvictionListener<V> evictionListener) {
@@ -80,12 +80,12 @@ public class CacheManager<K,V> {
         }
 
         @Override
-        public V getIfPresent(Object key) {
+        public V getIfPresent(@Nonnull Object key) {
             return backingCache.getIfPresent(new CacheKey(segmentKey,key));
         }
 
         @Override
-        public V get(K key, Callable<? extends V> valueLoader) throws ExecutionException {
+        public V get(@Nonnull K key, @Nonnull Callable<? extends V> valueLoader) throws ExecutionException {
             CacheKey cacheKey = new CacheKey(segmentKey,key);
             V value = backingCache.get(cacheKey,valueLoader);
             segmentIndex.put(segmentKey,cacheKey);
@@ -93,36 +93,35 @@ public class CacheManager<K,V> {
         }
 
         @Override
-        public void invalidate(Object key) {
+        public void invalidate(@Nonnull Object key) {
             CacheKey cacheKey = new CacheKey(segmentKey,key);
-            backingCache.invalidate(new CacheKey(segmentKey,key));
+            backingCache.invalidate(cacheKey);
             segmentIndex.remove(segmentKey,cacheKey);
         }
 
         @Override
-        public void put(K key, V value) {
+        public void put(@Nonnull K key, @Nonnull V value) {
             CacheKey cacheKey = new CacheKey(segmentKey,key);
             backingCache.put(cacheKey,value);
             segmentIndex.put(segmentKey,cacheKey);
         }
 
+        @Nonnull
         @Override
-        public ImmutableMap<K, V> getAllPresent(Iterable<?> keys) {
-            Map<K,V> result = Maps.newLinkedHashMap();
+        public ImmutableMap<K, V> getAllPresent(@Nonnull Iterable<?> keys) {
+            ImmutableMap.Builder<K,V> result = ImmutableMap.builder();
             for (Object key : keys) {
                 V value = backingCache.getIfPresent(new CacheKey(segmentKey,key));
                 if(value != null) {
                     result.put((K) key, value);
                 }
             }
-            return ImmutableMap.copyOf(result);
+            return result.build();
         }
 
         @Override
         public void putAll(Map<? extends K, ? extends V> m) {
-            for (Map.Entry<? extends K, ? extends V> entry : m.entrySet()) {
-                put(entry.getKey(),entry.getValue());
-            }
+            m.forEach(this::put);
         }
 
         @Override
@@ -147,6 +146,7 @@ public class CacheManager<K,V> {
             backingCache.invalidateAll(segmentIndex.removeAll(segmentKey));
         }
 
+        @Nonnull
         @Override
         public CacheStats stats() {
             return backingCache.stats();
@@ -186,23 +186,26 @@ public class CacheManager<K,V> {
     }
 
     private final class GlobalRemovalListener implements RemovalListener<CacheManager.CacheKey,V> {
+
         @Override
         public void onRemoval(RemovalNotification<CacheKey, V> notification) {
-            if(notification.getKey() != null && notification.wasEvicted()) {
-                segmentIndex.remove(notification.getKey().segmentKey,notification.getKey());
-            }
-            EvictionListener<V> evictionListener = evictionListeners.get(notification.getKey().segmentKey);
-            // only notify when it was not evicted explicitly (when a entry was deleted)
-            // otherwise the prePassivate will run
-            if (logger.isDebugEnabled()) {
-                logger.debug(
-                    "Removing [{}] from cache. Cause: [{}]",
-                    notification.getValue(),
-                    notification.getCause()
-                );
-            }
-            if(evictionListener != null && notification.wasEvicted()) {
-                evictionListener.onEvicted(notification.getValue());
+            if (notification.getKey() != null) {
+                if (notification.wasEvicted()) {
+                    segmentIndex.remove(notification.getKey().segmentKey, notification.getKey());
+                    EvictionListener<V> evictionListener = evictionListeners.get(notification.getKey().segmentKey);
+                    // only notify when it was not evicted explicitly (when an entry was deleted)
+                    // otherwise the prePassivate will run
+                    if (evictionListener != null) {
+                        evictionListener.onEvicted(notification.getValue());
+                    }
+                }
+                if (logger.isDebugEnabled()) {
+                    logger.debug(
+                        "Removing [{}] from cache. Cause: [{}]",
+                        notification.getValue(),
+                        notification.getCause()
+                    );
+                }
             }
         }
     }

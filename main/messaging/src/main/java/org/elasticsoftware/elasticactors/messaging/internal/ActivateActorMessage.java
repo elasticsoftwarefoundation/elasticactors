@@ -19,13 +19,14 @@ package org.elasticsoftware.elasticactors.messaging.internal;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 
 /**
  * @author Joost van de Wijgerd
  */
 @Message(immutable = true, durable = false, serializationFramework = SystemSerializationFramework.class)
-public final class ActivateActorMessage implements Serializable {
+public final class ActivateActorMessage implements Serializable, MessageQueueBoundPayload {
     private final String actorSystem;
     private final String actorId;
     private final ActorType actorType;
@@ -46,5 +47,11 @@ public final class ActivateActorMessage implements Serializable {
 
     public ActorType getActorType() {
         return actorType;
+    }
+
+    @Nullable
+    @Override
+    public String getMessageQueueAffinityKey() {
+        return actorId;
     }
 }

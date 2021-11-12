@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors.cluster.tasks;
 
+import com.google.common.collect.HashMultimap;
 import org.elasticsoftware.elasticactors.ActorLifecycleListener;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
@@ -34,8 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author Joost van de Wijgerd
@@ -122,13 +121,12 @@ public final class DestroyActorTask extends ActorLifecycleTask {
     }
 
     private void notifySubscribers() {
-        if(persistentActor.getMessageSubscribers() != null) {
+        HashMultimap<String, MessageSubscriber> messageSubscribers = persistentActor.getMessageSubscribers();
+        if(messageSubscribers != null) {
             // make sure to let my subscribers know I will cease to exist
             try {
-                ((Map<String, Set<MessageSubscriber>>) persistentActor.getMessageSubscribers().asMap())
-                        .forEach((messageName, subscribers) -> subscribers
-                                .forEach(messageSubscriber -> messageSubscriber.getSubscriberRef()
-                                        .tell(new CompletedMessage(messageName))));
+                messageSubscribers.forEach((messageName, messageSubscriber) ->
+                    messageSubscriber.getSubscriberRef().tell(new CompletedMessage(messageName)));
             } catch(Exception e) {
                 logger.error("Unexpected exception while notifying subscribers", e);
             }

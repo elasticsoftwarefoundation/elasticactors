@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -39,7 +38,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
     private static final Logger logger = LoggerFactory.getLogger(ThreadBoundExecutorImpl.class);
     private final ThreadFactory threadFactory;
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
-    private final List<BlockingQueue<ThreadBoundEvent>> queues = new ArrayList<>();
+    private final BlockingQueue<ThreadBoundEvent>[] queues;
 
     /**
      * Create an executor with numberOfThreads worker threads.
@@ -54,10 +53,11 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
     public ThreadBoundExecutorImpl(ThreadBoundEventProcessor eventProcessor, int maxBatchSize, ThreadFactory threadFactory, int numberOfThreads) {
         this.threadFactory = threadFactory;
         logger.info("Initializing (LinkedBlockingQueue)ThreadBoundExecutor[{}]",threadFactory);
+        queues = new BlockingQueue[numberOfThreads];
         for (int i = 0; i < numberOfThreads; i++) {
             BlockingQueue<ThreadBoundEvent> queue = new LinkedBlockingQueue<>();
             Thread t = threadFactory.newThread(new Consumer(queue,eventProcessor,maxBatchSize));
-            queues.add(queue);
+            queues[i] = queue;
             t.start();
         }
     }
@@ -76,24 +76,24 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
             event = wrap((ThreadBoundRunnable<?>) event);
         }
         int bucket = getBucket(event.getKey());
-        BlockingQueue<ThreadBoundEvent> queue = queues.get(bucket);
+        BlockingQueue<ThreadBoundEvent> queue = queues[bucket];
         queue.add(event);
     }
 
     @Override
     public int getThreadCount() {
-        return queues.size();
+        return queues.length;
     }
 
     private int getBucket(Object key) {
-        return Math.abs(key.hashCode()) % queues.size();
+        return Math.abs(key.hashCode()) % queues.length;
     }
 
     @Override
     public void shutdown() {
         logger.info("Shutting down the (LinkedBlockingQueue)ThreadBoundExecutor[{}]",threadFactory);
         if (shuttingDown.compareAndSet(false, true)) {
-            final CountDownLatch shuttingDownLatch = new CountDownLatch(queues.size());
+            final CountDownLatch shuttingDownLatch = new CountDownLatch(queues.length);
             for (BlockingQueue<ThreadBoundEvent> queue : queues) {
                 queue.add(new ShutdownTask(shuttingDownLatch));
             }
@@ -125,7 +125,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
             this.eventProcessor = eventProcessor;
             // store this -1 as we will always use take to get the first element of the batch
             this.maxBatchSize = maxBatchSize - 1;
-            this.batch = new ArrayList<>(maxBatchSize);
+            this.batch = maxBatchSize > 1 ? new ArrayList<>(maxBatchSize) : null;
         }
 
         @Override
@@ -137,13 +137,13 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
                         // block on event availability
                         ThreadBoundEvent event = queue.take();
                         // add to the batch, and see if we can add more
-                        batch.add(event);
-                        if(maxBatchSize > 0) {
+                        if(batch != null) {
+                            batch.add(event);
                             queue.drainTo(batch, maxBatchSize);
                         }
                         // check for the stop condition (and remove it)
                         // treat batches of 1 (the most common case) specially
-                        if(batch.size() > 1) {
+                        if(batch != null && batch.size() > 1) {
                             ListIterator<ThreadBoundEvent> itr = batch.listIterator();
                             while (itr.hasNext()) {
                                 ThreadBoundEvent next = itr.next();
@@ -160,7 +160,11 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
                                 running = false;
                                 ((ShutdownTask)event).latch.countDown();
                             } else {
-                                eventProcessor.process(batch);
+                                if (batch != null) {
+                                    eventProcessor.process(batch);
+                                } else {
+                                    eventProcessor.process(event);
+                                }
                             }
                         }
                     } catch (InterruptedException e) {
@@ -170,7 +174,9 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
                         logger.error("Exception on queue {} while executing events", Thread.currentThread().getName(), exception);
                     } finally {
                         // reset the batch
-                        batch.clear();
+                        if (batch != null) {
+                            batch.clear();
+                        }
                     }
                 }
             } catch(Throwable unexpectedThrowable) {

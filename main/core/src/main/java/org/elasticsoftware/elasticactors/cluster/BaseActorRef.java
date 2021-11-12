@@ -42,7 +42,7 @@ public abstract class BaseActorRef implements ActorRef {
     protected final String actorId;
     protected final String refSpec;
 
-    public BaseActorRef(InternalActorSystem actorSystem, String clusterName, @Nullable String actorId, String refSpec) {
+    protected BaseActorRef(InternalActorSystem actorSystem, String clusterName, @Nullable String actorId, String refSpec) {
         this.actorSystem = actorSystem;
         this.actorId = actorId;
         this.clusterName = clusterName;
@@ -53,7 +53,6 @@ public abstract class BaseActorRef implements ActorRef {
     public final <T> CompletableFuture<T> ask(Object message, Class<T> responseType) {
         return ask(message, responseType, Boolean.FALSE);
     }
-
 
     @Override
     public <T> CompletableFuture<T> ask(Object message, Class<T> responseType, Boolean persistOnResponse) {

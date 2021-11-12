@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors.client.serialization;
 
+import com.google.common.collect.ImmutableMap;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
@@ -30,19 +31,18 @@ import org.elasticsoftware.elasticactors.serialization.internal.CancelScheduledM
 import org.elasticsoftware.elasticactors.serialization.internal.CreateActorMessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.DestroyActorMessageDeserializer;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public final class ClientSystemDeserializers implements SystemDeserializers {
 
-    private final Map<Class, MessageDeserializer> systemDeserializers = new HashMap<>();
+    private final ImmutableMap<Class, MessageDeserializer> systemDeserializers;
 
     public ClientSystemDeserializers(SerializationFrameworks serializationFrameworks, ActorRefFactory actorRefFactory) {
+        ImmutableMap.Builder<Class, MessageDeserializer> builder = ImmutableMap.builder();
         ActorRefDeserializer actorRefDeserializer = new ActorRefDeserializer(actorRefFactory);
-        systemDeserializers.put(CreateActorMessage.class,new CreateActorMessageDeserializer(serializationFrameworks));
-        systemDeserializers.put(DestroyActorMessage.class,new DestroyActorMessageDeserializer(actorRefDeserializer));
-        systemDeserializers.put(ActivateActorMessage.class,new ActivateActorMessageDeserializer());
-        systemDeserializers.put(CancelScheduledMessageMessage.class,new CancelScheduledMessageMessageDeserializer());
+        builder.put(CreateActorMessage.class,new CreateActorMessageDeserializer(serializationFrameworks));
+        builder.put(DestroyActorMessage.class,new DestroyActorMessageDeserializer(actorRefDeserializer));
+        builder.put(ActivateActorMessage.class,new ActivateActorMessageDeserializer());
+        builder.put(CancelScheduledMessageMessage.class,new CancelScheduledMessageMessageDeserializer());
+        this.systemDeserializers = builder.build();
     }
 
     @Override

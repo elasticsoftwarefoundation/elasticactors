@@ -21,8 +21,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import org.elasticsoftware.elasticactors.Actor;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
@@ -56,6 +54,7 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.cluster.LocalActorRefGroup;
 import org.elasticsoftware.elasticactors.cluster.NodeSelector;
 import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
+import org.elasticsoftware.elasticactors.cluster.NodeSelectorHasher;
 import org.elasticsoftware.elasticactors.cluster.ShardDistributionStrategy;
 import org.elasticsoftware.elasticactors.cluster.ShardDistributor;
 import org.elasticsoftware.elasticactors.cluster.scheduler.InternalScheduler;
@@ -63,6 +62,8 @@ import org.elasticsoftware.elasticactors.kafka.cluster.KafkaInternalActorSystems
 import org.elasticsoftware.elasticactors.kafka.scheduler.KafkaTopicScheduler;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory;
 import org.elasticsoftware.elasticactors.kafka.utils.TopicHelper;
+import org.elasticsoftware.elasticactors.messaging.ActorShardHasher;
+import org.elasticsoftware.elasticactors.messaging.Hasher;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
@@ -83,14 +84,12 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -119,7 +118,8 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
     private final AtomicBoolean stable = new AtomicBoolean(false);
     private final ConcurrentMap<Class, ElasticActor> actorInstances = new ConcurrentHashMap<>();
     private final KafkaTopicScheduler schedulerService;
-    private final HashFunction hashFunction = Hashing.murmur3_32();
+    private final Hasher actorShardHasher;
+    private final Hasher nodeHasher;
     private final ActorLifecycleListenerRegistry actorLifecycleListenerRegistry;
     private final ManagedActorsRegistry managedActorsRegistry;
 
@@ -172,6 +172,8 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
             shardThreads[i].assign(localActorNode, false);
         }
         this.managedActorsRegistry = managedActorsRegistry;
+        this.actorShardHasher = new ActorShardHasher(configuration.getShardHashSeed());
+        this.nodeHasher = new NodeSelectorHasher(configuration.getShardDistributionHashSeed());
     }
 
     @PostConstruct
@@ -184,6 +186,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
 
     @PreDestroy
     public void destroy() {
+        logger.info("Shutting down ActorSystem [{}]", getName());
         for (KafkaActorThread shardThread : shardThreads) {
             shardThread.stopRunning();
         }
@@ -343,9 +346,8 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
     }
 
     private KafkaActorShard shardFor(String actorId) {
-        return this.actorShards[Math.abs(hashFunction.hashString(actorId, StandardCharsets.UTF_8).asInt()) % this.actorShards.length];
+        return this.actorShards[actorShardHasher.hashStringToInt(actorId) % this.actorShards.length];
     }
-
 
     @Override
     public <T> ActorRef tempActorOf(Class<T> actorClass, @Nullable ActorState initialState) throws Exception {
@@ -416,6 +418,30 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
     }
 
     @Override
+    public int getQueuesPerNode() {
+        // Not supported in this implementation, so always return 1
+        return 1;
+    }
+
+    @Override
+    public int getQueuesPerShard() {
+        // Not supported in this implementation, so always return 1
+        return 1;
+    }
+
+    @Override
+    public int getShardHashSeed() {
+        // Not supported in this implementation, so always return 0
+        return 0;
+    }
+
+    @Override
+    public int getMultiQueueHashSeed() {
+        // Not supported in this implementation, so always return 53
+        return 53;
+    }
+
+    @Override
     public boolean isStable() {
         return stable.get();
     }
@@ -474,7 +500,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
             logger.info("Initializing ActorSystem [{}]", getName());
         }
 
-        NodeSelector nodeSelector = nodeSelectorFactory.create(nodes);
+        NodeSelector nodeSelector = nodeSelectorFactory.create(nodeHasher, nodes);
 
         Multimap<PhysicalNode, ShardKey> shardDistribution = HashMultimap.create();
 
@@ -587,8 +613,9 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         // print out the shard distribution here
 
         logger.info("Cluster shard mapping summary:");
-        for (Map.Entry<PhysicalNode, Collection<ShardKey>> entry : shardDistribution.asMap().entrySet()) {
-            logger.info("\t{} has {} shards assigned", entry.getKey(), entry.getValue().size());
+        if (logger.isInfoEnabled()) {
+            shardDistribution.asMap()
+                .forEach((k, v) -> logger.info("\t{} has {} shards assigned", k, v.size()));
         }
     }
 

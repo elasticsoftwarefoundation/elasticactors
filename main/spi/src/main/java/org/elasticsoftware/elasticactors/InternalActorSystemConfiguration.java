@@ -23,6 +23,7 @@ import java.util.Set;
  * @author Joost van de Wijgerd
  */
 public interface InternalActorSystemConfiguration extends ActorSystemConfiguration {
+
     /**
      * Return the singleton service instance
      *

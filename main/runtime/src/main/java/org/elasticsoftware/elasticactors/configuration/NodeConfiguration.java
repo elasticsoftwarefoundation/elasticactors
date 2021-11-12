@@ -149,8 +149,8 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"messageHandlersRegistry"})
-    public PluggableMessageHandlersScanner createPluggableMessagesHandlersScanner() {
-        return new PluggableMessageHandlersScanner();
+    public PluggableMessageHandlersScanner createPluggableMessagesHandlersScanner(ApplicationContext applicationContext) {
+        return new PluggableMessageHandlersScanner(applicationContext);
     }
 
     @Bean(name = {"nodeSelectorFactory"})

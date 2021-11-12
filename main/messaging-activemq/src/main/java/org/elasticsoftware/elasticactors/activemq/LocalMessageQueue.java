@@ -109,7 +109,7 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
     }
 
     @Override
-    public void initialize() throws Exception {
+    public synchronized void initialize() throws Exception {
         if(useMessageHandler) {
             consumer.setMessageHandler(this);
         } else {
