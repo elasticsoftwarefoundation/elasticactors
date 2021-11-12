@@ -60,27 +60,40 @@ public final class PersistentActorDeserializer implements Deserializer<byte[], P
             HashMultimap<String, MessageSubscriber> messageSubscribers = protobufMessage.getSubscribersCount() > 0 ? HashMultimap.create() : null;
 
             if (protobufMessage.getSubscribersCount() > 0) {
-                protobufMessage.getSubscribersList().forEach(s -> messageSubscribers.put(s.getMessageName(),
-                        new MessageSubscriber(actorRefFactory.create(s.getSubscriberRef()), s.getLeases())));
+                protobufMessage.getSubscribersList().forEach(s -> messageSubscribers.put(
+                    s.getMessageName(),
+                    new MessageSubscriber(
+                        actorRefFactory.create(s.getSubscriberRef()),
+                        s.getLeases()
+                    )
+                ));
             }
             List<InternalPersistentSubscription> persistentSubscriptions = null;
 
             if (protobufMessage.getSubscriptionsCount() > 0) {
                 persistentSubscriptions = protobufMessage.getSubscriptionsList().stream()
-                        .map(s -> new PersistentSubscriptionImpl(selfRef, actorRefFactory.create(s.getPublisherRef()),
-                                s.getMessageName(), s.getCancelled(),
-                                materializeSubscriber(selfRef, actorClass, s.getMessageName()))).collect(Collectors.toList());
+                    .map(s -> new PersistentSubscriptionImpl(
+                        selfRef,
+                        actorRefFactory.create(s.getPublisherRef()),
+                        s.getMessageName(),
+                        s.getCancelled(),
+                        materializeSubscriber(selfRef, actorClass, s.getMessageName())
+                    )).collect(Collectors.toList());
             }
 
-            return new PersistentActor<>(shardKey,
-                    actorSystems.get(shardKey.getActorSystemName()),
-                    currentActorStateVersion,
-                    protobufMessage.getActorSystemVersion(),
-                    selfRef,
-                    actorClass,
-                    protobufMessage.getState() != null && !protobufMessage.getState().isEmpty() ? protobufMessage.getState().toByteArray() : null,
-                    messageSubscribers,
-                    persistentSubscriptions);
+            return new PersistentActor<>(
+                shardKey,
+                actorSystems.get(shardKey.getActorSystemName()),
+                currentActorStateVersion,
+                protobufMessage.getActorSystemVersion(),
+                selfRef,
+                actorClass,
+                !protobufMessage.getState().isEmpty()
+                    ? protobufMessage.getState().toByteArray()
+                    : null,
+                messageSubscribers,
+                persistentSubscriptions
+            );
         } catch (ClassNotFoundException e) {
             throw new IOException("Exception deserializing PersistentActor", e);
         }
