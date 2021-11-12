@@ -3,6 +3,8 @@ package org.elasticsoftware.elasticactors.tracing;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.reflect.Method;
+import java.time.Clock;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -12,6 +14,32 @@ public final class TracingUtils {
     private static final ConcurrentMap<Method, String> methodCache = new ConcurrentHashMap<>();
 
     private TracingUtils() {
+    }
+
+    /**
+     * See https://github.com/openzipkin/b3-propagation/issues/6
+     */
+    @Nonnull
+    public static String nextTraceIdHigh(Clock clock, Random prng) {
+        long epochSeconds = clock.millis() / 1000;
+        int random = prng.nextInt();
+        long traceIdHigh = (epochSeconds & 0xffffffffL) << 32 | (random & 0xffffffffL);
+        return toHexString(traceIdHigh);
+    }
+
+    @Nonnull
+    public static String toHexString(long number) {
+        String numberHex = Long.toHexString(number);
+        int zeroes = 16 - numberHex.length();
+        if (zeroes == 0) {
+            return numberHex;
+        }
+        StringBuilder sb = new StringBuilder(16);
+        for (int i = 0; i < zeroes; i++) {
+            sb.append('0');
+        }
+        sb.append(numberHex);
+        return sb.toString();
     }
 
     @Nullable
@@ -52,7 +80,13 @@ public final class TracingUtils {
     @Nullable
     public static String shorten(@Nullable Class<?> aClass) {
         if (aClass != null) {
-            return classCache.computeIfAbsent(aClass, c -> shorten(c.getName()));
+            return classCache.computeIfAbsent(aClass, c -> {
+                if (c.isArray()) {
+                    return shorten(c.getComponentType().getName()) + "[]";
+                } else {
+                    return shorten(c.getName());
+                }
+            });
         }
         return null;
     }
@@ -77,12 +111,13 @@ public final class TracingUtils {
         if (method != null) {
             return methodCache.computeIfAbsent(
                     method,
-                    m -> shorten(m.getDeclaringClass())
-                            + '.'
-                            + m.getName()
-                            + '('
-                            + shorten(m.getParameterTypes())
-                            + ')');
+                m -> shorten(m.getDeclaringClass())
+                    + '.'
+                    + m.getName()
+                    + '('
+                    + shorten(m.getParameterTypes())
+                    + ')'
+            );
         }
         return null;
     }

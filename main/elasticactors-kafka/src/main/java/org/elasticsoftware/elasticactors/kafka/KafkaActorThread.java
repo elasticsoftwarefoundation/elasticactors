@@ -524,8 +524,7 @@ public final class KafkaActorThread extends Thread {
             // switch state to rebalancing
             this.state = KafkaActorSystemState.REBALANCING;
             // filter only on shards the are managed by this thread
-            shardDistribution.asMap()
-                    .forEach((node, value) -> value.forEach(shardKey -> {
+            shardDistribution.forEach((node, shardKey) -> {
                         // find the actorShard (will be null if not managed by this instance)
                         KafkaActorShard actorShard = managedShards.get(shardKey);
                         if(actorShard != null) {
@@ -577,7 +576,7 @@ public final class KafkaActorThread extends Thread {
                                 }
                             }
                         }
-                    }));
+                    });
             // we are done, signal back to stable flag
             completableFuture.complete(stable.get());
             // we stay in the rebalancing state as we need to perform the rebalance

@@ -2,6 +2,7 @@ package org.elasticsoftware.elasticactors.tracing;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.time.Clock;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,8 +11,12 @@ import java.util.Random;
 import java.util.StringJoiner;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static org.elasticsoftware.elasticactors.tracing.TracingUtils.nextTraceIdHigh;
+import static org.elasticsoftware.elasticactors.tracing.TracingUtils.toHexString;
+
 public final class TraceContext {
 
+    private static final Clock systemClock = Clock.systemUTC();
     private final String spanId;
     private final String traceId;
     private final String parentId;
@@ -81,7 +86,7 @@ public final class TraceContext {
         Random prng = ThreadLocalRandom.current();
         this.spanId = toHexString(prng.nextLong());
         this.traceId = parent == null || parent.getTraceId().isEmpty()
-            ? nextTraceIdHigh(prng) + this.spanId
+            ? nextTraceIdHigh(systemClock, prng) + this.spanId
             : parent.getTraceId();
         this.parentId = parent == null || parent.getSpanId().isEmpty()
             ? null
@@ -89,32 +94,6 @@ public final class TraceContext {
         this.baggage = !immutableBaggageMap && baggage != null
             ? Collections.unmodifiableMap(new HashMap<>(baggage))
             : baggage;
-    }
-
-    /**
-     * See https://github.com/openzipkin/b3-propagation/issues/6
-     */
-    @Nonnull
-    private static String nextTraceIdHigh(Random prng) {
-        long epochSeconds = System.currentTimeMillis() / 1000;
-        int random = prng.nextInt();
-        long traceIdHigh = (epochSeconds & 0xffffffffL) << 32 | (random & 0xffffffffL);
-        return toHexString(traceIdHigh);
-    }
-
-    @Nonnull
-    private static String toHexString(long number) {
-        String numberHex = Long.toHexString(number);
-        int zeroes = 16 - numberHex.length();
-        if (zeroes == 0) {
-            return numberHex;
-        }
-        StringBuilder sb = new StringBuilder(16);
-        for (int i = 0; i < zeroes; i++) {
-            sb.append('0');
-        }
-        sb.append(numberHex);
-        return sb.toString();
     }
 
     @Nonnull
