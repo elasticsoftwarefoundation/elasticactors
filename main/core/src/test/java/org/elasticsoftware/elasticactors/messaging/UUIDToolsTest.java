@@ -39,6 +39,15 @@ public class UUIDToolsTest {
     }
 
     @Test
+    public void randomUUID() {
+        UUID uuid = UUIDTools.createRandomUUID();
+        assertEquals(uuid.version(), 4);
+        byte[] uuidBytes = UUIDTools.toByteArray(uuid);
+        UUID convertedUuid = UUIDTools.toUUID(uuidBytes);
+        assertEquals(convertedUuid, uuid);
+    }
+
+    @Test
     public void testPerformance() {
         // warm it up
         for (int i = 0; i < 1000; i++) {

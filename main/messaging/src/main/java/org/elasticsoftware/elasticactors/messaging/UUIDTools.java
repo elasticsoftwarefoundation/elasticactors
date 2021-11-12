@@ -37,21 +37,21 @@ public final class UUIDTools {
      * @return the bytes of the UUID
      */
     public static byte[] toByteArray(UUID uuid) {
-        long msb = uuid.getMostSignificantBits();
-        long lsb = uuid.getLeastSignificantBits();
+        final long msb = uuid.getMostSignificantBits();
+        final long lsb = uuid.getLeastSignificantBits();
         byte[] buffer = new byte[16];
 
         for (int i = 0; i < 8; i++) {
-            buffer[i] = (byte) (msb >>> 8 * (7 - i));
+            buffer[i] = (byte) (msb >>> (8 * (7 - i)));
         }
         for (int i = 8; i < 16; i++) {
-            buffer[i] = (byte) (lsb >>> 8 * (7 - i));
+            buffer[i] = (byte) (lsb >>> (8 * (15 - i)));
         }
 
         return buffer;
     }
 
-    public static java.util.UUID toUUID(byte[] uuid) {
+    public static UUID toUUID(byte[] uuid) {
         if (uuid == null || uuid.length != 16) {
             throw new IllegalArgumentException("UUID byte array must contain exactly 16 bytes");
         }
@@ -80,12 +80,9 @@ public final class UUIDTools {
     }
 
     public static long toUnixTimestamp(UUID uuid) {
-        long t = uuid.timestamp();
         // 0x01b21dd213814000 is the number of 100-ns intervals between the
         // UUID epoch 1582-10-15 00:00:00 and the Unix epoch 1970-01-01 00:00:00.
-        t = t - 0x01b21dd213814000L;
-        t = t / 10_000L; //Convert to ms
-        return t;
+        return (uuid.timestamp() - 0x01b21dd213814000L) / 10_000L;
     }
 
     private static Comparator<UUID> timeBasedComparator = null;
