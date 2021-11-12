@@ -32,13 +32,25 @@ public final class TestPublisher extends MethodActor {
     public void postActivate(String previousVersion) throws Exception {
         // schedule a message
         Long initialSequence = 1L;
-        getSystem().getScheduler().scheduleOnce(getSelf(), new StreamedMessage("Streaming #"+initialSequence, initialSequence), getSelf(), 1, TimeUnit.SECONDS);
+        getSystem().getScheduler()
+            .scheduleOnce(
+                new StreamedMessage("Streaming #" + initialSequence, initialSequence),
+                getSelf(),
+                1,
+                TimeUnit.SECONDS
+            );
     }
 
     @MessageHandler
     public void handle(StreamedMessage streamedMessage, ActorSystem actorSystem) {
         // reschedule
         Long nextSequence = streamedMessage.getSequenceNumber() + 1L;
-        getSystem().getScheduler().scheduleOnce(getSelf(), new StreamedMessage("Streaming #"+nextSequence, nextSequence), getSelf(), 1, TimeUnit.SECONDS);
+        getSystem().getScheduler()
+            .scheduleOnce(
+                new StreamedMessage("Streaming #" + nextSequence, nextSequence),
+                getSelf(),
+                1,
+                TimeUnit.SECONDS
+            );
     }
 }

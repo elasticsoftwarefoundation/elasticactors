@@ -62,7 +62,7 @@ public final class LocalActorRefGroup implements ActorRefGroup {
         if(self != null) {
             tell(message,self);
         } else {
-            throw new IllegalStateException("Cannot determine ActorRef(self) Only use this method while inside an ElasticActor Lifecycle or on(Message) method!");
+            throw new IllegalStateException("Cannot determine ActorRef(self). Only use this method while inside an ElasticActor Lifecycle or on(Message) method!");
         }
     }
 

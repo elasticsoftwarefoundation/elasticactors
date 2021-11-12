@@ -90,7 +90,8 @@ public class VirtualCashAccountActor extends MethodActor {
     @MessageHandler
     public void handle(ScheduleDebitCommand command, ActorSystem actorSystem) {
         logger.info("Scheduling message of type {} to run in 10 seconds", command.getMessage().getClass().getSimpleName());
-        actorSystem.getScheduler().scheduleOnce(getSelf(), command.getMessage(), getSelf(), 10, TimeUnit.SECONDS);
+        actorSystem.getScheduler()
+            .scheduleOnce(command.getMessage(), getSelf(), 10, TimeUnit.SECONDS);
     }
 
     @MessageHandler

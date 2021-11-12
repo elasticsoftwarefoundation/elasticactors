@@ -69,7 +69,8 @@ public final class GreetingActor extends TypedActor<Greeting> {
             assertEquals(current.getTraceId(), TEST_TRACE.getTraceId());
             assertEquals(current.getParentId(), TEST_TRACE.getSpanId());
         }
-        ScheduledMessageRef messageRef = getSystem().getScheduler().scheduleOnce(getSelf(),new Greeting("Greeting Actor"),sender,1, TimeUnit.SECONDS);
+        ScheduledMessageRef messageRef = getSystem().getScheduler()
+            .scheduleOnce(new Greeting("Greeting Actor"), sender, 1, TimeUnit.SECONDS);
         sender.tell(new ScheduledGreeting(messageRef));
     }
 }

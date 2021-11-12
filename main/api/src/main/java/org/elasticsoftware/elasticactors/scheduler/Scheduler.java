@@ -27,12 +27,15 @@ public interface Scheduler {
     /**
      * Schedules a particular message to be send once
      *
-     * @param sender            the actor specified as the sender of the message
      * @param message           the message to be send
      * @param receiver          the receiver of the message
      * @param delay             the delay before sending (a message is guaranteed to be send after this delay, but not exactly at this delay)
-     * @param timeUnit          the {@link java.util.concurrent.TimeUnit} to interpret the delay parameter
+     * @param timeUnit          the {@link TimeUnit} to interpret the delay parameter
      * @return                  the serializable reference to the scheduled message that can be stored and used to manage it
      */
-    ScheduledMessageRef scheduleOnce(ActorRef sender,Object message,ActorRef receiver,long delay, TimeUnit timeUnit);
+    ScheduledMessageRef scheduleOnce(
+        Object message,
+        ActorRef receiver,
+        long delay,
+        TimeUnit timeUnit);
 }

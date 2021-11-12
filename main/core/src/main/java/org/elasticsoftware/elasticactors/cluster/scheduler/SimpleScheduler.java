@@ -16,7 +16,11 @@
 
 package org.elasticsoftware.elasticactors.cluster.scheduler;
 
+import org.elasticsoftware.elasticactors.ActorContainer;
+import org.elasticsoftware.elasticactors.ActorContainerRef;
+import org.elasticsoftware.elasticactors.ActorContextHolder;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.messaging.AbstractTracedMessage;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
@@ -72,11 +76,33 @@ public final class SimpleScheduler implements SchedulerService,ScheduledMessageR
     }
 
     @Override
-    public ScheduledMessageRef scheduleOnce(ActorRef sender,Object message, ActorRef receiver, long delay, TimeUnit timeUnit) {
-        String id = UUID.randomUUID().toString();
-        ScheduledFuture scheduledFuture = scheduledExecutorService.schedule(new TellActorTask(id, sender,receiver,message),delay,timeUnit);
-        scheduledFutures.put(id,scheduledFuture);
-        return new SimpleScheduledMessageRef(id,scheduledFuture);
+    public ScheduledMessageRef scheduleOnce(
+        Object message,
+        ActorRef receiver,
+        long delay,
+        TimeUnit timeUnit)
+    {
+        ActorRef sender = ActorContextHolder.getSelf();
+        if (sender instanceof ActorContainerRef) {
+            ActorContainer actorContainer = ((ActorContainerRef) sender).getActorContainer();
+            if (actorContainer instanceof ActorShard) {
+                ActorShard actorShard = (ActorShard) actorContainer;
+                if (actorShard.getOwningNode().isLocal()) {
+                    String id = UUID.randomUUID().toString();
+                    ScheduledFuture scheduledFuture =
+                        scheduledExecutorService.schedule(
+                            new TellActorTask(id, sender, receiver, message),
+                            delay,
+                            timeUnit
+                        );
+                    scheduledFutures.put(id, scheduledFuture);
+                    return new SimpleScheduledMessageRef(id, scheduledFuture);
+                }
+            }
+        }
+        throw new IllegalStateException(
+            "Cannot determine an appropriate ActorRef(self). Only use this method while inside an "
+                + "ElasticActor Lifecycle or on(Message) method on a Persistent Actor!");
     }
 
     @Override
