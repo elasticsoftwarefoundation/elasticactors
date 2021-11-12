@@ -37,7 +37,7 @@ Minimal dependency:
     <version>${elasticactors.version}</version> <!-- Can be ommitted when using the BOM -->
 </dependency>
 ```
-Convenient base classes inclusing a Jackson 2 based serialization framework:
+Convenient base classes, including a Jackson-based serialization framework:
 ```xml
 <dependency>
     <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
@@ -49,7 +49,7 @@ Convenient base classes inclusing a Jackson 2 based serialization framework:
 
 ## Example code
 
-Some example code (in java)
+Some example code (in Java):
 
 ```java
 @Message(serializationFramework = JacksonSerializationFramework.class,durable = true)
