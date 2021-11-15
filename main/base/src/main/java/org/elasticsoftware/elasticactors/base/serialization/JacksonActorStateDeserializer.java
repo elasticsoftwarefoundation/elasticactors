@@ -17,16 +17,18 @@
 package org.elasticsoftware.elasticactors.base.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.base.state.JacksonActorState;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class JacksonActorStateDeserializer implements Deserializer<byte[], ActorState> {
+public final class JacksonActorStateDeserializer implements Deserializer<ByteBuffer, ActorState> {
     private final ObjectMapper objectMapper;
 
     public JacksonActorStateDeserializer(ObjectMapper objectMapper) {
@@ -34,7 +36,10 @@ public final class JacksonActorStateDeserializer implements Deserializer<byte[],
     }
 
     @Override
-    public ActorState deserialize(byte[] serializedObject) throws IOException {
-        return objectMapper.readValue(serializedObject, JacksonActorState.class);
+    public ActorState deserialize(ByteBuffer serializedObject) throws IOException {
+        return objectMapper.readValue(
+            new ByteBufferBackedInputStream(serializedObject.asReadOnlyBuffer()),
+            JacksonActorState.class
+        );
     }
 }

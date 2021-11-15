@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.messaging;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.messaging.internal.InternalHashKeyUtils;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
@@ -49,66 +50,86 @@ public final class DefaultInternalMessage extends AbstractTracedMessage
     private final boolean undeliverable;
     private final int timeout;
     private transient byte[] serializedForm;
+    private final String messageQueueAffinityKey;
 
-    public DefaultInternalMessage(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass,boolean durable) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass, durable, false);
+    public DefaultInternalMessage(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass, String messageQueueAffinityKey, boolean durable) {
+        this(UUIDTools.createTimeBasedUUID(), sender, ImmutableList.of(receiver), payload, payloadClass, messageQueueAffinityKey, durable, false, NO_TIMEOUT);
     }
 
-    public DefaultInternalMessage(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass,boolean durable) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receivers, payload, payloadClass, durable, false, NO_TIMEOUT);
-    }
-
-    public DefaultInternalMessage(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass,boolean durable, int timeout) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receivers, payload, payloadClass, durable, false, timeout);
-    }
-
-    public DefaultInternalMessage(ActorRef sender, ActorRef receiver,ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadClass, durable, undeliverable);
+    public DefaultInternalMessage(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, String payloadClass, Object message,boolean durable, int timeout) {
+        this(UUIDTools.createTimeBasedUUID(), sender, receivers, payload, payloadClass, message, durable, false, timeout);
     }
 
     public DefaultInternalMessage(ActorRef sender, ActorRef receiver,ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable, int timeout) {
-        this(UUIDTools.createTimeBasedUUID(), sender, ImmutableList.of(receiver), payload, payloadClass, durable, undeliverable, timeout);
-    }
-
-    public DefaultInternalMessage(UUID id, ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass, boolean durable, boolean undeliverable) {
-        this(id, sender, ImmutableList.of(receiver), payload, payloadClass, durable, undeliverable, NO_TIMEOUT);
+        this(UUIDTools.createTimeBasedUUID(), sender, ImmutableList.of(receiver), payload, payloadClass, null, durable, undeliverable, timeout);
     }
 
     private DefaultInternalMessage(
-            UUID id,
-            ActorRef sender,
-            ImmutableList<ActorRef> receivers,
-            ByteBuffer payload,
-            String payloadClass,
-            boolean durable,
-            boolean undeliverable,
-            int timeout) {
+        UUID id,
+        ActorRef sender,
+        ImmutableList<ActorRef> receivers,
+        ByteBuffer payload,
+        String payloadClass,
+        Object message,
+        boolean durable,
+        boolean undeliverable,
+        int timeout)
+    {
+        this(
+            id,
+            sender,
+            receivers,
+            payload,
+            payloadClass,
+            InternalHashKeyUtils.getMessageQueueAffinityKey(message),
+            durable,
+            undeliverable,
+            timeout
+        );
+    }
+
+    private DefaultInternalMessage(
+        UUID id,
+        ActorRef sender,
+        ImmutableList<ActorRef> receivers,
+        ByteBuffer payload,
+        String payloadClass,
+        String messageQueueAffinityKey,
+        boolean durable,
+        boolean undeliverable,
+        int timeout)
+    {
         this.sender = sender;
         this.receivers = receivers;
         this.id = id;
         this.payload = payload;
         this.payloadClass = payloadClass;
+        this.messageQueueAffinityKey = messageQueueAffinityKey;
         this.durable = durable;
         this.undeliverable = undeliverable;
         this.timeout = timeout;
     }
 
-    public DefaultInternalMessage(UUID id,
-            ActorRef sender,
-            ImmutableList<ActorRef> receivers,
-            ByteBuffer payload,
-            String payloadClass,
-            boolean durable,
-            boolean undeliverable,
-            int timeout,
-            TraceContext traceContext,
-            CreationContext creationContext) {
+    public DefaultInternalMessage(
+        UUID id,
+        ActorRef sender,
+        ImmutableList<ActorRef> receivers,
+        ByteBuffer payload,
+        String payloadClass,
+        String messageQueueAffinityKey,
+        boolean durable,
+        boolean undeliverable,
+        int timeout,
+        TraceContext traceContext,
+        CreationContext creationContext)
+    {
         super(traceContext, creationContext);
         this.sender = sender;
         this.receivers = receivers;
         this.id = id;
         this.payload = payload;
         this.payloadClass = payloadClass;
+        this.messageQueueAffinityKey = messageQueueAffinityKey;
         this.durable = durable;
         this.undeliverable = undeliverable;
         this.timeout = timeout;
@@ -182,6 +203,15 @@ public final class DefaultInternalMessage extends AbstractTracedMessage
         return false;
     }
 
+    @Nullable
+    @Override
+    public String getMessageQueueAffinityKey() {
+        if (messageQueueAffinityKey != null) {
+            return messageQueueAffinityKey;
+        }
+        return receivers.size() == 1 ? receivers.get(0).getActorId() : null;
+    }
+
     @Override
     public byte[] toByteArray() {
         if(serializedForm == null) {
@@ -198,6 +228,7 @@ public final class DefaultInternalMessage extends AbstractTracedMessage
                 receivers,
                 payload.asReadOnlyBuffer(),
                 payloadClass,
+                messageQueueAffinityKey,
                 durable,
                 undeliverable,
                 timeout,
@@ -219,6 +250,7 @@ public final class DefaultInternalMessage extends AbstractTracedMessage
             ImmutableList.copyOf(receivers),
             payload.asReadOnlyBuffer(),
             payloadClass,
+            messageQueueAffinityKey,
             durable,
             undeliverable,
             timeout,

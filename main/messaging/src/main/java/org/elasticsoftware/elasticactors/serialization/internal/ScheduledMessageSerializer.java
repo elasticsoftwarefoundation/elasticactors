@@ -55,6 +55,10 @@ public final class ScheduledMessageSerializer implements Serializer<ScheduledMes
         if (creationContext != null) {
             builder.setCreationContext(creationContext);
         }
+        String messageAffinityKey = scheduledMessage.getMessageQueueAffinityKey();
+        if (messageAffinityKey != null) {
+            builder.setMessageQueueAffinityKey(messageAffinityKey);
+        }
         return builder.build().toByteArray();
     }
 

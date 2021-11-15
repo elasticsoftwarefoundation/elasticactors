@@ -22,6 +22,7 @@ import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageDeserializer;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Map;
 
 public final class KafkaScheduledMessageDeserializer implements Deserializer<ScheduledMessage> {
@@ -39,7 +40,7 @@ public final class KafkaScheduledMessageDeserializer implements Deserializer<Sch
     @Override
     public ScheduledMessage deserialize(String topic, byte[] data) {
         try {
-            return delegate.deserialize(data);
+            return delegate.deserialize(ByteBuffer.wrap(data));
         } catch (IOException e) {
             throw new SerializationException(e);
         }

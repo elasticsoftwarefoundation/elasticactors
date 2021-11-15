@@ -19,6 +19,8 @@ package org.elasticsoftware.elasticactors.serialization;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 
+import java.nio.ByteBuffer;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -60,7 +62,7 @@ public final class SystemSerializationFramework implements SerializationFramewor
     }
 
     @Override
-    public Deserializer<byte[], ActorState> getActorStateDeserializer(Class<? extends ElasticActor> actorClass) {
+    public Deserializer<ByteBuffer, ActorState> getActorStateDeserializer(Class<? extends ElasticActor> actorClass) {
         throw new UnsupportedOperationException("Only message serialization and deserialization supported");
     }
 }

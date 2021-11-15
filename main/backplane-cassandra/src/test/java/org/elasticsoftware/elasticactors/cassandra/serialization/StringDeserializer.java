@@ -19,14 +19,15 @@ package org.elasticsoftware.elasticactors.cassandra.serialization;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class StringDeserializer implements Deserializer<byte[],String> {
+public final class StringDeserializer implements Deserializer<ByteBuffer,String> {
     @Override
-    public String deserialize(byte[] serializedObject) throws IOException {
-        return new String(serializedObject, StandardCharsets.UTF_8);
+    public String deserialize(ByteBuffer serializedObject) throws IOException {
+        return StandardCharsets.UTF_8.decode(serializedObject.asReadOnlyBuffer()).toString();
     }
 }

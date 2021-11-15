@@ -68,7 +68,7 @@ public final class PersistentActorUpdateEvent implements ThreadBoundEvent<Intege
 
     @Nullable
     public ByteBuffer getPersistentActorBytes() {
-        return persistentActorBytes;
+        return persistentActorBytes != null ? persistentActorBytes.asReadOnlyBuffer() : null;
     }
 
     @Nullable

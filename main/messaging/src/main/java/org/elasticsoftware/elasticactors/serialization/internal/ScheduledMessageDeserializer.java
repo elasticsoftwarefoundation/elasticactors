@@ -28,6 +28,7 @@ import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
@@ -35,7 +36,8 @@ import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClass
 /**
  * @author Joost van de Wijgerd
  */
-public final class ScheduledMessageDeserializer implements Deserializer<byte[],ScheduledMessage> {
+public final class ScheduledMessageDeserializer implements Deserializer<ByteBuffer, ScheduledMessage> {
+
     private final ActorRefDeserializer actorRefDeserializer;
 
     public ScheduledMessageDeserializer(ActorRefDeserializer actorRefDeserializer) {
@@ -43,13 +45,12 @@ public final class ScheduledMessageDeserializer implements Deserializer<byte[],S
     }
 
     @Override
-    public ScheduledMessage deserialize(byte[] serializedObject) throws IOException {
+    public ScheduledMessage deserialize(ByteBuffer serializedObject) throws IOException {
         try {
-            Messaging.ScheduledMessage protobufMessage = Messaging.ScheduledMessage.parseFrom(serializedObject);
+            Messaging.ScheduledMessage protobufMessage = Messaging.ScheduledMessage.parseFrom(serializedObject.asReadOnlyBuffer());
             ActorRef sender = getSender(protobufMessage);
             ActorRef receiver = actorRefDeserializer.deserialize(protobufMessage.getReceiver());
             Class messageClass = getClassHelper().forName(protobufMessage.getMessageClass());
-            byte[] messageBytes = protobufMessage.getMessage().toByteArray();
             UUID id = UUIDTools.toUUID(protobufMessage.getId().toByteArray());
             long fireTime = protobufMessage.getFireTime();
             TraceContext traceContext = protobufMessage.hasTraceContext()
@@ -58,15 +59,20 @@ public final class ScheduledMessageDeserializer implements Deserializer<byte[],S
             CreationContext creationContext = protobufMessage.hasCreationContext()
                     ? CreationContextDeserializer.deserialize(protobufMessage.getCreationContext())
                     : null;
+            String messageQueueAffinityKey = protobufMessage.hasMessageQueueAffinityKey()
+                ? protobufMessage.getMessageQueueAffinityKey()
+                : "";
             return new ScheduledMessageImpl(
-                    id,
-                    fireTime,
-                    sender,
-                    receiver,
-                    messageClass,
-                    messageBytes,
-                    traceContext,
-                    creationContext);
+                id,
+                fireTime,
+                sender,
+                receiver,
+                messageClass,
+                protobufMessage.getMessage().asReadOnlyByteBuffer(),
+                messageQueueAffinityKey.isEmpty() ? null : messageQueueAffinityKey,
+                traceContext,
+                creationContext
+            );
         } catch(ClassNotFoundException e) {
             throw new IOException(e);
         }

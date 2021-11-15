@@ -22,6 +22,7 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Map;
 
 public final class KafkaInternalMessageDeserializer implements Deserializer<InternalMessage> {
@@ -42,7 +43,7 @@ public final class KafkaInternalMessageDeserializer implements Deserializer<Inte
             return null;
         } else {
             try {
-                return delegate.deserialize(data);
+                return delegate.deserialize(ByteBuffer.wrap(data));
             } catch (IOException e) {
                 throw new SerializationException(e);
             }

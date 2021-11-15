@@ -21,6 +21,10 @@ import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,14 +33,12 @@ import javax.annotation.Nullable;
 /**
  * @author Joost van de Wijgerd
  */
-public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorState<ActorDelegate<T>> {
+public abstract class InternalActorDelegate<T> extends TypedActor<T> implements ActorState<InternalActorDelegate<T>> {
 
-    private static final Logger staticLogger = LoggerFactory.getLogger(ActorDelegate.class);
+    private static final Logger staticLogger = LoggerFactory.getLogger(InternalActorDelegate.class);
 
     /**
-     * Default implementation that uses the static logger for {@link ActorDelegate}.
-     * Although the user can override it, {@link ActorDelegate}  is often used for anonymous
-     * subclassing, so this is a valuable optimization.
+     * Default implementation that uses the static logger for {@link InternalActorDelegate}.
      */
     @Override
     protected Logger initLogger() {
@@ -44,20 +46,29 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
     }
 
     private final boolean deleteAfterReceive;
-
     private final ActorRef callerRef;
+    private final TraceContext traceContext;
+    private final CreationContext creationContext;
 
-    protected ActorDelegate() {
+    protected InternalActorDelegate() {
         this(true);
     }
 
-    protected ActorDelegate(boolean deleteAfterReceive) {
+    protected InternalActorDelegate(boolean deleteAfterReceive) {
         this(deleteAfterReceive, null);
     }
 
-    protected ActorDelegate(boolean deleteAfterReceive, ActorRef callerRef) {
+    protected InternalActorDelegate(boolean deleteAfterReceive, ActorRef callerRef) {
         this.deleteAfterReceive = deleteAfterReceive;
         this.callerRef = callerRef;
+        MessagingScope currentScope = MessagingContextManager.getManager().currentScope();
+        if (currentScope != null) {
+            traceContext = currentScope.getTraceContext();
+            creationContext = currentScope.getCreationContext();
+        } else {
+            traceContext = null;
+            creationContext = null;
+        }
     }
 
     public boolean isDeleteAfterReceive() {
@@ -69,8 +80,18 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
         return callerRef;
     }
 
+    @Nullable
+    public TraceContext getTraceContext() {
+        return traceContext;
+    }
+
+    @Nullable
+    public CreationContext getCreationContext() {
+        return creationContext;
+    }
+
     @Override
-    public ActorDelegate<T> getBody() {
+    public InternalActorDelegate<T> getBody() {
         return this;
     }
 

@@ -16,6 +16,9 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
+import javax.annotation.Nullable;
+import java.nio.ByteBuffer;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -24,5 +27,8 @@ public interface ActorSystemEventListener {
 
     Class getMessageClass();
 
-    byte[] getMessageBytes();
+    ByteBuffer getMessageBytes();
+
+    @Nullable
+    String getMessageQueueAffinityKey();
 }

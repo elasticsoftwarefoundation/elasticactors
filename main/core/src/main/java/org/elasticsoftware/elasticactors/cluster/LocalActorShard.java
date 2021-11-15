@@ -35,20 +35,16 @@ import org.elasticsoftware.elasticactors.cluster.tasks.CreateActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.DestroyActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.PassivateActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.PersistActorTask;
-import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.messaging.InternalMessageFactory;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MultiMessageHandlerEventListener;
-import org.elasticsoftware.elasticactors.messaging.TransientInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.PersistActorMessage;
-import org.elasticsoftware.elasticactors.serialization.Message;
-import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
@@ -58,7 +54,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -161,62 +156,22 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
 
     @Override
     public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
-        InternalMessage internalMessage = createInternalMessage(from, to, message);
-        if (internalMessage != null) {
-            offerInternalMessage(internalMessage);
-        }
-    }
-
-    private InternalMessage createInternalMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws IOException {
-        // get the durable flag
-        Message messageAnnotation = message.getClass().getAnnotation(Message.class);
-        final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
-        final boolean immutable = (messageAnnotation != null) && messageAnnotation.immutable();
-        final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-        if(durable || !immutable) {
-            // durable so it will go over the bus and needs to be serialized,
-            // or it's not durable, but it's mutable, so we need to serialize here
-            MessageSerializer<Object> messageSerializer = (MessageSerializer<Object>) actorSystem.getSerializer(message.getClass());
-            if(messageSerializer == null) {
-                logger.error(
-                    "No message serializer found for class: {}. NOT sending message",
-                    message.getClass().getName()
-                );
-                return null;
-            }
-            return new DefaultInternalMessage(
-                from,
-                ImmutableList.copyOf(to),
-                SerializationContext.serialize(messageSerializer, message),
-                message.getClass().getName(),
-                durable,
-                timeout
-            );
+        InternalMessage internalMessage;
+        if (message instanceof CreateActorMessage) {
+            // Since we cannot guarantee the initial state is an immutable object, always serialize
+            internalMessage =
+                InternalMessageFactory.createWithSerializedPayload(from, to, actorSystem, message);
         } else {
-            // as the message is immutable we can safely send it as a TransientInternalMessage
-            return new TransientInternalMessage(
-                from,
-                ImmutableList.copyOf(to),
-                message
-            );
+            internalMessage = InternalMessageFactory.create(from, to, actorSystem, message);
         }
+        offerInternalMessage(internalMessage);
     }
 
     @Override
     public void undeliverableMessage(InternalMessage message, ActorRef receiverRef) throws Exception {
         // input is the message that cannot be delivered
-        InternalMessage undeliverableMessage;
-        if (message instanceof TransientInternalMessage) {
-            undeliverableMessage = new TransientInternalMessage(receiverRef, message.getSender(), message.getPayload(null), true);
-        } else {
-            undeliverableMessage = new DefaultInternalMessage( receiverRef,
-                                                            message.getSender(),
-                                                            message.getPayload(),
-                                                            message.getPayloadClass(),
-                                                            message.isDurable(),
-                                                            true,
-                                                            message.getTimeout());
-        }
+        InternalMessage undeliverableMessage =
+            InternalMessageFactory.copyForUndeliverable(message, receiverRef);
         offerInternalMessage(undeliverableMessage);
     }
 
@@ -345,7 +300,14 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                                 } else {
                                     // we need to recreate the InternalMessage first, otherwise the undeliverable logic
                                     // won't work
-                                    InternalMessage originalMessage = createInternalMessage(actorNodeMessage.getReceiverRef(), ImmutableList.of(internalMessage.getSender()), actorNodeMessage.getMessage());
+                                    InternalMessage originalMessage = InternalMessageFactory.create(
+                                        actorNodeMessage.getReceiverRef(),
+                                        internalMessage.getSender() != null
+                                            ? ImmutableList.of(internalMessage.getSender())
+                                            : ImmutableList.of(),
+                                        actorSystem,
+                                        actorNodeMessage.getMessage()
+                                    );
                                     actorNode.undeliverableMessage(originalMessage, internalMessage.getSender());
                                 }
                             } else {

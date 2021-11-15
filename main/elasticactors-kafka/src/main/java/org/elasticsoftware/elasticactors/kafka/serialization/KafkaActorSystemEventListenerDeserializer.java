@@ -22,6 +22,7 @@ import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListener;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorSystemEventListenerDeserializer;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Map;
 
 public final class KafkaActorSystemEventListenerDeserializer implements Deserializer<ActorSystemEventListener> {
@@ -33,7 +34,7 @@ public final class KafkaActorSystemEventListenerDeserializer implements Deserial
     @Override
     public ActorSystemEventListener deserialize(String topic, byte[] data) {
         try {
-            return ActorSystemEventListenerDeserializer.get().deserialize(data);
+            return ActorSystemEventListenerDeserializer.get().deserialize(ByteBuffer.wrap(data));
         } catch (IOException e) {
             throw new SerializationException(e);
         }

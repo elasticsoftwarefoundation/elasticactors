@@ -30,6 +30,7 @@ import org.springframework.core.env.Environment;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -109,7 +110,7 @@ public final class JacksonSerializationFramework implements SerializationFramewo
     }
 
     @Override
-    public Deserializer<byte[], ActorState> getActorStateDeserializer(Class<? extends ElasticActor> actorClass) {
+    public Deserializer<ByteBuffer, ActorState> getActorStateDeserializer(Class<? extends ElasticActor> actorClass) {
         return actorStateDeserializer;
     }
 

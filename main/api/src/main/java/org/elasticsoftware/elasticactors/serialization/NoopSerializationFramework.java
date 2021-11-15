@@ -18,6 +18,8 @@ package org.elasticsoftware.elasticactors.serialization;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 
+import java.nio.ByteBuffer;
+
 /**
  * Default Serialization Framework. Does nothing (no-operation)
  *
@@ -55,7 +57,7 @@ public final class NoopSerializationFramework implements SerializationFramework 
     }
 
     @Override
-    public Deserializer<byte[], ActorState> getActorStateDeserializer(Class<? extends ElasticActor> actorClass) {
+    public Deserializer<ByteBuffer, ActorState> getActorStateDeserializer(Class<? extends ElasticActor> actorClass) {
         return null;
     }
 }

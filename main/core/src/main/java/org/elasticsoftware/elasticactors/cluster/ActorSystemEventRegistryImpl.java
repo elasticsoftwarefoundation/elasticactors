@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.cluster;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.messaging.internal.InternalHashKeyUtils;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.slf4j.Logger;
@@ -60,9 +61,16 @@ public final class ActorSystemEventRegistryImpl implements ActorSystemEventListe
         // store the reference
         MessageSerializer serializer = actorSystem.getSerializer(message.getClass());
         ByteBuffer serializedMessage = serializer.serialize(message);
-        byte[] serializedBytes = new byte[serializedMessage.remaining()];
-        serializedMessage.get(serializedBytes);
-        eventListenerRepository.create(shardKey, event, new ActorSystemEventListenerImpl(receiver.getActorId(),message.getClass(),serializedBytes));
+        eventListenerRepository.create(
+            shardKey,
+            event,
+            new ActorSystemEventListenerImpl(
+                receiver.getActorId(),
+                message.getClass(),
+                serializedMessage,
+                InternalHashKeyUtils.getMessageQueueAffinityKey(message)
+            )
+        );
     }
 
     @Override
@@ -82,7 +90,7 @@ public final class ActorSystemEventRegistryImpl implements ActorSystemEventListe
             MessageDeserializer deserializer = actorSystem.getDeserializer(listener.getMessageClass());
             if(deserializer != null) {
                 try {
-                    Object message = deserializer.deserialize(ByteBuffer.wrap(listener.getMessageBytes()));
+                    Object message = deserializer.deserialize(listener.getMessageBytes());
                     ActorRef receiver = actorSystem.actorFor(listener.getActorId());
                     actorShard.sendMessage(null, receiver, message);
                 } catch(Exception e) {

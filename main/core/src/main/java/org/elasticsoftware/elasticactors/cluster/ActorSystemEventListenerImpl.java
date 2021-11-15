@@ -16,18 +16,28 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
+import javax.annotation.Nullable;
+import java.nio.ByteBuffer;
+
 /**
  * @author Joost van de Wijgerd
  */
 public final class ActorSystemEventListenerImpl implements ActorSystemEventListener {
     private final String actorId;
     private final Class messageClass;
-    private final byte[] messageBytes;
+    private final ByteBuffer messageBytes;
+    private final String messageQueueAffinityKey;
 
-    public ActorSystemEventListenerImpl(String actorId, Class messageClass, byte[] messageBytes) {
+    public ActorSystemEventListenerImpl(
+        String actorId,
+        Class messageClass,
+        ByteBuffer messageBytes,
+        String messageQueueAffinityKey)
+    {
         this.actorId = actorId;
         this.messageClass = messageClass;
         this.messageBytes = messageBytes;
+        this.messageQueueAffinityKey = messageQueueAffinityKey;
     }
 
     @Override
@@ -41,7 +51,16 @@ public final class ActorSystemEventListenerImpl implements ActorSystemEventListe
     }
 
     @Override
-    public byte[] getMessageBytes() {
-        return messageBytes;
+    public ByteBuffer getMessageBytes() {
+        return messageBytes != null ? messageBytes.asReadOnlyBuffer() : null;
+    }
+
+    @Nullable
+    @Override
+    public String getMessageQueueAffinityKey() {
+        if (messageQueueAffinityKey != null) {
+            return messageQueueAffinityKey;
+        }
+        return actorId;
     }
 }

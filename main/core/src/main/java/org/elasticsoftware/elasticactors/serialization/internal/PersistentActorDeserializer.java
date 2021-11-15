@@ -31,6 +31,7 @@ import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.reactivestreams.Subscriber;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,7 +40,7 @@ import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClass
 /**
  * @author Joost van de Wijgerd
  */
-public final class PersistentActorDeserializer implements Deserializer<byte[], PersistentActor<ShardKey>> {
+public final class PersistentActorDeserializer implements Deserializer<ByteBuffer, PersistentActor<ShardKey>> {
     private final ActorRefFactory actorRefFactory;
     private final InternalActorSystems actorSystems;
 
@@ -49,8 +50,8 @@ public final class PersistentActorDeserializer implements Deserializer<byte[], P
     }
 
     @Override
-    public PersistentActor<ShardKey> deserialize(byte[] serializedObject) throws IOException {
-        Elasticactors.PersistentActor protobufMessage = Elasticactors.PersistentActor.parseFrom(serializedObject);
+    public PersistentActor<ShardKey> deserialize(ByteBuffer serializedObject) throws IOException {
+        Elasticactors.PersistentActor protobufMessage = Elasticactors.PersistentActor.parseFrom(serializedObject.asReadOnlyBuffer());
         final ShardKey shardKey = ShardKey.fromString(protobufMessage.getShardKey());
         try {
             Class<? extends ElasticActor> actorClass =

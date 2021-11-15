@@ -19,6 +19,8 @@ package org.elasticsoftware.elasticactors.serialization;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 
+import java.nio.ByteBuffer;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -77,5 +79,5 @@ public interface SerializationFramework {
      * @param actorClass the actor class for which to get the deserializer
      * @return the correct deserializer for the given actor's state class
      */
-    Deserializer<byte[], ActorState> getActorStateDeserializer(Class<? extends ElasticActor> actorClass);
+    Deserializer<ByteBuffer, ActorState> getActorStateDeserializer(Class<? extends ElasticActor> actorClass);
 }

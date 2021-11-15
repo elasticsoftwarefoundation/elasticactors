@@ -28,6 +28,7 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 
@@ -67,7 +68,7 @@ public final class SerializationTools {
         Actor actorAnnotation = actorClass.getAnnotation(Actor.class);
         if(actorAnnotation != null) {
             SerializationFramework framework = serializationFrameworks.getSerializationFramework(actorAnnotation.serializationFramework());
-            return framework.getActorStateDeserializer(actorClass).deserialize(serializedState);
+            return framework.getActorStateDeserializer(actorClass).deserialize(ByteBuffer.wrap(serializedState));
         } else {
             // @todo: what to do if we can't determine the state?
             return null;

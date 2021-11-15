@@ -21,8 +21,8 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ShardKey;
-import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.messaging.InternalMessageFactory;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
@@ -32,7 +32,6 @@ import org.elasticsoftware.elasticactors.messaging.MultiMessageQueueProxyHasher;
 import org.elasticsoftware.elasticactors.messaging.SingleMessageQueueProxy;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,31 +98,21 @@ public final class RemoteActorSystemActorShard implements ActorShard, MessageHan
     @Override
     public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
         MessageSerializer messageSerializer = getSerializer(message.getClass());
-        // get the durable flag
-        Message messageAnnotation = message.getClass().getAnnotation(Message.class);
-        final boolean durable = (messageAnnotation == null) || messageAnnotation.durable();
-        final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-        messageQueueProxy.offerInternalMessage(new DefaultInternalMessage(
+        InternalMessage internalMessage = InternalMessageFactory.createWithSerializedPayload(
             from,
-            ImmutableList.copyOf(to),
-            SerializationContext.serialize(messageSerializer, message),
-            message.getClass().getName(),
-            durable,
-            timeout
-        ));
+            to,
+            messageSerializer,
+            message
+        );
+        offerInternalMessage(internalMessage);
     }
 
     @Override
     public void undeliverableMessage(InternalMessage message, ActorRef receiverRef) throws Exception {
         // input is the message that cannot be delivered
-        DefaultInternalMessage undeliverableMessage = new DefaultInternalMessage(receiverRef,
-                                                                           message.getSender(),
-                                                                           message.getPayload(),
-                                                                           message.getPayloadClass(),
-                                                                           message.isDurable(),
-                                                                           true,
-                                                                           message.getTimeout());
-        messageQueueProxy.offerInternalMessage(undeliverableMessage);
+        InternalMessage undeliverableMessage =
+            InternalMessageFactory.copyForUndeliverableWithSerializedPayload(message, receiverRef);
+        offerInternalMessage(undeliverableMessage);
     }
 
     @Override

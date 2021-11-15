@@ -23,6 +23,8 @@ import org.elasticsoftware.elasticactors.serialization.MessageToStringConverter;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 
+import java.nio.ByteBuffer;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -58,7 +60,7 @@ public final class TestSerializationFramework implements SerializationFramework 
     }
 
     @Override
-    public Deserializer<byte[], ActorState> getActorStateDeserializer(Class<? extends ElasticActor> actorClass) {
+    public Deserializer<ByteBuffer, ActorState> getActorStateDeserializer(Class<? extends ElasticActor> actorClass) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }

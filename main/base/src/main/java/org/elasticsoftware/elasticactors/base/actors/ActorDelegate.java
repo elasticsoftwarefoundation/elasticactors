@@ -25,10 +25,15 @@ import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.UnexpectedResponseTypeException;
 import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
+import org.elasticsoftware.elasticactors.tracing.CreationContext;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
+import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -41,6 +46,9 @@ import static java.lang.String.format;
 public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorState<ActorDelegate<T>> {
 
     private final static Logger staticLogger = LoggerFactory.getLogger(ActorDelegate.class);
+
+    private final TraceContext traceContext;
+    private final CreationContext creationContext;
 
     /**
      * Default implementation that uses the static logger for {@link ActorDelegate}.
@@ -60,10 +68,28 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
 
     protected ActorDelegate(boolean deleteAfterReceive) {
         this.deleteAfterReceive = deleteAfterReceive;
+        MessagingScope currentScope = MessagingContextManager.getManager().currentScope();
+        if (currentScope != null) {
+            traceContext = currentScope.getTraceContext();
+            creationContext = currentScope.getCreationContext();
+        } else {
+            traceContext = null;
+            creationContext = null;
+        }
     }
 
     public boolean isDeleteAfterReceive() {
         return deleteAfterReceive;
+    }
+
+    @Nullable
+    public TraceContext getTraceContext() {
+        return traceContext;
+    }
+
+    @Nullable
+    public CreationContext getCreationContext() {
+        return creationContext;
     }
 
     @Override
@@ -132,8 +158,10 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
                 runIfPresent(sender, message, postReceiveConsumer);
             } else {
                 throw new UnexpectedResponseTypeException(
-                        "Receiver unexpectedly responded with a message of type "
-                                + messageClass.getTypeName());
+                    String.format(
+                        "Receiver unexpectedly responded with a message of type [%s]",
+                        messageClass.getTypeName()
+                    ));
             }
         }
 

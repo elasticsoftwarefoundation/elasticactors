@@ -81,9 +81,7 @@ public final class CassandraActorSystemEventListenerRepository implements ActorS
             for (int i = 0; i < resultRow.getColumnDefinitions().size(); i++) {
                 ByteBuffer resultBuffer = resultRow.getByteBuffer(i);
                 try {
-                    byte[] resultBytes = new byte[requireNonNull(resultBuffer).remaining()];
-                    resultBuffer.get(resultBytes);
-                    resultList.add(ActorSystemEventListenerDeserializer.get().deserialize(resultBytes));
+                    resultList.add(ActorSystemEventListenerDeserializer.get().deserialize(requireNonNull(resultBuffer)));
                 } catch(NullPointerException | IOException e)  {
                     logger.error("IOException while deserializing ActorSystemEventListener",e);
                 }

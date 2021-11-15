@@ -2446,6 +2446,20 @@ public final class Messaging {
      * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.CreationContext creationContext = 8;</code>
      */
     org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.CreationContextOrBuilder getCreationContextOrBuilder();
+
+    /**
+     * <code>optional string messageQueueAffinityKey = 9;</code>
+     */
+    boolean hasMessageQueueAffinityKey();
+    /**
+     * <code>optional string messageQueueAffinityKey = 9;</code>
+     */
+    java.lang.String getMessageQueueAffinityKey();
+    /**
+     * <code>optional string messageQueueAffinityKey = 9;</code>
+     */
+    com.google.protobuf.ByteString
+        getMessageQueueAffinityKeyBytes();
   }
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.ScheduledMessage}
@@ -2466,6 +2480,7 @@ public final class Messaging {
       sender_ = "";
       messageClass_ = "";
       message_ = com.google.protobuf.ByteString.EMPTY;
+      messageQueueAffinityKey_ = "";
     }
 
     @java.lang.Override
@@ -2549,6 +2564,12 @@ public final class Messaging {
                 creationContext_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000080;
+              break;
+            }
+            case 74: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000100;
+              messageQueueAffinityKey_ = bs;
               break;
             }
             default: {
@@ -2797,6 +2818,48 @@ public final class Messaging {
       return creationContext_ == null ? org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.CreationContext.getDefaultInstance() : creationContext_;
     }
 
+    public static final int MESSAGEQUEUEAFFINITYKEY_FIELD_NUMBER = 9;
+    private volatile java.lang.Object messageQueueAffinityKey_;
+    /**
+     * <code>optional string messageQueueAffinityKey = 9;</code>
+     */
+    public boolean hasMessageQueueAffinityKey() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional string messageQueueAffinityKey = 9;</code>
+     */
+    public java.lang.String getMessageQueueAffinityKey() {
+      java.lang.Object ref = messageQueueAffinityKey_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          messageQueueAffinityKey_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string messageQueueAffinityKey = 9;</code>
+     */
+    public com.google.protobuf.ByteString
+        getMessageQueueAffinityKeyBytes() {
+      java.lang.Object ref = messageQueueAffinityKey_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        messageQueueAffinityKey_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -2841,6 +2904,9 @@ public final class Messaging {
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeMessage(8, getCreationContext());
       }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 9, messageQueueAffinityKey_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -2878,6 +2944,9 @@ public final class Messaging {
       if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(8, getCreationContext());
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(9, messageQueueAffinityKey_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2935,6 +3004,11 @@ public final class Messaging {
         result = result && getCreationContext()
             .equals(other.getCreationContext());
       }
+      result = result && (hasMessageQueueAffinityKey() == other.hasMessageQueueAffinityKey());
+      if (hasMessageQueueAffinityKey()) {
+        result = result && getMessageQueueAffinityKey()
+            .equals(other.getMessageQueueAffinityKey());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -2978,6 +3052,10 @@ public final class Messaging {
       if (hasCreationContext()) {
         hash = (37 * hash) + CREATIONCONTEXT_FIELD_NUMBER;
         hash = (53 * hash) + getCreationContext().hashCode();
+      }
+      if (hasMessageQueueAffinityKey()) {
+        hash = (37 * hash) + MESSAGEQUEUEAFFINITYKEY_FIELD_NUMBER;
+        hash = (53 * hash) + getMessageQueueAffinityKey().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -3138,6 +3216,8 @@ public final class Messaging {
           creationContextBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000080);
+        messageQueueAffinityKey_ = "";
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -3206,6 +3286,10 @@ public final class Messaging {
         } else {
           result.creationContext_ = creationContextBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.messageQueueAffinityKey_ = messageQueueAffinityKey_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -3284,6 +3368,11 @@ public final class Messaging {
         }
         if (other.hasCreationContext()) {
           mergeCreationContext(other.getCreationContext());
+        }
+        if (other.hasMessageQueueAffinityKey()) {
+          bitField0_ |= 0x00000100;
+          messageQueueAffinityKey_ = other.messageQueueAffinityKey_;
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -3885,6 +3974,82 @@ public final class Messaging {
         }
         return creationContextBuilder_;
       }
+
+      private java.lang.Object messageQueueAffinityKey_ = "";
+      /**
+       * <code>optional string messageQueueAffinityKey = 9;</code>
+       */
+      public boolean hasMessageQueueAffinityKey() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional string messageQueueAffinityKey = 9;</code>
+       */
+      public java.lang.String getMessageQueueAffinityKey() {
+        java.lang.Object ref = messageQueueAffinityKey_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            messageQueueAffinityKey_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string messageQueueAffinityKey = 9;</code>
+       */
+      public com.google.protobuf.ByteString
+          getMessageQueueAffinityKeyBytes() {
+        java.lang.Object ref = messageQueueAffinityKey_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          messageQueueAffinityKey_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string messageQueueAffinityKey = 9;</code>
+       */
+      public Builder setMessageQueueAffinityKey(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000100;
+        messageQueueAffinityKey_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string messageQueueAffinityKey = 9;</code>
+       */
+      public Builder clearMessageQueueAffinityKey() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        messageQueueAffinityKey_ = getDefaultInstance().getMessageQueueAffinityKey();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string messageQueueAffinityKey = 9;</code>
+       */
+      public Builder setMessageQueueAffinityKeyBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000100;
+        messageQueueAffinityKey_ = value;
+        onChanged();
+        return this;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -4073,6 +4238,20 @@ public final class Messaging {
      * <code>optional .org.elasticsoftware.elasticactors.serialization.protobuf.CreationContext creationContext = 11;</code>
      */
     org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.CreationContextOrBuilder getCreationContextOrBuilder();
+
+    /**
+     * <code>optional string messageQueueAffinityKey = 12;</code>
+     */
+    boolean hasMessageQueueAffinityKey();
+    /**
+     * <code>optional string messageQueueAffinityKey = 12;</code>
+     */
+    java.lang.String getMessageQueueAffinityKey();
+    /**
+     * <code>optional string messageQueueAffinityKey = 12;</code>
+     */
+    com.google.protobuf.ByteString
+        getMessageQueueAffinityKeyBytes();
   }
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.InternalMessage}
@@ -4096,6 +4275,7 @@ public final class Messaging {
       undeliverable_ = false;
       receivers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       timeout_ = 0;
+      messageQueueAffinityKey_ = "";
     }
 
     @java.lang.Override
@@ -4198,6 +4378,12 @@ public final class Messaging {
                 creationContext_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000200;
+              break;
+            }
+            case 98: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000400;
+              messageQueueAffinityKey_ = bs;
               break;
             }
             default: {
@@ -4508,6 +4694,48 @@ public final class Messaging {
       return creationContext_ == null ? org.elasticsoftware.elasticactors.serialization.protobuf.Messaging.CreationContext.getDefaultInstance() : creationContext_;
     }
 
+    public static final int MESSAGEQUEUEAFFINITYKEY_FIELD_NUMBER = 12;
+    private volatile java.lang.Object messageQueueAffinityKey_;
+    /**
+     * <code>optional string messageQueueAffinityKey = 12;</code>
+     */
+    public boolean hasMessageQueueAffinityKey() {
+      return ((bitField0_ & 0x00000400) == 0x00000400);
+    }
+    /**
+     * <code>optional string messageQueueAffinityKey = 12;</code>
+     */
+    public java.lang.String getMessageQueueAffinityKey() {
+      java.lang.Object ref = messageQueueAffinityKey_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          messageQueueAffinityKey_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string messageQueueAffinityKey = 12;</code>
+     */
+    public com.google.protobuf.ByteString
+        getMessageQueueAffinityKeyBytes() {
+      java.lang.Object ref = messageQueueAffinityKey_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        messageQueueAffinityKey_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -4560,6 +4788,9 @@ public final class Messaging {
       }
       if (((bitField0_ & 0x00000200) == 0x00000200)) {
         output.writeMessage(11, getCreationContext());
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 12, messageQueueAffinityKey_);
       }
       unknownFields.writeTo(output);
     }
@@ -4614,6 +4845,9 @@ public final class Messaging {
       if (((bitField0_ & 0x00000200) == 0x00000200)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(11, getCreationContext());
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(12, messageQueueAffinityKey_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -4683,6 +4917,11 @@ public final class Messaging {
         result = result && getCreationContext()
             .equals(other.getCreationContext());
       }
+      result = result && (hasMessageQueueAffinityKey() == other.hasMessageQueueAffinityKey());
+      if (hasMessageQueueAffinityKey()) {
+        result = result && getMessageQueueAffinityKey()
+            .equals(other.getMessageQueueAffinityKey());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -4739,6 +4978,10 @@ public final class Messaging {
       if (hasCreationContext()) {
         hash = (37 * hash) + CREATIONCONTEXT_FIELD_NUMBER;
         hash = (53 * hash) + getCreationContext().hashCode();
+      }
+      if (hasMessageQueueAffinityKey()) {
+        hash = (37 * hash) + MESSAGEQUEUEAFFINITYKEY_FIELD_NUMBER;
+        hash = (53 * hash) + getMessageQueueAffinityKey().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -4905,6 +5148,8 @@ public final class Messaging {
           creationContextBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000400);
+        messageQueueAffinityKey_ = "";
+        bitField0_ = (bitField0_ & ~0x00000800);
         return this;
       }
 
@@ -4986,6 +5231,10 @@ public final class Messaging {
         } else {
           result.creationContext_ = creationContextBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+          to_bitField0_ |= 0x00000400;
+        }
+        result.messageQueueAffinityKey_ = messageQueueAffinityKey_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -5080,6 +5329,11 @@ public final class Messaging {
         }
         if (other.hasCreationContext()) {
           mergeCreationContext(other.getCreationContext());
+        }
+        if (other.hasMessageQueueAffinityKey()) {
+          bitField0_ |= 0x00000800;
+          messageQueueAffinityKey_ = other.messageQueueAffinityKey_;
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -5837,6 +6091,82 @@ public final class Messaging {
           creationContext_ = null;
         }
         return creationContextBuilder_;
+      }
+
+      private java.lang.Object messageQueueAffinityKey_ = "";
+      /**
+       * <code>optional string messageQueueAffinityKey = 12;</code>
+       */
+      public boolean hasMessageQueueAffinityKey() {
+        return ((bitField0_ & 0x00000800) == 0x00000800);
+      }
+      /**
+       * <code>optional string messageQueueAffinityKey = 12;</code>
+       */
+      public java.lang.String getMessageQueueAffinityKey() {
+        java.lang.Object ref = messageQueueAffinityKey_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            messageQueueAffinityKey_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string messageQueueAffinityKey = 12;</code>
+       */
+      public com.google.protobuf.ByteString
+          getMessageQueueAffinityKeyBytes() {
+        java.lang.Object ref = messageQueueAffinityKey_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          messageQueueAffinityKey_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string messageQueueAffinityKey = 12;</code>
+       */
+      public Builder setMessageQueueAffinityKey(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000800;
+        messageQueueAffinityKey_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string messageQueueAffinityKey = 12;</code>
+       */
+      public Builder clearMessageQueueAffinityKey() {
+        bitField0_ = (bitField0_ & ~0x00000800);
+        messageQueueAffinityKey_ = getDefaultInstance().getMessageQueueAffinityKey();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string messageQueueAffinityKey = 12;</code>
+       */
+      public Builder setMessageQueueAffinityKeyBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000800;
+        messageQueueAffinityKey_ = value;
+        onChanged();
+        return this;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -11611,7 +11941,7 @@ public final class Messaging {
       "Entry\032.\n\014BaggageEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005va" +
       "lue\030\002 \001(\t:\0028\001\"a\n\017CreationContext\022\017\n\007crea" +
       "tor\030\001 \001(\t\022\023\n\013creatorType\030\002 \001(\t\022\025\n\rcreato" +
-      "rMethod\030\003 \001(\t\022\021\n\tscheduled\030\004 \001(\010\"\273\002\n\020Sch" +
+      "rMethod\030\003 \001(\t\022\021\n\tscheduled\030\004 \001(\010\"\334\002\n\020Sch" +
       "eduledMessage\022\n\n\002id\030\001 \001(\014\022\020\n\010fireTime\030\002 " +
       "\001(\004\022\020\n\010receiver\030\003 \001(\t\022\016\n\006sender\030\004 \001(\t\022\024\n" +
       "\014messageClass\030\005 \001(\t\022\017\n\007message\030\006 \001(\014\022\\\n\014" +
@@ -11619,35 +11949,37 @@ public final class Messaging {
       ".elasticactors.serialization.protobuf.Tr" +
       "aceContext\022b\n\017creationContext\030\010 \001(\0132I.or" +
       "g.elasticsoftware.elasticactors.serializ" +
-      "ation.protobuf.CreationContext\"\364\002\n\017Inter" +
-      "nalMessage\022\020\n\010receiver\030\001 \001(\t\022\016\n\006sender\030\002" +
-      " \001(\t\022\024\n\014payloadClass\030\003 \001(\t\022\017\n\007payload\030\004 " +
-      "\001(\014\022\n\n\002id\030\005 \001(\014\022\017\n\007durable\030\006 \001(\010\022\025\n\runde" +
-      "liverable\030\007 \001(\010\022\021\n\treceivers\030\010 \003(\t\022\017\n\007ti" +
-      "meout\030\t \001(\r\022\\\n\014traceContext\030\n \001(\0132F.org." +
-      "elasticsoftware.elasticactors.serializat" +
-      "ion.protobuf.TraceContext\022b\n\017creationCon" +
-      "text\030\013 \001(\0132I.org.elasticsoftware.elastic" +
-      "actors.serialization.protobuf.CreationCo" +
-      "ntext\"\314\001\n\022CreateActorMessage\022\017\n\007actorId\030" +
-      "\001 \001(\t\022\024\n\014initialState\030\002 \001(\014\022\022\n\nactorClas" +
-      "s\030\003 \001(\t\022\023\n\013actorSystem\030\004 \001(\t\022Q\n\004type\030\005 \001" +
-      "(\0162C.org.elasticsoftware.elasticactors.s" +
-      "erialization.protobuf.ActorType\022\023\n\013affin" +
-      "ityKey\030\006 \001(\t\"\'\n\023DestroyActorMessage\022\020\n\010a" +
-      "ctorRef\030\001 \001(\t\"\217\001\n\024ActivateActorMessage\022\023" +
-      "\n\013actorSystem\030\001 \001(\t\022\017\n\007actorId\030\002 \001(\t\022Q\n\004" +
-      "type\030\003 \001(\0162C.org.elasticsoftware.elastic" +
-      "actors.serialization.protobuf.ActorType\"" +
-      "9\n\013WireMessage\022\021\n\tqueueName\030\001 \001(\t\022\027\n\017int" +
-      "ernalMessage\030\002 \001(\014\"D\n\035CancelScheduledMes" +
-      "sageMessage\022\021\n\tmessageId\030\001 \001(\014\022\020\n\010fireTi" +
-      "me\030\002 \001(\004\"r\n\020ActorNodeMessage\022\020\n\010receiver" +
-      "\030\001 \001(\t\022\016\n\006nodeId\030\002 \001(\t\022\024\n\014payloadClass\030\003" +
-      " \001(\t\022\017\n\007payload\030\004 \001(\014\022\025\n\rundeliverable\030\005" +
-      " \001(\010\"\'\n\023PersistActorMessage\022\020\n\010actorRef\030" +
-      "\001 \001(\t*2\n\tActorType\022\016\n\nPERSISTENT\020\000\022\010\n\004TE" +
-      "MP\020\001\022\013\n\007SERVICE\020\002B\002H\001"
+      "ation.protobuf.CreationContext\022\037\n\027messag" +
+      "eQueueAffinityKey\030\t \001(\t\"\225\003\n\017InternalMess" +
+      "age\022\020\n\010receiver\030\001 \001(\t\022\016\n\006sender\030\002 \001(\t\022\024\n" +
+      "\014payloadClass\030\003 \001(\t\022\017\n\007payload\030\004 \001(\014\022\n\n\002" +
+      "id\030\005 \001(\014\022\017\n\007durable\030\006 \001(\010\022\025\n\rundeliverab" +
+      "le\030\007 \001(\010\022\021\n\treceivers\030\010 \003(\t\022\017\n\007timeout\030\t" +
+      " \001(\r\022\\\n\014traceContext\030\n \001(\0132F.org.elastic" +
+      "software.elasticactors.serialization.pro" +
+      "tobuf.TraceContext\022b\n\017creationContext\030\013 " +
+      "\001(\0132I.org.elasticsoftware.elasticactors." +
+      "serialization.protobuf.CreationContext\022\037" +
+      "\n\027messageQueueAffinityKey\030\014 \001(\t\"\314\001\n\022Crea" +
+      "teActorMessage\022\017\n\007actorId\030\001 \001(\t\022\024\n\014initi" +
+      "alState\030\002 \001(\014\022\022\n\nactorClass\030\003 \001(\t\022\023\n\013act" +
+      "orSystem\030\004 \001(\t\022Q\n\004type\030\005 \001(\0162C.org.elast" +
+      "icsoftware.elasticactors.serialization.p" +
+      "rotobuf.ActorType\022\023\n\013affinityKey\030\006 \001(\t\"\'" +
+      "\n\023DestroyActorMessage\022\020\n\010actorRef\030\001 \001(\t\"" +
+      "\217\001\n\024ActivateActorMessage\022\023\n\013actorSystem\030" +
+      "\001 \001(\t\022\017\n\007actorId\030\002 \001(\t\022Q\n\004type\030\003 \001(\0162C.o" +
+      "rg.elasticsoftware.elasticactors.seriali" +
+      "zation.protobuf.ActorType\"9\n\013WireMessage" +
+      "\022\021\n\tqueueName\030\001 \001(\t\022\027\n\017internalMessage\030\002" +
+      " \001(\014\"D\n\035CancelScheduledMessageMessage\022\021\n" +
+      "\tmessageId\030\001 \001(\014\022\020\n\010fireTime\030\002 \001(\004\"r\n\020Ac" +
+      "torNodeMessage\022\020\n\010receiver\030\001 \001(\t\022\016\n\006node" +
+      "Id\030\002 \001(\t\022\024\n\014payloadClass\030\003 \001(\t\022\017\n\007payloa" +
+      "d\030\004 \001(\014\022\025\n\rundeliverable\030\005 \001(\010\"\'\n\023Persis" +
+      "tActorMessage\022\020\n\010actorRef\030\001 \001(\t*2\n\tActor" +
+      "Type\022\016\n\nPERSISTENT\020\000\022\010\n\004TEMP\020\001\022\013\n\007SERVIC" +
+      "E\020\002B\002H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -11684,13 +12016,13 @@ public final class Messaging {
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ScheduledMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ScheduledMessage_descriptor,
-        new java.lang.String[] { "Id", "FireTime", "Receiver", "Sender", "MessageClass", "Message", "TraceContext", "CreationContext", });
+        new java.lang.String[] { "Id", "FireTime", "Receiver", "Sender", "MessageClass", "Message", "TraceContext", "CreationContext", "MessageQueueAffinityKey", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_InternalMessage_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_InternalMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_InternalMessage_descriptor,
-        new java.lang.String[] { "Receiver", "Sender", "PayloadClass", "Payload", "Id", "Durable", "Undeliverable", "Receivers", "Timeout", "TraceContext", "CreationContext", });
+        new java.lang.String[] { "Receiver", "Sender", "PayloadClass", "Payload", "Id", "Durable", "Undeliverable", "Receivers", "Timeout", "TraceContext", "CreationContext", "MessageQueueAffinityKey", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CreateActorMessage_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_CreateActorMessage_fieldAccessorTable = new

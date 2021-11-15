@@ -20,6 +20,7 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.tracing.TracedMessage;
 
 import javax.annotation.Nullable;
+import java.nio.ByteBuffer;
 import java.util.UUID;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
@@ -50,7 +51,7 @@ public interface ScheduledMessage extends Delayed, TracedMessage {
      *
      * @return
      */
-    byte[] getMessageBytes();
+    ByteBuffer getMessageBytes();
 
     /**
      * The sender
@@ -70,4 +71,9 @@ public interface ScheduledMessage extends Delayed, TracedMessage {
     long getFireTime(TimeUnit timeUnit);
 
     Class getMessageClass();
+
+    @Nullable
+    String getMessageQueueAffinityKey();
+
+    ScheduledMessage copyForRescheduling(long newFireTime);
 }

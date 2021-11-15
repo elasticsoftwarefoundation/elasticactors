@@ -16,13 +16,12 @@
 
 package org.elasticsoftware.elasticactors.kafka.serialization;
 
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * @author Joost van de Wijgerd
@@ -47,11 +46,12 @@ public final class CompressingSerializer<I> implements Serializer<I, byte[]> {
         byte[] serializedObject = delegate.serialize(object);
         if(serializedObject.length > compressionThreshold) {
             byte[] compressedBytes =  lz4Compressor.compress(serializedObject);
-            ByteArrayDataOutput dataOutput = ByteStreams.newDataOutput(compressedBytes.length+8);
-            dataOutput.write(MAGIC_HEADER);
-            dataOutput.writeInt(serializedObject.length);
-            dataOutput.write(compressedBytes);
-            return dataOutput.toByteArray();
+            ByteBuffer buffer = ByteBuffer.allocate(compressedBytes.length + 8);
+            buffer.put(MAGIC_HEADER);
+            buffer.putInt(serializedObject.length);
+            buffer.put(compressedBytes);
+            buffer.rewind();
+            return buffer.array();
         } else {
             return serializedObject;
         }

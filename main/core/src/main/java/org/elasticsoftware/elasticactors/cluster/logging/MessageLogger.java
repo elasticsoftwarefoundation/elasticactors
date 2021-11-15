@@ -310,12 +310,8 @@ public final class MessageLogger {
                 internalMessage.getSender(),
                 shorten(messageClass),
                 shorten(internalMessage.getClass()),
-                internalMessage.getTraceContext() != null
-                    ? internalMessage.getTraceContext() + ". "
-                    : "",
-                internalMessage.getCreationContext() != null
-                    ? internalMessage.getCreationContext() + ". "
-                    : "",
+                toLoggableString(internalMessage.getTraceContext()),
+                toLoggableString(internalMessage.getCreationContext()),
                 measurement != null ? measurement.summary(MICROSECONDS) + ". " : "",
                 convertToString(
                     null,
@@ -349,18 +345,20 @@ public final class MessageLogger {
                     ? shorten(messageClass)
                     : shorten(internalMessage.getPayloadClass()),
                 shorten(internalMessage.getClass()),
-                internalMessage.getTraceContext() != null
-                    ? internalMessage.getTraceContext() + ". "
-                    : "",
-                internalMessage.getCreationContext() != null
-                    ? internalMessage.getCreationContext() + ". "
-                    : "",
+                toLoggableString(internalMessage.getTraceContext()),
+                toLoggableString(internalMessage.getCreationContext()),
                 measurement != null ? measurement.summary(MICROSECONDS) + ". " : "",
                 internalMessage.hasSerializedPayload()
                     ? internalMessage.getPayload().limit()
                     : "N/A"
             );
         }
+    }
+
+    private static String toLoggableString(Object object) {
+        return object != null
+            ? object + ". "
+            : "";
     }
 
     public static String convertToString(

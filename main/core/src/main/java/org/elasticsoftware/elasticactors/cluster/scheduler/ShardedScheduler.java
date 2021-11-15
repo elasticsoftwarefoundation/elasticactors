@@ -200,9 +200,14 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
                         long fireTime = System.currentTimeMillis() + timeUnit.toMillis(delay);
                         MessageSerializer serializer = actorSystem.getSerializer(message.getClass());
                         ByteBuffer serializedMessage = serializer.serialize(message);
-                        byte[] serializedBytes = new byte[serializedMessage.remaining()];
-                        serializedMessage.get(serializedBytes);
-                        ScheduledMessage scheduledMessage = new ScheduledMessageImpl(fireTime,sender,receiver,message.getClass(),serializedBytes);
+                        ScheduledMessage scheduledMessage = new ScheduledMessageImpl(
+                            fireTime,
+                            sender,
+                            receiver,
+                            message.getClass(),
+                            serializedMessage.asReadOnlyBuffer(),
+                            message
+                        );
                         scheduledMessageRepository.create(actorShard.getKey(), scheduledMessage);
                         schedule(actorShard.getKey(),scheduledMessage);
                         return new ScheduledMessageShardRef(actorSystem.getParent().getClusterName(),actorShard,new ScheduledMessageKey(scheduledMessage.getId(),fireTime));
@@ -255,7 +260,7 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
             try {
                 final MessageDeserializer messageDeserializer = actorSystem.getDeserializer(message.getMessageClass());
                 if(messageDeserializer != null) {
-                    Object deserializedMessage = messageDeserializer.deserialize(ByteBuffer.wrap(message.getMessageBytes()));
+                    Object deserializedMessage = messageDeserializer.deserialize(message.getMessageBytes());
                     // send the message
                     final ActorRef receiverRef = message.getReceiver();
                     receiverRef.tell(deserializedMessage,message.getSender());
@@ -269,7 +274,7 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
                     // because we generate a key it will be impossible to cancel, however technically it fired already
                     // so it should be no problem
                     long fireTime = System.currentTimeMillis() + 1000L;
-                    ScheduledMessage rescheduledMessage = new ScheduledMessageImpl(fireTime,message.getSender(),message.getReceiver(),message.getMessageClass(),message.getMessageBytes());
+                    ScheduledMessage rescheduledMessage = message.copyForRescheduling(fireTime);
                     try {
                         schedule(shardKey, rescheduledMessage);
                         scheduledMessageRepository.create(shardKey, rescheduledMessage);
@@ -284,7 +289,7 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
                 }
             } catch(IOException e) {
                 // try to figure out what is wrong with the bytes
-                String jsonMessage = new String(message.getMessageBytes(), StandardCharsets.UTF_8);
+                String jsonMessage = StandardCharsets.UTF_8.decode(message.getMessageBytes()).toString();
                 logger.error("IOException while deserializing ScheduledMessage contents [{}] of message class [{}]",jsonMessage,message.getMessageClass().getName(),e);
             } catch(Exception e) {
                 logger.error("Caught unexpected Exception while exexuting ScheduledMessage",e);
