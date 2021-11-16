@@ -12,9 +12,13 @@ public final class InternalHashKeyUtils {
      */
     @Nullable
     public static String getMessageQueueAffinityKey(@Nullable Object object) {
-        return object instanceof MessageQueueBoundPayload
-            ? ((MessageQueueBoundPayload) object).getMessageQueueAffinityKey()
-            : null;
+        if (object instanceof MessageQueueBoundPayload) {
+            String key = ((MessageQueueBoundPayload) object).getMessageQueueAffinityKey();
+            if (key != null && !key.isEmpty()) {
+                return key;
+            }
+        }
+        return null;
     }
 
 }
