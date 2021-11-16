@@ -38,8 +38,9 @@ public final class ActorSystemEventListenerDeserializer implements Deserializer<
 
     @Override
     public ActorSystemEventListener deserialize(ByteBuffer serializedObject) throws IOException {
-        try {
-            Elasticactors.ActorSystemEventListener protobufMessage = Elasticactors.ActorSystemEventListener.parseFrom(serializedObject.asReadOnlyBuffer());
+        try {// Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
+            // the original byte buffer has an array
+            Elasticactors.ActorSystemEventListener protobufMessage = Elasticactors.ActorSystemEventListener.parseFrom(serializedObject.duplicate());
             Class messageClass = getClassHelper().forName(protobufMessage.getMessageClass());
             ByteBuffer messageBytes = protobufMessage.getMessage().asReadOnlyByteBuffer();
             String actorId = protobufMessage.getActorId();

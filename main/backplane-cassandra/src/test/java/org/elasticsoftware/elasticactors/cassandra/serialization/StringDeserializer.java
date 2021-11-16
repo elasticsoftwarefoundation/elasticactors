@@ -28,6 +28,8 @@ import java.nio.charset.StandardCharsets;
 public final class StringDeserializer implements Deserializer<ByteBuffer,String> {
     @Override
     public String deserialize(ByteBuffer serializedObject) throws IOException {
-        return StandardCharsets.UTF_8.decode(serializedObject.asReadOnlyBuffer()).toString();
+        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
+        // the original byte buffer has an array
+        return StandardCharsets.UTF_8.decode(serializedObject.duplicate()).toString();
     }
 }

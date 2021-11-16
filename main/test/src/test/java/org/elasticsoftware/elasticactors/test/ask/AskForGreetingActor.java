@@ -53,7 +53,7 @@ public class AskForGreetingActor extends MethodActor {
     @MessageHandler(order = 0)
     public void handle(AskForGreeting greeting, ActorSystem actorSystem, ActorRef replyActor, StringState state) throws Exception {
         ActorRef echo = actorSystem.actorOf(
-            "echo" + (state != null && state.getBody() != null ? state.getBody() : ""),
+            "echo" + (state != null && state.getStringBody() != null ? state.getStringBody() : ""),
             EchoGreetingActor.class
         );
         if (logger.isInfoEnabled()) {

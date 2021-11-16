@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.serialization.internal;
 
-import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
@@ -37,7 +36,9 @@ public final class CancelScheduledMessageMessageDeserializer implements MessageD
 
     @Override
     public CancelScheduledMessageMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        Messaging.CancelScheduledMessageMessage protobufMessage = Messaging.CancelScheduledMessageMessage.parseFrom(ByteString.copyFrom(serializedObject));
+        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
+        // the original byte buffer has an array
+        Messaging.CancelScheduledMessageMessage protobufMessage = Messaging.CancelScheduledMessageMessage.parseFrom(serializedObject.duplicate());
         return new CancelScheduledMessageMessage(UUIDTools.toUUID(protobufMessage.getMessageId().toByteArray()),
                                                  protobufMessage.getFireTime());
     }

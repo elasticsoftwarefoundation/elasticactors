@@ -22,17 +22,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * @author Joost van de Wijgerd
  */
-public final class StringState extends JacksonActorState<String> {
-    private final String body;
+public final class StringState extends JacksonActorState<StringState> {
+    private final String stringBody;
 
     @JsonCreator
-    public StringState(@JsonProperty("body") String body) {
-        this.body = body;
+    public StringState(@JsonProperty("stringBody") String stringBody) {
+        this.stringBody = stringBody;
     }
 
-    @JsonProperty("body")
+    @JsonProperty("stringBody")
+    public String getStringBody() {
+        return stringBody;
+    }
+
     @Override
-    public String getBody() {
-        return body;
+    public StringState getBody() {
+        return this;
     }
 }

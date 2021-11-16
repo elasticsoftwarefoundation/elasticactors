@@ -153,7 +153,7 @@ public final class ActorStateUpdateEvent implements ThreadBoundEvent<String>, Ac
         return new ActorStateUpdateEvent(
                 actorClass,
                 actorRef,
-                serializedState.duplicate(),
+                serializedState,
                 version,
                 lifecycleStep,
                 messageClass,

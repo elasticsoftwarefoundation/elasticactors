@@ -46,6 +46,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 import static org.testng.Assert.assertEquals;
@@ -133,10 +134,10 @@ public class AskTest {
         ActorSystem actorSystem = testActorSystem.getActorSystem();
         ActorRef echo = actorSystem.actorOf("ask", AskForGreetingActor.class);
 
-        ActorRef[] actors = new ActorRef[1_000];
+        String[] actors = new String[1_000];
 
         for (int i = 0; i < actors.length; i++) {
-            actors[i] = actorSystem.actorOf("ask" + i, AskForGreetingActor.class, new StringState(Integer.toString(i)));
+            actors[i] = actorSystem.actorOf("ask" + i, AskForGreetingActor.class, new StringState(Integer.toString(i))).getActorId();
         }
 
         CompletableFuture<Greeting> response = echo.ask(new AskForGreeting(), Greeting.class)
@@ -158,7 +159,7 @@ public class AskTest {
         Random rand = ThreadLocalRandom.current();
         for (int i = 0; i < futures.length; i++) {
             futures[i] =
-                actors[rand.nextInt(actors.length)].ask(new AskForGreeting(), Greeting.class)
+                actorSystem.actorFor(actors[rand.nextInt(actors.length)]).ask(new AskForGreeting(), Greeting.class)
                     .whenComplete((m, e) -> {
                         if (m != null) {
                             tempLatch.countDown();
@@ -175,7 +176,7 @@ public class AskTest {
                     .toCompletableFuture();
         }
 
-        ActorRefGroup group = actorSystem.groupOf(Arrays.asList(actors));
+        ActorRefGroup group = actorSystem.groupOf(Arrays.stream(actors).map(actorSystem::actorFor).collect(Collectors.toList()));
         CountDownLatch groupLatch = new CountDownLatch(actors.length);
         ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
             .deleteAfterReceive(false)

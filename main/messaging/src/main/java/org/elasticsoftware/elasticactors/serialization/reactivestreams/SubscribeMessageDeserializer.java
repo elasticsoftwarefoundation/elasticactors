@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.serialization.reactivestreams;
 
-import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.SubscribeMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
@@ -37,7 +36,9 @@ public final class SubscribeMessageDeserializer implements MessageDeserializer<S
 
     @Override
     public SubscribeMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        Reactivestreams.SubscribeMessage subscribeMessage = Reactivestreams.SubscribeMessage.parseFrom(ByteString.copyFrom(serializedObject));
+        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
+        // the original byte buffer has an array
+        Reactivestreams.SubscribeMessage subscribeMessage = Reactivestreams.SubscribeMessage.parseFrom(serializedObject.duplicate());
         return new SubscribeMessage(actorRefDeserializer.deserialize(subscribeMessage.getSubscriberRef()), subscribeMessage.getMessageName());
     }
 

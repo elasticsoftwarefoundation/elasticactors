@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.serialization.reactivestreams;
 
-import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.CancelMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
@@ -37,7 +36,9 @@ public final class CancelMessageDeserializer implements MessageDeserializer<Canc
 
     @Override
     public CancelMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        Reactivestreams.CancelMessage cancelMessage = Reactivestreams.CancelMessage.parseFrom(ByteString.copyFrom(serializedObject));
+        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
+        // the original byte buffer has an array
+        Reactivestreams.CancelMessage cancelMessage = Reactivestreams.CancelMessage.parseFrom(serializedObject.duplicate());
         return new CancelMessage(actorRefDeserializer.deserialize(cancelMessage.getSubscriberRef()), cancelMessage.getMessageName());
     }
 

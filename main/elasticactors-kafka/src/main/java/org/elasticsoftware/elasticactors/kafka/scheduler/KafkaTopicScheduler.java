@@ -66,7 +66,7 @@ public final class KafkaTopicScheduler implements Scheduler {
                             sender,
                             receiver,
                             message.getClass(),
-                            serializedMessage.asReadOnlyBuffer(),
+                            serializedMessage,
                             message
                         );
                         actorShard.schedule(scheduledMessage);

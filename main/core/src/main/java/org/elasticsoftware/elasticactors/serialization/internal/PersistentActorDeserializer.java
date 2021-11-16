@@ -51,7 +51,9 @@ public final class PersistentActorDeserializer implements Deserializer<ByteBuffe
 
     @Override
     public PersistentActor<ShardKey> deserialize(ByteBuffer serializedObject) throws IOException {
-        Elasticactors.PersistentActor protobufMessage = Elasticactors.PersistentActor.parseFrom(serializedObject.asReadOnlyBuffer());
+        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
+        // the original byte buffer has an array
+        Elasticactors.PersistentActor protobufMessage = Elasticactors.PersistentActor.parseFrom(serializedObject.duplicate());
         final ShardKey shardKey = ShardKey.fromString(protobufMessage.getShardKey());
         try {
             Class<? extends ElasticActor> actorClass =

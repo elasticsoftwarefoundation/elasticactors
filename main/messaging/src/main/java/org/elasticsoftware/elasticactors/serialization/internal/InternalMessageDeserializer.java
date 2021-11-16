@@ -31,6 +31,7 @@ import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import static org.elasticsoftware.elasticactors.messaging.UUIDTools.toUUID;
@@ -50,7 +51,9 @@ public final class InternalMessageDeserializer implements Deserializer<ByteBuffe
 
     @Override
     public InternalMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        Messaging.InternalMessage protobufMessage = Messaging.InternalMessage.parseFrom(serializedObject.asReadOnlyBuffer());
+        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
+        // the original byte buffer has an array
+        Messaging.InternalMessage protobufMessage = Messaging.InternalMessage.parseFrom(serializedObject.duplicate());
         ActorRef sender = getSender(protobufMessage);
         // there is either a receiver or a list of receivers
         ImmutableList<ActorRef> receivers = getReceivers(protobufMessage);

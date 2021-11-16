@@ -205,7 +205,7 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
                             sender,
                             receiver,
                             message.getClass(),
-                            serializedMessage.asReadOnlyBuffer(),
+                            serializedMessage,
                             message
                         );
                         scheduledMessageRepository.create(actorShard.getKey(), scheduledMessage);

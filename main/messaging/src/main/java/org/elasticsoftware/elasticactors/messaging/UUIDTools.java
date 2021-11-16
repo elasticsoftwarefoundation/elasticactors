@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.messaging;
 import com.fasterxml.uuid.Generators;
 import com.fasterxml.uuid.impl.TimeBasedGenerator;
 
+import java.nio.ByteBuffer;
 import java.util.Comparator;
 import java.util.UUID;
 
@@ -27,6 +28,7 @@ import java.util.UUID;
  */
 public final class UUIDTools {
     private static final TimeBasedGenerator generator = Generators.timeBasedGenerator();
+    private static final int UUID_SIZE = Long.BYTES * 2;
 
     private UUIDTools() {}
 
@@ -39,7 +41,7 @@ public final class UUIDTools {
     public static byte[] toByteArray(UUID uuid) {
         final long msb = uuid.getMostSignificantBits();
         final long lsb = uuid.getLeastSignificantBits();
-        byte[] buffer = new byte[16];
+        byte[] buffer = new byte[UUID_SIZE];
 
         for (int i = 0; i < 8; i++) {
             buffer[i] = (byte) (msb >>> (8 * (7 - i)));
@@ -51,10 +53,45 @@ public final class UUIDTools {
         return buffer;
     }
 
-    public static UUID toUUID(byte[] uuid) {
-        if (uuid == null || uuid.length != 16) {
-            throw new IllegalArgumentException("UUID byte array must contain exactly 16 bytes");
+    public static ByteBuffer toByteBuffer(UUID uuid) {
+        final long msb = uuid.getMostSignificantBits();
+        final long lsb = uuid.getLeastSignificantBits();
+        ByteBuffer buffer = ByteBuffer.allocate(UUID_SIZE);
+        buffer.putLong(msb);
+        buffer.putLong(lsb);
+        buffer.rewind();
+        return buffer;
+    }
+
+    public static UUID toUUID(ByteBuffer uuid) {
+        if (uuid == null || uuid.remaining() != UUID_SIZE) {
+            throw new IllegalArgumentException(String.format(
+                "UUID byte array must contain exactly %d bytes",
+                UUID_SIZE
+            ));
         }
+        if (uuid.hasArray()) {
+            return toUUIDInternal(uuid.array());
+        } else {
+            int position = uuid.position();
+            final long msb = uuid.getLong();
+            final long lsb = uuid.getLong();
+            uuid.position(position);
+            return new UUID(msb, lsb);
+        }
+    }
+
+    public static UUID toUUID(byte[] uuid) {
+        if (uuid == null || uuid.length != UUID_SIZE) {
+            throw new IllegalArgumentException(String.format(
+                "UUID byte array must contain exactly %d bytes",
+                UUID_SIZE
+            ));
+        }
+        return toUUIDInternal(uuid);
+    }
+
+    private static UUID toUUIDInternal(byte[] uuid) {
         long msb = 0;
         long lsb = 0;
         for (int i = 0; i < 8; i++) {

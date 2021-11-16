@@ -62,13 +62,12 @@ public final class SerializationContext {
                 return (T) message;
             }
         }
-        bytes.mark();
-        final T message = deserializer.deserialize(bytes);
+        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
+        // the original byte buffer has an array
+        final T message = deserializer.deserialize(bytes.duplicate());
         // check if the message is immutable
         final Message immutableAnnotation = message.getClass().getAnnotation(Message.class);
         if(immutableAnnotation != null && immutableAnnotation.immutable() && serializationCache.get() != null) {
-            // reset the bytebuffer back to mark before returning
-            bytes.reset();
             // optimize serialization as well
             serializationCache.get().put(message,bytes.asReadOnlyBuffer());
             if(deserializationCache != null) {

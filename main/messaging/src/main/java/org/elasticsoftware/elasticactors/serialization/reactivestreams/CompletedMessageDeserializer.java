@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.serialization.reactivestreams;
 
-import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.CompletedMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams;
@@ -31,7 +30,9 @@ public final class CompletedMessageDeserializer implements MessageDeserializer<C
 
     @Override
     public CompletedMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        Reactivestreams.CompletedMessage completedMessage = Reactivestreams.CompletedMessage.parseFrom(ByteString.copyFrom(serializedObject));
+        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
+        // the original byte buffer has an array
+        Reactivestreams.CompletedMessage completedMessage = Reactivestreams.CompletedMessage.parseFrom(serializedObject.duplicate());
         return new CompletedMessage(completedMessage.getMessageName());
     }
 

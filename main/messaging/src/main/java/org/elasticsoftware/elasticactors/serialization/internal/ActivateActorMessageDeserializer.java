@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.serialization.internal;
 
-import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
@@ -37,7 +36,9 @@ public final class ActivateActorMessageDeserializer implements MessageDeserializ
 
     @Override
     public ActivateActorMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        Messaging.ActivateActorMessage protobufMessage = Messaging.ActivateActorMessage.parseFrom(ByteString.copyFrom(serializedObject));
+        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
+        // the original byte buffer has an array
+        Messaging.ActivateActorMessage protobufMessage = Messaging.ActivateActorMessage.parseFrom(serializedObject.duplicate());
         return new ActivateActorMessage(
             protobufMessage.getActorSystem(),
             protobufMessage.getActorId(),

@@ -47,7 +47,9 @@ public final class ScheduledMessageDeserializer implements Deserializer<ByteBuff
     @Override
     public ScheduledMessage deserialize(ByteBuffer serializedObject) throws IOException {
         try {
-            Messaging.ScheduledMessage protobufMessage = Messaging.ScheduledMessage.parseFrom(serializedObject.asReadOnlyBuffer());
+            // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
+            // the original byte buffer has an array
+            Messaging.ScheduledMessage protobufMessage = Messaging.ScheduledMessage.parseFrom(serializedObject.duplicate());
             ActorRef sender = getSender(protobufMessage);
             ActorRef receiver = actorRefDeserializer.deserialize(protobufMessage.getReceiver());
             Class messageClass = getClassHelper().forName(protobufMessage.getMessageClass());

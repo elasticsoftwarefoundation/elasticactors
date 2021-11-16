@@ -46,7 +46,8 @@ public final class CompressingSerializer<I> implements Serializer<I, byte[]> {
         byte[] serializedObject = delegate.serialize(object);
         if(serializedObject.length > compressionThreshold) {
             byte[] compressedBytes =  lz4Compressor.compress(serializedObject);
-            ByteBuffer buffer = ByteBuffer.allocate(compressedBytes.length + 8);
+            ByteBuffer buffer =
+                ByteBuffer.allocate(MAGIC_HEADER.length + Integer.BYTES + compressedBytes.length);
             buffer.put(MAGIC_HEADER);
             buffer.putInt(serializedObject.length);
             buffer.put(compressedBytes);

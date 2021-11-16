@@ -38,8 +38,10 @@ public final class JacksonMessageDeserializer<T> implements MessageDeserializer<
 
     @Override
     public T deserialize(ByteBuffer serializedObject) throws IOException {
+        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
+        // the original byte buffer has an array
         return objectMapper.readValue(
-            new ByteBufferBackedInputStream(serializedObject.asReadOnlyBuffer()),
+            new ByteBufferBackedInputStream(serializedObject.duplicate()),
             objectClass
         );
     }

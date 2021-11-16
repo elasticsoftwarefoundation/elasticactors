@@ -37,29 +37,32 @@ public final class DecompressingDeserializer<O> implements Deserializer<byte[],O
 
     @Override
     public O deserialize(byte[] serializedBuffer) throws IOException {
-        ByteBuffer buffer = ByteBuffer.wrap(serializedBuffer);
-        if(isCompressed(buffer)) {
-            ByteBuffer serializedObject = buffer.asReadOnlyBuffer();
+        if(isCompressed(serializedBuffer)) {
+            ByteBuffer buffer = ByteBuffer.wrap(serializedBuffer);
             // skip the header
-            serializedObject.position(MAGIC_HEADER.length);
-            int uncompressedLength = serializedObject.getInt();
-            serializedObject.position(buffer.position());
+            buffer.position(MAGIC_HEADER.length);
+            int uncompressedLength = buffer.getInt();
+            buffer.rewind();
             ByteBuffer destination = ByteBuffer.allocate(uncompressedLength);
-            lz4Decompressor.decompress(serializedObject, MAGIC_HEADER.length + 4, destination, 0, uncompressedLength);
+            lz4Decompressor.decompress(
+                buffer,
+                MAGIC_HEADER.length + Integer.BYTES,
+                destination,
+                0,
+                uncompressedLength
+            );
             return delegate.deserialize(destination);
         } else {
-            return delegate.deserialize(buffer);
+            return delegate.deserialize(ByteBuffer.wrap(serializedBuffer));
         }
     }
 
-    private boolean isCompressed(ByteBuffer serializedObject) {
-        if (serializedObject.remaining() < MAGIC_HEADER.length) {
+    private boolean isCompressed(byte[] bytes) {
+        if (bytes.length < MAGIC_HEADER.length) {
             return false;
         }
-        byte[] header = new byte[MAGIC_HEADER.length];
-        serializedObject.asReadOnlyBuffer().get(header);
         for (int i = 0; i < MAGIC_HEADER.length; i++) {
-            if(header[i] != MAGIC_HEADER[i]) {
+            if (bytes[i] != MAGIC_HEADER[i]) {
                 return false;
             }
         }

@@ -38,30 +38,53 @@ public final class DecompressingDeserializer<O> implements Deserializer<ByteBuff
     @Override
     public O deserialize(ByteBuffer serializedBuffer) throws IOException {
         if(isCompressed(serializedBuffer)) {
-            ByteBuffer serializedObject = serializedBuffer.asReadOnlyBuffer();
+            // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
+            // the original byte buffer has an array
+            ByteBuffer buffer = serializedBuffer.duplicate();
             // skip the header
-            serializedObject.position(MAGIC_HEADER.length);
-            int uncompressedLength = serializedObject.getInt();
-            serializedObject.position(serializedBuffer.position());
+            buffer.position(MAGIC_HEADER.length);
+            int uncompressedLength = buffer.getInt();
+            buffer.rewind();
             ByteBuffer destination = ByteBuffer.allocate(uncompressedLength);
-            lz4Decompressor.decompress(serializedObject, MAGIC_HEADER.length + 4, destination, 0, uncompressedLength);
+            lz4Decompressor.decompress(
+                buffer,
+                MAGIC_HEADER.length + Integer.BYTES,
+                destination,
+                0,
+                uncompressedLength
+            );
             return delegate.deserialize(destination);
         } else {
             return delegate.deserialize(serializedBuffer);
         }
     }
 
-    private boolean isCompressed(ByteBuffer serializedObject) {
-        if (serializedObject.remaining() < MAGIC_HEADER.length) {
+    private boolean isCompressed(byte[] bytes) {
+        if (bytes.length < MAGIC_HEADER.length) {
             return false;
         }
-        byte[] header = new byte[MAGIC_HEADER.length];
-        serializedObject.asReadOnlyBuffer().get(header);
         for (int i = 0; i < MAGIC_HEADER.length; i++) {
-            if(header[i] != MAGIC_HEADER[i]) {
+            if (bytes[i] != MAGIC_HEADER[i]) {
                 return false;
             }
         }
         return true;
+    }
+
+    private boolean isCompressed(ByteBuffer bytes) {
+        if (bytes.hasArray()) {
+            return isCompressed(bytes.array());
+        } else {
+            if (bytes.remaining() < MAGIC_HEADER.length) {
+                return false;
+            }
+            ByteBuffer copy = bytes.asReadOnlyBuffer();
+            for (byte b : MAGIC_HEADER) {
+                if (b != copy.get()) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 }

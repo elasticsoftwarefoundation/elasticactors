@@ -37,7 +37,9 @@ public class CompressionTest {
 
         CompressingSerializer<String> serializer = new CompressingSerializer<>(new StringSerializer());
         ByteBuffer serialized = serializer.serialize(testString);
-        assertEquals(StandardCharsets.UTF_8.decode(serialized.asReadOnlyBuffer()).toString(), testString);
+        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
+        // the original byte buffer has an array
+        assertEquals(StandardCharsets.UTF_8.decode(serialized.duplicate()).toString(), testString);
 
         DecompressingDeserializer<String> deserializer = new DecompressingDeserializer<>(new StringDeserializer());
         String deserializedString = deserializer.deserialize(serialized);
