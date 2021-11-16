@@ -173,7 +173,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
         offerInternalMessage(internalMessage);
     }
 
-    private boolean isCreateTempActorMessage(Object message) {
+    private static boolean isCreateTempActorMessage(Object message) {
         return message instanceof CreateActorMessage
             && ActorType.TEMP.equals(((CreateActorMessage) message).getType());
     }
