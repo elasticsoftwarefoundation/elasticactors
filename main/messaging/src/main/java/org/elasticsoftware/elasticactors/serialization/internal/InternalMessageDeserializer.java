@@ -31,7 +31,6 @@ import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import static org.elasticsoftware.elasticactors.messaging.UUIDTools.toUUID;

@@ -25,6 +25,7 @@ import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
+import org.elasticsoftware.elasticactors.tracing.Traceable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,9 @@ import javax.annotation.Nullable;
 /**
  * @author Joost van de Wijgerd
  */
-public abstract class InternalActorDelegate<T> extends TypedActor<T> implements ActorState<InternalActorDelegate<T>> {
+public abstract class InternalActorDelegate<T>
+    extends TypedActor<T>
+    implements ActorState<InternalActorDelegate<T>>, Traceable {
 
     private static final Logger staticLogger = LoggerFactory.getLogger(InternalActorDelegate.class);
 
@@ -80,11 +83,13 @@ public abstract class InternalActorDelegate<T> extends TypedActor<T> implements 
         return callerRef;
     }
 
+    @Override
     @Nullable
     public TraceContext getTraceContext() {
         return traceContext;
     }
 
+    @Override
     @Nullable
     public CreationContext getCreationContext() {
         return creationContext;

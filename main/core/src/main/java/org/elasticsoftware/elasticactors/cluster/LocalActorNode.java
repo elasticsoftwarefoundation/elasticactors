@@ -43,10 +43,12 @@ import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
+import org.elasticsoftware.elasticactors.tracing.Traceable;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -118,14 +120,37 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
 
     @Override
     public void onEvicted(PersistentActor<NodeKey> value) {
+        Traceable traceable = value.getState() instanceof Traceable
+            ? (Traceable) value.getState()
+            : null;
+        boolean hasTraceData = traceable != null
+            && (traceable.getTraceContext() != null || traceable.getCreationContext() != null);
         logger.error(
             "CRITICAL WARNING: Actor [{}] of type [{}] got evicted from the cache. "
                 + "This can lead to issues using temporary actors. "
                 + "Please increase the maximum size of the node actor cache "
-                + "by using the 'ea.nodeCache.maximumSize' property.",
+                + "by using the 'ea.nodeCache.maximumSize' property."
+                + "{}"
+                + "{}"
+                + "{}",
             value.getSelf(),
-            value.getActorClass().getName()
+            value.getActorClass().getName(),
+            hasTraceData
+                ? " Temporary Actor created with the following contexts in scope:"
+                : "",
+            hasTraceData
+                ? toLoggableString(traceable.getCreationContext())
+                : "",
+            hasTraceData
+                ? toLoggableString(traceable.getTraceContext())
+                : ""
         );
+    }
+
+    private static String toLoggableString(@Nullable Object object) {
+        return object != null
+            ? " " + object + "."
+            : "";
     }
 
     @Override
@@ -148,7 +173,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
         offerInternalMessage(internalMessage);
     }
 
-    private boolean isCreateTempActorMessage(Object message) {
+    private static boolean isCreateTempActorMessage(Object message) {
         return message instanceof CreateActorMessage
             && ActorType.TEMP.equals(((CreateActorMessage) message).getType());
     }

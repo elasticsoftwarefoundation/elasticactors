@@ -86,10 +86,12 @@ import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageD
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageDeserializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
+import org.elasticsoftware.elasticactors.tracing.Traceable;
 import org.elasticsoftware.elasticactors.util.ManifestTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -1279,14 +1281,37 @@ public final class KafkaActorThread extends Thread {
 
         @Override
         public void onEvicted(PersistentActor<NodeKey> value) {
+            Traceable traceable = value.getState() instanceof Traceable
+                ? (Traceable) value.getState()
+                : null;
+            boolean hasTraceData = traceable != null
+                && (traceable.getTraceContext() != null || traceable.getCreationContext() != null);
             logger.error(
                 "CRITICAL WARNING: Actor [{}] of type [{}] got evicted from the cache. "
                     + "This can lead to issues using temporary actors. "
                     + "Please increase the maximum size of the node actor cache "
-                    + "by using the 'ea.nodeCache.maximumSize' property.",
+                    + "by using the 'ea.nodeCache.maximumSize' property."
+                    + "{}"
+                    + "{}"
+                    + "{}",
                 value.getSelf(),
-                value.getActorClass().getName()
+                value.getActorClass().getName(),
+                hasTraceData
+                    ? " Temporary Actor created with the following contexts in scope:"
+                    : "",
+                hasTraceData
+                    ? toLoggableString(traceable.getCreationContext())
+                    : "",
+                hasTraceData
+                    ? toLoggableString(traceable.getTraceContext())
+                    : ""
             );
+        }
+
+        private String toLoggableString(@Nullable Object object) {
+            return object != null
+                ? " " + object + "."
+                : "";
         }
 
         @Override

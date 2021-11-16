@@ -29,6 +29,7 @@ import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
+import org.elasticsoftware.elasticactors.tracing.Traceable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +44,9 @@ import static java.lang.String.format;
 /**
  * @author Joost van de Wijgerd
  */
-public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorState<ActorDelegate<T>> {
+public abstract class ActorDelegate<T>
+    extends TypedActor<T>
+    implements ActorState<ActorDelegate<T>>, Traceable {
 
     private final static Logger staticLogger = LoggerFactory.getLogger(ActorDelegate.class);
 
@@ -82,11 +85,13 @@ public abstract class ActorDelegate<T> extends TypedActor<T> implements ActorSta
         return deleteAfterReceive;
     }
 
+    @Override
     @Nullable
     public TraceContext getTraceContext() {
         return traceContext;
     }
 
+    @Override
     @Nullable
     public CreationContext getCreationContext() {
         return creationContext;
