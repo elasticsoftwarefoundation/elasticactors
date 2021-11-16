@@ -36,16 +36,22 @@ public class CompressionTest {
         String testString = "This string is too small and should not be compressed";
 
         CompressingSerializer<String> serializer = new CompressingSerializer<>(new StringSerializer());
+        OriginalCompressingSerializer<String> originalSerializer = new OriginalCompressingSerializer<>(new StringSerializer());
+
+        ByteBuffer original = originalSerializer.serialize(testString);
         ByteBuffer serialized = serializer.serialize(testString);
         // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
         // the original byte buffer has an array
         assertEquals(StandardCharsets.UTF_8.decode(serialized.duplicate()).toString(), testString);
+        assertEquals(original, serialized);
 
         DecompressingDeserializer<String> deserializer = new DecompressingDeserializer<>(new StringDeserializer());
-        String deserializedString = deserializer.deserialize(serialized);
+        OriginalDecompressingDeserializer<String> originalDeserializer = new OriginalDecompressingDeserializer<>(new OriginalStringDeserializer());
 
-        assertEquals(deserializedString,testString);
-
+        assertEquals(deserializer.deserialize(serialized), testString);
+        assertEquals(deserializer.deserialize(original), testString);
+        assertEquals(originalDeserializer.deserialize(serialized.array()), testString);
+        assertEquals(originalDeserializer.deserialize(original.array()), testString);
     }
 
     @Test
@@ -73,14 +79,20 @@ public class CompressionTest {
                 "Schneier views this as deliberate obfuscation; I think it’s just a side effect of the fact that the evil NSA bureaucrats are still fundamentally bureaucrats, obsessed with subdividing everything into separate silos and processes (with a bizarre penchant for WTF names.) It’s as if Office Space‘s Milton made a Faustian deal with the devil –";
 
         CompressingSerializer<String> serializer = new CompressingSerializer<>(new StringSerializer());
+        OriginalCompressingSerializer<String> originalSerializer = new OriginalCompressingSerializer<>(new StringSerializer());
+        ByteBuffer original = originalSerializer.serialize(testString);
         ByteBuffer serialized = serializer.serialize(testString);
 
         assertTrue(serialized.remaining() < testString.getBytes(StandardCharsets.UTF_8).length);
+        assertEquals(original, serialized);
 
         DecompressingDeserializer<String> deserializer = new DecompressingDeserializer<>(new StringDeserializer());
-        String deserializedString = deserializer.deserialize(serialized);
+        OriginalDecompressingDeserializer<String> originalDeserializer = new OriginalDecompressingDeserializer<>(new OriginalStringDeserializer());
 
-        assertEquals(deserializedString,testString);
+        assertEquals(deserializer.deserialize(serialized), testString);
+        assertEquals(deserializer.deserialize(original), testString);
+        assertEquals(originalDeserializer.deserialize(serialized.array()), testString);
+        assertEquals(originalDeserializer.deserialize(original.array()), testString);
     }
 
     @Test
@@ -88,15 +100,20 @@ public class CompressionTest {
         String testString = "[{\"symbol\":\"Imtech\",\"securityId\":\"24154\",\"quoteCurrency\":\"EUR\",\"currentPrice\":\"2.00\"},{\"symbol\":\"Facebook\",\"securityId\":\"21977\",\"quoteCurrency\":\"USD\",\"currentPrice\":\"68.34\"},{\"symbol\":\"Twitter\",\"securityId\":\"25607\",\"quoteCurrency\":\"USD\",\"currentPrice\":\"54.97\"},{\"symbol\":\"Apple\",\"securityId\":\"12749\",\"quoteCurrency\":\"USD\",\"currentPrice\":\"526.99\"},{\"symbol\":\"Google\",\"securityId\":\"12746\",\"quoteCurrency\":\"USD\",\"currentPrice\":\"1216.40\"},{\"symbol\":\"Tesla\",\"securityId\":\"24348\",\"quoteCurrency\":\"USD\",\"currentPrice\":\"245.06\"},{\"symbol\":\"Vodaphone\",\"securityId\":\"12917\",\"quoteCurrency\":\"GBP\",\"currentPrice\":\"249.00\"},{\"symbol\":\"HSBC\",\"securityId\":\"12932\",\"quoteCurrency\":\"GBP\",\"currentPrice\":\"629.20\"},{\"symbol\":\"Tesco\",\"securityId\":\"12761\",\"quoteCurrency\":\"GBP\",\"currentPrice\":\"329.08\"},{\"symbol\":\"EUR/GBP\",\"securityId\":\"12956\",\"quoteCurrency\":\"FGB\",\"currentPrice\":\"0.82432\"},{\"symbol\":\"Silver\",\"securityId\":\"20680\",\"quoteCurrency\":\"CUS\",\"currentPrice\":\"21.248\"},{\"symbol\":\"EUR/USD\",\"securityId\":\"26484\",\"quoteCurrency\":\"FUS\",\"displayDecimals\":5,\"maxLeverage\":50,\"multiplier\":10,\"currentPrice\":\"1.38021\"}]";
 
         CompressingSerializer<String> serializer = new CompressingSerializer<>(new StringSerializer(),1024);
+        OriginalCompressingSerializer<String> originalSerializer = new OriginalCompressingSerializer<>(new StringSerializer(), 1024);
+        ByteBuffer original = originalSerializer.serialize(testString);
         ByteBuffer serialized = serializer.serialize(testString);
 
         assertTrue(serialized.remaining() < testString.getBytes(StandardCharsets.UTF_8).length);
+        assertEquals(original, serialized);
 
         DecompressingDeserializer<String> deserializer = new DecompressingDeserializer<>(new StringDeserializer());
-        String deserializedString = deserializer.deserialize(serialized);
+        OriginalDecompressingDeserializer<String> originalDeserializer = new OriginalDecompressingDeserializer<>(new OriginalStringDeserializer());
 
-        assertEquals(deserializedString,testString);
-
+        assertEquals(deserializer.deserialize(serialized), testString);
+        assertEquals(deserializer.deserialize(original), testString);
+        assertEquals(originalDeserializer.deserialize(serialized.array()), testString);
+        assertEquals(originalDeserializer.deserialize(original.array()), testString);
     }
 
     @Test
@@ -104,14 +121,19 @@ public class CompressionTest {
         String testString = "[{\"symbol\":\"Vodaphone\",\"securityId\":\"12917\",\"quoteCurrency\":\"GBP\",\"currentPrice\":\"249.00\"},{\"symbol\":\"HSBC\",\"securityId\":\"12932\",\"quoteCurrency\":\"GBP\",\"currentPrice\":\"629.20\"},{\"symbol\":\"Tesco\",\"securityId\":\"12761\",\"quoteCurrency\":\"GBP\",\"currentPrice\":\"329.08\"},{\"symbol\":\"EUR/GBP\",\"securityId\":\"12956\",\"quoteCurrency\":\"FGB\",\"currentPrice\":\"0.82432\"},{\"symbol\":\"Silver\",\"securityId\":\"20680\",\"quoteCurrency\":\"CUS\",\"currentPrice\":\"21.248\"},{\"symbol\":\"EUR/USD\",\"securityId\":\"26484\",\"quoteCurrency\":\"FUS\",\"displayDecimals\":5,\"maxLeverage\":50,\"multiplier\":10,\"currentPrice\":\"1.38021\"}]";
 
         CompressingSerializer<String> serializer = new CompressingSerializer<>(new StringSerializer(),512);
+        OriginalCompressingSerializer<String> originalSerializer = new OriginalCompressingSerializer<>(new StringSerializer(), 512);
+        ByteBuffer original = originalSerializer.serialize(testString);
         ByteBuffer serialized = serializer.serialize(testString);
 
         assertTrue(serialized.remaining() < testString.getBytes(StandardCharsets.UTF_8).length);
+        assertEquals(original, serialized);
 
         DecompressingDeserializer<String> deserializer = new DecompressingDeserializer<>(new StringDeserializer());
-        String deserializedString = deserializer.deserialize(serialized);
+        OriginalDecompressingDeserializer<String> originalDeserializer = new OriginalDecompressingDeserializer<>(new OriginalStringDeserializer());
 
-        assertEquals(deserializedString,testString);
-
+        assertEquals(deserializer.deserialize(serialized), testString);
+        assertEquals(deserializer.deserialize(original), testString);
+        assertEquals(originalDeserializer.deserialize(serialized.array()), testString);
+        assertEquals(originalDeserializer.deserialize(original.array()), testString);
     }
 }
