@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * @author Joost van de Wijgerd
  */
-public final class JavaScriptActorState extends JacksonActorState<JavaScriptActorState> {
+public final class JavaScriptActorState extends JacksonActorState {
     private String script;
     private Map<String, Object> storedState;
     private transient CompiledScript compiledScript;
@@ -63,10 +63,5 @@ public final class JavaScriptActorState extends JacksonActorState<JavaScriptActo
 
     public void setCompiledScript(CompiledScript compiledScript) {
         this.compiledScript = compiledScript;
-    }
-
-    @Override
-    public JavaScriptActorState getBody() {
-        return this;
     }
 }

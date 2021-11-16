@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * @author Joost van de Wijgerd
  */
-public final class StringState extends JacksonActorState<StringState> {
+public final class StringState extends JacksonActorState {
     private final String stringBody;
 
     @JsonCreator
@@ -33,10 +33,5 @@ public final class StringState extends JacksonActorState<StringState> {
     @JsonProperty("stringBody")
     public String getStringBody() {
         return stringBody;
-    }
-
-    @Override
-    public StringState getBody() {
-        return this;
     }
 }
