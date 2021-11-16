@@ -4,7 +4,7 @@ import org.elasticsoftware.elasticactors.ActorRef;
 
 import javax.annotation.Nullable;
 
-public interface TracedMessage {
+public interface TracedMessage extends Traceable {
 
     @Nullable
     ActorRef getSender();
@@ -13,11 +13,4 @@ public interface TracedMessage {
 
     @Nullable
     Class<?> getType();
-
-    @Nullable
-    TraceContext getTraceContext();
-
-    @Nullable
-    CreationContext getCreationContext();
-
 }

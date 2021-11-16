@@ -252,14 +252,13 @@ public final class ApplicationProtocol {
     }
 
     private static byte[] getMessageBytes(InternalMessage internalMessage, InternalActorSystem actorSystem) throws IOException {
-        if(internalMessage.getPayload() != null) {
-            if(internalMessage.getPayload().hasArray()) {
-                return internalMessage.getPayload().array();
+        if(internalMessage.hasSerializedPayload()) {
+            ByteBuffer messagePayload = internalMessage.getPayload();
+            if (messagePayload.hasArray()) {
+                return messagePayload.array();
             } else {
-                // make sure we are at the start of the payload bytes
-                internalMessage.getPayload().rewind();
-                byte[] messageBytes = new byte[internalMessage.getPayload().remaining()];
-                internalMessage.getPayload().get(messageBytes);
+                byte[] messageBytes = new byte[messagePayload.remaining()];
+                messagePayload.get(messageBytes);
                 return messageBytes;
             }
         } else {
@@ -269,7 +268,7 @@ public final class ApplicationProtocol {
             if(messageBytes.hasArray()) {
                 return messageBytes.array();
             } else {
-                byte[] bytes = new byte[internalMessage.getPayload().remaining()];
+                byte[] bytes = new byte[messageBytes.remaining()];
                 messageBytes.get(bytes);
                 return bytes;
             }

@@ -19,8 +19,8 @@ package org.elasticsoftware.elasticactors.cluster;
 import org.elasticsoftware.elasticactors.ActorContextHolder;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.TypedSubscriber;
+import org.elasticsoftware.elasticactors.core.actors.AskReplyActor;
 import org.elasticsoftware.elasticactors.core.actors.CompletableFutureDelegate;
-import org.elasticsoftware.elasticactors.core.actors.ReplyActor;
 import org.elasticsoftware.elasticactors.core.actors.SubscriberActor;
 import org.elasticsoftware.elasticactors.core.actors.SubscriberState;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.SubscribeMessage;
@@ -59,8 +59,10 @@ public abstract class BaseActorRef implements ActorRef {
         final CompletableFuture<T> future = new CompletableFuture<>();
         try {
             ActorRef callerRef = Boolean.TRUE.equals(persistOnResponse) ? ActorContextHolder.getSelf() : null;
-            ActorRef replyRef = actorSystem.tempActorOf(ReplyActor.class,
-                                                        new CompletableFutureDelegate<>(future, responseType, callerRef));
+            ActorRef replyRef = actorSystem.tempActorOf(
+                AskReplyActor.class,
+                new CompletableFutureDelegate<>(future, responseType, callerRef)
+            );
             this.tell(message, replyRef);
         } catch (Exception e) {
             future.completeExceptionally(e);

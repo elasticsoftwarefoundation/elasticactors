@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.messaging;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.messaging.internal.InternalHashKeyUtils;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
@@ -43,44 +44,11 @@ public final class ImmutableInternalMessage extends AbstractTracedMessage
     private final UUID id;
     private final ByteBuffer payload;
     private final Object payloadObject;
+    private final String messageQueueAffinityKey;
     private final boolean durable;
     private final boolean undeliverable;
     private final int timeout;
     private transient byte[] serializedForm;
-
-    public ImmutableInternalMessage(ActorRef sender, ActorRef receiver, ByteBuffer payload, Object payloadObject, boolean durable) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadObject,durable,false);
-    }
-
-    public ImmutableInternalMessage(ActorRef sender, ImmutableList<ActorRef> receivers, ByteBuffer payload, Object payloadObject, boolean durable) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receivers, payload, payloadObject,durable,false, NO_TIMEOUT);
-    }
-
-    public ImmutableInternalMessage(ActorRef sender, ActorRef receiver, ByteBuffer payload, Object payloadObject, boolean durable, boolean undeliverable) {
-        this(UUIDTools.createTimeBasedUUID(), sender, receiver, payload, payloadObject,durable,undeliverable);
-    }
-
-    public ImmutableInternalMessage(UUID id, ActorRef sender, ActorRef receiver, ByteBuffer payload, Object payloadObject, boolean durable, boolean undeliverable) {
-        this(id, sender, ImmutableList.of(receiver), payload, payloadObject, durable, undeliverable, NO_TIMEOUT);
-    }
-
-    private ImmutableInternalMessage(UUID id,
-            ActorRef sender,
-            ImmutableList<ActorRef> receivers,
-            ByteBuffer payload,
-            Object payloadObject,
-            boolean durable,
-            boolean undeliverable,
-            int timeout) {
-        this.sender = sender;
-        this.receivers = receivers;
-        this.id = id;
-        this.payload = payload;
-        this.payloadObject = payloadObject;
-        this.durable = durable;
-        this.undeliverable = undeliverable;
-        this.timeout = timeout;
-    }
 
     public ImmutableInternalMessage(
             UUID id,
@@ -99,6 +67,7 @@ public final class ImmutableInternalMessage extends AbstractTracedMessage
         this.id = id;
         this.payload = payload;
         this.payloadObject = payloadObject;
+        this.messageQueueAffinityKey = InternalHashKeyUtils.getMessageQueueAffinityKey(payloadObject);
         this.durable = durable;
         this.undeliverable = undeliverable;
         this.timeout = timeout;
@@ -169,6 +138,15 @@ public final class ImmutableInternalMessage extends AbstractTracedMessage
     @Override
     public boolean hasPayloadObject() {
         return payloadObject != null;
+    }
+
+    @Nullable
+    @Override
+    public String getMessageQueueAffinityKey() {
+        if (messageQueueAffinityKey != null) {
+            return messageQueueAffinityKey;
+        }
+        return receivers.size() == 1 ? receivers.get(0).getActorId() : null;
     }
 
     @Override

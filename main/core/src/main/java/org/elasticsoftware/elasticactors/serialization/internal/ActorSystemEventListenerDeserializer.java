@@ -42,7 +42,15 @@ public final class ActorSystemEventListenerDeserializer implements Deserializer<
             Class messageClass = getClassHelper().forName(protobufMessage.getMessageClass());
             byte[] messageBytes = protobufMessage.getMessage().toByteArray();
             String actorId = protobufMessage.getActorId();
-            return new ActorSystemEventListenerImpl(actorId, messageClass, messageBytes);
+            String messageQueueAffinityKey = protobufMessage.hasMessageQueueAffinityKey()
+                ? protobufMessage.getMessageQueueAffinityKey()
+                : "";
+            return new ActorSystemEventListenerImpl(
+                actorId,
+                messageClass,
+                messageBytes,
+                messageQueueAffinityKey.isEmpty() ? null : messageQueueAffinityKey
+            );
         } catch(ClassNotFoundException e) {
             throw new IOException(e);
         }

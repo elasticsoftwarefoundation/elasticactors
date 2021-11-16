@@ -32,8 +32,8 @@ import org.elasticsoftware.elasticactors.cluster.tasks.CreateActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.DestroyActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.HandleServiceMessageTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.HandleUndeliverableServiceMessageTask;
-import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.messaging.InternalMessageFactory;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MultiMessageHandlerEventListener;
@@ -42,14 +42,13 @@ import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
-import org.elasticsoftware.elasticactors.serialization.Message;
-import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
+import org.elasticsoftware.elasticactors.tracing.Traceable;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -121,14 +120,37 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
 
     @Override
     public void onEvicted(PersistentActor<NodeKey> value) {
+        Traceable traceable = value.getState() instanceof Traceable
+            ? (Traceable) value.getState()
+            : null;
+        boolean hasTraceData = traceable != null
+            && (traceable.getTraceContext() != null || traceable.getCreationContext() != null);
         logger.error(
             "CRITICAL WARNING: Actor [{}] of type [{}] got evicted from the cache. "
                 + "This can lead to issues using temporary actors. "
                 + "Please increase the maximum size of the node actor cache "
-                + "by using the 'ea.nodeCache.maximumSize' property.",
+                + "by using the 'ea.nodeCache.maximumSize' property."
+                + "{}"
+                + "{}"
+                + "{}",
             value.getSelf(),
-            value.getActorClass().getName()
+            value.getActorClass().getName(),
+            hasTraceData
+                ? " Temporary Actor created with the following contexts in scope:"
+                : "",
+            hasTraceData
+                ? toLoggableString(traceable.getCreationContext())
+                : "",
+            hasTraceData
+                ? toLoggableString(traceable.getTraceContext())
+                : ""
         );
+    }
+
+    private static String toLoggableString(@Nullable Object object) {
+        return object != null
+            ? " " + object + "."
+            : "";
     }
 
     @Override
@@ -138,66 +160,28 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
 
     @Override
     public void sendMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws Exception {
-        // we need some special handling for the CreateActorMessage in case of Temp Actor
-        if(message instanceof CreateActorMessage && ActorType.TEMP.equals(((CreateActorMessage) message).getType())) {
-            offerInternalMessage(new TransientInternalMessage(
+        InternalMessage internalMessage;
+        if (isCreateTempActorMessage(message)) {
+            internalMessage = new TransientInternalMessage(
                 from,
                 ImmutableList.copyOf(to),
                 message
-            ));
+            );
         } else {
-            // get the durable flag
-            Message messageAnnotation = message.getClass().getAnnotation(Message.class);
-            final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
-            final boolean immutable = (messageAnnotation != null) && messageAnnotation.immutable();
-            final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-            if(durable) {
-                // durable so it will go over the bus and needs to be serialized
-                MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                offerInternalMessage(new DefaultInternalMessage(
-                    from,
-                    ImmutableList.copyOf(to),
-                    SerializationContext.serialize(messageSerializer, message),
-                    message.getClass().getName(),
-                    true,
-                    timeout
-                ));
-            } else if(!immutable) {
-                // it's not durable, but it's mutable so we need to serialize here
-                MessageSerializer messageSerializer = actorSystem.getSerializer(message.getClass());
-                offerInternalMessage(new DefaultInternalMessage(
-                    from,
-                    ImmutableList.copyOf(to),
-                    SerializationContext.serialize(messageSerializer, message),
-                    message.getClass().getName(),
-                    false,
-                    timeout
-                ));
-            } else {
-                // as the message is immutable we can safely send it as a TransientInternalMessage
-                offerInternalMessage(new TransientInternalMessage(
-                    from,
-                    ImmutableList.copyOf(to),
-                    message
-                ));
-            }
+            internalMessage = InternalMessageFactory.create(from, to, actorSystem, message);
         }
+        offerInternalMessage(internalMessage);
+    }
+
+    private boolean isCreateTempActorMessage(Object message) {
+        return message instanceof CreateActorMessage
+            && ActorType.TEMP.equals(((CreateActorMessage) message).getType());
     }
 
     @Override
     public void undeliverableMessage(InternalMessage message, ActorRef receiverRef) throws Exception {
-        InternalMessage undeliverableMessage;
-        if (message instanceof TransientInternalMessage) {
-            undeliverableMessage = new TransientInternalMessage(receiverRef, message.getSender(), message.getPayload(null), true);
-        } else {
-            undeliverableMessage = new DefaultInternalMessage(receiverRef,
-                    message.getSender(),
-                    message.getPayload(),
-                    message.getPayloadClass(),
-                    message.isDurable(),
-                    true,
-                    message.getTimeout());
-        }
+        InternalMessage undeliverableMessage =
+            InternalMessageFactory.copyForUndeliverable(message, receiverRef);
         offerInternalMessage(undeliverableMessage);
     }
 

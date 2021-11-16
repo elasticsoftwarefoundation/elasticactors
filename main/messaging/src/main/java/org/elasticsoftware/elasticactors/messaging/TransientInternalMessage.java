@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.messaging;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.messaging.internal.InternalHashKeyUtils;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
@@ -41,11 +42,8 @@ public final class TransientInternalMessage extends AbstractTracedMessage
     private final ImmutableList<ActorRef> receivers;
     private final UUID id;
     private final Object payload;
+    private final String messageQueueAffinityKey;
     private final boolean undeliverable;
-
-    public TransientInternalMessage(ActorRef sender, ActorRef receiver, Object payload) {
-        this(sender,receiver,payload,false);
-    }
 
     public TransientInternalMessage(ActorRef sender, ImmutableList<ActorRef> receivers, Object payload) {
         this(sender,receivers,payload,false);
@@ -65,6 +63,7 @@ public final class TransientInternalMessage extends AbstractTracedMessage
         this.id = UUIDTools.createTimeBasedUUID();
         this.payload = payload;
         this.undeliverable = undeliverable;
+        this.messageQueueAffinityKey = InternalHashKeyUtils.getMessageQueueAffinityKey(payload);
     }
 
     public TransientInternalMessage(
@@ -80,6 +79,7 @@ public final class TransientInternalMessage extends AbstractTracedMessage
         this.id = UUIDTools.createTimeBasedUUID();
         this.payload = payload;
         this.undeliverable = undeliverable;
+        this.messageQueueAffinityKey = InternalHashKeyUtils.getMessageQueueAffinityKey(payload);
     }
 
     @Override
@@ -150,6 +150,15 @@ public final class TransientInternalMessage extends AbstractTracedMessage
     @Override
     public boolean hasPayloadObject() {
         return payload != null;
+    }
+
+    @Nullable
+    @Override
+    public String getMessageQueueAffinityKey() {
+        if (messageQueueAffinityKey != null) {
+            return messageQueueAffinityKey;
+        }
+        return receivers.size() == 1 ? receivers.get(0).getActorId() : null;
     }
 
     @Override

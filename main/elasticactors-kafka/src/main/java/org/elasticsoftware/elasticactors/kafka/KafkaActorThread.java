@@ -71,13 +71,13 @@ import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory
 import org.elasticsoftware.elasticactors.kafka.utils.TopicNamesHelper;
 import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.messaging.InternalMessageFactory;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.PersistActorMessage;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
-import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
@@ -86,10 +86,12 @@ import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageD
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageDeserializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
+import org.elasticsoftware.elasticactors.tracing.Traceable;
 import org.elasticsoftware.elasticactors.util.ManifestTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -410,11 +412,16 @@ public final class KafkaActorThread extends Thread {
             try {
                 producer.beginTransaction();
                 messagesToFire.forEach(scheduledMessage -> {
-                    // send the message (first to the shard so it will be picked up by the normal processMessages for that shard)
+                    // send the message (first to the shard, so it will be picked up by the normal processMessages for that shard)
                     InternalMessage internalMessage =
-                            new DefaultInternalMessage(scheduledMessage.getSender(), scheduledMessage.getReceiver(),
-                                    ByteBuffer.wrap(scheduledMessage.getMessageBytes()),
-                                    scheduledMessage.getMessageClass().getName(), false);
+                        new DefaultInternalMessage(
+                            scheduledMessage.getSender(),
+                            scheduledMessage.getReceiver(),
+                            ByteBuffer.wrap(scheduledMessage.getMessageBytes()),
+                            scheduledMessage.getMessageClass().getName(),
+                            scheduledMessage.getMessageQueueAffinityKey(),
+                            false
+                        );
                     // find out which shard to send it to (this has to be and ActorShard)
                     ShardKey destinationKey = ((ActorShard) ((ActorContainerRef) scheduledMessage.getReceiver()).getActorContainer()).getKey();
                     // and send it
@@ -819,9 +826,14 @@ public final class KafkaActorThread extends Thread {
                         ManagedActorShard managedActorShard = partitionsToShards.get(consumerRecord.partition());
                         ActorRef receiverRef = internalActorSystem.actorFor(eventListener.getActorId());
                         PersistentActor<ShardKey> persistentActor = managedActorShard.getPersistentActor(receiverRef);
-                        InternalMessage internalMessage = new DefaultInternalMessage(null, receiverRef,
-                                ByteBuffer.wrap(eventListener.getMessageBytes()),
-                                eventListener.getMessageClass().getName(), false);
+                        InternalMessage internalMessage = new DefaultInternalMessage(
+                            null,
+                            receiverRef,
+                            ByteBuffer.wrap(eventListener.getMessageBytes()),
+                            eventListener.getMessageClass().getName(),
+                            eventListener.getMessageQueueAffinityKey(),
+                            false
+                        );
                         // start a new transaction for each message
                         producer.beginTransaction();
                         try {
@@ -1122,16 +1134,12 @@ public final class KafkaActorThread extends Thread {
 
     private InternalMessage createInternalMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws IOException {
         MessageSerializer<Object> messageSerializer = (MessageSerializer<Object>) internalActorSystem.getSerializer(message.getClass());
-        if(messageSerializer == null) {
-            logger.error("No message serializer found for class: {}. NOT sending message",
-                    message.getClass().getSimpleName());
-            return null;
-        }
-        // get the durable flag
-        Message messageAnnotation = message.getClass().getAnnotation(Message.class);
-        final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
-        final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-        return new DefaultInternalMessage(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message),message.getClass().getName(),durable, timeout);
+        return InternalMessageFactory.createWithSerializedPayload(
+            from,
+            to,
+            messageSerializer,
+            message
+        );
     }
 
     private final class ManagedActorShard implements EvictionListener<PersistentActor<ShardKey>>, ManagedActorContainer<ShardKey> {
@@ -1274,14 +1282,37 @@ public final class KafkaActorThread extends Thread {
 
         @Override
         public void onEvicted(PersistentActor<NodeKey> value) {
+            Traceable traceable = value.getState() instanceof Traceable
+                ? (Traceable) value.getState()
+                : null;
+            boolean hasTraceData = traceable != null
+                && (traceable.getTraceContext() != null || traceable.getCreationContext() != null);
             logger.error(
                 "CRITICAL WARNING: Actor [{}] of type [{}] got evicted from the cache. "
                     + "This can lead to issues using temporary actors. "
                     + "Please increase the maximum size of the node actor cache "
-                    + "by using the 'ea.nodeCache.maximumSize' property.",
+                    + "by using the 'ea.nodeCache.maximumSize' property."
+                    + "{}"
+                    + "{}"
+                    + "{}",
                 value.getSelf(),
-                value.getActorClass().getName()
+                value.getActorClass().getName(),
+                hasTraceData
+                    ? " Temporary Actor created with the following contexts in scope:"
+                    : "",
+                hasTraceData
+                    ? toLoggableString(traceable.getCreationContext())
+                    : "",
+                hasTraceData
+                    ? toLoggableString(traceable.getTraceContext())
+                    : ""
             );
+        }
+
+        private String toLoggableString(@Nullable Object object) {
+            return object != null
+                ? " " + object + "."
+                : "";
         }
 
         @Override

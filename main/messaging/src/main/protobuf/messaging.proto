@@ -35,6 +35,7 @@ message ScheduledMessage {
   optional bytes message = 6;
   optional TraceContext traceContext = 7;
   optional CreationContext creationContext = 8;
+  optional string messageQueueAffinityKey = 9;
 }
 
 message InternalMessage {
@@ -49,6 +50,7 @@ message InternalMessage {
   optional uint32 timeout = 9;
   optional TraceContext traceContext = 10;
   optional CreationContext creationContext = 11;
+  optional string messageQueueAffinityKey = 12;
 }
 
 enum ActorType {

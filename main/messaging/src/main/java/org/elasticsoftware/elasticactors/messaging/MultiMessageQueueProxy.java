@@ -1,7 +1,6 @@
 package org.elasticsoftware.elasticactors.messaging;
 
 import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.messaging.internal.InternalHashKeyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -129,8 +128,8 @@ public final class MultiMessageQueueProxy implements MessageQueueProxy {
 
     private String determineMessageQueueKey(InternalMessage message) {
         if (message.getReceivers() != null && message.getReceivers().size() > 1) {
-            String payload = getMessageQueueKey(message);
-            if (payload != null) {
+            String key = getMessageQueueKey(message);
+            if (key != null) {
                 logger.error(
                     "Received a message of type [{}] that should be hashed to a specific queue, "
                         + "wrapped in a [{}] but has multiple receivers",
@@ -146,18 +145,16 @@ public final class MultiMessageQueueProxy implements MessageQueueProxy {
 
     @Nullable
     private String getMessageQueueKey(InternalMessage message) {
-        if (message.hasPayloadObject()) {
-            try {
-                return InternalHashKeyUtils.getMessageQueueAffinityKey(message.getPayload(null));
-            } catch (Exception e) {
-                logger.error(
-                    "Could not determine hashing key for message of type [{}] wrapped in [{}]",
-                    message.getPayloadClass(),
-                    message.getClass().getName(),
-                    e
-                );
-            }
+        try {
+            return message.getMessageQueueAffinityKey();
+        } catch (Exception e) {
+            logger.error(
+                "Could not determine hashing key for message of type [{}] wrapped in [{}]",
+                message.getPayloadClass(),
+                message.getClass().getName(),
+                e
+            );
+            return null;
         }
-        return null;
     }
 }

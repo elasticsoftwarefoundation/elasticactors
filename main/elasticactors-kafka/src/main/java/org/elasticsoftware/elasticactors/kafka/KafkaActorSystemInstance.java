@@ -67,6 +67,7 @@ import org.elasticsoftware.elasticactors.messaging.Hasher;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
+import org.elasticsoftware.elasticactors.messaging.internal.InternalHashKeyUtils;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
@@ -659,7 +660,13 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         byte[] serializedBytes = new byte[serializedMessage.remaining()];
         serializedMessage.get(serializedBytes);
         actorShard.getActorThread().register(actorShard.getKey(), event,
-                new ActorSystemEventListenerImpl(receiver.getActorId(),message.getClass(),serializedBytes));
+            new ActorSystemEventListenerImpl(
+                receiver.getActorId(),
+                message.getClass(),
+                serializedBytes,
+                InternalHashKeyUtils.getMessageQueueAffinityKey(message)
+            )
+        );
     }
 
     @Override

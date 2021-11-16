@@ -202,7 +202,14 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
                         ByteBuffer serializedMessage = serializer.serialize(message);
                         byte[] serializedBytes = new byte[serializedMessage.remaining()];
                         serializedMessage.get(serializedBytes);
-                        ScheduledMessage scheduledMessage = new ScheduledMessageImpl(fireTime,sender,receiver,message.getClass(),serializedBytes);
+                        ScheduledMessage scheduledMessage = new ScheduledMessageImpl(
+                            fireTime,
+                            sender,
+                            receiver,
+                            message.getClass(),
+                            serializedBytes,
+                            message
+                        );
                         scheduledMessageRepository.create(actorShard.getKey(), scheduledMessage);
                         schedule(actorShard.getKey(),scheduledMessage);
                         return new ScheduledMessageShardRef(actorSystem.getParent().getClusterName(),actorShard,new ScheduledMessageKey(scheduledMessage.getId(),fireTime));
@@ -269,7 +276,7 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
                     // because we generate a key it will be impossible to cancel, however technically it fired already
                     // so it should be no problem
                     long fireTime = System.currentTimeMillis() + 1000L;
-                    ScheduledMessage rescheduledMessage = new ScheduledMessageImpl(fireTime,message.getSender(),message.getReceiver(),message.getMessageClass(),message.getMessageBytes());
+                    ScheduledMessage rescheduledMessage = message.copyForRescheduling(fireTime);
                     try {
                         schedule(shardKey, rescheduledMessage);
                         scheduledMessageRepository.create(shardKey, rescheduledMessage);

@@ -31,7 +31,6 @@ import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import static org.elasticsoftware.elasticactors.messaging.UUIDTools.toUUID;
@@ -66,18 +65,17 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
         CreationContext creationContext = protobufMessage.hasCreationContext()
                 ? CreationContextDeserializer.deserialize(protobufMessage.getCreationContext())
                 : null;
-        //return new InternalMessageImpl(id, sender, receivers, protobufMessage.getPayload().asReadOnlyByteBuffer(), messageClassString, durable, undeliverable);
         // optimize immutable message if possible
-
         Class<?> immutableMessageClass = getIfImmutableMessageClass(messageClassString);
-        ByteBuffer payload = protobufMessage.getPayload().asReadOnlyByteBuffer();
-        if (immutableMessageClass == null) {
-            return new DefaultInternalMessage(
+        if (immutableMessageClass != null) {
+            Object payloadObject = serializationAccessor.getDeserializer(immutableMessageClass)
+                .deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
+            return new ImmutableInternalMessage(
                 id,
                 sender,
                 receivers,
-                payload,
-                messageClassString,
+                protobufMessage.getPayload().asReadOnlyByteBuffer(),
+                payloadObject,
                 durable,
                 undeliverable,
                 timeout,
@@ -85,13 +83,16 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
                 creationContext
             );
         } else {
-            Object payloadObject = serializationAccessor.getDeserializer(immutableMessageClass).deserialize(payload);
-            return new ImmutableInternalMessage(
+            String messageQueueAffinityKey = protobufMessage.hasMessageQueueAffinityKey()
+                ? protobufMessage.getMessageQueueAffinityKey()
+                : "";
+            return new DefaultInternalMessage(
                 id,
                 sender,
                 receivers,
-                payload,
-                payloadObject,
+                protobufMessage.getPayload().asReadOnlyByteBuffer(),
+                messageClassString,
+                messageQueueAffinityKey.isEmpty() ? null : messageQueueAffinityKey,
                 durable,
                 undeliverable,
                 timeout,

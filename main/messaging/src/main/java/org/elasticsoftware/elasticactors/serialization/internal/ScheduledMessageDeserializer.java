@@ -58,15 +58,20 @@ public final class ScheduledMessageDeserializer implements Deserializer<byte[],S
             CreationContext creationContext = protobufMessage.hasCreationContext()
                     ? CreationContextDeserializer.deserialize(protobufMessage.getCreationContext())
                     : null;
+            String messageQueueAffinityKey = protobufMessage.hasMessageQueueAffinityKey()
+                ? protobufMessage.getMessageQueueAffinityKey()
+                : "";
             return new ScheduledMessageImpl(
-                    id,
-                    fireTime,
-                    sender,
-                    receiver,
-                    messageClass,
-                    messageBytes,
-                    traceContext,
-                    creationContext);
+                id,
+                fireTime,
+                sender,
+                receiver,
+                messageClass,
+                messageBytes,
+                messageQueueAffinityKey.isEmpty() ? null : messageQueueAffinityKey,
+                traceContext,
+                creationContext
+            );
         } catch(ClassNotFoundException e) {
             throw new IOException(e);
         }

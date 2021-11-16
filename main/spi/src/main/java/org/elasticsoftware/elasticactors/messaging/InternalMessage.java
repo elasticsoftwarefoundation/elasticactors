@@ -60,4 +60,7 @@ public interface InternalMessage extends TracedMessage {
     boolean hasSerializedPayload();
 
     boolean hasPayloadObject();
+
+    @Nullable
+    String getMessageQueueAffinityKey();
 }

@@ -54,6 +54,20 @@ public final class Elasticactors {
      * <code>optional bytes message = 3;</code>
      */
     com.google.protobuf.ByteString getMessage();
+
+    /**
+     * <code>optional string messageQueueAffinityKey = 4;</code>
+     */
+    boolean hasMessageQueueAffinityKey();
+    /**
+     * <code>optional string messageQueueAffinityKey = 4;</code>
+     */
+    java.lang.String getMessageQueueAffinityKey();
+    /**
+     * <code>optional string messageQueueAffinityKey = 4;</code>
+     */
+    com.google.protobuf.ByteString
+        getMessageQueueAffinityKeyBytes();
   }
   /**
    * Protobuf type {@code org.elasticsoftware.elasticactors.serialization.protobuf.ActorSystemEventListener}
@@ -71,6 +85,7 @@ public final class Elasticactors {
       actorId_ = "";
       messageClass_ = "";
       message_ = com.google.protobuf.ByteString.EMPTY;
+      messageQueueAffinityKey_ = "";
     }
 
     @java.lang.Override
@@ -112,6 +127,12 @@ public final class Elasticactors {
             case 26: {
               bitField0_ |= 0x00000004;
               message_ = input.readBytes();
+              break;
+            }
+            case 34: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000008;
+              messageQueueAffinityKey_ = bs;
               break;
             }
             default: {
@@ -246,6 +267,48 @@ public final class Elasticactors {
       return message_;
     }
 
+    public static final int MESSAGEQUEUEAFFINITYKEY_FIELD_NUMBER = 4;
+    private volatile java.lang.Object messageQueueAffinityKey_;
+    /**
+     * <code>optional string messageQueueAffinityKey = 4;</code>
+     */
+    public boolean hasMessageQueueAffinityKey() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional string messageQueueAffinityKey = 4;</code>
+     */
+    public java.lang.String getMessageQueueAffinityKey() {
+      java.lang.Object ref = messageQueueAffinityKey_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          messageQueueAffinityKey_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string messageQueueAffinityKey = 4;</code>
+     */
+    public com.google.protobuf.ByteString
+        getMessageQueueAffinityKeyBytes() {
+      java.lang.Object ref = messageQueueAffinityKey_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        messageQueueAffinityKey_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -269,6 +332,9 @@ public final class Elasticactors {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeBytes(3, message_);
       }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, messageQueueAffinityKey_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -287,6 +353,9 @@ public final class Elasticactors {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, message_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, messageQueueAffinityKey_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -319,6 +388,11 @@ public final class Elasticactors {
         result = result && getMessage()
             .equals(other.getMessage());
       }
+      result = result && (hasMessageQueueAffinityKey() == other.hasMessageQueueAffinityKey());
+      if (hasMessageQueueAffinityKey()) {
+        result = result && getMessageQueueAffinityKey()
+            .equals(other.getMessageQueueAffinityKey());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -341,6 +415,10 @@ public final class Elasticactors {
       if (hasMessage()) {
         hash = (37 * hash) + MESSAGE_FIELD_NUMBER;
         hash = (53 * hash) + getMessage().hashCode();
+      }
+      if (hasMessageQueueAffinityKey()) {
+        hash = (37 * hash) + MESSAGEQUEUEAFFINITYKEY_FIELD_NUMBER;
+        hash = (53 * hash) + getMessageQueueAffinityKey().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -481,6 +559,8 @@ public final class Elasticactors {
         bitField0_ = (bitField0_ & ~0x00000002);
         message_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000004);
+        messageQueueAffinityKey_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -521,6 +601,10 @@ public final class Elasticactors {
           to_bitField0_ |= 0x00000004;
         }
         result.message_ = message_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.messageQueueAffinityKey_ = messageQueueAffinityKey_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -582,6 +666,11 @@ public final class Elasticactors {
         }
         if (other.hasMessage()) {
           setMessage(other.getMessage());
+        }
+        if (other.hasMessageQueueAffinityKey()) {
+          bitField0_ |= 0x00000008;
+          messageQueueAffinityKey_ = other.messageQueueAffinityKey_;
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -796,6 +885,82 @@ public final class Elasticactors {
       public Builder clearMessage() {
         bitField0_ = (bitField0_ & ~0x00000004);
         message_ = getDefaultInstance().getMessage();
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object messageQueueAffinityKey_ = "";
+      /**
+       * <code>optional string messageQueueAffinityKey = 4;</code>
+       */
+      public boolean hasMessageQueueAffinityKey() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional string messageQueueAffinityKey = 4;</code>
+       */
+      public java.lang.String getMessageQueueAffinityKey() {
+        java.lang.Object ref = messageQueueAffinityKey_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            messageQueueAffinityKey_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string messageQueueAffinityKey = 4;</code>
+       */
+      public com.google.protobuf.ByteString
+          getMessageQueueAffinityKeyBytes() {
+        java.lang.Object ref = messageQueueAffinityKey_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          messageQueueAffinityKey_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string messageQueueAffinityKey = 4;</code>
+       */
+      public Builder setMessageQueueAffinityKey(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        messageQueueAffinityKey_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string messageQueueAffinityKey = 4;</code>
+       */
+      public Builder clearMessageQueueAffinityKey() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        messageQueueAffinityKey_ = getDefaultInstance().getMessageQueueAffinityKey();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string messageQueueAffinityKey = 4;</code>
+       */
+      public Builder setMessageQueueAffinityKeyBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        messageQueueAffinityKey_ = value;
         onChanged();
         return this;
       }
@@ -4457,20 +4622,21 @@ public final class Elasticactors {
     java.lang.String[] descriptorData = {
       "\n\023elasticactors.proto\0228org.elasticsoftwa" +
       "re.elasticactors.serialization.protobuf\"" +
-      "R\n\030ActorSystemEventListener\022\017\n\007actorId\030\001" +
+      "s\n\030ActorSystemEventListener\022\017\n\007actorId\030\001" +
       " \001(\t\022\024\n\014messageClass\030\002 \001(\t\022\017\n\007message\030\003 " +
-      "\001(\014\"\256\002\n\017PersistentActor\022\020\n\010actorRef\030\001 \001(" +
-      "\t\022\022\n\nactorClass\030\002 \001(\t\022\032\n\022actorSystemVers" +
-      "ion\030\003 \001(\t\022\r\n\005state\030\004 \001(\014\022\020\n\010shardKey\030\005 \001" +
-      "(\t\022Y\n\013subscribers\030\006 \003(\0132D.org.elasticsof" +
-      "tware.elasticactors.serialization.protob" +
-      "uf.Subscriber\022]\n\rsubscriptions\030\007 \003(\0132F.o" +
-      "rg.elasticsoftware.elasticactors.seriali" +
-      "zation.protobuf.Subscription\"H\n\nSubscrib" +
-      "er\022\025\n\rsubscriberRef\030\001 \001(\t\022\023\n\013messageName" +
-      "\030\002 \001(\t\022\016\n\006leases\030\003 \001(\004\"L\n\014Subscription\022\024" +
-      "\n\014publisherRef\030\001 \001(\t\022\023\n\013messageName\030\002 \001(" +
-      "\t\022\021\n\tcancelled\030\003 \001(\010B\002H\001"
+      "\001(\014\022\037\n\027messageQueueAffinityKey\030\004 \001(\t\"\256\002\n" +
+      "\017PersistentActor\022\020\n\010actorRef\030\001 \001(\t\022\022\n\nac" +
+      "torClass\030\002 \001(\t\022\032\n\022actorSystemVersion\030\003 \001" +
+      "(\t\022\r\n\005state\030\004 \001(\014\022\020\n\010shardKey\030\005 \001(\t\022Y\n\013s" +
+      "ubscribers\030\006 \003(\0132D.org.elasticsoftware.e" +
+      "lasticactors.serialization.protobuf.Subs" +
+      "criber\022]\n\rsubscriptions\030\007 \003(\0132F.org.elas" +
+      "ticsoftware.elasticactors.serialization." +
+      "protobuf.Subscription\"H\n\nSubscriber\022\025\n\rs" +
+      "ubscriberRef\030\001 \001(\t\022\023\n\013messageName\030\002 \001(\t\022" +
+      "\016\n\006leases\030\003 \001(\004\"L\n\014Subscription\022\024\n\014publi" +
+      "sherRef\030\001 \001(\t\022\023\n\013messageName\030\002 \001(\t\022\021\n\tca" +
+      "ncelled\030\003 \001(\010B\002H\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -4489,7 +4655,7 @@ public final class Elasticactors {
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ActorSystemEventListener_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ActorSystemEventListener_descriptor,
-        new java.lang.String[] { "ActorId", "MessageClass", "Message", });
+        new java.lang.String[] { "ActorId", "MessageClass", "Message", "MessageQueueAffinityKey", });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_PersistentActor_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_PersistentActor_fieldAccessorTable = new

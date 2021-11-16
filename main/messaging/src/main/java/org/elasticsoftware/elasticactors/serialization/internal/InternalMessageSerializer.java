@@ -40,8 +40,6 @@ public final class InternalMessageSerializer implements Serializer<InternalMessa
         Messaging.InternalMessage.Builder builder = Messaging.InternalMessage.newBuilder();
         builder.setId(ByteString.copyFrom(UUIDTools.toByteArray(internalMessage.getId())));
         builder.setPayload(ByteString.copyFrom(internalMessage.getPayload()));
-        // rewind the payload to not fuck up the internal message
-        internalMessage.getPayload().rewind(); // @todo: this is a bit ugly
         builder.setPayloadClass(internalMessage.getPayloadClass());
         // backwards compatibility for single receiver messages (needed when running mixed clusters < 0.24)
         if(internalMessage.getReceivers().size() == 1) {
@@ -66,6 +64,10 @@ public final class InternalMessageSerializer implements Serializer<InternalMessa
                 CreationContextSerializer.serialize(internalMessage.getCreationContext());
         if (creationContext != null) {
             builder.setCreationContext(creationContext);
+        }
+        String messageQueueAffinityKey = internalMessage.getMessageQueueAffinityKey();
+        if (messageQueueAffinityKey != null) {
+            builder.setMessageQueueAffinityKey(messageQueueAffinityKey);
         }
         return builder.build().toByteArray();
     }

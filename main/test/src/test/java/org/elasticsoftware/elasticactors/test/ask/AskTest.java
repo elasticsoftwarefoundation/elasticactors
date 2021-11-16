@@ -46,7 +46,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 import static org.testng.Assert.assertEquals;
@@ -161,8 +160,8 @@ public class AskTest {
             futures[i] =
                 actors[rand.nextInt(actors.length)].ask(new AskForGreeting(), Greeting.class)
                     .whenComplete((m, e) -> {
-                        tempLatch.countDown();
                         if (m != null) {
+                            tempLatch.countDown();
                             logger.info(
                                 "TEMP ACTOR got REPLY from {} in Thread {}",
                                 m.getWho(),
@@ -177,20 +176,26 @@ public class AskTest {
         }
 
         ActorRefGroup group = actorSystem.groupOf(Arrays.asList(actors));
-        CountDownLatch countDownLatch = new CountDownLatch(actors.length);
+        CountDownLatch groupLatch = new CountDownLatch(actors.length);
         ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
             .deleteAfterReceive(false)
             .onReceive(
                 Greeting.class,
-                m -> logger.info(
-                    "Got GROUP count {} current actor name '{}'",
-                    actors.length - countDownLatch.getCount(),
-                    m.getWho()
-                )
+                m -> {
+                    logger.info(
+                        "Got GROUP count {} current actor name '{}'",
+                        actors.length - groupLatch.getCount(),
+                        m.getWho()
+                    );
+                    groupLatch.countDown();
+                }
             )
+            .orElse((s, m) -> {
+                logger.error("Received message of type [{}] from [{}]", m.getClass().getName(), s);
+                System.exit(1);
+            })
             .postReceive(() -> {
-                countDownLatch.countDown();
-                if (countDownLatch.getCount() == 0) {
+                if (groupLatch.getCount() == 0) {
                     ActorDelegate.Builder.stopActor();
                 }
             })
@@ -202,13 +207,19 @@ public class AskTest {
 
         group.tell(new AskForGreeting(), replyActor);
 
-        assertTrue(tempLatch.await(60_000, TimeUnit.SECONDS));
-        assertTrue(countDownLatch.await(60_000, TimeUnit.SECONDS));
+        assertTrue(tempLatch.await(60, TimeUnit.SECONDS));
+        assertTrue(groupLatch.await(60, TimeUnit.SECONDS));
 
-        Arrays.stream(futures)
-            .map(CompletableFuture::join)
-            .collect(Collectors.toList())
-            .forEach(i -> logger.info("Got {}", i));
+        for (CompletableFuture<?> future : futures) {
+            if (!future.isDone()) {
+                try {
+                    logger.info("Got {} from the future", future.get().getClass().getName());
+                } catch (Exception e) {
+                    logger.error("Oops!", e);
+                }
+                System.exit(1);
+            }
+        }
 
         assertEquals(response.get().getWho(), "echo");
 

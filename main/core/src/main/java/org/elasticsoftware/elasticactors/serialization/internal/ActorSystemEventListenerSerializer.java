@@ -37,6 +37,10 @@ public final class ActorSystemEventListenerSerializer implements Serializer<Acto
         builder.setActorId(eventListener.getActorId());
         builder.setMessageClass(eventListener.getMessageClass().getName());
         builder.setMessage(ByteString.copyFrom(eventListener.getMessageBytes()));
+        String messageQueueAffinityKey = eventListener.getMessageQueueAffinityKey();
+        if (messageQueueAffinityKey != null) {
+            builder.setMessageQueueAffinityKey(messageQueueAffinityKey);
+        }
         return builder.build().toByteArray();
     }
 

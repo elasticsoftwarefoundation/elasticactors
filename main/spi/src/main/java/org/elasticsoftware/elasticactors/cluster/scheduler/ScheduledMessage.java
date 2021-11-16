@@ -70,4 +70,9 @@ public interface ScheduledMessage extends Delayed, TracedMessage {
     long getFireTime(TimeUnit timeUnit);
 
     Class getMessageClass();
+
+    @Nullable
+    String getMessageQueueAffinityKey();
+
+    ScheduledMessage copyForRescheduling(long newFireTime);
 }
