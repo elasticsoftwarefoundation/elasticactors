@@ -20,6 +20,7 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -35,7 +36,9 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
 
     protected final Logger logger = initLogger();
 
-    protected abstract Logger initLogger();
+    protected Logger initLogger() {
+        return LoggerFactory.getLogger(getClass());
+    }
 
     @Override
     public void postCreate(ActorRef creator) throws Exception {
