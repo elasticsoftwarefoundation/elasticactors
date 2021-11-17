@@ -29,7 +29,7 @@ import static java.lang.String.format;
 /**
  * @author Joost van de Wijgerd
  */
-public final class CompletableFutureDelegate<T> extends ActorDelegate<T> {
+public final class CompletableFutureDelegate<T> extends InternalActorDelegate<T> {
 
     private static final Logger staticLogger = LoggerFactory.getLogger(CompletableFutureDelegate.class);
 
@@ -49,7 +49,7 @@ public final class CompletableFutureDelegate<T> extends ActorDelegate<T> {
 
     @Override
     public void onUndeliverable(ActorRef receiver, Object message) {
-        future.completeExceptionally(new ActorNotFoundException(format("Actor with id %s does not exist",receiver.getActorId()), receiver));
+        future.completeExceptionally(new ActorNotFoundException(format("Actor with id [%s] does not exist",receiver.getActorId()), receiver));
     }
 
     @Override
@@ -59,7 +59,10 @@ public final class CompletableFutureDelegate<T> extends ActorDelegate<T> {
         } else if (message instanceof Throwable) {
             future.completeExceptionally((Throwable) message);
         } else {
-            future.completeExceptionally(new UnexpectedResponseTypeException("Receiver unexpectedly responded with a message of type " + message.getClass().getTypeName()));
+            future.completeExceptionally(new UnexpectedResponseTypeException(String.format(
+                "Receiver unexpectedly responded with a message of type [%s]",
+                message.getClass().getTypeName()
+            )));
         }
     }
 }

@@ -137,6 +137,10 @@ public class TracingUtilsTest {
             shorten("org.elasticsoftware.elasticactors.ElasticActorsClass[]"),
             "o.e.e.ElasticActorsClass[]"
         );
+        assertEquals(
+            shorten("org.elasticsoftware.elasticactors.ElasticActorsClass[][]"),
+            "o.e.e.ElasticActorsClass[][]"
+        );
     }
 
     @Test
@@ -145,6 +149,7 @@ public class TracingUtilsTest {
         assertEquals(shorten(byte.class), "byte");
         assertEquals(shorten(int[].class), "int[]");
         assertEquals(shorten(Object[].class), "j.l.Object[]");
+        assertEquals(shorten(Object[][].class), "j.l.Object[][]");
         assertEquals(shorten(String.class), "j.l.String");
         assertEquals(shorten(getClass()), "o.e.e.t.TracingUtilsTest");
     }
@@ -158,9 +163,10 @@ public class TracingUtilsTest {
                 BigDecimal.class,
                 Short[].class,
                 int.class,
-                long[].class
+                long[].class,
+                Object[][].class
             }),
-            "j.l.String,j.l.Object,j.m.BigDecimal,j.l.Short[],int,long[]"
+            "j.l.String,j.l.Object,j.m.BigDecimal,j.l.Short[],int,long[],j.l.Object[][]"
         );
     }
 

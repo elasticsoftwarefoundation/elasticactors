@@ -80,13 +80,7 @@ public final class TracingUtils {
     @Nullable
     public static String shorten(@Nullable Class<?> aClass) {
         if (aClass != null) {
-            return classCache.computeIfAbsent(aClass, c -> {
-                if (c.isArray()) {
-                    return shorten(c.getComponentType().getName()) + "[]";
-                } else {
-                    return shorten(c.getName());
-                }
-            });
+            return classCache.computeIfAbsent(aClass, c -> shorten(c.getTypeName()));
         }
         return null;
     }

@@ -56,7 +56,9 @@ public class AskForGreetingActor extends MethodActor {
             "echo" + (state != null && state.getBody() != null ? state.getBody() : ""),
             EchoGreetingActor.class
         );
-        logger.info("Got REQUEST in Thread {}", Thread.currentThread().getName());
+        if (logger.isInfoEnabled()) {
+            logger.info("Got REQUEST in Thread {}", Thread.currentThread().getName());
+        }
         checkHandlerOrder(1);
         if (getManager().isTracingEnabled()) {
             MessagingScope scope = getManager().currentScope();
@@ -73,9 +75,16 @@ public class AskForGreetingActor extends MethodActor {
             );
         }
         echo.ask(new Greeting("echo"), Greeting.class, greeting.getPersistOnResponse())
-                .whenComplete((g, throwable) -> {
-                    logger.info("Got REPLY in Thread {}", Thread.currentThread().getName());
-                    replyActor.tell(g);
+                .whenComplete((g, e) -> {
+                    if (g != null) {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("Got REPLY in Thread {}", Thread.currentThread().getName());
+                        }
+                        replyActor.tell(g);
+                    } else if (e != null) {
+                        logger.error("Got an unexpected exception", e);
+                        replyActor.tell(e);
+                    }
                 });
     }
 

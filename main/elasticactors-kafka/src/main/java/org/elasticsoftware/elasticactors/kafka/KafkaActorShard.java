@@ -24,11 +24,9 @@ import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.ActorShardRef;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
-import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.messaging.InternalMessageFactory;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 
 import java.io.IOException;
 import java.util.List;
@@ -81,13 +79,8 @@ public final class KafkaActorShard implements ActorShard {
 
     @Override
     public void undeliverableMessage(InternalMessage message, ActorRef receiverRef) throws Exception {
-        InternalMessage undeliverableMessage = new DefaultInternalMessage( receiverRef,
-                message.getSender(),
-                message.getPayload(),
-                message.getPayloadClass(),
-                message.isDurable(),
-                true,
-                message.getTimeout());
+        InternalMessage undeliverableMessage =
+            InternalMessageFactory.copyForUndeliverableWithSerializedPayload(message, receiverRef);
         offerInternalMessage(undeliverableMessage);
     }
 
@@ -119,13 +112,11 @@ public final class KafkaActorShard implements ActorShard {
 
     private InternalMessage createInternalMessage(ActorRef from, List<? extends ActorRef> to, Object message) throws IOException {
         MessageSerializer<Object> messageSerializer = (MessageSerializer<Object>) actorSystem.getSerializer(message.getClass());
-        if(messageSerializer == null) {
-            throw new IllegalArgumentException("MessageSerializer not found for message of type "+message.getClass().getName());
-        }
-        // get the durable flag
-        Message messageAnnotation = message.getClass().getAnnotation(Message.class);
-        final boolean durable = (messageAnnotation != null) && messageAnnotation.durable();
-        final int timeout = (messageAnnotation != null) ? messageAnnotation.timeout() : Message.NO_TIMEOUT;
-        return new DefaultInternalMessage(from, ImmutableList.copyOf(to), SerializationContext.serialize(messageSerializer, message),message.getClass().getName(),durable, timeout);
+        return InternalMessageFactory.createWithSerializedPayload(
+            from,
+            to,
+            messageSerializer,
+            message
+        );
     }
 }

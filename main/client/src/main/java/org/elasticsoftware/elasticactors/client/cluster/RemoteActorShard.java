@@ -112,12 +112,14 @@ final class RemoteActorShard implements ActorShard, MessageHandler {
         final int timeout = getTimeout(message);
         String payloadClass = getPayloadClass(message);
         messageQueueProxy.offerInternalMessage(new DefaultInternalMessage(
-                null,
-                ImmutableList.copyOf(receiver),
-                SerializationContext.serialize(messageSerializer, message),
-                payloadClass,
-                durable,
-                timeout));
+            null,
+            ImmutableList.copyOf(receiver),
+            SerializationContext.serialize(messageSerializer, message),
+            payloadClass,
+            message,
+            durable,
+            timeout
+        ));
     }
 
     private boolean isDurable(Object message) {

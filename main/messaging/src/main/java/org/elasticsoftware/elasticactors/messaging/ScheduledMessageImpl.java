@@ -19,13 +19,11 @@ package org.elasticsoftware.elasticactors.messaging;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
-import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
+import org.elasticsoftware.elasticactors.messaging.internal.InternalHashKeyUtils;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.UUID;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
@@ -41,18 +39,36 @@ public final class ScheduledMessageImpl extends AbstractTracedMessage implements
     private final Class messageClass;
     private final byte[] messageBytes;
     private final ScheduledMessageKey key;
+    private final String messageQueueAffinityKey;
 
-    public ScheduledMessageImpl(long fireTime, ActorRef sender, ActorRef receiver, Class messageClass,byte[] messageBytes) {
-        this(UUIDTools.createTimeBasedUUID(),fireTime,sender,receiver, messageClass, messageBytes);
+    public ScheduledMessageImpl(
+        long fireTime,
+        ActorRef sender,
+        ActorRef receiver,
+        Class messageClass,
+        byte[] messageBytes,
+        Object message)
+    {
+        this(
+            UUIDTools.createTimeBasedUUID(),
+            fireTime,
+            sender,
+            receiver,
+            messageClass,
+            messageBytes,
+            InternalHashKeyUtils.getMessageQueueAffinityKey(message)
+        );
     }
 
     private ScheduledMessageImpl(
-            UUID id,
-            long fireTime,
-            ActorRef sender,
-            ActorRef receiver,
-            Class messageClass,
-            byte[] messageBytes) {
+        UUID id,
+        long fireTime,
+        ActorRef sender,
+        ActorRef receiver,
+        Class messageClass,
+        byte[] messageBytes,
+        String messageQueueAffinityKey)
+    {
         this.id = id;
         this.fireTime = fireTime;
         this.sender = sender;
@@ -60,17 +76,20 @@ public final class ScheduledMessageImpl extends AbstractTracedMessage implements
         this.messageClass = messageClass;
         this.messageBytes = messageBytes;
         this.key = new ScheduledMessageKey(id, fireTime);
+        this.messageQueueAffinityKey = messageQueueAffinityKey;
     }
 
     public ScheduledMessageImpl(
-            UUID id,
-            long fireTime,
-            ActorRef sender,
-            ActorRef receiver,
-            Class messageClass,
-            byte[] messageBytes,
-            TraceContext traceContext,
-            CreationContext creationContext) {
+        UUID id,
+        long fireTime,
+        ActorRef sender,
+        ActorRef receiver,
+        Class messageClass,
+        byte[] messageBytes,
+        String messageQueueAffinityKey,
+        TraceContext traceContext,
+        CreationContext creationContext)
+    {
         super(traceContext, creationContext);
         this.id = id;
         this.fireTime = fireTime;
@@ -79,16 +98,7 @@ public final class ScheduledMessageImpl extends AbstractTracedMessage implements
         this.messageClass = messageClass;
         this.messageBytes = messageBytes;
         this.key = new ScheduledMessageKey(id, fireTime);
-    }
-
-    /**
-     * Constructor that is used to remove the ScheduledMessage. The id and fireTime fields make up the unique key
-     *
-     * @param id
-     * @param fireTime
-     */
-    public ScheduledMessageImpl(UUID id,long fireTime) {
-        this(id,fireTime,null,null,null,null);
+        this.messageQueueAffinityKey = messageQueueAffinityKey;
     }
 
     @Override
@@ -111,13 +121,30 @@ public final class ScheduledMessageImpl extends AbstractTracedMessage implements
         return messageClass;
     }
 
+    @Nullable
+    @Override
+    public String getMessageQueueAffinityKey() {
+        if (messageQueueAffinityKey != null) {
+            return messageQueueAffinityKey;
+        }
+        return receiver != null ? receiver.getActorId() : null;
+    }
+
+    @Override
+    public ScheduledMessage copyForRescheduling(long newFireTime) {
+        return new ScheduledMessageImpl(
+            newFireTime,
+            sender,
+            receiver,
+            messageClass,
+            messageBytes,
+            messageQueueAffinityKey
+        );
+    }
+
     @Override
     public byte[] getMessageBytes() {
         return messageBytes;
-    }
-
-    public <T> T getPayload(MessageDeserializer<T> deserializer) throws IOException {
-        return deserializer.deserialize(ByteBuffer.wrap(messageBytes));
     }
 
     @Override

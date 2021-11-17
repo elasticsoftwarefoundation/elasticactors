@@ -174,6 +174,13 @@ public class RabbitMQMessagingServiceTest {
 
     private InternalMessage createInternalMessage(String name,int count) {
         ByteBuffer payload = ByteBuffer.wrap(format(PAYLOAD_FORMAT, count, name).getBytes(StandardCharsets.UTF_8));
-        return new DefaultInternalMessage(senderRef,receiverRef,payload,String.class.getName(),true);
+        return new DefaultInternalMessage(
+            senderRef,
+            receiverRef,
+            payload,
+            String.class.getName(),
+            null,
+            true
+        );
     }
 }
