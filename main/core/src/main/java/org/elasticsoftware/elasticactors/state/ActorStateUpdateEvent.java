@@ -134,7 +134,8 @@ public final class ActorStateUpdateEvent implements ThreadBoundEvent<String>, Ac
     @Nullable
     @Override
     public ByteBuffer getSerializedState() {
-        return serializedState != null ? serializedState.asReadOnlyBuffer() : null;
+        // Using duplicate to give implementations a chance to access the internal byte array
+        return serializedState != null ? serializedState.duplicate() : null;
     }
 
     @Nullable

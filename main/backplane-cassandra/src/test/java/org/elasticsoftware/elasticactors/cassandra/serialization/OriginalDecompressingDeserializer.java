@@ -57,4 +57,9 @@ public final class OriginalDecompressingDeserializer<O> implements Deserializer<
         }
         return true;
     }
+
+    @Override
+    public boolean isSafe() {
+        return delegate.isSafe();
+    }
 }

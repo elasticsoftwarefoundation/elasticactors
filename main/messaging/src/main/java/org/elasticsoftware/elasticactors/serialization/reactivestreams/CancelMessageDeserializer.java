@@ -20,6 +20,7 @@ import org.elasticsoftware.elasticactors.messaging.reactivestreams.CancelMessage
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -36,14 +37,20 @@ public final class CancelMessageDeserializer implements MessageDeserializer<Canc
 
     @Override
     public CancelMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
-        // the original byte buffer has an array
-        Reactivestreams.CancelMessage cancelMessage = Reactivestreams.CancelMessage.parseFrom(serializedObject.duplicate());
+        Reactivestreams.CancelMessage cancelMessage = ByteBufferUtils.throwingApplyAndReset(
+            serializedObject,
+            Reactivestreams.CancelMessage::parseFrom
+        );
         return new CancelMessage(actorRefDeserializer.deserialize(cancelMessage.getSubscriberRef()), cancelMessage.getMessageName());
     }
 
     @Override
     public Class<CancelMessage> getMessageClass() {
         return CancelMessage.class;
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 }

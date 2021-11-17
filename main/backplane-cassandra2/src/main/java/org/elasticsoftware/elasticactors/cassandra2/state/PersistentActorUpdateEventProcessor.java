@@ -104,7 +104,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
             if(events.size() == 1) {
                 PersistentActorUpdateEvent event = events.get(0);
                 BoundStatement boundStatement;
-                if(event.getPersistentActorBytes() != null) {
+                if (event.hasPersistentActorBytes()) {
                     boundStatement = insertStatement.bind(event.getRowKey()[0], event.getRowKey()[1], event.getPersistentActorId(), event.getPersistentActorBytes());
                 } else {
                     // it's a delete
@@ -154,7 +154,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
         StringBuilder batchBuilder = new StringBuilder("BEGIN UNLOGGED BATCH ");
         for (PersistentActorUpdateEvent event : events) {
             batchBuilder.append("   ");
-            if(event.getPersistentActorBytes() != null) {
+            if (event.hasPersistentActorBytes()) {
                 // insert query
                 batchBuilder.append(INSERT_QUERY);
                 // add the 4 arguments in order
@@ -183,7 +183,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
         List<Object> arguments = new LinkedList<>();
         int batchSize = 0;
         for (PersistentActorUpdateEvent event : events) {
-            if(event.getPersistentActorBytes() != null) {
+            if (event.hasPersistentActorBytes()) {
                 // add the 4 arguments in order
                 arguments.add(event.getRowKey()[0]);
                 arguments.add(event.getRowKey()[1]);
@@ -210,7 +210,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
     private void executeBatchV2AndUp(List<PersistentActorUpdateEvent> events) {
         BatchStatement batchStatement = new BatchStatement(UNLOGGED);
         for (PersistentActorUpdateEvent event : events) {
-            if (event.getPersistentActorBytes() != null) {
+            if (event.hasPersistentActorBytes()) {
                 batchStatement.add(insertStatement.bind(event.getRowKey()[0], event.getRowKey()[1], event.getPersistentActorId(), event.getPersistentActorBytes()));
             } else {
                 // it's a delete

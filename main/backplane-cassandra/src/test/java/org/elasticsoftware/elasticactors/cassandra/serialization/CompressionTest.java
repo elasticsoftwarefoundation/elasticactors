@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
+import static org.elasticsoftware.elasticactors.util.ByteBufferUtils.decodeUtf8String;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -40,9 +41,7 @@ public class CompressionTest {
 
         ByteBuffer original = originalSerializer.serialize(testString);
         ByteBuffer serialized = serializer.serialize(testString);
-        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
-        // the original byte buffer has an array
-        assertEquals(StandardCharsets.UTF_8.decode(serialized.duplicate()).toString(), testString);
+        assertEquals(decodeUtf8String(serialized), testString);
         assertEquals(original, serialized);
 
         DecompressingDeserializer<String> deserializer = new DecompressingDeserializer<>(new StringDeserializer());

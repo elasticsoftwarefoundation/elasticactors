@@ -20,6 +20,7 @@ import org.elasticsoftware.elasticactors.messaging.reactivestreams.SubscribeMess
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -36,14 +37,20 @@ public final class SubscribeMessageDeserializer implements MessageDeserializer<S
 
     @Override
     public SubscribeMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
-        // the original byte buffer has an array
-        Reactivestreams.SubscribeMessage subscribeMessage = Reactivestreams.SubscribeMessage.parseFrom(serializedObject.duplicate());
+        Reactivestreams.SubscribeMessage subscribeMessage = ByteBufferUtils.throwingApplyAndReset(
+            serializedObject,
+            Reactivestreams.SubscribeMessage::parseFrom
+        );
         return new SubscribeMessage(actorRefDeserializer.deserialize(subscribeMessage.getSubscriberRef()), subscribeMessage.getMessageName());
     }
 
     @Override
     public Class<SubscribeMessage> getMessageClass() {
         return SubscribeMessage.class;
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 }

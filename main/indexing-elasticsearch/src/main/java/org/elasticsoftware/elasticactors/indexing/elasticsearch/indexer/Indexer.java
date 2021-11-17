@@ -30,6 +30,7 @@ import org.elasticsoftware.elasticactors.indexing.elasticsearch.IndexConfig;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdate;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
+import org.elasticsoftware.elasticactors.util.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,7 +74,7 @@ public final class Indexer implements ActorStateUpdateListener {
                     Class messageClass = update.getMessageClass();
                     ActorLifecycleStep lifecycleStep = update.getLifecycleStep();
 
-                    if (messageClass != null && contains(indexConfig.includedMessages(), messageClass)) {
+                    if (messageClass != null && ArrayUtils.contains(indexConfig.includedMessages(), messageClass)) {
 
                         indexActorState(indexConfig, update);
 
@@ -97,16 +98,6 @@ public final class Indexer implements ActorStateUpdateListener {
                     }
                 }
         );
-    }
-
-    private boolean contains(Class<?>[] includedMessageClasses, Class messageClass) {
-        for (Class includedMessageClass : includedMessageClasses) {
-            if (messageClass.equals(includedMessageClass)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private void deleteActorState(IndexConfig indexConfig, ActorStateUpdate update) {

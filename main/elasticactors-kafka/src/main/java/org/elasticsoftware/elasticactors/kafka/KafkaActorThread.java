@@ -1052,7 +1052,6 @@ public final class KafkaActorThread extends Thread {
                                   InternalMessage internalMessage) {
         // setup the context
         InternalActorContext.setContext(persistentActor);
-        SerializationContext.initialize();
         boolean shouldUpdateState = false;
         ElasticActor receiver = internalActorSystem.getActorInstance(persistentActor.getSelf(), persistentActor.getActorClass());
         try {

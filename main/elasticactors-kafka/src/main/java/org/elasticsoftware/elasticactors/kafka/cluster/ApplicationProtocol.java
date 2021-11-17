@@ -29,6 +29,7 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -254,24 +255,12 @@ public final class ApplicationProtocol {
     private static byte[] getMessageBytes(InternalMessage internalMessage, InternalActorSystem actorSystem) throws IOException {
         if(internalMessage.hasSerializedPayload()) {
             ByteBuffer messagePayload = internalMessage.getPayload();
-            if (messagePayload.hasArray()) {
-                return messagePayload.array();
-            } else {
-                byte[] messageBytes = new byte[messagePayload.remaining()];
-                messagePayload.get(messageBytes);
-                return messageBytes;
-            }
+            return ByteBufferUtils.toByteArrayAndReset(messagePayload);
         } else {
             // transient message, need to serialize the bytes
             Object message = internalMessage.getPayload(null);
             ByteBuffer messageBytes = ((MessageSerializer<Object>) actorSystem.getSerializer(message.getClass())).serialize(message);
-            if(messageBytes.hasArray()) {
-                return messageBytes.array();
-            } else {
-                byte[] bytes = new byte[messageBytes.remaining()];
-                messageBytes.get(bytes);
-                return bytes;
-            }
+            return ByteBufferUtils.toByteArray(messageBytes);
         }
     }
 }

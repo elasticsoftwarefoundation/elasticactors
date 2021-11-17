@@ -54,12 +54,15 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
         if(lifecycleStep == null && message == null) {
             throw new IllegalArgumentException("At least one of lifecycleStep or message needs to be not null");
         }
-        this.executor.execute(new ActorStateUpdateEvent(persistentActor.getActorClass(),
-                persistentActor.getSelf(),
-                persistentActor.getSerializedState() != null ?
-                        ByteBuffer.wrap(persistentActor.getSerializedState()).asReadOnlyBuffer() : null,
-                persistentActor.getCurrentActorStateVersion(),
-                lifecycleStep, message != null ? message.getClass() : null));
+        this.executor.execute(new ActorStateUpdateEvent(
+            persistentActor.getActorClass(),
+            persistentActor.getSelf(),
+            persistentActor.getSerializedState() != null
+                ? ByteBuffer.wrap(persistentActor.getSerializedState())
+                : null,
+            persistentActor.getCurrentActorStateVersion(),
+            lifecycleStep, message != null ? message.getClass() : null
+        ));
     }
 
     @Override

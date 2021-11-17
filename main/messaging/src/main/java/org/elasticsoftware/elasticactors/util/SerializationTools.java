@@ -37,16 +37,23 @@ import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClass
  */
 public final class SerializationTools {
     public static Object deserializeMessage(SerializationAccessor serializationAccessor, InternalMessage internalMessage) throws Exception {
-        Class<?> messageClass = getClassHelper().forName(internalMessage.getPayloadClass());
-        MessageDeserializer<?> deserializer = serializationAccessor.getDeserializer(messageClass);
-
-        if(deserializer != null) {
-            return internalMessage.getPayload(deserializer);
+        if (internalMessage.hasPayloadObject()) {
+            return internalMessage.getPayload(null);
         } else {
-            //@todo: throw a more targeted exception
-            throw new Exception(String.format("No Deserializer found for Message class %s", internalMessage.getPayloadClass()));
-        }
+            Class<?> messageClass = getClassHelper().forName(internalMessage.getPayloadClass());
+            MessageDeserializer<?> deserializer =
+                serializationAccessor.getDeserializer(messageClass);
 
+            if (deserializer != null) {
+                return internalMessage.getPayload(deserializer);
+            } else {
+                //@todo: throw a more targeted exception
+                throw new Exception(String.format(
+                    "No Deserializer found for Message class %s",
+                    internalMessage.getPayloadClass()
+                ));
+            }
+        }
     }
 
     public static MessageToStringConverter getStringConverter(

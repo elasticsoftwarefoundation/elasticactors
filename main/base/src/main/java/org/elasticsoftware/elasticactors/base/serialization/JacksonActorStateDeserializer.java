@@ -37,11 +37,24 @@ public final class JacksonActorStateDeserializer implements Deserializer<ByteBuf
 
     @Override
     public ActorState deserialize(ByteBuffer serializedObject) throws IOException {
-        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
-        // the original byte buffer has an array
-        return objectMapper.readValue(
-            new ByteBufferBackedInputStream(serializedObject.duplicate()),
-            JacksonActorState.class
-        );
+        if (serializedObject.hasArray()) {
+            return objectMapper.readValue(serializedObject.array(), JacksonActorState.class);
+        } else {
+            // Avoid marking the buffer (what if it was marked from the outside?)
+            int position = serializedObject.position();
+            try {
+                return objectMapper.readValue(
+                    new ByteBufferBackedInputStream(serializedObject),
+                    JacksonActorState.class
+                );
+            } finally {
+                serializedObject.position(position);
+            }
+        }
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 }

@@ -28,6 +28,7 @@ import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 import org.reactivestreams.Subscriber;
 
 import java.io.IOException;
@@ -51,9 +52,10 @@ public final class PersistentActorDeserializer implements Deserializer<ByteBuffe
 
     @Override
     public PersistentActor<ShardKey> deserialize(ByteBuffer serializedObject) throws IOException {
-        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
-        // the original byte buffer has an array
-        Elasticactors.PersistentActor protobufMessage = Elasticactors.PersistentActor.parseFrom(serializedObject.duplicate());
+        Elasticactors.PersistentActor protobufMessage = ByteBufferUtils.throwingApplyAndReset(
+            serializedObject,
+            Elasticactors.PersistentActor::parseFrom
+        );
         final ShardKey shardKey = ShardKey.fromString(protobufMessage.getShardKey());
         try {
             Class<? extends ElasticActor> actorClass =
@@ -100,6 +102,11 @@ public final class PersistentActorDeserializer implements Deserializer<ByteBuffe
         } catch (ClassNotFoundException e) {
             throw new IOException("Exception deserializing PersistentActor", e);
         }
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 
     private Subscriber materializeSubscriber(ActorRef actorRef, Class<? extends ElasticActor> actorClass, String messageName) {

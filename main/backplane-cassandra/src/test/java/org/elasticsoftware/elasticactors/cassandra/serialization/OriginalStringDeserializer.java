@@ -27,8 +27,11 @@ import java.nio.charset.StandardCharsets;
 public final class OriginalStringDeserializer implements Deserializer<byte[],String> {
     @Override
     public String deserialize(byte[] serializedObject) throws IOException {
-        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
-        // the original byte buffer has an array
         return new String(serializedObject, StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 }

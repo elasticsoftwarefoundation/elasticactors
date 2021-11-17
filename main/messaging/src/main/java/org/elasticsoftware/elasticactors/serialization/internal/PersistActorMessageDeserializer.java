@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.serialization.internal;
 import org.elasticsoftware.elasticactors.messaging.internal.PersistActorMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -35,14 +36,20 @@ public final class PersistActorMessageDeserializer implements MessageDeserialize
 
     @Override
     public PersistActorMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
-        // the original byte buffer has an array
-        Messaging.PersistActorMessage protobufMessage = Messaging.PersistActorMessage.parseFrom(serializedObject.duplicate());
+        Messaging.PersistActorMessage protobufMessage = ByteBufferUtils.throwingApplyAndReset(
+            serializedObject,
+            Messaging.PersistActorMessage::parseFrom
+        );
         return new PersistActorMessage(actorRefDeserializer.deserialize(protobufMessage.getActorRef()));
     }
 
     @Override
     public Class<PersistActorMessage> getMessageClass() {
         return PersistActorMessage.class;
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 }

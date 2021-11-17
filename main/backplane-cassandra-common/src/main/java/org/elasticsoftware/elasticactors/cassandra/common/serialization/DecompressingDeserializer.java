@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.cassandra.common.serialization;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4FastDecompressor;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -38,28 +39,45 @@ public final class DecompressingDeserializer<O> implements Deserializer<ByteBuff
     @Override
     public O deserialize(ByteBuffer serializedBuffer) throws IOException {
         if(isCompressed(serializedBuffer)) {
-            // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
-            // the original byte buffer has an array
-            ByteBuffer buffer = serializedBuffer.duplicate();
-            // skip the header
-            buffer.position(MAGIC_HEADER.length);
-            int uncompressedLength = buffer.getInt();
-            buffer.rewind();
-            ByteBuffer destination = ByteBuffer.allocate(uncompressedLength);
-            lz4Decompressor.decompress(
-                buffer,
-                MAGIC_HEADER.length + Integer.BYTES,
-                destination,
-                0,
-                uncompressedLength
+            ByteBuffer uncompressed = ByteBufferUtils.doAndReset(
+                serializedBuffer, 
+                DecompressingDeserializer::uncompress
             );
-            return delegate.deserialize(destination);
+            return delegate.deserialize(uncompressed);
         } else {
             return delegate.deserialize(serializedBuffer);
         }
     }
 
-    private boolean isCompressed(byte[] bytes) {
+    @Override
+    public boolean isSafe() {
+        return delegate.isSafe();
+    }
+
+    private static int getUncompressedLength(ByteBuffer buffer) {
+        // skip the header
+        buffer.position(MAGIC_HEADER.length);
+        return buffer.getInt();
+    }
+
+    private static ByteBuffer uncompress(ByteBuffer buffer) {
+        int uncompressedLength = ByteBufferUtils.toIntAndReset(
+            buffer,
+            DecompressingDeserializer::getUncompressedLength
+        );
+        ByteBuffer destination = ByteBuffer.allocate(uncompressedLength);
+        lz4Decompressor.decompress(
+            buffer,
+            MAGIC_HEADER.length + Integer.BYTES,
+            destination,
+            0,
+            uncompressedLength
+        );
+        destination.rewind();
+        return destination;
+    }
+
+    private static boolean isCompressed(byte[] bytes) {
         if (bytes.length < MAGIC_HEADER.length) {
             return false;
         }
@@ -71,20 +89,26 @@ public final class DecompressingDeserializer<O> implements Deserializer<ByteBuff
         return true;
     }
 
-    private boolean isCompressed(ByteBuffer bytes) {
+    private static boolean isCompressed(ByteBuffer bytes) {
         if (bytes.hasArray()) {
             return isCompressed(bytes.array());
         } else {
             if (bytes.remaining() < MAGIC_HEADER.length) {
                 return false;
             }
-            ByteBuffer copy = bytes.asReadOnlyBuffer();
-            for (byte b : MAGIC_HEADER) {
-                if (b != copy.get()) {
-                    return false;
-                }
-            }
-            return true;
+            return ByteBufferUtils.testAndReset(
+                bytes,
+                DecompressingDeserializer::isCompressedBuffer
+            );
         }
+    }
+
+    private static boolean isCompressedBuffer(ByteBuffer copy) {
+        for (byte b : MAGIC_HEADER) {
+            if (b != copy.get()) {
+                return false;
+            }
+        }
+        return true;
     }
 }

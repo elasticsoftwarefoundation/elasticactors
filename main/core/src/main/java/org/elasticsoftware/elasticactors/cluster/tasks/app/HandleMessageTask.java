@@ -35,6 +35,7 @@ import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -187,24 +188,12 @@ public final class HandleMessageTask extends ActorLifecycleTask {
     private byte[] getMessageBytes(InternalMessage internalMessage) throws IOException {
         if(internalMessage.hasSerializedPayload()) {
             ByteBuffer messagePayload = internalMessage.getPayload();
-            if(messagePayload.hasArray()) {
-                return messagePayload.array();
-            } else {
-                byte[] messageBytes = new byte[messagePayload.remaining()];
-                messagePayload.get(messageBytes);
-                return messageBytes;
-            }
+            return ByteBufferUtils.toByteArrayAndReset(messagePayload);
         } else {
             // transient message, need to serialize the bytes
             Object message = internalMessage.getPayload(null);
             ByteBuffer messageBytes = ((MessageSerializer<Object>)actorSystem.getSerializer(message.getClass())).serialize(message);
-            if(messageBytes.hasArray()) {
-                return messageBytes.array();
-            } else {
-                byte[] bytes = new byte[messageBytes.remaining()];
-                messageBytes.get(bytes);
-                return bytes;
-            }
+            return ByteBufferUtils.toByteArray(messageBytes);
         }
     }
 

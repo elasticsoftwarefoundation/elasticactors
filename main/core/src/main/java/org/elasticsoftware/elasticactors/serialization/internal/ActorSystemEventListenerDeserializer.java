@@ -20,6 +20,7 @@ import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListener;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerImpl;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -38,9 +39,12 @@ public final class ActorSystemEventListenerDeserializer implements Deserializer<
 
     @Override
     public ActorSystemEventListener deserialize(ByteBuffer serializedObject) throws IOException {
-        try {// Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
-            // the original byte buffer has an array
-            Elasticactors.ActorSystemEventListener protobufMessage = Elasticactors.ActorSystemEventListener.parseFrom(serializedObject.duplicate());
+        try {
+            Elasticactors.ActorSystemEventListener protobufMessage =
+                ByteBufferUtils.throwingApplyAndReset(
+                    serializedObject,
+                    Elasticactors.ActorSystemEventListener::parseFrom
+                );
             Class messageClass = getClassHelper().forName(protobufMessage.getMessageClass());
             ByteBuffer messageBytes = protobufMessage.getMessage().asReadOnlyByteBuffer();
             String actorId = protobufMessage.getActorId();
@@ -56,5 +60,10 @@ public final class ActorSystemEventListenerDeserializer implements Deserializer<
         } catch(ClassNotFoundException e) {
             throw new IOException(e);
         }
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 }

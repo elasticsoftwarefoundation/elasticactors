@@ -26,6 +26,7 @@ import org.elasticsoftware.elasticactors.serialization.internal.tracing.TraceCon
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -47,9 +48,10 @@ public final class ScheduledMessageDeserializer implements Deserializer<ByteBuff
     @Override
     public ScheduledMessage deserialize(ByteBuffer serializedObject) throws IOException {
         try {
-            // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
-            // the original byte buffer has an array
-            Messaging.ScheduledMessage protobufMessage = Messaging.ScheduledMessage.parseFrom(serializedObject.duplicate());
+            Messaging.ScheduledMessage protobufMessage = ByteBufferUtils.throwingApplyAndReset(
+                serializedObject,
+                Messaging.ScheduledMessage::parseFrom
+            );
             ActorRef sender = getSender(protobufMessage);
             ActorRef receiver = actorRefDeserializer.deserialize(protobufMessage.getReceiver());
             Class messageClass = getClassHelper().forName(protobufMessage.getMessageClass());
@@ -89,5 +91,10 @@ public final class ScheduledMessageDeserializer implements Deserializer<ByteBuff
         } else {
             return null;
         }
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 }

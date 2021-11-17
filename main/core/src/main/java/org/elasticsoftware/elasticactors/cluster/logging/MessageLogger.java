@@ -12,6 +12,7 @@ import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageToStringConverter;
+import org.elasticsoftware.elasticactors.util.ArrayUtils;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,7 @@ public final class MessageLogger {
     {
         if (messageClass != null) {
             Message.LogFeature[] logFeatures = loggingSettings.processOverrides(messageClass);
-            return contains(logFeatures, Message.LogFeature.TIMING);
+            return ArrayUtils.contains(logFeatures, Message.LogFeature.TIMING);
         }
         return false;
     }
@@ -67,16 +68,7 @@ public final class MessageLogger {
     {
         if (messageClass != null) {
             Message.LogFeature[] logFeatures = loggingSettings.processOverrides(messageClass);
-            return contains(logFeatures, Message.LogFeature.CONTENTS);
-        }
-        return false;
-    }
-
-    private static <T> boolean contains(T[] array, T object) {
-        for (T currentObject : array) {
-            if (currentObject.equals(object)) {
-                return true;
-            }
+            return ArrayUtils.contains(logFeatures, Message.LogFeature.CONTENTS);
         }
         return false;
     }

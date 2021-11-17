@@ -52,7 +52,8 @@ public final class ActorSystemEventListenerImpl implements ActorSystemEventListe
 
     @Override
     public ByteBuffer getMessageBytes() {
-        return messageBytes != null ? messageBytes.asReadOnlyBuffer() : null;
+        // Using duplicate to give implementations a chance to access the internal byte array
+        return messageBytes.duplicate();
     }
 
     @Nullable

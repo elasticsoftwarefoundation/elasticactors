@@ -57,6 +57,11 @@ public final class DecompressingDeserializer<O> implements Deserializer<byte[],O
         }
     }
 
+    @Override
+    public boolean isSafe() {
+        return delegate.isSafe();
+    }
+
     private boolean isCompressed(byte[] bytes) {
         if (bytes.length < MAGIC_HEADER.length) {
             return false;

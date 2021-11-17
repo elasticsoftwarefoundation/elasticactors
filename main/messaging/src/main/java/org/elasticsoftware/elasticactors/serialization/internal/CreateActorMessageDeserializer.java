@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 
 import java.io.IOException;
@@ -42,9 +43,10 @@ public final class CreateActorMessageDeserializer implements MessageDeserializer
 
     @Override
     public CreateActorMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        // Using duplicate instead of asReadOnlyBuffer so implementations can optimize this in case
-        // the original byte buffer has an array
-        Messaging.CreateActorMessage protobufMessage = Messaging.CreateActorMessage.parseFrom(serializedObject.duplicate());
+        Messaging.CreateActorMessage protobufMessage = ByteBufferUtils.throwingApplyAndReset(
+            serializedObject,
+            Messaging.CreateActorMessage::parseFrom
+        );
         return new CreateActorMessage(
             protobufMessage.getActorSystem(),
             protobufMessage.getActorClass(),
@@ -53,6 +55,11 @@ public final class CreateActorMessageDeserializer implements MessageDeserializer
             ActorType.values()[protobufMessage.getType().getNumber()],
             protobufMessage.getAffinityKey()
         );
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 
     private ActorState getDeserializedState(Messaging.CreateActorMessage protobufMessage) throws IOException {
