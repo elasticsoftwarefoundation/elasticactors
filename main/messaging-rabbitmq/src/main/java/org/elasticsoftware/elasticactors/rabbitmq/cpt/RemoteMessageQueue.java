@@ -37,7 +37,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author Joost van de Wijgerd
  */
 public final class RemoteMessageQueue extends DefaultChannelListener implements MessageQueue {
-    private final Logger logger;
+
+    private final static Logger logger = LoggerFactory.getLogger(RemoteMessageQueue.class);
+
     private final Channel producerChannel;
     private final String exchangeName;
     private final String queueName;
@@ -50,7 +52,6 @@ public final class RemoteMessageQueue extends DefaultChannelListener implements 
         this.producerChannel = producerChannel;
         this.exchangeName = exchangeName;
         this.queueName = queueName;
-        this.logger = LoggerFactory.getLogger(String.format("Producer[%s->%s]",exchangeName,queueName));
         this.channelListenerRegistry = channelListenerRegistry;
         this.channelListenerRegistry.addChannelListener(this.producerChannel,this);
     }
@@ -96,11 +97,12 @@ public final class RemoteMessageQueue extends DefaultChannelListener implements 
 
     @Override
     public void initialize() throws Exception {
-        // nothing to do
+        logger.info("Starting remote message queue [{}->{}]", exchangeName, queueName);
     }
 
     @Override
     public void destroy() {
+        logger.info("Stopping remote message queue [{}->{}]", exchangeName, queueName);
         this.channelListenerRegistry.removeChannelListener(this.producerChannel,this);
     }
 

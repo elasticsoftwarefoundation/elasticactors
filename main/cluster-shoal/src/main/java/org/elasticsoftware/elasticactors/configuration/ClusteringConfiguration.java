@@ -18,7 +18,6 @@ package org.elasticsoftware.elasticactors.configuration;
 
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.elasticsoftware.elasticactors.shoal.cluster.ShoalClusterService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 
@@ -29,16 +28,14 @@ import java.net.UnknownHostException;
  * @author Joost van de Wijgerd
  */
 public class ClusteringConfiguration {
-    @Autowired
-    private Environment env;
 
     @Bean(name= "clusterService")
-    public ClusterService createClusterService() throws UnknownHostException {
+    public ClusterService createClusterService(Environment env) throws UnknownHostException {
         String nodeId = env.getRequiredProperty("ea.node.id");
         InetAddress nodeAddress = InetAddress.getByName(env.getRequiredProperty("ea.node.address"));
         int nodePort = env.getProperty("ea.node.port",Integer.class,9090);
         String clusterName = env.getRequiredProperty("ea.cluster");
-        String discoveryNodes = env.getProperty("ea.cluster.discovery.nodes",String.class,null);
+        String discoveryNodes = env.getProperty("ea.cluster.discovery.nodes",String.class);
         return new ShoalClusterService(clusterName,nodeId,nodeAddress,nodePort,discoveryNodes);
     }
 }

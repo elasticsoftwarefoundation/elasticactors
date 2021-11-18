@@ -42,13 +42,14 @@ import org.elasticsoftware.elasticactors.runtime.DefaultRemoteConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ManagedActorsScanner;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.DefaultActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.NoopActorStateUpdateProcessor;
-import org.elasticsoftware.elasticactors.test.InternalActorSystemsImpl;
+import org.elasticsoftware.elasticactors.test.TestInternalActorSystems;
 import org.elasticsoftware.elasticactors.test.cluster.NoopActorSystemEventRegistryService;
 import org.elasticsoftware.elasticactors.test.cluster.SingleNodeClusterService;
 import org.elasticsoftware.elasticactors.test.state.LoggingActorStateUpdateListener;
@@ -56,7 +57,7 @@ import org.elasticsoftware.elasticactors.tracing.configuration.TracingConfigurat
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -72,6 +73,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
@@ -88,11 +90,6 @@ import java.util.concurrent.Executor;
 })
 @PropertySource(value = "classpath:/system.properties", ignoreResourceNotFound = true)
 public class TestConfiguration extends AsyncConfigurerSupport {
-    @Autowired
-    private Environment env;
-    @Autowired
-    private ResourceLoader resourceLoader;
-    private final NodeSelectorFactory nodeSelectorFactory = new HashingNodeSelectorFactory();
     private final PhysicalNode localNode = new PhysicalNode(UUIDTools.createRandomUUID().toString(), InetAddress.getLoopbackAddress(), true);
     private final NodeConfiguration nodeConfiguration = new NodeConfiguration();
 
@@ -113,11 +110,14 @@ public class TestConfiguration extends AsyncConfigurerSupport {
         return new SystemInitializer(localNode, localActorSystemInstance, clusterService);
     }
 
-    @DependsOn("configuration") @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
+    @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
+    @DependsOn({"messageHandlersRegistry", "messagesScanner", "managedActorsScanner"})
     public LocalActorSystemInstance createLocalActorSystemInstance(
-            InternalActorSystems internalActorSystems,
-            InternalActorSystemConfiguration configuration,
-            ManagedActorsRegistry managedActorsRegistry) {
+        InternalActorSystems internalActorSystems,
+        @Qualifier("actorSystemConfiguration") InternalActorSystemConfiguration configuration,
+        NodeSelectorFactory nodeSelectorFactory,
+        ManagedActorsRegistry managedActorsRegistry)
+    {
         return new LocalActorSystemInstance(
             localNode,
             internalActorSystems,
@@ -128,14 +128,17 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     }
 
     @Bean(name = {"actorSystems", "actorRefFactory", "serializationFrameworks"})
-    public InternalActorSystemsImpl createInternalActorSystems(
+    public TestInternalActorSystems createInternalActorSystems(
             ApplicationContext applicationContext,
             ClusterService clusterService) {
-        return new InternalActorSystemsImpl(applicationContext, clusterService, localNode);
+        return new TestInternalActorSystems(applicationContext, clusterService, localNode);
     }
 
-    @Bean(name = {"configuration"})
-    public ActorSystemConfiguration getConfiguration() throws IOException {
+    @Bean(name = {"actorSystemConfiguration"})
+    public InternalActorSystemConfiguration getConfiguration(
+        ResourceLoader resourceLoader,
+        Environment env) throws IOException
+    {
         // get the yaml resource
         Resource configResource = resourceLoader.getResource(env.getProperty("ea.node.config.location","classpath:ea-test.yaml"));
         // yaml mapper
@@ -158,7 +161,7 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     @Bean(name = {"objectMapperBuilder"})
     public ObjectMapperBuilder createObjectMapperBuilder(
             SimpleScheduler simpleScheduler,
-            InternalActorSystemsImpl actorRefFactory) {
+            TestInternalActorSystems actorRefFactory) {
         // @todo: fix version
         return new ObjectMapperBuilder(actorRefFactory, simpleScheduler, "1.0.0");
     }
@@ -169,13 +172,16 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     }
 
     @Bean(name = {"managedActorsScanner"})
-    public ManagedActorsScanner createManagedActorsScanner() {
-        return new ManagedActorsScanner();
+    public ManagedActorsScanner createManagedActorsScanner(ApplicationContext applicationContext) {
+        return new ManagedActorsScanner(applicationContext);
     }
 
     @Bean(name = {"messagesScanner"})
-    public MessagesScanner createMessageScanner() {
-        return new MessagesScanner();
+    public MessagesScanner createMessageScanner(
+        ApplicationContext applicationContext,
+        List<SerializationFramework> serializationFrameworks)
+    {
+        return new MessagesScanner(applicationContext, serializationFrameworks);
     }
 
     @Bean(name = {"messageHandlersRegistry"})
@@ -185,17 +191,17 @@ public class TestConfiguration extends AsyncConfigurerSupport {
 
     @Bean(name = {"nodeSelectorFactory"})
     public NodeSelectorFactory getNodeSelectorFactory() {
-        return nodeSelectorFactory;
+        return new HashingNodeSelectorFactory();
     }
 
     @Bean(name = {"nodeActorCacheManager"})
-    public NodeActorCacheManager createNodeActorCacheManager() {
+    public NodeActorCacheManager createNodeActorCacheManager(Environment env) {
         int maximumSize = env.getProperty("ea.nodeCache.maximumSize",Integer.class,10240);
         return new NodeActorCacheManager(maximumSize);
     }
 
     @Bean(name = {"shardActorCacheManager"})
-    public ShardActorCacheManager createShardActorCacheManager() {
+    public ShardActorCacheManager createShardActorCacheManager(Environment env) {
         int maximumSize = env.getProperty("ea.shardCache.maximumSize",Integer.class,10240);
         return new ShardActorCacheManager(maximumSize);
     }

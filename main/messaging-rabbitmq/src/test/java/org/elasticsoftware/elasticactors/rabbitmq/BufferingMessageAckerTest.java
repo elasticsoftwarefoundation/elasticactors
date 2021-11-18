@@ -23,7 +23,8 @@ import org.testng.annotations.Test;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 /**
  * @author Joost van de Wijgerd
@@ -46,7 +47,7 @@ public class BufferingMessageAckerTest {
 
         Thread.sleep(1000);
 
-        verifyZeroInteractions(channel);
+        verifyNoInteractions(channel);
 
         // ack the first 99 but not the first (nothing should be acked)
         for(long i = 2; i < 100; i++) {
@@ -55,7 +56,7 @@ public class BufferingMessageAckerTest {
 
         Thread.sleep(1000);
 
-        verifyZeroInteractions(channel);
+        verifyNoInteractions(channel);
 
         // now ack the first (this should cause an ack on the channel
         messageAcker.ack(1);
@@ -83,10 +84,8 @@ public class BufferingMessageAckerTest {
 
         Thread.sleep(1000);
 
-        verifyZeroInteractions(channel);
+        verifyNoMoreInteractions(channel);
 
         messageAcker.stop();
-
-
     }
 }

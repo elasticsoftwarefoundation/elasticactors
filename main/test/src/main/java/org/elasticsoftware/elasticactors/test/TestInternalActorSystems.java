@@ -50,9 +50,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author Joost van de Wijgerd
  */
-public final class InternalActorSystemsImpl implements InternalActorSystems, ActorRefFactory {
+public final class TestInternalActorSystems implements InternalActorSystems, ActorRefFactory {
 
-    private final static Logger logger = LoggerFactory.getLogger(InternalActorSystemsImpl.class);
+    private final static Logger logger = LoggerFactory.getLogger(TestInternalActorSystems.class);
 
     private final SystemSerializers systemSerializers = new MessagingSystemSerializers(this);
     private final SystemDeserializers systemDeserializers = new MessagingSystemDeserializers(this,this);
@@ -63,7 +63,7 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
     private final ActorRefTools actorRefTools;
     private InternalActorSystem internalActorSystem;
 
-    public InternalActorSystemsImpl(ApplicationContext applicationContext,
+    public TestInternalActorSystems(ApplicationContext applicationContext,
                                     ClusterService clusterService,
                                     PhysicalNode localNode) {
         this.applicationContext = applicationContext;

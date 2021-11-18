@@ -139,7 +139,7 @@ public class ObjectMapperBuilder {
             try {
                 jacksonModule.addSerializer(objectClass, customSerializer.newInstance());
             } catch(Exception e) {
-                logger.warn("Failed to create Custom Jackson Serializer: {}",customSerializer.getName(),e);
+                logger.error("Failed to create Custom Jackson Serializer: {}",customSerializer.getName(),e);
             }
         }
     }
