@@ -129,16 +129,18 @@ public final class LocalMessageQueue extends DefaultConsumer implements MessageQ
 
     @Override
     public void initialize() throws Exception {
+        logger.info("Starting local message queue [{}->{}]", exchangeName, queueName);
         consumerChannel.basicConsume(queueName,false,this);
     }
 
     @Override
     public void destroy() {
         try {
+            logger.info("Stopping local message queue [{}->{}]", exchangeName, queueName);
             consumerChannel.basicCancel(getConsumerTag());
             destroyLatch.await(4, TimeUnit.SECONDS);
         } catch (IOException e) {
-            logger.error("IOException while cancelling consumer",e);
+            logger.error("IOException while cancelling consumer for queue {}", queueName, e);
         } catch (InterruptedException e) {
             // ignore
         } finally {

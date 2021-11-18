@@ -32,30 +32,33 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Find all classes annotated with {@link PluggableMessageHandlers} and add them to the registry
  *
  * @author Joost van de Wijgerd
  */
-@Named
 public final class PluggableMessageHandlersScanner implements MessageHandlersRegistry, ActorLifecycleListenerRegistry {
     private static final Logger logger = LoggerFactory.getLogger(PluggableMessageHandlersScanner.class);
-    @Inject
-    private ApplicationContext applicationContext;
+    private final ApplicationContext applicationContext;
     private final ListMultimap<Class<? extends MethodActor>,Class<?>> registry = LinkedListMultimap.create();
     private final ListMultimap<Class<? extends ElasticActor>,ActorLifecycleListener<?>> lifecycleListeners = LinkedListMultimap.create();
 
+    public PluggableMessageHandlersScanner(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
 
     @Override
     @PostConstruct
     public void init() {
+        logger.info("Scanning @PluggableMessageHandlers-annotated classes");
         String[] basePackages = ScannerHelper.findBasePackagesOnClasspath(applicationContext.getClassLoader());
         ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
+
+        logger.debug("Scanning the following base packages: {}", (Object) basePackages);
 
         for (String basePackage : basePackages) {
             configurationBuilder.addUrls(ClasspathHelper.forPackage(basePackage));
@@ -65,16 +68,42 @@ public final class PluggableMessageHandlersScanner implements MessageHandlersReg
 
         Set<Class<?>> handlerClasses = reflections.getTypesAnnotatedWith(PluggableMessageHandlers.class);
 
+        logger.info("Found {} classes annotated with @PluggableMessageHandlers", handlerClasses.size());
+        if (logger.isDebugEnabled()) {
+            logger.debug(
+                "Found the following classes annotated with @PluggableMessageHandlers: {}",
+                handlerClasses.stream().map(Class::getName).collect(Collectors.toList())
+            );
+        }
+
         for (Class<?> handlerClass : handlerClasses) {
             PluggableMessageHandlers handlerAnnotation = handlerClass.getAnnotation(PluggableMessageHandlers.class);
+            logger.debug(
+                "Registering @PluggableMessageHandlers class [{}] for Method Actor class [{}]",
+                handlerClass.getName(),
+                handlerAnnotation.value().getName()
+                );
             registry.put(handlerAnnotation.value(),handlerClass);
         }
 
+        logger.info("Scanning ActorLifecycleListener-implementing classes");
         Set<Class<? extends ActorLifecycleListener>> listenerClasses = reflections.getSubTypesOf(ActorLifecycleListener.class);
+        logger.info("Found {} classes that implement ActorLifecycleListener", listenerClasses.size());
+        if (logger.isDebugEnabled()) {
+            logger.debug(
+                "Found the following classes implementing ActorLifecycleListener: {}",
+                listenerClasses.stream().map(Class::getName).collect(Collectors.toList())
+            );
+        }
         for (Class<? extends ActorLifecycleListener> listenerClass : listenerClasses) {
             try {
                 ActorLifecycleListener lifeCycleListener = listenerClass.newInstance();
                 // ensure that the lifeCycle listener handles the correct state class
+                logger.debug(
+                    "Registering instance of ActorLifecycleListener class [{}] for Actor class [{}]",
+                    listenerClass.getName(),
+                    lifeCycleListener.getActorClass().getName()
+                );
                 lifecycleListeners.put(lifeCycleListener.getActorClass(), lifeCycleListener);
             } catch(Exception e) {
                 logger.error("Exception while instantiating ActorLifeCycleListener",e);

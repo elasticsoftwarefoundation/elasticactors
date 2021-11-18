@@ -33,7 +33,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author Joost van de Wijgerd
  */
 public final class LocalMessageQueue implements MessageQueue {
-    private final Logger logger;
+
+    private final static Logger logger = LoggerFactory.getLogger(LocalMessageQueue.class);
+
     private final String queueName;
     private final MessageHandler messageHandler;
     private final TransientAck transientAck = new TransientAck();
@@ -49,7 +51,6 @@ public final class LocalMessageQueue implements MessageQueue {
         this.queueExecutor = queueExecutor;
         this.queueName = queueName;
         this.messageHandler = messageHandler;
-        this.logger = LoggerFactory.getLogger(String.format("Producer[%s]",queueName));
     }
 
     @Override
@@ -77,10 +78,12 @@ public final class LocalMessageQueue implements MessageQueue {
 
     @Override
     public void initialize() throws Exception {
+        logger.info("Starting (test) local message queue [{}]", queueName);
     }
 
     @Override
     public void destroy() {
+        logger.info("Stopping (test) local message queue [{}]", queueName);
         thrownExceptions.clear();
     }
 

@@ -22,17 +22,34 @@ import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MessagingService;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.io.IOException;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class TestMessagingService implements MessagingService, MessageQueueFactory {
+
+    private final static Logger logger = LoggerFactory.getLogger(TestMessagingService.class);
+
     private final ThreadBoundExecutor queueExecutor;
 
     public TestMessagingService(ThreadBoundExecutor queueExecutor) {
         this.queueExecutor = queueExecutor;
+    }
+
+    @PostConstruct
+    public void init() {
+        logger.info("Starting messaging service");
+    }
+
+    @PreDestroy
+    public void stop() {
+        logger.info("Stopping messaging service");
     }
 
     @Override
@@ -42,6 +59,9 @@ public final class TestMessagingService implements MessagingService, MessageQueu
 
     @Override
     public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
-        return new LocalMessageQueue(queueExecutor,name,messageHandler);
+        LocalMessageQueue messageQueue =
+            new LocalMessageQueue(queueExecutor, name, messageHandler);
+        messageQueue.initialize();
+        return messageQueue;
     }
 }

@@ -11,7 +11,17 @@
         <Root level="INFO"> <!-- set to ERROR for cleaner look when testing -->
             <AppenderRef ref="STDOUT"/>
         </Root>
-<!--         <Logger name="org.elasticsoftware" level="DEBUG"/>-->
+            <!-- Uncomment the two lines below when running the stress test -->
+<!--         <Logger name="org.elasticsoftware.elasticactors.runtime" level="DEBUG"/>-->
+<!--         <Logger name="org.elasticsoftware.elasticactors.test" level="ERROR"/>-->
+<!--         <Logger name="org.elasticsoftware.elasticactors.test.cluster" level="INFO"/>-->
+<!--         <Logger name="org.elasticsoftware.elasticactors.cluster" level="INFO"/>-->
+<!--         <Logger name="org.elasticsoftware.elasticactors.messaging" level="INFO"/>-->
+<!--         <Logger name="org.elasticsoftware.elasticactors.client" level="INFO"/>-->
+<!--         <Logger name="org.elasticsoftware.elasticactors.cluster.LocalActorShard" level="DEBUG"/>-->
+<!--         <Logger name="org.elasticsoftware.elasticactors.cluster.LocalActorNode" level="DEBUG"/>-->
+<!--         <Logger name="org.elasticsoftware.elasticactors.cluster.MultiMessageQueueProxy" level="DEBUG"/>-->
+<!--         <Logger name="org.elasticsoftware.elasticactors.tracing" level="DEBUG"/>-->
         <!-- <Logger name="org.elasticsoftware.elasticactors.test" level="INFO"/>-->
     </Loggers>
 </Configuration>

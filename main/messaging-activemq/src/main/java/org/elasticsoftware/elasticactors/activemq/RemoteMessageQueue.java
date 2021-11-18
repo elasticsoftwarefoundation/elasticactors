@@ -23,6 +23,8 @@ import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -33,6 +35,9 @@ import static org.elasticsoftware.elasticactors.messaging.UUIDTools.toByteArray;
  * @author Joost van de Wijgerd
  */
 public final class RemoteMessageQueue implements MessageQueue {
+
+    private final static Logger logger = LoggerFactory.getLogger(RemoteMessageQueue.class);
+
     private final String queueName;
     private final String routingKey;
     private final ClientSession clientSession;
@@ -91,12 +96,14 @@ public final class RemoteMessageQueue implements MessageQueue {
 
     @Override
     public void initialize() throws Exception {
+        logger.info("Starting remote message queue [{}->{}]", routingKey, queueName);
         clientSession.start();
     }
 
     @Override
     public void destroy() {
         try {
+            logger.info("Stopping remote message queue [{}->{}]", routingKey, queueName);
             producer.close();
             clientSession.close();
         } catch(ActiveMQException e) {

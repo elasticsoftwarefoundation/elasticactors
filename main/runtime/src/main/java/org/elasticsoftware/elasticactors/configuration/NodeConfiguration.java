@@ -45,6 +45,7 @@ import org.elasticsoftware.elasticactors.runtime.ManagedActorsScanner;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
 import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
@@ -54,7 +55,6 @@ import org.elasticsoftware.elasticactors.state.NoopActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -66,10 +66,11 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import static java.lang.Boolean.FALSE;
@@ -82,48 +83,51 @@ public class NodeConfiguration {
 
     private static final String EA_METRICS_OVERRIDES = "ea.metrics.messages.overrides.";
 
-    @Autowired
-    private Environment env;
-    @Autowired
-    private ResourceLoader resourceLoader;
-
-    private final NodeSelectorFactory nodeSelectorFactory = new HashingNodeSelectorFactory();
-    private ElasticActorsNode node;
-    private InternalActorSystemConfiguration configuration;
-
-    @PostConstruct
-    public void init() throws IOException {
-        // get the yaml resource
-        Resource configResource = resourceLoader.getResource(env.getProperty("ea.node.config.location","classpath:ea-default.yaml"));
-        // yaml mapper
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-        configuration = objectMapper.readValue(configResource.getInputStream(), DefaultConfiguration.class);
+    @Bean(name = {
+        "elasticActorsNode",
+        "actorSystems",
+        "actorRefFactory",
+        "serializationFrameworks"
+    })
+    @DependsOn({"messageHandlersRegistry", "messagesScanner", "managedActorsScanner"})
+    public ElasticActorsNode createElasticActorsNode(
+        Environment env,
+        @Qualifier("actorRefCache") Cache<String, ActorRef> actorRefCache)
+        throws UnknownHostException
+    {
         String nodeId = env.getRequiredProperty("ea.node.id");
         InetAddress nodeAddress = InetAddress.getByName(env.getRequiredProperty("ea.node.address"));
         String clusterName = env.getRequiredProperty("ea.cluster");
+        return new ElasticActorsNode(clusterName, nodeId, nodeAddress, actorRefCache);
+    }
+
+    @Bean(name = {"actorRefCache"})
+    public Cache<String, ActorRef> createActorRefCache(Environment env) {
         int maximumSize = env.getProperty("ea.actorRefCache.maximumSize",Integer.class,10240);
-        Cache<String,ActorRef> actorRefCache = CacheBuilder.newBuilder().maximumSize(maximumSize).build();
-        node = new ElasticActorsNode(clusterName, nodeId, nodeAddress, actorRefCache);
+        return CacheBuilder.newBuilder().maximumSize(maximumSize).build();
     }
 
-
-    @Bean(name = {
-            "elasticActorsNode",
-            "actorSystems",
-            "actorRefFactory",
-            "serializationFrameworks"
-    })
-    public ElasticActorsNode getNode() {
-        return node;
-    }
-
-    @Bean
-    public InternalActorSystemConfiguration getConfiguration() {
-        return configuration;
+    @Bean(name = {"actorSystemConfiguration"})
+    public InternalActorSystemConfiguration createConfiguration(
+        ResourceLoader resourceLoader,
+        Environment env) throws IOException
+    {
+        // get the yaml resource
+        Resource configResource = resourceLoader.getResource(env.getProperty(
+            "ea.node.config.location",
+            "classpath:ea-default.yaml"
+        ));
+        // yaml mapper
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        return objectMapper.readValue(configResource.getInputStream(), DefaultConfiguration.class);
     }
 
     @Bean(name = {"objectMapperBuilder"})
-    public ObjectMapperBuilder createObjectMapperBuilder(ShardedScheduler schedulerService) {
+    public ObjectMapperBuilder createObjectMapperBuilder(
+        ShardedScheduler schedulerService,
+        Environment env,
+        ElasticActorsNode node)
+    {
         String basePackages = env.getProperty("ea.scan.packages",String.class,"");
         Boolean useAfterburner = env.getProperty("ea.base.useAfterburner",Boolean.class, FALSE);
         // @todo: fix version
@@ -139,40 +143,42 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"managedActorsScanner"})
-    public ManagedActorsScanner createManagedActorsScanner() {
-        return new ManagedActorsScanner();
+    public ManagedActorsScanner createManagedActorsScanner(ApplicationContext applicationContext) {
+        return new ManagedActorsScanner(applicationContext);
     }
 
     @Bean(name = {"messagesScanner"})
-    public MessagesScanner createMessageScanner() {
-        return new MessagesScanner();
+    public MessagesScanner createMessageScanner(
+        ApplicationContext applicationContext,
+        List<SerializationFramework> serializationFrameworks)
+    {
+        return new MessagesScanner(applicationContext, serializationFrameworks);
     }
 
     @Bean(name = {"messageHandlersRegistry"})
-    public PluggableMessageHandlersScanner createPluggableMessagesHandlersScanner() {
-        return new PluggableMessageHandlersScanner();
+    public PluggableMessageHandlersScanner createPluggableMessagesHandlersScanner(ApplicationContext applicationContext) {
+        return new PluggableMessageHandlersScanner(applicationContext);
     }
 
     @Bean(name = {"nodeSelectorFactory"})
     public NodeSelectorFactory getNodeSelectorFactory() {
-        return nodeSelectorFactory;
+        return new HashingNodeSelectorFactory();
     }
 
     @Bean(name = {"nodeActorCacheManager"})
-    public NodeActorCacheManager createNodeActorCacheManager() {
+    public NodeActorCacheManager createNodeActorCacheManager(Environment env) {
         int maximumSize = env.getProperty("ea.nodeCache.maximumSize",Integer.class,10240);
         return new NodeActorCacheManager(maximumSize);
     }
 
     @Bean(name = {"shardActorCacheManager"})
-    public ShardActorCacheManager createShardActorCacheManager() {
+    public ShardActorCacheManager createShardActorCacheManager(Environment env) {
         int maximumSize = env.getProperty("ea.shardCache.maximumSize",Integer.class,10240);
         return new ShardActorCacheManager(maximumSize);
     }
 
     @Bean(name = {"actorExecutor"}, destroyMethod = "shutdown")
-    @DependsOn("asyncUpdateExecutor")
-    public ThreadBoundExecutor createActorExecutor() {
+    public ThreadBoundExecutor createActorExecutor(Environment env) {
         final int workers = env.getProperty("ea.actorExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
         final Boolean useDisruptor = env.getProperty("ea.actorExecutor.useDisruptor",Boolean.class, FALSE);
         if(useDisruptor) {
@@ -183,8 +189,7 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"queueExecutor"}, destroyMethod = "shutdown")
-    @DependsOn("actorExecutor")
-    public ThreadBoundExecutor createQueueExecutor() {
+    public ThreadBoundExecutor createQueueExecutor(Environment env) {
         final int workers = env.getProperty("ea.queueExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
         final Boolean useDisruptor = env.getProperty("ea.queueExecutor.useDisruptor",Boolean.class, FALSE);
         if(useDisruptor) {
@@ -196,7 +201,11 @@ public class NodeConfiguration {
 
     @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
     public InternalActorSystem createLocalActorSystemInstance(
-                ManagedActorsRegistry managedActorsRegistry) {
+        ElasticActorsNode node,
+        @Qualifier("actorSystemConfiguration") InternalActorSystemConfiguration configuration,
+        ManagedActorsRegistry managedActorsRegistry,
+        NodeSelectorFactory nodeSelectorFactory)
+    {
         return new LocalActorSystemInstance(
                 node,
                 node,
@@ -206,12 +215,17 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"remoteActorSystems"})
-    public RemoteActorSystems createRemoteActorSystems(@Qualifier("remoteActorSystemMessageQueueFactoryFactory") MessageQueueFactoryFactory remoteActorSystemMessageQueueFactoryFactory) {
+    public RemoteActorSystems createRemoteActorSystems(
+        ElasticActorsNode node,
+        @Qualifier("actorSystemConfiguration") InternalActorSystemConfiguration configuration,
+        @Qualifier("remoteActorSystemMessageQueueFactoryFactory")
+            MessageQueueFactoryFactory remoteActorSystemMessageQueueFactoryFactory)
+    {
         return new RemoteActorSystems(configuration, node, remoteActorSystemMessageQueueFactoryFactory);
     }
 
     @Bean(name = {"scheduler"})
-    public ShardedScheduler createScheduler() {
+    public ShardedScheduler createScheduler(Environment env) {
         int numberOfWorkers = env.getProperty("ea.shardedScheduler.workerCount", Integer.class, Runtime.getRuntime().availableProcessors());
         return new ShardedScheduler(numberOfWorkers);
     }
@@ -227,7 +241,10 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"actorStateUpdateProcessor"})
-    public ActorStateUpdateProcessor createActorStateUpdateProcessor(ApplicationContext applicationContext) {
+    public ActorStateUpdateProcessor createActorStateUpdateProcessor(
+        ApplicationContext applicationContext,
+        Environment env)
+    {
         Map<String, ActorStateUpdateListener> listeners = applicationContext.getBeansOfType(ActorStateUpdateListener.class);
         if(listeners.isEmpty()) {
             return new NoopActorStateUpdateProcessor();

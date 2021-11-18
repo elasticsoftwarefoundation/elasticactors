@@ -39,23 +39,31 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SystemDeserializers;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializers;
 import org.elasticsoftware.elasticactors.util.ManifestTools;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.PreDestroy;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class InternalActorSystemsImpl implements InternalActorSystems, ActorRefFactory {
+public final class TestInternalActorSystems implements InternalActorSystems, ActorRefFactory {
+
+    private final static Logger logger = LoggerFactory.getLogger(TestInternalActorSystems.class);
+
     private final SystemSerializers systemSerializers = new MessagingSystemSerializers(this);
     private final SystemDeserializers systemDeserializers = new MessagingSystemDeserializers(this,this);
+    private final Map<Class<? extends SerializationFramework>,SerializationFramework> serializationFrameworks = new ConcurrentHashMap<>();
     private final ApplicationContext applicationContext;
     private final ClusterService clusterService;
     private final PhysicalNode localNode;
     private final ActorRefTools actorRefTools;
     private InternalActorSystem internalActorSystem;
 
-    public InternalActorSystemsImpl(ApplicationContext applicationContext,
+    public TestInternalActorSystems(ApplicationContext applicationContext,
                                     ClusterService clusterService,
                                     PhysicalNode localNode) {
         this.applicationContext = applicationContext;
@@ -134,6 +142,6 @@ public final class InternalActorSystemsImpl implements InternalActorSystems, Act
 
     @Override
     public SerializationFramework getSerializationFramework(Class<? extends SerializationFramework> frameworkClass) {
-        return applicationContext.getBean(frameworkClass);
+        return serializationFrameworks.computeIfAbsent(frameworkClass, applicationContext::getBean);
     }
 }

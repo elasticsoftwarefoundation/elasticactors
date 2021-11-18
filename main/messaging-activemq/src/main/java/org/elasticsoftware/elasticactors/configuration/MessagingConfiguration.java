@@ -21,62 +21,66 @@ import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
-import org.elasticsoftware.elasticactors.messaging.MessagingService;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
-
-import javax.annotation.PostConstruct;
 
 /**
  * @author Joost van de Wijgerd
  */
 public class MessagingConfiguration {
-    @Autowired
-    private Environment env;
-    @Autowired @Qualifier("queueExecutor")
-    private ThreadBoundExecutor queueExecutor;
-    @Autowired
-    private ActorRefFactory actorRefFactory;
-    @Autowired
-    private InternalActorSystem internalActorSystem;
-    private ActiveMQArtemisMessagingService messagingService;
-
-    @PostConstruct
-    public void initialize() {
-        String clusterName = env.getRequiredProperty("ea.cluster");
-        String activeMQHosts = env.getRequiredProperty("ea.activemq.hosts");
-        String activeMQUsername= env.getProperty("ea.activemq.username","guest");
-        String activeMQPassword = env.getProperty("ea.activemq.password","guest");
-        boolean useMessageHandler = env.getProperty("ea.activemq.useMessageHandler", Boolean.TYPE, true);
-        boolean useReceiveImmediate = env.getProperty("ea.activemq.useReceiveImmediate", Boolean.TYPE, false);
-        messagingService = new ActiveMQArtemisMessagingService(activeMQHosts, activeMQUsername, activeMQPassword,
-                                clusterName, queueExecutor,
-                                new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem),
-                                useMessageHandler, useReceiveImmediate);
-    }
 
     @Bean(name = {"messagingService"})
-    public MessagingService getMessagingService() {
-        return messagingService;
+    public ActiveMQArtemisMessagingService getMessagingService(
+        @Qualifier("queueExecutor") ThreadBoundExecutor queueExecutor,
+        InternalActorSystem internalActorSystem,
+        ActorRefFactory actorRefFactory,
+        Environment env)
+    {
+        String clusterName = env.getRequiredProperty("ea.cluster");
+        String activeMQHosts = env.getRequiredProperty("ea.activemq.hosts");
+        String activeMQUsername = env.getProperty("ea.activemq.username", "guest");
+        String activeMQPassword = env.getProperty("ea.activemq.password", "guest");
+        boolean useMessageHandler =
+            env.getProperty("ea.activemq.useMessageHandler", Boolean.TYPE, true);
+        boolean useReceiveImmediate =
+            env.getProperty("ea.activemq.useReceiveImmediate", Boolean.TYPE, false);
+        return new ActiveMQArtemisMessagingService(
+            activeMQHosts,
+            activeMQUsername,
+            activeMQPassword,
+            clusterName,
+            queueExecutor,
+            new InternalMessageDeserializer(
+                new ActorRefDeserializer(actorRefFactory),
+                internalActorSystem
+            ),
+            useMessageHandler,
+            useReceiveImmediate
+        );
     }
 
     @Bean(name = {"localMessageQueueFactory"})
-    public MessageQueueFactory getLocalMessageQueueFactory() {
+    public MessageQueueFactory getLocalMessageQueueFactory(
+        ActiveMQArtemisMessagingService messagingService)
+    {
         return messagingService.getLocalMessageQueueFactory();
     }
 
     @Bean(name = {"remoteMessageQueueFactory"})
-    public MessageQueueFactory getRemoteMessageQueueFactory() {
+    public MessageQueueFactory getRemoteMessageQueueFactory(
+        ActiveMQArtemisMessagingService messagingService)
+    {
         return messagingService.getRemoteMessageQueueFactory();
     }
 
     @Bean(name = "remoteActorSystemMessageQueueFactoryFactory")
-    public MessageQueueFactoryFactory getRemoteActorSystemMessageQueueFactoryFactory() {
+    public MessageQueueFactoryFactory getRemoteActorSystemMessageQueueFactoryFactory(
+        ActiveMQArtemisMessagingService messagingService)
+    {
         return messagingService.getRemoteActorSystemMessageQueueFactoryFactory();
     }
 }

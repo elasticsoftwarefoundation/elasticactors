@@ -95,6 +95,7 @@ public final class ActiveMQArtemisMessagingService implements MessagingService {
 
     @PostConstruct
     public void start() throws Exception {
+        logger.info("Starting up messaging service");
         Set<String> hosts = commaDelimitedListToSet(activeMQHosts);
         TransportConfiguration[] transportConfigurations = new TransportConfiguration[hosts.size()];
         int i = 0;
@@ -157,6 +158,7 @@ public final class ActiveMQArtemisMessagingService implements MessagingService {
 
     @PreDestroy
     public void stop() {
+        logger.info("Stopping messaging service");
         clientSessionFactory.close();
         serverLocator.close();
     }
@@ -212,7 +214,13 @@ public final class ActiveMQArtemisMessagingService implements MessagingService {
             final String queueName = format(QUEUE_NAME_FORMAT,elasticActorsCluster,name);
             ClientSession clientSession =  clientSessionFactory.createSession(activeMQUsername, activeMQPassword, false, true, true, false, serverLocator.getAckBatchSize());
             ensureQueueExists(clientSession, queueName, name);
-            return new RemoteMessageQueue(queueName, name, clientSession, clientSession.createProducer(format(EA_ADDRESS_FORMAT, elasticActorsCluster)));
+            RemoteMessageQueue messageQueue = new RemoteMessageQueue(queueName,
+                name,
+                clientSession,
+                clientSession.createProducer(format(EA_ADDRESS_FORMAT, elasticActorsCluster))
+            );
+            messageQueue.initialize();
+            return messageQueue;
         }
     }
 
@@ -228,7 +236,13 @@ public final class ActiveMQArtemisMessagingService implements MessagingService {
             final String queueName = format(QUEUE_NAME_FORMAT,this.clusterName,name);
             ClientSession clientSession =  clientSessionFactory.createSession(activeMQUsername, activeMQPassword, false, true, true, false, serverLocator.getAckBatchSize());
             ensureQueueExists(clientSession, queueName, name);
-            return new RemoteMessageQueue(queueName, name, clientSession, clientSession.createProducer(format(EA_ADDRESS_FORMAT, clusterName)));
+            RemoteMessageQueue messageQueue = new RemoteMessageQueue(queueName,
+                name,
+                clientSession,
+                clientSession.createProducer(format(EA_ADDRESS_FORMAT, clusterName))
+            );
+            messageQueue.initialize();
+            return messageQueue;
         }
     }
 

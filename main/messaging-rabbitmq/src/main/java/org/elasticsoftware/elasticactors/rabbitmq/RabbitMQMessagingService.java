@@ -110,6 +110,7 @@ public final class RabbitMQMessagingService implements RabbitMQMessagingServiceI
 
     @PostConstruct
     public void start() throws IOException, TimeoutException {
+        logger.info("Starting messaging service");
         // millis
         connectionFactory.setConnectionTimeout(1000);
         // seconds
@@ -155,6 +156,7 @@ public final class RabbitMQMessagingService implements RabbitMQMessagingServiceI
 
     @PreDestroy
     public void stop() {
+        logger.info("Stopping messaging service");
         try {
             messageAcker.stop();
             producerChannel.close();
@@ -307,7 +309,13 @@ public final class RabbitMQMessagingService implements RabbitMQMessagingServiceI
         public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
             final String queueName = format(QUEUE_NAME_FORMAT,this.clusterName,name);
             ensureQueueExists(producerChannel,queueName);
-            return new RemoteMessageQueue(RabbitMQMessagingService.this,producerChannel,exchangeName,queueName);
+            RemoteMessageQueue messageQueue =
+                new RemoteMessageQueue(RabbitMQMessagingService.this,
+                    producerChannel,
+                    exchangeName,
+                    queueName);
+            messageQueue.initialize();
+            return messageQueue;
         }
     }
 
