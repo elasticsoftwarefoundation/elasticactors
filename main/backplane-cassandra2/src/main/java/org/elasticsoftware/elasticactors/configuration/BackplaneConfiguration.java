@@ -16,16 +16,6 @@
 
 package org.elasticsoftware.elasticactors.configuration;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.ConsistencyLevel;
-import com.datastax.driver.core.HostDistance;
-import com.datastax.driver.core.PoolingOptions;
-import com.datastax.driver.core.QueryOptions;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.policies.ConstantReconnectionPolicy;
-import com.datastax.driver.core.policies.DefaultRetryPolicy;
-import com.datastax.driver.core.policies.LoggingRetryPolicy;
-import com.datastax.driver.core.policies.RoundRobinPolicy;
 import org.elasticsoftware.elasticactors.cassandra.common.serialization.CompressingSerializer;
 import org.elasticsoftware.elasticactors.cassandra.common.serialization.DecompressingDeserializer;
 import org.elasticsoftware.elasticactors.cassandra2.cluster.CassandraActorSystemEventListenerRepository;
@@ -47,103 +37,86 @@ import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
-import org.springframework.util.StringUtils;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import java.util.Set;
 
 /**
  * @author Joost van de Wijgerd
  */
 public class BackplaneConfiguration {
-    @Autowired
-    private Environment env;
-    @Autowired
-    private InternalActorSystems cluster;
-    @Autowired
-    private ActorRefFactory actorRefFactory;
 
-    private Session cassandraSession;
-
-    @PostConstruct
-    public void initialize() {
-        String cassandraHosts = env.getProperty("ea.cassandra.hosts","localhost:9042");
-        String cassandraClusterName = env.getProperty("ea.cassandra.cluster","ElasticActorsCluster");
-        String cassandraKeyspaceName = env.getProperty("ea.cassandra.keyspace","\"ElasticActors\"");
-        Integer cassandraPort = env.getProperty("ea.cassandra.port", Integer.class, 9042);
-
-        Set<String> hostSet = StringUtils.commaDelimitedListToSet(cassandraHosts);
-
-        String[] contactPoints = new String[hostSet.size()];
-        int i=0;
-        for (String host : hostSet) {
-            if(host.contains(":")) {
-                contactPoints[i] = host.substring(0,host.indexOf(":"));
-            } else {
-                contactPoints[i] = host;
-            }
-            i+=1;
-        }
-
-        PoolingOptions poolingOptions = new PoolingOptions();
-        poolingOptions.setHeartbeatIntervalSeconds(60);
-        poolingOptions.setConnectionsPerHost(HostDistance.LOCAL, 2, env.getProperty("ea.cassandra.maxActive",Integer.class,Runtime.getRuntime().availableProcessors() * 3));
-        poolingOptions.setPoolTimeoutMillis(2000);
-
-        Cluster cassandraCluster =
-                Cluster.builder().withClusterName(cassandraClusterName)
-                        .addContactPoints(contactPoints)
-                        .withPort(cassandraPort)
-                .withLoadBalancingPolicy(new RoundRobinPolicy())
-                .withRetryPolicy(new LoggingRetryPolicy(DefaultRetryPolicy.INSTANCE))
-                .withPoolingOptions(poolingOptions)
-                .withReconnectionPolicy(new ConstantReconnectionPolicy(env.getProperty("ea.cassandra.retryDownedHostsDelayInSeconds",Integer.class,1) * 1000))
-                .withQueryOptions(new QueryOptions().setConsistencyLevel(ConsistencyLevel.QUORUM)).build();
-
-        this.cassandraSession = cassandraCluster.connect(cassandraKeyspaceName);
-
-        
-    }
-
-    @PreDestroy
-    public void destroy() {
-        this.cassandraSession.close();
-        this.cassandraSession.getCluster().close();
+    @Bean(name = {"cassandraSessionManager"})
+    public CassandraSessionManager createCassandraSessionManager(Environment env) {
+        return new CassandraSessionManager(env);
     }
 
     @Bean(name = {"asyncUpdateExecutor"}, destroyMethod = "shutdown")
-    public ThreadBoundExecutor createAsyncUpdateExecutor() {
+    public ThreadBoundExecutor createAsyncUpdateExecutor(
+        Environment env,
+        CassandraSessionManager cassandraSessionManager)
+    {
         final int workers = env.getProperty("ea.asyncUpdateExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
         final int batchSize = env.getProperty("ea.asyncUpdateExecutor.batchSize",Integer.class,20);
         final boolean optimizedV1Batches = env.getProperty("ea.asyncUpdateExecutor.optimizedV1Batches", Boolean.TYPE, true);
-        return new ThreadBoundExecutorImpl(new PersistentActorUpdateEventProcessor(cassandraSession, batchSize, optimizedV1Batches),batchSize,new DaemonThreadFactory("UPDATE-EXECUTOR-WORKER"),workers);
+        return new ThreadBoundExecutorImpl(
+            new PersistentActorUpdateEventProcessor(
+                cassandraSessionManager.getSession(),
+                batchSize,
+                optimizedV1Batches
+            ),
+            batchSize,
+            new DaemonThreadFactory("UPDATE-EXECUTOR-WORKER"),
+            workers
+        );
     }
 
     @Bean(name = {"persistentActorRepository"})
-    public PersistentActorRepository getPersistentActorRepository(@Qualifier("asyncUpdateExecutor") ThreadBoundExecutor asyncUpdateExecutor) {
+    public PersistentActorRepository getPersistentActorRepository(
+        @Qualifier("asyncUpdateExecutor") ThreadBoundExecutor asyncUpdateExecutor,
+        InternalActorSystems cluster,
+        ActorRefFactory actorRefFactory,
+        CassandraSessionManager cassandraSessionManager,
+        Environment env)
+    {
         final Integer compressionThreshold = env.getProperty("ea.persistentActorRepository.compressionThreshold",Integer.class, 512);
         Serializer serializer = new CompressingSerializer<>(new PersistentActorSerializer(cluster),compressionThreshold);
         Deserializer deserializer = new DecompressingDeserializer<>(new PersistentActorDeserializer(actorRefFactory,cluster));
-        return new CassandraPersistentActorRepository(cassandraSession, cluster.getClusterName(), asyncUpdateExecutor, serializer, deserializer);
+        return new CassandraPersistentActorRepository(
+            cassandraSessionManager.getSession(),
+            cluster.getClusterName(),
+            asyncUpdateExecutor,
+            serializer,
+            deserializer
+        );
     }
 
     @Bean(name = {"scheduledMessageRepository"})
-    public ScheduledMessageRepository getScheduledMessageRepository() {
-        return new CassandraScheduledMessageRepository(cluster.getClusterName(), cassandraSession, new ScheduledMessageDeserializer(new ActorRefDeserializer(actorRefFactory)));
+    public ScheduledMessageRepository getScheduledMessageRepository(
+        InternalActorSystems cluster,
+        ActorRefFactory actorRefFactory,
+        CassandraSessionManager cassandraSessionManager)
+    {
+        return new CassandraScheduledMessageRepository(
+            cluster.getClusterName(),
+            cassandraSessionManager.getSession(),
+            new ScheduledMessageDeserializer(new ActorRefDeserializer(actorRefFactory))
+        );
     }
 
     @Bean(name = {"actorSystemEventListenerRepository"})
-    public ActorSystemEventListenerRepository getActorSystemEventListenerRepository() {
-        return new CassandraActorSystemEventListenerRepository(cluster.getClusterName(), cassandraSession);
+    public ActorSystemEventListenerRepository getActorSystemEventListenerRepository(
+        InternalActorSystems cluster,
+        CassandraSessionManager cassandraSessionManager)
+    {
+        return new CassandraActorSystemEventListenerRepository(
+            cluster.getClusterName(),
+            cassandraSessionManager.getSession()
+        );
     }
 
     @Bean(name = "cassandraHealthCheck")
-    public CassandraHealthCheck getHealthCheck() {
-        return new CassandraHealthCheck(cassandraSession);
+    public CassandraHealthCheck getHealthCheck(CassandraSessionManager cassandraSessionManager) {
+        return new CassandraHealthCheck(cassandraSessionManager.getSession());
     }
 }

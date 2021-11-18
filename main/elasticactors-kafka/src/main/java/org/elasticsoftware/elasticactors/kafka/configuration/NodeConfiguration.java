@@ -44,69 +44,71 @@ import org.elasticsoftware.elasticactors.runtime.ManagedActorsScanner;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
+import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorSerializer;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.List;
 
 import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 
 public class NodeConfiguration {
-    @Autowired
-    private Environment env;
-    @Autowired
-    private ResourceLoader resourceLoader;
 
-    private final NodeSelectorFactory nodeSelectorFactory = new HashingNodeSelectorFactory();
-    private ElasticActorsNode node;
-    private InternalActorSystemConfiguration configuration;
-    private Cache<String,ActorRef> actorRefCache;
-
-    @PostConstruct
-    public void init() throws IOException {
-        // get the yaml resource
-        Resource configResource = resourceLoader.getResource(env.getProperty("ea.node.config.location","classpath:ea-default.yaml"));
-        // yaml mapper
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-        configuration = objectMapper.readValue(configResource.getInputStream(), DefaultConfiguration.class);
+    @Bean(name = {
+        "elasticActorsNode",
+        "actorSystems",
+        "actorRefFactory",
+        "serializationFrameworks"
+    })
+    @DependsOn({"messageHandlersRegistry", "messagesScanner", "managedActorsScanner"})
+    public ElasticActorsNode createElasticActorsNode(
+        Environment env,
+        @Qualifier("actorRefCache") Cache<String, ActorRef> actorRefCache)
+        throws UnknownHostException
+    {
         String nodeId = env.getRequiredProperty("ea.node.id");
         InetAddress nodeAddress = InetAddress.getByName(env.getRequiredProperty("ea.node.address"));
         String clusterName = env.getRequiredProperty("ea.cluster");
-        int maximumSize = env.getProperty("ea.actorRefCache.maximumSize",Integer.class,10240);
-        actorRefCache = CacheBuilder.newBuilder().maximumSize(maximumSize).build();
-        node = new ElasticActorsNode(clusterName, nodeId, nodeAddress, actorRefCache);
+        return new ElasticActorsNode(clusterName, nodeId, nodeAddress, actorRefCache);
     }
 
-
-    @Bean(name = {
-            "elasticActorsNode",
-            "actorSystems",
-            "actorRefFactory",
-            "serializationFrameworks"
-    })
-    public ElasticActorsNode getNode() {
-        return node;
+    @Bean(name = {"actorRefCache"})
+    public Cache<String, ActorRef> createActorRefCache(Environment env) {
+        int maximumSize = env.getProperty("ea.actorRefCache.maximumSize", Integer.class, 10240);
+        return CacheBuilder.newBuilder().maximumSize(maximumSize).build();
     }
 
-    @Bean
-    public InternalActorSystemConfiguration getConfiguration() {
-        return configuration;
+    @Bean(name = {"actorSystemConfiguration"})
+    public InternalActorSystemConfiguration createConfiguration(
+        ResourceLoader resourceLoader,
+        Environment env) throws IOException
+    {
+        // get the yaml resource
+        Resource configResource = resourceLoader.getResource(env.getProperty(
+            "ea.node.config.location",
+            "classpath:ea-default.yaml"
+        ));
+        // yaml mapper
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        return objectMapper.readValue(configResource.getInputStream(), DefaultConfiguration.class);
     }
 
     @Bean(name = {"objectMapperBuilder"})
-    public ObjectMapperBuilder createObjectMapperBuilder() {
+    public ObjectMapperBuilder createObjectMapperBuilder(Environment env, ElasticActorsNode node) {
         String basePackages = env.getProperty("ea.scan.packages",String.class,"");
         Boolean useAfterburner = env.getProperty("ea.base.useAfterburner",Boolean.class,Boolean.FALSE);
         ScheduledMessageRefFactory scheduledMessageRefFactory = refSpec -> ScheduledMessageRefTools.parse(refSpec, node);
@@ -123,13 +125,16 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"managedActorsScanner"})
-    public ManagedActorsScanner createManagedActorsScanner() {
-        return new ManagedActorsScanner();
+    public ManagedActorsScanner createManagedActorsScanner(ApplicationContext applicationContext) {
+        return new ManagedActorsScanner(applicationContext);
     }
 
     @Bean(name = {"messagesScanner"})
-    public MessagesScanner createMessageScanner() {
-        return new MessagesScanner();
+    public MessagesScanner createMessageScanner(
+        ApplicationContext applicationContext,
+        List<SerializationFramework> serializationFrameworks)
+    {
+        return new MessagesScanner(applicationContext, serializationFrameworks);
     }
 
     @Bean(name = {"messageHandlersRegistry"})
@@ -139,28 +144,34 @@ public class NodeConfiguration {
 
     @Bean(name = {"nodeSelectorFactory"})
     public NodeSelectorFactory getNodeSelectorFactory() {
-        return nodeSelectorFactory;
+        return new HashingNodeSelectorFactory();
     }
 
     @Bean(name = {"nodeActorCacheManager"})
-    public NodeActorCacheManager createNodeActorCacheManager() {
+    public NodeActorCacheManager createNodeActorCacheManager(Environment env) {
         int maximumSize = env.getProperty("ea.nodeCache.maximumSize",Integer.class,10240);
         return new NodeActorCacheManager(maximumSize);
     }
 
     @Bean(name = {"shardActorCacheManager"})
-    public ShardActorCacheManager createShardActorCacheManager() {
+    public ShardActorCacheManager createShardActorCacheManager(Environment env) {
         int maximumSize = env.getProperty("ea.shardCache.maximumSize",Integer.class,10240);
         return new ShardActorCacheManager(maximumSize);
     }
 
     @Bean(name = {"internalActorSystem"})
     public InternalActorSystem createLocalActorSystemInstance(
-            ShardActorCacheManager shardActorCacheManager,
-            NodeActorCacheManager nodeActorCacheManager,
-            ActorLifecycleListenerRegistry actorLifecycleListenerRegistry,
-            PersistentActorStoreFactory persistentActorStoreFactory,
-            ManagedActorsRegistry managedActorsRegistry) {
+        ElasticActorsNode node,
+        Environment env,
+        ShardActorCacheManager shardActorCacheManager,
+        NodeActorCacheManager nodeActorCacheManager,
+        ActorLifecycleListenerRegistry actorLifecycleListenerRegistry,
+        PersistentActorStoreFactory persistentActorStoreFactory,
+        ManagedActorsRegistry managedActorsRegistry,
+        @Qualifier("actorSystemConfiguration") InternalActorSystemConfiguration configuration,
+        NodeSelectorFactory nodeSelectorFactory,
+        @Qualifier("actorRefCache") Cache<String, ActorRef> actorRefCache)
+    {
         final int workers = env.getProperty("ea.shardThreads.workerCount",Integer.class,
                 Runtime.getRuntime().availableProcessors());
         final String bootstrapServers = env.getRequiredProperty("ea.kafka.bootstrapServers");
@@ -191,7 +202,7 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"persistentActorStoreFactory"})
-    public PersistentActorStoreFactory createPersistentActorStoreFactory() throws Exception {
+    public PersistentActorStoreFactory createPersistentActorStoreFactory(Environment env) throws Exception {
         String className = env.getProperty("ea.kafka.persistentActorStore.factoryClass", String.class, "InMemoryPeristentActorStoreFactory");
         // if it is a simple classname then we need to append the default package
         if(!className.contains(".")) {

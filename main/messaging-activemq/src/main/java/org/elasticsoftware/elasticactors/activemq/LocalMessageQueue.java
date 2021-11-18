@@ -110,6 +110,7 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
 
     @Override
     public synchronized void initialize() throws Exception {
+        logger.info("Starting local message queue [{}->{}]", routingKey, queueName);
         if(useMessageHandler) {
             consumer.setMessageHandler(this);
         } else {
@@ -122,13 +123,14 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
     @Override
     public void destroy() {
         try {
+            logger.info("Stopping local message queue [{}->{}]", routingKey, queueName);
             queueExecutor.execute(new DestroyQueue(queueName));
             destroyLatch.await(3, TimeUnit.SECONDS);
             consumer.close();
             producer.close();
             clientSession.close();
         } catch (ActiveMQException | InterruptedException e) {
-            logger.warn("Exception while closing consumer", e);
+            logger.warn("Exception while closing consumer for queue {}", queueName, e);
         }
     }
 

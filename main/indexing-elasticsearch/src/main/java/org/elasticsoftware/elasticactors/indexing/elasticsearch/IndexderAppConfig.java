@@ -25,7 +25,6 @@ import org.elasticsoftware.elasticactors.indexing.elasticsearch.indexer.Indexer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanCreationException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.aspectj.EnableSpringConfigured;
@@ -42,13 +41,10 @@ public class IndexderAppConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(IndexderAppConfig.class);
 
-    @Autowired
-    private Environment environment;
-
     private TransportClient client;
 
     @Bean(name = "indexingElasticsearchClient")
-    public Client createElasticsearchClient() {
+    public Client createElasticsearchClient(Environment environment) {
         String[] elasticsearchHosts = environment.getRequiredProperty("actor.indexing.elasticsearch.hosts", String[].class);
         Integer elasticsearchPort = environment.getProperty("actor.indexing.elasticsearch.port", Integer.class, 9300);
         String elasticsearchClusterName = environment.getProperty("actor.indexing.elasticsearch.cluster.name", String.class, "elasticsearch");

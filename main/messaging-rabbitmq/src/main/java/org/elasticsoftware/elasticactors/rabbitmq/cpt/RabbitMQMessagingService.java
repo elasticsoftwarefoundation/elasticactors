@@ -121,6 +121,7 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
 
     @PostConstruct
     public void start() throws IOException, TimeoutException {
+        logger.info("Starting messaging service");
         // millis
         connectionFactory.setConnectionTimeout(1000);
         // seconds
@@ -171,6 +172,7 @@ public final class RabbitMQMessagingService implements ChannelListenerRegistry, 
 
     @PreDestroy
     public void stop() {
+        logger.info("Stopping messaging service");
         try {
             messageAcker.stop();
             clientConnection.close();

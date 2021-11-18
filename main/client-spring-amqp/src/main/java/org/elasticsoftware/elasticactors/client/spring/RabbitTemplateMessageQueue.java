@@ -19,6 +19,8 @@ package org.elasticsoftware.elasticactors.client.spring;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.core.MessageBuilderSupport;
 import org.springframework.amqp.core.MessageDeliveryMode;
@@ -27,6 +29,8 @@ import org.springframework.amqp.core.MessagePropertiesBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 public class RabbitTemplateMessageQueue implements MessageQueue {
+
+    private final static Logger logger = LoggerFactory.getLogger(RabbitTemplateMessageQueue.class);
 
     private final String exchange;
     private final String routingKey;
@@ -102,11 +106,11 @@ public class RabbitTemplateMessageQueue implements MessageQueue {
 
     @Override
     public void initialize() throws Exception {
-        // Not necessary
+        logger.info("Starting remote message queue [{}->{}]", exchange, routingKey);
     }
 
     @Override
     public void destroy() {
-        // Not necessary
+        logger.info("Stopping remote message queue [{}->{}]", exchange, routingKey);
     }
 }

@@ -51,7 +51,10 @@ public class RabbitTemplateMessageQueueFactory implements MessageQueueFactory {
     public MessageQueue create(String name, MessageHandler messageHandler) throws Exception {
         String queueName = String.format(QUEUE_NAME_FORMAT, elasticActorsCluster, name);
         ensureQueueExists(queueName);
-        return new RabbitTemplateMessageQueue(exchangeName, queueName, rabbitTemplate);
+        RabbitTemplateMessageQueue messageQueue =
+            new RabbitTemplateMessageQueue(exchangeName, queueName, rabbitTemplate);
+        messageQueue.initialize();
+        return messageQueue;
     }
 
     private void ensureQueueExists(String queueName) {
