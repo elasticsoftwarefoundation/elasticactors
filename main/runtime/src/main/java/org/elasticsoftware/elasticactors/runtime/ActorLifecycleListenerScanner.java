@@ -18,8 +18,9 @@ package org.elasticsoftware.elasticactors.runtime;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
-import org.elasticsoftware.elasticactors.MessageHandlersRegistry;
-import org.elasticsoftware.elasticactors.MethodActor;
+import org.elasticsoftware.elasticactors.ActorLifecycleListener;
+import org.elasticsoftware.elasticactors.ActorLifecycleListenerRegistry;
+import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.PluggableMessageHandlers;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
@@ -38,19 +39,19 @@ import java.util.stream.Collectors;
  *
  * @author Joost van de Wijgerd
  */
-public final class PluggableMessageHandlersScanner implements MessageHandlersRegistry {
-    private static final Logger logger = LoggerFactory.getLogger(PluggableMessageHandlersScanner.class);
+public final class ActorLifecycleListenerScanner implements ActorLifecycleListenerRegistry {
+    private static final Logger logger = LoggerFactory.getLogger(ActorLifecycleListenerScanner.class);
     private final ApplicationContext applicationContext;
-    private final ListMultimap<Class<? extends MethodActor>,Class<?>> registry = LinkedListMultimap.create();
+    private final ListMultimap<Class<? extends ElasticActor>,ActorLifecycleListener<?>> registry = LinkedListMultimap.create();
 
-    public PluggableMessageHandlersScanner(ApplicationContext applicationContext) {
+    public ActorLifecycleListenerScanner(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 
     @Override
     @PostConstruct
     public synchronized void init() {
-        logger.info("Scanning @PluggableMessageHandlers-annotated classes");
+        logger.info("Scanning ActorLifecycleListener-implementing classes");
         String[] basePackages = ScannerHelper.findBasePackagesOnClasspath(applicationContext.getClassLoader());
         ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
 
@@ -62,29 +63,34 @@ public final class PluggableMessageHandlersScanner implements MessageHandlersReg
 
         Reflections reflections = new Reflections(configurationBuilder);
 
-        Set<Class<?>> handlerClasses = reflections.getTypesAnnotatedWith(PluggableMessageHandlers.class);
-
-        logger.info("Found {} classes annotated with @PluggableMessageHandlers", handlerClasses.size());
+        Set<Class<? extends ActorLifecycleListener>> listenerClasses = reflections.getSubTypesOf(ActorLifecycleListener.class);
+        logger.info("Found {} classes that implement ActorLifecycleListener", listenerClasses.size());
         if (logger.isDebugEnabled()) {
             logger.debug(
-                "Found the following classes annotated with @PluggableMessageHandlers: {}",
-                handlerClasses.stream().map(Class::getName).collect(Collectors.toList())
+                "Found the following classes implementing ActorLifecycleListener: {}",
+                listenerClasses.stream().map(Class::getName).collect(Collectors.toList())
             );
         }
-
-        for (Class<?> handlerClass : handlerClasses) {
-            PluggableMessageHandlers handlerAnnotation = handlerClass.getAnnotation(PluggableMessageHandlers.class);
-            logger.debug(
-                "Registering @PluggableMessageHandlers class [{}] for Method Actor class [{}]",
-                handlerClass.getName(),
-                handlerAnnotation.value().getName()
-            );
-            registry.put(handlerAnnotation.value(),handlerClass);
+        for (Class<? extends ActorLifecycleListener> listenerClass : listenerClasses) {
+            try {
+                ActorLifecycleListener lifeCycleListener = listenerClass.newInstance();
+                logger.debug(
+                    "Registering instance of ActorLifecycleListener class [{}] for Actor class [{}]",
+                    listenerClass.getName(),
+                    lifeCycleListener.getActorClass().getName()
+                );
+                // ensure that the lifeCycle listener handles the correct state class
+                registry.put(lifeCycleListener.getActorClass(), lifeCycleListener);
+            } catch(Exception e) {
+                logger.error("Exception while instantiating ActorLifeCycleListener",e);
+            }
         }
     }
 
     @Override
-    public List<Class<?>> getMessageHandlers(Class<? extends MethodActor> methodActor) {
-        return registry.get(methodActor);
+    public List<ActorLifecycleListener<?>> getListeners(Class<? extends ElasticActor> actorClass) {
+        return registry.get(actorClass);
     }
+
+
 }

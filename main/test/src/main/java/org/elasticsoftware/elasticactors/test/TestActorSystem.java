@@ -35,6 +35,8 @@ import javax.annotation.PreDestroy;
 public final class TestActorSystem {
     //public static final String CONFIGURATION_BASEPACKAGE = "org.elasticsoftware.elasticactors.test.configuration";
 
+    private final boolean ignoreDefaultConfigClass;
+
     private AnnotationConfigApplicationContext applicationContext;
     private ActorSystem actorSystem;
     private RemoteActorSystems remoteActorSystems;
@@ -46,7 +48,12 @@ public final class TestActorSystem {
     }
 
     public TestActorSystem(Class customConfigurationClass) {
+        this(customConfigurationClass, false);
+    }
+
+    public TestActorSystem(Class customConfigurationClass, boolean ignoreDefaultConfigClass) {
         this.customConfigurationClass = customConfigurationClass;
+        this.ignoreDefaultConfigClass = ignoreDefaultConfigClass;
     }
 
     public ActorSystem getActorSystem() {
@@ -71,8 +78,10 @@ public final class TestActorSystem {
     public void initialize() {
         // annotation configuration context
         applicationContext = new AnnotationConfigApplicationContext();
-        // set the correct configurations
-        applicationContext.register(TestConfiguration.class);
+        if (!ignoreDefaultConfigClass) {
+            // set the correct configurations
+            applicationContext.register(TestConfiguration.class);
+        }
         // add custom configuration class
         if(customConfigurationClass != null) {
             applicationContext.register(customConfigurationClass);

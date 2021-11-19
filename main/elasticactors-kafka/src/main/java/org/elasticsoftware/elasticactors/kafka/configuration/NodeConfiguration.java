@@ -44,7 +44,6 @@ import org.elasticsoftware.elasticactors.runtime.ManagedActorsScanner;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
-import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
@@ -62,7 +61,6 @@ import org.springframework.core.io.ResourceLoader;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.List;
 
 import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 
@@ -74,7 +72,11 @@ public class NodeConfiguration {
         "actorRefFactory",
         "serializationFrameworks"
     })
-    @DependsOn({"messageHandlersRegistry", "messagesScanner", "managedActorsScanner"})
+    @DependsOn({
+        "messageHandlersRegistry",
+        "managedActorsRegistry",
+        "actorLifecycleListenerRegistry"
+    })
     public ElasticActorsNode createElasticActorsNode(
         Environment env,
         @Qualifier("actorRefCache") Cache<String, ActorRef> actorRefCache)
@@ -124,17 +126,14 @@ public class NodeConfiguration {
         return new SystemSerializationFramework(serializationFrameworks);
     }
 
-    @Bean(name = {"managedActorsScanner"})
+    @Bean(name = {"managedActorsRegistry"})
     public ManagedActorsScanner createManagedActorsScanner(ApplicationContext applicationContext) {
         return new ManagedActorsScanner(applicationContext);
     }
 
     @Bean(name = {"messagesScanner"})
-    public MessagesScanner createMessageScanner(
-        ApplicationContext applicationContext,
-        List<SerializationFramework> serializationFrameworks)
-    {
-        return new MessagesScanner(applicationContext, serializationFrameworks);
+    public MessagesScanner createMessageScanner(ApplicationContext applicationContext) {
+        return new MessagesScanner(applicationContext);
     }
 
     @Bean(name = {"messageHandlersRegistry"})
