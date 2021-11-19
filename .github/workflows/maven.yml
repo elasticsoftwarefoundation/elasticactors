@@ -33,9 +33,22 @@ jobs:
     - name: Build with Maven
       run: >
         mvn
+        --show-version
         --batch-mode
         --activate-profiles ci
         --file pom.xml
         --settings $GITHUB_WORKSPACE/settings.xml
         clean
+        compile
+        test-compile
+        -U
+    - name: Verify with Maven
+      run: >
+        mvn
+        --show-version
+        --batch-mode
+        --activate-profiles ci
+        --file pom.xml
+        --settings $GITHUB_WORKSPACE/settings.xml
         verify
+        -U

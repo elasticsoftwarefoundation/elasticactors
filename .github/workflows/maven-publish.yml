@@ -31,14 +31,37 @@ jobs:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2-
-    - name: Build with Maven and publish to Maven Central
+    - name: Build with Maven
       run: >
         mvn
+        --show-version
         --batch-mode
         --activate-profiles release
         --file pom.xml
         --settings $GITHUB_WORKSPACE/settings.xml
         clean
+        compile
+        test-compile
+    - name: Verify with Maven
+      run: >
+        mvn
+        --show-version
+        --batch-mode
+        --activate-profiles release
+        --file pom.xml
+        --settings $GITHUB_WORKSPACE/settings.xml
+        verify
+      env:
+        SIGN_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+        SIGN_KEY_PASS: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+    - name: Publish to Maven Central
+      run: >
+        mvn
+        --show-version
+        --batch-mode
+        --activate-profiles release
+        --file pom.xml
+        --settings $GITHUB_WORKSPACE/settings.xml
         deploy
         -DskipTests
         -Dmaven.install.skip=true
