@@ -25,7 +25,6 @@ import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -35,19 +34,14 @@ import java.util.List;
  */
 public final class ActorSystemEventRegistryImpl implements ActorSystemEventListenerService {
     private static final Logger logger = LoggerFactory.getLogger(ActorSystemEventRegistryImpl.class);
-    private ActorSystemEventListenerRepository eventListenerRepository;
-    private InternalActorSystem actorSystem;
+    private final ActorSystemEventListenerRepository eventListenerRepository;
+    private final InternalActorSystem actorSystem;
 
-    public ActorSystemEventRegistryImpl() {
-    }
-
-    @Inject
-    public void setEventListenerRepository(ActorSystemEventListenerRepository eventListenerRepository) {
+    public ActorSystemEventRegistryImpl(
+        ActorSystemEventListenerRepository eventListenerRepository,
+        InternalActorSystem actorSystem)
+    {
         this.eventListenerRepository = eventListenerRepository;
-    }
-
-    @Inject
-    public void setActorSystem(InternalActorSystem actorSystem) {
         this.actorSystem = actorSystem;
     }
 

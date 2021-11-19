@@ -14,14 +14,15 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors;
+package org.elasticsoftware.elasticactors.test.messaging;
 
-import java.util.List;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
 
-/**
- * @author Joost van de Wijgerd
- */
-public interface ActorLifecycleListenerRegistry {
-    void init();
-    List<ActorLifecycleListener<?>> getListeners(Class<? extends ElasticActor> actorClass);
+public final class UnsupportedMessageQueueFactoryFactory implements MessageQueueFactoryFactory {
+
+    @Override
+    public MessageQueueFactory create(String clusterName) {
+        throw new UnsupportedOperationException("Remote Queues not supported in test mode");
+    }
 }

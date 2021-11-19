@@ -26,8 +26,11 @@ import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
 import org.elasticsoftware.elasticactors.serialization.MessageToStringConverter;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.ByteBuffer;
@@ -43,8 +46,10 @@ import static org.elasticsoftware.elasticactors.serialization.MessageToStringCon
  */
 @Named
 public final class JacksonSerializationFramework implements SerializationFramework {
+    
+    private final static Logger logger = LoggerFactory.getLogger(JacksonSerializationFramework.class);
 
-    private final ConcurrentMap<Class, JacksonMessageDeserializer> deserializers =
+    private final ConcurrentMap<Class<?>, JacksonMessageDeserializer> deserializers =
             new ConcurrentHashMap<>();
     private final JacksonMessageSerializer serializer;
     private final MessageToStringConverter toStringConverter;
@@ -73,15 +78,21 @@ public final class JacksonSerializationFramework implements SerializationFramewo
 
     @Override
     public void register(Class<?> messageClass) {
-        Message messageAnnotation;
-        if ((messageAnnotation = messageClass.getAnnotation(Message.class)) != null
-            && this.getClass().equals(messageAnnotation.serializationFramework()))
-        {
-            deserializers.computeIfAbsent(
-                messageClass,
-                c -> new JacksonMessageDeserializer(c, objectMapper)
-            );
+        Message messageAnnotation = messageClass.getAnnotation(Message.class);
+        if (messageAnnotation != null) {
+            if (this.getClass().equals(messageAnnotation.serializationFramework())) {
+                deserializers.computeIfAbsent(messageClass, this::createDeserializerForRegistration);
+            }
         }
+    }
+
+    private JacksonMessageDeserializer createDeserializerForRegistration(Class<?> c) {
+        logger.debug(
+            "Registering message of type [{}] on [{}]",
+            c.getName(),
+            getClass().getName()
+        );
+        return new JacksonMessageDeserializer(c, objectMapper);
     }
 
     @Override
@@ -96,7 +107,31 @@ public final class JacksonSerializationFramework implements SerializationFramewo
 
     @Override
     public <T> MessageDeserializer<T> getDeserializer(Class<T> messageClass) {
-        return deserializers.get(messageClass);
+        // Still able to deserialize classes if somehow registration failed
+        return deserializers.computeIfAbsent(messageClass, this::createDeserializerIfApplicable);
+    }
+
+    @Nullable
+    private JacksonMessageDeserializer createDeserializerIfApplicable(Class<?> messageClass) {
+        Message messageAnnotation = messageClass.getAnnotation(Message.class);
+        if (messageAnnotation != null) {
+            if (getClass().equals(messageAnnotation.serializationFramework())) {
+                logger.warn(
+                    "Registering previously unregistered message of type [{}] on [{}]. "
+                        + "This usually means the initial registration has somehow failed or "
+                        + "we have received a message of this type before the initial registration "
+                        + "could have taken place.",
+                    messageClass.getName(),
+                    getClass().getName()
+                );
+                return createDeserializer(messageClass);
+            }
+        }
+        return null;
+    }
+
+    private JacksonMessageDeserializer createDeserializer(Class<?> c) {
+        return new JacksonMessageDeserializer(c, objectMapper);
     }
 
     @Override

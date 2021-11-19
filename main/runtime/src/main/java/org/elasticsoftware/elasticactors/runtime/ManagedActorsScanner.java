@@ -51,7 +51,7 @@ public final class ManagedActorsScanner implements ManagedActorsRegistry {
 
     @Override
     @PostConstruct
-    public void init() {
+    public synchronized void init() {
         logger.info("Scanning Managed Actor classes");
         String[] basePackages = ScannerHelper.findBasePackagesOnClasspath(applicationContext.getClassLoader());
         ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
