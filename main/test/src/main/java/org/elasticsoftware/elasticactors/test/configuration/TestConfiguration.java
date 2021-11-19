@@ -37,12 +37,12 @@ import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler;
 import org.elasticsoftware.elasticactors.configuration.NodeConfiguration;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
+import org.elasticsoftware.elasticactors.runtime.ActorLifecycleListenerScanner;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.DefaultRemoteConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ManagedActorsScanner;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
-import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
@@ -73,7 +73,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
@@ -111,7 +110,11 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     }
 
     @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
-    @DependsOn({"messageHandlersRegistry", "messagesScanner", "managedActorsScanner"})
+    @DependsOn({
+        "messageHandlersRegistry",
+        "managedActorsRegistry",
+        "actorLifecycleListenerRegistry"
+    })
     public LocalActorSystemInstance createLocalActorSystemInstance(
         InternalActorSystems internalActorSystems,
         @Qualifier("actorSystemConfiguration") InternalActorSystemConfiguration configuration,
@@ -171,22 +174,24 @@ public class TestConfiguration extends AsyncConfigurerSupport {
         return builder.build();
     }
 
-    @Bean(name = {"managedActorsScanner"})
+    @Bean(name = {"managedActorsRegistry"})
     public ManagedActorsScanner createManagedActorsScanner(ApplicationContext applicationContext) {
         return new ManagedActorsScanner(applicationContext);
     }
 
     @Bean(name = {"messagesScanner"})
-    public MessagesScanner createMessageScanner(
-        ApplicationContext applicationContext,
-        List<SerializationFramework> serializationFrameworks)
-    {
-        return new MessagesScanner(applicationContext, serializationFrameworks);
+    public MessagesScanner createMessageScanner(ApplicationContext applicationContext) {
+        return new MessagesScanner(applicationContext);
     }
 
     @Bean(name = {"messageHandlersRegistry"})
     public PluggableMessageHandlersScanner createPluggableMessagesHandlersScanner(ApplicationContext applicationContext) {
         return new PluggableMessageHandlersScanner(applicationContext);
+    }
+
+    @Bean(name = {"actorLifecycleListenerRegistry"})
+    public ActorLifecycleListenerScanner createActorLifecycleListenerScanner(ApplicationContext applicationContext) {
+        return new ActorLifecycleListenerScanner(applicationContext);
     }
 
     @Bean(name = {"nodeSelectorFactory"})

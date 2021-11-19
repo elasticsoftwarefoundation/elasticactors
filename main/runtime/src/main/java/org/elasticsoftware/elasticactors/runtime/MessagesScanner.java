@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.runtime;
 
-import com.google.common.collect.ImmutableMap;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.reflections.Reflections;
@@ -27,11 +26,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.PostConstruct;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static java.util.function.Function.identity;
 
 /**
  * Find all classes annotated with {@link org.elasticsoftware.elasticactors.serialization.Message} and
@@ -44,15 +40,9 @@ public final class MessagesScanner {
     private final static Logger logger = LoggerFactory.getLogger(MessagesScanner.class);
 
     private final ApplicationContext applicationContext;
-    private final ImmutableMap<Class<?>, SerializationFramework> serializationFrameworks;
 
-    public MessagesScanner(
-        ApplicationContext applicationContext,
-        List<SerializationFramework> serializationFrameworks)
-    {
+    public MessagesScanner(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
-        this.serializationFrameworks = serializationFrameworks.stream()
-            .collect(ImmutableMap.toImmutableMap(SerializationFramework::getClass, identity()));
     }
 
     @PostConstruct
@@ -81,20 +71,13 @@ public final class MessagesScanner {
 
         for (Class<?> messageClass : messageClasses) {
             Message messageAnnotation = messageClass.getAnnotation(Message.class);
-            Class<?> frameworkClass = messageAnnotation.serializationFramework();
-            SerializationFramework serializationFramework =
-                serializationFrameworks.get(frameworkClass);
-            if (serializationFramework == null) {
-                throw new IllegalStateException(String.format(
-                    "Serialization framework instance not found for class '%s'",
-                    frameworkClass.getTypeName()
-                ));
-            }
+            Class<? extends SerializationFramework> frameworkClass = messageAnnotation.serializationFramework();
             logger.debug(
                 "Registering message of type [{}] on [{}]",
-                messageClass.getTypeName(),
-                frameworkClass.getTypeName()
+                messageClass.getName(),
+                frameworkClass.getName()
             );
+            SerializationFramework serializationFramework = applicationContext.getBean(frameworkClass);
             serializationFramework.register(messageClass);
         }
     }

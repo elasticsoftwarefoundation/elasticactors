@@ -27,6 +27,7 @@ import org.elasticsoftware.elasticactors.ManagedActorsRegistry;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
+import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRepository;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerService;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventRegistryImpl;
 import org.elasticsoftware.elasticactors.cluster.HashingNodeSelectorFactory;
@@ -39,13 +40,13 @@ import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ShardedScheduler;
 import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
+import org.elasticsoftware.elasticactors.runtime.ActorLifecycleListenerScanner;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
 import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.ManagedActorsScanner;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
 import org.elasticsoftware.elasticactors.serialization.Message;
-import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
@@ -70,7 +71,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import static java.lang.Boolean.FALSE;
@@ -89,7 +89,11 @@ public class NodeConfiguration {
         "actorRefFactory",
         "serializationFrameworks"
     })
-    @DependsOn({"messageHandlersRegistry", "messagesScanner", "managedActorsScanner"})
+    @DependsOn({
+        "messageHandlersRegistry",
+        "managedActorsRegistry",
+        "actorLifecycleListenerRegistry"
+    })
     public ElasticActorsNode createElasticActorsNode(
         Environment env,
         @Qualifier("actorRefCache") Cache<String, ActorRef> actorRefCache)
@@ -142,22 +146,24 @@ public class NodeConfiguration {
         return new SystemSerializationFramework(serializationFrameworks);
     }
 
-    @Bean(name = {"managedActorsScanner"})
+    @Bean(name = {"managedActorsRegistry"})
     public ManagedActorsScanner createManagedActorsScanner(ApplicationContext applicationContext) {
         return new ManagedActorsScanner(applicationContext);
     }
 
     @Bean(name = {"messagesScanner"})
-    public MessagesScanner createMessageScanner(
-        ApplicationContext applicationContext,
-        List<SerializationFramework> serializationFrameworks)
-    {
-        return new MessagesScanner(applicationContext, serializationFrameworks);
+    public MessagesScanner createMessageScanner(ApplicationContext applicationContext) {
+        return new MessagesScanner(applicationContext);
     }
 
     @Bean(name = {"messageHandlersRegistry"})
     public PluggableMessageHandlersScanner createPluggableMessagesHandlersScanner(ApplicationContext applicationContext) {
         return new PluggableMessageHandlersScanner(applicationContext);
+    }
+
+    @Bean(name = {"actorLifecycleListenerRegistry"})
+    public ActorLifecycleListenerScanner createActorLifecycleListenerScanner(ApplicationContext applicationContext) {
+        return new ActorLifecycleListenerScanner(applicationContext);
     }
 
     @Bean(name = {"nodeSelectorFactory"})
@@ -178,6 +184,7 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"actorExecutor"}, destroyMethod = "shutdown")
+    @DependsOn("asyncUpdateExecutor")
     public ThreadBoundExecutor createActorExecutor(Environment env) {
         final int workers = env.getProperty("ea.actorExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
         final Boolean useDisruptor = env.getProperty("ea.actorExecutor.useDisruptor",Boolean.class, FALSE);
@@ -189,6 +196,7 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"queueExecutor"}, destroyMethod = "shutdown")
+    @DependsOn("actorExecutor")
     public ThreadBoundExecutor createQueueExecutor(Environment env) {
         final int workers = env.getProperty("ea.queueExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
         final Boolean useDisruptor = env.getProperty("ea.queueExecutor.useDisruptor",Boolean.class, FALSE);
@@ -231,8 +239,11 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"actorSystemEventListenerService"})
-    public ActorSystemEventListenerService createActorSystemEventListenerService() {
-        return new ActorSystemEventRegistryImpl();
+    public ActorSystemEventListenerService createActorSystemEventListenerService(
+        ActorSystemEventListenerRepository eventListenerRepository,
+        InternalActorSystem actorSystem)
+    {
+        return new ActorSystemEventRegistryImpl(eventListenerRepository, actorSystem);
     }
 
     @Bean(name = {"internalActorSystemHealthCheck"})

@@ -14,14 +14,26 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors;
+package org.elasticsoftware.elasticactors.test.cluster;
 
-import java.util.List;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 
-/**
- * @author Joost van de Wijgerd
- */
-public interface ActorLifecycleListenerRegistry {
-    void init();
-    List<ActorLifecycleListener<?>> getListeners(Class<? extends ElasticActor> actorClass);
+public final class UnsupportedThreadBoundExecutor<T extends ThreadBoundEvent<?>>
+    implements ThreadBoundExecutor<T> {
+
+    @Override
+    public void execute(T runnable) {
+        throw new UnsupportedOperationException("Dummy executor does not support running tasks");
+    }
+
+    @Override
+    public void shutdown() {
+
+    }
+
+    @Override
+    public int getThreadCount() {
+        return 1;
+    }
 }
