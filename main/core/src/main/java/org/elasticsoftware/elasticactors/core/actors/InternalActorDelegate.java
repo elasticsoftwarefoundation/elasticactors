@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.core.actors;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.TypedActor;
+import org.elasticsoftware.elasticactors.concurrent.Expirable;
 import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
@@ -29,14 +30,17 @@ import org.elasticsoftware.elasticactors.tracing.Traceable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Joost van de Wijgerd
  */
 public abstract class InternalActorDelegate<T>
     extends TypedActor<T>
-    implements ActorState<InternalActorDelegate<T>>, Traceable {
+    implements ActorState<InternalActorDelegate<T>>, Traceable, Expirable {
 
     private static final Logger staticLogger = LoggerFactory.getLogger(InternalActorDelegate.class);
 
@@ -52,6 +56,7 @@ public abstract class InternalActorDelegate<T>
     private final ActorRef callerRef;
     private final TraceContext traceContext;
     private final CreationContext creationContext;
+    private final long expirationTime;
 
     protected InternalActorDelegate() {
         this(true);
@@ -61,7 +66,27 @@ public abstract class InternalActorDelegate<T>
         this(deleteAfterReceive, null);
     }
 
+    protected InternalActorDelegate(boolean deleteAfterReceive, long timeoutMillis) {
+        this(deleteAfterReceive, null, timeoutMillis);
+    }
+
+    protected InternalActorDelegate(
+        boolean deleteAfterReceive,
+        long timeout,
+        @Nonnull TimeUnit timeUnit)
+    {
+        this(deleteAfterReceive, null, timeout, timeUnit);
+    }
+
     protected InternalActorDelegate(boolean deleteAfterReceive, ActorRef callerRef) {
+        this(deleteAfterReceive, callerRef, TEMP_ACTOR_TIMEOUT_MAX);
+    }
+
+    protected InternalActorDelegate(
+        boolean deleteAfterReceive,
+        ActorRef callerRef,
+        long timeoutMillis)
+    {
         this.deleteAfterReceive = deleteAfterReceive;
         this.callerRef = callerRef;
         MessagingScope currentScope = MessagingContextManager.getManager().currentScope();
@@ -72,6 +97,20 @@ public abstract class InternalActorDelegate<T>
             traceContext = null;
             creationContext = null;
         }
+        this.expirationTime = System.currentTimeMillis() + Expirable.clamp(
+            timeoutMillis,
+            TEMP_ACTOR_TIMEOUT_MIN,
+            TEMP_ACTOR_TIMEOUT_MAX
+        );
+    }
+
+    protected InternalActorDelegate(
+        boolean deleteAfterReceive,
+        ActorRef callerRef,
+        long timeout,
+        @Nonnull TimeUnit timeUnit)
+    {
+        this(deleteAfterReceive, callerRef, Objects.requireNonNull(timeUnit).toMillis(timeout));
     }
 
     public boolean isDeleteAfterReceive() {
@@ -103,5 +142,10 @@ public abstract class InternalActorDelegate<T>
     @Override
     public Class<? extends SerializationFramework> getSerializationFramework() {
         return NoopSerializationFramework.class;
+    }
+
+    @Override
+    public final long getExpirationTime() {
+        return expirationTime;
     }
 }

@@ -202,7 +202,9 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     @Bean(name = {"nodeActorCacheManager"})
     public NodeActorCacheManager createNodeActorCacheManager(Environment env) {
         int maximumSize = env.getProperty("ea.nodeCache.maximumSize",Integer.class,10240);
-        return new NodeActorCacheManager(maximumSize);
+        long expirationCheckPeriod =
+            env.getProperty("ea.nodeCache.expirationCheckPeriod", Long.class, 30000L);
+        return new NodeActorCacheManager(maximumSize, expirationCheckPeriod);
     }
 
     @Bean(name = {"shardActorCacheManager"})

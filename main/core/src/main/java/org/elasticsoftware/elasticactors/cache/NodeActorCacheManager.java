@@ -24,7 +24,15 @@ import org.elasticsoftware.elasticactors.state.PersistentActor;
  * @author Joost van de Wijgerd
  */
 public final class NodeActorCacheManager extends CacheManager<ActorRef,PersistentActor<NodeKey>> {
-    public NodeActorCacheManager(int maximumSize) {
+
+    private final long actorExpirationCheckPeriod;
+
+    public NodeActorCacheManager(int maximumSize, long actorExpirationCheckPeriod) {
         super(maximumSize);
+        this.actorExpirationCheckPeriod = Math.max(actorExpirationCheckPeriod, 500);
+    }
+
+    public long getExpirationCheckPeriod() {
+        return actorExpirationCheckPeriod;
     }
 }

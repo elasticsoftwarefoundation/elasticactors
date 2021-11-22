@@ -151,6 +151,21 @@ public class CacheManager<K,V> {
         public CacheStats stats() {
             return backingCache.stats();
         }
+
+        /**
+         * Unlike most implementations, the returned map has no connection to the underlying cache.
+         */
+        @Override
+        public ConcurrentMap<K, V> asMap() {
+            ConcurrentMap<K, V> result = new ConcurrentHashMap<>();
+            for (CacheKey key : segmentIndex.get(segmentKey)) {
+                V value = backingCache.getIfPresent(key);
+                if (value != null) {
+                    result.put((K) key.cacheKey, value);
+                }
+            }
+            return result;
+        }
     }
 
     private static final class CacheKey {

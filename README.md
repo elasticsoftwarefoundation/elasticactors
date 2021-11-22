@@ -265,6 +265,15 @@ ea.scan.packages=org.elasticsoftware.elasticactors
 # Default: 10240
 ea.nodeCache.maximumSize=10240
 
+# The period in milliseconds between cache expiration checks for node-bound actors.
+# Expirable actors are checked for expiration when they receive messages, as well as by a
+# scheduled executor thread that runs every N milliseconds and removed expired actors.
+# This key allows you to adjust how often this thread will run. There is no maximum value, but it 
+# enforces a minimum of 500ms so it can't be made to run so frequently.
+# Default: 30000
+# Minimum: 500
+ea.nodeCache.expirationCheckPeriod=30000
+
 # Maximum number of cached Persistent Actors.
 # Default: 10240
 ea.shardCache.maximumSize=10240
