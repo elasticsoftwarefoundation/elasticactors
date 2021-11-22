@@ -79,7 +79,7 @@ public abstract class InternalActorDelegate<T>
     }
 
     protected InternalActorDelegate(boolean deleteAfterReceive, ActorRef callerRef) {
-        this(deleteAfterReceive, callerRef, TEMP_ACTOR_TIMEOUT_MAX);
+        this(deleteAfterReceive, callerRef, TEMP_ACTOR_TIMEOUT_DEFAULT);
     }
 
     protected InternalActorDelegate(

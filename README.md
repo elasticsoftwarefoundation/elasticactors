@@ -475,6 +475,10 @@ ea.deserializationCache.enable=false
 # Changes the logging level used when logging unhandled message types in MethodActor.
 # Default: WARN
 ea.logging.messages.unhandled.level=WARN
+
+# Changes the default timeout, in milliseconds, for Temporary Actors
+# Default: 86400000 (one 24h day)
+ea.tempActor.timeout.default=86400000
 ```
 
 

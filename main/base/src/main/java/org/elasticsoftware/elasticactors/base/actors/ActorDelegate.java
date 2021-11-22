@@ -71,7 +71,7 @@ public abstract class ActorDelegate<T>
 
     /**
      * Creates an ActorDelegate that will be stopped after it receives a message and will expire
-     * at the default time after {@link Expirable#TEMP_ACTOR_TIMEOUT_MAX} milliseconds.
+     * at the default time after {@link Expirable#TEMP_ACTOR_TIMEOUT_DEFAULT} milliseconds.
      */
     protected ActorDelegate() {
         this(true);
@@ -79,13 +79,13 @@ public abstract class ActorDelegate<T>
 
     /**
      * Creates an ActorDelegate that will expire at the default time after
-     * {@link Expirable#TEMP_ACTOR_TIMEOUT_MAX} milliseconds
+     * {@link Expirable#TEMP_ACTOR_TIMEOUT_DEFAULT} milliseconds
      *
      * @param deleteAfterReceive true if the actor is meant to be stopped after it receives any
      * message. If false, the actor must be manually stopped.
      */
     protected ActorDelegate(boolean deleteAfterReceive) {
-        this(deleteAfterReceive, TEMP_ACTOR_TIMEOUT_MAX);
+        this(deleteAfterReceive, TEMP_ACTOR_TIMEOUT_DEFAULT);
     }
 
     /**
@@ -273,6 +273,7 @@ public abstract class ActorDelegate<T>
          * The value will be clamped so that it sits between
          * {@link Expirable#TEMP_ACTOR_TIMEOUT_MIN} and
          * {@link Expirable#TEMP_ACTOR_TIMEOUT_MAX}.
+         * Defaults to {@link Expirable#TEMP_ACTOR_TIMEOUT_DEFAULT}.
          *
          * @param timeoutMillis The timeout for this actor (in milliseconds).
          * @return A {@link PreReceiveStep} version of this builder
@@ -285,6 +286,7 @@ public abstract class ActorDelegate<T>
          * The converted value will be clamped so that it sits between
          * {@link Expirable#TEMP_ACTOR_TIMEOUT_MIN} and
          * {@link Expirable#TEMP_ACTOR_TIMEOUT_MAX}.
+         * Defaults to {@link Expirable#TEMP_ACTOR_TIMEOUT_DEFAULT}.
          *
          * @param timeout The timeout for this actor (in the unit specified).
          * @param timeUnit The unit of time to use for the timeout.
@@ -449,7 +451,7 @@ public abstract class ActorDelegate<T>
         private MessageConsumer<D> preReceiveConsumer;
         private MessageConsumer<D> postReceiveConsumer;
         private boolean deleteAfterReceive = true;
-        private long timeout = TEMP_ACTOR_TIMEOUT_MAX;
+        private long timeout = TEMP_ACTOR_TIMEOUT_DEFAULT;
 
         @Nonnull
         @Override

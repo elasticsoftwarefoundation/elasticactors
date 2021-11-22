@@ -40,7 +40,7 @@ public final class CompletableFutureDelegate<T> extends InternalActorDelegate<T>
         Class<T> responseType,
         ActorRef callerRef)
     {
-        super(true, callerRef, TEMP_ACTOR_TIMEOUT_MAX);
+        super(true, callerRef, TEMP_ACTOR_TIMEOUT_DEFAULT);
         this.future = future;
         this.responseType = responseType;
     }
