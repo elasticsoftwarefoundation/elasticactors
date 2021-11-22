@@ -105,6 +105,50 @@ public class AskTest {
         testActorSystem.destroy();
     }
 
+    @Test(
+        expectedExceptions = IllegalStateException.class,
+        expectedExceptionsMessageRegExp = "^Cannot perform synchronous operations of an "
+            + "ActorCompletableFuture inside an actor context\\. Current actor: \\[actor://.+]$"
+    )
+    public void testAskGreeting_throwExceptionIfGetInActorContext() throws Exception {
+        TestActorSystem testActorSystem = new TestActorSystem();
+        testActorSystem.initialize();
+
+        logger.info("Starting testAskGreeting");
+
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+        ActorRef echo = actorSystem.actorOf("e", EchoGreetingActor.class);
+
+        try {
+            echo.ask(new Greeting("echo"), Greeting.class).thenApply(greeting -> {
+                try {
+                    return echo.ask(
+                            new Greeting(greeting.getWho() + " but this will throw an exception"),
+                            Greeting.class
+                        ).thenAccept(g -> logger.info(
+                            "Got the response and applied an intermediate stage, "
+                                + "but will throw an exception next: {}",
+                            g.getWho()
+                        ))
+                        // Running get inside an actor context = will throw an IllegalStateException
+                        .get();
+                } catch (IllegalStateException e) {
+                    throw e;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }).get();
+        } catch (ExecutionException e) {
+            logger.error("Got an error, which we likely expect here", e.getCause());
+            if (e.getCause() instanceof IllegalStateException) {
+                throw (IllegalStateException) e.getCause();
+            }
+            throw e;
+        } finally {
+            testActorSystem.destroy();
+        }
+    }
+
     @Test
     public void testAskGreetingViaActor() throws Exception {
         TestActorSystem testActorSystem = new TestActorSystem();

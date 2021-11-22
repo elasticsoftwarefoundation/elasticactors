@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.cluster;
 import org.elasticsoftware.elasticactors.ActorContextHolder;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.TypedSubscriber;
+import org.elasticsoftware.elasticactors.concurrent.ActorCompletableFuture;
 import org.elasticsoftware.elasticactors.core.actors.AskReplyActor;
 import org.elasticsoftware.elasticactors.core.actors.CompletableFutureDelegate;
 import org.elasticsoftware.elasticactors.core.actors.SubscriberActor;
@@ -29,7 +30,6 @@ import org.elasticsoftware.elasticactors.serialization.Message;
 import org.reactivestreams.Publisher;
 
 import javax.annotation.Nullable;
-import java.util.concurrent.CompletableFuture;
 
 import static org.elasticsoftware.elasticactors.cluster.tasks.InternalActorContext.getAsProcessorContext;
 
@@ -50,13 +50,13 @@ public abstract class BaseActorRef implements ActorRef {
     }
 
     @Override
-    public final <T> CompletableFuture<T> ask(Object message, Class<T> responseType) {
+    public final <T> ActorCompletableFuture<T> ask(Object message, Class<T> responseType) {
         return ask(message, responseType, Boolean.FALSE);
     }
 
     @Override
-    public <T> CompletableFuture<T> ask(Object message, Class<T> responseType, Boolean persistOnResponse) {
-        final CompletableFuture<T> future = new CompletableFuture<>();
+    public <T> ActorCompletableFuture<T> ask(Object message, Class<T> responseType, Boolean persistOnResponse) {
+        final ActorCompletableFuture<T> future = new ActorCompletableFuture<>();
         try {
             ActorRef callerRef = Boolean.TRUE.equals(persistOnResponse) ? ActorContextHolder.getSelf() : null;
             ActorRef replyRef = actorSystem.tempActorOf(
@@ -91,9 +91,18 @@ public abstract class BaseActorRef implements ActorRef {
             return subscriber -> {
                 if(subscriber instanceof TypedSubscriber) {
                     // prepare the subscription (will be not active at this point)
-                    getAsProcessorContext().addSubscription(new PersistentSubscriptionImpl(ActorContextHolder.getSelf(), this, messageName, subscriber));
+                    ActorRef self = ActorContextHolder.getSelf();
+                    getAsProcessorContext().addSubscription(new PersistentSubscriptionImpl(
+                        self,
+                        this,
+                        messageName,
+                        subscriber
+                    ));
                     // all is good, start the protocol handshake
-                    tell(new SubscribeMessage(ActorContextHolder.getSelf(), messageName), ActorContextHolder.getSelf());
+                    tell(
+                        new SubscribeMessage(self, messageName),
+                        self
+                    );
                 } else {
                     subscriber.onError(new IllegalStateException("Within the context of an Actor it is not possible to use lambda's or anonymous classes. Please use this.asSubscriber() to pass in the proper reference"));
                 }
@@ -125,7 +134,4 @@ public abstract class BaseActorRef implements ActorRef {
     public final String toString() {
         return this.refSpec;
     }
-
-
-
 }

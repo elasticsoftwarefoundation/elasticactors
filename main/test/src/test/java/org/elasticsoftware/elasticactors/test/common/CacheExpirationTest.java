@@ -139,7 +139,7 @@ public class CacheExpirationTest {
             .postReceive(countDownLatch::countDown)
             .build());
 
-        Thread.sleep(2_000L);
+        Thread.sleep(2_500L);
 
         greeter.tell(new Greeting("Joost van de Wijgerd"), replyActor);
 
