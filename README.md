@@ -98,6 +98,8 @@ The following exceptions apply:
 * **1.x - 4.x** to **5.x** or later:
   * Changes to the shard-to-node distribution algorithm require the actor system to be completely 
     destroyed or scaled down to 1 node before deploying the new version.
+  * The tracing module was split between its basic implementation and an optional module to integrate
+    it with the logging framework. See [the section below](#Adding-trace-information-to-logs).
 
 
 ## Basic configuration
