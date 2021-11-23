@@ -45,7 +45,7 @@ public class ActorCompletableFutureTest {
         // for this temporary actor will run the function, and we'd still be inside actor context.
 
         try {
-            // Asking the reply to be delayed in 1 second so thenApply surely gets called before '
+            // Asking the reply to be delayed in 1 second so thenApply surely gets called before
             // ask has the chance to complete
             echo.ask(new Greeting("echo", false, 1000L), Greeting.class)
                 .thenApply(greeting -> {
