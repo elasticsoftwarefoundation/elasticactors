@@ -23,9 +23,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.std.StdScalarSerializer;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import net.jodah.typetools.TypeResolver;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
@@ -116,9 +114,7 @@ public class ObjectMapperBuilder {
 
         FilterBuilder filterBuilder = new FilterBuilder();
         filterBuilder.excludePackage(JsonSerializer.class.getPackage().getName());
-        filterBuilder.excludePackage(StdScalarSerializer.class.getPackage().getName());
         filterBuilder.excludePackage(JsonDeserializer.class.getPackage().getName());
-        filterBuilder.excludePackage(StdScalarDeserializer.class.getPackage().getName());
 
         configurationBuilder.filterInputsBy(filterBuilder);
 
@@ -166,6 +162,7 @@ public class ObjectMapperBuilder {
             reflections.getSubTypesOf(JsonSerializer.class)
                 .stream()
                 .filter(ObjectMapperBuilder::isInstantiable)
+                .filter(ObjectMapperBuilder::hasNoArgConstructor)
                 .collect(Collectors.toList());
         logger.info("Found {} classes that extend JsonSerializer", customSerializers.size());
         if (logger.isDebugEnabled()) {
@@ -175,92 +172,161 @@ public class ObjectMapperBuilder {
             );
         }
         for (Class<? extends JsonSerializer> customSerializer : customSerializers) {
-            Class<?> objectClass = TypeResolver.resolveRawArgument(JsonSerializer.class,customSerializer);
             try {
                 JsonSerializer jsonSerializer = customSerializer.newInstance();
+                Class<?> objectClass = resolveSerializerHandledType(customSerializer, jsonSerializer);
                 logger.debug(
                     "Adding serializer [{}] for type [{}]",
                     customSerializer.getName(),
                     objectClass.getName()
                 );
                 jacksonModule.addSerializer(objectClass, jsonSerializer);
-            } catch(Exception e) {
-                logger.error("Failed to create Custom Jackson Serializer: {}",customSerializer.getName(),e);
+            } catch (Exception e) {
+                logger.error(
+                    "Failed to create Custom Jackson Serializer: {}",
+                    customSerializer.getName(),
+                    e
+                );
             }
         }
     }
 
+    private static Class<?> resolveSerializerHandledType(
+        Class<? extends JsonSerializer> customSerializer,
+        JsonSerializer jsonSerializer)
+    {
+        Class<?> objectClass =
+            TypeResolver.resolveRawArgument(JsonSerializer.class, customSerializer);
+        if (TypeResolver.Unknown.class.equals(objectClass)) {
+            logger.debug(
+                "Could not resolve the type handled by serializer of type [{}]. "
+                    + "Trying to get it from JsonSerializer.handledType()",
+                customSerializer.getName()
+            );
+            // Best effort. This may not always be correct.
+            objectClass = jsonSerializer.handledType();
+        }
+        return objectClass;
+    }
+
     private void registerCustomDeserializers(Reflections reflections, SimpleModule jacksonModule) {
-        // @todo: looks like the SubTypeScanner only goes one level deep, need to fix this
-        logger.info("Scanning classes that extend StdScalarDeserializer");
-        List<Class<? extends StdScalarDeserializer>> customDeserializers =
-            reflections.getSubTypesOf(StdScalarDeserializer.class)
+        logger.info("Scanning classes that extend JsonDeserializer");
+        List<Class<? extends JsonDeserializer>> customDeserializers =
+            reflections.getSubTypesOf(JsonDeserializer.class)
                 .stream()
                 .filter(ObjectMapperBuilder::isInstantiable)
+                .filter(ObjectMapperBuilder::hasUsableDeserializerConstructor)
                 .collect(Collectors.toList());
-        logger.info("Found {} classes that extend StdScalarDeserializer", customDeserializers.size());
+        logger.info("Found {} classes that extend JsonDeserializer", customDeserializers.size());
         if (logger.isDebugEnabled()) {
             logger.debug(
-                "Found the following classes extending StdScalarDeserializer: {}",
+                "Found the following classes extending JsonDeserializer: {}",
                 customDeserializers.stream().map(Class::getName).collect(Collectors.toList())
             );
         }
-        for (Class<? extends StdScalarDeserializer> customDeserializer : customDeserializers) {
+        for (Class<? extends JsonDeserializer> customDeserializer : customDeserializers) {
             // need to exclude the JacksonActorRefDeserializer
-            if(hasNoArgConstructor(customDeserializer)) {
+            if (hasNoArgConstructor(customDeserializer)) {
                 try {
-                    StdScalarDeserializer deserializer = customDeserializer.newInstance();
-                    Class<?> objectClass = deserializer.handledType();
+                    JsonDeserializer deserializer = customDeserializer.newInstance();
+                    Class<?> objectClass =
+                        resolveDeserializerHandledType(customDeserializer, deserializer);
                     logger.debug(
                         "Adding deserializer [{}] for type [{}]",
                         customDeserializer.getName(),
                         objectClass.getName()
                     );
                     jacksonModule.addDeserializer(objectClass, deserializer);
-                } catch(Exception e) {
-                    logger.error("Failed to create Custom Jackson Deserializer: {}", customDeserializer.getName(), e);
+                } catch (Exception e) {
+                    logger.error(
+                        "Failed to create Custom Jackson Deserializer: {}",
+                        customDeserializer.getName(),
+                        e
+                    );
+                }
+            } else if (hasActorRefFactoryConstructor(customDeserializer)) {
+                try {
+                    Constructor<? extends JsonDeserializer> constructor =
+                        customDeserializer.getConstructor(ActorRefFactory.class);
+                    JsonDeserializer deserializer = constructor.newInstance(actorRefFactory);
+                    Class<?> objectClass =
+                        resolveDeserializerHandledType(customDeserializer, deserializer);
+                    logger.debug(
+                        "Adding deserializer [{}] for type [{}]",
+                        customDeserializer.getName(),
+                        objectClass.getName()
+                    );
+                    jacksonModule.addDeserializer(objectClass, deserializer);
+                } catch (Exception e) {
+                    logger.error(
+                        "Failed to create Custom Jackson Deserializer: {}",
+                        customDeserializer.getName(),
+                        e
+                    );
+                }
+            } else if (hasScheduledMessageRefFactoryConstructor(customDeserializer)) {
+                try {
+                    Constructor<? extends JsonDeserializer> constructor =
+                        customDeserializer.getConstructor(ScheduledMessageRefFactory.class);
+                    JsonDeserializer deserializer =
+                        constructor.newInstance(scheduledMessageRefFactory);
+                    Class<?> objectClass =
+                        resolveDeserializerHandledType(customDeserializer, deserializer);
+                    logger.debug(
+                        "Adding deserializer [{}] for type [{}]",
+                        customDeserializer.getName(),
+                        objectClass.getName()
+                    );
+                    jacksonModule.addDeserializer(objectClass, deserializer);
+                } catch (Exception e) {
+                    logger.error(
+                        "Failed to create Custom Jackson Deserializer: {}",
+                        customDeserializer.getName(),
+                        e
+                    );
                 }
             } else {
-                // this ones can currently not be created by the scanner due to the special constructor
-                for (Constructor<?> constructor : customDeserializer.getConstructors()) {
-                    if(hasSingleConstrutorParameterMatching(constructor,ActorRefFactory.class)) {
-                        try {
-                            StdScalarDeserializer deserializer = (StdScalarDeserializer) constructor.newInstance(actorRefFactory);
-                            Class<?> objectClass = deserializer.handledType();
-                            logger.debug(
-                                "Adding deserializer [{}] for type [{}]",
-                                customDeserializer.getName(),
-                                objectClass.getName()
-                            );
-                            jacksonModule.addDeserializer(objectClass, deserializer);
-                            break;
-                        } catch(Exception e) {
-                            logger.error("Failed to create Custom Jackson Deserializer: {}", customDeserializer.getName(),e);
-                        }
-                    } else if(hasSingleConstrutorParameterMatching(constructor,ScheduledMessageRefFactory.class)) {
-                        try {
-                            StdScalarDeserializer deserializer = (StdScalarDeserializer) constructor.newInstance(scheduledMessageRefFactory);
-                            Class<?> objectClass = deserializer.handledType();
-                            logger.debug(
-                                "Adding deserializer [{}] for type [{}]",
-                                customDeserializer.getName(),
-                                objectClass.getName()
-                            );
-                            jacksonModule.addDeserializer(objectClass, deserializer);
-                            break;
-                        } catch(Exception e) {
-                            logger.error("Failed to create Custom Jackson Deserializer: {}", customDeserializer.getName(),e);
-                        }
-                    } else {
-                        logger.debug(
-                            "Could not find a suitable constructor for deserializer [{}]",
-                            customDeserializer.getName()
-                        );
-                    }
-                }
-
+                logger.error(
+                    "Could not find a suitable constructor for deserializer [{}]",
+                    customDeserializer.getName()
+                );
             }
         }
+    }
+
+    private Class<?> resolveDeserializerHandledType(
+        Class<? extends JsonDeserializer> customDeserializer,
+        JsonDeserializer deserializer)
+    {
+        Class<?> objectClass =
+            TypeResolver.resolveRawArgument(JsonSerializer.class, customDeserializer);
+        if (TypeResolver.Unknown.class.equals(objectClass)) {
+            logger.debug(
+                "Could not resolve the type handled by deserializer of type [{}]. "
+                    + "Trying to get it from JsonDeserializer.handledType()",
+                customDeserializer.getName()
+            );
+            // Best effort. This may not always be correct.
+            objectClass = deserializer.handledType();
+        }
+        return objectClass;
+    }
+
+    private static boolean hasUsableDeserializerConstructor(Class<? extends JsonDeserializer> deserializerClass) {
+        return hasNoArgConstructor(deserializerClass)
+            || hasActorRefFactoryConstructor(deserializerClass)
+            || hasScheduledMessageRefFactoryConstructor(deserializerClass);
+    }
+
+    private static boolean hasActorRefFactoryConstructor(Class<? extends JsonDeserializer> deserializerClass) {
+        return hasSingleParameterConstructorMatching(deserializerClass, ActorRefFactory.class);
+    }
+
+    private static boolean hasScheduledMessageRefFactoryConstructor(Class<? extends JsonDeserializer> deserializerClass) {
+        return hasSingleParameterConstructorMatching(
+            deserializerClass,
+            ScheduledMessageRefFactory.class
+        );
     }
 
     private static boolean isInstantiable(Class<?> aClass) {
@@ -270,21 +336,25 @@ public class ObjectMapperBuilder {
             && !Modifier.isAbstract(aClass.getModifiers());
     }
 
-    private boolean hasNoArgConstructor(Class<? extends StdScalarDeserializer> customDeserializer) {
+    private static boolean hasNoArgConstructor(Class<?> aClass) {
         try {
-            customDeserializer.getConstructor();
+            aClass.getConstructor();
         } catch(NoSuchMethodException e) {
             return false;
         }
         return true;
     }
 
-    private boolean hasSingleConstrutorParameterMatching(Constructor constructor,Class parameterClass) {
-        if(constructor.getParameterTypes().length == 1) {
-            return constructor.getParameterTypes()[0].equals(parameterClass);
-        } else {
+    private static boolean hasSingleParameterConstructorMatching(
+        Class<?> aClass,
+        Class<?> parameterClass)
+    {
+        try {
+            aClass.getConstructor(parameterClass);
+        } catch(NoSuchMethodException e) {
             return false;
         }
+        return true;
     }
 }
 
