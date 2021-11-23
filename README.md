@@ -476,9 +476,20 @@ ea.deserializationCache.enable=false
 # Default: WARN
 ea.logging.messages.unhandled.level=WARN
 
-# Changes the default timeout, in milliseconds, for Temporary Actors
+# Changes the minimum timeout, in milliseconds, for Temporary Actors.
+# It will be clamped to the closest positive integer, if the provided number is negative or 0.
+# Default: 1000 (1 second)
+ea.tempActor.timeout.min=1000
+
+# Changes the default timeout, in milliseconds, for Temporary Actors.
+# It will be clamped so it sits between the minimum and maximum configured numbers.
 # Default: 86400000 (one 24h day)
 ea.tempActor.timeout.default=86400000
+
+# Changes the maximum timeout, in milliseconds, for Temporary Actors.
+# It will be champed to be larger than or equal to the minimum configured number.
+# Default: 172800000 (two 24h days)
+ea.tempActor.timeout.max=172800000
 ```
 
 
