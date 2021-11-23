@@ -163,10 +163,16 @@ public class TestConfiguration extends AsyncConfigurerSupport {
 
     @Bean(name = {"objectMapperBuilder"})
     public ObjectMapperBuilder createObjectMapperBuilder(
+        Environment env,
             SimpleScheduler simpleScheduler,
             TestInternalActorSystems actorRefFactory) {
+        String basePackages = env.getProperty("ea.scan.packages",String.class,"");
+        Boolean useAfterburner = env.getProperty("ea.base.useAfterburner",Boolean.class,Boolean.FALSE);
         // @todo: fix version
-        return new ObjectMapperBuilder(actorRefFactory, simpleScheduler, "1.0.0");
+        ObjectMapperBuilder builder =
+            new ObjectMapperBuilder(actorRefFactory, simpleScheduler, basePackages, "1.0.0");
+        builder.setUseAfterBurner(useAfterburner);
+        return builder;
     }
 
     @Bean(name = {"objectMapper"})

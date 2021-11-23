@@ -12,6 +12,7 @@
             <AppenderRef ref="STDOUT"/>
         </Root>
             <!-- Uncomment the two lines below when running the stress test -->
+<!--         <Logger name="org.elasticsoftware.elasticactors.base" level="DEBUG"/>-->
 <!--         <Logger name="org.elasticsoftware.elasticactors.runtime" level="DEBUG"/>-->
 <!--         <Logger name="org.elasticsoftware.elasticactors.test" level="ERROR"/>-->
 <!--         <Logger name="org.elasticsoftware.elasticactors.test.cluster" level="INFO"/>-->
