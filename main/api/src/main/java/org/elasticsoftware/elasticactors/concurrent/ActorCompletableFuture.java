@@ -1,6 +1,7 @@
 package org.elasticsoftware.elasticactors.concurrent;
 
 import org.elasticsoftware.elasticactors.ActorContextHolder;
+import org.elasticsoftware.elasticactors.ElasticActor;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -63,6 +64,7 @@ public final class ActorCompletableFuture<T> extends CompletableFuture<T> {
      * A specialization of {@link CompletableFuture#get()} that throws an exception if called
      * when handling an actor message.
      *
+     * @throws IllegalStateException if the method is called within a {@link ElasticActor} lifecycle or on(Message) method
      * @see CompletableFuture#get()
      */
     @Override
@@ -75,6 +77,7 @@ public final class ActorCompletableFuture<T> extends CompletableFuture<T> {
      * A specialization of {@link CompletableFuture#get(long, TimeUnit)} that throws an exception
      * if called when handling an actor message.
      *
+     * @throws IllegalStateException if the method is called within a {@link ElasticActor} lifecycle or on(Message) method
      * @see CompletableFuture#get(long, TimeUnit)
      */
     @Override
@@ -89,6 +92,7 @@ public final class ActorCompletableFuture<T> extends CompletableFuture<T> {
      * A specialization of {@link CompletableFuture#join()} that throws an exception if called
      * when handling an actor message.
      *
+     * @throws IllegalStateException if the method is called within a {@link ElasticActor} lifecycle or on(Message) method
      * @see CompletableFuture#join()
      */
     @Override

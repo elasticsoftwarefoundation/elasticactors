@@ -51,6 +51,7 @@ import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 /**
  * @author Joost van de Wijgerd
@@ -105,11 +106,7 @@ public class AskTest {
         testActorSystem.destroy();
     }
 
-    @Test(
-        expectedExceptions = IllegalStateException.class,
-        expectedExceptionsMessageRegExp = "^Cannot perform synchronous operations of an "
-            + "ActorCompletableFuture inside an actor context\\. Current actor: \\[actor://.+]$"
-    )
+    @Test(expectedExceptions = IllegalStateException.class)
     public void testAskGreeting_throwExceptionIfGetInActorContext() throws Exception {
         TestActorSystem testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
@@ -120,29 +117,46 @@ public class AskTest {
         ActorRef echo = actorSystem.actorOf("e", EchoGreetingActor.class);
 
         try {
-            echo.ask(new Greeting("echo"), Greeting.class).thenApply(greeting -> {
-                try {
-                    return echo.ask(
-                            new Greeting(greeting.getWho() + " but this will throw an exception"),
-                            Greeting.class
-                        ).thenAccept(g -> logger.info(
-                            "Got the response and applied an intermediate stage, "
-                                + "but will throw an exception next: {}",
-                            g.getWho()
-                        ))
-                        // Running get inside an actor context = will throw an IllegalStateException
-                        .get();
+            String who = echo.ask(new Greeting("echo"), Greeting.class)
+                .thenApply(greeting -> {
+                    try {
+                        assertTrue(ActorContextHolder.hasActorContext());
+                        // Running get inside an actor context
+                        // 'get' will throw an IllegalStateException
+                        String someString = echo.ask(
+                                new Greeting(greeting.getWho() + " but this will throw an "
+                                    + "exception"),
+                                Greeting.class
+                            ).thenApply(g -> {
+                                logger.info(
+                                    "Got the response and applied an intermediate stage, "
+                                        + "but will throw an exception next: {}",
+                                    g.getWho()
+                                );
+                                return g.getWho();
+                            })
+                            .get();
+                        fail("Calling ActorCompletableFuture.get() is expected to throw an exception here");
+                        return someString;
                 } catch (IllegalStateException e) {
                     throw e;
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             }).get();
+            assertEquals(who, "echo but this will throw an exception");
+            fail("Calling ActorCompletableFuture.get() is expected to throw an exception here");
         } catch (ExecutionException e) {
-            logger.error("Got an error, which we likely expect here", e.getCause());
+            logger.warn("Got an error, which we likely expect here", e.getCause());
             if (e.getCause() instanceof IllegalStateException) {
                 throw (IllegalStateException) e.getCause();
             }
+            throw e;
+        } catch (IllegalStateException e) {
+            logger.warn("Probably expecting this", e);
+            throw e;
+        } catch (Exception e) {
+            logger.error("Not expecting this", e);
             throw e;
         } finally {
             testActorSystem.destroy();
