@@ -147,8 +147,8 @@ public class ActorCompletableFutureTest {
                 }).get();
             assertEquals(who, "echo and thenApply");
         } catch (Exception e) {
-            logger.error("Not expecting this", e);
-            throw e;
+            logger.error("Got an unexpected exception", e);
+            fail("Not expecting an exception here", e);
         } finally {
             testActorSystem.destroy();
         }
