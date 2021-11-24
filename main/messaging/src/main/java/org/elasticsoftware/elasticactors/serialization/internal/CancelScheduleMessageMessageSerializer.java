@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.serialization.internal;
 
-import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
@@ -37,7 +36,7 @@ public final class CancelScheduleMessageMessageSerializer implements MessageSeri
     @Override
     public ByteBuffer serialize(CancelScheduledMessageMessage message) throws IOException {
         Messaging.CancelScheduledMessageMessage.Builder builder = Messaging.CancelScheduledMessageMessage.newBuilder();
-        builder.setMessageId(ByteString.copyFrom(UUIDTools.toByteArray(message.getMessageId())));
+        builder.setMessageId(UUIDTools.toByteString(message.getMessageId()));
         builder.setFireTime(message.getFireTime());
         return ByteBuffer.wrap(builder.build().toByteArray());
     }

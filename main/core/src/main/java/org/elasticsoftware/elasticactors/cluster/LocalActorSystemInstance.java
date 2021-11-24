@@ -48,6 +48,7 @@ import org.elasticsoftware.elasticactors.messaging.ActorShardHasher;
 import org.elasticsoftware.elasticactors.messaging.Hasher;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
@@ -75,7 +76,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -623,7 +623,7 @@ public final class LocalActorSystemInstance implements InternalActorSystem, Shar
             throw new IllegalArgumentException("actorClass has to be annotated with @TempActor");
         }
         // if we have state we need to wrap it
-        String actorId = UUID.randomUUID().toString();
+        String actorId = UUIDTools.createRandomUUIDString();
         // see if we are being called in the context of another actor (and set the affinity key)
         ActorRef self = ActorContextHolder.getSelf();
         String affinityKey = self != null ? self.getActorId() : null;

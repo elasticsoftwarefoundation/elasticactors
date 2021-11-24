@@ -38,7 +38,7 @@ public final class InternalMessageSerializer implements Serializer<InternalMessa
     @Override
     public byte[] serialize(InternalMessage internalMessage) {
         Messaging.InternalMessage.Builder builder = Messaging.InternalMessage.newBuilder();
-        builder.setId(ByteString.copyFrom(UUIDTools.toByteArray(internalMessage.getId())));
+        builder.setId(UUIDTools.toByteString(internalMessage.getId()));
         builder.setPayload(ByteString.copyFrom(internalMessage.getPayload()));
         builder.setPayloadClass(internalMessage.getPayloadClass());
         // backwards compatibility for single receiver messages (needed when running mixed clusters < 0.24)

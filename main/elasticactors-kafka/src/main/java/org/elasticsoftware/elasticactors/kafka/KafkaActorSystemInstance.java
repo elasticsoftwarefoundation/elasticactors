@@ -64,6 +64,7 @@ import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory
 import org.elasticsoftware.elasticactors.kafka.utils.TopicHelper;
 import org.elasticsoftware.elasticactors.messaging.ActorShardHasher;
 import org.elasticsoftware.elasticactors.messaging.Hasher;
+import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
@@ -92,7 +93,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
@@ -355,7 +355,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
         if(actorClass.getAnnotation(TempActor.class) == null) {
             throw new IllegalArgumentException("actorClass has to be annotated with @TempActor");
         }
-        String actorId = UUID.randomUUID().toString();
+        String actorId = UUIDTools.createRandomUUIDString();
         // see if we are being called in the context of another actor (and set the affinity key)
         ActorRef self = ActorContextHolder.getSelf();
         String affinityKey = self != null ? self.getActorId() : null;

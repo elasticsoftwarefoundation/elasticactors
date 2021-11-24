@@ -21,6 +21,7 @@ import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorContextHolder;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
+import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 
@@ -35,7 +36,7 @@ public final class ScheduledMessageShardRef implements ScheduledMessageRef, Acto
     public ScheduledMessageShardRef(String clusterName, ActorShard shard, ScheduledMessageKey scheduledMessageKey) {
         this.shard = shard;
         this.scheduledMessageKey = scheduledMessageKey;
-        this.refSpec = "message://" + clusterName + "/" + shard.getKey().getActorSystemName() + "/shards/" + shard.getKey().getShardId() + "/" + scheduledMessageKey.getFireTime() + "/" + scheduledMessageKey.getId().toString();
+        this.refSpec = "message://" + clusterName + "/" + shard.getKey().getActorSystemName() + "/shards/" + shard.getKey().getShardId() + "/" + scheduledMessageKey.getFireTime() + "/" + UUIDTools.toString(scheduledMessageKey.getId());
     }
 
     @Override

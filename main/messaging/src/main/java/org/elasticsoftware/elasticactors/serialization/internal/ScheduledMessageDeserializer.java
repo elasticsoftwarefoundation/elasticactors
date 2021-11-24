@@ -55,7 +55,7 @@ public final class ScheduledMessageDeserializer implements Deserializer<ByteBuff
             ActorRef sender = getSender(protobufMessage);
             ActorRef receiver = actorRefDeserializer.deserialize(protobufMessage.getReceiver());
             Class messageClass = getClassHelper().forName(protobufMessage.getMessageClass());
-            UUID id = UUIDTools.toUUID(protobufMessage.getId().toByteArray());
+            UUID id = UUIDTools.fromByteString(protobufMessage.getId());
             long fireTime = protobufMessage.getFireTime();
             TraceContext traceContext = protobufMessage.hasTraceContext()
                     ? TraceContextDeserializer.deserialize(protobufMessage.getTraceContext())

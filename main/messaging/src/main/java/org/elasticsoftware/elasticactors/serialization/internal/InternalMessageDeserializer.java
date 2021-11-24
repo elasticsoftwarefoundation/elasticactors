@@ -21,6 +21,7 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.ImmutableInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
@@ -36,7 +37,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-import static org.elasticsoftware.elasticactors.messaging.UUIDTools.toUUID;
 import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 
 /**
@@ -61,7 +61,7 @@ public final class InternalMessageDeserializer implements Deserializer<ByteBuffe
         // there is either a receiver or a list of receivers
         ImmutableList<ActorRef> receivers = getReceivers(protobufMessage);
         String messageClassString = protobufMessage.getPayloadClass();
-        UUID id = toUUID(protobufMessage.getId().toByteArray());
+        UUID id = UUIDTools.fromByteString(protobufMessage.getId());
         boolean durable = protobufMessage.getDurable();
         boolean undeliverable = protobufMessage.getUndeliverable();
         int timeout = protobufMessage.getTimeout() != 0 ? protobufMessage.getTimeout() : InternalMessage.NO_TIMEOUT;

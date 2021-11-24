@@ -275,7 +275,10 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
             Class<?>[] parameterTypes = handlerMethod.getParameterTypes();
             // do some sanity checking
             if(parameterTypes.length == 0) {
-                throw new IllegalArgumentException(format("Handler Method %s should have at least one parameter (message)",handlerMethod.toString()));
+                throw new IllegalArgumentException(format(
+                    "Handler Method %s should have at least one parameter (message)",
+                    handlerMethod
+                ));
             }
             Class<?> messageParameterClass = null;
             this.parameterTypeOrdering = new ParameterType[parameterTypes.length];
@@ -294,7 +297,10 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                 }
             }
             if(messageParameterClass == null) {
-                throw new IllegalArgumentException(format("Handler Method %s should have at least one parameter annotated with @Message",handlerMethod.toString()));
+                throw new IllegalArgumentException(format(
+                    "Handler Method %s should have at least one parameter annotated with @Message",
+                    handlerMethod
+                ));
             }
             this.messageClass = messageParameterClass;
         }

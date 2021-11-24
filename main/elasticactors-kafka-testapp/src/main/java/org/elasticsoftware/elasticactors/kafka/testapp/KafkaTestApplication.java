@@ -28,12 +28,12 @@ import org.elasticsoftware.elasticactors.kafka.testapp.messages.ScheduleDebitCom
 import org.elasticsoftware.elasticactors.kafka.testapp.messages.TransferCommand;
 import org.elasticsoftware.elasticactors.kafka.testapp.messages.VirtualCashAccountAdapter;
 import org.elasticsoftware.elasticactors.kafka.testapp.state.VirtualCashAccountState;
+import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.spring.AnnotationConfigApplicationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 public class KafkaTestApplication {
@@ -104,9 +104,12 @@ public class KafkaTestApplication {
 
             secondAccountRef.tell(new ScheduleDebitCommand(new DebitAccountEvent(new BigDecimal("100.00"))), null);
 
-            accountAdapter = firstAccountRef.ask(new TransferCommand(new BigDecimal("50.00"), "EUR",
-                            firstAccountId, secondAccountId, UUID.randomUUID().toString()),
-                    VirtualCashAccountAdapter.class).toCompletableFuture().get();
+            accountAdapter = firstAccountRef.ask(
+                new TransferCommand(new BigDecimal("50.00"), "EUR",
+                    firstAccountId, secondAccountId, UUIDTools.createRandomUUIDString()
+                ),
+                VirtualCashAccountAdapter.class
+            ).toCompletableFuture().get();
 
             logger.info(firstAccountId+" account balance: "+accountAdapter.getBalance());
 

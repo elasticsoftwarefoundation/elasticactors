@@ -89,7 +89,12 @@ import java.util.concurrent.Executor;
 })
 @PropertySource(value = "classpath:/system.properties", ignoreResourceNotFound = true)
 public class TestConfiguration extends AsyncConfigurerSupport {
-    private final PhysicalNode localNode = new PhysicalNode(UUIDTools.createRandomUUID().toString(), InetAddress.getLoopbackAddress(), true);
+
+    private final PhysicalNode localNode = new PhysicalNode(
+        UUIDTools.createRandomUUIDString(),
+        InetAddress.getLoopbackAddress(),
+        true
+    );
     private final NodeConfiguration nodeConfiguration = new NodeConfiguration();
 
     @Override

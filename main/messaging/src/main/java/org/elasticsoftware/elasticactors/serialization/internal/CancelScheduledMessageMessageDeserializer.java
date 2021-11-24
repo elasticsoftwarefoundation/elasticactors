@@ -42,8 +42,10 @@ public final class CancelScheduledMessageMessageDeserializer implements MessageD
                 serializedObject,
                 Messaging.CancelScheduledMessageMessage::parseFrom
             );
-        return new CancelScheduledMessageMessage(UUIDTools.toUUID(protobufMessage.getMessageId().toByteArray()),
-                                                 protobufMessage.getFireTime());
+        return new CancelScheduledMessageMessage(
+            UUIDTools.fromByteString(protobufMessage.getMessageId()),
+            protobufMessage.getFireTime()
+        );
     }
 
     @Override

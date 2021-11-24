@@ -16,9 +16,14 @@
 
 package org.elasticsoftware.elasticactors.messaging;
 
+import com.eatthepath.uuid.FastUUID;
 import com.fasterxml.uuid.Generators;
 import com.fasterxml.uuid.impl.TimeBasedGenerator;
+import com.fasterxml.uuid.impl.UUIDUtil;
+import com.google.protobuf.ByteString;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
+import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 import java.util.Comparator;
 import java.util.UUID;
@@ -28,7 +33,6 @@ import java.util.UUID;
  */
 public final class UUIDTools {
     private static final TimeBasedGenerator generator = Generators.timeBasedGenerator();
-    private static final int UUID_SIZE = Long.BYTES * 2;
 
     private UUIDTools() {}
 
@@ -38,85 +42,87 @@ public final class UUIDTools {
      * @param uuid the UUID to convert
      * @return the bytes of the UUID
      */
-    public static byte[] toByteArray(UUID uuid) {
-        final long msb = uuid.getMostSignificantBits();
-        final long lsb = uuid.getLeastSignificantBits();
-        byte[] buffer = new byte[UUID_SIZE];
-
-        for (int i = 0; i < 8; i++) {
-            buffer[i] = (byte) (msb >>> (8 * (7 - i)));
-        }
-        for (int i = 8; i < 16; i++) {
-            buffer[i] = (byte) (lsb >>> (8 * (15 - i)));
-        }
-
-        return buffer;
+    @Nonnull
+    public static byte[] toByteArray(@Nonnull UUID uuid) {
+        return UUIDUtil.asByteArray(uuid);
     }
 
-    public static ByteBuffer toByteBuffer(UUID uuid) {
-        final long msb = uuid.getMostSignificantBits();
-        final long lsb = uuid.getLeastSignificantBits();
-        ByteBuffer buffer = ByteBuffer.allocate(UUID_SIZE);
-        buffer.putLong(msb);
-        buffer.putLong(lsb);
-        buffer.rewind();
-        return buffer;
+    @Nonnull
+    public static ByteBuffer toByteBuffer(@Nonnull UUID uuid) {
+        return ByteBuffer.wrap(toByteArray(uuid));
     }
 
-    public static UUID toUUID(ByteBuffer uuid) {
-        if (uuid == null || uuid.remaining() != UUID_SIZE) {
-            throw new IllegalArgumentException(String.format(
-                "UUID byte array must contain exactly %d bytes",
-                UUID_SIZE
-            ));
-        }
+    @Nonnull
+    public static ByteString toByteString(@Nonnull UUID uuid) {
+        return ByteString.copyFrom(toByteArray(uuid));
+    }
+
+    @Nonnull
+    public static UUID fromByteArray(@Nonnull byte[] uuid) {
+        return fromByteArrayInternal(uuid);
+    }
+
+    @Nonnull
+    public static UUID fromByteBuffer(@Nonnull ByteBuffer uuid) {
         if (uuid.hasArray()) {
-            return toUUIDInternal(uuid.array());
+            return fromByteArrayInternal(uuid.array());
         } else {
-            int position = uuid.position();
-            final long msb = uuid.getLong();
-            final long lsb = uuid.getLong();
-            uuid.position(position);
-            return new UUID(msb, lsb);
+            if (uuid.remaining() != 16) {
+                throw new IllegalArgumentException(
+                    "UUID byte buffer must have exactly 16 bytes remaining");
+            }
+            return ByteBufferUtils.doAndReset(uuid, UUIDTools::fromByteBufferInternal);
         }
     }
 
-    public static UUID toUUID(byte[] uuid) {
-        if (uuid == null || uuid.length != UUID_SIZE) {
-            throw new IllegalArgumentException(String.format(
-                "UUID byte array must contain exactly %d bytes",
-                UUID_SIZE
-            ));
-        }
-        return toUUIDInternal(uuid);
-    }
-
-    private static UUID toUUIDInternal(byte[] uuid) {
-        long msb = 0;
-        long lsb = 0;
-        for (int i = 0; i < 8; i++) {
-            msb = (msb << 8) | (uuid[i] & 0xff);
-        }
-        for (int i = 8; i < 16; i++) {
-            lsb = (lsb << 8) | (uuid[i] & 0xff);
-        }
-
+    @Nonnull
+    private static UUID fromByteBufferInternal(@Nonnull ByteBuffer uuid) {
+        final long msb = uuid.getLong();
+        final long lsb = uuid.getLong();
         return new UUID(msb, lsb);
     }
 
+    @Nonnull
+    public static UUID fromByteString(@Nonnull ByteString uuid) {
+        return fromByteArrayInternal(uuid.toByteArray());
+    }
+
+    @Nonnull
+    private static UUID fromByteArrayInternal(@Nonnull byte[] uuid) {
+        return UUIDUtil.uuid(uuid);
+    }
+
+    @Nonnull
     public static UUID createTimeBasedUUID() {
         return generator.generate();
     }
 
+    @Nonnull
+    public static String createTimeBasedUUIDString() {
+        return toString(generator.generate());
+    }
+
+    @Nonnull
     public static UUID createRandomUUID() {
         return UUID.randomUUID();
     }
 
-    public static UUID fromString(String uuid) {
-        return UUID.fromString(uuid);
+    @Nonnull
+    public static String createRandomUUIDString() {
+        return toString(UUID.randomUUID());
     }
 
-    public static long toUnixTimestamp(UUID uuid) {
+    @Nonnull
+    public static UUID fromString(@Nonnull String uuid) {
+        return FastUUID.parseUUID(uuid);
+    }
+
+    @Nonnull
+    public static String toString(@Nonnull UUID uuid) {
+        return FastUUID.toString(uuid);
+    }
+
+    public static long toUnixTimestamp(@Nonnull UUID uuid) {
         // 0x01b21dd213814000 is the number of 100-ns intervals between the
         // UUID epoch 1582-10-15 00:00:00 and the Unix epoch 1970-01-01 00:00:00.
         return (uuid.timestamp() - 0x01b21dd213814000L) / 10_000L;
