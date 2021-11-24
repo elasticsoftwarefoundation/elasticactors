@@ -63,7 +63,7 @@ public final class CreateActorMessageDeserializer implements MessageDeserializer
     }
 
     private ActorState getDeserializedState(Messaging.CreateActorMessage protobufMessage) throws IOException {
-        return !protobufMessage.getInitialState().isEmpty()
+        return protobufMessage.hasInitialState() && !protobufMessage.getInitialState().isEmpty()
             ? getDeserializeState(protobufMessage)
             : null;
     }
@@ -71,11 +71,11 @@ public final class CreateActorMessageDeserializer implements MessageDeserializer
     private ActorState getDeserializeState(Messaging.CreateActorMessage protobufMessage) throws IOException {
         return deserializeState(
             protobufMessage.getActorClass(),
-            protobufMessage.getInitialState().toByteArray()
+            protobufMessage.getInitialState().asReadOnlyByteBuffer()
         );
     }
 
-    private ActorState deserializeState(String actorClass, byte[] serializedState) throws IOException {
+    private ActorState deserializeState(String actorClass, ByteBuffer serializedState) throws IOException {
         try {
             return SerializationTools.deserializeActorState(
                     serializationFrameworks,

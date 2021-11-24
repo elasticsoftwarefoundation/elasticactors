@@ -71,11 +71,28 @@ public final class SerializationTools {
         return null;
     }
 
-    public static ActorState deserializeActorState(SerializationFrameworks serializationFrameworks, Class<? extends ElasticActor> actorClass, byte[] serializedState) throws IOException {
+    public static ActorState deserializeActorState(
+        SerializationFrameworks serializationFrameworks,
+        Class<? extends ElasticActor> actorClass,
+        byte[] serializedState) throws IOException
+    {
+        return deserializeActorState(
+            serializationFrameworks,
+            actorClass,
+            ByteBuffer.wrap(serializedState)
+        );
+    }
+
+    public static ActorState deserializeActorState(
+        SerializationFrameworks serializationFrameworks,
+        Class<? extends ElasticActor> actorClass,
+        ByteBuffer serializedState) throws IOException
+    {
         Actor actorAnnotation = actorClass.getAnnotation(Actor.class);
-        if(actorAnnotation != null) {
-            SerializationFramework framework = serializationFrameworks.getSerializationFramework(actorAnnotation.serializationFramework());
-            return framework.getActorStateDeserializer(actorClass).deserialize(ByteBuffer.wrap(serializedState));
+        if (actorAnnotation != null) {
+            SerializationFramework framework =
+                serializationFrameworks.getSerializationFramework(actorAnnotation.serializationFramework());
+            return framework.getActorStateDeserializer(actorClass).deserialize(serializedState);
         } else {
             // @todo: what to do if we can't determine the state?
             return null;
