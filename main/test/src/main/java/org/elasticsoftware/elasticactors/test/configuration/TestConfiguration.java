@@ -53,9 +53,9 @@ import org.elasticsoftware.elasticactors.test.TestInternalActorSystems;
 import org.elasticsoftware.elasticactors.test.cluster.NoopActorSystemEventRegistryService;
 import org.elasticsoftware.elasticactors.test.cluster.SingleNodeClusterService;
 import org.elasticsoftware.elasticactors.test.state.LoggingActorStateUpdateListener;
+import org.elasticsoftware.elasticactors.util.concurrent.BlockingQueueThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -88,7 +88,8 @@ import java.util.concurrent.Executor;
         ClientConfiguration.class
 })
 @ComponentScans({
-    @ComponentScan("org.elasticsoftware.elasticactors.tracing.spring")
+    @ComponentScan("org.elasticsoftware.elasticactors.tracing.spring"),
+    @ComponentScan("org.elasticsoftware.elasticactors.metrics.spring")
 })
 @PropertySource(value = "classpath:/system.properties", ignoreResourceNotFound = true)
 public class TestConfiguration extends AsyncConfigurerSupport {
@@ -217,13 +218,13 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     @Bean(name = {"actorExecutor"}, destroyMethod = "shutdown")
     public ThreadBoundExecutor createActorExecutor() {
         int workers = Runtime.getRuntime().availableProcessors() * 3;
-        return new ThreadBoundExecutorImpl(new DaemonThreadFactory("ACTOR-WORKER"),workers);
+        return new BlockingQueueThreadBoundExecutor(new DaemonThreadFactory("ACTOR-WORKER"),workers);
     }
 
     @Bean(name = {"queueExecutor"}, destroyMethod = "shutdown")
     public ThreadBoundExecutor createQueueExecutor() {
         int workers = Runtime.getRuntime().availableProcessors() * 3;
-        return new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
+        return new BlockingQueueThreadBoundExecutor(new DaemonThreadFactory("QUEUE-WORKER"),workers);
     }
 
     @Bean(name = {"scheduler"})

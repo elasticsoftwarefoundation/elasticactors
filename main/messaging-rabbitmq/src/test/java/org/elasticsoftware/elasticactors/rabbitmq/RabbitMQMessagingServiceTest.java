@@ -28,9 +28,9 @@ import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
+import org.elasticsoftware.elasticactors.util.concurrent.BlockingQueueThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -85,7 +85,7 @@ public class RabbitMQMessagingServiceTest {
     @Test(enabled = false)
     public void testAllLocal() throws Exception {
         int workers = Runtime.getRuntime().availableProcessors() * 3;
-        ThreadBoundExecutor queueExecutor = new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
+        ThreadBoundExecutor queueExecutor = new BlockingQueueThreadBoundExecutor(new DaemonThreadFactory("QUEUE-WORKER"),workers);
 
         RabbitMQMessagingService messagingService = new RabbitMQMessagingService(CLUSTER_NAME,
                                                                                  System.getProperty("host","localhost"),

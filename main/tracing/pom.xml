@@ -35,7 +35,7 @@
     <dependencies>
         <dependency>
             <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
-            <artifactId>elasticactors-api</artifactId>
+            <artifactId>elasticactors-core</artifactId>
         </dependency>
     </dependencies>
 </project>

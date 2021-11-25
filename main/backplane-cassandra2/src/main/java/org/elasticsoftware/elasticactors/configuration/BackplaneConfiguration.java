@@ -34,9 +34,9 @@ import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorD
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorSerializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageDeserializer;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.util.concurrent.BlockingQueueThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
@@ -59,7 +59,7 @@ public class BackplaneConfiguration {
         final int workers = env.getProperty("ea.asyncUpdateExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
         final int batchSize = env.getProperty("ea.asyncUpdateExecutor.batchSize",Integer.class,20);
         final boolean optimizedV1Batches = env.getProperty("ea.asyncUpdateExecutor.optimizedV1Batches", Boolean.TYPE, true);
-        return new ThreadBoundExecutorImpl(
+        return new BlockingQueueThreadBoundExecutor(
             new PersistentActorUpdateEventProcessor(
                 cassandraSessionManager.getSession(),
                 batchSize,

@@ -53,9 +53,10 @@ import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.DefaultActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.NoopActorStateUpdateProcessor;
+import org.elasticsoftware.elasticactors.util.concurrent.BlockingQueueThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
+import org.elasticsoftware.elasticactors.util.concurrent.disruptor.DisruptorThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -81,7 +82,8 @@ import static java.lang.Boolean.FALSE;
  * @author Joost van de Wijgerd
  */
 @ComponentScans({
-    @ComponentScan("org.elasticsoftware.elasticactors.tracing.spring")
+    @ComponentScan("org.elasticsoftware.elasticactors.tracing.spring"),
+    @ComponentScan("org.elasticsoftware.elasticactors.metrics.spring")
 })
 public class NodeConfiguration {
 
@@ -193,9 +195,9 @@ public class NodeConfiguration {
         final int workers = env.getProperty("ea.actorExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
         final Boolean useDisruptor = env.getProperty("ea.actorExecutor.useDisruptor",Boolean.class, FALSE);
         if(useDisruptor) {
-            return new org.elasticsoftware.elasticactors.util.concurrent.disruptor.ThreadBoundExecutorImpl(new DaemonThreadFactory("ACTOR-WORKER"),workers);
+            return new DisruptorThreadBoundExecutor(new DaemonThreadFactory("ACTOR-WORKER"),workers);
         } else {
-            return new ThreadBoundExecutorImpl(new DaemonThreadFactory("ACTOR-WORKER"), workers);
+            return new BlockingQueueThreadBoundExecutor(new DaemonThreadFactory("ACTOR-WORKER"), workers);
         }
     }
 
@@ -205,9 +207,9 @@ public class NodeConfiguration {
         final int workers = env.getProperty("ea.queueExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
         final Boolean useDisruptor = env.getProperty("ea.queueExecutor.useDisruptor",Boolean.class, FALSE);
         if(useDisruptor) {
-            return new org.elasticsoftware.elasticactors.util.concurrent.disruptor.ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"), workers);
+            return new DisruptorThreadBoundExecutor(new DaemonThreadFactory("QUEUE-WORKER"), workers);
         } else {
-            return new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"), workers);
+            return new BlockingQueueThreadBoundExecutor(new DaemonThreadFactory("QUEUE-WORKER"), workers);
         }
     }
 

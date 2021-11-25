@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors.util.concurrent;
 
+import org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundEventUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,13 +30,14 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.elasticsoftware.elasticactors.util.concurrent.TraceThreadBoundRunnable.wrap;
+import static org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundEventUtils.processBatch;
+import static org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundEventUtils.processEvent;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
-    private static final Logger logger = LoggerFactory.getLogger(ThreadBoundExecutorImpl.class);
+public final class BlockingQueueThreadBoundExecutor implements ThreadBoundExecutor {
+    private static final Logger logger = LoggerFactory.getLogger(BlockingQueueThreadBoundExecutor.class);
     private final ThreadFactory threadFactory;
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
     private final BlockingQueue<ThreadBoundEvent>[] queues;
@@ -46,13 +48,13 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
      * @param threadFactory the thread factory to be used in this executor
      * @param numberOfThreads the number of worker threads
      */
-    public ThreadBoundExecutorImpl(ThreadFactory threadFactory, int numberOfThreads) {
+    public BlockingQueueThreadBoundExecutor(ThreadFactory threadFactory, int numberOfThreads) {
         this(new ThreadBoundRunnableEventProcessor(),1,threadFactory,numberOfThreads);
     }
 
-    public ThreadBoundExecutorImpl(ThreadBoundEventProcessor eventProcessor, int maxBatchSize, ThreadFactory threadFactory, int numberOfThreads) {
+    public BlockingQueueThreadBoundExecutor(ThreadBoundEventProcessor eventProcessor, int maxBatchSize, ThreadFactory threadFactory, int numberOfThreads) {
         this.threadFactory = threadFactory;
-        logger.info("Initializing (LinkedBlockingQueue)ThreadBoundExecutor[{}]",threadFactory);
+        logger.info("Initializing {}[{}]", getClass().getSimpleName(), threadFactory);
         queues = new BlockingQueue[numberOfThreads];
         for (int i = 0; i < numberOfThreads; i++) {
             BlockingQueue<ThreadBoundEvent> queue = new LinkedBlockingQueue<>();
@@ -68,16 +70,13 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
      * @param event The runnable to execute
      */
     @Override
-    public void execute(ThreadBoundEvent event) {
+    public void execute(final ThreadBoundEvent event) {
         if (shuttingDown.get()) {
             throw new RejectedExecutionException("The system is shutting down.");
         }
-        if (event instanceof ThreadBoundRunnable) {
-            event = wrap((ThreadBoundRunnable<?>) event);
-        }
         int bucket = getBucket(event.getKey());
         BlockingQueue<ThreadBoundEvent> queue = queues[bucket];
-        queue.add(event);
+        queue.add(ThreadBoundEventUtils.prepare(event));
     }
 
     @Override
@@ -91,7 +90,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
 
     @Override
     public void shutdown() {
-        logger.info("Shutting down the (LinkedBlockingQueue)ThreadBoundExecutor[{}]",threadFactory);
+        logger.info("Shutting down the {}[{}]", getClass().getSimpleName(), threadFactory);
         if (shuttingDown.compareAndSet(false, true)) {
             final CountDownLatch shuttingDownLatch = new CountDownLatch(queues.length);
             for (BlockingQueue<ThreadBoundEvent> queue : queues) {
@@ -99,14 +98,22 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
             }
             try {
                 if (!shuttingDownLatch.await(30, TimeUnit.SECONDS)) {
-                    logger.error("Timeout while waiting for (LinkedBlockingQueue)ThreadBoundExecutor[{}] queues to empty",threadFactory);
+                    logger.error(
+                        "Timeout while waiting for {}[{}] queues to empty",
+                        getClass().getSimpleName(),
+                        threadFactory
+                    );
                 }
             } catch (InterruptedException ignore) {
                 //we are shutting down anyway
-                logger.warn("(LinkedBlockingQueue)ThreadBoundExecutor[{}] shutdown interrupted.",threadFactory);
+                logger.warn(
+                    "{}[{}] shutdown interrupted.",
+                    getClass().getSimpleName(),
+                    threadFactory
+                );
             }
         }
-        logger.info("(LinkedBlockingQueue)ThreadBoundExecutor[{}] shut down completed",threadFactory);
+        logger.info("{}[{}] shut down completed", getClass().getSimpleName(), threadFactory);
     }
 
 
@@ -137,7 +144,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
                         // block on event availability
                         ThreadBoundEvent event = queue.take();
                         // add to the batch, and see if we can add more
-                        if(batch != null) {
+                        if (batch != null) {
                             batch.add(event);
                             queue.drainTo(batch, maxBatchSize);
                         }
@@ -153,7 +160,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
                                     itr.remove();
                                 }
                             }
-                            eventProcessor.process(batch);
+                            processBatch(eventProcessor, batch);
                         } else {
                             // just the one event, no need to iterate
                             if (event instanceof ShutdownTask) {
@@ -161,9 +168,9 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
                                 ((ShutdownTask)event).latch.countDown();
                             } else {
                                 if (batch != null) {
-                                    eventProcessor.process(batch);
+                                    processBatch(eventProcessor, batch);
                                 } else {
-                                    eventProcessor.process(event);
+                                    processEvent(eventProcessor, event);
                                 }
                             }
                         }
@@ -204,7 +211,7 @@ public final class ThreadBoundExecutorImpl implements ThreadBoundExecutor {
 
         @Override
         public String toString() {
-            return "ShutdownTask";
+            return ShutdownTask.class.getSimpleName();
         }
 
         @Override

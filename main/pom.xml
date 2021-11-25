@@ -492,7 +492,6 @@
         <module>tracing-slf4j</module>
         <module>tracing-spring</module>
         <module>caching</module>
-        <module>micrometer</module>
     </modules>
 
     <build>

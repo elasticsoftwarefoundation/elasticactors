@@ -25,7 +25,8 @@ import java.util.List;
  * @author Joost van de Wijgerd
  */
 public final class ThreadBoundRunnableEventProcessor implements ThreadBoundEventProcessor<ThreadBoundRunnable> {
-    private static final Logger logger = LoggerFactory.getLogger(ThreadBoundExecutorImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(
+        BlockingQueueThreadBoundExecutor.class);
 
     @Override
     public void process(List<ThreadBoundRunnable> events) {

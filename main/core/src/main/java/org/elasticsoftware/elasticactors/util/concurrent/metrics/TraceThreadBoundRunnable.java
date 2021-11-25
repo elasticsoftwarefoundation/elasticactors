@@ -1,20 +1,21 @@
-package org.elasticsoftware.elasticactors.util.concurrent;
+package org.elasticsoftware.elasticactors.util.concurrent.metrics;
 
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import javax.annotation.Nonnull;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 
-public class TraceThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
+final class TraceThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
 
     private final ThreadBoundRunnable<T> delegate;
     private final TraceContext parent;
     private final CreationContext creationContext;
 
-    public static <T> TraceThreadBoundRunnable<T> wrap(@Nonnull ThreadBoundRunnable<T> delegate) {
+    static <T> TraceThreadBoundRunnable<T> wrap(@Nonnull ThreadBoundRunnable<T> delegate) {
         if (delegate instanceof TraceThreadBoundRunnable) {
             return (TraceThreadBoundRunnable<T>) delegate;
         }

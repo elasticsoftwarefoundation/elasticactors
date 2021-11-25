@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.util.concurrent.disruptor;
 import com.lmax.disruptor.EventHandler;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
+import org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundEventUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,7 @@ import java.util.List;
  */
 public final class ThreadBoundEventHandler implements EventHandler<ThreadBoundEventWrapper> {
     private final ThreadBoundEventProcessor delegate;
-    private final List<ThreadBoundEvent<?>> batch;
+    private final List<ThreadBoundEvent> batch;
 
     public ThreadBoundEventHandler(ThreadBoundEventProcessor delegate, int maxBatchSize) {
         this.delegate = delegate;
@@ -40,7 +41,7 @@ public final class ThreadBoundEventHandler implements EventHandler<ThreadBoundEv
         batch.add(event.getWrappedEvent());
         if(endOfBatch) {
             try {
-                delegate.process(batch);
+                ThreadBoundEventUtils.processBatch(delegate, batch);
             } finally {
                 batch.clear();
             }

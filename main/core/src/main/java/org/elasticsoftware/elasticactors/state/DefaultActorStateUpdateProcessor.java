@@ -16,10 +16,10 @@
 
 package org.elasticsoftware.elasticactors.state;
 
+import org.elasticsoftware.elasticactors.util.concurrent.BlockingQueueThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +44,7 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
 
     public DefaultActorStateUpdateProcessor(Collection<ActorStateUpdateListener> listeners, int workerCount, int maxBatchSize) {
         this.listeners.addAll(listeners);
-        this.executor = new ThreadBoundExecutorImpl(this, maxBatchSize, new DaemonThreadFactory("ACTORSTATE-UPDATE-WORKER"), workerCount);
+        this.executor = new BlockingQueueThreadBoundExecutor(this, maxBatchSize, new DaemonThreadFactory("ACTORSTATE-UPDATE-WORKER"), workerCount);
         // optimize in the case of one listener, copy otherwise to avoid possible concurrency issues on the serializedState ByteBuffer
         this.processingFunction = (listeners.size() == 1) ? this::processWithoutCopy : this::processWithCopy;
     }

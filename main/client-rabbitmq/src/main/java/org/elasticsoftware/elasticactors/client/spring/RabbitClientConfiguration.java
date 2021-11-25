@@ -2,9 +2,10 @@ package org.elasticsoftware.elasticactors.client.spring;
 
 import org.elasticsoftware.elasticactors.client.configuration.ClientConfiguration;
 import org.elasticsoftware.elasticactors.configuration.MessagingConfiguration;
+import org.elasticsoftware.elasticactors.util.concurrent.BlockingQueueThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
+import org.elasticsoftware.elasticactors.util.concurrent.disruptor.DisruptorThreadBoundExecutor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
@@ -27,11 +28,11 @@ public class RabbitClientConfiguration {
         final Boolean useDisruptor =
                 env.getProperty("ea.queueExecutor.useDisruptor", Boolean.class, FALSE);
         if (useDisruptor) {
-            return new org.elasticsoftware.elasticactors.util.concurrent.disruptor.ThreadBoundExecutorImpl(
+            return new DisruptorThreadBoundExecutor(
                     new DaemonThreadFactory("QUEUE-WORKER"),
                     workers);
         } else {
-            return new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"), workers);
+            return new BlockingQueueThreadBoundExecutor(new DaemonThreadFactory("QUEUE-WORKER"), workers);
         }
     }
 

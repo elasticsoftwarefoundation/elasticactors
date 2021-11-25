@@ -67,7 +67,8 @@ import java.net.UnknownHostException;
 import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 
 @ComponentScans({
-    @ComponentScan("org.elasticsoftware.elasticactors.tracing.spring")
+    @ComponentScan("org.elasticsoftware.elasticactors.tracing.spring"),
+    @ComponentScan("org.elasticsoftware.elasticactors.metrics.spring")
 })
 public class NodeConfiguration {
 
