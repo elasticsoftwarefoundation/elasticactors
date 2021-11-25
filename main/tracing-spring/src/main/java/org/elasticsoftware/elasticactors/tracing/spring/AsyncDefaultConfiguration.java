@@ -1,4 +1,4 @@
-package org.elasticsoftware.elasticactors.tracing.configuration;
+package org.elasticsoftware.elasticactors.tracing.spring;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

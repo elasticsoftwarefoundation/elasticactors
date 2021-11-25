@@ -53,6 +53,8 @@ import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.ComponentScans;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
@@ -64,6 +66,9 @@ import java.net.UnknownHostException;
 
 import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 
+@ComponentScans({
+    @ComponentScan("org.elasticsoftware.elasticactors.tracing.spring")
+})
 public class NodeConfiguration {
 
     @Bean(name = {

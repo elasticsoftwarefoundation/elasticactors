@@ -1,6 +1,7 @@
-package org.elasticsoftware.elasticactors.tracing.configuration;
+package org.elasticsoftware.elasticactors.tracing.spring;
 
 import org.springframework.core.task.TaskDecorator;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.concurrent.ListenableFuture;
 
@@ -54,12 +55,12 @@ class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
     }
 
     @Override
-    public void setThreadFactory(ThreadFactory threadFactory) {
+    public void setThreadFactory(@Nullable ThreadFactory threadFactory) {
         this.delegate.setThreadFactory(threadFactory);
     }
 
     @Override
-    public void setRejectedExecutionHandler(RejectedExecutionHandler rejectedExecutionHandler) {
+    public void setRejectedExecutionHandler(@Nullable RejectedExecutionHandler rejectedExecutionHandler) {
         this.delegate.setRejectedExecutionHandler(rejectedExecutionHandler);
     }
 
@@ -128,7 +129,7 @@ class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
     }
 
     @Override
-    public void setThreadNamePrefix(String threadNamePrefix) {
+    public void setThreadNamePrefix(@Nullable String threadNamePrefix) {
         this.delegate.setThreadNamePrefix(threadNamePrefix);
     }
 
@@ -163,7 +164,7 @@ class LazyTraceThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
     }
 
     @Override
-    public void setThreadGroup(ThreadGroup threadGroup) {
+    public void setThreadGroup(@Nullable ThreadGroup threadGroup) {
         this.delegate.setThreadGroup(threadGroup);
     }
 

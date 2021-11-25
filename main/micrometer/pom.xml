@@ -22,10 +22,10 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>elasticactors-tracing-slf4j</artifactId>
+    <artifactId>elasticactors-micrometer</artifactId>
     <packaging>jar</packaging>
 
-    <name>Elastic Software Foundation :: ElasticActors :: Tracing :: Slf4j Integration</name>
+    <name>Elastic Software Foundation :: ElasticActors :: Micrometer</name>
     <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
     <properties>
@@ -35,12 +35,11 @@
     <dependencies>
         <dependency>
             <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
-            <artifactId>elasticactors-api</artifactId>
+            <artifactId>elasticactors-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
-            <artifactId>elasticactors-tracing</artifactId>
-            <scope>runtime</scope>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
         </dependency>
     </dependencies>
 </project>

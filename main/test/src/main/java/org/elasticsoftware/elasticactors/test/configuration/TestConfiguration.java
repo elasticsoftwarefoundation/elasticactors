@@ -53,13 +53,14 @@ import org.elasticsoftware.elasticactors.test.TestInternalActorSystems;
 import org.elasticsoftware.elasticactors.test.cluster.NoopActorSystemEventRegistryService;
 import org.elasticsoftware.elasticactors.test.cluster.SingleNodeClusterService;
 import org.elasticsoftware.elasticactors.test.state.LoggingActorStateUpdateListener;
-import org.elasticsoftware.elasticactors.tracing.configuration.TracingConfiguration;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.ComponentScans;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Import;
@@ -84,8 +85,10 @@ import java.util.concurrent.Executor;
 @Import({
         BackplaneConfiguration.class,
         MessagingConfiguration.class,
-        ClientConfiguration.class,
-        TracingConfiguration.class
+        ClientConfiguration.class
+})
+@ComponentScans({
+    @ComponentScan("org.elasticsoftware.elasticactors.tracing.spring")
 })
 @PropertySource(value = "classpath:/system.properties", ignoreResourceNotFound = true)
 public class TestConfiguration extends AsyncConfigurerSupport {

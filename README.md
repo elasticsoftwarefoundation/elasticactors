@@ -99,7 +99,10 @@ The following exceptions apply:
   * Changes to the shard-to-node distribution algorithm require the actor system to be completely 
     destroyed or scaled down to 1 node before deploying the new version.
   * The tracing module was split between its basic implementation and an optional module to integrate
-    it with the logging framework. See [the section below](#Adding-trace-information-to-logs).
+    it with the logging framework. See [how to add trace information to logs in the section below](#adding-trace-information-to-logs).
+* **2.5 - 5.1** to **5.2** or later:
+  * The tracing module now integrates with Spring without the need to explicitly import the `TracingConfiguration` class.
+    See [how to instrument Spring beans in the section below](#instrumenting-spring-beans).
 
 
 ## Basic configuration
@@ -510,12 +513,25 @@ In order to use distributed tracing, include the following dependency in your pr
 <dependency>
     <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
     <artifactId>elasticactors-tracing</artifactId>
-    <scope>compile</scope> <!-- or runtime if you don't need the Spring bits-->
+    <scope>runtime</scope>
 </dependency>
 ```
 
-In order to instrument asynchronous executor beans automatically, import `TracingConfiguration` to
-your Spring configuration. This includes a bean post-processor that wraps those facilities in ones
+
+### Instrumenting Spring beans
+
+In order to instrument asynchronous executor beans automatically, add the following dependency 
+to your project:
+
+```xml
+<dependency>
+    <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
+    <artifactId>elasticactors-tracing-spring</artifactId>
+    <scope>runtime</scope>
+</dependency>
+```
+
+This includes a bean post-processor that wraps those facilities in ones
 that can automatically propagate the traces from Elastic Actors.
 
 `MessagingContextManager` is the main class responsible for managing trace context data.\

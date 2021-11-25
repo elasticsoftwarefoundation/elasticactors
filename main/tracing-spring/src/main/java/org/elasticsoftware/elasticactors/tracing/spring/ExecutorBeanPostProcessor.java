@@ -1,4 +1,4 @@
-package org.elasticsoftware.elasticactors.tracing.configuration;
+package org.elasticsoftware.elasticactors.tracing.spring;
 
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInterceptor;

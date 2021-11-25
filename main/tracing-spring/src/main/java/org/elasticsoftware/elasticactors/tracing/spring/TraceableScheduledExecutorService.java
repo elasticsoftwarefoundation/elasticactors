@@ -1,4 +1,4 @@
-package org.elasticsoftware.elasticactors.tracing.configuration;
+package org.elasticsoftware.elasticactors.tracing.spring;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;

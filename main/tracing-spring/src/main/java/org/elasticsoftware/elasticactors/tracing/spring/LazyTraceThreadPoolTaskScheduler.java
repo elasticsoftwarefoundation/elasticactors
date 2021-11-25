@@ -1,4 +1,4 @@
-package org.elasticsoftware.elasticactors.tracing.configuration;
+package org.elasticsoftware.elasticactors.tracing.spring;
 
 import org.springframework.lang.Nullable;
 import org.springframework.scheduling.Trigger;
@@ -221,18 +221,18 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
     }
 
     @Override
-    public void setThreadFactory(ThreadFactory threadFactory) {
+    public void setThreadFactory(@Nullable ThreadFactory threadFactory) {
         this.delegate.setThreadFactory(threadFactory);
     }
 
     @Override
-    public void setThreadNamePrefix(String threadNamePrefix) {
+    public void setThreadNamePrefix(@Nullable String threadNamePrefix) {
         this.delegate.setThreadNamePrefix(threadNamePrefix);
     }
 
     @Override
     public void setRejectedExecutionHandler(
-            RejectedExecutionHandler rejectedExecutionHandler) {
+            @Nullable RejectedExecutionHandler rejectedExecutionHandler) {
         this.delegate.setRejectedExecutionHandler(rejectedExecutionHandler);
     }
 
@@ -308,7 +308,7 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
     }
 
     @Override
-    public void setThreadGroup(ThreadGroup threadGroup) {
+    public void setThreadGroup(@Nullable ThreadGroup threadGroup) {
         this.delegate.setThreadGroup(threadGroup);
     }
 

@@ -59,6 +59,8 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.ComponentScans;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
@@ -78,7 +80,9 @@ import static java.lang.Boolean.FALSE;
 /**
  * @author Joost van de Wijgerd
  */
-
+@ComponentScans({
+    @ComponentScan("org.elasticsoftware.elasticactors.tracing.spring")
+})
 public class NodeConfiguration {
 
     private static final String EA_METRICS_OVERRIDES = "ea.metrics.messages.overrides.";

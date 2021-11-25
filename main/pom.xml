@@ -71,6 +71,7 @@
         <persistence-api.version>2.2</persistence-api.version>
         <plexus-utils.version>3.0.24</plexus-utils.version>
         <netty.version>4.1.70.Final</netty.version>
+        <micrometer.version>1.5.17</micrometer.version>
     </properties>
 
     <scm>
@@ -133,6 +134,13 @@
                 <groupId>io.fabric8</groupId>
                 <artifactId>kubernetes-client-bom</artifactId>
                 <version>${kubernetes-client.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-bom</artifactId>
+                <version>${micrometer.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -482,7 +490,9 @@
         <module>client-rabbitmq</module>
         <module>tracing</module>
         <module>tracing-slf4j</module>
+        <module>tracing-spring</module>
         <module>caching</module>
+        <module>micrometer</module>
     </modules>
 
     <build>
