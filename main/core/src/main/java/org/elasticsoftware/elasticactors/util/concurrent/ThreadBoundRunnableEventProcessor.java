@@ -36,13 +36,6 @@ public final class ThreadBoundRunnableEventProcessor implements ThreadBoundEvent
     }
 
     @Override
-    public void process(ThreadBoundRunnable... events) {
-        for (ThreadBoundRunnable event : events) {
-            process(event);
-        }
-    }
-
-    @Override
     public void process(ThreadBoundRunnable event) {
         try {
             event.run();

@@ -23,7 +23,6 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcess
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -77,11 +76,6 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
                 );
             }
         }
-    }
-
-    @Override
-    public void process(PersistentActorUpdateEvent... events) {
-        process(Arrays.asList(events));
     }
 
     @Override

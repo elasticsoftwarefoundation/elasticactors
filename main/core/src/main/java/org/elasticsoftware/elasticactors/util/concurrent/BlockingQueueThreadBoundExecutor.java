@@ -16,10 +16,12 @@
 
 package org.elasticsoftware.elasticactors.util.concurrent;
 
-import org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundEventUtils;
+import org.elasticsoftware.elasticactors.util.concurrent.metrics.MeterConfiguration;
+import org.elasticsoftware.elasticactors.util.concurrent.metrics.TimedThreadBoundExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.ListIterator;
 import java.util.concurrent.BlockingQueue;
@@ -30,13 +32,10 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundEventUtils.processBatch;
-import static org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundEventUtils.processEvent;
-
 /**
  * @author Joost van de Wijgerd
  */
-public final class BlockingQueueThreadBoundExecutor implements ThreadBoundExecutor {
+public final class BlockingQueueThreadBoundExecutor extends TimedThreadBoundExecutor {
     private static final Logger logger = LoggerFactory.getLogger(BlockingQueueThreadBoundExecutor.class);
     private final ThreadFactory threadFactory;
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
@@ -48,17 +47,34 @@ public final class BlockingQueueThreadBoundExecutor implements ThreadBoundExecut
      * @param threadFactory the thread factory to be used in this executor
      * @param numberOfThreads the number of worker threads
      */
-    public BlockingQueueThreadBoundExecutor(ThreadFactory threadFactory, int numberOfThreads) {
-        this(new ThreadBoundRunnableEventProcessor(),1,threadFactory,numberOfThreads);
+    public BlockingQueueThreadBoundExecutor(
+        ThreadFactory threadFactory,
+        int numberOfThreads,
+        @Nullable MeterConfiguration meterConfiguration)
+    {
+        this(
+            new ThreadBoundRunnableEventProcessor(),
+            1,
+            threadFactory,
+            numberOfThreads,
+            meterConfiguration
+        );
     }
 
-    public BlockingQueueThreadBoundExecutor(ThreadBoundEventProcessor eventProcessor, int maxBatchSize, ThreadFactory threadFactory, int numberOfThreads) {
+    public BlockingQueueThreadBoundExecutor(
+        ThreadBoundEventProcessor eventProcessor,
+        int maxBatchSize,
+        ThreadFactory threadFactory,
+        int numberOfThreads,
+        MeterConfiguration meterConfiguration)
+    {
+        super(eventProcessor, meterConfiguration);
         this.threadFactory = threadFactory;
         logger.info("Initializing {}[{}]", getClass().getSimpleName(), threadFactory);
-        queues = new BlockingQueue[numberOfThreads];
+        this.queues = new BlockingQueue[numberOfThreads];
         for (int i = 0; i < numberOfThreads; i++) {
             BlockingQueue<ThreadBoundEvent> queue = new LinkedBlockingQueue<>();
-            Thread t = threadFactory.newThread(new Consumer(queue,eventProcessor,maxBatchSize));
+            Thread t = threadFactory.newThread(new Consumer(queue, maxBatchSize));
             queues[i] = queue;
             t.start();
         }
@@ -76,7 +92,7 @@ public final class BlockingQueueThreadBoundExecutor implements ThreadBoundExecut
         }
         int bucket = getBucket(event.getKey());
         BlockingQueue<ThreadBoundEvent> queue = queues[bucket];
-        queue.add(ThreadBoundEventUtils.prepare(event));
+        queue.add(prepare(event));
     }
 
     @Override
@@ -116,20 +132,13 @@ public final class BlockingQueueThreadBoundExecutor implements ThreadBoundExecut
         logger.info("{}[{}] shut down completed", getClass().getSimpleName(), threadFactory);
     }
 
-
-    private static final class Consumer implements Runnable {
+    private final class Consumer implements Runnable {
         private final BlockingQueue<ThreadBoundEvent> queue;
         private final int maxBatchSize;
         private final ArrayList<ThreadBoundEvent> batch;
-        private final ThreadBoundEventProcessor<ThreadBoundEvent> eventProcessor;
 
-        public Consumer(BlockingQueue<ThreadBoundEvent> queue) {
-            this(queue,new ThreadBoundRunnableEventProcessor(),1);
-        }
-
-        public Consumer(BlockingQueue<ThreadBoundEvent> queue, ThreadBoundEventProcessor eventProcessor, int maxBatchSize) {
+        public Consumer(BlockingQueue<ThreadBoundEvent> queue, int maxBatchSize) {
             this.queue = queue;
-            this.eventProcessor = eventProcessor;
             // store this -1 as we will always use take to get the first element of the batch
             this.maxBatchSize = maxBatchSize - 1;
             this.batch = maxBatchSize > 1 ? new ArrayList<>(maxBatchSize) : null;
@@ -160,7 +169,7 @@ public final class BlockingQueueThreadBoundExecutor implements ThreadBoundExecut
                                     itr.remove();
                                 }
                             }
-                            processBatch(eventProcessor, batch);
+                            processBatch(batch);
                         } else {
                             // just the one event, no need to iterate
                             if (event instanceof ShutdownTask) {
@@ -168,9 +177,9 @@ public final class BlockingQueueThreadBoundExecutor implements ThreadBoundExecut
                                 ((ShutdownTask)event).latch.countDown();
                             } else {
                                 if (batch != null) {
-                                    processBatch(eventProcessor, batch);
+                                    processBatch(batch);
                                 } else {
-                                    processEvent(eventProcessor, event);
+                                    processEvent(event);
                                 }
                             }
                         }
