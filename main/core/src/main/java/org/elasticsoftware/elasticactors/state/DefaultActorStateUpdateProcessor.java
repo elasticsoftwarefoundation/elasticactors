@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors.state;
 
+import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
@@ -25,13 +26,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * @author Joost van de Wijgerd
@@ -39,14 +37,20 @@ import java.util.stream.Collectors;
 public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateProcessor, ThreadBoundEventProcessor<ActorStateUpdateEvent> {
     private static final Logger logger = LoggerFactory.getLogger(DefaultActorStateUpdateProcessor.class);
     private final ThreadBoundExecutor<ActorStateUpdateEvent> executor;
-    private final List<ActorStateUpdateListener> listeners = new ArrayList<>();
-    private final Consumer<List<ActorStateUpdateEvent>> processingFunction;
+    private final ImmutableList<ActorStateUpdateListener> listeners;
 
-    public DefaultActorStateUpdateProcessor(Collection<ActorStateUpdateListener> listeners, int workerCount, int maxBatchSize) {
-        this.listeners.addAll(listeners);
-        this.executor = new ThreadBoundExecutorImpl(this, maxBatchSize, new DaemonThreadFactory("ACTORSTATE-UPDATE-WORKER"), workerCount);
-        // optimize in the case of one listener, copy otherwise to avoid possible concurrency issues on the serializedState ByteBuffer
-        this.processingFunction = (listeners.size() == 1) ? this::processWithoutCopy : this::processWithCopy;
+    public DefaultActorStateUpdateProcessor(
+        Collection<ActorStateUpdateListener> listeners,
+        int workerCount,
+        int maxBatchSize)
+    {
+        this.listeners = ImmutableList.copyOf(listeners);
+        this.executor = new ThreadBoundExecutorImpl(
+            this,
+            maxBatchSize,
+            new DaemonThreadFactory("ACTORSTATE-UPDATE-WORKER"),
+            workerCount
+        );
     }
 
     @Override
@@ -67,7 +71,15 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
 
     @Override
     public void process(List<ActorStateUpdateEvent> events) {
-        processingFunction.accept(events);
+        for (ActorStateUpdateListener listener : listeners) {
+            try {
+                // No need to copy events now that we made
+                // ActorStateUpdateEvent#getSerializedState safe
+                listener.onUpdate(events);
+            } catch(Exception e) {
+                logger.error("Unexpected Exception while processing ActorStateUpdates on listener of type {}", listener.getClass().getSimpleName(), e);
+            }
+        }
     }
 
     @Override
@@ -78,25 +90,5 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
     @Override
     public void process(ActorStateUpdateEvent event) {
         process(Collections.singletonList(event));
-    }
-
-    private void processWithoutCopy(List<ActorStateUpdateEvent> events) {
-        for (ActorStateUpdateListener listener : listeners) {
-            try {
-                listener.onUpdate(events);
-            } catch(Exception e) {
-                logger.error("Unexpected Exception while processing ActorStateUpdates on listener of type {}", listener.getClass().getSimpleName(), e);
-            }
-        }
-    }
-
-    private void processWithCopy(List<ActorStateUpdateEvent> events) {
-        for (ActorStateUpdateListener listener : listeners) {
-            try {
-                listener.onUpdate(events.stream().map(ActorStateUpdateEvent::copyOf).collect(Collectors.toList()));
-            } catch(Exception e) {
-                logger.error("Unexpected Exception while processing ActorStateUpdates on listener of type {}", listener.getClass().getSimpleName(), e);
-            }
-        }
     }
 }
