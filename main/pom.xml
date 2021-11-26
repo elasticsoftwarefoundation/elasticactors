@@ -72,6 +72,7 @@
         <plexus-utils.version>3.0.24</plexus-utils.version>
         <netty.version>4.1.70.Final</netty.version>
         <micrometer.version>1.5.17</micrometer.version>
+        <HdrHistogram.version>2.1.12</HdrHistogram.version>
     </properties>
 
     <scm>
@@ -143,6 +144,11 @@
                 <version>${micrometer.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.hdrhistogram</groupId>
+                <artifactId>HdrHistogram</artifactId>
+                <version>${HdrHistogram.version}</version>
             </dependency>
             <dependency>
                 <groupId>javax.inject</groupId>

@@ -85,14 +85,26 @@ public class RabbitMQMessagingServiceTest {
     @Test(enabled = false)
     public void testAllLocal() throws Exception {
         int workers = Runtime.getRuntime().availableProcessors() * 3;
-        ThreadBoundExecutor queueExecutor = new BlockingQueueThreadBoundExecutor(new DaemonThreadFactory("QUEUE-WORKER"),workers);
+        ThreadBoundExecutor queueExecutor = new BlockingQueueThreadBoundExecutor(
+            new DaemonThreadFactory("QUEUE-WORKER"),
+            workers,
+            null
+        );
 
-        RabbitMQMessagingService messagingService = new RabbitMQMessagingService(CLUSTER_NAME,
-                                                                                 System.getProperty("host","localhost"),
-                                                                                 5672, System.getProperty("username","guest"),
-                                                                                 System.getProperty("password","guest"),
-                                                                                 MessageAcker.Type.DIRECT,
-                                                                                 queueExecutor, new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem), 10);
+        RabbitMQMessagingService messagingService = new RabbitMQMessagingService(
+            CLUSTER_NAME,
+            System.getProperty("host", "localhost"),
+            5672,
+            System.getProperty("username", "guest"),
+            System.getProperty("password", "guest"),
+            MessageAcker.Type.DIRECT,
+            queueExecutor,
+            new InternalMessageDeserializer(
+                new ActorRefDeserializer(actorRefFactory),
+                internalActorSystem
+            ),
+            10
+        );
         messagingService.start();
 
         final CountDownLatch waitLatch = new CountDownLatch(NUM_MESSAGES);

@@ -21,6 +21,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.ManagedActorsRegistry;
@@ -53,10 +55,8 @@ import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.DefaultActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.NoopActorStateUpdateProcessor;
-import org.elasticsoftware.elasticactors.util.concurrent.BlockingQueueThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.disruptor.DisruptorThreadBoundExecutor;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -69,12 +69,13 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.lang.Nullable;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.Map;
+import java.util.List;
 
 import static java.lang.Boolean.FALSE;
 
@@ -83,7 +84,6 @@ import static java.lang.Boolean.FALSE;
  */
 @ComponentScans({
     @ComponentScan("org.elasticsoftware.elasticactors.tracing.spring"),
-    @ComponentScan("org.elasticsoftware.elasticactors.metrics.spring")
 })
 public class NodeConfiguration {
 
@@ -191,26 +191,34 @@ public class NodeConfiguration {
 
     @Bean(name = {"actorExecutor"}, destroyMethod = "shutdown")
     @DependsOn("asyncUpdateExecutor")
-    public ThreadBoundExecutor createActorExecutor(Environment env) {
-        final int workers = env.getProperty("ea.actorExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
-        final Boolean useDisruptor = env.getProperty("ea.actorExecutor.useDisruptor",Boolean.class, FALSE);
-        if(useDisruptor) {
-            return new DisruptorThreadBoundExecutor(new DaemonThreadFactory("ACTOR-WORKER"),workers);
-        } else {
-            return new BlockingQueueThreadBoundExecutor(new DaemonThreadFactory("ACTOR-WORKER"), workers);
-        }
+    public ThreadBoundExecutor createActorExecutor(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsActorExecutorTags") Tags customTags)
+    {
+        return ThreadBoundExecutorBuilder.build(
+            env,
+            "actorExecutor",
+            "ACTOR-WORKER",
+            meterRegistry,
+            customTags
+        );
     }
 
     @Bean(name = {"queueExecutor"}, destroyMethod = "shutdown")
     @DependsOn("actorExecutor")
-    public ThreadBoundExecutor createQueueExecutor(Environment env) {
-        final int workers = env.getProperty("ea.queueExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
-        final Boolean useDisruptor = env.getProperty("ea.queueExecutor.useDisruptor",Boolean.class, FALSE);
-        if(useDisruptor) {
-            return new DisruptorThreadBoundExecutor(new DaemonThreadFactory("QUEUE-WORKER"), workers);
-        } else {
-            return new BlockingQueueThreadBoundExecutor(new DaemonThreadFactory("QUEUE-WORKER"), workers);
-        }
+    public ThreadBoundExecutor createQueueExecutor(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsQueueExecutorTags") Tags customTags)
+    {
+        return ThreadBoundExecutorBuilder.build(
+            env,
+            "queueExecutor",
+            "QUEUE-WORKER",
+            meterRegistry,
+            customTags
+        );
     }
 
     @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
@@ -259,16 +267,20 @@ public class NodeConfiguration {
 
     @Bean(name = {"actorStateUpdateProcessor"})
     public ActorStateUpdateProcessor createActorStateUpdateProcessor(
-        ApplicationContext applicationContext,
-        Environment env)
+        Environment env,
+        List<ActorStateUpdateListener> listeners,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsActorStateUpdateProcessorTags") Tags customTags)
     {
-        Map<String, ActorStateUpdateListener> listeners = applicationContext.getBeansOfType(ActorStateUpdateListener.class);
         if(listeners.isEmpty()) {
             return new NoopActorStateUpdateProcessor();
         } else {
-            final int workers = env.getProperty("ea.actorStateUpdateProcessor.workerCount",Integer.class,1);
-            final int maxBatchSize = env.getProperty("ea.actorStateUpdateProcessor.maxBatchSize",Integer.class,20);
-            return new DefaultActorStateUpdateProcessor(listeners.values(), workers, maxBatchSize);
+            return new DefaultActorStateUpdateProcessor(
+                listeners,
+                env,
+                meterRegistry,
+                customTags
+            );
         }
     }
 

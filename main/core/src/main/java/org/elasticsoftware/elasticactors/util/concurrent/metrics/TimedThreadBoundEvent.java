@@ -25,6 +25,7 @@ import javax.annotation.Nonnull;
  * A wrapper for a {@link ThreadBoundEvent} with idle and execution timings.
  */
 final class TimedThreadBoundEvent<T> implements ThreadBoundEvent<T> {
+    private final int thread;
     private final MeterRegistry registry;
     private final Timer executionTimer;
     private final Timer idleTimer;
@@ -33,13 +34,15 @@ final class TimedThreadBoundEvent<T> implements ThreadBoundEvent<T> {
     private Timer.Sample executionSample;
 
     static <T> TimedThreadBoundEvent<T> wrap(
+        int thread,
         @Nonnull ThreadBoundEvent<T> delegate,
-        @Nonnull MeterConfiguration meterConfiguration)
+        @Nonnull ThreadBoundExecutorMeterConfiguration meterConfiguration)
     {
         if (delegate instanceof TimedThreadBoundEvent) {
             return (TimedThreadBoundEvent<T>) delegate;
         }
         return new TimedThreadBoundEvent<>(
+            thread,
             meterConfiguration.getRegistry(),
             meterConfiguration.getExecutionTimer(),
             meterConfiguration.getIdleTimer(),
@@ -48,11 +51,13 @@ final class TimedThreadBoundEvent<T> implements ThreadBoundEvent<T> {
     }
 
     private TimedThreadBoundEvent(
+        int thread,
         MeterRegistry registry,
         Timer executionTimer,
         Timer idleTimer,
         ThreadBoundEvent<T> delegate)
     {
+        this.thread = thread;
         this.registry = registry;
         this.executionTimer = executionTimer;
         this.idleTimer = idleTimer;
@@ -76,5 +81,9 @@ final class TimedThreadBoundEvent<T> implements ThreadBoundEvent<T> {
     @Override
     public T getKey() {
         return delegate.getKey();
+    }
+
+    public int getThread() {
+        return thread;
     }
 }

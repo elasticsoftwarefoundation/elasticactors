@@ -1,6 +1,8 @@
 package org.elasticsoftware.elasticactors.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerService;
@@ -60,6 +62,11 @@ public class ContextTestConfiguration {
     @Bean(name = {"asyncUpdateExecutor"})
     public ThreadBoundExecutor createAsyncUpdateExecutor() {
         return new UnsupportedThreadBoundExecutor();
+    }
+
+    @Bean(name = "elasticActorsMeterRegistry")
+    public MeterRegistry createMeterRegistry() {
+        return new SimpleMeterRegistry();
     }
 
 }

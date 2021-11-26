@@ -18,6 +18,9 @@ package org.elasticsoftware.elasticactors.test.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.ManagedActorsRegistry;
@@ -53,9 +56,8 @@ import org.elasticsoftware.elasticactors.test.TestInternalActorSystems;
 import org.elasticsoftware.elasticactors.test.cluster.NoopActorSystemEventRegistryService;
 import org.elasticsoftware.elasticactors.test.cluster.SingleNodeClusterService;
 import org.elasticsoftware.elasticactors.test.state.LoggingActorStateUpdateListener;
-import org.elasticsoftware.elasticactors.util.concurrent.BlockingQueueThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -69,12 +71,13 @@ import org.springframework.context.annotation.aspectj.EnableSpringConfigured;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 /**
@@ -89,7 +92,6 @@ import java.util.concurrent.Executor;
 })
 @ComponentScans({
     @ComponentScan("org.elasticsoftware.elasticactors.tracing.spring"),
-    @ComponentScan("org.elasticsoftware.elasticactors.metrics.spring")
 })
 @PropertySource(value = "classpath:/system.properties", ignoreResourceNotFound = true)
 public class TestConfiguration extends AsyncConfigurerSupport {
@@ -215,16 +217,40 @@ public class TestConfiguration extends AsyncConfigurerSupport {
         return new ShardActorCacheManager(maximumSize);
     }
 
+    @Bean(name = {"elasticActorsMeterRegistry"})
+    public MeterRegistry createMeterRegistry() {
+        return new SimpleMeterRegistry();
+    }
+
     @Bean(name = {"actorExecutor"}, destroyMethod = "shutdown")
-    public ThreadBoundExecutor createActorExecutor() {
-        int workers = Runtime.getRuntime().availableProcessors() * 3;
-        return new BlockingQueueThreadBoundExecutor(new DaemonThreadFactory("ACTOR-WORKER"),workers);
+    public ThreadBoundExecutor createActorExecutor(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsActorExecutorTags") Tags customTags)
+    {
+        return ThreadBoundExecutorBuilder.build(
+            env,
+            "actorExecutor",
+            "ACTOR-WORKER",
+            meterRegistry,
+            customTags
+        );
     }
 
     @Bean(name = {"queueExecutor"}, destroyMethod = "shutdown")
-    public ThreadBoundExecutor createQueueExecutor() {
-        int workers = Runtime.getRuntime().availableProcessors() * 3;
-        return new BlockingQueueThreadBoundExecutor(new DaemonThreadFactory("QUEUE-WORKER"),workers);
+    @DependsOn("actorExecutor")
+    public ThreadBoundExecutor createQueueExecutor(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsQueueExecutorTags") Tags customTags)
+    {
+        return ThreadBoundExecutorBuilder.build(
+            env,
+            "queueExecutor",
+            "QUEUE-WORKER",
+            meterRegistry,
+            customTags
+        );
     }
 
     @Bean(name = {"scheduler"})
@@ -243,12 +269,23 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     }
 
     @Bean(name = {"actorStateUpdateProcessor"})
-    public ActorStateUpdateProcessor createActorStateUpdateProcessor(ApplicationContext applicationContext) {
-        Map<String, ActorStateUpdateListener> listeners = applicationContext.getBeansOfType(ActorStateUpdateListener.class);
+    public ActorStateUpdateProcessor createActorStateUpdateProcessor(
+        Environment env,
+        List<ActorStateUpdateListener> listeners,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsActorStateUpdateProcessorTags") Tags customTags)
+    {
         if(listeners.isEmpty()) {
             return new NoopActorStateUpdateProcessor();
         } else {
-            return new DefaultActorStateUpdateProcessor(listeners.values(), 1, 20);
+            return new DefaultActorStateUpdateProcessor(
+                listeners,
+                env,
+                1,
+                20,
+                meterRegistry,
+                customTags
+            );
         }
     }
 

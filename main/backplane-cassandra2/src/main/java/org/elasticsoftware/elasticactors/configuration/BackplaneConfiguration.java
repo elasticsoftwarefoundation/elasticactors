@@ -16,6 +16,8 @@
 
 package org.elasticsoftware.elasticactors.configuration;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 import org.elasticsoftware.elasticactors.cassandra.common.serialization.CompressingSerializer;
 import org.elasticsoftware.elasticactors.cassandra.common.serialization.DecompressingDeserializer;
 import org.elasticsoftware.elasticactors.cassandra2.cluster.CassandraActorSystemEventListenerRepository;
@@ -34,12 +36,12 @@ import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorD
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorSerializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageDeserializer;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
-import org.elasticsoftware.elasticactors.util.concurrent.BlockingQueueThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Joost van de Wijgerd
@@ -54,20 +56,23 @@ public class BackplaneConfiguration {
     @Bean(name = {"asyncUpdateExecutor"}, destroyMethod = "shutdown")
     public ThreadBoundExecutor createAsyncUpdateExecutor(
         Environment env,
-        CassandraSessionManager cassandraSessionManager)
+        CassandraSessionManager cassandraSessionManager,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsAsyncUpdateExecutorTags") Tags customTags)
     {
-        final int workers = env.getProperty("ea.asyncUpdateExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
         final int batchSize = env.getProperty("ea.asyncUpdateExecutor.batchSize",Integer.class,20);
         final boolean optimizedV1Batches = env.getProperty("ea.asyncUpdateExecutor.optimizedV1Batches", Boolean.TYPE, true);
-        return new BlockingQueueThreadBoundExecutor(
+        return ThreadBoundExecutorBuilder.buildBlockingQueueThreadBoundExecutor(
+            env,
             new PersistentActorUpdateEventProcessor(
                 cassandraSessionManager.getSession(),
                 batchSize,
                 optimizedV1Batches
             ),
-            batchSize,
-            new DaemonThreadFactory("UPDATE-EXECUTOR-WORKER"),
-            workers
+            "asyncUpdateExecutor",
+            "UPDATE-EXECUTOR-WORKER",
+            meterRegistry,
+            customTags
         );
     }
 

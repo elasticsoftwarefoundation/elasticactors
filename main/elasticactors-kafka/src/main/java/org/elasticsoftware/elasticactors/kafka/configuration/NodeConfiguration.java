@@ -68,7 +68,6 @@ import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClass
 
 @ComponentScans({
     @ComponentScan("org.elasticsoftware.elasticactors.tracing.spring"),
-    @ComponentScan("org.elasticsoftware.elasticactors.metrics.spring")
 })
 public class NodeConfiguration {
 

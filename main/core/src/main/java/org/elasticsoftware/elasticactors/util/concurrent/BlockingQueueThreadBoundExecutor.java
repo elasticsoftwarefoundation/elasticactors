@@ -16,18 +16,19 @@
 
 package org.elasticsoftware.elasticactors.util.concurrent;
 
-import org.elasticsoftware.elasticactors.util.concurrent.metrics.MeterConfiguration;
-import org.elasticsoftware.elasticactors.util.concurrent.metrics.TimedThreadBoundExecutor;
+import org.elasticsoftware.elasticactors.util.concurrent.metrics.DelegatingTimedThreadBoundExecutor;
+import org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundExecutorMeterConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.ListIterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -35,7 +36,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * @author Joost van de Wijgerd
  */
-public final class BlockingQueueThreadBoundExecutor extends TimedThreadBoundExecutor {
+public final class BlockingQueueThreadBoundExecutor
+    extends DelegatingTimedThreadBoundExecutor {
+
     private static final Logger logger = LoggerFactory.getLogger(BlockingQueueThreadBoundExecutor.class);
     private final ThreadFactory threadFactory;
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
@@ -50,7 +53,7 @@ public final class BlockingQueueThreadBoundExecutor extends TimedThreadBoundExec
     public BlockingQueueThreadBoundExecutor(
         ThreadFactory threadFactory,
         int numberOfThreads,
-        @Nullable MeterConfiguration meterConfiguration)
+        @Nullable ThreadBoundExecutorMeterConfiguration meterConfiguration)
     {
         this(
             new ThreadBoundRunnableEventProcessor(),
@@ -66,11 +69,10 @@ public final class BlockingQueueThreadBoundExecutor extends TimedThreadBoundExec
         int maxBatchSize,
         ThreadFactory threadFactory,
         int numberOfThreads,
-        MeterConfiguration meterConfiguration)
+        @Nullable ThreadBoundExecutorMeterConfiguration meterConfiguration)
     {
         super(eventProcessor, meterConfiguration);
         this.threadFactory = threadFactory;
-        logger.info("Initializing {}[{}]", getClass().getSimpleName(), threadFactory);
         this.queues = new BlockingQueue[numberOfThreads];
         for (int i = 0; i < numberOfThreads; i++) {
             BlockingQueue<ThreadBoundEvent> queue = new LinkedBlockingQueue<>();
@@ -80,28 +82,53 @@ public final class BlockingQueueThreadBoundExecutor extends TimedThreadBoundExec
         }
     }
 
+    @PostConstruct
+    @Override
+    public void init() {
+        logger.info("Initializing {} [{}]", getClass().getSimpleName(), threadFactory);
+        super.init();
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return logger;
+    }
+
+    @Nonnull
+    @Override
+    protected String getExecutorDataStructureName() {
+        return "queue";
+    }
+
+    @Override
+    protected long getCapacityForThread(int thread) {
+        return queues[thread].remainingCapacity();
+    }
+
+    @Override
+    protected long getQueuedEventsForThread(int thread) {
+        return queues[thread].size();
+    }
+
+    @Override
+    protected boolean isShuttingDown() {
+        return shuttingDown.get();
+    }
+
     /**
      * Schedule a runnable for execution.
      *
      * @param event The runnable to execute
      */
     @Override
-    public void execute(final ThreadBoundEvent event) {
-        if (shuttingDown.get()) {
-            throw new RejectedExecutionException("The system is shutting down.");
-        }
-        int bucket = getBucket(event.getKey());
-        BlockingQueue<ThreadBoundEvent> queue = queues[bucket];
-        queue.add(prepare(event));
+    protected void timedExecute(@Nonnull final ThreadBoundEvent event, final int thread) {
+        BlockingQueue<ThreadBoundEvent> queue = queues[thread];
+        queue.add(event);
     }
 
     @Override
     public int getThreadCount() {
         return queues.length;
-    }
-
-    private int getBucket(Object key) {
-        return Math.abs(key.hashCode()) % queues.length;
     }
 
     @Override
@@ -159,7 +186,7 @@ public final class BlockingQueueThreadBoundExecutor extends TimedThreadBoundExec
                         }
                         // check for the stop condition (and remove it)
                         // treat batches of 1 (the most common case) specially
-                        if(batch != null && batch.size() > 1) {
+                        if (batch != null && batch.size() > 1) {
                             ListIterator<ThreadBoundEvent> itr = batch.listIterator();
                             while (itr.hasNext()) {
                                 ThreadBoundEvent next = itr.next();

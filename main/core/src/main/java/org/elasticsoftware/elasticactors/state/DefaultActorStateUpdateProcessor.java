@@ -16,15 +16,17 @@
 
 package org.elasticsoftware.elasticactors.state;
 
-import org.elasticsoftware.elasticactors.util.concurrent.BlockingQueueThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.metrics.MeterConfiguration;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 
 import javax.annotation.Nullable;
+import javax.annotation.PostConstruct;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,20 +45,49 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
 
     public DefaultActorStateUpdateProcessor(
         Collection<ActorStateUpdateListener> listeners,
-        int workerCount,
-        int maxBatchSize,
-        MeterConfiguration meterConfiguration)
+        Environment env,
+        @Nullable MeterRegistry meterRegistry,
+        @Nullable Tags customTags)
     {
         this.listeners.addAll(listeners);
-        this.executor = new BlockingQueueThreadBoundExecutor(
+        this.executor = ThreadBoundExecutorBuilder.buildBlockingQueueThreadBoundExecutor(
+            env,
             this,
-            maxBatchSize,
-            new DaemonThreadFactory("ACTORSTATE-UPDATE-WORKER"),
-            workerCount,
-            meterConfiguration
+            "actorStateUpdateProcessor",
+            "ACTORSTATE-UPDATE-WORKER",
+            meterRegistry,
+            customTags
         );
         // optimize in the case of one listener, copy otherwise to avoid possible concurrency issues on the serializedState ByteBuffer
         this.processingFunction = (listeners.size() == 1) ? this::processWithoutCopy : this::processWithCopy;
+    }
+
+    public DefaultActorStateUpdateProcessor(
+        Collection<ActorStateUpdateListener> listeners,
+        Environment env,
+        int workerCount,
+        int batchSize,
+        @Nullable MeterRegistry meterRegistry,
+        @Nullable Tags customTags)
+    {
+        this.listeners.addAll(listeners);
+        this.executor = ThreadBoundExecutorBuilder.buildBlockingQueueThreadBoundExecutor(
+            env,
+            this,
+            workerCount,
+            batchSize,
+            "actorStateUpdateProcessor",
+            "ACTORSTATE-UPDATE-WORKER",
+            meterRegistry,
+            customTags
+        );
+        // optimize in the case of one listener, copy otherwise to avoid possible concurrency issues on the serializedState ByteBuffer
+        this.processingFunction = (listeners.size() == 1) ? this::processWithoutCopy : this::processWithCopy;
+    }
+
+    @PostConstruct
+    public void init() {
+        executor.init();
     }
 
     @Override

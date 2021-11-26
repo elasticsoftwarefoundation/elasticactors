@@ -25,6 +25,7 @@ import javax.annotation.Nonnull;
  * A wrapper for a {@link ThreadBoundRunnable} with idle and execution timings.
  */
 final class TimedThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
+    private final int thread;
     private final MeterRegistry registry;
     private final Timer executionTimer;
     private final Timer idleTimer;
@@ -32,13 +33,15 @@ final class TimedThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
     private final Timer.Sample idleSample;
 
     static <T> TimedThreadBoundRunnable<T> wrap(
+        int thread,
         @Nonnull ThreadBoundRunnable<T> delegate,
-        @Nonnull MeterConfiguration meterConfig)
+        @Nonnull ThreadBoundExecutorMeterConfiguration meterConfig)
     {
         if (delegate instanceof TimedThreadBoundRunnable) {
             return (TimedThreadBoundRunnable<T>) delegate;
         }
         return new TimedThreadBoundRunnable<>(
+            thread,
             meterConfig.getRegistry(),
             meterConfig.getExecutionTimer(),
             meterConfig.getIdleTimer(),
@@ -47,11 +50,13 @@ final class TimedThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
     }
 
     private TimedThreadBoundRunnable(
+        int thread,
         MeterRegistry registry,
         Timer executionTimer,
         Timer idleTimer,
         ThreadBoundRunnable<T> delegate)
     {
+        this.thread = thread;
         this.registry = registry;
         this.executionTimer = executionTimer;
         this.idleTimer = idleTimer;
@@ -73,5 +78,9 @@ final class TimedThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
     @Override
     public T getKey() {
         return delegate.getKey();
+    }
+
+    public int getThread() {
+        return thread;
     }
 }
