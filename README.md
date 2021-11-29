@@ -338,10 +338,18 @@ ea.rabbitmq.username=guest
 ea.rabbitmq.password=guest
 
 # RabbitMQ ACK type.
+# Options:
+#   - DIRECT: ACKs the messages on the handler thread
+#   - BUFFERED: ACKs the messages on one of the handler threads, buffering them in case of high load
+#   - WRITE_BEHIND: ACKs the messages asynchronously using a disruptor
+#   - ASYNC: ACKs the messages asynchronously using a separate thread
 # Default: DIRECT
 ea.rabbitmq.ack=ASYNC
 
 # RabbitMQ thread model.
+# Options: 
+#   - sc (single-channel): uses producer channel
+#   - cpt (channel-per-thread): uses one producer channel for each queue thread
 # Default: sc
 ea.rabbitmq.threadmodel=cpt
 

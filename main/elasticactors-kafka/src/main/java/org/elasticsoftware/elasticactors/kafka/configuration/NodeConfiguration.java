@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.cache.GuavaCacheMetrics;
 import org.elasticsoftware.elasticactors.ActorLifecycleListenerRegistry;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
@@ -31,6 +33,8 @@ import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.HashingNodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
+import org.elasticsoftware.elasticactors.cluster.metrics.MeterConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MeterTagCustomizer;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRefFactory;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRefTools;
 import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
@@ -59,6 +63,7 @@ import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.lang.Nullable;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -94,9 +99,26 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"actorRefCache"})
-    public Cache<String, ActorRef> createActorRefCache(Environment env) {
+    public Cache<String, ActorRef> createActorRefCache(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer
+    ) {
         int maximumSize = env.getProperty("ea.actorRefCache.maximumSize", Integer.class, 10240);
-        return CacheBuilder.newBuilder().maximumSize(maximumSize).build();
+        MeterConfiguration configuration =
+            MeterConfiguration.build(env, meterRegistry, "actorRefCache", tagCustomizer);
+        CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder().maximumSize(maximumSize);
+        if (configuration != null) {
+            builder.recordStats();
+            return GuavaCacheMetrics.monitor(
+                configuration.getRegistry(),
+                builder.build(),
+                configuration.getComponentName(),
+                configuration.getTags()
+            );
+        } else {
+            return builder.build();
+        }
     }
 
     @Bean(name = {"actorSystemConfiguration"})
@@ -152,15 +174,29 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"nodeActorCacheManager"})
-    public NodeActorCacheManager createNodeActorCacheManager(Environment env) {
+    public NodeActorCacheManager createNodeActorCacheManager(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+    {
         int maximumSize = env.getProperty("ea.nodeCache.maximumSize",Integer.class,10240);
-        return new NodeActorCacheManager(maximumSize);
+        return new NodeActorCacheManager(
+            maximumSize,
+            MeterConfiguration.build(env, meterRegistry, "nodeActorCache", tagCustomizer)
+        );
     }
 
     @Bean(name = {"shardActorCacheManager"})
-    public ShardActorCacheManager createShardActorCacheManager(Environment env) {
+    public ShardActorCacheManager createShardActorCacheManager(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+    {
         int maximumSize = env.getProperty("ea.shardCache.maximumSize",Integer.class,10240);
-        return new ShardActorCacheManager(maximumSize);
+        return new ShardActorCacheManager(
+            maximumSize,
+            MeterConfiguration.build(env, meterRegistry, "shardActorCache", tagCustomizer)
+        );
     }
 
     @Bean(name = {"internalActorSystem"})

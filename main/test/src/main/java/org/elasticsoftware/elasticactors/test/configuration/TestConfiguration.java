@@ -19,7 +19,6 @@ package org.elasticsoftware.elasticactors.test.configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
@@ -36,6 +35,8 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.cluster.LocalActorSystemInstance;
 import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
+import org.elasticsoftware.elasticactors.cluster.metrics.MeterConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MeterTagCustomizer;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler;
 import org.elasticsoftware.elasticactors.configuration.NodeConfiguration;
@@ -206,15 +207,29 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     }
 
     @Bean(name = {"nodeActorCacheManager"})
-    public NodeActorCacheManager createNodeActorCacheManager(Environment env) {
+    public NodeActorCacheManager createNodeActorCacheManager(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+    {
         int maximumSize = env.getProperty("ea.nodeCache.maximumSize",Integer.class,10240);
-        return new NodeActorCacheManager(maximumSize);
+        return new NodeActorCacheManager(
+            maximumSize,
+            MeterConfiguration.build(env, meterRegistry, "nodeActorCache", tagCustomizer)
+        );
     }
 
     @Bean(name = {"shardActorCacheManager"})
-    public ShardActorCacheManager createShardActorCacheManager(Environment env) {
+    public ShardActorCacheManager createShardActorCacheManager(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+    {
         int maximumSize = env.getProperty("ea.shardCache.maximumSize",Integer.class,10240);
-        return new ShardActorCacheManager(maximumSize);
+        return new ShardActorCacheManager(
+            maximumSize,
+            MeterConfiguration.build(env, meterRegistry, "shardActorCache", tagCustomizer)
+        );
     }
 
     @Bean(name = {"elasticActorsMeterRegistry"})
@@ -226,14 +241,14 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     public ThreadBoundExecutor createActorExecutor(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsActorExecutorTags") Tags customTags)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
     {
         return ThreadBoundExecutorBuilder.build(
             env,
             "actorExecutor",
             "ACTOR-WORKER",
             meterRegistry,
-            customTags
+            tagCustomizer
         );
     }
 
@@ -242,20 +257,29 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     public ThreadBoundExecutor createQueueExecutor(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsQueueExecutorTags") Tags customTags)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
     {
         return ThreadBoundExecutorBuilder.build(
             env,
             "queueExecutor",
             "QUEUE-WORKER",
             meterRegistry,
-            customTags
+            tagCustomizer
         );
     }
 
     @Bean(name = {"scheduler"})
-    public SimpleScheduler createScheduler() {
-        return new SimpleScheduler();
+    public SimpleScheduler createScheduler(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+    {
+        return new SimpleScheduler(MeterConfiguration.build(
+            env,
+            meterRegistry,
+            "scheduler",
+            tagCustomizer
+        ));
     }
 
     @Bean(name= "clusterService")
@@ -273,7 +297,7 @@ public class TestConfiguration extends AsyncConfigurerSupport {
         Environment env,
         List<ActorStateUpdateListener> listeners,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsActorStateUpdateProcessorTags") Tags customTags)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
     {
         if(listeners.isEmpty()) {
             return new NoopActorStateUpdateProcessor();
@@ -284,7 +308,7 @@ public class TestConfiguration extends AsyncConfigurerSupport {
                 1,
                 20,
                 meterRegistry,
-                customTags
+                tagCustomizer
             );
         }
     }

@@ -36,16 +36,16 @@ final class TimedThreadBoundEvent<T> implements ThreadBoundEvent<T> {
     static <T> TimedThreadBoundEvent<T> wrap(
         int thread,
         @Nonnull ThreadBoundEvent<T> delegate,
-        @Nonnull ThreadBoundExecutorMeterConfiguration meterConfiguration)
+        @Nonnull ThreadBoundExecutorMonitor monitor)
     {
         if (delegate instanceof TimedThreadBoundEvent) {
             return (TimedThreadBoundEvent<T>) delegate;
         }
         return new TimedThreadBoundEvent<>(
             thread,
-            meterConfiguration.getRegistry(),
-            meterConfiguration.getExecutionTimer(),
-            meterConfiguration.getIdleTimer(),
+            monitor.getConfiguration().getRegistry(),
+            monitor.getExecutionTimer(),
+            monitor.getIdleTimer(),
             delegate
         );
     }

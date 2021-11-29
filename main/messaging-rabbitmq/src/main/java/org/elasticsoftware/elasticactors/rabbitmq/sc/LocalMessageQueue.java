@@ -14,7 +14,7 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.rabbitmq;
+package org.elasticsoftware.elasticactors.rabbitmq.sc;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.AlreadyClosedException;
@@ -29,6 +29,8 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
+import org.elasticsoftware.elasticactors.rabbitmq.ChannelListenerRegistry;
+import org.elasticsoftware.elasticactors.rabbitmq.MessageAcker;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
@@ -43,8 +45,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * @author Joost van de Wijgerd
  */
-public final class LocalMessageQueue extends DefaultConsumer implements MessageQueue, ChannelListener {
+final class LocalMessageQueue extends DefaultConsumer implements MessageQueue, ChannelListener {
+
     private static final Logger logger = LoggerFactory.getLogger(LocalMessageQueue.class);
+
     private final Channel consumerChannel;
     private final Channel producerChannel;
     private final String exchangeName;

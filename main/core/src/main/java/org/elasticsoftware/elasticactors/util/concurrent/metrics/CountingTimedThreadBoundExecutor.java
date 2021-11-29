@@ -12,9 +12,9 @@ public abstract class CountingTimedThreadBoundExecutor extends TimedThreadBoundE
 
     protected CountingTimedThreadBoundExecutor(
         @Nonnull ThreadBoundEventProcessor eventProcessor,
-        @Nullable ThreadBoundExecutorMeterConfiguration meterConfiguration)
+        @Nullable ThreadBoundExecutorMonitor monitor)
     {
-        super(eventProcessor, meterConfiguration);
+        super(eventProcessor, monitor);
     }
 
     @Override

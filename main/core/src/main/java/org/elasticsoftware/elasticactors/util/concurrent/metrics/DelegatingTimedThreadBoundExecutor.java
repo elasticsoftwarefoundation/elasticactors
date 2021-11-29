@@ -9,9 +9,9 @@ public abstract class DelegatingTimedThreadBoundExecutor extends TimedThreadBoun
 
     protected DelegatingTimedThreadBoundExecutor(
         @Nonnull ThreadBoundEventProcessor eventProcessor,
-        @Nullable ThreadBoundExecutorMeterConfiguration meterConfiguration)
+        @Nullable ThreadBoundExecutorMonitor monitor)
     {
-        super(eventProcessor, meterConfiguration);
+        super(eventProcessor, monitor);
     }
 
     @Override

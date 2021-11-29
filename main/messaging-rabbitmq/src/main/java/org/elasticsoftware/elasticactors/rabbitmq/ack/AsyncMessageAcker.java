@@ -17,11 +17,14 @@
 package org.elasticsoftware.elasticactors.rabbitmq.ack;
 
 import com.rabbitmq.client.Channel;
+import io.micrometer.core.instrument.binder.jvm.ExecutorServiceMetrics;
+import org.elasticsoftware.elasticactors.cluster.metrics.MeterConfiguration;
 import org.elasticsoftware.elasticactors.rabbitmq.MessageAcker;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -33,11 +36,26 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
  */
 public final class AsyncMessageAcker implements MessageAcker {
     private static final Logger logger = LoggerFactory.getLogger(AsyncMessageAcker.class);
-    private final ExecutorService executorService = newSingleThreadExecutor(new DaemonThreadFactory("RABBITMQ-MESSAGE_ACKER"));
+    private final ExecutorService executorService;
     private final Channel consumerChannel;
 
-    public AsyncMessageAcker(Channel consumerChannel) {
+    public AsyncMessageAcker(
+        Channel consumerChannel,
+        @Nullable MeterConfiguration meterConfiguration)
+    {
         this.consumerChannel = consumerChannel;
+        ExecutorService executor = newSingleThreadExecutor(new DaemonThreadFactory("RABBITMQ-MESSAGE-ACKER"));
+        if (meterConfiguration != null) {
+            this.executorService = ExecutorServiceMetrics.monitor(
+                meterConfiguration.getRegistry(),
+                executor,
+                meterConfiguration.getComponentName(),
+                meterConfiguration.getMetricPrefix(),
+                meterConfiguration.getTags()
+            );
+        } else {
+            this.executorService = executor;
+        }
     }
 
     @Override
@@ -56,7 +74,7 @@ public final class AsyncMessageAcker implements MessageAcker {
 
     @Override
     public void start() {
-
+        logger.info("Using MessageAcker [{}]", getClass().getSimpleName());
     }
 
     @Override

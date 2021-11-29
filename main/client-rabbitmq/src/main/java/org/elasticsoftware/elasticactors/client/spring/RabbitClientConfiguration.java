@@ -1,8 +1,8 @@
 package org.elasticsoftware.elasticactors.client.spring;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
 import org.elasticsoftware.elasticactors.client.configuration.ClientConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MeterTagCustomizer;
 import org.elasticsoftware.elasticactors.configuration.MessagingConfiguration;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorBuilder;
@@ -23,14 +23,14 @@ public class RabbitClientConfiguration {
     public ThreadBoundExecutor createQueueExecutor(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsQueueExecutorTags") Tags customTags)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
     {
         return ThreadBoundExecutorBuilder.build(
             env,
             "queueExecutor",
             "QUEUE-WORKER",
             meterRegistry,
-            customTags
+            tagCustomizer
         );
     }
 

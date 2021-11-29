@@ -70,9 +70,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -99,7 +99,8 @@ public final class ElasticActorsNode extends PhysicalNode implements
     private ClusterService clusterService;
     private final LinkedBlockingQueue<ShardReleasedMessage> shardReleasedMessages = new LinkedBlockingQueue<>();
     private final AtomicReference<List<PhysicalNode>> currentTopology = new AtomicReference<>(null);
-    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("CLUSTER_SCHEDULER"));
+    private final ExecutorService rebalancingExecutor =
+        Executors.newSingleThreadExecutor(new DaemonThreadFactory("CLUSTER-REBALANCER"));
     private final List<RebalancingEventListener> rebalancingEventListeners = new CopyOnWriteArrayList<>();
     private final ActorRefTools actorRefTools;
     private InternalActorSystem internalActorSystem;
@@ -181,7 +182,7 @@ public final class ElasticActorsNode extends PhysicalNode implements
                 shardDistributionStrategy = new RunningNodeScaleDownStrategy();
             }
         }
-        scheduledExecutorService.submit(new RebalancingRunnable(shardDistributionStrategy, topology));
+        rebalancingExecutor.submit(new RebalancingRunnable(shardDistributionStrategy, topology));
     }
 
     @Override

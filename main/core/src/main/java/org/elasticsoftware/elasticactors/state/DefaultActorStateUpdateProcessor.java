@@ -17,7 +17,7 @@
 package org.elasticsoftware.elasticactors.state;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
+import org.elasticsoftware.elasticactors.cluster.metrics.MeterTagCustomizer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorBuilder;
@@ -47,7 +47,7 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
         Collection<ActorStateUpdateListener> listeners,
         Environment env,
         @Nullable MeterRegistry meterRegistry,
-        @Nullable Tags customTags)
+        @Nullable MeterTagCustomizer tagCustomizer)
     {
         this.listeners.addAll(listeners);
         this.executor = ThreadBoundExecutorBuilder.buildBlockingQueueThreadBoundExecutor(
@@ -56,7 +56,7 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
             "actorStateUpdateProcessor",
             "ACTORSTATE-UPDATE-WORKER",
             meterRegistry,
-            customTags
+            tagCustomizer
         );
         // optimize in the case of one listener, copy otherwise to avoid possible concurrency issues on the serializedState ByteBuffer
         this.processingFunction = (listeners.size() == 1) ? this::processWithoutCopy : this::processWithCopy;
@@ -68,7 +68,7 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
         int workerCount,
         int batchSize,
         @Nullable MeterRegistry meterRegistry,
-        @Nullable Tags customTags)
+        @Nullable MeterTagCustomizer tagCustomizer)
     {
         this.listeners.addAll(listeners);
         this.executor = ThreadBoundExecutorBuilder.buildBlockingQueueThreadBoundExecutor(
@@ -79,7 +79,7 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
             "actorStateUpdateProcessor",
             "ACTORSTATE-UPDATE-WORKER",
             meterRegistry,
-            customTags
+            tagCustomizer
         );
         // optimize in the case of one listener, copy otherwise to avoid possible concurrency issues on the serializedState ByteBuffer
         this.processingFunction = (listeners.size() == 1) ? this::processWithoutCopy : this::processWithCopy;

@@ -26,6 +26,7 @@ import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.rabbitmq.sc.SingleProducerRabbitMQMessagingService;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
 import org.elasticsoftware.elasticactors.util.concurrent.BlockingQueueThreadBoundExecutor;
@@ -91,7 +92,8 @@ public class RabbitMQMessagingServiceTest {
             null
         );
 
-        RabbitMQMessagingService messagingService = new RabbitMQMessagingService(
+        SingleProducerRabbitMQMessagingService
+            messagingService = new SingleProducerRabbitMQMessagingService(
             CLUSTER_NAME,
             System.getProperty("host", "localhost"),
             5672,
@@ -103,7 +105,9 @@ public class RabbitMQMessagingServiceTest {
                 new ActorRefDeserializer(actorRefFactory),
                 internalActorSystem
             ),
-            10
+            10,
+            null,
+            null
         );
         messagingService.start();
 

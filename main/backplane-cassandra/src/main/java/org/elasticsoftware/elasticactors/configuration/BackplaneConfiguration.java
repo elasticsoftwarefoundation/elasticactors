@@ -17,7 +17,6 @@
 package org.elasticsoftware.elasticactors.configuration;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
 import org.elasticsoftware.elasticactors.cassandra.cluster.CassandraActorSystemEventListenerRepository;
 import org.elasticsoftware.elasticactors.cassandra.cluster.scheduler.CassandraScheduledMessageRepository;
 import org.elasticsoftware.elasticactors.cassandra.serialization.CompressingSerializer;
@@ -27,6 +26,7 @@ import org.elasticsoftware.elasticactors.cassandra.state.PersistentActorUpdateEv
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRepository;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.metrics.MeterTagCustomizer;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRepository;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorDeserializer;
@@ -55,7 +55,7 @@ public class BackplaneConfiguration {
         Environment env,
         CassandraSessionManager cassandraSessionManager,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsAsyncUpdateExecutorTags") Tags customTags)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
     {
         return ThreadBoundExecutorBuilder.buildBlockingQueueThreadBoundExecutor(
             env,
@@ -63,7 +63,7 @@ public class BackplaneConfiguration {
             "asyncUpdateExecutor",
             "UPDATE-EXECUTOR-WORKER",
             meterRegistry,
-            customTags
+            tagCustomizer
         );
     }
 

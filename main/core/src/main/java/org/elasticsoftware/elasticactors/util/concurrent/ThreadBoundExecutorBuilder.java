@@ -1,9 +1,9 @@
 package org.elasticsoftware.elasticactors.util.concurrent;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
+import org.elasticsoftware.elasticactors.cluster.metrics.MeterTagCustomizer;
 import org.elasticsoftware.elasticactors.util.concurrent.disruptor.DisruptorThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundExecutorMeterConfiguration;
+import org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundExecutorMonitor;
 import org.springframework.core.env.Environment;
 
 import javax.annotation.Nonnull;
@@ -22,7 +22,7 @@ public final class ThreadBoundExecutorBuilder {
         @Nonnull String executorName,
         @Nonnull String baseThreadName,
         @Nullable MeterRegistry meterRegistry,
-        @Nullable Tags customTags)
+        @Nullable MeterTagCustomizer tagCustomizer)
     {
         final int workers = env.getProperty(
             format("ea.%s.workerCount", executorName),
@@ -35,23 +35,13 @@ public final class ThreadBoundExecutorBuilder {
             return new DisruptorThreadBoundExecutor(
                 new DaemonThreadFactory(baseThreadName),
                 workers,
-                ThreadBoundExecutorMeterConfiguration.build(
-                    env,
-                    meterRegistry,
-                    executorName,
-                    customTags
-                )
+                ThreadBoundExecutorMonitor.build(env, meterRegistry, executorName, tagCustomizer)
             );
         } else {
             return new BlockingQueueThreadBoundExecutor(
                 new DaemonThreadFactory(baseThreadName),
                 workers,
-                ThreadBoundExecutorMeterConfiguration.build(
-                    env,
-                    meterRegistry,
-                    executorName,
-                    customTags
-                )
+                ThreadBoundExecutorMonitor.build(env, meterRegistry, executorName, tagCustomizer)
             );
         }
     }
@@ -61,7 +51,7 @@ public final class ThreadBoundExecutorBuilder {
         @Nonnull String executorName,
         @Nonnull String baseThreadName,
         @Nullable MeterRegistry meterRegistry,
-        @Nullable Tags customTags)
+        @Nullable MeterTagCustomizer tagCustomizer)
     {
         final int workers = env.getProperty(
             format("ea.%s.workerCount", executorName),
@@ -71,12 +61,7 @@ public final class ThreadBoundExecutorBuilder {
         return new BlockingQueueThreadBoundExecutor(
             new DaemonThreadFactory(baseThreadName),
             workers,
-            ThreadBoundExecutorMeterConfiguration.build(
-                env,
-                meterRegistry,
-                executorName,
-                customTags
-            )
+            ThreadBoundExecutorMonitor.build(env, meterRegistry, executorName, tagCustomizer)
         );
     }
 
@@ -86,7 +71,7 @@ public final class ThreadBoundExecutorBuilder {
         @Nonnull String executorName,
         @Nonnull String baseThreadName,
         @Nullable MeterRegistry meterRegistry,
-        @Nullable Tags customTags)
+        @Nullable MeterTagCustomizer tagCustomizer)
     {
         final int workers = env.getProperty(
             format("ea.%s.workerCount", executorName),
@@ -102,12 +87,7 @@ public final class ThreadBoundExecutorBuilder {
                 batchSize,
                 new DaemonThreadFactory(baseThreadName),
                 workers,
-                ThreadBoundExecutorMeterConfiguration.build(
-                    env,
-                    meterRegistry,
-                    executorName,
-                    customTags
-                )
+                ThreadBoundExecutorMonitor.build(env, meterRegistry, executorName, tagCustomizer)
             );
         } else {
             return new BlockingQueueThreadBoundExecutor(
@@ -115,12 +95,7 @@ public final class ThreadBoundExecutorBuilder {
                 batchSize,
                 new DaemonThreadFactory(baseThreadName),
                 workers,
-                ThreadBoundExecutorMeterConfiguration.build(
-                    env,
-                    meterRegistry,
-                    executorName,
-                    customTags
-                )
+                ThreadBoundExecutorMonitor.build(env, meterRegistry, executorName, tagCustomizer)
             );
         }
     }
@@ -131,7 +106,7 @@ public final class ThreadBoundExecutorBuilder {
         @Nonnull String executorName,
         @Nonnull String baseThreadName,
         @Nullable MeterRegistry meterRegistry,
-        @Nullable Tags customTags)
+        @Nullable MeterTagCustomizer tagCustomizer)
     {
         final int workers = env.getProperty(
             format("ea.%s.workerCount", executorName),
@@ -147,7 +122,7 @@ public final class ThreadBoundExecutorBuilder {
             executorName,
             baseThreadName,
             meterRegistry,
-            customTags
+            tagCustomizer
         );
     }
 
@@ -159,19 +134,14 @@ public final class ThreadBoundExecutorBuilder {
         @Nonnull String executorName,
         @Nonnull String baseThreadName,
         @Nullable MeterRegistry meterRegistry,
-        @Nullable Tags customTags)
+        @Nullable MeterTagCustomizer tagCustomizer)
     {
         return new BlockingQueueThreadBoundExecutor(
             eventProcessor,
             batchSize,
             new DaemonThreadFactory(baseThreadName),
             workers,
-            ThreadBoundExecutorMeterConfiguration.build(
-                env,
-                meterRegistry,
-                executorName,
-                customTags
-            )
+            ThreadBoundExecutorMonitor.build(env, meterRegistry, executorName, tagCustomizer)
         );
     }
 

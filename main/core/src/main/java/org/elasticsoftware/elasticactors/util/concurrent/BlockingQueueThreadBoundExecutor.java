@@ -17,7 +17,7 @@
 package org.elasticsoftware.elasticactors.util.concurrent;
 
 import org.elasticsoftware.elasticactors.util.concurrent.metrics.DelegatingTimedThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundExecutorMeterConfiguration;
+import org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundExecutorMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,14 +53,14 @@ public final class BlockingQueueThreadBoundExecutor
     public BlockingQueueThreadBoundExecutor(
         ThreadFactory threadFactory,
         int numberOfThreads,
-        @Nullable ThreadBoundExecutorMeterConfiguration meterConfiguration)
+        @Nullable ThreadBoundExecutorMonitor monitor)
     {
         this(
             new ThreadBoundRunnableEventProcessor(),
             1,
             threadFactory,
             numberOfThreads,
-            meterConfiguration
+            monitor
         );
     }
 
@@ -69,9 +69,9 @@ public final class BlockingQueueThreadBoundExecutor
         int maxBatchSize,
         ThreadFactory threadFactory,
         int numberOfThreads,
-        @Nullable ThreadBoundExecutorMeterConfiguration meterConfiguration)
+        @Nullable ThreadBoundExecutorMonitor monitor)
     {
-        super(eventProcessor, meterConfiguration);
+        super(eventProcessor, monitor);
         this.threadFactory = threadFactory;
         this.queues = new BlockingQueue[numberOfThreads];
         for (int i = 0; i < numberOfThreads; i++) {

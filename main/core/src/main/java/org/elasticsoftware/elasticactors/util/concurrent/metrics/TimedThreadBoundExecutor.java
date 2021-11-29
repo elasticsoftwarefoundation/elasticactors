@@ -27,7 +27,7 @@ import static java.lang.String.format;
 public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
 
     private final ThreadBoundEventProcessor eventProcessor;
-    private final ThreadBoundExecutorMeterConfiguration meterConfiguration;
+    private final ThreadBoundExecutorMonitor monitor;
 
     private Counter[] completedEvents;
     private LongAdder globalQueuedEvents;
@@ -36,10 +36,10 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
 
     protected TimedThreadBoundExecutor(
         @Nonnull ThreadBoundEventProcessor eventProcessor,
-        @Nullable ThreadBoundExecutorMeterConfiguration meterConfiguration)
+        @Nullable ThreadBoundExecutorMonitor monitor)
     {
         this.eventProcessor = eventProcessor;
-        this.meterConfiguration = meterConfiguration;
+        this.monitor = monitor;
     }
 
     @Override
@@ -49,7 +49,7 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
             getLogger().info(
                 "Initializing metrics for {} {}",
                 getClass().getSimpleName(),
-                meterConfiguration.getTags()
+                monitor.getTags()
             );
 
             int threadCount = getThreadCount();
@@ -58,11 +58,11 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
             this.globalQueuedEvents = new LongAdder();
             this.activeThreadsCount = new LongAdder();
 
-            Tags tags = meterConfiguration.getTags();
-            MeterRegistry registry = meterConfiguration.getRegistry();
+            Tags tags = monitor.getTags();
+            MeterRegistry registry = monitor.getConfiguration().getRegistry();
 
             Gauge.builder(
-                    meterConfiguration.createNameForSuffix("threads"),
+                    monitor.createNameForSuffix("threads"),
                     this,
                     ThreadBoundExecutor::getThreadCount
                 )
@@ -72,7 +72,7 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
                 .register(registry);
 
             this.globalFinishedEvents =
-                Counter.builder(meterConfiguration.createNameForSuffix("completed"))
+                Counter.builder(monitor.createNameForSuffix("completed"))
                     .tags(tags)
                     .description(
                         "The approximate total number of tasks that have completed processing")
@@ -80,7 +80,7 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
                     .register(registry);
 
             Gauge.builder(
-                    meterConfiguration.createNameForSuffix("active"),
+                    monitor.createNameForSuffix("active"),
                     activeThreadsCount,
                     LongAdder::sum
                 )
@@ -90,7 +90,7 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
                 .register(registry);
 
             Gauge.builder(
-                    meterConfiguration.createNameForSuffix("queued"),
+                    monitor.createNameForSuffix("queued"),
                     globalQueuedEvents,
                     LongAdder::sum
                 )
@@ -102,7 +102,7 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
             String structureName = getExecutorDataStructureName();
 
             for (int i = 0; i < threadCount; i++) {
-                Gauge.builder(meterConfiguration.createNameForSuffix(format(
+                Gauge.builder(monitor.createNameForSuffix(format(
                         "%s.remaining.%d",
                         structureName,
                         i
@@ -117,7 +117,7 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
                     .baseUnit(BaseUnits.TASKS)
                     .register(registry);
 
-                FunctionCounter.builder(meterConfiguration.createNameForSuffix(format(
+                FunctionCounter.builder(monitor.createNameForSuffix(format(
                         "%s.queued.%d",
                         structureName,
                         i
@@ -133,7 +133,7 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
                     .register(registry);
 
                 this.completedEvents[i] =
-                    Counter.builder(meterConfiguration.createNameForSuffix(format(
+                    Counter.builder(monitor.createNameForSuffix(format(
                             "%s.completed.%d",
                             structureName,
                             i
@@ -167,7 +167,7 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
     protected abstract void decrementQueuedEvents(int thread);
 
     protected final boolean isMeterEnabled() {
-        return meterConfiguration != null;
+        return monitor != null;
     }
 
     private void reportQueuedItem(int thread) {
@@ -331,7 +331,7 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
         }
         if (isMeterEnabled()) {
             // Wrapping metrics must always be the last one
-            event = TimedThreadBoundRunnable.wrap(thread, event, meterConfiguration);
+            event = TimedThreadBoundRunnable.wrap(thread, event, monitor);
         }
         return event;
     }
@@ -339,7 +339,7 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
     @Nonnull
     private ThreadBoundEvent wrapEvent(int thread, @Nonnull ThreadBoundEvent event) {
         if (isMeterEnabled()) {
-            event = TimedThreadBoundEvent.wrap(thread, event, meterConfiguration);
+            event = TimedThreadBoundEvent.wrap(thread, event, monitor);
         }
         return event;
     }

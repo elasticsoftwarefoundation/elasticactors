@@ -21,7 +21,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.binder.cache.GuavaCacheMetrics;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.ManagedActorsRegistry;
@@ -37,6 +37,8 @@ import org.elasticsoftware.elasticactors.cluster.LocalActorSystemInstance;
 import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.RemoteActorSystems;
 import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
+import org.elasticsoftware.elasticactors.cluster.metrics.MeterConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MeterTagCustomizer;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ShardedScheduler;
 import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
@@ -104,9 +106,26 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"actorRefCache"})
-    public Cache<String, ActorRef> createActorRefCache(Environment env) {
-        int maximumSize = env.getProperty("ea.actorRefCache.maximumSize",Integer.class,10240);
-        return CacheBuilder.newBuilder().maximumSize(maximumSize).build();
+    public Cache<String, ActorRef> createActorRefCache(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer
+    ) {
+        int maximumSize = env.getProperty("ea.actorRefCache.maximumSize", Integer.class, 10240);
+        MeterConfiguration configuration =
+            MeterConfiguration.build(env, meterRegistry, "actorRefCache", tagCustomizer);
+        CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder().maximumSize(maximumSize);
+        if (configuration != null) {
+            builder.recordStats();
+            return GuavaCacheMetrics.monitor(
+                configuration.getRegistry(),
+                builder.build(),
+                configuration.getComponentName(),
+                configuration.getTags()
+            );
+        } else {
+            return builder.build();
+        }
     }
 
     @Bean(name = {"actorSystemConfiguration"})
@@ -170,15 +189,29 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"nodeActorCacheManager"})
-    public NodeActorCacheManager createNodeActorCacheManager(Environment env) {
+    public NodeActorCacheManager createNodeActorCacheManager(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+    {
         int maximumSize = env.getProperty("ea.nodeCache.maximumSize",Integer.class,10240);
-        return new NodeActorCacheManager(maximumSize);
+        return new NodeActorCacheManager(
+            maximumSize,
+            MeterConfiguration.build(env, meterRegistry, "nodeActorCache", tagCustomizer)
+        );
     }
 
     @Bean(name = {"shardActorCacheManager"})
-    public ShardActorCacheManager createShardActorCacheManager(Environment env) {
+    public ShardActorCacheManager createShardActorCacheManager(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+    {
         int maximumSize = env.getProperty("ea.shardCache.maximumSize",Integer.class,10240);
-        return new ShardActorCacheManager(maximumSize);
+        return new ShardActorCacheManager(
+            maximumSize,
+            MeterConfiguration.build(env, meterRegistry, "shardActorCache", tagCustomizer)
+        );
     }
 
     @Bean(name = {"actorExecutor"}, destroyMethod = "shutdown")
@@ -186,14 +219,14 @@ public class NodeConfiguration {
     public ThreadBoundExecutor createActorExecutor(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsActorExecutorTags") Tags customTags)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
     {
         return ThreadBoundExecutorBuilder.build(
             env,
             "actorExecutor",
             "ACTOR-WORKER",
             meterRegistry,
-            customTags
+            tagCustomizer
         );
     }
 
@@ -202,14 +235,14 @@ public class NodeConfiguration {
     public ThreadBoundExecutor createQueueExecutor(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsQueueExecutorTags") Tags customTags)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
     {
         return ThreadBoundExecutorBuilder.build(
             env,
             "queueExecutor",
             "QUEUE-WORKER",
             meterRegistry,
-            customTags
+            tagCustomizer
         );
     }
 
@@ -239,9 +272,16 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"scheduler"})
-    public ShardedScheduler createScheduler(Environment env) {
+    public ShardedScheduler createScheduler(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+    {
         int numberOfWorkers = env.getProperty("ea.shardedScheduler.workerCount", Integer.class, Runtime.getRuntime().availableProcessors());
-        return new ShardedScheduler(numberOfWorkers);
+        return new ShardedScheduler(
+            numberOfWorkers,
+            MeterConfiguration.build(env, meterRegistry, "scheduler", tagCustomizer)
+        );
     }
 
     @Bean(name = {"actorSystemEventListenerService"})
@@ -262,7 +302,7 @@ public class NodeConfiguration {
         Environment env,
         List<ActorStateUpdateListener> listeners,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsActorStateUpdateProcessorTags") Tags customTags)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
     {
         if(listeners.isEmpty()) {
             return new NoopActorStateUpdateProcessor();
@@ -271,7 +311,7 @@ public class NodeConfiguration {
                 listeners,
                 env,
                 meterRegistry,
-                customTags
+                tagCustomizer
             );
         }
     }

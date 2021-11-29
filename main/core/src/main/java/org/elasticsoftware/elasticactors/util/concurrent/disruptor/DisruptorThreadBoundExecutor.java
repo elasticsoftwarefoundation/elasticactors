@@ -23,7 +23,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnableEventProcessor;
 import org.elasticsoftware.elasticactors.util.concurrent.metrics.CountingTimedThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundExecutorMeterConfiguration;
+import org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundExecutorMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,14 +46,14 @@ public final class DisruptorThreadBoundExecutor extends CountingTimedThreadBound
     public DisruptorThreadBoundExecutor(
         ThreadFactory threadFactory,
         int workers,
-        @Nullable ThreadBoundExecutorMeterConfiguration meterConfiguration)
+        @Nullable ThreadBoundExecutorMonitor monitor)
     {
         this(
             new ThreadBoundRunnableEventProcessor(),
             1024,
             threadFactory,
             workers,
-            meterConfiguration
+            monitor
         );
     }
 
@@ -62,9 +62,9 @@ public final class DisruptorThreadBoundExecutor extends CountingTimedThreadBound
         int bufferSize,
         ThreadFactory threadFactory,
         int workers,
-        @Nullable ThreadBoundExecutorMeterConfiguration meterConfiguration)
+        @Nullable ThreadBoundExecutorMonitor monitor)
     {
-        super(eventProcessor, meterConfiguration);
+        super(eventProcessor, monitor);
         this.threadFactory = threadFactory;
         this.disruptors = new Disruptor[workers];
 

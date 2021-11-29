@@ -16,12 +16,14 @@
 
 package org.elasticsoftware.elasticactors.cluster.scheduler;
 
+import io.micrometer.core.instrument.binder.jvm.ExecutorServiceMetrics;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorContextHolder;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.cluster.metrics.MeterConfiguration;
 import org.elasticsoftware.elasticactors.messaging.AbstractTracedMessage;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
@@ -52,17 +54,34 @@ public final class SimpleScheduler implements SchedulerService,ScheduledMessageR
     private ScheduledExecutorService scheduledExecutorService;
     private final ConcurrentMap<String, ScheduledFuture<?>> scheduledFutures =
             new ConcurrentHashMap<>();
+    private final MeterConfiguration meterConfiguration;
 
     @PostConstruct
     public void init() {
         logger.info("Initializing Simple Actor Cluster Scheduler");
-        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("SIMPLE-SCHEDULER"));
+        ScheduledExecutorService scheduler =
+            Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("SCHEDULER"));
+        if (meterConfiguration != null) {
+            scheduledExecutorService = ExecutorServiceMetrics.monitor(
+                meterConfiguration.getRegistry(),
+                scheduler,
+                meterConfiguration.getComponentName(),
+                meterConfiguration.getMetricPrefix(),
+                meterConfiguration.getTags()
+            );
+        } else {
+            scheduledExecutorService = scheduler;
+        }
     }
 
     @PreDestroy
     public void destroy() {
         logger.info("Destroying Simple Actor Cluster Scheduler");
         scheduledExecutorService.shutdownNow();
+    }
+
+    public SimpleScheduler(@Nullable MeterConfiguration meterConfiguration) {
+        this.meterConfiguration = meterConfiguration;
     }
 
     @Override

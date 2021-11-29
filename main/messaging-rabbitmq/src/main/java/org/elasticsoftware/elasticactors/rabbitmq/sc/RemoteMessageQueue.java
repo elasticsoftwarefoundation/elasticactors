@@ -14,7 +14,7 @@
  *   limitations under the License.
  */
 
-package org.elasticsoftware.elasticactors.rabbitmq;
+package org.elasticsoftware.elasticactors.rabbitmq.sc;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.AlreadyClosedException;
@@ -24,6 +24,7 @@ import net.jodah.lyra.event.DefaultChannelListener;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
+import org.elasticsoftware.elasticactors.rabbitmq.ChannelListenerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * @author Joost van de Wijgerd
  */
-public final class RemoteMessageQueue extends DefaultChannelListener implements MessageQueue {
+final class RemoteMessageQueue extends DefaultChannelListener implements MessageQueue {
 
     private final static Logger logger = LoggerFactory.getLogger(RemoteMessageQueue.class);
 

@@ -1,9 +1,7 @@
-package org.elasticsoftware.elasticactors.util.concurrent.metrics;
+package org.elasticsoftware.elasticactors.cluster.metrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
-import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.util.StringUtils;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.core.env.Environment;
@@ -14,23 +12,22 @@ import javax.annotation.Nullable;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
-public class ThreadBoundExecutorMeterConfiguration {
+public final class MeterConfiguration {
 
     private final MeterRegistry registry;
+    private final String componentName;
     private final String metricPrefix;
     private final Tags tags;
-    private final Timer executionTimer;
-    private final Timer idleTimer;
 
     @Nullable
-    public static ThreadBoundExecutorMeterConfiguration build(
+    public static MeterConfiguration build(
         @Nonnull Environment env,
         @Nullable MeterRegistry meterRegistry,
-        @Nonnull String executorName,
-        @Nullable Tags customTags)
+        @Nonnull String componentName,
+        @Nullable MeterTagCustomizer tagCustomizer)
     {
         boolean isMeterEnabled = env.getProperty(
-            format("ea.%s.metrics.enable", executorName),
+            format("ea.%s.metrics.enable", componentName),
             Boolean.class,
             false
         );
@@ -41,29 +38,27 @@ public class ThreadBoundExecutorMeterConfiguration {
                     "expected a bean with name 'elasticActorsMeterRegistry'"
                 );
             }
-            String prefix = env.getProperty(format("ea.%s.metrics.prefix", executorName));
-            return new ThreadBoundExecutorMeterConfiguration(
+            String prefix = env.getProperty(format("ea.%s.metrics.prefix", componentName));
+            return new MeterConfiguration(
                 meterRegistry,
-                executorName,
+                componentName,
                 prefix,
-                customTags
+                tagCustomizer != null ? tagCustomizer.get(componentName) : null
             );
         }
         return null;
     }
 
-    public ThreadBoundExecutorMeterConfiguration(
+    public MeterConfiguration(
         @Nonnull MeterRegistry registry,
-        @Nonnull String executorName,
+        @Nonnull String componentName,
         @Nullable String metricPrefix,
-        @Nullable Iterable<Tag> tags)
+        @Nullable Tags tags)
     {
         this.registry = requireNonNull(registry);
         this.metricPrefix = sanitizePrefix(metricPrefix);
-        this.tags = Tags.concat(tags, "name", executorName);
-        this.executionTimer =
-            registry.timer(createNameForSuffix("execution"), this.tags);
-        this.idleTimer = registry.timer(createNameForSuffix("idle"), this.tags);
+        this.componentName = requireNonNull(componentName);
+        this.tags = tags != null ? tags : Tags.empty();
     }
 
     private static String sanitizePrefix(String metricPrefix) {
@@ -82,18 +77,13 @@ public class ThreadBoundExecutorMeterConfiguration {
     }
 
     @Nonnull
-    public Timer getExecutionTimer() {
-        return executionTimer;
+    public String getComponentName() {
+        return componentName;
     }
 
     @Nonnull
-    public Timer getIdleTimer() {
-        return idleTimer;
-    }
-
-    @Nonnull
-    public String createNameForSuffix(String metricSuffix) {
-        return metricPrefix + "threadbound.executor." + metricSuffix;
+    public String getMetricPrefix() {
+        return metricPrefix;
     }
 
     @Nonnull

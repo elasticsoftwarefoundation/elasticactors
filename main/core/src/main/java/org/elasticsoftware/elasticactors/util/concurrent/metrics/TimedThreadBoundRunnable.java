@@ -35,14 +35,14 @@ final class TimedThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
     static <T> TimedThreadBoundRunnable<T> wrap(
         int thread,
         @Nonnull ThreadBoundRunnable<T> delegate,
-        @Nonnull ThreadBoundExecutorMeterConfiguration meterConfig)
+        @Nonnull ThreadBoundExecutorMonitor meterConfig)
     {
         if (delegate instanceof TimedThreadBoundRunnable) {
             return (TimedThreadBoundRunnable<T>) delegate;
         }
         return new TimedThreadBoundRunnable<>(
             thread,
-            meterConfig.getRegistry(),
+            meterConfig.getConfiguration().getRegistry(),
             meterConfig.getExecutionTimer(),
             meterConfig.getIdleTimer(),
             delegate
