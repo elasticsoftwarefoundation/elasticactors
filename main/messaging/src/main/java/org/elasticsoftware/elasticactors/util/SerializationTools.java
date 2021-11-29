@@ -36,6 +36,10 @@ import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClass
  */
 public final class SerializationTools {
     public static Object deserializeMessage(SerializationAccessor serializationAccessor, InternalMessage internalMessage) throws Exception {
+        if (internalMessage.hasPayloadObject()) {
+            return internalMessage.getPayload(null);
+        }
+
         Class<?> messageClass = getClassHelper().forName(internalMessage.getPayloadClass());
         MessageDeserializer<?> deserializer = serializationAccessor.getDeserializer(messageClass);
 
