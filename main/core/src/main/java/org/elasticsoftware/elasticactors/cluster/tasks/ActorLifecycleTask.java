@@ -85,8 +85,8 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         this.receiver = receiver;
         this.messageHandlerEventListener = messageHandlerEventListener;
         this.internalMessage = internalMessage;
-        this.metricsSettings = metricsSettings != null ? metricsSettings : MetricsSettings.disabled();
-        this.loggingSettings = loggingSettings != null ? loggingSettings : LoggingSettings.disabled();
+        this.metricsSettings = metricsSettings != null ? metricsSettings : MetricsSettings.DISABLED;
+        this.loggingSettings = loggingSettings != null ? loggingSettings : LoggingSettings.DISABLED;
         this.measurement = isMeasurementEnabled() ? new Measurement(System.nanoTime()) : null;
     }
 
@@ -123,6 +123,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         SerializationContext.initialize();
         boolean shouldUpdateState = false;
         try {
+            logMessageBasicInformation();
             shouldUpdateState = doInActorContext(actorSystem, receiver, receiverRef, internalMessage);
             executeLifecycleListeners();
         } catch (Exception e) {
@@ -192,6 +193,16 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
                 checkMessageHandlingThresholdExceeded();
             }
         }
+    }
+
+    private void logMessageBasicInformation() {
+        MessageLogger.logMessageBasicInformation(
+            internalMessage,
+            loggingSettings,
+            receiver,
+            receiverRef,
+            this::unwrapMessageClass
+        );
     }
 
     protected void logMessageContents(Object message) {

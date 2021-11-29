@@ -78,8 +78,8 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         this.serviceActor = serviceActor;
         this.internalMessage = internalMessage;
         this.messageHandlerEventListener = messageHandlerEventListener;
-        this.metricsSettings = metricsSettings != null ? metricsSettings : MetricsSettings.disabled();
-        this.loggingSettings = loggingSettings != null ? loggingSettings : LoggingSettings.disabled();
+        this.metricsSettings = metricsSettings != null ? metricsSettings : MetricsSettings.DISABLED;
+        this.loggingSettings = loggingSettings != null ? loggingSettings : LoggingSettings.DISABLED;
         this.measurement = isMeasurementEnabled() ? new Measurement(System.nanoTime()) : null;
     }
 
@@ -149,6 +149,7 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
         Exception executionException = null;
         InternalActorContext.setContext(this);
         try {
+            logMessageBasicInformation();
             Object message = deserializeMessage(actorSystem, internalMessage);
             logMessageContents(message);
             try {
@@ -208,6 +209,16 @@ public final class HandleServiceMessageTask implements ThreadBoundRunnable<Strin
             logger.error("Class [{}] not found", internalMessage.getPayloadClass());
             return null;
         }
+    }
+
+    private void logMessageBasicInformation() {
+        MessageLogger.logMessageBasicInformation(
+            internalMessage,
+            loggingSettings,
+            serviceActor,
+            serviceRef,
+            this::unwrapMessageClass
+        );
     }
 
     private void logMessageContents(Object message) {

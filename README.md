@@ -438,9 +438,22 @@ ea.logging.shard.messaging.enabled=false
 # Default: false
 ea.logging.node.messaging.enabled=false
 
+# Default set of features for logging message types.
+# Features defined here have the lowest precedence, meaning any features defined in the 
+# @Message annotation or overrides take precedence over this.
+# This does not affect internal messages defined in the Elastic Actors framework.
+# The value is a list of comma-separated features.
+# Default: empty
+ea.logging.messages.default=BASIC,TIMING,CONTENTS
+
 # Optional LogFeature overrides for specific message types.
-# The value is a list of comma-separated features
-ea.logging.messages.overrides.[class_name]=TIMING,CONTENTS
+# Features defined here have the highest precedence, meaning any features defined here will 
+# override both the default and those defined in the @Message annotation for any message type.
+# These overrides affect internal messages defined in the Elastic Actors framework too, in case
+# that's needed for debugging.
+# The value is a list of comma-separated features.
+# To disable all features, add the key but leave its value empty.
+ea.logging.messages.overrides.[class_name]=BASIC,TIMING,CONTENTS
 
 # The maximum number of characters when logging message contents. 
 # Default: 5000

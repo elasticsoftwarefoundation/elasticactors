@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.ImmutableMap;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import org.elasticsoftware.elasticactors.ActorRef;
@@ -48,7 +47,6 @@ import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.ManagedActorsScanner;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
-import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
@@ -63,10 +61,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScans;
 import org.springframework.context.annotation.DependsOn;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.Environment;
-import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.lang.Nullable;
@@ -74,7 +69,6 @@ import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.List;
 
 import static java.lang.Boolean.FALSE;
@@ -86,8 +80,6 @@ import static java.lang.Boolean.FALSE;
     @ComponentScan("org.elasticsoftware.elasticactors.tracing.spring"),
 })
 public class NodeConfiguration {
-
-    private static final String EA_METRICS_OVERRIDES = "ea.metrics.messages.overrides.";
 
     @Bean(name = {
         "elasticActorsNode",
@@ -325,10 +317,7 @@ public class NodeConfiguration {
         boolean loggingEnabled =
             environment.getProperty("ea.logging.node.messaging.enabled", Boolean.class, false);
 
-        return new LoggingSettings(
-            loggingEnabled,
-            buildOverridesMap(environment)
-        );
+        return new LoggingSettings(loggingEnabled, environment);
     }
 
     @Bean(name = "shardLoggingSettings")
@@ -336,37 +325,7 @@ public class NodeConfiguration {
         boolean loggingEnabled =
             environment.getProperty("ea.logging.shard.messaging.enabled", Boolean.class, false);
 
-        return new LoggingSettings(
-            loggingEnabled,
-            buildOverridesMap(environment)
-        );
+        return new LoggingSettings(loggingEnabled, environment);
     }
 
-    private ImmutableMap<String, Message.LogFeature[]> buildOverridesMap(Environment environment) {
-        ImmutableMap.Builder<String, Message.LogFeature[]> mapBuilder = ImmutableMap.builder();
-        if (environment instanceof ConfigurableEnvironment) {
-            for (PropertySource<?> propertySource : ((ConfigurableEnvironment) environment).getPropertySources()) {
-                if (propertySource instanceof EnumerablePropertySource) {
-                    for (String key : ((EnumerablePropertySource<?>) propertySource).getPropertyNames()) {
-                        if (key.length() > EA_METRICS_OVERRIDES.length() && key.startsWith(EA_METRICS_OVERRIDES)) {
-                            Object property = propertySource.getProperty(key);
-                            if (property != null) {
-                                String value = property.toString();
-                                Message.LogFeature[] features = Arrays.stream(value.split(","))
-                                    .map(String::trim)
-                                    .filter(s -> !s.isEmpty())
-                                    .map(String::toUpperCase)
-                                    .map(Message.LogFeature::valueOf)
-                                    .distinct()
-                                    .toArray(Message.LogFeature[]::new);
-                                String className = key.substring(EA_METRICS_OVERRIDES.length());
-                                mapBuilder.put(className, features);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return mapBuilder.build();
-    }
 }

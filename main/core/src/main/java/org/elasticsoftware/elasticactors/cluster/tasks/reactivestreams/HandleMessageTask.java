@@ -61,6 +61,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
 public final class HandleMessageTask extends ActorLifecycleTask implements SubscriberContext {
     private static final Logger log = LoggerFactory.getLogger(HandleMessageTask.class);
     private InternalPersistentSubscription currentSubscription;
+    private Object deserializedMessage;
 
     HandleMessageTask(
         InternalActorSystem actorSystem,
@@ -124,6 +125,7 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
         if(NextMessage.class.getName().equals(internalMessage.getPayloadClass())) {
             try {
                 NextMessage nextMessage = internalMessage.getPayload(actorSystem.getDeserializer(NextMessage.class));
+                deserializedMessage = nextMessage;
                 unwrappedMessageClass = getClassHelper().forName(nextMessage.getMessageName());
                 return unwrappedMessageClass;
             } catch(IOException e) {
@@ -144,7 +146,7 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
                                        ActorRef receiverRef,
                                        InternalMessage internalMessage) {
         try {
-            Object message = deserializeMessage(actorSystem, internalMessage);
+            Object message = deserializeAndCacheMessage(actorSystem, internalMessage);
             if(message instanceof NextMessage) {
                 return handle((NextMessage) message, receiver, internalMessage.getSender(), actorSystem);
             } else if(message instanceof SubscribeMessage) {
@@ -166,6 +168,16 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
         }
     }
 
+    private Object deserializeAndCacheMessage(
+        InternalActorSystem actorSystem,
+        InternalMessage internalMessage) throws Exception
+    {
+        if (deserializedMessage == null) {
+            deserializedMessage = deserializeMessage(actorSystem, internalMessage);
+        }
+        return deserializedMessage;
+    }
+
     private boolean handle(NextMessage nextMessage, ElasticActor receiver, ActorRef publisherRef, InternalActorSystem actorSystem) {
         Optional<InternalPersistentSubscription> persistentSubscription =
                 persistentActor.getSubscription(nextMessage.getMessageName(), publisherRef);
@@ -179,6 +191,7 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
                 MessageDeserializer<?> deserializer = actorSystem.getDeserializer(messageClass);
                 Object message = SerializationContext.deserialize(deserializer, ByteBuffer.wrap(nextMessage.getMessageBytes()));
 
+                logMessageContents(message);
                 currentSubscription.getSubscriber().onNext(message);
 
                 return shouldUpdateState(receiver, message);

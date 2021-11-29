@@ -2,14 +2,12 @@ package org.elasticsoftware.elasticactors.cluster.metrics;
 
 public final class MetricsSettings {
 
+    public final static MetricsSettings DISABLED = new MetricsSettings(false, 0L, 0L, 0L);
+
     private final boolean enabled;
     private final long messageDeliveryWarnThreshold;
     private final long messageHandlingWarnThreshold;
     private final long serializationWarnThreshold;
-
-    public static MetricsSettings disabled() {
-        return new MetricsSettings(false, 0L, 0L, 0L);
-    }
 
     public MetricsSettings(
         boolean enabled,

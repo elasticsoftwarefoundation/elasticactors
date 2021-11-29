@@ -75,12 +75,19 @@ public @interface Message {
      */
     enum LogFeature {
         /**
+         * Basic information (message type and trace contexts, if any) is recorded when the
+         * message is handled by an actor.
+         */
+        BASIC,
+        /**
          * Timing information is recorded when the message is handled by an actor.
+         * This feature includes {@link LogFeature#BASIC}.
          */
         TIMING,
         /**
          * Logs the contents of the received message.
          * The String representation will depend on the {@link SerializationFramework} used.
+         * This feature includes {@link LogFeature#BASIC}.
          * <br><br>
          * IMPORTANT: the contents of a message can contain sensitive information.
          * Use this with caution.
