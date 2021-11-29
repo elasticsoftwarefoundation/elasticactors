@@ -234,6 +234,7 @@ org.elasticsoftware.elasticactors.test.TestActorFullName:
 ## Configuration properties
 
 These properties can be set per-environment using any property source accepted by Spring.
+This list is not exhaustive. Specific sections of this README may contain keys specific to them.
 
 ```properties
 ## Basic configuration
@@ -573,6 +574,46 @@ following dependency in your project:
     <scope>runtime</scope>
 </dependency>
 ```
+
+### Metrics
+
+Starting from version 5.2, Elastic Actors supports exporting its internal metrics using [Micrometer](https://micrometer.io/).
+
+All metrics are optional and can be enabled/disabled independently using configuration properties.
+If metrics are enabled, Elastic Actors will expect the existence of a bean of type `MeterRegistry` 
+and name `elasticActorsMeterRegistry`. The supplied bean will be used to add the metrics.
+
+Additionally, customization of tags is supported by providing a bean of type `MeterTagCustomizer`
+and name `elasticActorsMeterTagCustomizer` containing a map of component names and tags to be added
+for each component.
+
+```properties
+# Toggles Micrometer ON or OFF for a given component.
+#
+# The following components are currently supported:
+# - Caches:
+#   - actorRefCache: ActorRef cache
+#   - nodeActorCache: Node actor state cache
+#   - shardActorCache: Shard actor state cache
+# - Thread-bound executors:
+#   - queueExecutor: Message queue executor
+#   - actorExecutor: Actor message handler executor
+#   - asyncUpdateExecutor: Actor state persistence executor
+#   - actorStateUpdateProcessor: Actor state update processor executor
+# - Messaging services:
+#   - rabbitmq: RabbitMQ metrics
+#   - rabbitmqAcker: ASYNC ACKer executor service
+# - Message schedulers:
+#   - scheduler: Scheduler executor service
+#
+# Default (for all components): false
+ea.[component_name].metrics.enabled=false
+
+# Sets a metric prefix for a given component
+# Default (for all components): empty
+ea.[component_name].metrics.prefix="ea"
+```
+
 
 
 ### Performance impact of tracing with log context on applications using Log4j2
