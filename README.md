@@ -607,7 +607,7 @@ for each component.
 #   - scheduler: Scheduler executor service
 #
 # Default (for all components): false
-ea.[component_name].metrics.enabled=false
+ea.[component_name].metrics.enable=false
 
 # Sets a metric prefix for a given component
 # Default (for all components): empty
