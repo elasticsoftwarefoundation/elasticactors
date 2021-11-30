@@ -81,7 +81,7 @@ import static java.lang.Boolean.FALSE;
 
 public class NodeConfiguration {
 
-    private static final String EA_METRICS_OVERRIDES = "ea.metrics.messages.overrides.";
+    private static final String EA_LOGGING_MESSAGES_OVERRIDES = "ea.logging.messages.overrides.";
 
     @Bean(name = {
         "elasticActorsNode",
@@ -330,7 +330,8 @@ public class NodeConfiguration {
             for (PropertySource<?> propertySource : ((ConfigurableEnvironment) environment).getPropertySources()) {
                 if (propertySource instanceof EnumerablePropertySource) {
                     for (String key : ((EnumerablePropertySource<?>) propertySource).getPropertyNames()) {
-                        if (key.length() > EA_METRICS_OVERRIDES.length() && key.startsWith(EA_METRICS_OVERRIDES)) {
+                        if (key.length() > EA_LOGGING_MESSAGES_OVERRIDES.length() && key.startsWith(
+                            EA_LOGGING_MESSAGES_OVERRIDES)) {
                             Object property = propertySource.getProperty(key);
                             if (property != null) {
                                 String value = property.toString();
@@ -341,7 +342,7 @@ public class NodeConfiguration {
                                     .map(Message.LogFeature::valueOf)
                                     .distinct()
                                     .toArray(Message.LogFeature[]::new);
-                                String className = key.substring(EA_METRICS_OVERRIDES.length());
+                                String className = key.substring(EA_LOGGING_MESSAGES_OVERRIDES.length());
                                 mapBuilder.put(className, features);
                             }
                         }
