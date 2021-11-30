@@ -48,10 +48,10 @@ public final class LoggingSettings {
             enabled,
             enabledForUndeliverable,
             enabledForReactive,
-            toLogFeatures(environment.getProperty("ea.metrics.messages.default")),
+            toLogFeatures(environment.getProperty("ea.logging.messages.default")),
             getKeyValuePairsUnderPrefix(
                 environment,
-                "ea.metrics.messages.default",
+                "ea.logging.messages.overrides",
                 LoggingSettings::toLogFeatures
             )
         );
