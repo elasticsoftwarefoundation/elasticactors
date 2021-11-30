@@ -39,7 +39,6 @@ import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
 import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler;
-import org.elasticsoftware.elasticactors.configuration.NodeConfiguration;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.runtime.ActorLifecycleListenerScanner;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
@@ -97,7 +96,6 @@ import java.util.concurrent.Executor;
 @PropertySource(value = "classpath:/system.properties", ignoreResourceNotFound = true)
 public class TestConfiguration extends AsyncConfigurerSupport {
     private final PhysicalNode localNode = new PhysicalNode(UUIDTools.createRandomUUID().toString(), InetAddress.getLoopbackAddress(), true);
-    private final NodeConfiguration nodeConfiguration = new NodeConfiguration();
 
     @Override
     @Bean(name = "asyncExecutor")
@@ -325,21 +323,21 @@ public class TestConfiguration extends AsyncConfigurerSupport {
 
     @Bean(name = "nodeMetricsSettings")
     public MetricsSettings nodeMetricsSettings(Environment environment) {
-        return nodeConfiguration.nodeMetricsSettings(environment);
+        return MetricsSettings.build(environment, "node");
     }
 
     @Bean(name = "shardMetricsSettings")
     public MetricsSettings shardMetricsSettings(Environment environment) {
-        return nodeConfiguration.shardMetricsSettings(environment);
+        return MetricsSettings.build(environment, "shard");
     }
 
     @Bean(name = "nodeLoggingSettings")
     public LoggingSettings nodeLoggingSettings(Environment environment) {
-        return nodeConfiguration.nodeLoggingSettings(environment);
+        return LoggingSettings.build(environment, "node");
     }
 
     @Bean(name = "shardLoggingSettings")
     public LoggingSettings shardLoggingSettings(Environment environment) {
-        return nodeConfiguration.shardLoggingSettings(environment);
+        return LoggingSettings.build(environment, "shard");
     }
 }
