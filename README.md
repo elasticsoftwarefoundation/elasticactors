@@ -690,6 +690,12 @@ ea.metrics.micrometer.[component_name].measureDeliveryTimes=false
 # Default: false
 ea.metrics.micrometer.[component_name].tagMessageWrapperTypes=false
 
+# Toggles adding the task types as tags for a given component.
+# Adds the current thread-bound task type as the tag "elastic.actors.message.task".
+# Currently, this only applies to the "actorExecutor" component.
+# Default: false
+ea.metrics.micrometer.[component_name].tagTaskTypes=false
+
 # Allows detailed tagging for the specified actor type for a given component.
 # Adds the receiver type as the tag "elastic.actors.actor.type".
 # Currently, this only applies to the "actorExecutor" component.

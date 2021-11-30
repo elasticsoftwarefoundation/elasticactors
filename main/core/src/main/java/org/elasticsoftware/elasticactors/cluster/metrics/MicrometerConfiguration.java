@@ -25,6 +25,7 @@ public final class MicrometerConfiguration {
 
     private final boolean measureDeliveryTimes;
     private final boolean tagMessageWrapperTypes;
+    private final boolean tagTaskTypes;
     private final MeterRegistry registry;
     private final String componentName;
     private final String metricPrefix;
@@ -58,6 +59,11 @@ public final class MicrometerConfiguration {
             );
             boolean tagMessageWrapperTypes = env.getProperty(
                 format("ea.metrics.micrometer.%s.tagMessageWrapperTypes", componentName),
+                Boolean.class,
+                false
+            );
+            boolean tagTaskTypes = env.getProperty(
+                format("ea.metrics.micrometer.%s.tagTaskTypes", componentName),
                 Boolean.class,
                 false
             );
@@ -108,6 +114,7 @@ public final class MicrometerConfiguration {
             return new MicrometerConfiguration(
                 measureMessageDeliveryTimes,
                 tagMessageWrapperTypes,
+                tagTaskTypes,
                 meterRegistry,
                 componentName,
                 prefix,
@@ -122,6 +129,7 @@ public final class MicrometerConfiguration {
     public MicrometerConfiguration(
         boolean measureDeliveryTimes,
         boolean tagMessageWrapperTypes,
+        boolean tagTaskTypes,
         @Nonnull MeterRegistry registry,
         @Nonnull String componentName,
         @Nullable String metricPrefix,
@@ -131,6 +139,7 @@ public final class MicrometerConfiguration {
     {
         this.measureDeliveryTimes = measureDeliveryTimes;
         this.tagMessageWrapperTypes = tagMessageWrapperTypes;
+        this.tagTaskTypes = tagTaskTypes;
         this.registry = requireNonNull(registry);
         this.metricPrefix = sanitizePrefix(metricPrefix);
         this.componentName = requireNonNull(componentName);
@@ -157,6 +166,10 @@ public final class MicrometerConfiguration {
 
     public boolean isTagMessageWrapperTypes() {
         return tagMessageWrapperTypes;
+    }
+
+    public boolean isTagTaskTypes() {
+        return tagTaskTypes;
     }
 
     @Nonnull

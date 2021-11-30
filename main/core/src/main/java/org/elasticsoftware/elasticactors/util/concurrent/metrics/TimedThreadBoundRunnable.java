@@ -17,9 +17,13 @@ package org.elasticsoftware.elasticactors.util.concurrent.metrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import org.elasticsoftware.elasticactors.messaging.UUIDTools;
+import org.elasticsoftware.elasticactors.util.concurrent.MessageHandlingThreadBoundRunnable;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A wrapper for a {@link ThreadBoundRunnable} with idle and execution timings.
@@ -29,6 +33,7 @@ final class TimedThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
     private final MeterRegistry registry;
     private final Timer executionTimer;
     private final Timer idleTimer;
+    private final Timer deliveryTimer;
     private final ThreadBoundRunnable<T> delegate;
     private final Timer.Sample idleSample;
 
@@ -45,6 +50,7 @@ final class TimedThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
             meterConfig.getConfiguration().getRegistry(),
             meterConfig.getExecutionTimerFor(delegate),
             meterConfig.getIdleTimerFor(delegate),
+            meterConfig.getDeliveryTimerFor(delegate),
             delegate
         );
     }
@@ -54,6 +60,7 @@ final class TimedThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
         MeterRegistry registry,
         Timer executionTimer,
         Timer idleTimer,
+        @Nullable Timer deliveryTimer,
         ThreadBoundRunnable<T> delegate)
     {
         this.thread = thread;
@@ -61,13 +68,19 @@ final class TimedThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
         this.executionTimer = executionTimer;
         this.idleTimer = idleTimer;
         this.delegate = delegate;
+        this.deliveryTimer = deliveryTimer;
         this.idleSample = Timer.start(registry);
     }
 
     @Override
     public void run() {
-        // TODO time delivery times here
-        // if the delegate has an internal message, we can get the time of origin from the ID
+        if (deliveryTimer != null && delegate instanceof MessageHandlingThreadBoundRunnable) {
+            MessageHandlingThreadBoundRunnable<?> mhtbRunnable =
+                (MessageHandlingThreadBoundRunnable<?>) delegate;
+            long timestamp = UUIDTools.toUnixTimestamp(mhtbRunnable.getInternalMessage().getId());
+            long delay = (System.currentTimeMillis() - timestamp);
+            deliveryTimer.record(delay, TimeUnit.MILLISECONDS);
+        }
         idleSample.stop(idleTimer);
         Timer.Sample executionSample = Timer.start(registry);
         try {

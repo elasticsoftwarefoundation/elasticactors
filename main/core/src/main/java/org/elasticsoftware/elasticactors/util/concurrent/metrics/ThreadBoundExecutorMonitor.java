@@ -16,7 +16,6 @@ import org.springframework.core.env.Environment;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
@@ -31,13 +30,14 @@ public final class ThreadBoundExecutorMonitor {
     private final MicrometerConfiguration configuration;
     private final Timer executionTimer;
     private final Timer idleTimer;
+    private final Timer deliveryTimer;
     private final Tags tags;
     private final String executionTimerName;
     private final String idleTimerName;
+    private final String deliveryTimerName;
     private final ConcurrentMap<TimerCacheKey, Timer> idleTimers;
     private final ConcurrentMap<TimerCacheKey, Timer> executionTimers;
-    private final ConcurrentMap<Class<? extends InternalMessage>, Timer> wrapperIdleTimers;
-    private final ConcurrentMap<Class<? extends InternalMessage>, Timer> wrapperExecutionTimers;
+    private final ConcurrentMap<TimerCacheKey, Timer> deliveryTimers;
 
     @Nullable
     public static ThreadBoundExecutorMonitor build(
@@ -62,12 +62,18 @@ public final class ThreadBoundExecutorMonitor {
 
         this.idleTimers = new ConcurrentHashMap<>();
         this.executionTimers = new ConcurrentHashMap<>();
-        this.wrapperIdleTimers = new ConcurrentHashMap<>();
-        this.wrapperExecutionTimers = new ConcurrentHashMap<>();
+        this.deliveryTimers = new ConcurrentHashMap<>();
         this.executionTimerName = createNameForSuffix("execution");
         this.executionTimer = registry.timer(executionTimerName, this.tags);
         this.idleTimerName = createNameForSuffix("idle");
         this.idleTimer = registry.timer(idleTimerName, this.tags);
+        if (configuration.isMeasureDeliveryTimes()) {
+            this.deliveryTimerName = createNameForSuffix("delivery");
+            this.deliveryTimer = registry.timer(deliveryTimerName, this.tags);
+        } else {
+            this.deliveryTimerName = null;
+            this.deliveryTimer = null;
+        }
     }
 
     @Nonnull
@@ -96,9 +102,7 @@ public final class ThreadBoundExecutorMonitor {
             runnable,
             executionTimer,
             executionTimers,
-            wrapperExecutionTimers,
-            this::createExecutionTimerForKey,
-            this::createExecutionTimerForWrapper
+            this::createExecutionTimerForKey
         );
     }
 
@@ -108,10 +112,22 @@ public final class ThreadBoundExecutorMonitor {
             runnable,
             idleTimer,
             idleTimers,
-            wrapperIdleTimers,
-            this::createIdleTimerForKey,
-            this::createIdleTimerForWrapper
+            this::createIdleTimerForKey
         );
+    }
+
+    @Nullable
+    public Timer getDeliveryTimerFor(ThreadBoundRunnable<?> runnable) {
+        if (deliveryTimer != null) {
+            return getTimerFor(
+                runnable,
+                deliveryTimer,
+                deliveryTimers,
+                this::createDeliveryTimerForKey
+            );
+        } else {
+            return null;
+        }
     }
 
     private Timer createExecutionTimerForKey(TimerCacheKey key) {
@@ -122,44 +138,58 @@ public final class ThreadBoundExecutorMonitor {
         return createTimerForKey(key, idleTimerName);
     }
 
-    private Timer createExecutionTimerForWrapper(Class<? extends InternalMessage> wrapperClass) {
-        return createTimerForWrapper(wrapperClass, executionTimerName);
-    }
-
-    private Timer createIdleTimerForWrapper(Class<? extends InternalMessage> wrapperClass) {
-        return createTimerForWrapper(wrapperClass, idleTimerName);
+    private Timer createDeliveryTimerForKey(TimerCacheKey key) {
+        return createTimerForKey(key, deliveryTimerName);
     }
 
     private Timer getTimerFor(
         ThreadBoundRunnable<?> runnable,
         Timer defaultTimer,
         Map<TimerCacheKey, Timer> map,
-        Map<Class<? extends InternalMessage>, Timer> wrapperMap,
-        Function<TimerCacheKey, Timer> keyFunction,
-        Function<Class<? extends InternalMessage>, Timer> wrapperFunction)
+        Function<TimerCacheKey, Timer> keyFunction)
     {
         if (runnable instanceof MessageHandlingThreadBoundRunnable) {
             MessageHandlingThreadBoundRunnable<?> mhtbRunnable =
                 (MessageHandlingThreadBoundRunnable<?>) runnable;
-            if (shouldAddTagsForActor(mhtbRunnable.getActorType())) {
-                TimerCacheKey pooledKey =
-                    keyPool.get().fill(mhtbRunnable, configuration.isTagMessageWrapperTypes());
+            Class<? extends ElasticActor> actorClass =
+                shouldAddTagsForActor(mhtbRunnable.getActorType())
+                    ? mhtbRunnable.getActorType()
+                    : null;
+            Class<?> messageClass =
+                actorClass != null && shouldAddTagsForMessage(mhtbRunnable.getMessageClass())
+                    ? mhtbRunnable.getMessageClass()
+                    : null;
+            Class<? extends InternalMessage> internalMessageClass =
+                configuration.isTagMessageWrapperTypes()
+                    ? mhtbRunnable.getInternalMessage().getClass()
+                    : null;
+            Class<? extends ThreadBoundRunnable> runnableClass =
+                configuration.isTagTaskTypes()
+                    ? mhtbRunnable.getClass()
+                    : null;
+            if (actorClass != null || internalMessageClass != null || runnableClass != null) {
+                TimerCacheKey pooledKey = keyPool.get().fill(
+                    actorClass,
+                    messageClass,
+                    internalMessageClass,
+                    runnableClass
+                );
                 // Reuse key here to avoid generating garbage, since this will be read a lot more
                 // than written. Since this key is reused, we have to compute any actual results
                 // in a separate step.
                 Timer timer = map.get(pooledKey);
                 if (timer == null) {
                     // Creating a new key here so the shared one is not put on the map
-                    TimerCacheKey newKey =
-                        new TimerCacheKey(mhtbRunnable, configuration.isTagMessageWrapperTypes());
+                    TimerCacheKey newKey = TimerCacheKey.of(
+                        actorClass,
+                        messageClass,
+                        internalMessageClass,
+                        runnableClass
+                    );
                     return map.computeIfAbsent(newKey, keyFunction);
                 } else {
                     return timer;
                 }
-            } else if (configuration.isTagMessageWrapperTypes()) {
-                Class<? extends InternalMessage> wrapperClass =
-                    mhtbRunnable.getInternalMessage().getClass();
-                return wrapperMap.computeIfAbsent(wrapperClass, wrapperFunction);
             }
         }
         return defaultTimer;
@@ -167,35 +197,31 @@ public final class ThreadBoundExecutorMonitor {
 
     private Timer createTimerForKey(TimerCacheKey key, String timerName) {
         Tags tags = getTags();
-        String actorTypeName = shorten(key.actorClass);
-        if (actorTypeName != null) {
-            tags = tags.and("elastic.actors.actor.type", actorTypeName);
+        if (key.actorClass != null) {
+            String actorTypeName = shorten(key.actorClass);
+            if (actorTypeName != null) {
+                tags = tags.and("elastic.actors.actor.type", actorTypeName);
+            }
         }
-        if (shouldAddTagsForMessage(key.messageClass)) {
+        if (key.messageClass != null) {
             String messageTypeName = shorten(key.messageClass);
             if (messageTypeName != null) {
                 tags = tags.and(Tag.of("elastic.actors.message.type", messageTypeName));
             }
         }
-        if (configuration.isTagMessageWrapperTypes()) {
-            tags = getTagsForWrapper(key.getInternalMessageClass(), tags);
-        }
-        return configuration.getRegistry().timer(timerName, tags);
-    }
-
-    private Timer createTimerForWrapper(Class<? extends InternalMessage> wrapperClass, String timerName) {
-        Tags tags = getTagsForWrapper(wrapperClass, getTags());
-        return configuration.getRegistry().timer(timerName, tags);
-    }
-
-    private Tags getTagsForWrapper(Class<? extends InternalMessage> wrapperClass, Tags tags) {
-        if (wrapperClass != null) {
-            String wrapperName = shorten(wrapperClass);
+        if (key.internalMessageClass != null) {
+            String wrapperName = shorten(key.internalMessageClass);
             if (wrapperName != null) {
                 tags = tags.and(Tag.of("elastic.actors.message.wrapper", wrapperName));
             }
         }
-        return tags;
+        if (key.runnableClass != null) {
+            String taskName = shorten(key.runnableClass);
+            if (taskName != null) {
+                tags = tags.and(Tag.of("elastic.actors.message.task", taskName));
+            }
+        }
+        return configuration.getRegistry().timer(timerName, tags);
     }
 
     @Nonnull
@@ -221,65 +247,34 @@ public final class ThreadBoundExecutorMonitor {
         private Class<? extends ElasticActor> actorClass;
         private Class<?> messageClass;
         private Class<? extends InternalMessage> internalMessageClass;
+        private Class<? extends ThreadBoundRunnable> runnableClass;
 
         // Fill this key, in case it's coming from the pool
-        public TimerCacheKey fill(MessageHandlingThreadBoundRunnable<?> runnable, boolean addWrapper) {
-            this.actorClass = runnable.getActorType();
-            this.messageClass = runnable.getMessageClass();
-            this.internalMessageClass = addWrapper ? runnable.getInternalMessage().getClass() : null;
+        public TimerCacheKey fill(
+            Class<? extends ElasticActor> actorClass,
+            Class<?> messageClass,
+            Class<? extends InternalMessage> internalMessageClass,
+            Class<? extends ThreadBoundRunnable> runnableClass)
+        {
+            this.actorClass = actorClass;
+            this.messageClass = messageClass;
+            this.internalMessageClass = internalMessageClass;
+            this.runnableClass = runnableClass;
             return this;
         }
 
-        public TimerCacheKey(){
-
-        }
-
-        public TimerCacheKey(MessageHandlingThreadBoundRunnable<?> runnable, boolean addWrapper) {
-            this.actorClass = runnable.getActorType();
-            this.messageClass = runnable.getMessageClass();
-            this.internalMessageClass = addWrapper ? runnable.getInternalMessage().getClass() : null;
-        }
-
-        public Class<? extends ElasticActor> getActorClass() {
-            return actorClass;
-        }
-
-        public Class<?> getMessageClass() {
-            return messageClass;
-        }
-
-        @Nullable
-        public Class<? extends InternalMessage> getInternalMessageClass() {
-            return internalMessageClass;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (!(o instanceof TimerCacheKey)) {
-                return false;
-            }
-
-            TimerCacheKey that = (TimerCacheKey) o;
-
-            if (!actorClass.equals(that.actorClass)) {
-                return false;
-            }
-            if (!messageClass.equals(that.messageClass)) {
-                return false;
-            }
-            return Objects.equals(internalMessageClass, that.internalMessageClass);
-        }
-
-        @Override
-        public int hashCode() {
-            int result = actorClass.hashCode();
-            result = 31 * result + messageClass.hashCode();
-            result =
-                31 * result + (internalMessageClass != null ? internalMessageClass.hashCode() : 0);
-            return result;
+        public static TimerCacheKey of(
+            Class<? extends ElasticActor> actorClass,
+            Class<?> messageClass,
+            Class<? extends InternalMessage> internalMessageClass,
+            Class<? extends ThreadBoundRunnable> runnableClass)
+        {
+            return new TimerCacheKey().fill(
+                actorClass,
+                messageClass,
+                internalMessageClass,
+                runnableClass
+            );
         }
     }
 
