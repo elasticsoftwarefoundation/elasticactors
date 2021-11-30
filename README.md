@@ -6,7 +6,7 @@ Persistent Stateful Actor System
 
 ## Current released version
 
-![CI](https://github.com/elasticsoftwarefoundation/elasticactors/workflows/CI/badge.svg)
+[![CI](https://github.com/elasticsoftwarefoundation/elasticactors/workflows/CI/badge.svg)](https://github.com/elasticsoftwarefoundation/elasticactors/workflows/CI)
 [![License: Apache 2](https://img.shields.io/badge/LICENSE-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.txt)
 [![Maven Central](https://img.shields.io/maven-central/v/org.elasticsoftwarefoundation.elasticactors/elasticactors-parent.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22org.elasticsoftwarefoundation.elasticactors%22)
 
