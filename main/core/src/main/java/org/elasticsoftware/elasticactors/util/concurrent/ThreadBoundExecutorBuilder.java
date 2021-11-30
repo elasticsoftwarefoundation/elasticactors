@@ -1,7 +1,7 @@
 package org.elasticsoftware.elasticactors.util.concurrent;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterTagCustomizer;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
 import org.elasticsoftware.elasticactors.util.concurrent.disruptor.DisruptorThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundExecutorMonitor;
 import org.springframework.core.env.Environment;
@@ -22,12 +22,12 @@ public final class ThreadBoundExecutorBuilder {
         @Nonnull String executorName,
         @Nonnull String baseThreadName,
         @Nullable MeterRegistry meterRegistry,
-        @Nullable MeterTagCustomizer tagCustomizer)
+        @Nullable MicrometerTagCustomizer tagCustomizer)
     {
         final int workers = env.getProperty(
             format("ea.%s.workerCount", executorName),
             Integer.class,
-            Runtime.getRuntime().availableProcessors() * 3
+            getDefaultNumberOfWorkers()
         );
         final Boolean useDisruptor =
             env.getProperty(format("ea.%s.useDisruptor", executorName), Boolean.class, FALSE);
@@ -51,12 +51,12 @@ public final class ThreadBoundExecutorBuilder {
         @Nonnull String executorName,
         @Nonnull String baseThreadName,
         @Nullable MeterRegistry meterRegistry,
-        @Nullable MeterTagCustomizer tagCustomizer)
+        @Nullable MicrometerTagCustomizer tagCustomizer)
     {
         final int workers = env.getProperty(
             format("ea.%s.workerCount", executorName),
             Integer.class,
-            Runtime.getRuntime().availableProcessors() * 3
+            getDefaultNumberOfWorkers()
         );
         return new BlockingQueueThreadBoundExecutor(
             new DaemonThreadFactory(baseThreadName),
@@ -71,12 +71,12 @@ public final class ThreadBoundExecutorBuilder {
         @Nonnull String executorName,
         @Nonnull String baseThreadName,
         @Nullable MeterRegistry meterRegistry,
-        @Nullable MeterTagCustomizer tagCustomizer)
+        @Nullable MicrometerTagCustomizer tagCustomizer)
     {
         final int workers = env.getProperty(
             format("ea.%s.workerCount", executorName),
             Integer.class,
-            Runtime.getRuntime().availableProcessors() * 3
+            getDefaultNumberOfWorkers()
         );
         final int batchSize = getBatchSize(env, executorName);
         final Boolean useDisruptor =
@@ -106,12 +106,12 @@ public final class ThreadBoundExecutorBuilder {
         @Nonnull String executorName,
         @Nonnull String baseThreadName,
         @Nullable MeterRegistry meterRegistry,
-        @Nullable MeterTagCustomizer tagCustomizer)
+        @Nullable MicrometerTagCustomizer tagCustomizer)
     {
         final int workers = env.getProperty(
             format("ea.%s.workerCount", executorName),
             Integer.class,
-            Runtime.getRuntime().availableProcessors() * 3
+            getDefaultNumberOfWorkers()
         );
         final int batchSize = getBatchSize(env, executorName);
         return buildBlockingQueueThreadBoundExecutor(
@@ -134,7 +134,7 @@ public final class ThreadBoundExecutorBuilder {
         @Nonnull String executorName,
         @Nonnull String baseThreadName,
         @Nullable MeterRegistry meterRegistry,
-        @Nullable MeterTagCustomizer tagCustomizer)
+        @Nullable MicrometerTagCustomizer tagCustomizer)
     {
         return new BlockingQueueThreadBoundExecutor(
             eventProcessor,
@@ -145,18 +145,22 @@ public final class ThreadBoundExecutorBuilder {
         );
     }
 
+    private static int getDefaultNumberOfWorkers() {
+        return Runtime.getRuntime().availableProcessors() * 3;
+    }
+
     private static int getBatchSize(Environment env, String executorName) {
-        // Working around the fact some executors used 'maxBatchSize' instead of 'batchSize'
         Integer batchSize =
             env.getProperty(format("ea.%s.batchSize", executorName), Integer.class);
-        Integer maxBatchSize =
-            env.getProperty(format("ea.%s.maxBatchSize", executorName), Integer.class);
         if (batchSize != null) {
             return batchSize;
-        } else if (maxBatchSize != null) {
-            return maxBatchSize;
-        } else {
-            return 20;
         }
+        // Working around the fact some executors used 'maxBatchSize' instead of 'batchSize'
+        Integer maxBatchSize =
+            env.getProperty(format("ea.%s.maxBatchSize", executorName), Integer.class);
+        if (maxBatchSize != null) {
+            return maxBatchSize;
+        }
+        return 20;
     }
 }

@@ -31,7 +31,7 @@ import net.jodah.lyra.config.RecoveryPolicy;
 import net.jodah.lyra.event.ChannelListener;
 import net.jodah.lyra.util.Duration;
 import org.elasticsoftware.elasticactors.PhysicalNode;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
 import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
@@ -99,8 +99,8 @@ public final class MultiProducerRabbitMQMessagingService
     private final MessageAcker.Type ackType;
     private MessageAcker messageAcker;
     private final Integer prefetchCount;
-    private final MeterConfiguration meterConfiguration;
-    private final MeterConfiguration ackerMeterConfiguration;
+    private final MicrometerConfiguration micrometerConfiguration;
+    private final MicrometerConfiguration ackerMicrometerConfiguration;
 
     public MultiProducerRabbitMQMessagingService(
         String elasticActorsCluster,
@@ -112,8 +112,8 @@ public final class MultiProducerRabbitMQMessagingService
         ThreadBoundExecutor queueExecutor,
         InternalMessageDeserializer internalMessageDeserializer,
         Integer prefetchCount,
-        @Nullable MeterConfiguration meterConfiguration,
-        @Nullable MeterConfiguration ackerMeterConfiguration)
+        @Nullable MicrometerConfiguration micrometerConfiguration,
+        @Nullable MicrometerConfiguration ackerMicrometerConfiguration)
     {
         this.rabbitmqHosts = rabbitmqHosts;
         this.elasticActorsCluster = elasticActorsCluster;
@@ -129,18 +129,18 @@ public final class MultiProducerRabbitMQMessagingService
         this.remoteMessageQueueFactory = new RemoteMessageQueueFactory();
         this.remoteActorSystemMessageQueueFactoryFactory = new RemoteActorSystemMessageQueueFactoryFactory();
         this.producerChannels = new ArrayList<>(queueExecutor.getThreadCount());
-        this.meterConfiguration = meterConfiguration;
-        this.ackerMeterConfiguration = ackerMeterConfiguration;
+        this.micrometerConfiguration = micrometerConfiguration;
+        this.ackerMicrometerConfiguration = ackerMicrometerConfiguration;
     }
 
     @PostConstruct
     public void start() throws IOException, TimeoutException {
         logger.info("Starting messaging service [{}]", getClass().getSimpleName());
-        if (meterConfiguration != null) {
+        if (micrometerConfiguration != null) {
             MetricsCollector metricsCollector = new MicrometerMetricsCollector(
-                meterConfiguration.getRegistry(),
-                meterConfiguration.getMetricPrefix(),
-                meterConfiguration.getTags()
+                micrometerConfiguration.getRegistry(),
+                micrometerConfiguration.getMetricPrefix(),
+                micrometerConfiguration.getTags()
             );
             connectionFactory.setMetricsCollector(metricsCollector);
         }
@@ -185,7 +185,7 @@ public final class MultiProducerRabbitMQMessagingService
         } else if(ackType == WRITE_BEHIND) {
             messageAcker = new WriteBehindMessageAcker(consumerChannel);
         } else if(ackType == ASYNC) {
-            messageAcker = new AsyncMessageAcker(consumerChannel, ackerMeterConfiguration);
+            messageAcker = new AsyncMessageAcker(consumerChannel, ackerMicrometerConfiguration);
         } else {
             messageAcker = new DirectMessageAcker(consumerChannel);
         }

@@ -18,8 +18,8 @@ package org.elasticsoftware.elasticactors.configuration;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterConfiguration;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterTagCustomizer;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
 import org.elasticsoftware.elasticactors.rabbitmq.MessageAcker;
@@ -50,7 +50,7 @@ public class MessagingConfiguration {
         ActorRefFactory actorRefFactory,
         SerializationAccessor serializationAccessor,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         String clusterName = env.getRequiredProperty("ea.cluster");
         String rabbitMQHosts = env.getRequiredProperty("ea.rabbitmq.hosts");
@@ -61,10 +61,10 @@ public class MessagingConfiguration {
             env.getProperty("ea.rabbitmq.ack", MessageAcker.Type.class, DIRECT);
         String threadModel = env.getProperty("ea.rabbitmq.threadmodel", "sc").toLowerCase().trim();
         Integer prefetchCount = env.getProperty("ea.rabbitmq.prefetchCount", Integer.class, 0);
-        MeterConfiguration meterConfiguration =
-            MeterConfiguration.build(env, meterRegistry, "rabbitmq", tagCustomizer);
-        MeterConfiguration ackerMeterConfiguration =
-            MeterConfiguration.build(env, meterRegistry, "rabbitmqAcker", tagCustomizer);
+        MicrometerConfiguration micrometerConfiguration =
+            MicrometerConfiguration.build(env, meterRegistry, "rabbitmq", tagCustomizer);
+        MicrometerConfiguration ackerMicrometerConfiguration =
+            MicrometerConfiguration.build(env, meterRegistry, "rabbitmqAcker", tagCustomizer);
         InternalMessageDeserializer messageDeserializer = new InternalMessageDeserializer(
             new ActorRefDeserializer(actorRefFactory),
             serializationAccessor
@@ -80,8 +80,8 @@ public class MessagingConfiguration {
                 queueExecutor,
                 messageDeserializer,
                 prefetchCount,
-                meterConfiguration,
-                ackerMeterConfiguration
+                micrometerConfiguration,
+                ackerMicrometerConfiguration
             );
         } else {
             return new SingleProducerRabbitMQMessagingService(
@@ -94,8 +94,8 @@ public class MessagingConfiguration {
                 queueExecutor,
                 messageDeserializer,
                 prefetchCount,
-                meterConfiguration,
-                ackerMeterConfiguration
+                micrometerConfiguration,
+                ackerMicrometerConfiguration
             );
         }
     }

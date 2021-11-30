@@ -17,7 +17,7 @@
 package org.elasticsoftware.elasticactors.state;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterTagCustomizer;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorBuilder;
@@ -47,7 +47,7 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
         Collection<ActorStateUpdateListener> listeners,
         Environment env,
         @Nullable MeterRegistry meterRegistry,
-        @Nullable MeterTagCustomizer tagCustomizer)
+        @Nullable MicrometerTagCustomizer tagCustomizer)
     {
         this.listeners.addAll(listeners);
         this.executor = ThreadBoundExecutorBuilder.buildBlockingQueueThreadBoundExecutor(
@@ -68,7 +68,7 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
         int workerCount,
         int batchSize,
         @Nullable MeterRegistry meterRegistry,
-        @Nullable MeterTagCustomizer tagCustomizer)
+        @Nullable MicrometerTagCustomizer tagCustomizer)
     {
         this.listeners.addAll(listeners);
         this.executor = ThreadBoundExecutorBuilder.buildBlockingQueueThreadBoundExecutor(

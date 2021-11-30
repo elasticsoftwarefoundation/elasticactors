@@ -18,7 +18,7 @@ package org.elasticsoftware.elasticactors.cache;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.NodeKey;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 
 import javax.annotation.Nullable;
@@ -27,7 +27,8 @@ import javax.annotation.Nullable;
  * @author Joost van de Wijgerd
  */
 public final class NodeActorCacheManager extends CacheManager<ActorRef,PersistentActor<NodeKey>> {
-    public NodeActorCacheManager(int maximumSize, @Nullable MeterConfiguration meterConfiguration) {
-        super(maximumSize, meterConfiguration);
+    public NodeActorCacheManager(int maximumSize, @Nullable
+        MicrometerConfiguration micrometerConfiguration) {
+        super(maximumSize, micrometerConfiguration);
     }
 }

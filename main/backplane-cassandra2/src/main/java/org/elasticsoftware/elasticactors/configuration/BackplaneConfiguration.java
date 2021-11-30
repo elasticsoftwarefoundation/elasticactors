@@ -27,7 +27,7 @@ import org.elasticsoftware.elasticactors.cassandra2.state.PersistentActorUpdateE
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRepository;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterTagCustomizer;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRepository;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
@@ -58,7 +58,7 @@ public class BackplaneConfiguration {
         Environment env,
         CassandraSessionManager cassandraSessionManager,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         final int batchSize = env.getProperty("ea.asyncUpdateExecutor.batchSize",Integer.class,20);
         final boolean optimizedV1Batches = env.getProperty("ea.asyncUpdateExecutor.optimizedV1Batches", Boolean.TYPE, true);

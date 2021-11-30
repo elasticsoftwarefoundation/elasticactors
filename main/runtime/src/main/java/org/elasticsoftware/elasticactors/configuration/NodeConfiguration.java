@@ -37,9 +37,9 @@ import org.elasticsoftware.elasticactors.cluster.LocalActorSystemInstance;
 import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.RemoteActorSystems;
 import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterConfiguration;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterTagCustomizer;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ShardedScheduler;
 import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
@@ -109,11 +109,11 @@ public class NodeConfiguration {
     public Cache<String, ActorRef> createActorRefCache(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer
-    ) {
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
+    {
         int maximumSize = env.getProperty("ea.actorRefCache.maximumSize", Integer.class, 10240);
-        MeterConfiguration configuration =
-            MeterConfiguration.build(env, meterRegistry, "actorRefCache", tagCustomizer);
+        MicrometerConfiguration configuration =
+            MicrometerConfiguration.build(env, meterRegistry, "actorRefCache", tagCustomizer);
         CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder().maximumSize(maximumSize);
         if (configuration != null) {
             builder.recordStats();
@@ -192,12 +192,12 @@ public class NodeConfiguration {
     public NodeActorCacheManager createNodeActorCacheManager(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         int maximumSize = env.getProperty("ea.nodeCache.maximumSize",Integer.class,10240);
         return new NodeActorCacheManager(
             maximumSize,
-            MeterConfiguration.build(env, meterRegistry, "nodeActorCache", tagCustomizer)
+            MicrometerConfiguration.build(env, meterRegistry, "nodeActorCache", tagCustomizer)
         );
     }
 
@@ -205,12 +205,12 @@ public class NodeConfiguration {
     public ShardActorCacheManager createShardActorCacheManager(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         int maximumSize = env.getProperty("ea.shardCache.maximumSize",Integer.class,10240);
         return new ShardActorCacheManager(
             maximumSize,
-            MeterConfiguration.build(env, meterRegistry, "shardActorCache", tagCustomizer)
+            MicrometerConfiguration.build(env, meterRegistry, "shardActorCache", tagCustomizer)
         );
     }
 
@@ -219,7 +219,7 @@ public class NodeConfiguration {
     public ThreadBoundExecutor createActorExecutor(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         return ThreadBoundExecutorBuilder.build(
             env,
@@ -235,7 +235,7 @@ public class NodeConfiguration {
     public ThreadBoundExecutor createQueueExecutor(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         return ThreadBoundExecutorBuilder.build(
             env,
@@ -275,12 +275,12 @@ public class NodeConfiguration {
     public ShardedScheduler createScheduler(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         int numberOfWorkers = env.getProperty("ea.shardedScheduler.workerCount", Integer.class, Runtime.getRuntime().availableProcessors());
         return new ShardedScheduler(
             numberOfWorkers,
-            MeterConfiguration.build(env, meterRegistry, "scheduler", tagCustomizer)
+            MicrometerConfiguration.build(env, meterRegistry, "scheduler", tagCustomizer)
         );
     }
 
@@ -302,7 +302,7 @@ public class NodeConfiguration {
         Environment env,
         List<ActorStateUpdateListener> listeners,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         if(listeners.isEmpty()) {
             return new NoopActorStateUpdateProcessor();
@@ -318,54 +318,22 @@ public class NodeConfiguration {
 
     @Bean(name = "nodeMetricsSettings")
     public MetricsSettings nodeMetricsSettings(Environment environment) {
-        boolean metricsEnabled =
-            environment.getProperty("ea.metrics.node.messaging.enabled", Boolean.class, false);
-        long messageDeliveryWarnThreshold =
-            environment.getProperty("ea.metrics.node.messaging.delivery.warn.threshold", Long.class, 0L);
-        long messageHandlingWarnThreshold =
-            environment.getProperty("ea.metrics.node.messaging.handling.warn.threshold", Long.class, 0L);
-
-        return new MetricsSettings(
-            metricsEnabled,
-            messageDeliveryWarnThreshold,
-            messageHandlingWarnThreshold,
-            0L
-        );
+        return MetricsSettings.build(environment, "node");
     }
 
     @Bean(name = "shardMetricsSettings")
     public MetricsSettings shardMetricsSettings(Environment environment) {
-        boolean metricsEnabled =
-            environment.getProperty("ea.metrics.shard.messaging.enabled", Boolean.class, false);
-        long messageDeliveryWarnThreshold =
-            environment.getProperty("ea.metrics.shard.messaging.delivery.warn.threshold", Long.class, 0L);
-        long messageHandlingWarnThreshold =
-            environment.getProperty("ea.metrics.shard.messaging.handling.warn.threshold", Long.class, 0L);
-        long serializationWarnThreshold =
-            environment.getProperty("ea.metrics.shard.serialization.warn.threshold", Long.class, 0L);
-
-        return new MetricsSettings(
-            metricsEnabled,
-            messageDeliveryWarnThreshold,
-            messageHandlingWarnThreshold,
-            serializationWarnThreshold
-        );
+        return MetricsSettings.build(environment, "shard");
     }
 
     @Bean(name = "nodeLoggingSettings")
     public LoggingSettings nodeLoggingSettings(Environment environment) {
-        boolean loggingEnabled =
-            environment.getProperty("ea.logging.node.messaging.enabled", Boolean.class, false);
-
-        return new LoggingSettings(loggingEnabled, environment);
+        return LoggingSettings.build(environment, "node");
     }
 
     @Bean(name = "shardLoggingSettings")
     public LoggingSettings shardLoggingSettings(Environment environment) {
-        boolean loggingEnabled =
-            environment.getProperty("ea.logging.shard.messaging.enabled", Boolean.class, false);
-
-        return new LoggingSettings(loggingEnabled, environment);
+        return LoggingSettings.build(environment, "shard");
     }
 
 }

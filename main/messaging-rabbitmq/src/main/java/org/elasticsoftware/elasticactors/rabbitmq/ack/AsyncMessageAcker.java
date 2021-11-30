@@ -18,7 +18,7 @@ package org.elasticsoftware.elasticactors.rabbitmq.ack;
 
 import com.rabbitmq.client.Channel;
 import io.micrometer.core.instrument.binder.jvm.ExecutorServiceMetrics;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
 import org.elasticsoftware.elasticactors.rabbitmq.MessageAcker;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.slf4j.Logger;
@@ -41,17 +41,17 @@ public final class AsyncMessageAcker implements MessageAcker {
 
     public AsyncMessageAcker(
         Channel consumerChannel,
-        @Nullable MeterConfiguration meterConfiguration)
+        @Nullable MicrometerConfiguration micrometerConfiguration)
     {
         this.consumerChannel = consumerChannel;
         ExecutorService executor = newSingleThreadExecutor(new DaemonThreadFactory("RABBITMQ-MESSAGE-ACKER"));
-        if (meterConfiguration != null) {
+        if (micrometerConfiguration != null) {
             this.executorService = ExecutorServiceMetrics.monitor(
-                meterConfiguration.getRegistry(),
+                micrometerConfiguration.getRegistry(),
                 executor,
-                meterConfiguration.getComponentName(),
-                meterConfiguration.getMetricPrefix(),
-                meterConfiguration.getTags()
+                micrometerConfiguration.getComponentName(),
+                micrometerConfiguration.getMetricPrefix(),
+                micrometerConfiguration.getTags()
             );
         } else {
             this.executorService = executor;

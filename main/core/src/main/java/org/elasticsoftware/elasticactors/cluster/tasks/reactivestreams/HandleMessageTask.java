@@ -58,7 +58,7 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  *
  * @author Joost van de Wijged
  */
-public final class HandleMessageTask extends ActorLifecycleTask implements SubscriberContext {
+final class HandleMessageTask extends ActorLifecycleTask implements SubscriberContext {
     private static final Logger log = LoggerFactory.getLogger(HandleMessageTask.class);
     private InternalPersistentSubscription currentSubscription;
     private Object deserializedMessage;
@@ -286,6 +286,11 @@ public final class HandleMessageTask extends ActorLifecycleTask implements Subsc
             // got a completed message but missing subscription
             log.error("Subscriber {} is missing PersistentSubscription for Publisher {} while handling CompletedMessage", receiverRef, publisherRef);
         }
+    }
+
+    @Override
+    protected boolean shouldLogMessageInformation() {
+        return true;
     }
 
 }

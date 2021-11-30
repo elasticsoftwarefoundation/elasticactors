@@ -24,6 +24,8 @@ import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.PublisherNotFoundException;
 import org.elasticsoftware.elasticactors.SubscriberContext;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
+import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
@@ -49,17 +51,21 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  *
  * @author Joost van de Wijged
  */
-public final class HandleUndeliverableMessageTask extends ActorLifecycleTask implements SubscriberContext {
+final class HandleUndeliverableMessageTask extends ActorLifecycleTask implements SubscriberContext {
     private static final Logger log = LoggerFactory.getLogger(HandleUndeliverableMessageTask.class);
     private InternalPersistentSubscription currentSubscription;
 
-    public HandleUndeliverableMessageTask(InternalActorSystem actorSystem,
-                                          ElasticActor receiver,
-                                          ActorRef receiverRef,
-                                          InternalMessage internalMessage,
-                                          PersistentActor persistentActor,
-                                          PersistentActorRepository persistentActorRepository,
-                                          MessageHandlerEventListener messageHandlerEventListener) {
+    HandleUndeliverableMessageTask(
+        InternalActorSystem actorSystem,
+        ElasticActor receiver,
+        ActorRef receiverRef,
+        InternalMessage internalMessage,
+        PersistentActor persistentActor,
+        PersistentActorRepository persistentActorRepository,
+        MessageHandlerEventListener messageHandlerEventListener,
+        MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings)
+    {
         super(
             null,
             persistentActorRepository,
@@ -69,8 +75,8 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask imp
             receiverRef,
             messageHandlerEventListener,
             internalMessage,
-            null,
-            null
+            metricsSettings,
+            loggingSettings
         );
     }
 

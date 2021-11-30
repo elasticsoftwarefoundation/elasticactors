@@ -1,18 +1,24 @@
 package org.elasticsoftware.elasticactors.cluster.metrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.util.StringUtils;
+import org.elasticsoftware.elasticactors.util.EnvironmentUtils;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.core.env.Environment;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
-public final class MeterConfiguration {
+public final class MicrometerConfiguration {
 
     private final MeterRegistry registry;
     private final String componentName;
@@ -20,14 +26,14 @@ public final class MeterConfiguration {
     private final Tags tags;
 
     @Nullable
-    public static MeterConfiguration build(
+    public static MicrometerConfiguration build(
         @Nonnull Environment env,
         @Nullable MeterRegistry meterRegistry,
         @Nonnull String componentName,
-        @Nullable MeterTagCustomizer tagCustomizer)
+        @Nullable MicrometerTagCustomizer tagCustomizer)
     {
         boolean isMeterEnabled = env.getProperty(
-            format("ea.%s.metrics.enable", componentName),
+            format("ea.metrics.micrometer.%s.enabled", componentName),
             Boolean.class,
             false
         );
@@ -38,18 +44,36 @@ public final class MeterConfiguration {
                     "expected a bean with name 'elasticActorsMeterRegistry'"
                 );
             }
-            String prefix = env.getProperty(format("ea.%s.metrics.prefix", componentName));
-            return new MeterConfiguration(
+            String prefix = env.getProperty(format("ea.metrics.micrometer.%s.prefix", componentName));
+            String nodeId = env.getRequiredProperty("ea.node.id");
+            String clusterName = env.getRequiredProperty("ea.cluster");
+            Tags tags = Tags.of(
+                "elastic.actors.internal", "true",
+                "elastic.actors.node.id", nodeId,
+                "elastic.actors.cluster.name", clusterName
+            );
+            Map<String, String> configurationTagMap =
+                EnvironmentUtils.getKeyValuePairsUnderPrefix(
+                    env,
+                    format("ea.metrics.micrometer.%s.tags", componentName),
+                    Function.identity()
+                );
+            if (!configurationTagMap.isEmpty()) {
+                List<Tag> configurationTags = new ArrayList<>(configurationTagMap.size());
+                configurationTagMap.forEach((k, v) -> configurationTags.add(Tag.of(k, v)));
+                tags = tags.and(configurationTags);
+            }
+            return new MicrometerConfiguration(
                 meterRegistry,
                 componentName,
                 prefix,
-                tagCustomizer != null ? tagCustomizer.get(componentName) : null
+                tagCustomizer != null ? tags.and(tagCustomizer.get(componentName)) : tags
             );
         }
         return null;
     }
 
-    public MeterConfiguration(
+    public MicrometerConfiguration(
         @Nonnull MeterRegistry registry,
         @Nonnull String componentName,
         @Nullable String metricPrefix,

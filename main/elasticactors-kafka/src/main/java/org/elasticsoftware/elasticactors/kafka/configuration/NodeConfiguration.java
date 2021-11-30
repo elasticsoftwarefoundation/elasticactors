@@ -33,8 +33,8 @@ import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.HashingNodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterConfiguration;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterTagCustomizer;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRefFactory;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRefTools;
 import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
@@ -102,11 +102,11 @@ public class NodeConfiguration {
     public Cache<String, ActorRef> createActorRefCache(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer
-    ) {
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
+    {
         int maximumSize = env.getProperty("ea.actorRefCache.maximumSize", Integer.class, 10240);
-        MeterConfiguration configuration =
-            MeterConfiguration.build(env, meterRegistry, "actorRefCache", tagCustomizer);
+        MicrometerConfiguration configuration =
+            MicrometerConfiguration.build(env, meterRegistry, "actorRefCache", tagCustomizer);
         CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder().maximumSize(maximumSize);
         if (configuration != null) {
             builder.recordStats();
@@ -177,12 +177,12 @@ public class NodeConfiguration {
     public NodeActorCacheManager createNodeActorCacheManager(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         int maximumSize = env.getProperty("ea.nodeCache.maximumSize",Integer.class,10240);
         return new NodeActorCacheManager(
             maximumSize,
-            MeterConfiguration.build(env, meterRegistry, "nodeActorCache", tagCustomizer)
+            MicrometerConfiguration.build(env, meterRegistry, "nodeActorCache", tagCustomizer)
         );
     }
 
@@ -190,12 +190,12 @@ public class NodeConfiguration {
     public ShardActorCacheManager createShardActorCacheManager(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         int maximumSize = env.getProperty("ea.shardCache.maximumSize",Integer.class,10240);
         return new ShardActorCacheManager(
             maximumSize,
-            MeterConfiguration.build(env, meterRegistry, "shardActorCache", tagCustomizer)
+            MicrometerConfiguration.build(env, meterRegistry, "shardActorCache", tagCustomizer)
         );
     }
 

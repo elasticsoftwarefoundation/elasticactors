@@ -27,7 +27,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multimaps;
 import io.micrometer.core.instrument.binder.cache.GuavaCacheMetrics;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,17 +50,17 @@ public class CacheManager<K,V> {
     private final Multimap<Object,CacheKey> segmentIndex;
     private final ConcurrentMap<Object,EvictionListener<V>> evictionListeners = new ConcurrentHashMap<>();
 
-    public CacheManager(int maximumSize, @Nullable MeterConfiguration meterConfiguration) {
+    public CacheManager(int maximumSize, @Nullable MicrometerConfiguration micrometerConfiguration) {
         CacheBuilder<CacheKey, V> builder = CacheBuilder.newBuilder()
             .maximumSize(maximumSize)
             .removalListener(new GlobalRemovalListener());
-        if (meterConfiguration != null) {
+        if (micrometerConfiguration != null) {
             builder.recordStats();
             backingCache = GuavaCacheMetrics.monitor(
-                meterConfiguration.getRegistry(),
+                micrometerConfiguration.getRegistry(),
                 builder.build(),
-                meterConfiguration.getComponentName(),
-                meterConfiguration.getTags()
+                micrometerConfiguration.getComponentName(),
+                micrometerConfiguration.getTags()
             );
         } else {
             backingCache = builder.build();

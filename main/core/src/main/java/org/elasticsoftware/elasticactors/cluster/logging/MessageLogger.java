@@ -35,7 +35,7 @@ public final class MessageLogger {
         Function<InternalMessage, Class<?>> messageClassUnwrapper)
     {
         return logger.isTraceEnabled()
-            || metricsSettings.requiresMeasurement()
+            || metricsSettings.requiresMeasurement(internalMessage)
             || shouldLogTimingForThisMessage(internalMessage, loggingSettings, messageClassUnwrapper);
     }
 
@@ -45,7 +45,7 @@ public final class MessageLogger {
     {
         return internalMessage != null
             && logger.isInfoEnabled()
-            && loggingSettings.isEnabled();
+            && loggingSettings.isEnabled(internalMessage);
     }
 
     private static boolean isBasicLoggingEnabledFor(
@@ -223,7 +223,7 @@ public final class MessageLogger {
         Function<InternalMessage, Class<?>> messageClassUnwrapper)
     {
         if (logger.isWarnEnabled()
-            && metricsSettings.isMessageHandlingWarnThresholdEnabled()
+            && metricsSettings.isMessageHandlingWarnThresholdEnabled(internalMessage)
             && measurement != null
             && measurement.getTotalDuration(MICROSECONDS)
             > metricsSettings.getMessageHandlingWarnThreshold())
@@ -254,7 +254,7 @@ public final class MessageLogger {
         Function<InternalMessage, Class<?>> messageClassUnwrapper)
     {
         if (logger.isWarnEnabled()
-            && metricsSettings.isSerializationWarnThresholdEnabled()
+            && metricsSettings.isSerializationWarnThresholdEnabled(internalMessage)
             && measurement != null
             && measurement.getSerializationDuration(MICROSECONDS)
             > metricsSettings.getSerializationWarnThreshold())
@@ -285,7 +285,7 @@ public final class MessageLogger {
     {
         if (internalMessage != null
             && logger.isWarnEnabled()
-            && metricsSettings.isMessageDeliveryWarnThresholdEnabled())
+            && metricsSettings.isMessageDeliveryWarnThresholdEnabled(internalMessage))
         {
             long timestamp = UUIDTools.toUnixTimestamp(internalMessage.getId());
             long delay = (System.currentTimeMillis() - timestamp) * 1000;

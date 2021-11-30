@@ -103,6 +103,8 @@ The following exceptions apply:
 * **2.5 - 5.1** to **5.2** or later:
   * The tracing module now integrates with Spring without the need to explicitly import the `TracingConfiguration` class.
     See [how to instrument Spring beans in the section below](#instrumenting-spring-beans).
+  * Metrics and Logging settings are now only enabled for undeliverable messages and messages that use 
+    the reactive streams protocol (such as Subscriptions) if explicitly configured.
 
 
 ## Basic configuration
@@ -362,6 +364,7 @@ ea.rabbitmq.prefetchCount=100
 ## Persistent Actor Repository layer
 
 # Minimum size (in bytes) for which a serialized actor state will be compressed with LZ4
+# Default: 512 bytes
 ea.persistentActorRepository.compressionThreshold=512
 
 
@@ -411,23 +414,22 @@ ea.asyncUpdateExecutor.optimizedV1Batches=true
 ea.cassandra.hfactory.manageCluster=true
 
 
-## Metrics and Logging
+## Metrics
 
-# Toggles metrics for messages in node queues
+# Toggles metrics for messages in shard queues.
 # Default: false
-ea.metrics.node.messaging.enabled=false
+ea.metrics.shard.messaging.enabled=false
 
-# Configures the threshold for message delivery (total time spent in broker + local queues)
-# in microseconds
-# Default: 0
-ea.metrics.node.messaging.delivery.warn.threshold=0
+# Toggles metrics for undeliverable messages in shard queues. 
+# Default: false
+ea.metrics.shard.messaging.undeliverable.enabled=false
 
-# Configures the threshold for message handling in microseconds
-# Default: 0
-ea.metrics.node.messaging.handling.warn.threshold=0
+# Toggles metrics for messages using the reactive streams protocol (such as Subscriptions) in shard queues. 
+# Default: false
+ea.metrics.shard.messaging.reactive.enabled=false
 
-# Configures the threshold for message delivery (total time spent in broker + local queues)
-# in microseconds
+# Configures the threshold for message delivery (total time spent in broker + local queues),
+# in microseconds.
 # Default: 0
 ea.metrics.shard.messaging.delivery.warn.threshold=0
 
@@ -439,19 +441,60 @@ ea.metrics.shard.messaging.handling.warn.threshold=0
 # Default: 0
 ea.metrics.shard.serialization.warn.threshold=0
 
+# Toggles metrics for messages in node queues.
+# Default: false
+ea.metrics.node.messaging.enabled=false
+
+# Toggles metrics for undeliverable messages in node queues. 
+# Default: false
+ea.metrics.node.messaging.undeliverable.enabled=false
+
+# Toggles metrics for messages using the reactive streams protocol (such as Subscriptions) in node queues. 
+# Default: false
+ea.metrics.node.messaging.reactive.enabled=false
+
+# Configures the threshold for message delivery (total time spent in broker + local queues),
+# in microseconds.
+# Default: 0
+ea.metrics.node.messaging.delivery.warn.threshold=0
+
+# Configures the threshold for message handling in microseconds.
+# Default: 0
+ea.metrics.node.messaging.handling.warn.threshold=0
+
+
+## Logging
+
 # Toggles logging for messages in shard queues. 
 # Default: false
 ea.logging.shard.messaging.enabled=false
 
+# Toggles logging for undeliverable messages in shard queues. 
+# Default: false
+ea.logging.shard.messaging.undeliverable.enabled=false
+
+# Toggles logging for messages using the reactive streams protocol (such as Subscriptions) in shard queues. 
+# Default: false
+ea.logging.shard.messaging.reactive.enabled=false
+
 # Toggles logging for messages in node queues. 
 # Default: false
 ea.logging.node.messaging.enabled=false
+
+# Toggles logging for undeliverable messages in node queues. 
+# Default: false
+ea.logging.node.messaging.undeliverable.enabled=false
+
+# Toggles logging for messages using the reactive streams protocol (such as Subscriptions) in node queues. 
+# Default: false
+ea.logging.node.messaging.reactive.enabled=false
 
 # Default set of features for logging message types.
 # Features defined here have the lowest precedence, meaning any features defined in the 
 # @Message annotation or overrides take precedence over this.
 # This does not affect internal messages defined in the Elastic Actors framework.
 # The value is a list of comma-separated features.
+# Refer to the @Message.LogFeature enum for options and their meanings.
 # Default: empty
 ea.logging.messages.default=BASIC,TIMING,CONTENTS
 
@@ -461,6 +504,7 @@ ea.logging.messages.default=BASIC,TIMING,CONTENTS
 # These overrides affect internal messages defined in the Elastic Actors framework too, in case
 # that's needed for debugging.
 # The value is a list of comma-separated features.
+# Refer to the @Message.LogFeature enum for options and their meanings.
 # To disable all features, add the key but leave its value empty.
 ea.logging.messages.overrides.[class_name]=BASIC,TIMING,CONTENTS
 
@@ -486,7 +530,7 @@ ea.serializationCache.enabled=false
 
 # Toggles deserialization caching. 
 # Default: false
-ea.deserializationCache.enable=false
+ea.deserializationCache.enabled=false
 
 # Changes the logging level used when logging unhandled message types in MethodActor.
 # Default: WARN
@@ -583,10 +627,6 @@ All metrics are optional and can be enabled/disabled independently using configu
 If metrics are enabled, Elastic Actors will expect the existence of a bean of type `MeterRegistry` 
 and name `elasticActorsMeterRegistry`. The supplied bean will be used to add the metrics.
 
-Additionally, customization of tags is supported by providing a bean of type `MeterTagCustomizer`
-and name `elasticActorsMeterTagCustomizer` containing a map of component names and tags to be added
-for each component.
-
 ```properties
 # Toggles Micrometer ON or OFF for a given component.
 #
@@ -607,13 +647,18 @@ for each component.
 #   - scheduler: Scheduler executor service
 #
 # Default (for all components): false
-ea.[component_name].metrics.enable=false
+ea.metrics.micrometer.[component_name].enabled=false
 
-# Sets a metric prefix for a given component
-# Default (for all components): empty
-ea.[component_name].metrics.prefix="ea"
+# Optional metric prefix for a given component.
+ea.metrics.micrometer.[component_name].prefix="ea"
+
+# Optional custom tags for a given component.
+# Can be repeated multiple times for a given component in order to add multiple tags.
+ea.metrics.micrometer.[component_name].tags.[tag_name]=[tag_value]
 ```
 
+Additionally, customization of tags is supported by providing a bean of type `MeterTagCustomizer`
+and name `elasticActorsMeterTagCustomizer`.
 
 
 ### Performance impact of tracing with log context on applications using Log4j2

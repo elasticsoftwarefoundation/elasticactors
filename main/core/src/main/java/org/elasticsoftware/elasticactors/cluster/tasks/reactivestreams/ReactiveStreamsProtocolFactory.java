@@ -62,19 +62,27 @@ public final class ReactiveStreamsProtocolFactory implements ProtocolFactory {
     }
 
     @Override
-    public ActorLifecycleTask createHandleUndeliverableMessageTask(InternalActorSystem actorSystem,
-                                                                   ElasticActor receiver,
-                                                                   ActorRef receiverRef,
-                                                                   InternalMessage internalMessage,
-                                                                   PersistentActor persistentActor,
-                                                                   PersistentActorRepository persistentActorRepository,
-                                                                   MessageHandlerEventListener messageHandlerEventListener) {
-        return new HandleUndeliverableMessageTask(actorSystem,
-                                                  receiver,
-                                                  receiverRef,
-                                                  internalMessage,
-                                                  persistentActor,
-                                                  persistentActorRepository,
-                                                  messageHandlerEventListener);
+    public ActorLifecycleTask createHandleUndeliverableMessageTask(
+        InternalActorSystem actorSystem,
+        ElasticActor receiver,
+        ActorRef receiverRef,
+        InternalMessage internalMessage,
+        PersistentActor persistentActor,
+        PersistentActorRepository persistentActorRepository,
+        MessageHandlerEventListener messageHandlerEventListener,
+        MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings)
+    {
+        return new HandleUndeliverableMessageTask(
+            actorSystem,
+            receiver,
+            receiverRef,
+            internalMessage,
+            persistentActor,
+            persistentActorRepository,
+            messageHandlerEventListener,
+            metricsSettings,
+            loggingSettings
+        );
     }
 }

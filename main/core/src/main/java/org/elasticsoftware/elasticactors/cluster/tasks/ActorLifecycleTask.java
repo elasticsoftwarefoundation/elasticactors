@@ -196,36 +196,42 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
     }
 
     private void logMessageBasicInformation() {
-        MessageLogger.logMessageBasicInformation(
-            internalMessage,
-            loggingSettings,
-            receiver,
-            receiverRef,
-            this::unwrapMessageClass
-        );
+        if (shouldLogMessageInformation()) {
+            MessageLogger.logMessageBasicInformation(
+                internalMessage,
+                loggingSettings,
+                receiver,
+                receiverRef,
+                this::unwrapMessageClass
+            );
+        }
     }
 
     protected void logMessageContents(Object message) {
-        MessageLogger.logMessageContents(
-            internalMessage,
-            actorSystem,
-            message,
-            loggingSettings,
-            receiver,
-            receiverRef,
-            this::unwrapMessageClass
-        );
+        if (shouldLogMessageInformation()) {
+            MessageLogger.logMessageContents(
+                internalMessage,
+                actorSystem,
+                message,
+                loggingSettings,
+                receiver,
+                receiverRef,
+                this::unwrapMessageClass
+            );
+        }
     }
 
     private void logMessageTimingInformation() {
-        MessageLogger.logMessageTimingInformation(
-            internalMessage,
-            loggingSettings,
-            measurement,
-            receiver,
-            receiverRef,
-            this::unwrapMessageClass
-        );
+        if (shouldLogMessageInformation()) {
+            MessageLogger.logMessageTimingInformation(
+                internalMessage,
+                loggingSettings,
+                measurement,
+                receiver,
+                receiverRef,
+                this::unwrapMessageClass
+            );
+        }
     }
 
     private void logMessageTimingInformationForTraces() {
@@ -319,6 +325,10 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             PersistenceConfig persistenceConfig = elasticActor.getClass().getAnnotation(PersistenceConfig.class);
             return PersistenceConfigHelper.shouldUpdateState(persistenceConfig,message);
         }
+    }
+
+    protected boolean shouldLogMessageInformation() {
+        return false;
     }
 
     /**

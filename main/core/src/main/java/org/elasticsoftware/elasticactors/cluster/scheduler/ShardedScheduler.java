@@ -26,7 +26,7 @@ import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
 import org.elasticsoftware.elasticactors.messaging.ScheduledMessageImpl;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
@@ -66,20 +66,20 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
     private ScheduledExecutorService scheduledExecutorService;
     private final ConcurrentHashMap<ShardKey, ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>>> scheduledFutures = new ConcurrentHashMap<>();
     private final int numberOfWorkers;
-    private final MeterConfiguration meterConfiguration;
+    private final MicrometerConfiguration micrometerConfiguration;
 
     @PostConstruct
     public synchronized void init() {
         logger.info("Initializing Sharded Cluster Scheduler with {} worker threads", numberOfWorkers);
         ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(numberOfWorkers, new DaemonThreadFactory("SCHEDULER"));
-        if (meterConfiguration != null) {
+        if (micrometerConfiguration != null) {
             scheduledExecutorService = ExecutorServiceMetrics.monitor(
-                meterConfiguration.getRegistry(),
+                micrometerConfiguration.getRegistry(),
                 scheduler,
-                meterConfiguration.getComponentName(),
-                meterConfiguration.getMetricPrefix(),
-                meterConfiguration.getTags()
+                micrometerConfiguration.getComponentName(),
+                micrometerConfiguration.getMetricPrefix(),
+                micrometerConfiguration.getTags()
             );
         } else {
             scheduledExecutorService = scheduler;
@@ -96,9 +96,10 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
         this(Runtime.getRuntime().availableProcessors(), null);
     }
 
-    public ShardedScheduler(int numberOfWorkers, @Nullable MeterConfiguration meterConfiguration) {
+    public ShardedScheduler(int numberOfWorkers, @Nullable
+        MicrometerConfiguration micrometerConfiguration) {
         this.numberOfWorkers = numberOfWorkers;
-        this.meterConfiguration = meterConfiguration;
+        this.micrometerConfiguration = micrometerConfiguration;
     }
 
     @Inject

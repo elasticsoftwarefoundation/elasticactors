@@ -23,7 +23,7 @@ import org.elasticsoftware.elasticactors.ActorContextHolder;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.ShardKey;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
 import org.elasticsoftware.elasticactors.messaging.AbstractTracedMessage;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
@@ -54,20 +54,20 @@ public final class SimpleScheduler implements SchedulerService,ScheduledMessageR
     private ScheduledExecutorService scheduledExecutorService;
     private final ConcurrentMap<String, ScheduledFuture<?>> scheduledFutures =
             new ConcurrentHashMap<>();
-    private final MeterConfiguration meterConfiguration;
+    private final MicrometerConfiguration micrometerConfiguration;
 
     @PostConstruct
     public void init() {
         logger.info("Initializing Simple Actor Cluster Scheduler");
         ScheduledExecutorService scheduler =
             Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("SCHEDULER"));
-        if (meterConfiguration != null) {
+        if (micrometerConfiguration != null) {
             scheduledExecutorService = ExecutorServiceMetrics.monitor(
-                meterConfiguration.getRegistry(),
+                micrometerConfiguration.getRegistry(),
                 scheduler,
-                meterConfiguration.getComponentName(),
-                meterConfiguration.getMetricPrefix(),
-                meterConfiguration.getTags()
+                micrometerConfiguration.getComponentName(),
+                micrometerConfiguration.getMetricPrefix(),
+                micrometerConfiguration.getTags()
             );
         } else {
             scheduledExecutorService = scheduler;
@@ -80,8 +80,8 @@ public final class SimpleScheduler implements SchedulerService,ScheduledMessageR
         scheduledExecutorService.shutdownNow();
     }
 
-    public SimpleScheduler(@Nullable MeterConfiguration meterConfiguration) {
-        this.meterConfiguration = meterConfiguration;
+    public SimpleScheduler(@Nullable MicrometerConfiguration micrometerConfiguration) {
+        this.micrometerConfiguration = micrometerConfiguration;
     }
 
     @Override

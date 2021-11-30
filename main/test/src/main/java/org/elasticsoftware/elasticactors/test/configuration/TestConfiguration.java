@@ -35,9 +35,9 @@ import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.cluster.LocalActorSystemInstance;
 import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterConfiguration;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterTagCustomizer;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler;
 import org.elasticsoftware.elasticactors.configuration.NodeConfiguration;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
@@ -210,12 +210,12 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     public NodeActorCacheManager createNodeActorCacheManager(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         int maximumSize = env.getProperty("ea.nodeCache.maximumSize",Integer.class,10240);
         return new NodeActorCacheManager(
             maximumSize,
-            MeterConfiguration.build(env, meterRegistry, "nodeActorCache", tagCustomizer)
+            MicrometerConfiguration.build(env, meterRegistry, "nodeActorCache", tagCustomizer)
         );
     }
 
@@ -223,12 +223,12 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     public ShardActorCacheManager createShardActorCacheManager(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         int maximumSize = env.getProperty("ea.shardCache.maximumSize",Integer.class,10240);
         return new ShardActorCacheManager(
             maximumSize,
-            MeterConfiguration.build(env, meterRegistry, "shardActorCache", tagCustomizer)
+            MicrometerConfiguration.build(env, meterRegistry, "shardActorCache", tagCustomizer)
         );
     }
 
@@ -241,7 +241,7 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     public ThreadBoundExecutor createActorExecutor(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         return ThreadBoundExecutorBuilder.build(
             env,
@@ -257,7 +257,7 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     public ThreadBoundExecutor createQueueExecutor(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         return ThreadBoundExecutorBuilder.build(
             env,
@@ -272,9 +272,9 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     public SimpleScheduler createScheduler(
         Environment env,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
-        return new SimpleScheduler(MeterConfiguration.build(
+        return new SimpleScheduler(MicrometerConfiguration.build(
             env,
             meterRegistry,
             "scheduler",
@@ -297,7 +297,7 @@ public class TestConfiguration extends AsyncConfigurerSupport {
         Environment env,
         List<ActorStateUpdateListener> listeners,
         @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
-        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MeterTagCustomizer tagCustomizer)
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         if(listeners.isEmpty()) {
             return new NoopActorStateUpdateProcessor();

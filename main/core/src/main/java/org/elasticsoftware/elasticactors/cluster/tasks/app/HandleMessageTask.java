@@ -50,11 +50,11 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  *
  * @author Joost van de Wijged
  */
-public final class HandleMessageTask extends ActorLifecycleTask {
+final class HandleMessageTask extends ActorLifecycleTask {
 
     private static final Logger logger = LoggerFactory.getLogger(HandleMessageTask.class);
 
-    public HandleMessageTask(
+    HandleMessageTask(
         InternalActorSystem actorSystem,
         ElasticActor receiver,
         ActorRef receiverRef,
@@ -206,6 +206,11 @@ public final class HandleMessageTask extends ActorLifecycleTask {
                 return bytes;
             }
         }
+    }
+
+    @Override
+    protected boolean shouldLogMessageInformation() {
+        return true;
     }
 
 }

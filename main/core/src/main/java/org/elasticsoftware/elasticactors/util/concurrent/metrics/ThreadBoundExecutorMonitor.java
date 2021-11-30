@@ -3,8 +3,8 @@ package org.elasticsoftware.elasticactors.util.concurrent.metrics;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterConfiguration;
-import org.elasticsoftware.elasticactors.cluster.metrics.MeterTagCustomizer;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
 import org.springframework.core.env.Environment;
 
 import javax.annotation.Nonnull;
@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 
 public final class ThreadBoundExecutorMonitor {
 
-    private final MeterConfiguration configuration;
+    private final MicrometerConfiguration configuration;
     private final Timer executionTimer;
     private final Timer idleTimer;
     private final Tags tags;
@@ -22,10 +22,10 @@ public final class ThreadBoundExecutorMonitor {
         @Nonnull Environment env,
         @Nullable MeterRegistry meterRegistry,
         @Nonnull String executorName,
-        @Nullable MeterTagCustomizer tagCustomizer)
+        @Nullable MicrometerTagCustomizer tagCustomizer)
     {
-        MeterConfiguration configuration =
-            MeterConfiguration.build(env, meterRegistry, executorName, tagCustomizer);
+        MicrometerConfiguration configuration =
+            MicrometerConfiguration.build(env, meterRegistry, executorName, tagCustomizer);
         if (configuration != null) {
             return new ThreadBoundExecutorMonitor(configuration);
         } else {
@@ -33,7 +33,7 @@ public final class ThreadBoundExecutorMonitor {
         }
     }
 
-    public ThreadBoundExecutorMonitor(@Nonnull MeterConfiguration configuration) {
+    public ThreadBoundExecutorMonitor(@Nonnull MicrometerConfiguration configuration) {
         this.configuration = configuration;
         this.tags = Tags.concat(configuration.getTags(), "name", configuration.getComponentName());
         MeterRegistry registry = configuration.getRegistry();
@@ -42,7 +42,7 @@ public final class ThreadBoundExecutorMonitor {
     }
 
     @Nonnull
-    public MeterConfiguration getConfiguration() {
+    public MicrometerConfiguration getConfiguration() {
         return configuration;
     }
 

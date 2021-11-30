@@ -1,11 +1,9 @@
 package org.elasticsoftware.elasticactors.cluster.logging;
 
 import com.google.common.collect.ImmutableMap;
+import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.serialization.Message;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.Environment;
-import org.springframework.core.env.PropertySource;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -14,41 +12,78 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import static org.elasticsoftware.elasticactors.util.EnvironmentUtils.getKeyValuePairsUnderPrefix;
+
+import static java.lang.String.format;
+
 public final class LoggingSettings {
 
-    public static final String EA_METRICS_OVERRIDES = "ea.metrics.messages.overrides.";
-    public static final String EA_METRICS_DEFAULT = "ea.metrics.messages.default";
     private static final Message.LogFeature[] EMPTY = new Message.LogFeature[0];
 
     public static final LoggingSettings DISABLED =
-        new LoggingSettings(false, EMPTY, ImmutableMap.of());
+        new LoggingSettings(false, false, false, EMPTY, ImmutableMap.of());
 
-    private final boolean enabled;
-    private final Message.LogFeature[] defaultFeatures;
-    private final ImmutableMap<String, Message.LogFeature[]> overrides;
-    private final ConcurrentMap<Class<?>, Message.LogFeature[]> cache;
+    @Nonnull
+    public static LoggingSettings build(
+        @Nonnull Environment environment,
+        @Nonnull String containerType)
+    {
+        boolean enabled = environment.getProperty(
+            format("ea.logging.%s.messaging.enabled", containerType),
+            Boolean.class,
+            false
+        );
+        boolean enabledForUndeliverable = environment.getProperty(
+            format("ea.logging.%s.messaging.undeliverable.enabled", containerType),
+            Boolean.class,
+            false
+        );
+        boolean enabledForReactive = environment.getProperty(
+            format("ea.logging.%s.messaging.reactive.enabled", containerType),
+            Boolean.class,
+            false
+        );
 
-    public LoggingSettings(boolean enabled, @Nonnull Environment environment) {
-        this(
+        return new LoggingSettings(
             enabled,
-            toLogFeatures(environment.getProperty(EA_METRICS_DEFAULT)),
-            buildOverridesMap(environment)
+            enabledForUndeliverable,
+            enabledForReactive,
+            toLogFeatures(environment.getProperty("ea.metrics.messages.default")),
+            getKeyValuePairsUnderPrefix(
+                environment,
+                "ea.metrics.messages.default",
+                LoggingSettings::toLogFeatures
+            )
         );
     }
 
+    private final boolean enabled;
+    private final boolean enabledForUndeliverable;
+    private final boolean enabledForReactive;
+    private final Message.LogFeature[] defaultFeatures;
+    private final ImmutableMap<String, Message.LogFeature[]> overrides;
+
+    private final transient ConcurrentMap<Class<?>, Message.LogFeature[]> cache;
+
     public LoggingSettings(
         boolean enabled,
+        boolean enabledForUndeliverable,
+        boolean enabledForReactive,
         @Nonnull Message.LogFeature[] defaultFeatures,
         @Nonnull Map<String, Message.LogFeature[]> overrides)
     {
         this.enabled = enabled;
+        this.enabledForUndeliverable = enabledForUndeliverable;
+        this.enabledForReactive = enabledForReactive;
         this.defaultFeatures = defaultFeatures;
         this.overrides = ImmutableMap.copyOf(overrides);
-        this.cache = new ConcurrentHashMap<>();
+        this.cache = enabled ? new ConcurrentHashMap<>() : null;
     }
 
-    public boolean isEnabled() {
-        return enabled;
+    public boolean isEnabled(InternalMessage message) {
+        return enabled
+            && (enabledForUndeliverable || !message.isUndeliverable())
+            && (enabledForReactive || !message.isReactive());
     }
 
     /**
@@ -91,7 +126,7 @@ public final class LoggingSettings {
 
     @Nonnull
     private static Message.LogFeature[] toLogFeatures(@Nullable String value) {
-        if (value == null) {
+        if (value == null || (value = value.trim()).isEmpty()) {
             return EMPTY;
         }
         return Arrays.stream(value.split(","))
@@ -101,29 +136,6 @@ public final class LoggingSettings {
             .map(Message.LogFeature::valueOf)
             .distinct()
             .toArray(Message.LogFeature[]::new);
-    }
-
-    @Nonnull
-    private static ImmutableMap<String, Message.LogFeature[]> buildOverridesMap(@Nonnull Environment environment) {
-        ImmutableMap.Builder<String, Message.LogFeature[]> mapBuilder = ImmutableMap.builder();
-        if (environment instanceof ConfigurableEnvironment) {
-            for (PropertySource<?> propertySource : ((ConfigurableEnvironment) environment).getPropertySources()) {
-                if (propertySource instanceof EnumerablePropertySource) {
-                    for (String key : ((EnumerablePropertySource<?>) propertySource).getPropertyNames()) {
-                        if (key.length() > EA_METRICS_OVERRIDES.length() && key.startsWith(EA_METRICS_OVERRIDES)) {
-                            Object property = propertySource.getProperty(key);
-                            if (property != null) {
-                                String value = property.toString();
-                                Message.LogFeature[] features = LoggingSettings.toLogFeatures(value);
-                                String className = key.substring(EA_METRICS_OVERRIDES.length());
-                                mapBuilder.put(className, features);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return mapBuilder.build();
     }
 
 }
