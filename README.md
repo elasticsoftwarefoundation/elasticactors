@@ -105,6 +105,8 @@ The following exceptions apply:
     See [how to instrument Spring beans in the section below](#instrumenting-spring-beans).
   * Metrics and Logging settings are now only enabled for undeliverable messages and messages that use 
     the reactive streams protocol (such as Subscriptions) if explicitly configured.
+  * Configuration keys for indexing with Elasticsearch have been changed from `actor.indexing.*` 
+    to `ea.indexing.*` in order for it to use the same format as other modules. 
 
 
 ## Basic configuration
@@ -414,6 +416,21 @@ ea.asyncUpdateExecutor.optimizedV1Batches=true
 ea.cassandra.hfactory.manageCluster=true
 
 
+## Indexing
+
+# Elasticsearch hosts for indexing Actors
+# Required, if using indexing
+ea.indexing.elasticsearch.hosts=host1,host2
+
+# Elasticsearch port
+# Default: 9300
+ea.indexing.elasticsearch.port=9300
+
+# Elasticsearch cluster name
+# Default: elasticsearch
+ea.indexing.elasticsearch.cluster.name=elasticsearch
+
+
 ## Metrics
 
 # Toggles metrics for messages in shard queues.
@@ -653,8 +670,40 @@ ea.metrics.micrometer.[component_name].enabled=false
 ea.metrics.micrometer.[component_name].prefix="ea"
 
 # Optional custom tags for a given component.
+# Keep in mind that all meters created by Elastic Actors will contain at least the following tags:
+#   - elastic.actors.generated: true
+#   - elastic.actors.node.id: [the node's ID]
+#   - elastic.actors.cluster.name: [the cluster's name]
 # Can be repeated multiple times for a given component in order to add multiple tags.
 ea.metrics.micrometer.[component_name].tags.[tag_name]=[tag_value]
+
+# Toggles exporting the message delivery times for a given component.
+# These are a rough estimate of the time it took from the message being created until it 
+# arrived at the receiving actor, in milliseconds.
+# Currently, this only applies to the "actorExecutor" component.
+# Default: false
+ea.metrics.micrometer.[component_name].measureDeliveryTimes=false
+
+# Toggles adding the message wrapper types as tags for a given component.
+# Adds the current message's wrapper as the tag "elastic.actors.message.wrapper".
+# Currently, this only applies to the "actorExecutor" component.
+# Default: false
+ea.metrics.micrometer.[component_name].tagMessageWrapperTypes=false
+
+# Allows detailed tagging for the specified actor type for a given component.
+# Adds the receiver type as the tag "elastic.actors.actor.type".
+# Currently, this only applies to the "actorExecutor" component.
+# This might cause some additional overhead, so use this option with caution.
+ea.metrics.micrometer.[component_name].detailed.actors.[class_name]=true
+
+# Allows detailed tagging for the specified message types for a given component.
+# This requires the type of the receiver actor to be present in the list of actors allowed for 
+# detailed tagging.
+# Adds the receiver type as the tag "elastic.actors.message.type".
+# Currently, this only applies to the "actorExecutor" component.
+# In order to enable this for all messages, use "all" instead of the class name.
+# This might cause some additional overhead, so use this option with caution.
+ea.metrics.micrometer.[component_name].detailed.messages.[class_name]=true
 ```
 
 Additionally, customization of tags is supported by providing a bean of type `MeterTagCustomizer`

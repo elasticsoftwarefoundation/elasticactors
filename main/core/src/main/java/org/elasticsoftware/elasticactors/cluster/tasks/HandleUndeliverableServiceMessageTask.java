@@ -30,7 +30,7 @@ import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
+import org.elasticsoftware.elasticactors.util.concurrent.MessageHandlingThreadBoundRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,8 +47,11 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
 /**
  * @author Joost van de Wijgerd
  */
-public final class HandleUndeliverableServiceMessageTask implements ThreadBoundRunnable<String>, ActorContext {
+public final class HandleUndeliverableServiceMessageTask
+    implements MessageHandlingThreadBoundRunnable<String>, ActorContext {
+
     private static final Logger logger = LoggerFactory.getLogger(HandleUndeliverableServiceMessageTask.class);
+
     private final ActorRef serviceRef;
     private final InternalActorSystem actorSystem;
     private final ElasticActor serviceActor;
@@ -244,5 +247,20 @@ public final class HandleUndeliverableServiceMessageTask implements ThreadBoundR
             serviceRef,
             this::unwrapMessageClass
         );
+    }
+
+    @Override
+    public Class<? extends ElasticActor> getActorType() {
+        return serviceActor.getClass();
+    }
+
+    @Override
+    public Class<?> getMessageClass() {
+        return unwrapMessageClass(internalMessage);
+    }
+
+    @Override
+    public InternalMessage getInternalMessage() {
+        return internalMessage;
     }
 }

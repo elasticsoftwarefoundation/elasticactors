@@ -43,8 +43,8 @@ final class TimedThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
         return new TimedThreadBoundRunnable<>(
             thread,
             meterConfig.getConfiguration().getRegistry(),
-            meterConfig.getExecutionTimer(),
-            meterConfig.getIdleTimer(),
+            meterConfig.getExecutionTimerFor(delegate),
+            meterConfig.getIdleTimerFor(delegate),
             delegate
         );
     }
@@ -66,6 +66,8 @@ final class TimedThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
 
     @Override
     public void run() {
+        // TODO time delivery times here
+        // if the delegate has an internal message, we can get the time of origin from the ID
         idleSample.stop(idleTimer);
         Timer.Sample executionSample = Timer.start(registry);
         try {
