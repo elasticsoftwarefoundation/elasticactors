@@ -16,6 +16,7 @@ import org.springframework.core.env.Environment;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
@@ -275,6 +276,39 @@ public final class ThreadBoundExecutorMonitor {
                 internalMessageClass,
                 runnableClass
             );
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof TimerCacheKey)) {
+                return false;
+            }
+
+            TimerCacheKey that = (TimerCacheKey) o;
+
+            if (!Objects.equals(actorClass, that.actorClass)) {
+                return false;
+            }
+            if (!Objects.equals(messageClass, that.messageClass)) {
+                return false;
+            }
+            if (!Objects.equals(internalMessageClass, that.internalMessageClass)) {
+                return false;
+            }
+            return Objects.equals(runnableClass, that.runnableClass);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = actorClass != null ? actorClass.hashCode() : 0;
+            result = 31 * result + (messageClass != null ? messageClass.hashCode() : 0);
+            result =
+                31 * result + (internalMessageClass != null ? internalMessageClass.hashCode() : 0);
+            result = 31 * result + (runnableClass != null ? runnableClass.hashCode() : 0);
+            return result;
         }
     }
 
