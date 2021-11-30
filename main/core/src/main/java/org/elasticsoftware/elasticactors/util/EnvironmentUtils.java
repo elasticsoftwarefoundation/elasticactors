@@ -28,7 +28,7 @@ public final class EnvironmentUtils {
             for (PropertySource<?> propertySource : ((ConfigurableEnvironment) environment).getPropertySources()) {
                 if (propertySource instanceof EnumerablePropertySource) {
                     for (String key : ((EnumerablePropertySource<?>) propertySource).getPropertyNames()) {
-                        if (key.length() > prefix.length() && key.startsWith(prefix)) {
+                        if (key.startsWith(prefix)) {
                             Object property = propertySource.getProperty(key);
                             if (property != null) {
                                 String value = property.toString();

@@ -4,7 +4,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.util.StringUtils;
-import org.elasticsoftware.elasticactors.util.EnvironmentUtils;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.core.env.Environment;
 
@@ -14,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+
+import static org.elasticsoftware.elasticactors.util.EnvironmentUtils.getKeyValuePairsUnderPrefix;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -52,12 +53,11 @@ public final class MicrometerConfiguration {
                 "elastic.actors.node.id", nodeId,
                 "elastic.actors.cluster.name", clusterName
             );
-            Map<String, String> configurationTagMap =
-                EnvironmentUtils.getKeyValuePairsUnderPrefix(
-                    env,
-                    format("ea.metrics.micrometer.%s.tags", componentName),
-                    Function.identity()
-                );
+            Map<String, String> configurationTagMap = getKeyValuePairsUnderPrefix(
+                env,
+                format("ea.metrics.micrometer.%s.tags", componentName),
+                Function.identity()
+            );
             if (!configurationTagMap.isEmpty()) {
                 List<Tag> configurationTags = new ArrayList<>(configurationTagMap.size());
                 configurationTagMap.forEach((k, v) -> configurationTags.add(Tag.of(k, v)));
