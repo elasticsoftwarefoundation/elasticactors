@@ -42,7 +42,8 @@
         </dependency>
         <dependency>
             <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
-            <artifactId>elasticactors-tracing</artifactId>
+            <artifactId>elasticactors-tracing-spring</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>

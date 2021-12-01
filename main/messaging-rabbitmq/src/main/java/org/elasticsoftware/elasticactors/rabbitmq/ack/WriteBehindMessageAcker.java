@@ -26,14 +26,15 @@ import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class WriteBehindMessageAcker implements MessageAcker {
+
     private static final Logger logger = LoggerFactory.getLogger(WriteBehindMessageAcker.class);
+
     private final Channel consumerChannel;
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
     private final Disruptor<AckEvent> disruptor;
@@ -41,7 +42,7 @@ public final class WriteBehindMessageAcker implements MessageAcker {
 
     public WriteBehindMessageAcker(Channel consumerChannel) {
         this.consumerChannel = consumerChannel;
-        this.disruptor = new Disruptor<>(new AckEventFactory(), 16384, Executors.newCachedThreadPool(new DaemonThreadFactory("RABBITMQ-MESSAGE_ACKER")));
+        this.disruptor = new Disruptor<>(new AckEventFactory(), 16384, new DaemonThreadFactory("RABBITMQ-MESSAGE-ACKER"));
         this.disruptor.handleEventsWith(new AckEventHandler());
     }
 
@@ -61,6 +62,7 @@ public final class WriteBehindMessageAcker implements MessageAcker {
 
     @Override
     public void start() {
+        logger.info("Using MessageAcker [{}]", getClass().getSimpleName());
         this.disruptor.start();
     }
 

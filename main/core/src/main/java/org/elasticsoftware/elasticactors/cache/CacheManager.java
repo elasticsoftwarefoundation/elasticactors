@@ -26,10 +26,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multimaps;
+import io.micrometer.core.instrument.binder.cache.GuavaCacheMetrics;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,11 +50,21 @@ public class CacheManager<K,V> {
     private final Multimap<Object,CacheKey> segmentIndex;
     private final ConcurrentMap<Object,EvictionListener<V>> evictionListeners = new ConcurrentHashMap<>();
 
-    public CacheManager(int maximumSize) {
-        backingCache = CacheBuilder.newBuilder()
+    public CacheManager(int maximumSize, @Nullable MicrometerConfiguration micrometerConfiguration) {
+        CacheBuilder<CacheKey, V> builder = CacheBuilder.newBuilder()
             .maximumSize(maximumSize)
-            .removalListener(new GlobalRemovalListener())
-            .build();
+            .removalListener(new GlobalRemovalListener());
+        if (micrometerConfiguration != null) {
+            builder.recordStats();
+            backingCache = GuavaCacheMetrics.monitor(
+                micrometerConfiguration.getRegistry(),
+                builder.build(),
+                micrometerConfiguration.getComponentName(),
+                micrometerConfiguration.getTags()
+            );
+        } else {
+            backingCache = builder.build();
+        }
         segmentIndex = Multimaps.synchronizedMultimap(MultimapBuilder.hashKeys().hashSetValues().build());
     }
 

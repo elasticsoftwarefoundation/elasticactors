@@ -26,11 +26,12 @@ import org.elasticsoftware.elasticactors.messaging.MessageHandler;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.messaging.MessageQueue;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
+import org.elasticsoftware.elasticactors.rabbitmq.sc.SingleProducerRabbitMQMessagingService;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
+import org.elasticsoftware.elasticactors.util.concurrent.BlockingQueueThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -85,14 +86,29 @@ public class RabbitMQMessagingServiceTest {
     @Test(enabled = false)
     public void testAllLocal() throws Exception {
         int workers = Runtime.getRuntime().availableProcessors() * 3;
-        ThreadBoundExecutor queueExecutor = new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
+        ThreadBoundExecutor queueExecutor = new BlockingQueueThreadBoundExecutor(
+            new DaemonThreadFactory("QUEUE-WORKER"),
+            workers,
+            null
+        );
 
-        RabbitMQMessagingService messagingService = new RabbitMQMessagingService(CLUSTER_NAME,
-                                                                                 System.getProperty("host","localhost"),
-                                                                                 5672, System.getProperty("username","guest"),
-                                                                                 System.getProperty("password","guest"),
-                                                                                 MessageAcker.Type.DIRECT,
-                                                                                 queueExecutor, new InternalMessageDeserializer(new ActorRefDeserializer(actorRefFactory), internalActorSystem), 10);
+        SingleProducerRabbitMQMessagingService
+            messagingService = new SingleProducerRabbitMQMessagingService(
+            CLUSTER_NAME,
+            System.getProperty("host", "localhost"),
+            5672,
+            System.getProperty("username", "guest"),
+            System.getProperty("password", "guest"),
+            MessageAcker.Type.DIRECT,
+            queueExecutor,
+            new InternalMessageDeserializer(
+                new ActorRefDeserializer(actorRefFactory),
+                internalActorSystem
+            ),
+            10,
+            null,
+            null
+        );
         messagingService.start();
 
         final CountDownLatch waitLatch = new CountDownLatch(NUM_MESSAGES);

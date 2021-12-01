@@ -23,10 +23,14 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
+import org.elasticsoftware.elasticactors.cluster.logging.MessageLogger;
+import org.elasticsoftware.elasticactors.cluster.metrics.Measurement;
+import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
+import org.elasticsoftware.elasticactors.util.concurrent.MessageHandlingThreadBoundRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,29 +41,53 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
+import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 import static org.elasticsoftware.elasticactors.util.SerializationTools.deserializeMessage;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class HandleUndeliverableServiceMessageTask implements ThreadBoundRunnable<String>, ActorContext {
+public final class HandleUndeliverableServiceMessageTask
+    implements MessageHandlingThreadBoundRunnable<String>, ActorContext {
+
     private static final Logger logger = LoggerFactory.getLogger(HandleUndeliverableServiceMessageTask.class);
+
     private final ActorRef serviceRef;
     private final InternalActorSystem actorSystem;
     private final ElasticActor serviceActor;
     private final InternalMessage internalMessage;
     private final MessageHandlerEventListener messageHandlerEventListener;
+    private final Measurement measurement;
+    private final MetricsSettings metricsSettings;
+    private final LoggingSettings loggingSettings;
+    private Class<?> unwrappedMessageClass;
 
-    public HandleUndeliverableServiceMessageTask(InternalActorSystem actorSystem,
-                                                 ActorRef serviceRef,
-                                                 ElasticActor serviceActor,
-                                                 InternalMessage internalMessage,
-                                                 MessageHandlerEventListener messageHandlerEventListener) {
+    public HandleUndeliverableServiceMessageTask(
+        InternalActorSystem actorSystem,
+        ActorRef serviceRef,
+        ElasticActor serviceActor,
+        InternalMessage internalMessage,
+        MessageHandlerEventListener messageHandlerEventListener,
+        MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings)
+    {
         this.serviceRef = serviceRef;
         this.actorSystem = actorSystem;
         this.serviceActor = serviceActor;
         this.internalMessage = internalMessage;
         this.messageHandlerEventListener = messageHandlerEventListener;
+        this.metricsSettings = metricsSettings != null ? metricsSettings : MetricsSettings.DISABLED;
+        this.loggingSettings = loggingSettings != null ? loggingSettings : LoggingSettings.DISABLED;
+        this.measurement = isMeasurementEnabled() ? new Measurement(System.nanoTime()) : null;
+    }
+
+    private boolean isMeasurementEnabled() {
+        return MessageLogger.isMeasurementEnabled(
+            internalMessage,
+            metricsSettings,
+            loggingSettings,
+            this::unwrapMessageClass
+        );
     }
 
     @Override
@@ -111,10 +139,13 @@ public final class HandleUndeliverableServiceMessageTask implements ThreadBoundR
     }
 
     private void runInContext() {
+        checkDeliveryThresholdExceeded();
         Exception executionException = null;
         InternalActorContext.setContext(this);
         try {
+            logMessageBasicInformation();
             Object message = deserializeMessage(actorSystem, internalMessage);
+            logMessageContents(message);
             serviceActor.onUndeliverable(internalMessage.getSender(), message);
         } catch (Exception e) {
             // @todo: send an error message to the sender
@@ -130,5 +161,106 @@ public final class HandleUndeliverableServiceMessageTask implements ThreadBoundR
                 messageHandlerEventListener.onError(internalMessage,executionException);
             }
         }
+        if (this.measurement != null) {
+            logMessageTimingInformationForTraces();
+            logMessageTimingInformation();
+            checkMessageHandlingThresholdExceeded();
+        }
+    }
+
+    @Nullable
+    private Class unwrapMessageClass(InternalMessage internalMessage) {
+        try {
+            if (unwrappedMessageClass == null) {
+                unwrappedMessageClass = getClassHelper().forName(internalMessage.getPayloadClass());
+            }
+            return unwrappedMessageClass;
+        } catch (ClassNotFoundException e) {
+            logger.error("Class [{}] not found", internalMessage.getPayloadClass());
+            return null;
+        }
+    }
+
+    private void logMessageBasicInformation() {
+        MessageLogger.logMessageBasicInformation(
+            internalMessage,
+            loggingSettings,
+            serviceActor,
+            serviceRef,
+            this::unwrapMessageClass
+        );
+    }
+
+    private void logMessageContents(Object message) {
+        MessageLogger.logMessageContents(
+            internalMessage,
+            actorSystem,
+            message,
+            loggingSettings,
+            serviceActor,
+            serviceRef,
+            this::unwrapMessageClass
+        );
+    }
+
+    private void logMessageTimingInformation() {
+        MessageLogger.logMessageTimingInformation(
+            internalMessage,
+            loggingSettings,
+            measurement,
+            serviceActor,
+            serviceRef,
+            this::unwrapMessageClass
+        );
+    }
+
+    private void logMessageTimingInformationForTraces() {
+        MessageLogger.logMessageTimingInformationForTraces(
+            this.getClass(),
+            internalMessage,
+            measurement,
+            serviceActor,
+            serviceRef
+        );
+    }
+
+    private void checkMessageHandlingThresholdExceeded() {
+        MessageLogger.checkMessageHandlingThresholdExceeded(
+            this.getClass(),
+            internalMessage,
+            actorSystem,
+            metricsSettings,
+            measurement,
+            serviceActor,
+            serviceRef,
+            this::unwrapMessageClass
+        );
+    }
+
+    private void checkDeliveryThresholdExceeded() {
+        MessageLogger.checkDeliveryThresholdExceeded(
+            this.getClass(),
+            internalMessage,
+            actorSystem,
+            metricsSettings,
+            serviceActor,
+            serviceRef,
+            this::unwrapMessageClass
+        );
+    }
+
+    @Override
+    public Class<? extends ElasticActor> getActorType() {
+        return serviceActor.getClass();
+    }
+
+    @Override
+    public Class<?> getMessageClass() {
+        return unwrapMessageClass(internalMessage);
+    }
+
+    @Override
+    public InternalMessage getInternalMessage() {
+        return internalMessage;
     }
 }

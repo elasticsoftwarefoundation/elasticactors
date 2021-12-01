@@ -202,18 +202,22 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
                     } else {
                         // find actor class behind receiver ActorRef
                         ElasticActor actorInstance = actorSystem.getActorInstance(receiverRef, actor.getActorClass());
-                        // execute on it's own thread
+                        // execute on its own thread
                         if (internalMessage.isUndeliverable()) {
-                            actorExecutor.execute(getProtocolFactory(internalMessage.getPayloadClass())
-                                    .createHandleUndeliverableMessageTask(actorSystem,
-                                                                          actorInstance,
-                                                                          receiverRef,
-                                                                          internalMessage,
-                                                                          actor,
-                                                                          persistentActorRepository,
-                                                                          messageHandlerEventListener));
+                            actorExecutor.execute(getProtocolFactory(internalMessage)
+                                .createHandleUndeliverableMessageTask(
+                                    actorSystem,
+                                    actorInstance,
+                                    receiverRef,
+                                    internalMessage,
+                                    actor,
+                                    persistentActorRepository,
+                                    messageHandlerEventListener,
+                                    metricsSettings,
+                                    loggingSettings
+                                ));
                         } else {
-                            actorExecutor.execute(getProtocolFactory(internalMessage.getPayloadClass())
+                            actorExecutor.execute(getProtocolFactory(internalMessage)
                                 .createHandleMessageTask(
                                     actorSystem,
                                     actorInstance,

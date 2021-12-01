@@ -1,40 +1,141 @@
 package org.elasticsoftware.elasticactors.cluster.logging;
 
 import com.google.common.collect.ImmutableMap;
+import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.serialization.Message;
+import org.springframework.core.env.Environment;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import static org.elasticsoftware.elasticactors.util.EnvironmentUtils.getKeyValuePairsUnderPrefix;
+
+import static java.lang.String.format;
 
 public final class LoggingSettings {
 
     private static final Message.LogFeature[] EMPTY = new Message.LogFeature[0];
 
+    public static final LoggingSettings DISABLED =
+        new LoggingSettings(false, false, false, EMPTY, ImmutableMap.of());
+
+    @Nonnull
+    public static LoggingSettings build(
+        @Nonnull Environment environment,
+        @Nonnull String containerType)
+    {
+        boolean enabled = environment.getProperty(
+            format("ea.logging.%s.messaging.enabled", containerType),
+            Boolean.class,
+            false
+        );
+        boolean enabledForUndeliverable = environment.getProperty(
+            format("ea.logging.%s.messaging.undeliverable.enabled", containerType),
+            Boolean.class,
+            false
+        );
+        boolean enabledForReactive = environment.getProperty(
+            format("ea.logging.%s.messaging.reactive.enabled", containerType),
+            Boolean.class,
+            false
+        );
+
+        return new LoggingSettings(
+            enabled,
+            enabledForUndeliverable,
+            enabledForReactive,
+            toLogFeatures(environment.getProperty("ea.logging.messages.default")),
+            getKeyValuePairsUnderPrefix(
+                environment,
+                "ea.logging.messages.overrides",
+                LoggingSettings::toLogFeatures
+            )
+        );
+    }
+
     private final boolean enabled;
+    private final boolean enabledForUndeliverable;
+    private final boolean enabledForReactive;
+    private final Message.LogFeature[] defaultFeatures;
     private final ImmutableMap<String, Message.LogFeature[]> overrides;
 
-    public static LoggingSettings disabled() {
-        return new LoggingSettings(false, ImmutableMap.of());
-    }
+    private final transient ConcurrentMap<Class<?>, Message.LogFeature[]> cache;
 
     public LoggingSettings(
         boolean enabled,
-        ImmutableMap<String, Message.LogFeature[]> overrides)
+        boolean enabledForUndeliverable,
+        boolean enabledForReactive,
+        @Nonnull Message.LogFeature[] defaultFeatures,
+        @Nonnull Map<String, Message.LogFeature[]> overrides)
     {
         this.enabled = enabled;
-        this.overrides = overrides;
+        this.enabledForUndeliverable = enabledForUndeliverable;
+        this.enabledForReactive = enabledForReactive;
+        this.defaultFeatures = defaultFeatures;
+        this.overrides = ImmutableMap.copyOf(overrides);
+        this.cache = enabled ? new ConcurrentHashMap<>() : null;
     }
 
-    public boolean isEnabled() {
-        return enabled;
+    public boolean isEnabled(InternalMessage message) {
+        return enabled
+            && (enabledForUndeliverable || !message.isUndeliverable())
+            && (enabledForReactive || !message.isReactive());
     }
 
-    public Message.LogFeature[] processOverrides(Class<?> messageClass) {
+    /**
+     * Processes the log features set for this message class.
+     * <br><br>
+     * The order of precedence is:
+     * <ol>
+     *     <li>Configured overrides</li>
+     *     <li>Features defined in the {@link Message} annotation</li>
+     *     <li>Configured defaults (except for messages internal to Elastic Actors)</li>
+     * </ol>
+     *
+     * @param messageClass the message class
+     * @return the list of log features for this message class, according to the order of precedence
+     */
+    @Nonnull
+    public Message.LogFeature[] processFeatures(@Nonnull Class<?> messageClass) {
+        if (!enabled) {
+            return EMPTY;
+        }
+        // Cache because processing some internal messages can be a bit expensive
+        return cache.computeIfAbsent(messageClass, this::internalProcessFeatures);
+    }
+
+    @Nonnull
+    private Message.LogFeature[] internalProcessFeatures(@Nonnull Class<?> messageClass) {
         Message.LogFeature[] overriden = overrides.get(messageClass.getName());
         if (overriden != null) {
             return overriden;
         }
         Message messageAnnotation = messageClass.getAnnotation(Message.class);
-        if (messageAnnotation != null) {
+        if (messageAnnotation != null && messageAnnotation.logOnReceive().length > 0) {
             return messageAnnotation.logOnReceive();
         }
-        return EMPTY;
+        if (messageClass.getName().startsWith("org.elasticsoftware.elasticactors.")) {
+            return EMPTY;
+        }
+        return defaultFeatures;
     }
+
+    @Nonnull
+    private static Message.LogFeature[] toLogFeatures(@Nullable String value) {
+        if (value == null || (value = value.trim()).isEmpty()) {
+            return EMPTY;
+        }
+        return Arrays.stream(value.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .map(String::toUpperCase)
+            .map(Message.LogFeature::valueOf)
+            .distinct()
+            .toArray(Message.LogFeature[]::new);
+    }
+
 }

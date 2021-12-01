@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.messaging.internal.InternalHashKeyUtils;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.ReactiveStreamsProtocol;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
@@ -159,6 +160,11 @@ public final class TransientInternalMessage extends AbstractTracedMessage
             return messageQueueAffinityKey;
         }
         return receivers.size() == 1 ? receivers.get(0).getActorId() : null;
+    }
+
+    @Override
+    public boolean isReactive() {
+        return payload instanceof ReactiveStreamsProtocol;
     }
 
     @Override

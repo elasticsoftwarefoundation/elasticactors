@@ -18,7 +18,7 @@ package org.elasticsoftware.elasticactors.rabbitmq.health;
 
 import org.elasticsoftware.elasticactors.health.HealthCheck;
 import org.elasticsoftware.elasticactors.health.HealthCheckResult;
-import org.elasticsoftware.elasticactors.rabbitmq.RabbitMQMessagingServiceInterface;
+import org.elasticsoftware.elasticactors.rabbitmq.RabbitMQMessagingService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.elasticsoftware.elasticactors.health.HealthCheckResult.healthy;
@@ -29,10 +29,10 @@ import static org.elasticsoftware.elasticactors.health.HealthCheckResult.unhealt
  */
 public class RabbitMQHealthCheck implements HealthCheck {
 
-    private final RabbitMQMessagingServiceInterface rabbitMQMessagingService;
+    private final RabbitMQMessagingService rabbitMQMessagingService;
 
     @Autowired
-    public RabbitMQHealthCheck(RabbitMQMessagingServiceInterface rabbitMQMessagingService) {
+    public RabbitMQHealthCheck(RabbitMQMessagingService rabbitMQMessagingService) {
         this.rabbitMQMessagingService = rabbitMQMessagingService;
     }
 

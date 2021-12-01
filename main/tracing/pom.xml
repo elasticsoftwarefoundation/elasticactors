@@ -25,7 +25,7 @@
     <artifactId>elasticactors-tracing</artifactId>
     <packaging>jar</packaging>
 
-    <name>Elastic Software Foundation :: ElasticActors :: Tracing Utils</name>
+    <name>Elastic Software Foundation :: ElasticActors :: Tracing</name>
     <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
     <properties>
@@ -35,11 +35,7 @@
     <dependencies>
         <dependency>
             <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
-            <artifactId>elasticactors-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
+            <artifactId>elasticactors-core</artifactId>
         </dependency>
     </dependencies>
 </project>
