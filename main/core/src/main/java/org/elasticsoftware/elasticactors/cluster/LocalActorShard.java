@@ -443,12 +443,6 @@ public final class LocalActorShard extends AbstractActorContainer implements Act
     private PersistentActor<ShardKey> loadActorFromCache(ActorRef actorRef)
         throws ExecutionException
     {
-        // Checking first if the actor is in the cache, avoiding creating garbage
-        // Guava creates a new object every time you provide it with a cache loader callable
-        PersistentActor<ShardKey> persistentActor = actorCache.getIfPresent(actorRef);
-        if (persistentActor != null) {
-            return persistentActor;
-        }
         return actorCache.get(
             actorRef,
             cacheLoaderPool.get().fill(
