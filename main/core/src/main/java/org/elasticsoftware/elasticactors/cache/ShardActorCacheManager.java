@@ -18,13 +18,17 @@ package org.elasticsoftware.elasticactors.cache;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
+
+import javax.annotation.Nullable;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class ShardActorCacheManager extends CacheManager<ActorRef,PersistentActor<ShardKey>> {
-    public ShardActorCacheManager(int maximumSize) {
-        super(maximumSize);
+    public ShardActorCacheManager(int maximumSize, @Nullable
+        MicrometerConfiguration micrometerConfiguration) {
+        super(maximumSize, micrometerConfiguration);
     }
 }

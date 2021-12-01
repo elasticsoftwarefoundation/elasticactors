@@ -33,4 +33,6 @@ public interface ThreadBoundExecutor<T extends ThreadBoundEvent<?>> {
     void shutdown();
 
     int getThreadCount();
+
+    void init();
 }

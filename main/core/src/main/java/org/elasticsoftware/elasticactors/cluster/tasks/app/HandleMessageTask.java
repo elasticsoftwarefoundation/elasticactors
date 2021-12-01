@@ -35,6 +35,7 @@ import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.MessageSubscriber;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.util.concurrent.MessageHandlingThreadBoundRunnable;
 import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,11 +52,13 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  *
  * @author Joost van de Wijged
  */
-public final class HandleMessageTask extends ActorLifecycleTask {
+final class HandleMessageTask
+    extends ActorLifecycleTask
+    implements MessageHandlingThreadBoundRunnable<String> {
 
     private static final Logger logger = LoggerFactory.getLogger(HandleMessageTask.class);
 
-    public HandleMessageTask(
+    HandleMessageTask(
         InternalActorSystem actorSystem,
         ElasticActor receiver,
         ActorRef receiverRef,
@@ -197,4 +200,23 @@ public final class HandleMessageTask extends ActorLifecycleTask {
         }
     }
 
+    @Override
+    protected boolean shouldLogMessageInformation() {
+        return true;
+    }
+
+    @Override
+    public Class<? extends ElasticActor> getActorType() {
+        return receiver.getClass();
+    }
+
+    @Override
+    public Class<?> getMessageClass() {
+        return unwrapMessageClass(internalMessage);
+    }
+
+    @Override
+    public InternalMessage getInternalMessage() {
+        return internalMessage;
+    }
 }

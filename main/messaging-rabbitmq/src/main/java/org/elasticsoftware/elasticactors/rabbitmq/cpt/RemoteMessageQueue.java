@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * @author Joost van de Wijgerd
  */
-public final class RemoteMessageQueue extends DefaultChannelListener implements MessageQueue {
+final class RemoteMessageQueue extends DefaultChannelListener implements MessageQueue {
 
     private final static Logger logger = LoggerFactory.getLogger(RemoteMessageQueue.class);
 

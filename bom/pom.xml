@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
         <artifactId>elasticactors-parent</artifactId>
-        <version>5.1.3-SNAPSHOT</version>
+        <version>5.2.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -129,6 +129,11 @@
             <dependency>
                 <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>elasticactors-tracing</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
+                <artifactId>elasticactors-tracing-spring</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -85,8 +85,8 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         this.receiver = receiver;
         this.messageHandlerEventListener = messageHandlerEventListener;
         this.internalMessage = internalMessage;
-        this.metricsSettings = metricsSettings != null ? metricsSettings : MetricsSettings.disabled();
-        this.loggingSettings = loggingSettings != null ? loggingSettings : LoggingSettings.disabled();
+        this.metricsSettings = metricsSettings != null ? metricsSettings : MetricsSettings.DISABLED;
+        this.loggingSettings = loggingSettings != null ? loggingSettings : LoggingSettings.DISABLED;
         this.measurement = isMeasurementEnabled() ? new Measurement(System.nanoTime()) : null;
     }
 
@@ -122,6 +122,7 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         InternalActorContext.setContext(persistentActor);
         boolean shouldUpdateState = false;
         try {
+            logMessageBasicInformation();
             shouldUpdateState = doInActorContext(actorSystem, receiver, receiverRef, internalMessage);
             executeLifecycleListeners();
         } catch (Exception e) {
@@ -193,27 +194,43 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
         }
     }
 
+    private void logMessageBasicInformation() {
+        if (shouldLogMessageInformation()) {
+            MessageLogger.logMessageBasicInformation(
+                internalMessage,
+                loggingSettings,
+                receiver,
+                receiverRef,
+                this::unwrapMessageClass
+            );
+        }
+    }
+
     protected void logMessageContents(Object message) {
-        MessageLogger.logMessageContents(
-            internalMessage,
-            actorSystem,
-            message,
-            loggingSettings,
-            receiver,
-            receiverRef,
-            this::unwrapMessageClass
-        );
+        if (shouldLogMessageInformation()) {
+            MessageLogger.logMessageContents(
+                internalMessage,
+                actorSystem,
+                message,
+                loggingSettings,
+                receiver,
+                receiverRef,
+                this::unwrapMessageClass
+            );
+        }
     }
 
     private void logMessageTimingInformation() {
-        MessageLogger.logMessageTimingInformation(
-            internalMessage,
-            loggingSettings,
-            measurement,
-            receiver,
-            receiverRef,
-            this::unwrapMessageClass
-        );
+        if (shouldLogMessageInformation()) {
+            MessageLogger.logMessageTimingInformation(
+                internalMessage,
+                loggingSettings,
+                measurement,
+                receiver,
+                receiverRef,
+                this::unwrapMessageClass
+            );
+        }
     }
 
     private void logMessageTimingInformationForTraces() {
@@ -307,6 +324,10 @@ public abstract class ActorLifecycleTask implements ThreadBoundRunnable<String> 
             PersistenceConfig persistenceConfig = elasticActor.getClass().getAnnotation(PersistenceConfig.class);
             return PersistenceConfigHelper.shouldUpdateState(persistenceConfig,message);
         }
+    }
+
+    protected boolean shouldLogMessageInformation() {
+        return false;
     }
 
     /**

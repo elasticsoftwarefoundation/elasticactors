@@ -16,15 +16,19 @@
 
 package org.elasticsoftware.elasticactors.state;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
 import com.google.common.collect.ImmutableList;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 
 import javax.annotation.Nullable;
+import javax.annotation.PostConstruct;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
@@ -41,16 +45,45 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
 
     public DefaultActorStateUpdateProcessor(
         Collection<ActorStateUpdateListener> listeners,
-        int workerCount,
-        int maxBatchSize)
+        Environment env,
+        @Nullable MeterRegistry meterRegistry,
+        @Nullable MicrometerTagCustomizer tagCustomizer)
     {
         this.listeners = ImmutableList.copyOf(listeners);
-        this.executor = new ThreadBoundExecutorImpl(
+        this.executor = ThreadBoundExecutorBuilder.buildBlockingQueueThreadBoundExecutor(
+            env,
             this,
-            maxBatchSize,
-            new DaemonThreadFactory("ACTORSTATE-UPDATE-WORKER"),
-            workerCount
+            "actorStateUpdateProcessor",
+            "ACTORSTATE-UPDATE-WORKER",
+            meterRegistry,
+            tagCustomizer
         );
+    }
+
+    public DefaultActorStateUpdateProcessor(
+        Collection<ActorStateUpdateListener> listeners,
+        Environment env,
+        int workerCount,
+        int batchSize,
+        @Nullable MeterRegistry meterRegistry,
+        @Nullable MicrometerTagCustomizer tagCustomizer)
+    {
+        this.listeners = ImmutableList.copyOf(listeners);
+        this.executor = ThreadBoundExecutorBuilder.buildBlockingQueueThreadBoundExecutor(
+            env,
+            this,
+            workerCount,
+            batchSize,
+            "actorStateUpdateProcessor",
+            "ACTORSTATE-UPDATE-WORKER",
+            meterRegistry,
+            tagCustomizer
+        );
+    }
+
+    @PostConstruct
+    public void init() {
+        executor.init();
     }
 
     @Override
@@ -80,11 +113,6 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
                 logger.error("Unexpected Exception while processing ActorStateUpdates on listener of type {}", listener.getClass().getSimpleName(), e);
             }
         }
-    }
-
-    @Override
-    public void process(ActorStateUpdateEvent... events) {
-        process(Arrays.asList(events));
     }
 
     @Override

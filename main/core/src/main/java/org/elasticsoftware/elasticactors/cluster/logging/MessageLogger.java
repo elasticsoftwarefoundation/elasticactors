@@ -5,9 +5,7 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.metrics.Measurement;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
-import org.elasticsoftware.elasticactors.messaging.ImmutableInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.TransientInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
 import org.elasticsoftware.elasticactors.serialization.Message;
@@ -38,7 +36,7 @@ public final class MessageLogger {
         Function<InternalMessage, Class<?>> messageClassUnwrapper)
     {
         return logger.isTraceEnabled()
-            || metricsSettings.requiresMeasurement()
+            || metricsSettings.requiresMeasurement(internalMessage)
             || shouldLogTimingForThisMessage(internalMessage, loggingSettings, messageClassUnwrapper);
     }
 
@@ -48,7 +46,22 @@ public final class MessageLogger {
     {
         return internalMessage != null
             && logger.isInfoEnabled()
-            && loggingSettings.isEnabled();
+            && loggingSettings.isEnabled(internalMessage);
+    }
+
+    private static boolean isBasicLoggingEnabledFor(
+        Class<?> messageClass,
+        LoggingSettings loggingSettings)
+    {
+        if (messageClass != null) {
+            Message.LogFeature[] logFeatures = loggingSettings.processFeatures(messageClass);
+            // If CONTENTS or TIMING are enabled, the information convered by BASIC is already
+            // being logged.
+            return contains(logFeatures, Message.LogFeature.BASIC)
+                && !contains(logFeatures, Message.LogFeature.CONTENTS)
+                && !contains(logFeatures, Message.LogFeature.TIMING);
+        }
+        return false;
     }
 
     private static boolean isTimingLoggingEnabledFor(
@@ -56,7 +69,7 @@ public final class MessageLogger {
         LoggingSettings loggingSettings)
     {
         if (messageClass != null) {
-            Message.LogFeature[] logFeatures = loggingSettings.processOverrides(messageClass);
+            Message.LogFeature[] logFeatures = loggingSettings.processFeatures(messageClass);
             return ArrayUtils.contains(logFeatures, Message.LogFeature.TIMING);
         }
         return false;
@@ -67,7 +80,7 @@ public final class MessageLogger {
         LoggingSettings loggingSettings)
     {
         if (messageClass != null) {
-            Message.LogFeature[] logFeatures = loggingSettings.processOverrides(messageClass);
+            Message.LogFeature[] logFeatures = loggingSettings.processFeatures(messageClass);
             return ArrayUtils.contains(logFeatures, Message.LogFeature.CONTENTS);
         }
         return false;
@@ -95,6 +108,27 @@ public final class MessageLogger {
         return false;
     }
 
+    public static void logMessageBasicInformation(
+        InternalMessage internalMessage,
+        LoggingSettings loggingSettings,
+        ElasticActor receiver,
+        ActorRef receiverRef,
+        Function<InternalMessage, Class<?>> messageClassUnwrapper)
+    {
+        if (isLoggingEnabledForMessage(internalMessage, loggingSettings)) {
+            Class<?> messageClass = messageClassUnwrapper.apply(internalMessage);
+            if (isBasicLoggingEnabledFor(messageClass, loggingSettings)) {
+                logger.info(
+                    "Message of type [{}] received by actor [{}] of type [{}], wrapped in [{}]",
+                    shorten(messageClass),
+                    receiverRef,
+                    shorten(receiver.getClass()),
+                    shorten(internalMessage.getClass())
+                );
+            }
+        }
+    }
+
     public static void logMessageTimingInformation(
         InternalMessage internalMessage,
         LoggingSettings loggingSettings,
@@ -107,7 +141,7 @@ public final class MessageLogger {
             Class<?> messageClass = messageClassUnwrapper.apply(internalMessage);
             if (isTimingLoggingEnabledFor(messageClass, loggingSettings)) {
                 logger.info(
-                    "Message of type [{}] received by actor [{}] of type [{}], wrapped in an [{}]. {}",
+                    "Message of type [{}] received by actor [{}] of type [{}], wrapped in [{}]. {}",
                     shorten(messageClass),
                     receiverRef,
                     shorten(receiver.getClass()),
@@ -134,7 +168,7 @@ public final class MessageLogger {
                 MessageToStringConverter messageToStringConverter =
                     getMessageToStringConverter(internalActorSystem, messageClass);
                 logger.info(
-                    "Message of type [{}] received by actor [{}] of type [{}], wrapped in an [{}]. Contents: [{}]",
+                    "Message of type [{}] received by actor [{}] of type [{}], wrapped in [{}]. Contents: [{}]",
                     shorten(messageClass),
                     receiverRef,
                     shorten(receiver.getClass()),
@@ -181,7 +215,7 @@ public final class MessageLogger {
         Function<InternalMessage, Class<?>> messageClassUnwrapper)
     {
         if (logger.isWarnEnabled()
-            && metricsSettings.isMessageHandlingWarnThresholdEnabled()
+            && metricsSettings.isMessageHandlingWarnThresholdEnabled(internalMessage)
             && measurement != null
             && measurement.getTotalDuration(MICROSECONDS)
             > metricsSettings.getMessageHandlingWarnThreshold())
@@ -212,7 +246,7 @@ public final class MessageLogger {
         Function<InternalMessage, Class<?>> messageClassUnwrapper)
     {
         if (logger.isWarnEnabled()
-            && metricsSettings.isSerializationWarnThresholdEnabled()
+            && metricsSettings.isSerializationWarnThresholdEnabled(internalMessage)
             && measurement != null
             && measurement.getSerializationDuration(MICROSECONDS)
             > metricsSettings.getSerializationWarnThreshold())
@@ -243,7 +277,7 @@ public final class MessageLogger {
     {
         if (internalMessage != null
             && logger.isWarnEnabled()
-            && metricsSettings.isMessageDeliveryWarnThresholdEnabled())
+            && metricsSettings.isMessageDeliveryWarnThresholdEnabled(internalMessage))
         {
             long timestamp = UUIDTools.toUnixTimestamp(internalMessage.getId());
             long delay = (System.currentTimeMillis() - timestamp) * 1000;
@@ -371,9 +405,8 @@ public final class MessageLogger {
                 return messageToStringConverter.convert(internalMessage.getPayload());
             } else if (message != null) {
                 return messageToStringConverter.convert(message);
-            } else if (internalMessage instanceof TransientInternalMessage
-                || internalMessage instanceof ImmutableInternalMessage) {
-                return messageToStringConverter.convert((Object) internalMessage.getPayload(null));
+            } else if (internalMessage.hasPayloadObject()) {
+                return messageToStringConverter.convert(internalMessage.getPayload(null));
             }
         } catch (Exception e) {
             logger.error(

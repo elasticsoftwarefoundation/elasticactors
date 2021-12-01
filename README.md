@@ -6,7 +6,7 @@ Persistent Stateful Actor System
 
 ## Current released version
 
-![CI](https://github.com/elasticsoftwarefoundation/elasticactors/workflows/CI/badge.svg)
+[![CI](https://github.com/elasticsoftwarefoundation/elasticactors/actions/workflows/maven.yml/badge.svg)](https://github.com/elasticsoftwarefoundation/elasticactors/actions/workflows/maven.yml)
 [![License: Apache 2](https://img.shields.io/badge/LICENSE-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.txt)
 [![Maven Central](https://img.shields.io/maven-central/v/org.elasticsoftwarefoundation.elasticactors/elasticactors-parent.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22org.elasticsoftwarefoundation.elasticactors%22)
 
@@ -99,7 +99,14 @@ The following exceptions apply:
   * Changes to the shard-to-node distribution algorithm require the actor system to be completely 
     destroyed or scaled down to 1 node before deploying the new version.
   * The tracing module was split between its basic implementation and an optional module to integrate
-    it with the logging framework. See [the section below](#Adding-trace-information-to-logs).
+    it with the logging framework. See [how to add trace information to logs in the section below](#adding-trace-information-to-logs).
+* **2.5 - 5.1** to **5.2** or later:
+  * The tracing module now integrates with Spring without the need to explicitly import the `TracingConfiguration` class.
+    See [how to instrument Spring beans in the section below](#instrumenting-spring-beans).
+  * Metrics and Logging settings are now only enabled for undeliverable messages and messages that use 
+    the reactive streams protocol (such as Subscriptions) if explicitly configured.
+  * Configuration keys for indexing with Elasticsearch have been changed from `actor.indexing.*` 
+    to `ea.indexing.*` in order for it to use the same format as other modules. 
 
 
 ## Basic configuration
@@ -231,6 +238,7 @@ org.elasticsoftware.elasticactors.test.TestActorFullName:
 ## Configuration properties
 
 These properties can be set per-environment using any property source accepted by Spring.
+This list is not exhaustive. Specific sections of this README may contain keys specific to them.
 
 ```properties
 ## Basic configuration
@@ -335,10 +343,18 @@ ea.rabbitmq.username=guest
 ea.rabbitmq.password=guest
 
 # RabbitMQ ACK type.
+# Options:
+#   - DIRECT: ACKs the messages on the handler thread
+#   - BUFFERED: ACKs the messages on one of the handler threads, buffering them in case of high load
+#   - WRITE_BEHIND: ACKs the messages asynchronously using a disruptor
+#   - ASYNC: ACKs the messages asynchronously using a separate thread
 # Default: DIRECT
 ea.rabbitmq.ack=ASYNC
 
 # RabbitMQ thread model.
+# Options: 
+#   - sc (single-channel): uses producer channel
+#   - cpt (channel-per-thread): uses one producer channel for each queue thread
 # Default: sc
 ea.rabbitmq.threadmodel=cpt
 
@@ -350,6 +366,7 @@ ea.rabbitmq.prefetchCount=100
 ## Persistent Actor Repository layer
 
 # Minimum size (in bytes) for which a serialized actor state will be compressed with LZ4
+# Default: 512 bytes
 ea.persistentActorRepository.compressionThreshold=512
 
 
@@ -399,23 +416,37 @@ ea.asyncUpdateExecutor.optimizedV1Batches=true
 ea.cassandra.hfactory.manageCluster=true
 
 
-## Metrics and Logging
+## Indexing
 
-# Toggles metrics for messages in node queues
+# Elasticsearch hosts for indexing Actors
+# Required, if using indexing
+ea.indexing.elasticsearch.hosts=host1,host2
+
+# Elasticsearch port
+# Default: 9300
+ea.indexing.elasticsearch.port=9300
+
+# Elasticsearch cluster name
+# Default: elasticsearch
+ea.indexing.elasticsearch.cluster.name=elasticsearch
+
+
+## Metrics
+
+# Toggles metrics for messages in shard queues.
 # Default: false
-ea.metrics.node.messaging.enabled=false
+ea.metrics.shard.messaging.enabled=false
 
-# Configures the threshold for message delivery (total time spent in broker + local queues)
-# in microseconds
-# Default: 0
-ea.metrics.node.messaging.delivery.warn.threshold=0
+# Toggles metrics for undeliverable messages in shard queues. 
+# Default: false
+ea.metrics.shard.messaging.undeliverable.enabled=false
 
-# Configures the threshold for message handling in microseconds
-# Default: 0
-ea.metrics.node.messaging.handling.warn.threshold=0
+# Toggles metrics for messages using the reactive streams protocol (such as Subscriptions) in shard queues. 
+# Default: false
+ea.metrics.shard.messaging.reactive.enabled=false
 
-# Configures the threshold for message delivery (total time spent in broker + local queues)
-# in microseconds
+# Configures the threshold for message delivery (total time spent in broker + local queues),
+# in microseconds.
 # Default: 0
 ea.metrics.shard.messaging.delivery.warn.threshold=0
 
@@ -427,17 +458,72 @@ ea.metrics.shard.messaging.handling.warn.threshold=0
 # Default: 0
 ea.metrics.shard.serialization.warn.threshold=0
 
+# Toggles metrics for messages in node queues.
+# Default: false
+ea.metrics.node.messaging.enabled=false
+
+# Toggles metrics for undeliverable messages in node queues. 
+# Default: false
+ea.metrics.node.messaging.undeliverable.enabled=false
+
+# Toggles metrics for messages using the reactive streams protocol (such as Subscriptions) in node queues. 
+# Default: false
+ea.metrics.node.messaging.reactive.enabled=false
+
+# Configures the threshold for message delivery (total time spent in broker + local queues),
+# in microseconds.
+# Default: 0
+ea.metrics.node.messaging.delivery.warn.threshold=0
+
+# Configures the threshold for message handling in microseconds.
+# Default: 0
+ea.metrics.node.messaging.handling.warn.threshold=0
+
+
+## Logging
+
 # Toggles logging for messages in shard queues. 
 # Default: false
 ea.logging.shard.messaging.enabled=false
+
+# Toggles logging for undeliverable messages in shard queues. 
+# Default: false
+ea.logging.shard.messaging.undeliverable.enabled=false
+
+# Toggles logging for messages using the reactive streams protocol (such as Subscriptions) in shard queues. 
+# Default: false
+ea.logging.shard.messaging.reactive.enabled=false
 
 # Toggles logging for messages in node queues. 
 # Default: false
 ea.logging.node.messaging.enabled=false
 
+# Toggles logging for undeliverable messages in node queues. 
+# Default: false
+ea.logging.node.messaging.undeliverable.enabled=false
+
+# Toggles logging for messages using the reactive streams protocol (such as Subscriptions) in node queues. 
+# Default: false
+ea.logging.node.messaging.reactive.enabled=false
+
+# Default set of features for logging message types.
+# Features defined here have the lowest precedence, meaning any features defined in the 
+# @Message annotation or overrides take precedence over this.
+# This does not affect internal messages defined in the Elastic Actors framework.
+# The value is a list of comma-separated features.
+# Refer to the @Message.LogFeature enum for options and their meanings.
+# Default: empty
+ea.logging.messages.default=BASIC,TIMING,CONTENTS
+
 # Optional LogFeature overrides for specific message types.
-# The value is a list of comma-separated features
-ea.logging.messages.overrides.[class_name]=TIMING,CONTENTS
+# Features defined here have the highest precedence, meaning any features defined here will 
+# override both the default and those defined in the @Message annotation for any message type.
+# These overrides affect internal messages defined in the Elastic Actors framework too, in case
+# that's needed for debugging.
+# The value is a list of comma-separated features.
+# Refer to the @Message.LogFeature enum for options and their meanings.
+# To disable all features, add the key but leave its value empty.
+ea.logging.messages.overrides.[class_name]=BASIC,TIMING,CONTENTS
 
 # The maximum number of characters when logging message contents. 
 # Default: 5000
@@ -461,7 +547,7 @@ ea.serializationCache.enabled=false
 
 # Toggles deserialization caching. 
 # Default: false
-ea.deserializationCache.enable=false
+ea.deserializationCache.enabled=false
 
 # Changes the logging level used when logging unhandled message types in MethodActor.
 # Default: WARN
@@ -510,16 +596,29 @@ In order to use distributed tracing, include the following dependency in your pr
 <dependency>
     <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
     <artifactId>elasticactors-tracing</artifactId>
-    <scope>compile</scope> <!-- or runtime if you don't need the Spring bits-->
+    <scope>runtime</scope>
 </dependency>
 ```
 
-In order to instrument asynchronous executor beans automatically, import `TracingConfiguration` to
-your Spring configuration. This includes a bean post-processor that wraps those facilities in ones
-that can automatically propagate the traces from Elastic Actors.
-
 `MessagingContextManager` is the main class responsible for managing trace context data.\
-It allows you to put a set of trace and creation contexts into scope. 
+It allows you to put a set of trace and creation contexts into scope.
+
+
+### Instrumenting Spring beans
+
+In order to instrument asynchronous executor beans automatically, add the following dependency 
+to your project:
+
+```xml
+<dependency>
+    <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
+    <artifactId>elasticactors-tracing-spring</artifactId>
+    <scope>runtime</scope>
+</dependency>
+```
+
+This includes a bean post-processor that wraps those facilities in ones
+that can automatically propagate the traces from Elastic Actors.
 
 
 ### Adding trace information to logs
@@ -536,6 +635,87 @@ following dependency in your project:
     <scope>runtime</scope>
 </dependency>
 ```
+
+### Metrics
+
+Starting from version 5.2, Elastic Actors supports exporting its internal metrics using [Micrometer](https://micrometer.io/).
+
+All metrics are optional and can be enabled/disabled independently using configuration properties.
+If metrics are enabled, Elastic Actors will expect the existence of a bean of type `MeterRegistry` 
+and name `elasticActorsMeterRegistry`. The supplied bean will be used to add the metrics.
+
+```properties
+# Optional prefix for component names
+ea.metrics.micrometer.namePrefix=prefix
+
+# Toggles Micrometer ON or OFF for a given component.
+#
+# The following components are currently supported:
+# - Caches:
+#   - actorRefCache: ActorRef cache
+#   - nodeActorCache: Node actor state cache
+#   - shardActorCache: Shard actor state cache
+# - Thread-bound executors:
+#   - queueExecutor: Message queue executor
+#   - actorExecutor: Actor message handler executor
+#   - asyncUpdateExecutor: Actor state persistence executor
+#   - actorStateUpdateProcessor: Actor state update processor executor
+# - Messaging services:
+#   - rabbitmq: RabbitMQ metrics
+#   - rabbitmqAcker: ASYNC ACKer executor service
+# - Message schedulers:
+#   - scheduler: Scheduler executor service
+#
+# Default (for all components): false
+ea.metrics.micrometer.[component_name].enabled=false
+
+# Optional metric prefix for a given component.
+ea.metrics.micrometer.[component_name].prefix=ea
+
+# Optional custom tags for a given component.
+# Keep in mind that all meters created by Elastic Actors will contain at least the following tags:
+#   - elastic.actors.generated: true
+#   - elastic.actors.node.id: [the node's ID]
+#   - elastic.actors.cluster.name: [the cluster's name]
+# Can be repeated multiple times for a given component in order to add multiple tags.
+ea.metrics.micrometer.[component_name].tags.[tag_name]=tag_value
+
+# Toggles exporting the message delivery times for a given component.
+# These are a rough estimate of the time it took from the message being created until it 
+# arrived at the receiving actor, in milliseconds.
+# Currently, this only applies to the "actorExecutor" component.
+# Default: false
+ea.metrics.micrometer.[component_name].measureDeliveryTimes=false
+
+# Toggles adding the message wrapper types as tags for a given component.
+# Adds the current message's wrapper as the tag "elastic.actors.message.wrapper" and creates a new timer with the wrapper's name as a suffix.
+# Currently, this only applies to the "actorExecutor" component.
+# Default: false
+ea.metrics.micrometer.[component_name].tagMessageWrapperTypes=false
+
+# Toggles adding the task types as tags for a given component.
+# Adds the current thread-bound task type as the tag "elastic.actors.message.task" and creates a new timer with the task's name as a suffix.
+# Currently, this only applies to the "actorExecutor" component.
+# Default: false
+ea.metrics.micrometer.[component_name].tagTaskTypes=false
+
+# Allows detailed tagging for the specified actor type for a given component.
+# Adds the receiver type as the tag "elastic.actors.actor.type" and creates a new timer with the provided suffix.
+# Currently, this only applies to the "actorExecutor" component.
+# This might cause some additional overhead, so use this option with caution.
+ea.metrics.micrometer.[component_name].detailed.actors.[class_name]=metric.suffix
+
+# Allows detailed tagging for the specified message types for a given component.
+# This requires the type of the receiver actor to be present in the list of actors allowed for 
+# detailed tagging.
+# Adds the receiver type as the tag "elastic.actors.message.type" and creates a new timer with the provided suffix.
+# Currently, this only applies to the "actorExecutor" component.
+# This might cause some additional overhead, so use this option with caution.
+ea.metrics.micrometer.[component_name].detailed.messages.[class_name]=metric.suffix
+```
+
+Additionally, customization of tags is supported by providing a bean of type `MeterTagCustomizer`
+and name `elasticActorsMeterTagCustomizer`.
 
 
 ### Performance impact of tracing with log context on applications using Log4j2

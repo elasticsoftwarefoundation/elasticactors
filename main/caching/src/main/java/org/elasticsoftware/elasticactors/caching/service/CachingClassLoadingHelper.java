@@ -37,15 +37,17 @@ public final class CachingClassLoadingHelper extends ClassLoadingHelper {
     @Override
     public Class<?> forName(@Nonnull String className) throws ClassNotFoundException {
         try {
-            return classCache.computeIfAbsent(className, name -> {
-                try {
-                    return Class.forName(name);
-                } catch (ClassNotFoundException e) {
-                    throw new WrappedException(e);
-                }
-            });
+            return classCache.computeIfAbsent(className, CachingClassLoadingHelper::loadClass);
         } catch (WrappedException e) {
             throw e.getCause();
+        }
+    }
+
+    private static Class<?> loadClass(String name) {
+        try {
+            return Class.forName(name);
+        } catch (ClassNotFoundException e) {
+            throw new WrappedException(e);
         }
     }
 

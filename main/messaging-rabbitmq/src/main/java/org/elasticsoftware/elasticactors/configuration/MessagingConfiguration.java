@@ -16,13 +16,17 @@
 
 package org.elasticsoftware.elasticactors.configuration;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
 import org.elasticsoftware.elasticactors.rabbitmq.MessageAcker;
 import org.elasticsoftware.elasticactors.rabbitmq.RabbitMQMessagingService;
-import org.elasticsoftware.elasticactors.rabbitmq.RabbitMQMessagingServiceInterface;
+import org.elasticsoftware.elasticactors.rabbitmq.cpt.MultiProducerRabbitMQMessagingService;
 import org.elasticsoftware.elasticactors.rabbitmq.health.RabbitMQHealthCheck;
+import org.elasticsoftware.elasticactors.rabbitmq.sc.SingleProducerRabbitMQMessagingService;
 import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageDeserializer;
@@ -30,6 +34,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
+import org.springframework.lang.Nullable;
 
 import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.DIRECT;
 
@@ -39,11 +44,13 @@ import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.DIREC
 public class MessagingConfiguration {
 
     @Bean(name = {"messagingService"})
-    public RabbitMQMessagingServiceInterface getMessagingService(
+    public RabbitMQMessagingService getMessagingService(
         @Qualifier("queueExecutor") ThreadBoundExecutor queueExecutor,
         Environment env,
         ActorRefFactory actorRefFactory,
-        SerializationAccessor serializationAccessor)
+        SerializationAccessor serializationAccessor,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         String clusterName = env.getRequiredProperty("ea.cluster");
         String rabbitMQHosts = env.getRequiredProperty("ea.rabbitmq.hosts");
@@ -52,10 +59,18 @@ public class MessagingConfiguration {
         String rabbitMQPassword = env.getProperty("ea.rabbitmq.password", "guest");
         MessageAcker.Type ackType =
             env.getProperty("ea.rabbitmq.ack", MessageAcker.Type.class, DIRECT);
-        String threadModel = env.getProperty("ea.rabbitmq.threadmodel", "sc");
+        String threadModel = env.getProperty("ea.rabbitmq.threadmodel", "sc").toLowerCase().trim();
         Integer prefetchCount = env.getProperty("ea.rabbitmq.prefetchCount", Integer.class, 0);
+        MicrometerConfiguration micrometerConfiguration =
+            MicrometerConfiguration.build(env, meterRegistry, "rabbitmq", tagCustomizer);
+        MicrometerConfiguration ackerMicrometerConfiguration =
+            MicrometerConfiguration.build(env, meterRegistry, "rabbitmqAcker", tagCustomizer);
+        InternalMessageDeserializer messageDeserializer = new InternalMessageDeserializer(
+            new ActorRefDeserializer(actorRefFactory),
+            serializationAccessor
+        );
         if ("cpt".equals(threadModel)) {
-            return new org.elasticsoftware.elasticactors.rabbitmq.cpt.RabbitMQMessagingService(
+            return new MultiProducerRabbitMQMessagingService(
                 clusterName,
                 rabbitMQHosts,
                 rabbitmqPort,
@@ -63,52 +78,52 @@ public class MessagingConfiguration {
                 rabbitMQPassword,
                 ackType,
                 queueExecutor,
-                new InternalMessageDeserializer(
-                    new ActorRefDeserializer(actorRefFactory),
-                    serializationAccessor
-                ),
-                prefetchCount
+                messageDeserializer,
+                prefetchCount,
+                micrometerConfiguration,
+                ackerMicrometerConfiguration
             );
         } else {
-            return new RabbitMQMessagingService(clusterName,
+            return new SingleProducerRabbitMQMessagingService(
+                clusterName,
                 rabbitMQHosts,
                 rabbitmqPort,
                 rabbitMQUsername,
                 rabbitMQPassword,
                 ackType,
                 queueExecutor,
-                new InternalMessageDeserializer(
-                    new ActorRefDeserializer(actorRefFactory),
-                    serializationAccessor
-                ), prefetchCount
+                messageDeserializer,
+                prefetchCount,
+                micrometerConfiguration,
+                ackerMicrometerConfiguration
             );
         }
     }
 
     @Bean(name = {"localMessageQueueFactory"})
     public MessageQueueFactory getLocalMessageQueueFactory(
-        RabbitMQMessagingServiceInterface messagingService)
+        RabbitMQMessagingService messagingService)
     {
         return messagingService.getLocalMessageQueueFactory();
     }
 
     @Bean(name = {"remoteMessageQueueFactory"})
     public MessageQueueFactory getRemoteMessageQueueFactory(
-        RabbitMQMessagingServiceInterface messagingService)
+        RabbitMQMessagingService messagingService)
     {
         return messagingService.getRemoteMessageQueueFactory();
     }
 
     @Bean(name = "remoteActorSystemMessageQueueFactoryFactory")
     public MessageQueueFactoryFactory getRemoteActorSystemMessageQueueFactoryFactory(
-        RabbitMQMessagingServiceInterface messagingService)
+        RabbitMQMessagingService messagingService)
     {
         return messagingService.getRemoteActorSystemMessageQueueFactoryFactory();
     }
 
     @Bean(name = "rabbitMQHealthCheck")
     public RabbitMQHealthCheck getHealthCheck(
-        RabbitMQMessagingServiceInterface messagingService)
+        RabbitMQMessagingService messagingService)
     {
         return new RabbitMQHealthCheck(messagingService);
     }
