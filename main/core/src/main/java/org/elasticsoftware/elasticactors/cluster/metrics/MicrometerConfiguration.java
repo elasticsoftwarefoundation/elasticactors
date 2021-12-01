@@ -65,8 +65,9 @@ public final class MicrometerConfiguration {
                 Boolean.class,
                 false
             );
+            String componentNamePrefix = env.getProperty("ea.metrics.micrometer.namePrefix", "");
             String prefix =
-                env.getProperty(format("ea.metrics.micrometer.%s.prefix", componentName));
+                env.getProperty(format("ea.metrics.micrometer.%s.prefix", componentName), "");
             String nodeId = env.getRequiredProperty("ea.node.id");
             String clusterName = env.getRequiredProperty("ea.cluster");
             Tags tags = Tags.of(
@@ -99,7 +100,7 @@ public final class MicrometerConfiguration {
                 tagMessageWrapperTypes,
                 tagTaskTypes,
                 meterRegistry,
-                componentName,
+                sanitizePrefix(componentNamePrefix) + componentName,
                 prefix,
                 tagCustomizer != null ? tags.and(tagCustomizer.get(componentName)) : tags,
                 allowedActorTypesForTagging,
@@ -113,7 +114,7 @@ public final class MicrometerConfiguration {
         if (StringUtils.isBlank(metricSuffix)) {
             return "";
         }
-        return metricSuffix.replaceAll("\\s|^\\.|\\.$", "");
+        return metricSuffix;
     }
 
     public MicrometerConfiguration(

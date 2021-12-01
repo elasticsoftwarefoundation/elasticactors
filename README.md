@@ -645,6 +645,9 @@ If metrics are enabled, Elastic Actors will expect the existence of a bean of ty
 and name `elasticActorsMeterRegistry`. The supplied bean will be used to add the metrics.
 
 ```properties
+# Optional prefix for component names
+ea.metrics.micrometer.namePrefix=prefix
+
 # Toggles Micrometer ON or OFF for a given component.
 #
 # The following components are currently supported:
