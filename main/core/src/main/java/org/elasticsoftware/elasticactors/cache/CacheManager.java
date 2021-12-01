@@ -163,6 +163,9 @@ public class CacheManager<K,V> {
         private int hashCode;
 
         public CacheKey fill(Object segmentKey, Object cacheKey) {
+            if (this.segmentKey == segmentKey && this.cacheKey == cacheKey) {
+                return this;
+            }
             this.segmentKey = segmentKey;
             this.cacheKey = cacheKey;
             this.hashCode = (segmentKey.hashCode() * 31) + cacheKey.hashCode();
