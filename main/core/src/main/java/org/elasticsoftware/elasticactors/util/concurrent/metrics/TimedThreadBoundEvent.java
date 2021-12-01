@@ -18,8 +18,10 @@ package org.elasticsoftware.elasticactors.util.concurrent.metrics;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
+import org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundExecutorMonitor.TimerType;
 
 import javax.annotation.Nonnull;
+import java.util.Map;
 
 /**
  * A wrapper for a {@link ThreadBoundEvent} with idle and execution timings.
@@ -41,11 +43,12 @@ final class TimedThreadBoundEvent<T> implements ThreadBoundEvent<T> {
         if (delegate instanceof TimedThreadBoundEvent) {
             return (TimedThreadBoundEvent<T>) delegate;
         }
+        Map<TimerType, Timer> timers = monitor.getTimers();
         return new TimedThreadBoundEvent<>(
             thread,
             monitor.getConfiguration().getRegistry(),
-            monitor.getExecutionTimer(),
-            monitor.getIdleTimer(),
+            timers.get(TimerType.EXECUTION),
+            timers.get(TimerType.IDLE),
             delegate
         );
     }

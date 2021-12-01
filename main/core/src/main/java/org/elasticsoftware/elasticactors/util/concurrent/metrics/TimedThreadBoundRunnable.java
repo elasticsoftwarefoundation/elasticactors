@@ -20,9 +20,11 @@ import io.micrometer.core.instrument.Timer;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.util.concurrent.MessageHandlingThreadBoundRunnable;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
+import org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundExecutorMonitor.TimerType;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -40,17 +42,18 @@ final class TimedThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
     static <T> TimedThreadBoundRunnable<T> wrap(
         int thread,
         @Nonnull ThreadBoundRunnable<T> delegate,
-        @Nonnull ThreadBoundExecutorMonitor meterConfig)
+        @Nonnull ThreadBoundExecutorMonitor monitor)
     {
         if (delegate instanceof TimedThreadBoundRunnable) {
             return (TimedThreadBoundRunnable<T>) delegate;
         }
+        Map<TimerType, Timer> timers = monitor.getTimersFor(delegate);
         return new TimedThreadBoundRunnable<>(
             thread,
-            meterConfig.getConfiguration().getRegistry(),
-            meterConfig.getExecutionTimerFor(delegate),
-            meterConfig.getIdleTimerFor(delegate),
-            meterConfig.getDeliveryTimerFor(delegate),
+            monitor.getConfiguration().getRegistry(),
+            timers.get(TimerType.EXECUTION),
+            timers.get(TimerType.IDLE),
+            timers.get(TimerType.DELIVERY),
             delegate
         );
     }
@@ -74,6 +77,7 @@ final class TimedThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
 
     @Override
     public void run() {
+        idleSample.stop(idleTimer);
         if (deliveryTimer != null && delegate instanceof MessageHandlingThreadBoundRunnable) {
             MessageHandlingThreadBoundRunnable<?> mhtbRunnable =
                 (MessageHandlingThreadBoundRunnable<?>) delegate;
@@ -81,7 +85,6 @@ final class TimedThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
             long delay = (System.currentTimeMillis() - timestamp);
             deliveryTimer.record(delay, TimeUnit.MILLISECONDS);
         }
-        idleSample.stop(idleTimer);
         Timer.Sample executionSample = Timer.start(registry);
         try {
             delegate.run();
