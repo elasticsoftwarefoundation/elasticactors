@@ -76,7 +76,7 @@ public final class BlockingQueueThreadBoundExecutor
         this.queues = new BlockingQueue[numberOfThreads];
         for (int i = 0; i < numberOfThreads; i++) {
             BlockingQueue<ThreadBoundEvent> queue = new LinkedBlockingQueue<>();
-            Thread t = threadFactory.newThread(new Consumer(queue, maxBatchSize));
+            Thread t = threadFactory.newThread(new Consumer(i, queue, maxBatchSize));
             queues[i] = queue;
             t.start();
         }
@@ -121,9 +121,8 @@ public final class BlockingQueueThreadBoundExecutor
      * @param event The runnable to execute
      */
     @Override
-    protected void timedExecute(@Nonnull final ThreadBoundEvent event, final int thread) {
-        BlockingQueue<ThreadBoundEvent> queue = queues[thread];
-        queue.add(event);
+    protected void timedExecute(final int thread, @Nonnull final ThreadBoundEvent event) {
+        queues[thread].add(event);
     }
 
     @Override
@@ -160,11 +159,13 @@ public final class BlockingQueueThreadBoundExecutor
     }
 
     private final class Consumer implements Runnable {
+        private final int thread;
         private final BlockingQueue<ThreadBoundEvent> queue;
         private final int maxBatchSize;
         private final ArrayList<ThreadBoundEvent> batch;
 
-        public Consumer(BlockingQueue<ThreadBoundEvent> queue, int maxBatchSize) {
+        public Consumer(int thread, BlockingQueue<ThreadBoundEvent> queue, int maxBatchSize) {
+            this.thread = thread;
             this.queue = queue;
             // store this -1 as we will always use take to get the first element of the batch
             this.maxBatchSize = maxBatchSize - 1;
@@ -196,17 +197,22 @@ public final class BlockingQueueThreadBoundExecutor
                                     itr.remove();
                                 }
                             }
-                            processBatch(batch);
+                            if (!batch.isEmpty()) {
+                                processBatch(thread, batch);
+                            }
                         } else {
                             // just the one event, no need to iterate
                             if (event instanceof ShutdownTask) {
                                 running = false;
                                 ((ShutdownTask)event).latch.countDown();
                             } else {
+                                // This batch has only one item, but some processors will wrap
+                                // single events into a list and then iterate over it.
+                                // Let's just use the batch to avoid creating garbage.
                                 if (batch != null) {
-                                    processBatch(batch);
+                                    processBatch(thread, batch);
                                 } else {
-                                    processEvent(event);
+                                    processEvent(thread, event);
                                 }
                             }
                         }

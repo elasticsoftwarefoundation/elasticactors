@@ -27,7 +27,6 @@ import java.util.Map;
  * A wrapper for a {@link ThreadBoundEvent} with idle and execution timings.
  */
 final class TimedThreadBoundEvent<T> implements ThreadBoundEvent<T> {
-    private final int thread;
     private final MeterRegistry registry;
     private final Timer executionTimer;
     private final Timer idleTimer;
@@ -36,7 +35,6 @@ final class TimedThreadBoundEvent<T> implements ThreadBoundEvent<T> {
     private Timer.Sample executionSample;
 
     static <T> TimedThreadBoundEvent<T> wrap(
-        int thread,
         @Nonnull ThreadBoundEvent<T> delegate,
         @Nonnull ThreadBoundExecutorMonitor monitor)
     {
@@ -45,7 +43,6 @@ final class TimedThreadBoundEvent<T> implements ThreadBoundEvent<T> {
         }
         Map<TimerType, Timer> timers = monitor.getTimers();
         return new TimedThreadBoundEvent<>(
-            thread,
             monitor.getConfiguration().getRegistry(),
             timers.get(TimerType.EXECUTION),
             timers.get(TimerType.IDLE),
@@ -54,13 +51,11 @@ final class TimedThreadBoundEvent<T> implements ThreadBoundEvent<T> {
     }
 
     private TimedThreadBoundEvent(
-        int thread,
         MeterRegistry registry,
         Timer executionTimer,
         Timer idleTimer,
         ThreadBoundEvent<T> delegate)
     {
-        this.thread = thread;
         this.registry = registry;
         this.executionTimer = executionTimer;
         this.idleTimer = idleTimer;
@@ -84,9 +79,5 @@ final class TimedThreadBoundEvent<T> implements ThreadBoundEvent<T> {
     @Override
     public T getKey() {
         return delegate.getKey();
-    }
-
-    public int getThread() {
-        return thread;
     }
 }

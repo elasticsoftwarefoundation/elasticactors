@@ -15,12 +15,12 @@ public abstract class DelegatingTimedThreadBoundExecutor extends TimedThreadBoun
     }
 
     @Override
-    protected final void incrementQueuedEvents(int thread) {
+    protected final void incrementQueuedEvents(int thread, int itemCount) {
         // Nothing to do. Let the internal data structure count that.
     }
 
     @Override
-    protected final void decrementQueuedEvents(int thread) {
+    protected final void decrementQueuedEvents(int thread, int itemCount) {
         // Nothing to do. Let the internal data structure count that.
     }
 }

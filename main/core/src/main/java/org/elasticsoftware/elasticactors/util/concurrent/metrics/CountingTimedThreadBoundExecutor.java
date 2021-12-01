@@ -31,13 +31,13 @@ public abstract class CountingTimedThreadBoundExecutor extends TimedThreadBoundE
     }
 
     @Override
-    protected final void incrementQueuedEvents(int thread) {
-        queuedEvents[thread].increment();
+    protected final void incrementQueuedEvents(int thread, int itemCount) {
+        queuedEvents[thread].add(itemCount);
     }
 
     @Override
-    protected final void decrementQueuedEvents(int thread) {
-        queuedEvents[thread].decrement();
+    protected final void decrementQueuedEvents(int thread, int itemCount) {
+        queuedEvents[thread].add(-itemCount);
     }
 
     @Override

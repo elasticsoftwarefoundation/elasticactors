@@ -17,7 +17,6 @@
 package org.elasticsoftware.elasticactors.util.concurrent.disruptor;
 
 import com.lmax.disruptor.EventTranslatorOneArg;
-import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
@@ -72,7 +71,7 @@ public final class DisruptorThreadBoundExecutor extends CountingTimedThreadBound
 
         for (int i = 0; i < workers; i++) {
             Disruptor<ThreadBoundEventWrapper> disruptor = new Disruptor<>(eventFactory,bufferSize,threadFactory);
-            disruptor.handleEventsWith(new ThreadBoundEventHandler(this::processBatch, bufferSize));
+            disruptor.handleEventsWith(new ThreadBoundEventHandler(i, this::processBatch, bufferSize));
             disruptors[i] = disruptor;
             disruptor.start();
         }
@@ -113,10 +112,9 @@ public final class DisruptorThreadBoundExecutor extends CountingTimedThreadBound
     }
 
     @Override
-    protected void timedExecute(@Nonnull final ThreadBoundEvent event, final int thread) {
-        final RingBuffer<ThreadBoundEventWrapper> ringBuffer = disruptors[thread].getRingBuffer();
+    protected void timedExecute(final int thread, @Nonnull final ThreadBoundEvent event) {
         // this method will wait when the buffer is overflowing ( using Lock.parkNanos(1) )
-        ringBuffer.publishEvent(translator, event);
+        disruptors[thread].getRingBuffer().publishEvent(translator, event);
     }
 
     @Override

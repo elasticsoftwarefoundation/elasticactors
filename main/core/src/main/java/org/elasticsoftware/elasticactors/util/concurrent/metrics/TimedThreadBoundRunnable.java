@@ -32,7 +32,6 @@ import java.util.concurrent.TimeUnit;
  * A wrapper for a {@link ThreadBoundRunnable} with idle and execution timings.
  */
 final class TimedThreadBoundRunnable<T> implements WrapperThreadBoundRunnable<T> {
-    private final int thread;
     private final MeterRegistry registry;
     private final Timer executionTimer;
     private final Timer idleTimer;
@@ -41,7 +40,6 @@ final class TimedThreadBoundRunnable<T> implements WrapperThreadBoundRunnable<T>
     private final Timer.Sample idleSample;
 
     static <T> TimedThreadBoundRunnable<T> wrap(
-        int thread,
         @Nonnull ThreadBoundRunnable<T> delegate,
         @Nonnull ThreadBoundExecutorMonitor monitor)
     {
@@ -50,7 +48,6 @@ final class TimedThreadBoundRunnable<T> implements WrapperThreadBoundRunnable<T>
         }
         Map<TimerType, Timer> timers = monitor.getTimersFor(delegate);
         return new TimedThreadBoundRunnable<>(
-            thread,
             monitor.getConfiguration().getRegistry(),
             timers.get(TimerType.EXECUTION),
             timers.get(TimerType.IDLE),
@@ -60,14 +57,12 @@ final class TimedThreadBoundRunnable<T> implements WrapperThreadBoundRunnable<T>
     }
 
     private TimedThreadBoundRunnable(
-        int thread,
         MeterRegistry registry,
         Timer executionTimer,
         Timer idleTimer,
         @Nullable Timer deliveryTimer,
         ThreadBoundRunnable<T> delegate)
     {
-        this.thread = thread;
         this.registry = registry;
         this.executionTimer = executionTimer;
         this.idleTimer = idleTimer;
@@ -103,10 +98,6 @@ final class TimedThreadBoundRunnable<T> implements WrapperThreadBoundRunnable<T>
     @Override
     public T getKey() {
         return delegate.getKey();
-    }
-
-    public int getThread() {
-        return thread;
     }
 
     @Nonnull

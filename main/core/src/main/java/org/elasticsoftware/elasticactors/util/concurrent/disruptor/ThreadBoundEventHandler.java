@@ -21,16 +21,18 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 /**
  * @author Joost van de Wijgerd
  */
 public final class ThreadBoundEventHandler implements EventHandler<ThreadBoundEventWrapper> {
-    private final Consumer<List<ThreadBoundEvent>> delegate;
+    private final int thread;
+    private final BiConsumer<Integer, List<ThreadBoundEvent>> delegate;
     private final List<ThreadBoundEvent> batch;
 
-    public ThreadBoundEventHandler(Consumer<List<ThreadBoundEvent>> delegate, int maxBatchSize) {
+    public ThreadBoundEventHandler(int thread, BiConsumer<Integer, List<ThreadBoundEvent>> delegate, int maxBatchSize) {
+        this.thread = thread;
         this.delegate = delegate;
         this.batch = new ArrayList<>(maxBatchSize);
     }
@@ -40,7 +42,7 @@ public final class ThreadBoundEventHandler implements EventHandler<ThreadBoundEv
         batch.add(event.getWrappedEvent());
         if(endOfBatch) {
             try {
-                delegate.accept(batch);
+                delegate.accept(thread, batch);
             } finally {
                 batch.clear();
             }

@@ -1,6 +1,5 @@
 package org.elasticsoftware.elasticactors.util.concurrent.metrics;
 
-import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -29,9 +28,9 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
     private final ThreadBoundEventProcessor eventProcessor;
     private final ThreadBoundExecutorMonitor monitor;
 
-    private Counter[] completedEvents;
     private LongAdder globalQueuedEvents;
-    private Counter globalFinishedEvents;
+    private LongAdder[] completedEvents;
+    private LongAdder globalCompletedEvents;
     private LongAdder activeThreadsCount;
 
     protected TimedThreadBoundExecutor(
@@ -53,10 +52,15 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
             );
 
             int threadCount = getThreadCount();
-            
-            this.completedEvents = new Counter[threadCount];
+
             this.globalQueuedEvents = new LongAdder();
+            this.completedEvents = new LongAdder[threadCount];
+            this.globalCompletedEvents = new LongAdder();
             this.activeThreadsCount = new LongAdder();
+
+            for (int i = 0; i < threadCount; i++) {
+                this.completedEvents[i] = new LongAdder();
+            }
 
             Tags tags = monitor.getTags();
             MeterRegistry registry = monitor.getConfiguration().getRegistry();
@@ -71,13 +75,15 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
                 .baseUnit(BaseUnits.THREADS)
                 .register(registry);
 
-            this.globalFinishedEvents =
-                Counter.builder(monitor.createNameForSuffix("completed"))
-                    .tags(tags)
-                    .description(
-                        "The approximate total number of tasks that have completed processing")
-                    .baseUnit(BaseUnits.TASKS)
-                    .register(registry);
+            FunctionCounter.builder(
+                    monitor.createNameForSuffix("completed"),
+                    globalCompletedEvents,
+                    LongAdder::sum
+                )
+                .tags(tags)
+                .description("The approximate total number of tasks that have completed processing")
+                .baseUnit(BaseUnits.TASKS)
+                .register(registry);
 
             Gauge.builder(
                     monitor.createNameForSuffix("active"),
@@ -102,49 +108,61 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
             String structureName = getExecutorDataStructureName();
 
             for (int i = 0; i < threadCount; i++) {
-                Gauge.builder(monitor.createNameForSuffix(format(
-                        "%s.remaining.%d",
-                        structureName,
-                        i
-                    )), i, this::getCapacityForThread)
+                int threadName = i + 1;
+                Gauge.builder(
+                        monitor.createNameForSuffix(format(
+                            "%s.remaining.%d",
+                            structureName,
+                            threadName
+                        )),
+                        i,
+                        this::getCapacityForThread
+                    )
                     .tags(tags)
                     .description(format(
                         "The number of additional tasks the %s for thread %d can ideally accept "
                             + "without blocking",
                         structureName,
-                        i
+                        threadName
                     ))
                     .baseUnit(BaseUnits.TASKS)
                     .register(registry);
 
-                FunctionCounter.builder(monitor.createNameForSuffix(format(
-                        "%s.queued.%d",
-                        structureName,
-                        i
-                    )), i, this::getQueuedEventsForThread)
+                Gauge.builder(
+                        monitor.createNameForSuffix(format(
+                            "%s.queued.%d",
+                            structureName,
+                            threadName
+                        )),
+                        i,
+                        this::getQueuedEventsForThread
+                    )
                     .tags(tags)
                     .description(format(
                         "The number of tasks that that are queued for execution on the %s for "
                             + "thread %d",
                         structureName,
-                        i
+                        threadName
                     ))
                     .baseUnit(BaseUnits.TASKS)
                     .register(registry);
 
-                this.completedEvents[i] =
-                    Counter.builder(monitor.createNameForSuffix(format(
+                FunctionCounter.builder(
+                        monitor.createNameForSuffix(format(
                             "%s.completed.%d",
                             structureName,
-                            i
-                        )))
-                        .tags(tags)
-                        .description(format(
-                            "The number of tasks that have completed processing on thread %d",
-                            i
-                        ))
-                        .baseUnit(BaseUnits.TASKS)
-                        .register(registry);
+                            threadName
+                        )),
+                        this.completedEvents[i],
+                        LongAdder::sum
+                    )
+                    .tags(tags)
+                    .description(format(
+                        "The number of tasks that have completed processing on thread %d",
+                        threadName
+                    ))
+                    .baseUnit(BaseUnits.TASKS)
+                    .register(registry);
             }
         }
     }
@@ -160,78 +178,86 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
 
     protected abstract boolean isShuttingDown();
 
-    protected abstract void timedExecute(@Nonnull final ThreadBoundEvent event, final int thread);
+    protected abstract void timedExecute(final int thread, @Nonnull final ThreadBoundEvent event);
 
-    protected abstract void incrementQueuedEvents(int thread);
+    protected abstract void incrementQueuedEvents(int thread, int itemCount);
 
-    protected abstract void decrementQueuedEvents(int thread);
+    protected abstract void decrementQueuedEvents(int thread, int itemCount);
 
     protected final boolean isMeterEnabled() {
         return monitor != null;
     }
 
-    private void reportQueuedItem(int thread) {
+    private void reportQueuedItem(int thread, int itemCount) {
         if (isMeterEnabled()) {
             if (getLogger().isTraceEnabled()) {
                 getLogger().trace(
-                    "Increasing total number of queued events. "
-                        + "Thread {}. "
-                        + "Total before this increase: {}",
-                    thread,
-                    globalQueuedEvents.sum()
+                    "Reporting thread {} queued {} event(s). "
+                        + "Total number of queued events before this: {}. "
+                        + "Queued events on thread {} before this: {}",
+                    thread + 1,
+                    itemCount,
+                    globalQueuedEvents.sum(),
+                    thread + 1,
+                    getQueuedEventsForThread(thread)
                 );
             }
-            globalQueuedEvents.increment();
-            incrementQueuedEvents(thread);
+            globalQueuedEvents.add(itemCount);
+            incrementQueuedEvents(thread, itemCount);
         }
     }
 
-    private void reportTakenItem(int thread) {
+    private void reportTakenItem(int thread, int itemCount) {
         if (isMeterEnabled()) {
             if (getLogger().isTraceEnabled()) {
                 getLogger().trace(
-                    "Decreasing total number of queued events. "
-                        + "Thread {}. "
-                        + "Total before this increase: {}",
-                    thread,
-                    globalQueuedEvents.sum()
+                    "Reporting thread {} took {} event(s). "
+                        + "Total number of queued events before this: {}. "
+                        + "Queued events on thread {} before this: {}",
+                    thread + 1,
+                    itemCount,
+                    globalQueuedEvents.sum(),
+                    thread + 1,
+                    getQueuedEventsForThread(thread)
                 );
             }
-            globalQueuedEvents.decrement();
-            decrementQueuedEvents(thread);
+            globalQueuedEvents.add(-itemCount);
+            decrementQueuedEvents(thread, itemCount);
         }
     }
 
-    private void reportThreadStarted(int thread) {
+    private void reportThreadStarted(int thread, int itemCount) {
         if (getLogger().isTraceEnabled()) {
             getLogger().trace(
-                "Reporting thread {} started processing an event. "
+                "Reporting thread {} started processing {} event(s). "
                     + "Current number of active threads before this: {}",
-                thread,
+                thread + 1,
+                itemCount,
                 activeThreadsCount.sum()
             );
         }
         activeThreadsCount.increment();
         // An item gets taken from the queue when it starts processing
-        reportTakenItem(thread);
+        reportTakenItem(thread, itemCount);
     }
 
-    private void reportThreadFinished(int thread) {
+    private void reportThreadFinished(int thread, int itemCount) {
         if (getLogger().isTraceEnabled()) {
             getLogger().trace(
-                "Reporting thread {} finished processing an event. "
+                "Reporting thread {} finished processing {} event(s). "
                     + "Current number of active threads before this: {}. "
                     + "Completed tasks for this thread before this: {}. "
                     + "Total number of completed tasks before this: {}.",
-                thread,
+                thread + 1,
+                itemCount,
                 activeThreadsCount.sum(),
-                completedEvents[thread].count(),
-                globalFinishedEvents.count()
+                completedEvents[thread].sum(),
+                globalCompletedEvents.sum()
             );
         }
         activeThreadsCount.decrement();
-        completedEvents[thread].increment();
-        globalFinishedEvents.increment();
+        completedEvents[thread].add(itemCount);
+        globalCompletedEvents.add(itemCount);
     }
 
     @Override
@@ -239,112 +265,118 @@ public abstract class TimedThreadBoundExecutor implements ThreadBoundExecutor {
         if (isShuttingDown()) {
             throw new RejectedExecutionException("The system is shutting down.");
         }
-        int thread = getBucket(event);
-        reportQueuedItem(thread);
+        int thread = getThread(event);
+        reportQueuedItem(thread, 1);
         try {
-            timedExecute(prepare(thread, event), thread);
+            timedExecute(thread, prepare(event));
         } catch (Exception e) {
-            reportTakenItem(thread);
+            reportTakenItem(thread, 1);
             throw e;
         }
     }
 
-    private int getBucket(@Nonnull final ThreadBoundEvent event) {
+    private int getThread(@Nonnull final ThreadBoundEvent event) {
         return Math.abs(event.getKey().hashCode()) % getThreadCount();
     }
 
     @Nonnull
-    private ThreadBoundEvent prepare(int thread, @Nonnull ThreadBoundEvent event)
+    private ThreadBoundEvent prepare(@Nonnull ThreadBoundEvent event)
     {
         if (event instanceof ThreadBoundRunnable) {
-            return wrapRunnable(thread, (ThreadBoundRunnable) event);
+            return wrapRunnable((ThreadBoundRunnable) event);
         } else {
-            return wrapEvent(thread, event);
+            return wrapEvent(event);
         }
     }
 
-    protected final void processBatch(@Nonnull List<ThreadBoundEvent> batch) {
-        reportStart(batch);
+    protected final void processBatch(int thread, @Nonnull List<ThreadBoundEvent> batch) {
+        reportStartBatch(thread, batch);
         try {
-            eventProcessor.process(unwrap(batch));
+            eventProcessor.process(unwrapBatch(batch));
         } finally {
-            reportEnd(batch);
+            reportEndBatch(thread, batch);
         }
     }
 
-    protected final void processEvent(@Nonnull ThreadBoundEvent event) {
-        reportStart(event);
+    protected final void processEvent(int thread, @Nonnull ThreadBoundEvent event) {
+        reportStart(thread, event);
         try {
             eventProcessor.process(unwrap(event));
         } finally {
-            reportEnd(event);
+            reportEnd(thread, event);
         }
     }
 
-    private void reportStart(@Nonnull List<ThreadBoundEvent> events) {
+    private void reportStartBatch(int thread, @Nonnull List<ThreadBoundEvent> events) {
         if (isMeterEnabled()) {
+            reportThreadStarted(thread, events.size());
             for (ThreadBoundEvent event : events) {
-                reportStart(event);
+                reportStart(thread, event, true);
             }
         }
     }
 
-    private void reportStart(@Nonnull ThreadBoundEvent event) {
+    private void reportStart(int thread, @Nonnull ThreadBoundEvent event) {
+        reportStart(thread, event, false);
+    }
+
+    private void reportStart(int thread, @Nonnull ThreadBoundEvent event, boolean isBatch) {
         if (isMeterEnabled()) {
             if (event instanceof TimedThreadBoundEvent) {
-                TimedThreadBoundEvent<?> timedEvent = (TimedThreadBoundEvent<?>) event;
-                timedEvent.reportStart();
-                reportThreadStarted(timedEvent.getThread());
-            } else if (event instanceof TimedThreadBoundRunnable) {
-                TimedThreadBoundRunnable timedRunnable = (TimedThreadBoundRunnable) event;
-                reportThreadStarted(timedRunnable.getThread());
+                ((TimedThreadBoundEvent<?>) event).reportStart();
+            }
+            if (!isBatch) {
+                reportThreadStarted(thread, 1);
             }
         }
     }
 
-    private void reportEnd(@Nonnull List<ThreadBoundEvent> events) {
+    private void reportEndBatch(int thread, @Nonnull List<ThreadBoundEvent> events) {
         if (isMeterEnabled()) {
+            reportThreadFinished(thread, events.size());
             for (ThreadBoundEvent event : events) {
-                reportEnd(event);
+                reportEnd(thread, event, true);
             }
         }
     }
 
-    private void reportEnd(@Nonnull ThreadBoundEvent event) {
+    private void reportEnd(int thread, @Nonnull ThreadBoundEvent event) {
+        reportEnd(thread, event, false);
+    }
+
+    private void reportEnd(int thread, @Nonnull ThreadBoundEvent event, boolean isBatch) {
         if (isMeterEnabled()) {
             if (event instanceof TimedThreadBoundEvent) {
-                TimedThreadBoundEvent<?> timedThreadBoundEvent = (TimedThreadBoundEvent<?>) event;
-                timedThreadBoundEvent.reportEnd();
-                reportThreadFinished(timedThreadBoundEvent.getThread());
-            } else if (event instanceof TimedThreadBoundRunnable) {
-                TimedThreadBoundRunnable timedRunnable = (TimedThreadBoundRunnable) event;
-                reportThreadFinished(timedRunnable.getThread());
+                ((TimedThreadBoundEvent<?>) event).reportEnd();
+            }
+            if (!isBatch) {
+                reportThreadFinished(thread, 1);
             }
         }
     }
 
     @Nonnull
-    private ThreadBoundEvent wrapRunnable(int thread, @Nonnull ThreadBoundRunnable event)
+    private ThreadBoundRunnable wrapRunnable(@Nonnull ThreadBoundRunnable runnable)
     {
         if (getManager().isTracingEnabled()) {
-            event = TraceThreadBoundRunnable.wrap(event);
+            runnable = TraceThreadBoundRunnable.wrap(runnable);
         }
         if (isMeterEnabled()) {
             // Wrapping metrics must always be the last one
-            event = TimedThreadBoundRunnable.wrap(thread, event, monitor);
+            runnable = TimedThreadBoundRunnable.wrap(runnable, monitor);
         }
-        return event;
+        return runnable;
     }
 
     @Nonnull
-    private ThreadBoundEvent wrapEvent(int thread, @Nonnull ThreadBoundEvent event) {
+    private ThreadBoundEvent wrapEvent(@Nonnull ThreadBoundEvent event) {
         if (isMeterEnabled()) {
-            event = TimedThreadBoundEvent.wrap(thread, event, monitor);
+            event = TimedThreadBoundEvent.wrap(event, monitor);
         }
         return event;
     }
 
-    private List<ThreadBoundEvent> unwrap(@Nonnull List<ThreadBoundEvent> events) {
+    private List<ThreadBoundEvent> unwrapBatch(@Nonnull List<ThreadBoundEvent> events) {
         if (needsUnwrapping(events)) {
             if (events.size() == 1) {
                 return Collections.singletonList(unwrap(events.get(0)));
