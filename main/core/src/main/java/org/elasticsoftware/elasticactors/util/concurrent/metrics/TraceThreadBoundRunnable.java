@@ -4,12 +4,13 @@ import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
+import org.elasticsoftware.elasticactors.util.concurrent.WrapperThreadBoundRunnable;
 
 import javax.annotation.Nonnull;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 
-final class TraceThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
+final class TraceThreadBoundRunnable<T> implements WrapperThreadBoundRunnable<T> {
 
     private final ThreadBoundRunnable<T> delegate;
     private final TraceContext parent;
@@ -39,5 +40,11 @@ final class TraceThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
     @Override
     public T getKey() {
         return delegate.getKey();
+    }
+
+    @Nonnull
+    @Override
+    public ThreadBoundRunnable<T> getWrappedRunnable() {
+        return delegate;
     }
 }

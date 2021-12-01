@@ -20,6 +20,7 @@ import io.micrometer.core.instrument.Timer;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.util.concurrent.MessageHandlingThreadBoundRunnable;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
+import org.elasticsoftware.elasticactors.util.concurrent.WrapperThreadBoundRunnable;
 import org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundExecutorMonitor.TimerType;
 
 import javax.annotation.Nonnull;
@@ -30,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * A wrapper for a {@link ThreadBoundRunnable} with idle and execution timings.
  */
-final class TimedThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
+final class TimedThreadBoundRunnable<T> implements WrapperThreadBoundRunnable<T> {
     private final int thread;
     private final MeterRegistry registry;
     private final Timer executionTimer;
@@ -100,5 +101,11 @@ final class TimedThreadBoundRunnable<T> implements ThreadBoundRunnable<T> {
 
     public int getThread() {
         return thread;
+    }
+
+    @Nonnull
+    @Override
+    public ThreadBoundRunnable<T> getWrappedRunnable() {
+        return delegate;
     }
 }

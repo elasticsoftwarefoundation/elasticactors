@@ -11,6 +11,7 @@ import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.util.concurrent.MessageHandlingThreadBoundRunnable;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
+import org.elasticsoftware.elasticactors.util.concurrent.WrapperThreadBoundRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -103,6 +104,9 @@ public final class ThreadBoundExecutorMonitor {
 
     @Nonnull
     public Map<TimerType, Timer> getTimersFor(ThreadBoundRunnable<?> runnable) {
+        if (runnable instanceof WrapperThreadBoundRunnable) {
+            runnable = ((WrapperThreadBoundRunnable<?>) runnable).unwrap();
+        }
         if (runnable instanceof MessageHandlingThreadBoundRunnable) {
             MessageHandlingThreadBoundRunnable<?> mhtbRunnable =
                 (MessageHandlingThreadBoundRunnable<?>) runnable;
