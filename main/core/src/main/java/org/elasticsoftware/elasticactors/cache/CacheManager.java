@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -170,9 +171,12 @@ public class CacheManager<K,V> {
          */
         @Override
         public ConcurrentMap<K, V> asMap() {
-            ConcurrentMap<K, V> result = new ConcurrentHashMap<>();
-            for (CacheKey key : segmentIndex.get(segmentKey)) {
-                V value = backingCache.getIfPresent(key);
+            // Getting the cache as a map here, so we don't skew the statistics
+            Map<CacheKey, V> backingCacheAsMap = backingCache.asMap();
+            Collection<CacheKey> cacheKeysForSegment = segmentIndex.get(segmentKey);
+            ConcurrentMap<K, V> result = new ConcurrentHashMap<>(cacheKeysForSegment.size());
+            for (CacheKey key : cacheKeysForSegment) {
+                V value = backingCacheAsMap.get(key);
                 if (value != null) {
                     result.put((K) key.cacheKey, value);
                 }
