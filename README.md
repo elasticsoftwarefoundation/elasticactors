@@ -273,6 +273,15 @@ ea.scan.packages=org.elasticsoftware.elasticactors
 # Default: 10240
 ea.nodeCache.maximumSize=10240
 
+# The period in milliseconds between cache expiration checks for node-bound actors.
+# Expirable actors are checked for expiration when they receive messages, as well as by a
+# scheduled executor thread that runs every N milliseconds and removed expired actors.
+# This key allows you to adjust how often this thread will run. There is no maximum value, but it 
+# enforces a minimum of 500ms so it can't be made to run so frequently.
+# Default: 30000
+# Minimum: 500
+ea.nodeCache.expirationCheckPeriod=30000
+
 # Maximum number of cached Persistent Actors.
 # Default: 10240
 ea.shardCache.maximumSize=10240
@@ -552,6 +561,21 @@ ea.deserializationCache.enabled=false
 # Changes the logging level used when logging unhandled message types in MethodActor.
 # Default: WARN
 ea.logging.messages.unhandled.level=WARN
+
+# Changes the minimum timeout, in milliseconds, for Temporary Actors.
+# It will be clamped to the closest positive integer, if the provided number is negative or 0.
+# Default: 1000 (1 second)
+ea.tempActor.timeout.min=1000
+
+# Changes the default timeout, in milliseconds, for Temporary Actors.
+# It will be clamped so it sits between the minimum and maximum configured numbers.
+# Default: 86400000 (one 24h day)
+ea.tempActor.timeout.default=86400000
+
+# Changes the maximum timeout, in milliseconds, for Temporary Actors.
+# It will be champed to be larger than or equal to the minimum configured number.
+# Default: 172800000 (two 24h days)
+ea.tempActor.timeout.max=172800000
 ```
 
 

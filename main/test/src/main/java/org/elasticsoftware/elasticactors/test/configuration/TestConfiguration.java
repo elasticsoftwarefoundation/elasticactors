@@ -168,10 +168,16 @@ public class TestConfiguration extends AsyncConfigurerSupport {
 
     @Bean(name = {"objectMapperBuilder"})
     public ObjectMapperBuilder createObjectMapperBuilder(
+        Environment env,
             SimpleScheduler simpleScheduler,
             TestInternalActorSystems actorRefFactory) {
+        String basePackages = env.getProperty("ea.scan.packages",String.class,"");
+        Boolean useAfterburner = env.getProperty("ea.base.useAfterburner",Boolean.class,Boolean.FALSE);
         // @todo: fix version
-        return new ObjectMapperBuilder(actorRefFactory, simpleScheduler, "1.0.0");
+        ObjectMapperBuilder builder =
+            new ObjectMapperBuilder(actorRefFactory, simpleScheduler, basePackages, "1.0.0");
+        builder.setUseAfterBurner(useAfterburner);
+        return builder;
     }
 
     @Bean(name = {"objectMapper"})
@@ -211,8 +217,11 @@ public class TestConfiguration extends AsyncConfigurerSupport {
         @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         int maximumSize = env.getProperty("ea.nodeCache.maximumSize",Integer.class,10240);
+        long expirationCheckPeriod =
+            env.getProperty("ea.nodeCache.expirationCheckPeriod", Long.class, 30000L);
         return new NodeActorCacheManager(
             maximumSize,
+            expirationCheckPeriod,
             MicrometerConfiguration.build(env, meterRegistry, "nodeActorCache", tagCustomizer)
         );
     }

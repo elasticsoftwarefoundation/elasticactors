@@ -19,10 +19,10 @@ package org.elasticsoftware.elasticactors.cluster;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorRef;
+import org.elasticsoftware.elasticactors.concurrent.ActorCompletableFuture;
 import org.reactivestreams.Publisher;
 
 import javax.annotation.Nullable;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * @author Joost van de Wijgerd
@@ -63,15 +63,15 @@ public abstract class BaseDisconnectedActorRef implements ActorRef, ActorContain
     protected abstract String getExceptionMessage();
 
     @Override
-    public final <T> CompletableFuture<T> ask(Object message, Class<T> responseType) {
-        CompletableFuture<T> future = new CompletableFuture<>();
+    public final <T> ActorCompletableFuture<T> ask(Object message, Class<T> responseType) {
+        ActorCompletableFuture<T> future = new ActorCompletableFuture<>();
         future.completeExceptionally(new IllegalStateException(getExceptionMessage()));
         return future;
     }
 
     @Override
-    public <T> CompletableFuture<T> ask(Object message, Class<T> responseType, Boolean persistOnResponse) {
-        CompletableFuture<T> future = new CompletableFuture<>();
+    public <T> ActorCompletableFuture<T> ask(Object message, Class<T> responseType, Boolean persistOnResponse) {
+        ActorCompletableFuture<T> future = new ActorCompletableFuture<>();
         future.completeExceptionally(new IllegalStateException(getExceptionMessage()));
         return future;
     }

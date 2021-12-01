@@ -36,6 +36,14 @@ public abstract class TypedActor<T> implements ElasticActor<T> {
 
     protected final Logger logger = initLogger();
 
+    /**
+     * Method used to initialize this actor's logger. This is used to optimize actor classes that
+     * create many instances. This is usually not the case for user-created actors, but it can be
+     * for many actors created by the framework (such as temporary actors).
+     *
+     * If that's not the case, there is no need to override this method.
+     * Therefore, a default implementation is provided.
+     */
     protected Logger initLogger() {
         return LoggerFactory.getLogger(getClass());
     }
