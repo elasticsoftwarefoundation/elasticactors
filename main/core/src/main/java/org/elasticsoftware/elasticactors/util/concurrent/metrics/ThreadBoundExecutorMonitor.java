@@ -41,7 +41,7 @@ public final class ThreadBoundExecutorMonitor {
     }
 
     // Key pool to prevent a lot of garbage being generated
-    private final ThreadLocal<TimerCacheKey> keyPool = ThreadLocal.withInitial(TimerCacheKey::new);
+    private final static ThreadLocal<TimerCacheKey> keyPool = ThreadLocal.withInitial(TimerCacheKey::new);
 
     private final MicrometerConfiguration configuration;
     private final Map<TimerType, Timer> timers;
@@ -137,12 +137,7 @@ public final class ThreadBoundExecutorMonitor {
                     return timer;
                 } else {
                     // Creating a new key here so the shared one is not put on the map
-                    TimerCacheKey newKey = TimerCacheKey.of(
-                        actorClass,
-                        messageClass,
-                        internalMessageClass,
-                        runnableClass
-                    );
+                    TimerCacheKey newKey = pooledKey.copy();
                     return timersMap.computeIfAbsent(newKey, this::createTimersForKey);
                 }
             }
@@ -214,6 +209,7 @@ public final class ThreadBoundExecutorMonitor {
         private Class<?> messageClass;
         private Class<? extends InternalMessage> internalMessageClass;
         private Class<? extends ThreadBoundRunnable> runnableClass;
+        private int hashCode;
 
         // Fill this key, in case it's coming from the pool
         public TimerCacheKey fill(
@@ -226,7 +222,18 @@ public final class ThreadBoundExecutorMonitor {
             this.messageClass = messageClass;
             this.internalMessageClass = internalMessageClass;
             this.runnableClass = runnableClass;
+            this.hashCode = internalHashCode();
             return this;
+        }
+
+        public TimerCacheKey copy() {
+            TimerCacheKey copy = new TimerCacheKey();
+            copy.actorClass = this.actorClass;
+            copy.messageClass = this.messageClass;
+            copy.internalMessageClass = this.internalMessageClass;
+            copy.runnableClass = this.runnableClass;
+            copy.hashCode = this.hashCode;
+            return copy;
         }
 
         public static TimerCacheKey of(
@@ -268,6 +275,10 @@ public final class ThreadBoundExecutorMonitor {
 
         @Override
         public int hashCode() {
+            return hashCode;
+        }
+
+        private int internalHashCode() {
             int result = actorClass != null ? actorClass.hashCode() : 0;
             result = 31 * result + (messageClass != null ? messageClass.hashCode() : 0);
             result =
