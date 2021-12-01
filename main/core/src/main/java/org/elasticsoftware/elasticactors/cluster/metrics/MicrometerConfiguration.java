@@ -100,7 +100,7 @@ public final class MicrometerConfiguration {
                 tagMessageWrapperTypes,
                 tagTaskTypes,
                 meterRegistry,
-                sanitizePrefix(componentNamePrefix) + componentName,
+                sanitizePrefix(componentNamePrefix) + "elastic.actors." + componentName,
                 prefix,
                 tagCustomizer != null ? tags.and(tagCustomizer.get(componentName)) : tags,
                 allowedActorTypesForTagging,
