@@ -103,13 +103,13 @@ public final class ThreadBoundExecutorMonitor {
     }
 
     @Nonnull
-    public Map<TimerType, Timer> getTimersFor(ThreadBoundRunnable<?> runnable) {
-        if (runnable instanceof WrapperThreadBoundRunnable) {
-            runnable = ((WrapperThreadBoundRunnable<?>) runnable).unwrap();
-        }
-        if (runnable instanceof MessageHandlingThreadBoundRunnable) {
+    public Map<TimerType, Timer> getTimersFor(final ThreadBoundRunnable<?> runnable) {
+        ThreadBoundRunnable<?> unwrapped = runnable instanceof WrapperThreadBoundRunnable
+            ? ((WrapperThreadBoundRunnable<?>) runnable).unwrap()
+            : runnable;
+        if (unwrapped instanceof MessageHandlingThreadBoundRunnable) {
             MessageHandlingThreadBoundRunnable<?> mhtbRunnable =
-                (MessageHandlingThreadBoundRunnable<?>) runnable;
+                (MessageHandlingThreadBoundRunnable<?>) unwrapped;
             Class<? extends ElasticActor> actorClass =
                 shouldAddTagsForActor(mhtbRunnable.getActorType())
                     ? mhtbRunnable.getActorType()

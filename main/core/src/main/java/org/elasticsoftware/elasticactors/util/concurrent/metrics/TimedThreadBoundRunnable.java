@@ -79,12 +79,18 @@ final class TimedThreadBoundRunnable<T> implements WrapperThreadBoundRunnable<T>
     @Override
     public void run() {
         idleSample.stop(idleTimer);
-        if (deliveryTimer != null && delegate instanceof MessageHandlingThreadBoundRunnable) {
-            MessageHandlingThreadBoundRunnable<?> mhtbRunnable =
-                (MessageHandlingThreadBoundRunnable<?>) delegate;
-            long timestamp = UUIDTools.toUnixTimestamp(mhtbRunnable.getInternalMessage().getId());
-            long delay = (System.currentTimeMillis() - timestamp);
-            deliveryTimer.record(delay, TimeUnit.MILLISECONDS);
+        if (deliveryTimer != null) {
+            ThreadBoundRunnable<?> unwrapped = delegate instanceof WrapperThreadBoundRunnable
+                ? ((WrapperThreadBoundRunnable<?>) delegate).unwrap()
+                : delegate;
+            if (unwrapped instanceof MessageHandlingThreadBoundRunnable) {
+                MessageHandlingThreadBoundRunnable<?> mhtbRunnable =
+                    (MessageHandlingThreadBoundRunnable<?>) unwrapped;
+                long timestamp =
+                    UUIDTools.toUnixTimestamp(mhtbRunnable.getInternalMessage().getId());
+                long delay = (System.currentTimeMillis() - timestamp);
+                deliveryTimer.record(delay, TimeUnit.MILLISECONDS);
+            }
         }
         Timer.Sample executionSample = Timer.start(registry);
         try {
