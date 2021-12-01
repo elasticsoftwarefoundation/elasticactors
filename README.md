@@ -670,7 +670,7 @@ ea.metrics.micrometer.namePrefix=prefix
 ea.metrics.micrometer.[component_name].enabled=false
 
 # Optional metric prefix for a given component.
-ea.metrics.micrometer.[component_name].prefix="ea"
+ea.metrics.micrometer.[component_name].prefix=ea
 
 # Optional custom tags for a given component.
 # Keep in mind that all meters created by Elastic Actors will contain at least the following tags:
