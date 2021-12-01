@@ -44,6 +44,9 @@ import java.util.concurrent.ExecutionException;
  */
 public class CacheManager<K,V> {
 
+    // Pooling keys for read-only operations
+    private final static ThreadLocal<CacheKey> keyPool = ThreadLocal.withInitial(CacheKey::new);
+
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final Cache<CacheKey,V> backingCache;
@@ -94,12 +97,12 @@ public class CacheManager<K,V> {
 
         @Override
         public V getIfPresent(@Nonnull Object key) {
-            return backingCache.getIfPresent(new CacheKey(segmentKey,key));
+            return backingCache.getIfPresent(keyPool.get().fill(segmentKey, key));
         }
 
         @Override
         public V get(@Nonnull K key, @Nonnull Callable<? extends V> valueLoader) throws ExecutionException {
-            CacheKey cacheKey = new CacheKey(segmentKey,key);
+            CacheKey cacheKey = new CacheKey().fill(segmentKey, key);
             V value = backingCache.get(cacheKey,valueLoader);
             segmentIndex.put(segmentKey,cacheKey);
             return value;
@@ -107,14 +110,14 @@ public class CacheManager<K,V> {
 
         @Override
         public void invalidate(@Nonnull Object key) {
-            CacheKey cacheKey = new CacheKey(segmentKey,key);
+            CacheKey cacheKey = keyPool.get().fill(segmentKey, key);
             backingCache.invalidate(cacheKey);
             segmentIndex.remove(segmentKey,cacheKey);
         }
 
         @Override
         public void put(@Nonnull K key, @Nonnull V value) {
-            CacheKey cacheKey = new CacheKey(segmentKey,key);
+            CacheKey cacheKey = new CacheKey().fill(segmentKey, key);
             backingCache.put(cacheKey,value);
             segmentIndex.put(segmentKey,cacheKey);
         }
@@ -123,8 +126,9 @@ public class CacheManager<K,V> {
         @Override
         public ImmutableMap<K, V> getAllPresent(@Nonnull Iterable<?> keys) {
             ImmutableMap.Builder<K,V> result = ImmutableMap.builder();
+            CacheKey pooledKey = keyPool.get();
             for (Object key : keys) {
-                V value = backingCache.getIfPresent(new CacheKey(segmentKey,key));
+                V value = backingCache.getIfPresent(pooledKey.fill(segmentKey, key));
                 if(value != null) {
                     result.put((K) key, value);
                 }
@@ -167,14 +171,23 @@ public class CacheManager<K,V> {
     }
 
     private static final class CacheKey {
-        private final Object segmentKey;
-        private final Object cacheKey;
-        private final int hashCode;
+        private Object segmentKey;
+        private Object cacheKey;
+        private int hashCode;
 
-        private CacheKey(Object segmentKey, Object cacheKey) {
+        public CacheKey fill(Object segmentKey, Object cacheKey) {
             this.segmentKey = segmentKey;
             this.cacheKey = cacheKey;
             this.hashCode = (segmentKey.hashCode() * 31) + cacheKey.hashCode();
+            return this;
+        }
+
+        public CacheKey copy() {
+            CacheKey copy = new CacheKey();
+            copy.segmentKey = this.segmentKey;
+            copy.cacheKey = this.cacheKey;
+            copy.hashCode = this.hashCode;
+            return copy;
         }
 
         @Override
