@@ -926,11 +926,12 @@ public final class KafkaActorThread extends Thread {
         }
     }
 
-    private void handleInternalMessage(ManagedActorContainer managedActorContainer, InternalMessage im) {
+    private void handleInternalMessage(
+        ManagedActorContainer managedActorContainer,
+        InternalMessage internalMessage)
+    {
         // assumption here is that all receivers are for the same shard
-        boolean needsCopy = im.getReceivers().size() > 1;
-        im.getReceivers().forEach(actorRef -> {
-            InternalMessage internalMessage = (needsCopy) ? im.copyOf() : im;
+        internalMessage.getReceivers().forEach(actorRef -> {
             if(actorRef.getActorId() != null) {
                 handleActorMessage(managedActorContainer, actorRef, internalMessage);
             } else {

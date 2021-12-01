@@ -232,23 +232,6 @@ public final class DefaultInternalMessage extends AbstractTracedMessage
     }
 
     @Override
-    public InternalMessage copyOf() {
-        return new DefaultInternalMessage(
-            id,
-            sender,
-            receivers,
-            payload,
-            payloadClass,
-            messageQueueAffinityKey,
-            durable,
-            undeliverable,
-            timeout,
-            getTraceContext(),
-            getCreationContext()
-        );
-    }
-
-    @Override
     public ImmutableMap<Integer, InternalMessage> splitInBuckets(Hasher hasher, int buckets) {
         return receivers.size() <= 1
             ? ImmutableMap.of(calculateBucketForEmptyOrSingleActor(receivers, hasher, buckets), this)

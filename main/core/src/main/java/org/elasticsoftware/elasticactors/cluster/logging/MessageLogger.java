@@ -10,7 +10,6 @@ import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageToStringConverter;
-import org.elasticsoftware.elasticactors.util.ArrayUtils;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +18,7 @@ import java.nio.ByteBuffer;
 import java.util.function.Function;
 
 import static org.elasticsoftware.elasticactors.tracing.TracingUtils.shorten;
+import static org.elasticsoftware.elasticactors.util.ArrayUtils.contains;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
@@ -70,7 +70,7 @@ public final class MessageLogger {
     {
         if (messageClass != null) {
             Message.LogFeature[] logFeatures = loggingSettings.processFeatures(messageClass);
-            return ArrayUtils.contains(logFeatures, Message.LogFeature.TIMING);
+            return contains(logFeatures, Message.LogFeature.TIMING);
         }
         return false;
     }
@@ -81,7 +81,7 @@ public final class MessageLogger {
     {
         if (messageClass != null) {
             Message.LogFeature[] logFeatures = loggingSettings.processFeatures(messageClass);
-            return ArrayUtils.contains(logFeatures, Message.LogFeature.CONTENTS);
+            return contains(logFeatures, Message.LogFeature.CONTENTS);
         }
         return false;
     }

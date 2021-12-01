@@ -186,17 +186,16 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     }
 
     @Override
-    public void handleMessage(final InternalMessage im,
-                              final MessageHandlerEventListener mhel) {
-        // we only need to copy if there are more than one receivers
-        boolean needsCopy = false;
+    public void handleMessage(
+        final InternalMessage internalMessage,
+        final MessageHandlerEventListener mhel)
+    {
         MessageHandlerEventListener messageHandlerEventListener = mhel;
-        if(im.getReceivers().size() > 1) {
-            needsCopy = true;
-            messageHandlerEventListener = new MultiMessageHandlerEventListener(mhel, im.getReceivers().size());
+        if (internalMessage.getReceivers().size() > 1) {
+            messageHandlerEventListener =
+                new MultiMessageHandlerEventListener(mhel, internalMessage.getReceivers().size());
         }
-        for (ActorRef receiverRef : im.getReceivers()) {
-            InternalMessage internalMessage = (needsCopy) ? im.copyOf() : im;
+        for (ActorRef receiverRef : internalMessage.getReceivers()) {
             if(receiverRef.getActorId() != null) {
                 try {
                     // load persistent actor from cache or persistent store
