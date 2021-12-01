@@ -72,6 +72,7 @@ public final class MicrometerConfiguration {
             String clusterName = env.getRequiredProperty("ea.cluster");
             Tags tags = Tags.of(
                 "elastic.actors.generated", "true",
+                "elastic.actors.component.name", componentName,
                 "elastic.actors.node.id", nodeId,
                 "elastic.actors.cluster.name", clusterName
             );

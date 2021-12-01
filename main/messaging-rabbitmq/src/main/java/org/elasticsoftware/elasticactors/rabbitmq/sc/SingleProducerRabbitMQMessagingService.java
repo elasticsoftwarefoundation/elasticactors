@@ -135,7 +135,7 @@ public final class SingleProducerRabbitMQMessagingService
         if (micrometerConfiguration != null) {
             MetricsCollector metricsCollector = new MicrometerMetricsCollector(
                 micrometerConfiguration.getRegistry(),
-                micrometerConfiguration.getMetricPrefix(),
+                micrometerConfiguration.getMetricPrefix() + "rabbitmq",
                 micrometerConfiguration.getTags()
             );
             connectionFactory.setMetricsCollector(metricsCollector);
