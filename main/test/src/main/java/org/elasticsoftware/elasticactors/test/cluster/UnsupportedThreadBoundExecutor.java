@@ -36,4 +36,9 @@ public final class UnsupportedThreadBoundExecutor<T extends ThreadBoundEvent<?>>
     public int getThreadCount() {
         return 1;
     }
+
+    @Override
+    public void init() {
+
+    }
 }

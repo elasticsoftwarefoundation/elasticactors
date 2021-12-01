@@ -50,6 +50,7 @@ public final class DirectMessageAcker implements MessageAcker {
 
     @Override
     public void start() {
+        logger.info("Using MessageAcker [{}]", getClass().getSimpleName());
         // nothing to do here
     }
 

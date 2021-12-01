@@ -20,11 +20,14 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
+import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.tasks.ActorLifecycleTask;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
+import org.elasticsoftware.elasticactors.util.concurrent.MessageHandlingThreadBoundRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,9 +38,11 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  *
  * @author Joost van de Wijged
  */
-public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
-    private static final Logger log = LoggerFactory.getLogger(HandleUndeliverableMessageTask.class);
+final class HandleUndeliverableMessageTask
+    extends ActorLifecycleTask
+    implements MessageHandlingThreadBoundRunnable<String> {
 
+    private static final Logger log = LoggerFactory.getLogger(HandleUndeliverableMessageTask.class);
 
     HandleUndeliverableMessageTask(
         InternalActorSystem actorSystem,
@@ -46,7 +51,9 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
         InternalMessage internalMessage,
         PersistentActor persistentActor,
         PersistentActorRepository persistentActorRepository,
-        MessageHandlerEventListener messageHandlerEventListener)
+        MessageHandlerEventListener messageHandlerEventListener,
+        MetricsSettings metricsSettings,
+        LoggingSettings loggingSettings)
     {
         super(
             null,
@@ -57,8 +64,8 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
             receiverRef,
             messageHandlerEventListener,
             internalMessage,
-            null,
-            null
+            metricsSettings,
+            loggingSettings
         );
     }
 
@@ -69,6 +76,7 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
                                        InternalMessage internalMessage) {
         try {
             Object message = deserializeMessage(actorSystem, internalMessage);
+            logMessageContents(message);
             try {
                 receiver.onUndeliverable(internalMessage.getSender(), message);
                 return shouldUpdateState(receiver, message);
@@ -89,5 +97,25 @@ public final class HandleUndeliverableMessageTask extends ActorLifecycleTask {
                     internalMessage.getPayloadClass(), actorSystem.getName(), e);
             return false;
         }
+    }
+
+    @Override
+    protected boolean shouldLogMessageInformation() {
+        return true;
+    }
+
+    @Override
+    public Class<? extends ElasticActor> getActorType() {
+        return receiver.getClass();
+    }
+
+    @Override
+    public Class<?> getMessageClass() {
+        return unwrapMessageClass(internalMessage);
+    }
+
+    @Override
+    public InternalMessage getInternalMessage() {
+        return internalMessage;
     }
 }

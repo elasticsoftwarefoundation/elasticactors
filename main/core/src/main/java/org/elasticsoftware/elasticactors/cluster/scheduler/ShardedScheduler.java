@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors.cluster.scheduler;
 
+import io.micrometer.core.instrument.binder.jvm.ExecutorServiceMetrics;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorContextHolder;
@@ -25,6 +26,7 @@ import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
 import org.elasticsoftware.elasticactors.messaging.ScheduledMessageImpl;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
@@ -34,6 +36,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
@@ -63,11 +66,24 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
     private ScheduledExecutorService scheduledExecutorService;
     private final ConcurrentHashMap<ShardKey, ConcurrentHashMap<ScheduledMessageKey, ScheduledFuture<?>>> scheduledFutures = new ConcurrentHashMap<>();
     private final int numberOfWorkers;
+    private final MicrometerConfiguration micrometerConfiguration;
 
     @PostConstruct
-    public void init() {
+    public synchronized void init() {
         logger.info("Initializing Sharded Cluster Scheduler with {} worker threads", numberOfWorkers);
-        scheduledExecutorService = Executors.newScheduledThreadPool(numberOfWorkers, new DaemonThreadFactory("SCHEDULER"));
+        ScheduledExecutorService scheduler =
+            Executors.newScheduledThreadPool(numberOfWorkers, new DaemonThreadFactory("SCHEDULER"));
+        if (micrometerConfiguration != null) {
+            scheduledExecutorService = ExecutorServiceMetrics.monitor(
+                micrometerConfiguration.getRegistry(),
+                scheduler,
+                micrometerConfiguration.getComponentName(),
+                micrometerConfiguration.getMetricPrefix(),
+                micrometerConfiguration.getTags()
+            );
+        } else {
+            scheduledExecutorService = scheduler;
+        }
     }
 
     @PreDestroy
@@ -77,11 +93,13 @@ public final class ShardedScheduler implements SchedulerService,ScheduledMessage
     }
 
     public ShardedScheduler() {
-        this(Runtime.getRuntime().availableProcessors());
+        this(Runtime.getRuntime().availableProcessors(), null);
     }
 
-    public ShardedScheduler(int numberOfWorkers) {
+    public ShardedScheduler(int numberOfWorkers, @Nullable
+        MicrometerConfiguration micrometerConfiguration) {
         this.numberOfWorkers = numberOfWorkers;
+        this.micrometerConfiguration = micrometerConfiguration;
     }
 
     @Inject

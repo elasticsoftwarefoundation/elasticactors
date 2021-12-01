@@ -16,6 +16,7 @@
 
 package org.elasticsoftware.elasticactors.configuration;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.elasticsoftware.elasticactors.cassandra.cluster.CassandraActorSystemEventListenerRepository;
 import org.elasticsoftware.elasticactors.cassandra.cluster.scheduler.CassandraScheduledMessageRepository;
 import org.elasticsoftware.elasticactors.cassandra.serialization.CompressingSerializer;
@@ -25,18 +26,19 @@ import org.elasticsoftware.elasticactors.cassandra.state.PersistentActorUpdateEv
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRepository;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRepository;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.PersistentActorSerializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ScheduledMessageDeserializer;
 import org.elasticsoftware.elasticactors.state.PersistentActorRepository;
-import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Joost van de Wijgerd
@@ -51,16 +53,17 @@ public class BackplaneConfiguration {
     @Bean(name = {"asyncUpdateExecutor"}, destroyMethod = "shutdown")
     public ThreadBoundExecutor createAsyncUpdateExecutor(
         Environment env,
-        CassandraSessionManager cassandraSessionManager)
+        CassandraSessionManager cassandraSessionManager,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
-        final int workers = env.getProperty("ea.asyncUpdateExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
-        final int batchSize = env.getProperty("ea.asyncUpdateExecutor.batchSize",Integer.class,20);
-        return new ThreadBoundExecutorImpl(
-            new PersistentActorUpdateEventProcessor(
-                cassandraSessionManager.getPersistentActorsColumnFamilyTemplate()),
-            batchSize,
-            new DaemonThreadFactory("UPDATE-EXECUTOR-WORKER"),
-            workers
+        return ThreadBoundExecutorBuilder.buildBlockingQueueThreadBoundExecutor(
+            env,
+            new PersistentActorUpdateEventProcessor(cassandraSessionManager.getPersistentActorsColumnFamilyTemplate()),
+            "asyncUpdateExecutor",
+            "UPDATE-EXECUTOR-WORKER",
+            meterRegistry,
+            tagCustomizer
         );
     }
 

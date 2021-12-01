@@ -45,8 +45,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * @author Joost van de Wijgerd
  */
-public final class LocalMessageQueue extends DefaultConsumer implements MessageQueue, ChannelListener {
+final class LocalMessageQueue extends DefaultConsumer implements MessageQueue, ChannelListener {
+
     private static final Logger logger = LoggerFactory.getLogger(LocalMessageQueue.class);
+
     private final Channel consumerChannel;
     private final Channel producerChannel;
     private final String exchangeName;

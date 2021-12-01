@@ -16,10 +16,15 @@
 
 package org.elasticsoftware.elasticactors.messaging.reactivestreams;
 
+import javax.annotation.Nonnull;
+
 /**
  * Tagging interface to signal that the message is part of the Reactive Streams protocol
  *
  * @author Joost van de Wijgerd
  */
 public interface ReactiveStreamsProtocol {
+    static boolean isReactive(@Nonnull String className) {
+        return className.startsWith("org.elasticsoftware.elasticactors.messaging.reactivestreams");
+    }
 }

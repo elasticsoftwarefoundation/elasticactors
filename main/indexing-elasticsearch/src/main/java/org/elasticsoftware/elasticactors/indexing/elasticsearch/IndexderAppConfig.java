@@ -45,9 +45,16 @@ public class IndexderAppConfig {
 
     @Bean(name = "indexingElasticsearchClient")
     public Client createElasticsearchClient(Environment environment) {
-        String[] elasticsearchHosts = environment.getRequiredProperty("actor.indexing.elasticsearch.hosts", String[].class);
-        Integer elasticsearchPort = environment.getProperty("actor.indexing.elasticsearch.port", Integer.class, 9300);
-        String elasticsearchClusterName = environment.getProperty("actor.indexing.elasticsearch.cluster.name", String.class, "elasticsearch");
+
+        String[] elasticsearchHosts =
+            environment.getRequiredProperty("ea.indexing.elasticsearch.hosts", String[].class);
+        int elasticsearchPort =
+            environment.getProperty("ea.indexing.elasticsearch.port", Integer.class, 9300);
+        String elasticsearchClusterName = environment.getProperty(
+            "ea.indexing.elasticsearch.cluster.name",
+            String.class,
+            "elasticsearch"
+        );
 
         logger.info("Creating elasticsearch client with hosts <{}>", Arrays.toString(elasticsearchHosts));
 

@@ -18,6 +18,8 @@ package org.elasticsoftware.elasticactors.test.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.elasticsoftware.elasticactors.ActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.ManagedActorsRegistry;
@@ -34,8 +36,9 @@ import org.elasticsoftware.elasticactors.cluster.LocalActorSystemInstance;
 import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SimpleScheduler;
-import org.elasticsoftware.elasticactors.configuration.NodeConfiguration;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.runtime.ActorLifecycleListenerScanner;
 import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
@@ -53,13 +56,13 @@ import org.elasticsoftware.elasticactors.test.TestInternalActorSystems;
 import org.elasticsoftware.elasticactors.test.cluster.NoopActorSystemEventRegistryService;
 import org.elasticsoftware.elasticactors.test.cluster.SingleNodeClusterService;
 import org.elasticsoftware.elasticactors.test.state.LoggingActorStateUpdateListener;
-import org.elasticsoftware.elasticactors.tracing.configuration.TracingConfiguration;
-import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.ComponentScans;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Import;
@@ -68,12 +71,13 @@ import org.springframework.context.annotation.aspectj.EnableSpringConfigured;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 /**
@@ -84,13 +88,14 @@ import java.util.concurrent.Executor;
 @Import({
         BackplaneConfiguration.class,
         MessagingConfiguration.class,
-        ClientConfiguration.class,
-        TracingConfiguration.class
+        ClientConfiguration.class
+})
+@ComponentScans({
+    @ComponentScan("org.elasticsoftware.elasticactors.tracing.spring"),
 })
 @PropertySource(value = "classpath:/system.properties", ignoreResourceNotFound = true)
 public class TestConfiguration extends AsyncConfigurerSupport {
     private final PhysicalNode localNode = new PhysicalNode(UUIDTools.createRandomUUID().toString(), InetAddress.getLoopbackAddress(), true);
-    private final NodeConfiguration nodeConfiguration = new NodeConfiguration();
 
     @Override
     @Bean(name = "asyncExecutor")
@@ -206,34 +211,82 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     }
 
     @Bean(name = {"nodeActorCacheManager"})
-    public NodeActorCacheManager createNodeActorCacheManager(Environment env) {
+    public NodeActorCacheManager createNodeActorCacheManager(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
+    {
         int maximumSize = env.getProperty("ea.nodeCache.maximumSize",Integer.class,10240);
         long expirationCheckPeriod =
             env.getProperty("ea.nodeCache.expirationCheckPeriod", Long.class, 30000L);
-        return new NodeActorCacheManager(maximumSize, expirationCheckPeriod);
+        return new NodeActorCacheManager(
+            maximumSize,
+            expirationCheckPeriod,
+            MicrometerConfiguration.build(env, meterRegistry, "nodeActorCache", tagCustomizer)
+        );
     }
 
     @Bean(name = {"shardActorCacheManager"})
-    public ShardActorCacheManager createShardActorCacheManager(Environment env) {
+    public ShardActorCacheManager createShardActorCacheManager(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
+    {
         int maximumSize = env.getProperty("ea.shardCache.maximumSize",Integer.class,10240);
-        return new ShardActorCacheManager(maximumSize);
+        return new ShardActorCacheManager(
+            maximumSize,
+            MicrometerConfiguration.build(env, meterRegistry, "shardActorCache", tagCustomizer)
+        );
+    }
+
+    @Bean(name = {"elasticActorsMeterRegistry"})
+    public MeterRegistry createMeterRegistry() {
+        return new SimpleMeterRegistry();
     }
 
     @Bean(name = {"actorExecutor"}, destroyMethod = "shutdown")
-    public ThreadBoundExecutor createActorExecutor() {
-        int workers = Runtime.getRuntime().availableProcessors() * 3;
-        return new ThreadBoundExecutorImpl(new DaemonThreadFactory("ACTOR-WORKER"),workers);
+    public ThreadBoundExecutor createActorExecutor(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
+    {
+        return ThreadBoundExecutorBuilder.build(
+            env,
+            "actorExecutor",
+            "ACTOR-WORKER",
+            meterRegistry,
+            tagCustomizer
+        );
     }
 
     @Bean(name = {"queueExecutor"}, destroyMethod = "shutdown")
-    public ThreadBoundExecutor createQueueExecutor() {
-        int workers = Runtime.getRuntime().availableProcessors() * 3;
-        return new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"),workers);
+    @DependsOn("actorExecutor")
+    public ThreadBoundExecutor createQueueExecutor(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
+    {
+        return ThreadBoundExecutorBuilder.build(
+            env,
+            "queueExecutor",
+            "QUEUE-WORKER",
+            meterRegistry,
+            tagCustomizer
+        );
     }
 
     @Bean(name = {"scheduler"})
-    public SimpleScheduler createScheduler() {
-        return new SimpleScheduler();
+    public SimpleScheduler createScheduler(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
+    {
+        return new SimpleScheduler(MicrometerConfiguration.build(
+            env,
+            meterRegistry,
+            "scheduler",
+            tagCustomizer
+        ));
     }
 
     @Bean(name= "clusterService")
@@ -247,12 +300,23 @@ public class TestConfiguration extends AsyncConfigurerSupport {
     }
 
     @Bean(name = {"actorStateUpdateProcessor"})
-    public ActorStateUpdateProcessor createActorStateUpdateProcessor(ApplicationContext applicationContext) {
-        Map<String, ActorStateUpdateListener> listeners = applicationContext.getBeansOfType(ActorStateUpdateListener.class);
+    public ActorStateUpdateProcessor createActorStateUpdateProcessor(
+        Environment env,
+        List<ActorStateUpdateListener> listeners,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
+    {
         if(listeners.isEmpty()) {
             return new NoopActorStateUpdateProcessor();
         } else {
-            return new DefaultActorStateUpdateProcessor(listeners.values(), 1, 20);
+            return new DefaultActorStateUpdateProcessor(
+                listeners,
+                env,
+                1,
+                20,
+                meterRegistry,
+                tagCustomizer
+            );
         }
     }
 
@@ -268,21 +332,21 @@ public class TestConfiguration extends AsyncConfigurerSupport {
 
     @Bean(name = "nodeMetricsSettings")
     public MetricsSettings nodeMetricsSettings(Environment environment) {
-        return nodeConfiguration.nodeMetricsSettings(environment);
+        return MetricsSettings.build(environment, "node");
     }
 
     @Bean(name = "shardMetricsSettings")
     public MetricsSettings shardMetricsSettings(Environment environment) {
-        return nodeConfiguration.shardMetricsSettings(environment);
+        return MetricsSettings.build(environment, "shard");
     }
 
     @Bean(name = "nodeLoggingSettings")
     public LoggingSettings nodeLoggingSettings(Environment environment) {
-        return nodeConfiguration.nodeLoggingSettings(environment);
+        return LoggingSettings.build(environment, "node");
     }
 
     @Bean(name = "shardLoggingSettings")
     public LoggingSettings shardLoggingSettings(Environment environment) {
-        return nodeConfiguration.shardLoggingSettings(environment);
+        return LoggingSettings.build(environment, "shard");
     }
 }

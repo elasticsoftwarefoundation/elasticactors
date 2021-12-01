@@ -220,18 +220,22 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                     if(actor != null) {
                         // find actor class behind receiver ActorRef
                         ElasticActor actorInstance = actorSystem.getActorInstance(receiverRef, actor.getActorClass());
-                        // execute on it's own thread
+                        // execute on its own thread
                         if(internalMessage.isUndeliverable()) {
-                            actorExecutor.execute(getProtocolFactory(internalMessage.getPayloadClass())
-                                    .createHandleUndeliverableMessageTask(actorSystem,
-                                                                          actorInstance,
-                                                                          receiverRef,
-                                                                          internalMessage,
-                                                                          actor,
-                                                                         null,
-                                                                          messageHandlerEventListener));
+                            actorExecutor.execute(getProtocolFactory(internalMessage)
+                                .createHandleUndeliverableMessageTask(
+                                    actorSystem,
+                                    actorInstance,
+                                    receiverRef,
+                                    internalMessage,
+                                    actor,
+                                    null,
+                                    messageHandlerEventListener,
+                                    metricsSettings,
+                                    loggingSettings
+                                ));
                         } else {
-                            actorExecutor.execute(getProtocolFactory(internalMessage.getPayloadClass())
+                            actorExecutor.execute(getProtocolFactory(internalMessage)
                                 .createHandleMessageTask(
                                     actorSystem,
                                     actorInstance,
@@ -269,11 +273,15 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                                     loggingSettings
                                 ));
                             } else {
-                                actorExecutor.execute(new HandleUndeliverableServiceMessageTask(actorSystem,
-                                                                                                receiverRef,
-                                                                                                serviceInstance,
-                                                                                                internalMessage,
-                                                                                                messageHandlerEventListener));
+                                actorExecutor.execute(new HandleUndeliverableServiceMessageTask(
+                                    actorSystem,
+                                    receiverRef,
+                                    serviceInstance,
+                                    internalMessage,
+                                    messageHandlerEventListener,
+                                    metricsSettings,
+                                    loggingSettings
+                                ));
                             }
                         } else {
                             handleUndeliverable(internalMessage, receiverRef, messageHandlerEventListener);

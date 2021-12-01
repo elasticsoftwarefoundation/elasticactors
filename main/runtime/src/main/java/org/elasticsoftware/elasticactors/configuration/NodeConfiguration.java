@@ -20,7 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.ImmutableMap;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.cache.GuavaCacheMetrics;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.ManagedActorsRegistry;
@@ -37,6 +38,8 @@ import org.elasticsoftware.elasticactors.cluster.NodeSelectorFactory;
 import org.elasticsoftware.elasticactors.cluster.RemoteActorSystems;
 import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ShardedScheduler;
 import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
 import org.elasticsoftware.elasticactors.messaging.MessageQueueFactoryFactory;
@@ -46,42 +49,39 @@ import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.runtime.ManagedActorsScanner;
 import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
 import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
-import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateListener;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.DefaultActorStateUpdateProcessor;
 import org.elasticsoftware.elasticactors.state.NoopActorStateUpdateProcessor;
-import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorImpl;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.ComponentScans;
 import org.springframework.context.annotation.DependsOn;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.Environment;
-import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.lang.Nullable;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Map;
+import java.util.List;
 
 import static java.lang.Boolean.FALSE;
 
 /**
  * @author Joost van de Wijgerd
  */
-
+@ComponentScans({
+    @ComponentScan("org.elasticsoftware.elasticactors.tracing.spring"),
+})
 public class NodeConfiguration {
-
-    private static final String EA_METRICS_OVERRIDES = "ea.metrics.messages.overrides.";
 
     @Bean(name = {
         "elasticActorsNode",
@@ -106,9 +106,26 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"actorRefCache"})
-    public Cache<String, ActorRef> createActorRefCache(Environment env) {
-        int maximumSize = env.getProperty("ea.actorRefCache.maximumSize",Integer.class,10240);
-        return CacheBuilder.newBuilder().maximumSize(maximumSize).build();
+    public Cache<String, ActorRef> createActorRefCache(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
+    {
+        int maximumSize = env.getProperty("ea.actorRefCache.maximumSize", Integer.class, 10240);
+        MicrometerConfiguration configuration =
+            MicrometerConfiguration.build(env, meterRegistry, "actorRefCache", tagCustomizer);
+        CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder().maximumSize(maximumSize);
+        if (configuration != null) {
+            builder.recordStats();
+            return GuavaCacheMetrics.monitor(
+                configuration.getRegistry(),
+                builder.build(),
+                configuration.getComponentName(),
+                configuration.getTags()
+            );
+        } else {
+            return builder.build();
+        }
     }
 
     @Bean(name = {"actorSystemConfiguration"})
@@ -172,41 +189,64 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"nodeActorCacheManager"})
-    public NodeActorCacheManager createNodeActorCacheManager(Environment env) {
+    public NodeActorCacheManager createNodeActorCacheManager(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
+    {
         int maximumSize = env.getProperty("ea.nodeCache.maximumSize",Integer.class,10240);
         long expirationCheckPeriod =
             env.getProperty("ea.nodeCache.expirationCheckPeriod", Long.class, 30000L);
-        return new NodeActorCacheManager(maximumSize, expirationCheckPeriod);
+        return new NodeActorCacheManager(
+            maximumSize,
+            expirationCheckPeriod,
+            MicrometerConfiguration.build(env, meterRegistry, "nodeActorCache", tagCustomizer)
+        );
     }
 
     @Bean(name = {"shardActorCacheManager"})
-    public ShardActorCacheManager createShardActorCacheManager(Environment env) {
+    public ShardActorCacheManager createShardActorCacheManager(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
+    {
         int maximumSize = env.getProperty("ea.shardCache.maximumSize",Integer.class,10240);
-        return new ShardActorCacheManager(maximumSize);
+        return new ShardActorCacheManager(
+            maximumSize,
+            MicrometerConfiguration.build(env, meterRegistry, "shardActorCache", tagCustomizer)
+        );
     }
 
     @Bean(name = {"actorExecutor"}, destroyMethod = "shutdown")
     @DependsOn("asyncUpdateExecutor")
-    public ThreadBoundExecutor createActorExecutor(Environment env) {
-        final int workers = env.getProperty("ea.actorExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
-        final Boolean useDisruptor = env.getProperty("ea.actorExecutor.useDisruptor",Boolean.class, FALSE);
-        if(useDisruptor) {
-            return new org.elasticsoftware.elasticactors.util.concurrent.disruptor.ThreadBoundExecutorImpl(new DaemonThreadFactory("ACTOR-WORKER"),workers);
-        } else {
-            return new ThreadBoundExecutorImpl(new DaemonThreadFactory("ACTOR-WORKER"), workers);
-        }
+    public ThreadBoundExecutor createActorExecutor(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
+    {
+        return ThreadBoundExecutorBuilder.build(
+            env,
+            "actorExecutor",
+            "ACTOR-WORKER",
+            meterRegistry,
+            tagCustomizer
+        );
     }
 
     @Bean(name = {"queueExecutor"}, destroyMethod = "shutdown")
     @DependsOn("actorExecutor")
-    public ThreadBoundExecutor createQueueExecutor(Environment env) {
-        final int workers = env.getProperty("ea.queueExecutor.workerCount",Integer.class,Runtime.getRuntime().availableProcessors() * 3);
-        final Boolean useDisruptor = env.getProperty("ea.queueExecutor.useDisruptor",Boolean.class, FALSE);
-        if(useDisruptor) {
-            return new org.elasticsoftware.elasticactors.util.concurrent.disruptor.ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"), workers);
-        } else {
-            return new ThreadBoundExecutorImpl(new DaemonThreadFactory("QUEUE-WORKER"), workers);
-        }
+    public ThreadBoundExecutor createQueueExecutor(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
+    {
+        return ThreadBoundExecutorBuilder.build(
+            env,
+            "queueExecutor",
+            "QUEUE-WORKER",
+            meterRegistry,
+            tagCustomizer
+        );
     }
 
     @Bean(name = {"internalActorSystem"}, destroyMethod = "shutdown")
@@ -235,9 +275,16 @@ public class NodeConfiguration {
     }
 
     @Bean(name = {"scheduler"})
-    public ShardedScheduler createScheduler(Environment env) {
+    public ShardedScheduler createScheduler(
+        Environment env,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
+    {
         int numberOfWorkers = env.getProperty("ea.shardedScheduler.workerCount", Integer.class, Runtime.getRuntime().availableProcessors());
-        return new ShardedScheduler(numberOfWorkers);
+        return new ShardedScheduler(
+            numberOfWorkers,
+            MicrometerConfiguration.build(env, meterRegistry, "scheduler", tagCustomizer)
+        );
     }
 
     @Bean(name = {"actorSystemEventListenerService"})
@@ -255,102 +302,41 @@ public class NodeConfiguration {
 
     @Bean(name = {"actorStateUpdateProcessor"})
     public ActorStateUpdateProcessor createActorStateUpdateProcessor(
-        ApplicationContext applicationContext,
-        Environment env)
+        Environment env,
+        List<ActorStateUpdateListener> listeners,
+        @Nullable @Qualifier("elasticActorsMeterRegistry") MeterRegistry meterRegistry,
+        @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
-        Map<String, ActorStateUpdateListener> listeners = applicationContext.getBeansOfType(ActorStateUpdateListener.class);
         if(listeners.isEmpty()) {
             return new NoopActorStateUpdateProcessor();
         } else {
-            final int workers = env.getProperty("ea.actorStateUpdateProcessor.workerCount",Integer.class,1);
-            final int maxBatchSize = env.getProperty("ea.actorStateUpdateProcessor.maxBatchSize",Integer.class,20);
-            return new DefaultActorStateUpdateProcessor(listeners.values(), workers, maxBatchSize);
+            return new DefaultActorStateUpdateProcessor(
+                listeners,
+                env,
+                meterRegistry,
+                tagCustomizer
+            );
         }
     }
 
     @Bean(name = "nodeMetricsSettings")
     public MetricsSettings nodeMetricsSettings(Environment environment) {
-        boolean metricsEnabled =
-            environment.getProperty("ea.metrics.node.messaging.enabled", Boolean.class, false);
-        long messageDeliveryWarnThreshold =
-            environment.getProperty("ea.metrics.node.messaging.delivery.warn.threshold", Long.class, 0L);
-        long messageHandlingWarnThreshold =
-            environment.getProperty("ea.metrics.node.messaging.handling.warn.threshold", Long.class, 0L);
-
-        return new MetricsSettings(
-            metricsEnabled,
-            messageDeliveryWarnThreshold,
-            messageHandlingWarnThreshold,
-            0L
-        );
+        return MetricsSettings.build(environment, "node");
     }
 
     @Bean(name = "shardMetricsSettings")
     public MetricsSettings shardMetricsSettings(Environment environment) {
-        boolean metricsEnabled =
-            environment.getProperty("ea.metrics.shard.messaging.enabled", Boolean.class, false);
-        long messageDeliveryWarnThreshold =
-            environment.getProperty("ea.metrics.shard.messaging.delivery.warn.threshold", Long.class, 0L);
-        long messageHandlingWarnThreshold =
-            environment.getProperty("ea.metrics.shard.messaging.handling.warn.threshold", Long.class, 0L);
-        long serializationWarnThreshold =
-            environment.getProperty("ea.metrics.shard.serialization.warn.threshold", Long.class, 0L);
-
-        return new MetricsSettings(
-            metricsEnabled,
-            messageDeliveryWarnThreshold,
-            messageHandlingWarnThreshold,
-            serializationWarnThreshold
-        );
+        return MetricsSettings.build(environment, "shard");
     }
 
     @Bean(name = "nodeLoggingSettings")
     public LoggingSettings nodeLoggingSettings(Environment environment) {
-        boolean loggingEnabled =
-            environment.getProperty("ea.logging.node.messaging.enabled", Boolean.class, false);
-
-        return new LoggingSettings(
-            loggingEnabled,
-            buildOverridesMap(environment)
-        );
+        return LoggingSettings.build(environment, "node");
     }
 
     @Bean(name = "shardLoggingSettings")
     public LoggingSettings shardLoggingSettings(Environment environment) {
-        boolean loggingEnabled =
-            environment.getProperty("ea.logging.shard.messaging.enabled", Boolean.class, false);
-
-        return new LoggingSettings(
-            loggingEnabled,
-            buildOverridesMap(environment)
-        );
+        return LoggingSettings.build(environment, "shard");
     }
 
-    private ImmutableMap<String, Message.LogFeature[]> buildOverridesMap(Environment environment) {
-        ImmutableMap.Builder<String, Message.LogFeature[]> mapBuilder = ImmutableMap.builder();
-        if (environment instanceof ConfigurableEnvironment) {
-            for (PropertySource<?> propertySource : ((ConfigurableEnvironment) environment).getPropertySources()) {
-                if (propertySource instanceof EnumerablePropertySource) {
-                    for (String key : ((EnumerablePropertySource<?>) propertySource).getPropertyNames()) {
-                        if (key.length() > EA_METRICS_OVERRIDES.length() && key.startsWith(EA_METRICS_OVERRIDES)) {
-                            Object property = propertySource.getProperty(key);
-                            if (property != null) {
-                                String value = property.toString();
-                                Message.LogFeature[] features = Arrays.stream(value.split(","))
-                                    .map(String::trim)
-                                    .filter(s -> !s.isEmpty())
-                                    .map(String::toUpperCase)
-                                    .map(Message.LogFeature::valueOf)
-                                    .distinct()
-                                    .toArray(Message.LogFeature[]::new);
-                                String className = key.substring(EA_METRICS_OVERRIDES.length());
-                                mapBuilder.put(className, features);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return mapBuilder.build();
-    }
 }

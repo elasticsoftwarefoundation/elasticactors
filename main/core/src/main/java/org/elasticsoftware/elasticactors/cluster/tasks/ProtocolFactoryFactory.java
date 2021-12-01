@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.cluster.tasks;
 
 import org.elasticsoftware.elasticactors.cluster.tasks.app.ApplicationProtocolFactory;
 import org.elasticsoftware.elasticactors.cluster.tasks.reactivestreams.ReactiveStreamsProtocolFactory;
+import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 
 /**
  * @author Joost van de Wijgerd
@@ -26,8 +27,8 @@ public final class ProtocolFactoryFactory {
     private final static ProtocolFactory applicationProtocolFactory = new ApplicationProtocolFactory();
     private final static ProtocolFactory reactiveStreamsProtocolFactory = new ReactiveStreamsProtocolFactory();
 
-    public static ProtocolFactory getProtocolFactory(String messageClass) {
-        if(messageClass.startsWith("org.elasticsoftware.elasticactors.messaging.reactivestreams")) {
+    public static ProtocolFactory getProtocolFactory(InternalMessage internalMessage) {
+        if (internalMessage.isReactive()) {
             return reactiveStreamsProtocolFactory;
         } else {
             return applicationProtocolFactory;

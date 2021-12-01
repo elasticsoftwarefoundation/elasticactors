@@ -18,14 +18,14 @@
     <parent>
         <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
         <artifactId>elasticactors-main</artifactId>
-        <version>5.1.3-SNAPSHOT</version>
+        <version>5.2.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>elasticactors-tracing</artifactId>
     <packaging>jar</packaging>
 
-    <name>Elastic Software Foundation :: ElasticActors :: Tracing Utils</name>
+    <name>Elastic Software Foundation :: ElasticActors :: Tracing</name>
     <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
     <properties>
@@ -35,11 +35,7 @@
     <dependencies>
         <dependency>
             <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
-            <artifactId>elasticactors-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
+            <artifactId>elasticactors-core</artifactId>
         </dependency>
     </dependencies>
 </project>

@@ -26,7 +26,6 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcess
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -83,11 +82,6 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
                 batchStatements.put(batchSize, cassandraSession.prepare(batchBuilder.toString()));
             }
         }
-    }
-
-    @Override
-    public void process(PersistentActorUpdateEvent... events) {
-        process(Arrays.asList(events));
     }
 
     @Override

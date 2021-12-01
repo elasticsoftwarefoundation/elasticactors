@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.messaging.internal.InternalHashKeyUtils;
+import org.elasticsoftware.elasticactors.messaging.reactivestreams.ReactiveStreamsProtocol;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationContext;
 import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageSerializer;
@@ -51,6 +52,7 @@ public final class DefaultInternalMessage extends AbstractTracedMessage
     private final int timeout;
     private transient byte[] serializedForm;
     private final String messageQueueAffinityKey;
+    private transient Boolean reactive;
 
     public DefaultInternalMessage(ActorRef sender, ActorRef receiver, ByteBuffer payload, String payloadClass, String messageQueueAffinityKey, boolean durable) {
         this(UUIDTools.createTimeBasedUUID(), sender, ImmutableList.of(receiver), payload, payloadClass, messageQueueAffinityKey, durable, false, NO_TIMEOUT);
@@ -210,6 +212,14 @@ public final class DefaultInternalMessage extends AbstractTracedMessage
             return messageQueueAffinityKey;
         }
         return receivers.size() == 1 ? receivers.get(0).getActorId() : null;
+    }
+
+    @Override
+    public boolean isReactive() {
+        if (reactive == null) {
+            reactive = ReactiveStreamsProtocol.isReactive(payloadClass);
+        }
+        return reactive;
     }
 
     @Override

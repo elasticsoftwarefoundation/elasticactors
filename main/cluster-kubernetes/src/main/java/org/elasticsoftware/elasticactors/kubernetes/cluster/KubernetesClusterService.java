@@ -36,12 +36,12 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.String.format;
 import static java.net.HttpURLConnection.HTTP_GONE;
-import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 public final class KubernetesClusterService implements ClusterService {
     private static final Logger logger = LoggerFactory.getLogger(KubernetesClusterService.class);
@@ -52,7 +52,7 @@ public final class KubernetesClusterService implements ClusterService {
     private final String masterNodeId;
     private final Queue<ClusterEventListener> eventListeners = new ConcurrentLinkedQueue<>();
     private final ExecutorService clusterServiceExecutor =
-            newSingleThreadExecutor(new DaemonThreadFactory("KUBERNETES_CLUSTER_SERVICE"));
+        Executors.newSingleThreadExecutor(new DaemonThreadFactory("KUBERNETES-CLUSTER-SERVICE"));
     private final AtomicInteger currentTopology = new AtomicInteger();
     private final AtomicReference<Watch> currentWatch = new AtomicReference<>();
     private final Boolean useDesiredReplicas;

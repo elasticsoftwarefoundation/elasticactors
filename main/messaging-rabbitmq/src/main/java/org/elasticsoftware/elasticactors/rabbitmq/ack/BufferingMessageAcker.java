@@ -46,7 +46,7 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
 
     public BufferingMessageAcker(Channel consumerChannel) {
         this.consumerChannel = consumerChannel;
-        this.threadFactory = new DaemonThreadFactory("RABBITMQ-MESSAGE_ACKER");
+        this.threadFactory = new DaemonThreadFactory("RABBITMQ-MESSAGE-ACKER");
     }
 
     @Override
@@ -61,6 +61,7 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
 
     @Override
     public void start() {
+        logger.info("Using MessageAcker [{}]", getClass().getSimpleName());
         final Thread t = threadFactory.newThread(this);
         t.start();
     }

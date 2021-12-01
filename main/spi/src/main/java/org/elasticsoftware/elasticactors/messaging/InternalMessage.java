@@ -63,4 +63,6 @@ public interface InternalMessage extends TracedMessage {
 
     @Nullable
     String getMessageQueueAffinityKey();
+
+    boolean isReactive();
 }
