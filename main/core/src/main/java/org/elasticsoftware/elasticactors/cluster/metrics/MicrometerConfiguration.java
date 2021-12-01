@@ -1,6 +1,6 @@
 package org.elasticsoftware.elasticactors.cluster.metrics;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
@@ -13,8 +13,6 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
 
 import static org.elasticsoftware.elasticactors.util.EnvironmentUtils.getKeyValuePairsUnderPrefix;
 
@@ -30,8 +28,8 @@ public final class MicrometerConfiguration {
     private final String componentName;
     private final String metricPrefix;
     private final Tags tags;
-    private final ImmutableSet<String> allowedActorTypesForTagging;
-    private final ImmutableSet<String> allowedMessageTypesForTagging;
+    private final ImmutableMap<String, String> suffixesForActor;
+    private final ImmutableMap<String, String> suffixesForMessages;
 
     @Nullable
     public static MicrometerConfiguration build(
@@ -79,38 +77,23 @@ public final class MicrometerConfiguration {
             Map<String, String> configurationTagMap = getKeyValuePairsUnderPrefix(
                 env,
                 format("ea.metrics.micrometer.%s.tags", componentName),
-                Function.identity()
+                String::trim
             );
             if (!configurationTagMap.isEmpty()) {
                 List<Tag> configurationTags = new ArrayList<>(configurationTagMap.size());
                 configurationTagMap.forEach((k, v) -> configurationTags.add(Tag.of(k, v)));
                 tags = tags.and(configurationTags);
             }
-            Map<String, Boolean> allowedActorTypesForTaggingMap = getKeyValuePairsUnderPrefix(
+            Map<String, String> allowedActorTypesForTagging = getKeyValuePairsUnderPrefix(
                 env,
                 format("ea.metrics.micrometer.%s.detailed.actors", componentName),
-                Boolean::parseBoolean
+                MicrometerConfiguration::sanitizeSuffix
             );
-            Map<String, Boolean> allowedMessageTypesForTaggingMap = getKeyValuePairsUnderPrefix(
+            Map<String, String> allowedMessageTypesForTagging = getKeyValuePairsUnderPrefix(
                 env,
                 format("ea.metrics.micrometer.%s.detailed.messages", componentName),
-                Boolean::parseBoolean
+                MicrometerConfiguration::sanitizeSuffix
             );
-            Set<String> allowedActorTypesForTagging = allowedActorTypesForTaggingMap.entrySet()
-                .stream()
-                .filter(Map.Entry::getValue)
-                .map(Map.Entry::getKey)
-                .collect(ImmutableSet.toImmutableSet());
-            Set<String> allowedMessageTypesForTagging = allowedMessageTypesForTaggingMap.entrySet()
-                .stream()
-                .filter(Map.Entry::getValue)
-                .map(Map.Entry::getKey)
-                .collect(ImmutableSet.toImmutableSet());
-            // Shortcut to always tag messages.
-            // Users should not need to use this, but it can be useful for tricky scenarios.
-            if (allowedMessageTypesForTagging.contains("all")) {
-                allowedMessageTypesForTagging = ImmutableSet.of("all");
-            }
             return new MicrometerConfiguration(
                 measureMessageDeliveryTimes,
                 tagMessageWrapperTypes,
@@ -126,6 +109,13 @@ public final class MicrometerConfiguration {
         return null;
     }
 
+    private static String sanitizeSuffix(String metricSuffix) {
+        if (StringUtils.isBlank(metricSuffix)) {
+            return "";
+        }
+        return metricSuffix.replaceAll("\\s|^\\.|\\.$", "");
+    }
+
     public MicrometerConfiguration(
         boolean measureDeliveryTimes,
         boolean tagMessageWrapperTypes,
@@ -134,8 +124,8 @@ public final class MicrometerConfiguration {
         @Nonnull String componentName,
         @Nullable String metricPrefix,
         @Nullable Tags tags,
-        @Nonnull Set<String> allowedActorTypesForTagging,
-        @Nonnull Set<String> allowedMessageTypesForTagging)
+        @Nonnull Map<String, String> suffixesForActor,
+        @Nonnull Map<String, String> suffixesForMessages)
     {
         this.measureDeliveryTimes = measureDeliveryTimes;
         this.tagMessageWrapperTypes = tagMessageWrapperTypes;
@@ -144,10 +134,8 @@ public final class MicrometerConfiguration {
         this.metricPrefix = sanitizePrefix(metricPrefix);
         this.componentName = requireNonNull(componentName);
         this.tags = tags != null ? tags : Tags.empty();
-        this.allowedActorTypesForTagging =
-            ImmutableSet.copyOf(requireNonNull(allowedActorTypesForTagging));
-        this.allowedMessageTypesForTagging =
-            ImmutableSet.copyOf(requireNonNull(allowedMessageTypesForTagging));
+        this.suffixesForActor = ImmutableMap.copyOf(requireNonNull(suffixesForActor));
+        this.suffixesForMessages = ImmutableMap.copyOf(requireNonNull(suffixesForMessages));
     }
 
     private static String sanitizePrefix(String metricPrefix) {
@@ -192,11 +180,11 @@ public final class MicrometerConfiguration {
         return tags;
     }
 
-    public ImmutableSet<String> getAllowedActorTypesForTagging() {
-        return allowedActorTypesForTagging;
+    public ImmutableMap<String, String> getSuffixesForActor() {
+        return suffixesForActor;
     }
 
-    public ImmutableSet<String> getAllowedMessageTypesForTagging() {
-        return allowedMessageTypesForTagging;
+    public ImmutableMap<String, String> getSuffixesForMessages() {
+        return suffixesForMessages;
     }
 }

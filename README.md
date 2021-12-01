@@ -675,7 +675,7 @@ ea.metrics.micrometer.[component_name].prefix="ea"
 #   - elastic.actors.node.id: [the node's ID]
 #   - elastic.actors.cluster.name: [the cluster's name]
 # Can be repeated multiple times for a given component in order to add multiple tags.
-ea.metrics.micrometer.[component_name].tags.[tag_name]=[tag_value]
+ea.metrics.micrometer.[component_name].tags.[tag_name]=tag_value
 
 # Toggles exporting the message delivery times for a given component.
 # These are a rough estimate of the time it took from the message being created until it 
@@ -685,31 +685,30 @@ ea.metrics.micrometer.[component_name].tags.[tag_name]=[tag_value]
 ea.metrics.micrometer.[component_name].measureDeliveryTimes=false
 
 # Toggles adding the message wrapper types as tags for a given component.
-# Adds the current message's wrapper as the tag "elastic.actors.message.wrapper".
+# Adds the current message's wrapper as the tag "elastic.actors.message.wrapper" and creates a new timer with the wrapper's name as a suffix.
 # Currently, this only applies to the "actorExecutor" component.
 # Default: false
 ea.metrics.micrometer.[component_name].tagMessageWrapperTypes=false
 
 # Toggles adding the task types as tags for a given component.
-# Adds the current thread-bound task type as the tag "elastic.actors.message.task".
+# Adds the current thread-bound task type as the tag "elastic.actors.message.task" and creates a new timer with the task's name as a suffix.
 # Currently, this only applies to the "actorExecutor" component.
 # Default: false
 ea.metrics.micrometer.[component_name].tagTaskTypes=false
 
 # Allows detailed tagging for the specified actor type for a given component.
-# Adds the receiver type as the tag "elastic.actors.actor.type".
+# Adds the receiver type as the tag "elastic.actors.actor.type" and creates a new timer with the provided suffix.
 # Currently, this only applies to the "actorExecutor" component.
 # This might cause some additional overhead, so use this option with caution.
-ea.metrics.micrometer.[component_name].detailed.actors.[class_name]=true
+ea.metrics.micrometer.[component_name].detailed.actors.[class_name]=metric.suffix
 
 # Allows detailed tagging for the specified message types for a given component.
 # This requires the type of the receiver actor to be present in the list of actors allowed for 
 # detailed tagging.
-# Adds the receiver type as the tag "elastic.actors.message.type".
+# Adds the receiver type as the tag "elastic.actors.message.type" and creates a new timer with the provided suffix.
 # Currently, this only applies to the "actorExecutor" component.
-# In order to enable this for all messages, use "all" instead of the class name.
 # This might cause some additional overhead, so use this option with caution.
-ea.metrics.micrometer.[component_name].detailed.messages.[class_name]=true
+ea.metrics.micrometer.[component_name].detailed.messages.[class_name]=metric.suffix
 ```
 
 Additionally, customization of tags is supported by providing a bean of type `MeterTagCustomizer`

@@ -59,15 +59,15 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  *
  * @author Joost van de Wijged
  */
-final class HandleMessageTask
+final class ReactiveHandleMessageTask
     extends ActorLifecycleTask
     implements SubscriberContext, MessageHandlingThreadBoundRunnable<String> {
 
-    private static final Logger log = LoggerFactory.getLogger(HandleMessageTask.class);
+    private static final Logger log = LoggerFactory.getLogger(ReactiveHandleMessageTask.class);
     private InternalPersistentSubscription currentSubscription;
     private Object deserializedMessage;
 
-    HandleMessageTask(
+    ReactiveHandleMessageTask(
         InternalActorSystem actorSystem,
         ElasticActor receiver,
         ActorRef receiverRef,

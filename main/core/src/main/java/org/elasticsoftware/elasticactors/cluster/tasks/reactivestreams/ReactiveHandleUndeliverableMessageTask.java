@@ -51,11 +51,15 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
  *
  * @author Joost van de Wijged
  */
-final class HandleUndeliverableMessageTask extends ActorLifecycleTask implements SubscriberContext {
-    private static final Logger log = LoggerFactory.getLogger(HandleUndeliverableMessageTask.class);
+final class ReactiveHandleUndeliverableMessageTask
+    extends ActorLifecycleTask
+    implements SubscriberContext {
+
+    private static final Logger log = LoggerFactory.getLogger(ReactiveHandleUndeliverableMessageTask.class);
+
     private InternalPersistentSubscription currentSubscription;
 
-    HandleUndeliverableMessageTask(
+    ReactiveHandleUndeliverableMessageTask(
         InternalActorSystem actorSystem,
         ElasticActor receiver,
         ActorRef receiverRef,

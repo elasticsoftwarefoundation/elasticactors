@@ -47,7 +47,7 @@ public final class ReactiveStreamsProtocolFactory implements ProtocolFactory {
         MetricsSettings metricsSettings,
         LoggingSettings loggingSettings)
     {
-        return new HandleMessageTask(
+        return new ReactiveHandleMessageTask(
             actorSystem,
             receiver,
             receiverRef,
@@ -73,7 +73,7 @@ public final class ReactiveStreamsProtocolFactory implements ProtocolFactory {
         MetricsSettings metricsSettings,
         LoggingSettings loggingSettings)
     {
-        return new HandleUndeliverableMessageTask(
+        return new ReactiveHandleUndeliverableMessageTask(
             actorSystem,
             receiver,
             receiverRef,

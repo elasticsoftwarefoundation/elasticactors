@@ -1,6 +1,5 @@
 package org.elasticsoftware.elasticactors.util.concurrent.metrics;
 
-import com.google.common.collect.ImmutableSet;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
@@ -18,8 +17,10 @@ import org.springframework.core.env.Environment;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -111,11 +112,11 @@ public final class ThreadBoundExecutorMonitor {
             MessageHandlingThreadBoundRunnable<?> mhtbRunnable =
                 (MessageHandlingThreadBoundRunnable<?>) unwrapped;
             Class<? extends ElasticActor> actorClass =
-                shouldAddTagsForActor(mhtbRunnable.getActorType())
+                getSuffixForActor(mhtbRunnable.getActorType()) != null
                     ? mhtbRunnable.getActorType()
                     : null;
             Class<?> messageClass =
-                actorClass != null && shouldAddTagsForMessage(mhtbRunnable.getMessageClass())
+                actorClass != null && getSuffixForMessage(mhtbRunnable.getMessageClass()) != null
                     ? mhtbRunnable.getMessageClass()
                     : null;
             Class<? extends InternalMessage> internalMessageClass =
@@ -127,15 +128,15 @@ public final class ThreadBoundExecutorMonitor {
                     ? mhtbRunnable.getClass()
                     : null;
             if (actorClass != null || internalMessageClass != null || runnableClass != null) {
+                // Reuse key here to avoid generating garbage, since this will be read a lot more
+                // than written. Since this key is reused, we have to compute any actual results
+                // in a separate step.
                 TimerCacheKey pooledKey = keyPool.get().fill(
                     actorClass,
                     messageClass,
                     internalMessageClass,
                     runnableClass
                 );
-                // Reuse key here to avoid generating garbage, since this will be read a lot more
-                // than written. Since this key is reused, we have to compute any actual results
-                // in a separate step.
                 Map<TimerType, Timer> timer = timersMap.get(pooledKey);
                 if (timer != null) {
                     return timer;
@@ -151,41 +152,61 @@ public final class ThreadBoundExecutorMonitor {
 
     private Map<TimerType, Timer> createTimersForKey(TimerCacheKey key) {
         Tags tags = getTags();
-        if (key.actorClass != null) {
-            String actorTypeName = shorten(key.actorClass);
-            if (actorTypeName != null) {
-                tags = tags.and("elastic.actors.actor.type", actorTypeName);
+        try {
+            List<String> additionalNames = new ArrayList<>();
+            if (key.actorClass != null) {
+                String actorTypeName = shorten(key.actorClass);
+                if (actorTypeName != null) {
+                    tags = tags.and("elastic.actors.actor.type", actorTypeName);
+                    additionalNames.add(getSuffixForActor(key.actorClass));
+                }
             }
-        }
-        if (key.messageClass != null) {
-            String messageTypeName = shorten(key.messageClass);
-            if (messageTypeName != null) {
-                tags = tags.and(Tag.of("elastic.actors.message.type", messageTypeName));
+            if (key.messageClass != null) {
+                String messageTypeName = shorten(key.messageClass);
+                if (messageTypeName != null) {
+                    tags = tags.and(Tag.of("elastic.actors.message.type", messageTypeName));
+                    additionalNames.add(getSuffixForMessage(key.messageClass));
+                }
             }
-        }
-        if (key.internalMessageClass != null) {
-            String wrapperName = shorten(key.internalMessageClass);
-            if (wrapperName != null) {
-                tags = tags.and(Tag.of("elastic.actors.message.wrapper", wrapperName));
+            if (key.internalMessageClass != null) {
+                String wrapperName = shorten(key.internalMessageClass);
+                if (wrapperName != null) {
+                    tags = tags.and(Tag.of("elastic.actors.message.wrapper", wrapperName));
+                    additionalNames.add(key.internalMessageClass.getSimpleName());
+                }
             }
-        }
-        if (key.runnableClass != null) {
-            String taskName = shorten(key.runnableClass);
-            if (taskName != null) {
-                tags = tags.and(Tag.of("elastic.actors.message.task", taskName));
+            if (key.runnableClass != null) {
+                String taskName = shorten(key.runnableClass);
+                if (taskName != null) {
+                    tags = tags.and(Tag.of("elastic.actors.message.task", taskName));
+                    additionalNames.add(key.runnableClass.getSimpleName());
+                }
             }
-        }
-        if (tags == getTags()) {
-            logger.error("Something went wrong with determining making a new tag for {}", key);
+            if (tags == getTags()) {
+                logger.error("Something went wrong with determining making a new tag for {}", key);
+                return timers;
+            }
+            String suffix = String.join(".", additionalNames);
+            EnumMap<TimerType, Timer> newTimers = new EnumMap<>(TimerType.class);
+            newTimers.put(
+                EXECUTION,
+                configuration.getRegistry().timer(executionTimerName + "." + suffix, tags)
+            );
+            newTimers.put(
+                IDLE,
+                configuration.getRegistry().timer(idleTimerName + "." + suffix, tags)
+            );
+            if (configuration.isMeasureDeliveryTimes()) {
+                newTimers.put(
+                    DELIVERY,
+                    configuration.getRegistry().timer(deliveryTimerName + "." + suffix, tags)
+                );
+            }
+            return Collections.unmodifiableMap(newTimers);
+        } catch (Exception e) {
+            logger.error("Error while creating tag for {}: {}", key, tags, e);
             return timers;
         }
-        EnumMap<TimerType, Timer> newTimers = new EnumMap<>(TimerType.class);
-        newTimers.put(EXECUTION, configuration.getRegistry().timer(executionTimerName, tags));
-        newTimers.put(IDLE, configuration.getRegistry().timer(idleTimerName, tags));
-        if (configuration.isMeasureDeliveryTimes()) {
-            newTimers.put(DELIVERY, configuration.getRegistry().timer(deliveryTimerName, tags));
-        }
-        return Collections.unmodifiableMap(newTimers);
     }
 
     @Nonnull
@@ -193,18 +214,20 @@ public final class ThreadBoundExecutorMonitor {
         return configuration.getMetricPrefix() + "threadbound.executor." + metricSuffix;
     }
 
-    public boolean shouldAddTagsForActor(Class<? extends ElasticActor> elasticActor) {
-        ImmutableSet<String> typesForTagging = configuration.getAllowedActorTypesForTagging();
-        return elasticActor != null
-            && !typesForTagging.isEmpty()
-            && typesForTagging.contains(elasticActor.getName());
+    @Nullable
+    private String getSuffixForActor(Class<? extends ElasticActor> elasticActor) {
+        if (elasticActor == null) {
+            return null;
+        }
+        return configuration.getSuffixesForActor().get(elasticActor.getName());
     }
 
-    public boolean shouldAddTagsForMessage(Class<?> messageClass) {
-        ImmutableSet<String> typesForTagging = configuration.getAllowedMessageTypesForTagging();
-        return messageClass != null
-            && !typesForTagging.isEmpty()
-            && (typesForTagging.contains("all") || typesForTagging.contains(messageClass.getName()));
+    @Nullable
+    private String getSuffixForMessage(Class<?> messageClass) {
+        if (messageClass == null) {
+            return null;
+        }
+        return configuration.getSuffixesForMessages().get(messageClass.getName());
     }
 
     private static final class TimerCacheKey {
