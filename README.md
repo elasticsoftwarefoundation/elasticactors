@@ -600,6 +600,9 @@ In order to use distributed tracing, include the following dependency in your pr
 </dependency>
 ```
 
+`MessagingContextManager` is the main class responsible for managing trace context data.\
+It allows you to put a set of trace and creation contexts into scope.
+
 
 ### Instrumenting Spring beans
 
@@ -616,9 +619,6 @@ to your project:
 
 This includes a bean post-processor that wraps those facilities in ones
 that can automatically propagate the traces from Elastic Actors.
-
-`MessagingContextManager` is the main class responsible for managing trace context data.\
-It allows you to put a set of trace and creation contexts into scope. 
 
 
 ### Adding trace information to logs
