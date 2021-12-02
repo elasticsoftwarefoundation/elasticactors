@@ -107,6 +107,9 @@ The following exceptions apply:
     the reactive streams protocol (such as Subscriptions) if explicitly configured.
   * Configuration keys for indexing with Elasticsearch have been changed from `actor.indexing.*` 
     to `ea.indexing.*` in order for it to use the same format as other modules. 
+* **1.x - 5.x** to **6.0** or later:
+  * Elastic Actors 6.0 introduces timeouts for Temporary Actors. If your application has long-lived 
+    Temporary Actors, make sure to configure the timeout properties, so they suit your use-case.
 
 
 ## Basic configuration
@@ -355,6 +358,9 @@ ea.rabbitmq.password=guest
 # Options:
 #   - DIRECT: ACKs the messages on the handler thread
 #   - BUFFERED: ACKs the messages on one of the handler threads, buffering them in case of high load
+#       - **NOTE**: this implementation was broken in older versions of Elastic Actors. 
+#                   It would wrongly ACK messages. 
+#                   This was fixed in version 6.0.0.
 #   - WRITE_BEHIND: ACKs the messages asynchronously using a disruptor
 #   - ASYNC: ACKs the messages asynchronously using a separate thread
 # Default: DIRECT
