@@ -768,4 +768,4 @@ VCS tag.
 
 GitHub Actions will start [the build process](https://github.com/elasticsoftwarefoundation/elasticactors/actions/workflows/maven-publish.yml). 
 
-If successful, the build will be automatically published to [Maven Central](https://repo.maven.apache.org/maven2/org/elasticsoftwarefoundation/elasticactors/elasticactors-api/).
+If successful, the build will be automatically published to [Maven Central](https://repo.maven.apache.org/maven2/org/elasticsoftwarefoundation/elasticactors/).
