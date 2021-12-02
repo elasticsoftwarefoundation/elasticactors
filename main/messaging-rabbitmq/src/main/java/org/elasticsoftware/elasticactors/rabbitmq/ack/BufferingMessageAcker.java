@@ -121,11 +121,12 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
             // not ready to ack yet because it's not consecutive with what has been acked so far
             return;
         }
+        // remove ackUntil
+        pendingTags.pollFirst();
         // find highest tag we can ack
-        // first one returned will be ackUntil itself
         Long next;
         while ((next = pendingTags.pollFirst()) != null) {
-            if (next <= ackUntil + 1) {
+            if (next == ackUntil + 1) {
                 ackUntil = next;
             } else {
                 // re-add it because it's not consecutive, but we already removed it
