@@ -27,8 +27,21 @@ import javax.annotation.Nullable;
  * @author Joost van de Wijgerd
  */
 public final class NodeActorCacheManager extends CacheManager<ActorRef,PersistentActor<NodeKey>> {
-    public NodeActorCacheManager(int maximumSize, @Nullable
-        MicrometerConfiguration micrometerConfiguration) {
+
+    private final long actorExpirationCheckPeriod;
+
+    public NodeActorCacheManager(
+        int maximumSize,
+        long actorExpirationCheckPeriod,
+        @Nullable MicrometerConfiguration micrometerConfiguration)
+    {
         super(maximumSize, micrometerConfiguration);
+        this.actorExpirationCheckPeriod = actorExpirationCheckPeriod <= 0
+            ? -1
+            : Math.max(actorExpirationCheckPeriod, 500);
+    }
+
+    public long getExpirationCheckPeriod() {
+        return actorExpirationCheckPeriod;
     }
 }

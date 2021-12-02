@@ -107,6 +107,11 @@ The following exceptions apply:
     the reactive streams protocol (such as Subscriptions) if explicitly configured.
   * Configuration keys for indexing with Elasticsearch have been changed from `actor.indexing.*` 
     to `ea.indexing.*` in order for it to use the same format as other modules. 
+* **1.x - 5.x** to **6.0** or later:
+  * Elastic Actors 6.0 introduces timeouts for Temporary Actors. If your application has long-lived 
+    Temporary Actors, make sure to configure the timeout properties, so they suit your use-case.
+  * A major bug in the BUFFERED RabbitMQ ACKer was fixed. If you are using it, upgrade 
+    to version 6.0 or later as soon as possible, or use another ACKer implementation.
 
 
 ## Basic configuration
@@ -273,6 +278,17 @@ ea.scan.packages=org.elasticsoftware.elasticactors
 # Default: 10240
 ea.nodeCache.maximumSize=10240
 
+# The period in milliseconds between cache expiration checks for node-bound actors.
+# Expirable actors are checked for expiration when they receive messages, as well as by a
+# scheduled executor thread that runs every N milliseconds and removed expired actors.
+# This key allows you to adjust how often this thread will run. There is no maximum value, but it 
+# enforces a minimum of 500ms so it can't be made to run so frequently.
+# Set it to 0 or lower to completely disable the periodic timeout checks.
+# Expired actors will still be invalidated when being fetched from the cache.
+# Default: 30000
+# Minimum: 500
+ea.nodeCache.expirationCheckPeriod=30000
+
 # Maximum number of cached Persistent Actors.
 # Default: 10240
 ea.shardCache.maximumSize=10240
@@ -346,6 +362,9 @@ ea.rabbitmq.password=guest
 # Options:
 #   - DIRECT: ACKs the messages on the handler thread
 #   - BUFFERED: ACKs the messages on one of the handler threads, buffering them in case of high load
+#       - **NOTE**: this implementation was broken in older versions of Elastic Actors. 
+#                   It would wrongly ACK messages. 
+#                   This was fixed in version 6.0.0.
 #   - WRITE_BEHIND: ACKs the messages asynchronously using a disruptor
 #   - ASYNC: ACKs the messages asynchronously using a separate thread
 # Default: DIRECT
@@ -552,6 +571,21 @@ ea.deserializationCache.enabled=false
 # Changes the logging level used when logging unhandled message types in MethodActor.
 # Default: WARN
 ea.logging.messages.unhandled.level=WARN
+
+# Changes the minimum timeout, in milliseconds, for Temporary Actors.
+# It will be clamped to the closest positive integer, if the provided number is negative or 0.
+# Default: 1000 (1 second)
+ea.tempActor.timeout.min=1000
+
+# Changes the default timeout, in milliseconds, for Temporary Actors.
+# It will be clamped so it sits between the minimum and maximum configured numbers.
+# Default: 86400000 (one 24h day)
+ea.tempActor.timeout.default=86400000
+
+# Changes the maximum timeout, in milliseconds, for Temporary Actors.
+# It will be champed to be larger than or equal to the minimum configured number.
+# Default: 172800000 (two 24h days)
+ea.tempActor.timeout.max=172800000
 ```
 
 
@@ -648,6 +682,9 @@ and name `elasticActorsMeterRegistry`. The supplied bean will be used to add the
 # Optional prefix for component names
 ea.metrics.micrometer.namePrefix=prefix
 
+# Option global metrics prefix
+ea.metrics.micrometer.prefix=elastic.actors
+
 # Toggles Micrometer ON or OFF for a given component.
 #
 # The following components are currently supported:
@@ -670,6 +707,7 @@ ea.metrics.micrometer.namePrefix=prefix
 ea.metrics.micrometer.[component_name].enabled=false
 
 # Optional metric prefix for a given component.
+# Component-specific prefixes are inserted after the global prefix.
 ea.metrics.micrometer.[component_name].prefix=ea
 
 # Optional custom tags for a given component.
@@ -730,4 +768,12 @@ log4j2.is.webapp=false
 log4j2.garbagefree.threadContextMap=true
 ```
 
+### Release process
 
+This project uses the Maven Release Plugin and GitHub Actions to create releases.\
+Just run `mvn release:prepare release:perform` to select the version to be released and create a 
+VCS tag. 
+
+GitHub Actions will start [the build process](https://github.com/elasticsoftwarefoundation/elasticactors/actions/workflows/maven-publish.yml). 
+
+If successful, the build will be automatically published to [Maven Central](https://repo.maven.apache.org/maven2/org/elasticsoftwarefoundation/elasticactors/).

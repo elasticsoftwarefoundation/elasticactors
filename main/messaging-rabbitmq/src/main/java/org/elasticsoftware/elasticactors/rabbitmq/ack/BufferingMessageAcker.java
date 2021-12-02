@@ -39,7 +39,7 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
     private final Channel consumerChannel;
     private final LinkedBlockingQueue<Tag> tagQueue = new LinkedBlockingQueue<>();
     private long lastAckedTag = -1;
-    private long highestDeliveredTag = -1;
+    private long highestAckedTag = -1;
     private final TreeSet<Long> pendingTags = new TreeSet<>();
     private final ThreadFactory threadFactory;
     private final CountDownLatch shutdownLatch = new CountDownLatch(1);
@@ -51,7 +51,7 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
 
     @Override
     public void deliver(long deliveryTag) {
-        tagQueue.offer(new Tag(TagType.DELIVERED,deliveryTag));
+        // Nothing to do here
     }
 
     @Override
@@ -85,16 +85,11 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
                 // need to trigger the flush
                 if(tag == null) {
                     flushAck();
-                } else if(tag.type == TagType.DELIVERED) {
-                    // register the last delivered tag
-                    highestDeliveredTag = (tag.value > highestDeliveredTag) ? tag.value : highestDeliveredTag;
-                    // add to the end of the list (in order)
-                    pendingTags.add(tag.value);
                 } else if(tag.type == TagType.ACK) {
                     // search from the beginning and delete
-                    pendingTags.remove(tag.value);
-                } else if(tag.type == TagType.RESET) {
-                    // not sure what to do here
+                    pendingTags.add(tag.value);
+                    // register the last acked tag
+                    highestAckedTag = Math.max(tag.value, highestAckedTag);
                 } else if(tag.type == TagType.STOP) {
                     // flush first
                     flushAck();
@@ -109,19 +104,41 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
 
     private void flushAck() {
         // we should only send an ack if something has change
-        if(lastAckedTag == highestDeliveredTag) {
+        if (lastAckedTag == highestAckedTag) {
             return;
         }
         // get the head of the deque
-        Long lowestUnAckedTag = (pendingTags.isEmpty()) ? null : pendingTags.first();
-        long ackUntil = (lowestUnAckedTag != null) ? lowestUnAckedTag - 1 : highestDeliveredTag;
+        Long ackUntil = pendingTags.isEmpty() ? null : pendingTags.first();
+        if (ackUntil == null) {
+            // no tags to ack yet
+            return;
+        }
+        if (lastAckedTag == -1 && ackUntil > 1) {
+            // cannot ack anything if we haven't acked 1 yet
+            return;
+        }
+        if (lastAckedTag > 0 && ackUntil > lastAckedTag + 1) {
+            // not ready to ack yet because it's not consecutive with what has been acked so far
+            return;
+        }
+        // remove ackUntil
+        pendingTags.pollFirst();
+        // find highest tag we can ack
+        Long next;
+        while ((next = pendingTags.pollFirst()) != null) {
+            if (next == ackUntil + 1) {
+                ackUntil = next;
+            } else {
+                // re-add it because it's not consecutive, but we already removed it
+                pendingTags.add(next);
+                break;
+            }
+        }
         // don't ack 0 as it will ack all pending messages!!!
         if(ackUntil > 0 && ackUntil > lastAckedTag) {
             try {
                 consumerChannel.basicAck(ackUntil,true);
-                if(logger.isInfoEnabled()) {
-                    logger.info("Acked all messages from {} up until {}",lastAckedTag,ackUntil);
-                }
+                logger.debug("Acked all messages from {} up until {}", lastAckedTag, ackUntil);
                 lastAckedTag = ackUntil;
             } catch (IOException e) {
                 logger.error("Exception while acking message", e);
@@ -129,8 +146,9 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
         }
     }
 
-    private static enum TagType {
-        DELIVERED,ACK,RESET,STOP
+    private enum TagType {
+        ACK,
+        STOP
     }
 
     private static final class Tag {

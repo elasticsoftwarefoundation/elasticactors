@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.TypedActor;
 import org.elasticsoftware.elasticactors.UnexpectedResponseTypeException;
+import org.elasticsoftware.elasticactors.concurrent.Expirable;
 import org.elasticsoftware.elasticactors.serialization.NoopSerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
@@ -38,6 +39,7 @@ import javax.annotation.Nullable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 
@@ -46,7 +48,7 @@ import static java.lang.String.format;
  */
 public abstract class ActorDelegate<T>
     extends TypedActor<T>
-    implements ActorState<ActorDelegate<T>>, Traceable {
+    implements ActorState<ActorDelegate<T>>, Traceable, Expirable {
 
     private final static Logger staticLogger = LoggerFactory.getLogger(ActorDelegate.class);
 
@@ -55,7 +57,7 @@ public abstract class ActorDelegate<T>
 
     /**
      * Default implementation that uses the static logger for {@link ActorDelegate}.
-     * Although the user can override it, {@link ActorDelegate}  is often used for anonymous
+     * Although the user can override it, {@link ActorDelegate} is often used for anonymous
      * subclassing, so this is a valuable optimization.
      */
     @Override
@@ -65,12 +67,43 @@ public abstract class ActorDelegate<T>
 
     private final boolean deleteAfterReceive;
 
+    private final long expirationTime;
+
+    /**
+     * Creates an ActorDelegate that will be stopped after it receives a message and will expire
+     * at the default time after {@link Expirable#TEMP_ACTOR_TIMEOUT_DEFAULT} milliseconds.
+     */
     protected ActorDelegate() {
         this(true);
     }
 
+    /**
+     * Creates an ActorDelegate that will expire at the default time after
+     * {@link Expirable#TEMP_ACTOR_TIMEOUT_DEFAULT} milliseconds
+     *
+     * @param deleteAfterReceive true if the actor is meant to be stopped after it receives any
+     * message. If false, the actor must be manually stopped.
+     */
     protected ActorDelegate(boolean deleteAfterReceive) {
+        this(deleteAfterReceive, TEMP_ACTOR_TIMEOUT_DEFAULT);
+    }
+
+    /**
+     * Creates an ActorDelegate.
+     *
+     * @param deleteAfterReceive true if the actor is meant to be stopped after it receives any
+     * message. If false, the actor must be manually stopped.
+     * @param timeoutMillis timeout is applied to this actor (in milliseconds). After this amount
+     * of time has passed, the actor will be destroyed. The value will be clamped so that it sits
+     * between {@link Expirable#TEMP_ACTOR_TIMEOUT_MIN} and {@link Expirable#TEMP_ACTOR_TIMEOUT_MAX}.
+     */
+    protected ActorDelegate(boolean deleteAfterReceive, long timeoutMillis) {
         this.deleteAfterReceive = deleteAfterReceive;
+        this.expirationTime = System.currentTimeMillis() + Expirable.clamp(
+            timeoutMillis,
+            TEMP_ACTOR_TIMEOUT_MIN,
+            TEMP_ACTOR_TIMEOUT_MAX
+        );
         MessagingScope currentScope = MessagingContextManager.getManager().currentScope();
         if (currentScope != null) {
             traceContext = currentScope.getTraceContext();
@@ -81,8 +114,28 @@ public abstract class ActorDelegate<T>
         }
     }
 
+    /**
+     * Creates an ActorDelegate.
+     *
+     * @param deleteAfterReceive true if the actor is meant to be stopped after it receives any
+     * message. If false, the actor must be manually stopped.
+     * @param timeout timeout is applied to this actor (in the specified time unit).
+     * After this amount of time has passed, the actor will be destroyed. The converted value will
+     * be clamped so that it sits between {@link Expirable#TEMP_ACTOR_TIMEOUT_MIN} and
+     * {@link Expirable#TEMP_ACTOR_TIMEOUT_MAX}.
+     * @param timeUnit the unit of time in which timeout is represented.
+     */
+    protected ActorDelegate(boolean deleteAfterReceive, long timeout, @Nonnull TimeUnit timeUnit) {
+        this(deleteAfterReceive, Objects.requireNonNull(timeUnit).toMillis(timeout));
+    }
+
     public boolean isDeleteAfterReceive() {
         return deleteAfterReceive;
+    }
+
+    @Override
+    public long getExpirationTime() {
+        return expirationTime;
     }
 
     @Override
@@ -127,13 +180,15 @@ public abstract class ActorDelegate<T>
         private final MessageConsumer<D> postReceiveConsumer;
 
         private FunctionalActorDelegate(
-                Map<Class<?>, MessageConsumer<?>> onReceiveConsumers,
-                MessageConsumer<D> orElseConsumer,
-                MessageConsumer<Object> onUndeliverableConsumer,
-                MessageConsumer<D> preReceiveConsumer,
-                MessageConsumer<D> postReceiveConsumer,
-                boolean deleteAfterReceive) {
-            super(deleteAfterReceive);
+            Map<Class<?>, MessageConsumer<?>> onReceiveConsumers,
+            MessageConsumer<D> orElseConsumer,
+            MessageConsumer<Object> onUndeliverableConsumer,
+            MessageConsumer<D> preReceiveConsumer,
+            MessageConsumer<D> postReceiveConsumer,
+            boolean deleteAfterReceive,
+            long timeout)
+        {
+            super(deleteAfterReceive, timeout);
             this.onReceiveConsumers = ImmutableMap.copyOf(onReceiveConsumers);
             this.orElseConsumer = orElseConsumer;
             this.onUndeliverableConsumer = onUndeliverableConsumer;
@@ -197,17 +252,48 @@ public abstract class ActorDelegate<T>
         ActorDelegate<D> build();
     }
 
-    public interface PreparatoryStep<D> extends PreReceiveStep<D> {
+    public interface PreparatoryStep<D> extends TimeoutStep<D> {
 
         /**
-         * Sets whether or not the actor should be stopped after receiving a message.
-         * Defaults to {@code true}.
+         * Sets whether the actor should be stopped after receiving a message. Defaults to
+         * {@code true}.
          *
-         * @param deleteAfterReceive If true, this actor will be stopped as soon as it receives a message
+         * @param deleteAfterReceive If true, this actor will be stopped as soon as it receives a
+         * message
+         * @return A {@link TimeoutStep} version of this builder
+         */
+        @Nonnull
+        TimeoutStep<D> deleteAfterReceive(boolean deleteAfterReceive);
+    }
+
+    public interface TimeoutStep<D> extends PreReceiveStep<D> {
+
+        /**
+         * Sets the timeout for this actor.
+         * The value will be clamped so that it sits between
+         * {@link Expirable#TEMP_ACTOR_TIMEOUT_MIN} and
+         * {@link Expirable#TEMP_ACTOR_TIMEOUT_MAX}.
+         * Defaults to {@link Expirable#TEMP_ACTOR_TIMEOUT_DEFAULT}.
+         *
+         * @param timeoutMillis The timeout for this actor (in milliseconds).
          * @return A {@link PreReceiveStep} version of this builder
          */
         @Nonnull
-        PreReceiveStep<D> deleteAfterReceive(boolean deleteAfterReceive);
+        PreReceiveStep<D> timeout(long timeoutMillis);
+
+        /**
+         * Sets the timeout for this actor.
+         * The converted value will be clamped so that it sits between
+         * {@link Expirable#TEMP_ACTOR_TIMEOUT_MIN} and
+         * {@link Expirable#TEMP_ACTOR_TIMEOUT_MAX}.
+         * Defaults to {@link Expirable#TEMP_ACTOR_TIMEOUT_DEFAULT}.
+         *
+         * @param timeout The timeout for this actor (in the unit specified).
+         * @param timeUnit The unit of time to use for the timeout.
+         * @return A {@link PreReceiveStep} version of this builder
+         */
+        @Nonnull
+        PreReceiveStep<D> timeout(long timeout, @Nonnull TimeUnit timeUnit);
     }
 
     public interface PreReceiveStep<D> extends MessageHandlingStep<D> {
@@ -365,23 +451,40 @@ public abstract class ActorDelegate<T>
         private MessageConsumer<D> preReceiveConsumer;
         private MessageConsumer<D> postReceiveConsumer;
         private boolean deleteAfterReceive = true;
+        private long timeout = TEMP_ACTOR_TIMEOUT_DEFAULT;
 
         @Nonnull
         @Override
         public ActorDelegate<D> build() {
             return new FunctionalActorDelegate<>(
-                    onReceiveConsumers,
-                    orElseConsumer,
-                    onUndeliverableConsumer,
-                    preReceiveConsumer,
-                    postReceiveConsumer,
-                    deleteAfterReceive);
+                onReceiveConsumers,
+                orElseConsumer,
+                onUndeliverableConsumer,
+                preReceiveConsumer,
+                postReceiveConsumer,
+                deleteAfterReceive,
+                timeout
+            );
         }
 
         @Nonnull
         @Override
-        public PreReceiveStep<D> deleteAfterReceive(boolean deleteAfterReceive) {
+        public TimeoutStep<D> deleteAfterReceive(boolean deleteAfterReceive) {
             this.deleteAfterReceive = deleteAfterReceive;
+            return this;
+        }
+
+        @Nonnull
+        @Override
+        public PreReceiveStep<D> timeout(long timeoutMillis) {
+            this.timeout = timeoutMillis;
+            return this;
+        }
+
+        @Nonnull
+        @Override
+        public PreReceiveStep<D> timeout(long timeout, @Nonnull TimeUnit timeUnit) {
+            this.timeout = Objects.requireNonNull(timeUnit).toMillis(timeout);
             return this;
         }
 

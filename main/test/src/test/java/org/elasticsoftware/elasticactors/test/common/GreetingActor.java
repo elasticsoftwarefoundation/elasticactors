@@ -54,7 +54,7 @@ public final class GreetingActor extends TypedActor<Greeting> {
     @Override
     public void onReceive(ActorRef sender, Greeting message) throws Exception {
         logger.info("Hello, {}", message.getWho());
-        if (getManager().isTracingEnabled()) {
+        if (getManager().isTracingEnabled() && message.isCheckTraceData()) {
             MessagingScope scope = getManager().currentScope();
             assertNotNull(scope);
             assertNull(scope.getMethod());
@@ -63,6 +63,7 @@ public final class GreetingActor extends TypedActor<Greeting> {
             assertNull(creationContext.getScheduled());
             assertEquals(creationContext.getCreator(), GreetingTest.class.getSimpleName());
             assertEquals(creationContext.getCreatorType(), shorten(GreetingTest.class.getName()));
+            assertNotNull(creationContext.getCreatorMethod());
             TraceContext current = scope.getTraceContext();
             assertNotNull(current);
             assertNotEquals(current.getSpanId(), TEST_TRACE.getSpanId());

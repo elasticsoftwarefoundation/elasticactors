@@ -20,6 +20,9 @@ import com.rabbitmq.client.Channel;
 import org.elasticsoftware.elasticactors.rabbitmq.ack.BufferingMessageAcker;
 import org.testng.annotations.Test;
 
+import static org.mockito.ArgumentMatchers.booleanThat;
+import static org.mockito.ArgumentMatchers.longThat;
+import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
@@ -41,6 +44,11 @@ public class BufferingMessageAckerTest {
         for(long i = 100; i < 1000; i++) {
             messageAcker.deliver(i);
         }
+
+        Thread.sleep(1000);
+
+        verifyNoInteractions(channel);
+
         for(long i = 1; i < 100; i++) {
             messageAcker.deliver(i);
         }
@@ -76,7 +84,10 @@ public class BufferingMessageAckerTest {
             messageAcker.ack(i);
         }
 
-        verify(channel,timeout(1000)).basicAck(999, true);
+        verify(channel, timeout(1000)).basicAck(999, true);
+
+        // In case the for-loop above ran slower than the polling inside the Acker
+        verify(channel, atMost(999 - 103)).basicAck(longThat(i -> i >= 103 && i < 999), booleanThat(Boolean::booleanValue));
 
         // deliver one more message
 
