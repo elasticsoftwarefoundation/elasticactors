@@ -44,6 +44,11 @@ public class BufferingMessageAckerTest {
         for(long i = 100; i < 1000; i++) {
             messageAcker.deliver(i);
         }
+
+        Thread.sleep(1000);
+
+        verifyNoInteractions(channel);
+
         for(long i = 1; i < 100; i++) {
             messageAcker.deliver(i);
         }
