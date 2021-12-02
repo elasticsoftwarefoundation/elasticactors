@@ -51,7 +51,7 @@ public final class ActorLifecycleListenerScanner implements ActorLifecycleListen
     @Override
     @PostConstruct
     public synchronized void init() {
-        logger.info("Scanning ActorLifecycleListener-implementing classes");
+        logger.info("Scanning classes that implement ActorLifecycleListener");
         String[] basePackages = ScannerHelper.findBasePackagesOnClasspath(applicationContext.getClassLoader());
         ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
 

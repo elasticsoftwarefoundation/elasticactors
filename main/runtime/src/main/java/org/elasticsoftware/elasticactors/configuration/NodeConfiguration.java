@@ -195,8 +195,11 @@ public class NodeConfiguration {
         @Nullable @Qualifier("elasticActorsMeterTagCustomizer") MicrometerTagCustomizer tagCustomizer)
     {
         int maximumSize = env.getProperty("ea.nodeCache.maximumSize",Integer.class,10240);
+        long expirationCheckPeriod =
+            env.getProperty("ea.nodeCache.expirationCheckPeriod", Long.class, 30000L);
         return new NodeActorCacheManager(
             maximumSize,
+            expirationCheckPeriod,
             MicrometerConfiguration.build(env, meterRegistry, "nodeActorCache", tagCustomizer)
         );
     }

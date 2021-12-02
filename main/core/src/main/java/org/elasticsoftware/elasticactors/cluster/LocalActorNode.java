@@ -32,6 +32,7 @@ import org.elasticsoftware.elasticactors.cluster.tasks.CreateActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.DestroyActorTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.HandleServiceMessageTask;
 import org.elasticsoftware.elasticactors.cluster.tasks.HandleUndeliverableServiceMessageTask;
+import org.elasticsoftware.elasticactors.concurrent.Expirable;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessageFactory;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
@@ -44,15 +45,22 @@ import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 import org.elasticsoftware.elasticactors.tracing.Traceable;
+import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static org.elasticsoftware.elasticactors.cluster.tasks.ProtocolFactoryFactory.getProtocolFactory;
 import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
@@ -65,6 +73,8 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
 
     private final static Logger staticLogger = LoggerFactory.getLogger(LocalActorNode.class);
 
+    private static final Clock SYSTEM_CLOCK = Clock.systemDefaultZone();
+
     private final InternalActorSystem actorSystem;
     private final NodeKey nodeKey;
     private final ThreadBoundExecutor actorExecutor;
@@ -73,6 +83,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     private final Set<ElasticActor> initializedActors = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final MetricsSettings metricsSettings;
     private final LoggingSettings loggingSettings;
+    private ScheduledExecutorService actorExpirationScheduler;
 
     public LocalActorNode(
         PhysicalNode node,
@@ -108,6 +119,17 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     public synchronized void init() throws Exception {
         logger.info("Initializing Local Actor Node [{}]", nodeKey);
         this.actorCache = actorCacheManager.create(nodeKey,this);
+        long expirationCheckPeriod = actorCacheManager.getExpirationCheckPeriod();
+        if (expirationCheckPeriod > 0) {
+            this.actorExpirationScheduler = Executors.newSingleThreadScheduledExecutor(
+                new DaemonThreadFactory("ACTOR-EXPIRATION-SCHEDULER"));
+            this.actorExpirationScheduler.scheduleAtFixedRate(
+                this::checkExpiredActors,
+                expirationCheckPeriod,
+                expirationCheckPeriod,
+                TimeUnit.MILLISECONDS
+            );
+        }
         super.init();
     }
 
@@ -115,6 +137,9 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     public void destroy() {
         logger.info("Destroying Local Actor Node [{}]", nodeKey);
         super.destroy();
+        if (actorExpirationScheduler != null) {
+            actorExpirationScheduler.shutdownNow();
+        }
         actorCacheManager.destroy(actorCache);
     }
 
@@ -199,7 +224,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
             if(receiverRef.getActorId() != null) {
                 try {
                     // load persistent actor from cache or persistent store
-                    PersistentActor<NodeKey> actor = actorCache.getIfPresent(receiverRef);
+                    PersistentActor<NodeKey> actor = getActorFromCacheIfNotExpired(receiverRef);
                     if(actor != null) {
                         // find actor class behind receiver ActorRef
                         ElasticActor actorInstance = actorSystem.getActorInstance(receiverRef, actor.getActorClass());
@@ -297,7 +322,8 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
                         }
                     } else if(message instanceof DestroyActorMessage) {
                         DestroyActorMessage destroyActorMessage = (DestroyActorMessage) message;
-                        PersistentActor<NodeKey> persistentActor = this.actorCache.getIfPresent(destroyActorMessage.getActorRef());
+                        PersistentActor<NodeKey> persistentActor =
+                            actorCache.getIfPresent(destroyActorMessage.getActorRef());
                         if(persistentActor != null) {
                             // run the preDestroy and other cleanup
                             destroyActor(persistentActor, internalMessage, messageHandlerEventListener);
@@ -331,8 +357,70 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
         }
     }
 
+    private void checkExpiredActors() {
+        ConcurrentMap<ActorRef, PersistentActor<NodeKey>> cacheMap = actorCache.asMap();
+        if (!cacheMap.isEmpty()) {
+            Clock clock = Clock.fixed(SYSTEM_CLOCK.instant(), SYSTEM_CLOCK.getZone());
+            for (PersistentActor<NodeKey> actor : cacheMap.values()) {
+                if (isExpired(actor, clock)) {
+                    invalidate(actor);
+                }
+            }
+        }
+    }
+
+    @Nullable
+    private PersistentActor<NodeKey> getActorFromCacheIfNotExpired(ActorRef receiverRef) {
+        PersistentActor<NodeKey> actor = actorCache.getIfPresent(receiverRef);
+        if (isExpired(actor, SYSTEM_CLOCK)) {
+            invalidate(actor);
+            return null;
+        }
+        return actor;
+    }
+
+    private boolean isExpired(@Nullable PersistentActor<NodeKey> actor, Clock clock) {
+        if (actor != null && actor.getState() instanceof Expirable) {
+            Expirable expirable = (Expirable) actor.getState();
+            return expirable.getExpirationTime() < clock.millis();
+        }
+        return false;
+    }
+
+    private void invalidate(@Nonnull PersistentActor<NodeKey> actor) {
+        try {
+            // Destroy the actor due to timeout
+            actorSystem.stop(actor.getSelf());
+            Traceable traceable = actor.getState() instanceof Traceable
+                ? (Traceable) actor.getState()
+                : null;
+            boolean hasTraceData = traceable != null
+                && (traceable.getTraceContext() != null
+                || traceable.getCreationContext() != null);
+            logger.warn(
+                "Actor [{}] of type [{}] expired due to timeout."
+                    + "{}"
+                    + "{}"
+                    + "{}",
+                actor.getSelf(),
+                actor.getActorClass().getName(),
+                hasTraceData
+                    ? " Actor created with the following contexts in scope:"
+                    : "",
+                hasTraceData
+                    ? toLoggableString(traceable.getCreationContext())
+                    : "",
+                hasTraceData
+                    ? toLoggableString(traceable.getTraceContext())
+                    : ""
+            );
+        } catch (Exception e) {
+            logger.error("Could not expire actor [{}]", actor, e);
+        }
+    }
+
     private boolean actorExists(ActorRef actorRef) {
-        return actorCache.getIfPresent(actorRef) != null;
+        return getActorFromCacheIfNotExpired(actorRef) != null;
     }
 
     private void createActor(ActorRef ref, CreateActorMessage createMessage,InternalMessage internalMessage, MessageHandlerEventListener messageHandlerEventListener) throws Exception {

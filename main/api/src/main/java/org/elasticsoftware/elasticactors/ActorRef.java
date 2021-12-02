@@ -16,9 +16,8 @@
 
 package org.elasticsoftware.elasticactors;
 
+import org.elasticsoftware.elasticactors.concurrent.ActorCompletableFuture;
 import org.reactivestreams.Publisher;
-
-import java.util.concurrent.CompletionStage;
 
 /**
  * This is the main entry point for the ElasticActors API. When a {@link org.elasticsoftware.elasticactors.serialization.Message}
@@ -88,9 +87,9 @@ public interface ActorRef {
      * @param message       the message to send (needs to be annotated with {@link org.elasticsoftware.elasticactors.serialization.Message}
      * @param responseType  the expected message type of the response
      * @param <T>           the expected message type of the response
-     * @return              a {@link CompletionStage} that completes with the response message
+     * @return              an {@link ActorCompletableFuture} that completes with the response message
      */
-    <T> CompletionStage<T> ask(Object message, Class<T> responseType);
+    <T> ActorCompletableFuture<T> ask(Object message, Class<T> responseType);
 
     /**
      * Send a message to an {@link ElasticActor} and request a response. When {@code persistOnResponse} is {@link Boolean#TRUE}
@@ -100,9 +99,9 @@ public interface ActorRef {
      * @param responseType the expected message type of the response
      * @param persistOnResponse if true, the calling actor's state (if it's a persistent actor) will be saved
      * @param <T> the expected message type of the response
-     * @return a {@link CompletionStage} that completes with the response message
+     * @return an {@link ActorCompletableFuture} that completes with the response message
      */
-    <T> CompletionStage<T> ask(Object message, Class<T> responseType, Boolean persistOnResponse);
+    <T> ActorCompletableFuture<T> ask(Object message, Class<T> responseType, Boolean persistOnResponse);
 
     /**
      * Return whether the Actor is co-located on the same JVM as the caller. There can be significant performance

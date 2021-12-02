@@ -66,6 +66,7 @@ public final class MicrometerConfiguration {
                 false
             );
             String componentNamePrefix = env.getProperty("ea.metrics.micrometer.namePrefix", "");
+            String globalPrefix = env.getProperty("ea.metrics.micrometer.prefix", "");
             String prefix =
                 env.getProperty(format("ea.metrics.micrometer.%s.prefix", componentName), "");
             String nodeId = env.getRequiredProperty("ea.node.id");
@@ -102,7 +103,7 @@ public final class MicrometerConfiguration {
                 tagTaskTypes,
                 meterRegistry,
                 sanitizePrefix(componentNamePrefix) + "elastic.actors." + componentName,
-                prefix,
+                sanitizePrefix(globalPrefix) + prefix,
                 tagCustomizer != null ? tags.and(tagCustomizer.get(componentName)) : tags,
                 allowedActorTypesForTagging,
                 allowedMessageTypesForTagging

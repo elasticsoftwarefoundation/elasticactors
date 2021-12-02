@@ -30,13 +30,37 @@ import org.elasticsoftware.elasticactors.serialization.Message;
     logBodyOnError = true)
 public class Greeting {
     private final String who;
+    private final boolean checkTraceData;
+    private final long delayResponseTime;
+
+    public Greeting(String who) {
+        this(who, Boolean.TRUE, 0L);
+    }
+
+    public Greeting(String who, Boolean checkTraceData) {
+        this(who, checkTraceData, 0L);
+    }
 
     @JsonCreator
-    public Greeting(@JsonProperty("who") String who) {
+    public Greeting(
+        @JsonProperty("who") String who,
+        @JsonProperty("checkTraceData") Boolean checkTraceData,
+        @JsonProperty("delayResponseTime") Long delayResponseTime)
+    {
         this.who = who;
+        this.checkTraceData = checkTraceData == null || checkTraceData;
+        this.delayResponseTime = delayResponseTime != null ? delayResponseTime : 0L;
     }
 
     public String getWho() {
         return who;
+    }
+
+    public boolean isCheckTraceData() {
+        return checkTraceData;
+    }
+
+    public long getDelayResponseTime() {
+        return delayResponseTime;
     }
 }
