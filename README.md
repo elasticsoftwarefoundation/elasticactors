@@ -110,6 +110,8 @@ The following exceptions apply:
 * **1.x - 5.x** to **6.0** or later:
   * Elastic Actors 6.0 introduces timeouts for Temporary Actors. If your application has long-lived 
     Temporary Actors, make sure to configure the timeout properties, so they suit your use-case.
+  * A major bug in the BUFFERED RabbitMQ ACKer was fixed. If you are using it, upgrade 
+    to version 6.0 or later as soon as possible, or use another ACKer implementation.
 
 
 ## Basic configuration
@@ -281,6 +283,7 @@ ea.nodeCache.maximumSize=10240
 # scheduled executor thread that runs every N milliseconds and removed expired actors.
 # This key allows you to adjust how often this thread will run. There is no maximum value, but it 
 # enforces a minimum of 500ms so it can't be made to run so frequently.
+# Set it to 0 or lower to completely disable timeout checks.
 # Default: 30000
 # Minimum: 500
 ea.nodeCache.expirationCheckPeriod=30000

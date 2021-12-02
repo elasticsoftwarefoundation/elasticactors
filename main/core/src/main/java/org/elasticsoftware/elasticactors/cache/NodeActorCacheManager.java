@@ -36,7 +36,9 @@ public final class NodeActorCacheManager extends CacheManager<ActorRef,Persisten
         @Nullable MicrometerConfiguration micrometerConfiguration)
     {
         super(maximumSize, micrometerConfiguration);
-        this.actorExpirationCheckPeriod = Math.max(actorExpirationCheckPeriod, 500);
+        this.actorExpirationCheckPeriod = actorExpirationCheckPeriod <= 0
+            ? -1
+            : Math.max(actorExpirationCheckPeriod, 500);
     }
 
     public long getExpirationCheckPeriod() {

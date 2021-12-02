@@ -79,9 +79,7 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     private final Set<ElasticActor> initializedActors = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final MetricsSettings metricsSettings;
     private final LoggingSettings loggingSettings;
-    private final ScheduledExecutorService actorExpirationScheduler =
-        Executors.newSingleThreadScheduledExecutor(
-            new DaemonThreadFactory("ACTOR-EXPIRATION-SCHEDULER"));
+    private ScheduledExecutorService actorExpirationScheduler;
 
     public LocalActorNode(
         PhysicalNode node,
@@ -117,12 +115,17 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     public synchronized void init() throws Exception {
         logger.info("Initializing Local Actor Node [{}]", nodeKey);
         this.actorCache = actorCacheManager.create(nodeKey,this);
-        this.actorExpirationScheduler.scheduleAtFixedRate(
-            this::checkExpiredActors,
-            actorCacheManager.getExpirationCheckPeriod(),
-            actorCacheManager.getExpirationCheckPeriod(),
-            TimeUnit.MILLISECONDS
-        );
+        long expirationCheckPeriod = actorCacheManager.getExpirationCheckPeriod();
+        if (expirationCheckPeriod > 0) {
+            this.actorExpirationScheduler = Executors.newSingleThreadScheduledExecutor(
+                new DaemonThreadFactory("ACTOR-EXPIRATION-SCHEDULER"));
+            this.actorExpirationScheduler.scheduleAtFixedRate(
+                this::checkExpiredActors,
+                expirationCheckPeriod,
+                expirationCheckPeriod,
+                TimeUnit.MILLISECONDS
+            );
+        }
         super.init();
     }
 
@@ -130,7 +133,9 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     public void destroy() {
         logger.info("Destroying Local Actor Node [{}]", nodeKey);
         super.destroy();
-        actorExpirationScheduler.shutdownNow();
+        if (actorExpirationScheduler != null) {
+            actorExpirationScheduler.shutdownNow();
+        }
         actorCacheManager.destroy(actorCache);
     }
 
