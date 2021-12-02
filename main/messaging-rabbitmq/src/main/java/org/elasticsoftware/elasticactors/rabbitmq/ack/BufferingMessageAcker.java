@@ -87,14 +87,10 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
                     flushAck();
                 } else if(tag.type == TagType.DELIVERED) {
                     // register the last delivered tag
-                    highestDeliveredTag = (tag.value > highestDeliveredTag) ? tag.value : highestDeliveredTag;
-                    // add to the end of the list (in order)
-                    pendingTags.add(tag.value);
+                    highestDeliveredTag = Math.max(tag.value, highestDeliveredTag);
                 } else if(tag.type == TagType.ACK) {
                     // search from the beginning and delete
-                    pendingTags.remove(tag.value);
-                } else if(tag.type == TagType.RESET) {
-                    // not sure what to do here
+                    pendingTags.add(tag.value);
                 } else if(tag.type == TagType.STOP) {
                     // flush first
                     flushAck();
@@ -113,15 +109,39 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
             return;
         }
         // get the head of the deque
-        Long lowestUnAckedTag = (pendingTags.isEmpty()) ? null : pendingTags.first();
-        long ackUntil = (lowestUnAckedTag != null) ? lowestUnAckedTag - 1 : highestDeliveredTag;
+        Long ackUntil = pendingTags.pollFirst();
+        if (ackUntil == null) {
+            // no tags to ack yet
+            return;
+        }
+        if (lastAckedTag == -1 && ackUntil > 1) {
+            // cannot ack anything if we haven't acked 1 yet
+            // re-add it
+            pendingTags.add(ackUntil);
+            return;
+        }
+        if (lastAckedTag > 0 && ackUntil > lastAckedTag + 1) {
+            // not ready to ack yet because it's not consecutive with what has been acked so far
+            // re-add it
+            pendingTags.add(ackUntil);
+            return;
+        }
+        // find highest tag we can ack
+        Long next;
+        while ((next = pendingTags.pollFirst()) != null) {
+            if (next == ackUntil + 1) {
+                ackUntil = next;
+            } else {
+                // re-add it because it's not consecutive, but we already removed it
+                pendingTags.add(next);
+                break;
+            }
+        }
         // don't ack 0 as it will ack all pending messages!!!
         if(ackUntil > 0 && ackUntil > lastAckedTag) {
             try {
                 consumerChannel.basicAck(ackUntil,true);
-                if(logger.isInfoEnabled()) {
-                    logger.info("Acked all messages from {} up until {}",lastAckedTag,ackUntil);
-                }
+                logger.info("Acked all messages from {} up until {}", lastAckedTag, ackUntil);
                 lastAckedTag = ackUntil;
             } catch (IOException e) {
                 logger.error("Exception while acking message", e);
@@ -129,8 +149,10 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
         }
     }
 
-    private static enum TagType {
-        DELIVERED,ACK,RESET,STOP
+    private enum TagType {
+        DELIVERED,
+        ACK,
+        STOP
     }
 
     private static final class Tag {
