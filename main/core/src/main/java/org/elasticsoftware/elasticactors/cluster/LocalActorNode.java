@@ -52,10 +52,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -70,6 +72,8 @@ import static org.elasticsoftware.elasticactors.util.SerializationTools.deserial
 public final class LocalActorNode extends AbstractActorContainer implements ActorNode, EvictionListener<PersistentActor<NodeKey>> {
 
     private final static Logger staticLogger = LoggerFactory.getLogger(LocalActorNode.class);
+
+    private static final Clock SYSTEM_CLOCK = Clock.systemDefaultZone();
 
     private final InternalActorSystem actorSystem;
     private final NodeKey nodeKey;
@@ -355,29 +359,31 @@ public final class LocalActorNode extends AbstractActorContainer implements Acto
     }
 
     private void checkExpiredActors() {
-        actorCache.asMap().values().forEach(this::invalidateIfExpired);
-    }
-
-    private void invalidateIfExpired(PersistentActor<NodeKey> actor) {
-        if (isExpired(actor)) {
-            invalidate(actor);
+        ConcurrentMap<ActorRef, PersistentActor<NodeKey>> cacheMap = actorCache.asMap();
+        if (!cacheMap.isEmpty()) {
+            Clock clock = Clock.fixed(SYSTEM_CLOCK.instant(), SYSTEM_CLOCK.getZone());
+            for (PersistentActor<NodeKey> actor : cacheMap.values()) {
+                if (isExpired(actor, clock)) {
+                    invalidate(actor);
+                }
+            }
         }
     }
 
     @Nullable
     private PersistentActor<NodeKey> getActorFromCacheIfNotExpired(ActorRef receiverRef) {
         PersistentActor<NodeKey> actor = actorCache.getIfPresent(receiverRef);
-        if (isExpired(actor)) {
+        if (isExpired(actor, SYSTEM_CLOCK)) {
             invalidate(actor);
             return null;
         }
         return actor;
     }
 
-    private boolean isExpired(@Nullable PersistentActor<NodeKey> actor) {
+    private boolean isExpired(@Nullable PersistentActor<NodeKey> actor, Clock clock) {
         if (actor != null && actor.getState() instanceof Expirable) {
             Expirable expirable = (Expirable) actor.getState();
-            return expirable.getExpirationTime() < System.currentTimeMillis();
+            return expirable.getExpirationTime() < clock.millis();
         }
         return false;
     }
