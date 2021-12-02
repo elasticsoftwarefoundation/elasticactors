@@ -137,7 +137,7 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
         if(ackUntil > 0 && ackUntil > lastAckedTag) {
             try {
                 consumerChannel.basicAck(ackUntil,true);
-                logger.info("Acked all messages from {} up until {}", lastAckedTag, ackUntil);
+                logger.debug("Acked all messages from {} up until {}", lastAckedTag, ackUntil);
                 lastAckedTag = ackUntil;
             } catch (IOException e) {
                 logger.error("Exception while acking message", e);
