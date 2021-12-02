@@ -648,6 +648,9 @@ and name `elasticActorsMeterRegistry`. The supplied bean will be used to add the
 # Optional prefix for component names
 ea.metrics.micrometer.namePrefix=prefix
 
+# Option global metrics prefix
+ea.metrics.micrometer.prefix=elastic.actors
+
 # Toggles Micrometer ON or OFF for a given component.
 #
 # The following components are currently supported:
@@ -670,6 +673,7 @@ ea.metrics.micrometer.namePrefix=prefix
 ea.metrics.micrometer.[component_name].enabled=false
 
 # Optional metric prefix for a given component.
+# Component-specific prefixes are inserted after the global prefix.
 ea.metrics.micrometer.[component_name].prefix=ea
 
 # Optional custom tags for a given component.
