@@ -109,27 +109,24 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
             return;
         }
         // get the head of the deque
-        Long ackUntil = pendingTags.pollFirst();
+        Long ackUntil = pendingTags.isEmpty() ? null : pendingTags.first();
         if (ackUntil == null) {
             // no tags to ack yet
             return;
         }
         if (lastAckedTag == -1 && ackUntil > 1) {
             // cannot ack anything if we haven't acked 1 yet
-            // re-add it
-            pendingTags.add(ackUntil);
             return;
         }
         if (lastAckedTag > 0 && ackUntil > lastAckedTag + 1) {
             // not ready to ack yet because it's not consecutive with what has been acked so far
-            // re-add it
-            pendingTags.add(ackUntil);
             return;
         }
         // find highest tag we can ack
+        // first one returned will be ackUntil itself
         Long next;
         while ((next = pendingTags.pollFirst()) != null) {
-            if (next == ackUntil + 1) {
+            if (next <= ackUntil + 1) {
                 ackUntil = next;
             } else {
                 // re-add it because it's not consecutive, but we already removed it
