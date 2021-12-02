@@ -16,11 +16,11 @@
 
 package org.elasticsoftware.elasticactors.serialization.reactivestreams;
 
-import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.CancelMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -37,12 +37,20 @@ public final class CancelMessageDeserializer implements MessageDeserializer<Canc
 
     @Override
     public CancelMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        Reactivestreams.CancelMessage cancelMessage = Reactivestreams.CancelMessage.parseFrom(ByteString.copyFrom(serializedObject));
+        Reactivestreams.CancelMessage cancelMessage = ByteBufferUtils.throwingApplyAndReset(
+            serializedObject,
+            Reactivestreams.CancelMessage::parseFrom
+        );
         return new CancelMessage(actorRefDeserializer.deserialize(cancelMessage.getSubscriberRef()), cancelMessage.getMessageName());
     }
 
     @Override
     public Class<CancelMessage> getMessageClass() {
         return CancelMessage.class;
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 }

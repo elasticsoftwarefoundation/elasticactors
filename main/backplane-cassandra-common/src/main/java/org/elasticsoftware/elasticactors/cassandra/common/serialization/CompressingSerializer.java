@@ -16,8 +16,6 @@
 
 package org.elasticsoftware.elasticactors.cassandra.common.serialization;
 
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
@@ -47,12 +45,14 @@ public final class CompressingSerializer<I> implements Serializer<I,ByteBuffer> 
     public ByteBuffer serialize(I object) throws IOException {
         byte[] serializedObject = delegate.serialize(object);
         if(serializedObject.length > compressionThreshold) {
-            byte[] compressedBytes =  lz4Compressor.compress(serializedObject);
-            ByteArrayDataOutput dataOutput = ByteStreams.newDataOutput(compressedBytes.length+8);
-            dataOutput.write(MAGIC_HEADER);
-            dataOutput.writeInt(serializedObject.length);
-            dataOutput.write(compressedBytes);
-            return ByteBuffer.wrap(dataOutput.toByteArray());
+            byte[] compressedBytes = lz4Compressor.compress(serializedObject);
+            ByteBuffer buffer =
+                ByteBuffer.allocate(MAGIC_HEADER.length + Integer.BYTES + compressedBytes.length);
+            buffer.put(MAGIC_HEADER);
+            buffer.putInt(serializedObject.length);
+            buffer.put(compressedBytes);
+            buffer.rewind();
+            return buffer;
         } else {
             return ByteBuffer.wrap(serializedObject);
         }

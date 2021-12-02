@@ -166,13 +166,14 @@ public final class DefaultInternalMessage extends AbstractTracedMessage
 
     @Override
     public ByteBuffer getPayload() {
-        return payload != null ? payload.asReadOnlyBuffer() : null;
+        // Using duplicate to give implementations a chance to access the internal byte array
+        return payload.duplicate();
     }
 
     @Override
     public <T> T getPayload(MessageDeserializer<T> deserializer) throws IOException {
-        //return deserializer.deserialize(payload);
-        return SerializationContext.deserialize(deserializer, payload.asReadOnlyBuffer());
+        // Using duplicate to give implementations a chance to access the internal byte array
+        return SerializationContext.deserialize(deserializer, payload.duplicate());
     }
 
     @Override
@@ -231,22 +232,6 @@ public final class DefaultInternalMessage extends AbstractTracedMessage
     }
 
     @Override
-    public InternalMessage copyOf() {
-        return new DefaultInternalMessage(
-                id,
-                sender,
-                receivers,
-                payload.asReadOnlyBuffer(),
-                payloadClass,
-                messageQueueAffinityKey,
-                durable,
-                undeliverable,
-                timeout,
-                getTraceContext(),
-                getCreationContext());
-    }
-
-    @Override
     public ImmutableMap<Integer, InternalMessage> splitInBuckets(Hasher hasher, int buckets) {
         return receivers.size() <= 1
             ? ImmutableMap.of(calculateBucketForEmptyOrSingleActor(receivers, hasher, buckets), this)
@@ -258,7 +243,7 @@ public final class DefaultInternalMessage extends AbstractTracedMessage
             UUIDTools.createTimeBasedUUID(),
             sender,
             ImmutableList.copyOf(receivers),
-            payload.asReadOnlyBuffer(),
+            payload,
             payloadClass,
             messageQueueAffinityKey,
             durable,

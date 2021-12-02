@@ -53,8 +53,6 @@ public interface InternalMessage extends TracedMessage {
 
     boolean isUndeliverable();
 
-    InternalMessage copyOf();
-
     int getTimeout();
 
     boolean hasSerializedPayload();

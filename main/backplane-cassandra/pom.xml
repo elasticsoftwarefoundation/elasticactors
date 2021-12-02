@@ -34,16 +34,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.lz4</groupId>
-            <artifactId>lz4-java</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
-            <artifactId>elasticactors-spi</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
-            <artifactId>elasticactors-core</artifactId>
+            <artifactId>backplane-cassandra-common</artifactId>
         </dependency>
         <dependency>
             <groupId>org.hectorclient</groupId>

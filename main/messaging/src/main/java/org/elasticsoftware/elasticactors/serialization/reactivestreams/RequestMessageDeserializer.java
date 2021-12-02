@@ -16,10 +16,10 @@
 
 package org.elasticsoftware.elasticactors.serialization.reactivestreams;
 
-import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.RequestMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -31,12 +31,20 @@ public final class RequestMessageDeserializer implements MessageDeserializer<Req
 
     @Override
     public RequestMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        Reactivestreams.RequestMessage subscriptionMessage = Reactivestreams.RequestMessage.parseFrom(ByteString.copyFrom(serializedObject));
+        Reactivestreams.RequestMessage subscriptionMessage = ByteBufferUtils.throwingApplyAndReset(
+            serializedObject,
+            Reactivestreams.RequestMessage::parseFrom
+        );
         return new RequestMessage(subscriptionMessage.getMessageName(), subscriptionMessage.getN());
     }
 
     @Override
     public Class<RequestMessage> getMessageClass() {
         return RequestMessage.class;
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 }

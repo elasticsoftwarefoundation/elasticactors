@@ -79,9 +79,7 @@ public final class CassandraScheduledMessageRepository implements ScheduledMessa
             for (int i = 0; i < resultRow.getColumnDefinitions().size(); i++) {
                 ByteBuffer resultBuffer = resultRow.getByteBuffer(i);
                 try {
-                    byte[] resultBytes = new byte[requireNonNull(resultBuffer).remaining()];
-                    resultBuffer.get(resultBytes);
-                    resultList.add(scheduledMessageDeserializer.deserialize(resultBytes));
+                    resultList.add(scheduledMessageDeserializer.deserialize(requireNonNull(resultBuffer)));
                 } catch (NullPointerException | IOException e) {
                     logger.error("IOException while deserializing ScheduledMessage", e);
                 }

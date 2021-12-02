@@ -28,6 +28,7 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 
@@ -39,18 +40,21 @@ public final class SerializationTools {
     public static Object deserializeMessage(SerializationAccessor serializationAccessor, InternalMessage internalMessage) throws Exception {
         if (internalMessage.hasPayloadObject()) {
             return internalMessage.getPayload(null);
-        }
-
-        Class<?> messageClass = getClassHelper().forName(internalMessage.getPayloadClass());
-        MessageDeserializer<?> deserializer = serializationAccessor.getDeserializer(messageClass);
-
-        if(deserializer != null) {
-            return internalMessage.getPayload(deserializer);
         } else {
-            //@todo: throw a more targeted exception
-            throw new Exception(String.format("No Deserializer found for Message class %s", internalMessage.getPayloadClass()));
-        }
+            Class<?> messageClass = getClassHelper().forName(internalMessage.getPayloadClass());
+            MessageDeserializer<?> deserializer =
+                serializationAccessor.getDeserializer(messageClass);
 
+            if (deserializer != null) {
+                return internalMessage.getPayload(deserializer);
+            } else {
+                //@todo: throw a more targeted exception
+                throw new Exception(String.format(
+                    "No Deserializer found for Message class %s",
+                    internalMessage.getPayloadClass()
+                ));
+            }
+        }
     }
 
     public static MessageToStringConverter getStringConverter(
@@ -68,10 +72,27 @@ public final class SerializationTools {
         return null;
     }
 
-    public static ActorState deserializeActorState(SerializationFrameworks serializationFrameworks, Class<? extends ElasticActor> actorClass, byte[] serializedState) throws IOException {
+    public static ActorState deserializeActorState(
+        SerializationFrameworks serializationFrameworks,
+        Class<? extends ElasticActor> actorClass,
+        byte[] serializedState) throws IOException
+    {
+        return deserializeActorState(
+            serializationFrameworks,
+            actorClass,
+            ByteBuffer.wrap(serializedState)
+        );
+    }
+
+    public static ActorState deserializeActorState(
+        SerializationFrameworks serializationFrameworks,
+        Class<? extends ElasticActor> actorClass,
+        ByteBuffer serializedState) throws IOException
+    {
         Actor actorAnnotation = actorClass.getAnnotation(Actor.class);
-        if(actorAnnotation != null) {
-            SerializationFramework framework = serializationFrameworks.getSerializationFramework(actorAnnotation.serializationFramework());
+        if (actorAnnotation != null) {
+            SerializationFramework framework =
+                serializationFrameworks.getSerializationFramework(actorAnnotation.serializationFramework());
             return framework.getActorStateDeserializer(actorClass).deserialize(serializedState);
         } else {
             // @todo: what to do if we can't determine the state?

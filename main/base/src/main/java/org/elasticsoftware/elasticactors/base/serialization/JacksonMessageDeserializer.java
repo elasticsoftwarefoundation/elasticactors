@@ -17,6 +17,7 @@
 package org.elasticsoftware.elasticactors.base.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 
 import java.io.IOException;
@@ -37,13 +38,29 @@ public final class JacksonMessageDeserializer<T> implements MessageDeserializer<
 
     @Override
     public T deserialize(ByteBuffer serializedObject) throws IOException {
-        byte[] buf = new byte[serializedObject.remaining()];
-        serializedObject.get(buf);
-        return objectMapper.readValue(buf, objectClass);
+        if (serializedObject.hasArray()) {
+            return objectMapper.readValue(serializedObject.array(), objectClass);
+        } else {
+            // Avoid marking the buffer (what if it was marked from the outside?)
+            int position = serializedObject.position();
+            try {
+                return objectMapper.readValue(
+                    new ByteBufferBackedInputStream(serializedObject),
+                    objectClass
+                );
+            } finally {
+                serializedObject.position(position);
+            }
+        }
     }
 
     @Override
     public Class<T> getMessageClass() {
         return objectClass;
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 }

@@ -36,4 +36,9 @@ public final class ActorRefDeserializer implements Deserializer<String,ActorRef>
     public ActorRef deserialize(String serializedObject) throws IOException {
         return actorRefFactory.create(serializedObject);
     }
+
+    @Override
+    public boolean isSafe() {
+        return true;
+    }
 }

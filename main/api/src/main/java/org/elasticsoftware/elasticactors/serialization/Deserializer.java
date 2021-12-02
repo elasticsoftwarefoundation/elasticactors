@@ -23,4 +23,11 @@ import java.io.IOException;
  */
 public interface Deserializer<I,O> {
     O deserialize(I serializedObject) throws IOException;
+
+    /**
+     * Whether this deserializer is safe from side effects on the serialized object.
+     */
+    default boolean isSafe() {
+        return false;
+    }
 }

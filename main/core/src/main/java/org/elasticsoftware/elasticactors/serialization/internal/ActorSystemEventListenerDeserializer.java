@@ -20,15 +20,17 @@ import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListener;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerImpl;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Elasticactors;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class ActorSystemEventListenerDeserializer implements Deserializer<byte[],ActorSystemEventListener> {
+public final class ActorSystemEventListenerDeserializer implements Deserializer<ByteBuffer,ActorSystemEventListener> {
     private static final ActorSystemEventListenerDeserializer INSTANCE = new ActorSystemEventListenerDeserializer();
 
     public static ActorSystemEventListenerDeserializer get() {
@@ -36,11 +38,15 @@ public final class ActorSystemEventListenerDeserializer implements Deserializer<
     }
 
     @Override
-    public ActorSystemEventListener deserialize(byte[] serializedObject) throws IOException {
+    public ActorSystemEventListener deserialize(ByteBuffer serializedObject) throws IOException {
         try {
-            Elasticactors.ActorSystemEventListener protobufMessage = Elasticactors.ActorSystemEventListener.parseFrom(serializedObject);
+            Elasticactors.ActorSystemEventListener protobufMessage =
+                ByteBufferUtils.throwingApplyAndReset(
+                    serializedObject,
+                    Elasticactors.ActorSystemEventListener::parseFrom
+                );
             Class messageClass = getClassHelper().forName(protobufMessage.getMessageClass());
-            byte[] messageBytes = protobufMessage.getMessage().toByteArray();
+            ByteBuffer messageBytes = protobufMessage.getMessage().asReadOnlyByteBuffer();
             String actorId = protobufMessage.getActorId();
             String messageQueueAffinityKey = protobufMessage.hasMessageQueueAffinityKey()
                 ? protobufMessage.getMessageQueueAffinityKey()
@@ -54,5 +60,10 @@ public final class ActorSystemEventListenerDeserializer implements Deserializer<
         } catch(ClassNotFoundException e) {
             throw new IOException(e);
         }
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 }

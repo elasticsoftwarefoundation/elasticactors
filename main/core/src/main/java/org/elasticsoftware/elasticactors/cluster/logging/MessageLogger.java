@@ -18,6 +18,7 @@ import java.nio.ByteBuffer;
 import java.util.function.Function;
 
 import static org.elasticsoftware.elasticactors.tracing.TracingUtils.shorten;
+import static org.elasticsoftware.elasticactors.util.ArrayUtils.contains;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
@@ -81,15 +82,6 @@ public final class MessageLogger {
         if (messageClass != null) {
             Message.LogFeature[] logFeatures = loggingSettings.processFeatures(messageClass);
             return contains(logFeatures, Message.LogFeature.CONTENTS);
-        }
-        return false;
-    }
-
-    private static <T> boolean contains(T[] array, T object) {
-        for (T currentObject : array) {
-            if (currentObject.equals(object)) {
-                return true;
-            }
         }
         return false;
     }

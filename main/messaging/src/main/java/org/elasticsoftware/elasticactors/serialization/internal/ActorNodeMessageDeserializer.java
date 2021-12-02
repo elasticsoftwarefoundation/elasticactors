@@ -16,12 +16,12 @@
 
 package org.elasticsoftware.elasticactors.serialization.internal;
 
-import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorNodeMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -43,7 +43,10 @@ public final class ActorNodeMessageDeserializer implements MessageDeserializer<A
     @Override
     public ActorNodeMessage deserialize(ByteBuffer serializedObject) throws IOException {
         try {
-            Messaging.ActorNodeMessage protobufMessage = Messaging.ActorNodeMessage.parseFrom(ByteString.copyFrom(serializedObject));
+            Messaging.ActorNodeMessage protobufMessage = ByteBufferUtils.throwingApplyAndReset(
+                serializedObject,
+                Messaging.ActorNodeMessage::parseFrom
+            );
             ActorRef receiverRef = getReceiver(protobufMessage);
             String messageClassString = protobufMessage.getPayloadClass();
             Class<?> messageClass = getClassHelper().forName(messageClassString);
@@ -62,5 +65,10 @@ public final class ActorNodeMessageDeserializer implements MessageDeserializer<A
     @Override
     public Class<ActorNodeMessage> getMessageClass() {
         return ActorNodeMessage.class;
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 }

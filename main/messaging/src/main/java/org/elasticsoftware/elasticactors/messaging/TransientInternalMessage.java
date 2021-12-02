@@ -175,11 +175,6 @@ public final class TransientInternalMessage extends AbstractTracedMessage
     }
 
     @Override
-    public InternalMessage copyOf() {
-        return this;
-    }
-
-    @Override
     public ImmutableMap<Integer, InternalMessage> splitInBuckets(Hasher hasher, int buckets) {
         return receivers.size() <= 1
             ? ImmutableMap.of(calculateBucketForEmptyOrSingleActor(receivers, hasher, buckets), this)

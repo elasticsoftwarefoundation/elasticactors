@@ -16,11 +16,11 @@
 
 package org.elasticsoftware.elasticactors.serialization.internal;
 
-import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.messaging.internal.CancelScheduledMessageMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -37,13 +37,24 @@ public final class CancelScheduledMessageMessageDeserializer implements MessageD
 
     @Override
     public CancelScheduledMessageMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        Messaging.CancelScheduledMessageMessage protobufMessage = Messaging.CancelScheduledMessageMessage.parseFrom(ByteString.copyFrom(serializedObject));
-        return new CancelScheduledMessageMessage(UUIDTools.toUUID(protobufMessage.getMessageId().toByteArray()),
-                                                 protobufMessage.getFireTime());
+        Messaging.CancelScheduledMessageMessage protobufMessage =
+            ByteBufferUtils.throwingApplyAndReset(
+                serializedObject,
+                Messaging.CancelScheduledMessageMessage::parseFrom
+            );
+        return new CancelScheduledMessageMessage(
+            UUIDTools.fromByteString(protobufMessage.getMessageId()),
+            protobufMessage.getFireTime()
+        );
     }
 
     @Override
     public Class<CancelScheduledMessageMessage> getMessageClass() {
         return CancelScheduledMessageMessage.class;
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 }

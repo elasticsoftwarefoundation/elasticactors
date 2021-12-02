@@ -61,14 +61,12 @@ public final class KafkaTopicScheduler implements Scheduler {
                         long fireTime = System.currentTimeMillis() + timeUnit.toMillis(delay);
                         MessageSerializer serializer = actorSystem.getSerializer(message.getClass());
                         ByteBuffer serializedMessage = serializer.serialize(message);
-                        byte[] serializedBytes = new byte[serializedMessage.remaining()];
-                        serializedMessage.get(serializedBytes);
                         ScheduledMessage scheduledMessage = new ScheduledMessageImpl(
                             fireTime,
                             sender,
                             receiver,
                             message.getClass(),
-                            serializedBytes,
+                            serializedMessage,
                             message
                         );
                         actorShard.schedule(scheduledMessage);

@@ -23,27 +23,28 @@ import net.jpountz.lz4.LZ4Factory;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class CompressingSerializer<I> implements Serializer<I,byte[]> {
+public final class OriginalCompressingSerializer<I> implements Serializer<I,ByteBuffer> {
     private static final LZ4Compressor lz4Compressor = LZ4Factory.fastestJavaInstance().fastCompressor();
     private static final byte[] MAGIC_HEADER = {0x18,0x4D,0x22,0x04};
     private final Serializer<I,byte[]> delegate;
     private final int compressionThreshold;
 
-    public CompressingSerializer(Serializer<I, byte[]> delegate) {
+    public OriginalCompressingSerializer(Serializer<I, byte[]> delegate) {
         this(delegate,2048);
     }
 
-    public CompressingSerializer(Serializer<I, byte[]> delegate, int compressionThreshold) {
+    public OriginalCompressingSerializer(Serializer<I, byte[]> delegate, int compressionThreshold) {
         this.delegate = delegate;
         this.compressionThreshold = compressionThreshold;
     }
 
     @Override
-    public byte[] serialize(I object) throws IOException {
+    public ByteBuffer serialize(I object) throws IOException {
         byte[] serializedObject = delegate.serialize(object);
         if(serializedObject.length > compressionThreshold) {
             byte[] compressedBytes =  lz4Compressor.compress(serializedObject);
@@ -51,9 +52,9 @@ public final class CompressingSerializer<I> implements Serializer<I,byte[]> {
             dataOutput.write(MAGIC_HEADER);
             dataOutput.writeInt(serializedObject.length);
             dataOutput.write(compressedBytes);
-            return dataOutput.toByteArray();
+            return ByteBuffer.wrap(dataOutput.toByteArray());
         } else {
-            return serializedObject;
+            return ByteBuffer.wrap(serializedObject);
         }
     }
 }

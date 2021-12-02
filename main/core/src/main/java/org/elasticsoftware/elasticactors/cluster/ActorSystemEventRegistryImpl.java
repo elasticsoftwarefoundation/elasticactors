@@ -55,15 +55,13 @@ public final class ActorSystemEventRegistryImpl implements ActorSystemEventListe
         // store the reference
         MessageSerializer serializer = actorSystem.getSerializer(message.getClass());
         ByteBuffer serializedMessage = serializer.serialize(message);
-        byte[] serializedBytes = new byte[serializedMessage.remaining()];
-        serializedMessage.get(serializedBytes);
         eventListenerRepository.create(
             shardKey,
             event,
             new ActorSystemEventListenerImpl(
                 receiver.getActorId(),
                 message.getClass(),
-                serializedBytes,
+                serializedMessage,
                 InternalHashKeyUtils.getMessageQueueAffinityKey(message)
             )
         );
@@ -86,7 +84,7 @@ public final class ActorSystemEventRegistryImpl implements ActorSystemEventListe
             MessageDeserializer deserializer = actorSystem.getDeserializer(listener.getMessageClass());
             if(deserializer != null) {
                 try {
-                    Object message = deserializer.deserialize(ByteBuffer.wrap(listener.getMessageBytes()));
+                    Object message = deserializer.deserialize(listener.getMessageBytes());
                     ActorRef receiver = actorSystem.actorFor(listener.getActorId());
                     actorShard.sendMessage(null, receiver, message);
                 } catch(Exception e) {

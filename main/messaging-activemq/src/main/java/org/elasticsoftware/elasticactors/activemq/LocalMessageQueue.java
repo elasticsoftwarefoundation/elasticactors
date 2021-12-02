@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -136,10 +137,15 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
 
     @Override
     public void onMessage(ClientMessage message) {
-        byte[] bodyBuffer = new byte[message.getBodySize()];
-        message.getBodyBuffer().readBytes(bodyBuffer);
         // execute on separate (thread bound) executor
-        queueExecutor.execute(new ActiveMQMessageHandler(queueName,bodyBuffer,internalMessageDeserializer,messageHandler,new ActiveMQAck(message),logger));
+        queueExecutor.execute(new ActiveMQMessageHandler(
+            queueName,
+            message.getBodyBuffer().toByteBuffer(),
+            internalMessageDeserializer,
+            messageHandler,
+            new ActiveMQAck(message),
+            logger
+        ));
     }
 
     private void receiveMessage() {
@@ -174,10 +180,10 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
             try {
                 ClientMessage clientMessage = receiveImmediate ? consumer.receiveImmediate() : consumer.receive(1);
                 if(clientMessage != null) {
-                    byte[] bodyBuffer = new byte[clientMessage.getBodySize()];
-                    clientMessage.getBodyBuffer().readBytes(bodyBuffer);
                     // get the body data
-                    InternalMessage message = internalMessageDeserializer.deserialize(bodyBuffer);
+                    InternalMessage message = internalMessageDeserializer.deserialize(
+                        clientMessage.getBodyBuffer().toByteBuffer()
+                    );
                     messageHandler.handleMessage(message, new ActiveMQAck(clientMessage));
                 }
             } catch(ActiveMQException e) {
@@ -198,14 +204,19 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
     private static final class ActiveMQMessageHandler implements ThreadBoundRunnable<String> {
         private final String queueName;
         private final InternalMessageDeserializer internalMessageDeserializer;
-        private final byte[] body;
+        private final ByteBuffer body;
         private final org.elasticsoftware.elasticactors.messaging.MessageHandler messageHandler;
         private final MessageHandlerEventListener listener;
         private final Logger logger;
 
-        private ActiveMQMessageHandler(String queueName, byte[] body, InternalMessageDeserializer internalMessageDeserializer,
-                                       org.elasticsoftware.elasticactors.messaging.MessageHandler messageHandler,
-                                       MessageHandlerEventListener listener, Logger logger) {
+        private ActiveMQMessageHandler(
+            String queueName,
+            ByteBuffer body,
+            InternalMessageDeserializer internalMessageDeserializer,
+            org.elasticsoftware.elasticactors.messaging.MessageHandler messageHandler,
+            MessageHandlerEventListener listener,
+            Logger logger)
+        {
             this.queueName = queueName;
             this.internalMessageDeserializer = internalMessageDeserializer;
             this.body = body;
@@ -221,7 +232,7 @@ public final class LocalMessageQueue implements MessageQueue, org.apache.activem
 
         @Override
         public void run() {
-            InternalMessage message = null;
+            InternalMessage message;
             try {
                 // get the body data
                 message = internalMessageDeserializer.deserialize(body);

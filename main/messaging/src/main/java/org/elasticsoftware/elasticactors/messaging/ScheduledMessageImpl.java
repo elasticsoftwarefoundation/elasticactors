@@ -24,6 +24,7 @@ import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
 import javax.annotation.Nullable;
+import java.nio.ByteBuffer;
 import java.util.UUID;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
@@ -37,7 +38,7 @@ public final class ScheduledMessageImpl extends AbstractTracedMessage implements
     private final ActorRef sender;
     private final ActorRef receiver;
     private final Class messageClass;
-    private final byte[] messageBytes;
+    private final ByteBuffer messageBytes;
     private final ScheduledMessageKey key;
     private final String messageQueueAffinityKey;
 
@@ -46,7 +47,7 @@ public final class ScheduledMessageImpl extends AbstractTracedMessage implements
         ActorRef sender,
         ActorRef receiver,
         Class messageClass,
-        byte[] messageBytes,
+        ByteBuffer messageBytes,
         Object message)
     {
         this(
@@ -66,7 +67,7 @@ public final class ScheduledMessageImpl extends AbstractTracedMessage implements
         ActorRef sender,
         ActorRef receiver,
         Class messageClass,
-        byte[] messageBytes,
+        ByteBuffer messageBytes,
         String messageQueueAffinityKey)
     {
         this.id = id;
@@ -85,7 +86,7 @@ public final class ScheduledMessageImpl extends AbstractTracedMessage implements
         ActorRef sender,
         ActorRef receiver,
         Class messageClass,
-        byte[] messageBytes,
+        ByteBuffer messageBytes,
         String messageQueueAffinityKey,
         TraceContext traceContext,
         CreationContext creationContext)
@@ -143,8 +144,9 @@ public final class ScheduledMessageImpl extends AbstractTracedMessage implements
     }
 
     @Override
-    public byte[] getMessageBytes() {
-        return messageBytes;
+    public ByteBuffer getMessageBytes() {
+        // Using duplicate to give implementations a chance to access the internal byte array
+        return messageBytes.duplicate();
     }
 
     @Override

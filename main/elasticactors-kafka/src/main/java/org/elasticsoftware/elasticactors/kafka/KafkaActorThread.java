@@ -93,7 +93,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Comparator;
@@ -417,7 +416,7 @@ public final class KafkaActorThread extends Thread {
                         new DefaultInternalMessage(
                             scheduledMessage.getSender(),
                             scheduledMessage.getReceiver(),
-                            ByteBuffer.wrap(scheduledMessage.getMessageBytes()),
+                            scheduledMessage.getMessageBytes(),
                             scheduledMessage.getMessageClass().getName(),
                             scheduledMessage.getMessageQueueAffinityKey(),
                             false
@@ -829,7 +828,7 @@ public final class KafkaActorThread extends Thread {
                         InternalMessage internalMessage = new DefaultInternalMessage(
                             null,
                             receiverRef,
-                            ByteBuffer.wrap(eventListener.getMessageBytes()),
+                            eventListener.getMessageBytes(),
                             eventListener.getMessageClass().getName(),
                             eventListener.getMessageQueueAffinityKey(),
                             false
@@ -927,11 +926,12 @@ public final class KafkaActorThread extends Thread {
         }
     }
 
-    private void handleInternalMessage(ManagedActorContainer managedActorContainer, InternalMessage im) {
+    private void handleInternalMessage(
+        ManagedActorContainer managedActorContainer,
+        InternalMessage internalMessage)
+    {
         // assumption here is that all receivers are for the same shard
-        boolean needsCopy = im.getReceivers().size() > 1;
-        im.getReceivers().forEach(actorRef -> {
-            InternalMessage internalMessage = (needsCopy) ? im.copyOf() : im;
+        internalMessage.getReceivers().forEach(actorRef -> {
             if(actorRef.getActorId() != null) {
                 handleActorMessage(managedActorContainer, actorRef, internalMessage);
             } else {
@@ -1053,7 +1053,6 @@ public final class KafkaActorThread extends Thread {
                                   InternalMessage internalMessage) {
         // setup the context
         InternalActorContext.setContext(persistentActor);
-        SerializationContext.initialize();
         boolean shouldUpdateState = false;
         ElasticActor receiver = internalActorSystem.getActorInstance(persistentActor.getSelf(), persistentActor.getActorClass());
         try {

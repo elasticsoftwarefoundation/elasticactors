@@ -25,12 +25,14 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 /**
  * @author Joost van de Wijgerd
  */
-@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY)
-public abstract class JacksonActorState<Body> implements ActorState<Body> {
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+public abstract class JacksonActorState implements ActorState<JacksonActorState> {
 
     @Override
     @JsonIgnore
-    public abstract Body getBody();
+    public final JacksonActorState getBody() {
+        return this;
+    }
 
     @JsonIgnore
     @Override

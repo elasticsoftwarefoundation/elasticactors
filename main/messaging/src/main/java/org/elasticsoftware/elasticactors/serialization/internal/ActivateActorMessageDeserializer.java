@@ -16,11 +16,11 @@
 
 package org.elasticsoftware.elasticactors.serialization.internal;
 
-import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -37,7 +37,10 @@ public final class ActivateActorMessageDeserializer implements MessageDeserializ
 
     @Override
     public ActivateActorMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        Messaging.ActivateActorMessage protobufMessage = Messaging.ActivateActorMessage.parseFrom(ByteString.copyFrom(serializedObject));
+        Messaging.ActivateActorMessage protobufMessage = ByteBufferUtils.throwingApplyAndReset(
+            serializedObject,
+            Messaging.ActivateActorMessage::parseFrom
+        );
         return new ActivateActorMessage(
             protobufMessage.getActorSystem(),
             protobufMessage.getActorId(),
@@ -48,5 +51,10 @@ public final class ActivateActorMessageDeserializer implements MessageDeserializ
     @Override
     public Class<ActivateActorMessage> getMessageClass() {
         return ActivateActorMessage.class;
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 }

@@ -39,7 +39,7 @@ public final class ScheduledMessageSerializer implements Serializer<ScheduledMes
     @Override
     public byte[] serialize(ScheduledMessage scheduledMessage) {
         Messaging.ScheduledMessage.Builder builder = Messaging.ScheduledMessage.newBuilder();
-        builder.setId(ByteString.copyFrom(UUIDTools.toByteArray(scheduledMessage.getId())));
+        builder.setId(UUIDTools.toByteString(scheduledMessage.getId()));
         builder.setFireTime(scheduledMessage.getFireTime(TimeUnit.MILLISECONDS));
         builder.setMessageClass(scheduledMessage.getMessageClass().getName());
         builder.setSender(scheduledMessage.getSender().toString());

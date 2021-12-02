@@ -34,7 +34,7 @@ public class UUIDToolsTest {
         UUID uuid = UUIDTools.createTimeBasedUUID();
         assertEquals(uuid.version(),1);
         byte[] uuidBytes = UUIDTools.toByteArray(uuid);
-        UUID convertedUuid = UUIDTools.toUUID(uuidBytes);
+        UUID convertedUuid = UUIDTools.fromByteArray(uuidBytes);
         assertEquals(convertedUuid,uuid);
     }
 
@@ -43,7 +43,7 @@ public class UUIDToolsTest {
         UUID uuid = UUIDTools.createRandomUUID();
         assertEquals(uuid.version(), 4);
         byte[] uuidBytes = UUIDTools.toByteArray(uuid);
-        UUID convertedUuid = UUIDTools.toUUID(uuidBytes);
+        UUID convertedUuid = UUIDTools.fromByteArray(uuidBytes);
         assertEquals(convertedUuid, uuid);
     }
 

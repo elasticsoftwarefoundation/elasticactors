@@ -72,6 +72,7 @@
         <plexus-utils.version>3.0.24</plexus-utils.version>
         <netty.version>4.1.70.Final</netty.version>
         <micrometer.version>1.5.17</micrometer.version>
+        <fast-uuid.version>0.2.0</fast-uuid.version>
     </properties>
 
     <scm>
@@ -163,6 +164,11 @@
                 <groupId>org.lz4</groupId>
                 <artifactId>lz4-java</artifactId>
                 <version>${lz4.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.eatthepath</groupId>
+                <artifactId>fast-uuid</artifactId>
+                <version>${fast-uuid.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.hectorclient</groupId>

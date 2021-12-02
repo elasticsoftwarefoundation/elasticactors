@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -89,7 +90,7 @@ public final class CassandraActorSystemEventListenerRepository implements ActorS
                 Collection<String> actorIds = results.getColumnNames();
                 for (String actorId : actorIds) {
                     try {
-                        resultList.add(ActorSystemEventListenerDeserializer.get().deserialize(results.getByteArray(actorId)));
+                        resultList.add(ActorSystemEventListenerDeserializer.get().deserialize(ByteBuffer.wrap(results.getByteArray(actorId))));
                     } catch(IOException e)  {
                         logger.error("IOException while deserializing ActorSystemEventListener",e);
                     }

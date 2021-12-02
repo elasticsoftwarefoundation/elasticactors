@@ -20,9 +20,8 @@ import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystems;
 import org.elasticsoftware.elasticactors.cluster.ShardAccessor;
+import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
-
-import java.util.UUID;
 
 import static java.lang.String.format;
 
@@ -39,7 +38,11 @@ public final class ScheduledMessageRefTools {
             final String[] components = refSpec.substring(10).split("/");
             // should have 6 components
             if(components.length == 6) {
-                final ScheduledMessageKey key = new ScheduledMessageKey(UUID.fromString(components[5]),Long.parseLong(components[4]));
+                final ScheduledMessageKey key =
+                    new ScheduledMessageKey(
+                        UUIDTools.fromString(components[5]),
+                        Long.parseLong(components[4])
+                    );
                 final int shardId = Integer.parseInt(components[3]);
                 if(components[0].equals(cluster.getClusterName())) {
                     // local ref

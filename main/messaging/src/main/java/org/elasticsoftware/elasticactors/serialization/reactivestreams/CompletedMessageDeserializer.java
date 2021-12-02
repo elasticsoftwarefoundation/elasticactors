@@ -16,10 +16,10 @@
 
 package org.elasticsoftware.elasticactors.serialization.reactivestreams;
 
-import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.CompletedMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -31,12 +31,20 @@ public final class CompletedMessageDeserializer implements MessageDeserializer<C
 
     @Override
     public CompletedMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        Reactivestreams.CompletedMessage completedMessage = Reactivestreams.CompletedMessage.parseFrom(ByteString.copyFrom(serializedObject));
+        Reactivestreams.CompletedMessage completedMessage = ByteBufferUtils.throwingApplyAndReset(
+            serializedObject,
+            Reactivestreams.CompletedMessage::parseFrom
+        );
         return new CompletedMessage(completedMessage.getMessageName());
     }
 
     @Override
     public Class<CompletedMessage> getMessageClass() {
         return CompletedMessage.class;
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 }

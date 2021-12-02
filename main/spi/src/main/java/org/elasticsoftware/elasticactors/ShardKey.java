@@ -20,6 +20,9 @@ package org.elasticsoftware.elasticactors;
  * @author Joost van de Wijgerd
  */
 public final class ShardKey implements Comparable<ShardKey> {
+
+    private static final String SEPARATOR = "/shards/";
+
     private final String actorSystemName;
     private final int shardId;
     private final String spec;
@@ -27,7 +30,7 @@ public final class ShardKey implements Comparable<ShardKey> {
     public ShardKey(String actorSystemName, int shardId) {
         this.actorSystemName = actorSystemName;
         this.shardId = shardId;
-        this.spec = actorSystemName + "/shards/" + shardId;
+        this.spec = actorSystemName + SEPARATOR + shardId;
     }
 
     public int getShardId() {
@@ -44,12 +47,14 @@ public final class ShardKey implements Comparable<ShardKey> {
     }
 
     public static ShardKey fromString(String shardKey) {
-        int separator = shardKey.lastIndexOf("/shards/");
-        if(separator < 0) {
-            throw new IllegalArgumentException("Missing /shards/ separator");
+        int index = shardKey.lastIndexOf(SEPARATOR);
+        if(index < 0) {
+            throw new IllegalArgumentException("Missing /shards/ index");
         }
-        String[] components = shardKey.split("/");
-        return new ShardKey(components[0],Integer.parseInt(components[2]));
+        return new ShardKey(
+            shardKey.substring(0, index),
+            Integer.parseInt(shardKey.substring(index + SEPARATOR.length()))
+        );
     }
 
     @Override

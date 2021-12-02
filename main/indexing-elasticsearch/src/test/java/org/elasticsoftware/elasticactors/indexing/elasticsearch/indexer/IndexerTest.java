@@ -26,6 +26,7 @@ import org.elasticsearch.transport.Netty4Plugin;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.indexing.elasticsearch.IndexConfig;
+import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.state.ActorLifecycleStep;
 import org.elasticsoftware.elasticactors.state.ActorStateUpdate;
 import org.mockito.Mockito;
@@ -48,7 +49,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.UUID;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static org.awaitility.Awaitility.await;
@@ -67,22 +67,24 @@ public class IndexerTest {
     private Node testNode;
 
     private final Path tmpElasticsearchHomeDir = Paths.get(System.getProperty("java.io.tmpdir"))
-            .resolve("es-test-home")
-            .resolve(String.format(
-                    "%d_%s_%s",
-                    System.currentTimeMillis(),
-                    getClass().getSimpleName(),
-                    UUID.randomUUID()))
-            .toAbsolutePath();
+        .resolve("es-test-home")
+        .resolve(String.format(
+            "%d_%s_%s",
+            System.currentTimeMillis(),
+            getClass().getSimpleName(),
+            UUIDTools.createRandomUUID()
+        ))
+        .toAbsolutePath();
 
     private final Path tmpElasticsearchDataDir = Paths.get(System.getProperty("java.io.tmpdir"))
-            .resolve("es-test-data")
-            .resolve(String.format(
-                    "%d_%s_%s",
-                    System.currentTimeMillis(),
-                    getClass().getSimpleName(),
-                    UUID.randomUUID()))
-            .toAbsolutePath();
+        .resolve("es-test-data")
+        .resolve(String.format(
+            "%d_%s_%s",
+            System.currentTimeMillis(),
+            getClass().getSimpleName(),
+            UUIDTools.createRandomUUID()
+        ))
+        .toAbsolutePath();
 
     private Client client;
     private Indexer indexer;

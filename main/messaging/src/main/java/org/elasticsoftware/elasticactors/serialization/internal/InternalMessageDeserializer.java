@@ -21,25 +21,28 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.messaging.DefaultInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.ImmutableInternalMessage;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
+import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.Message;
+import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationAccessor;
 import org.elasticsoftware.elasticactors.serialization.internal.tracing.CreationContextDeserializer;
 import org.elasticsoftware.elasticactors.serialization.internal.tracing.TraceContextDeserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.UUID;
 
-import static org.elasticsoftware.elasticactors.messaging.UUIDTools.toUUID;
 import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class InternalMessageDeserializer implements Deserializer<byte[],InternalMessage> {
+public final class InternalMessageDeserializer implements Deserializer<ByteBuffer,InternalMessage> {
     private final ActorRefDeserializer actorRefDeserializer;
     private final SerializationAccessor serializationAccessor;
 
@@ -49,13 +52,16 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
     }
 
     @Override
-    public InternalMessage deserialize(byte[] serializedObject) throws IOException {
-        Messaging.InternalMessage protobufMessage = Messaging.InternalMessage.parseFrom(serializedObject);
+    public InternalMessage deserialize(ByteBuffer serializedObject) throws IOException {
+        Messaging.InternalMessage protobufMessage = ByteBufferUtils.throwingApplyAndReset(
+            serializedObject,
+            Messaging.InternalMessage::parseFrom
+        );
         ActorRef sender = getSender(protobufMessage);
         // there is either a receiver or a list of receivers
         ImmutableList<ActorRef> receivers = getReceivers(protobufMessage);
         String messageClassString = protobufMessage.getPayloadClass();
-        UUID id = toUUID(protobufMessage.getId().toByteArray());
+        UUID id = UUIDTools.fromByteString(protobufMessage.getId());
         boolean durable = protobufMessage.getDurable();
         boolean undeliverable = protobufMessage.getUndeliverable();
         int timeout = protobufMessage.getTimeout() != 0 ? protobufMessage.getTimeout() : InternalMessage.NO_TIMEOUT;
@@ -67,14 +73,17 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
                 : null;
         // optimize immutable message if possible
         Class<?> immutableMessageClass = getIfImmutableMessageClass(messageClassString);
+        ByteBuffer payload = protobufMessage.getPayload().asReadOnlyByteBuffer();
         if (immutableMessageClass != null) {
-            Object payloadObject = serializationAccessor.getDeserializer(immutableMessageClass)
-                .deserialize(protobufMessage.getPayload().asReadOnlyByteBuffer());
+            MessageDeserializer<?> deserializer = serializationAccessor.getDeserializer(immutableMessageClass);
+            Object payloadObject = deserializer.isSafe()
+                ? deserializer.deserialize(payload)
+                : ByteBufferUtils.throwingApplyAndReset(payload, deserializer::deserialize);
             return new ImmutableInternalMessage(
                 id,
                 sender,
                 receivers,
-                protobufMessage.getPayload().asReadOnlyByteBuffer(),
+                payload,
                 payloadObject,
                 durable,
                 undeliverable,
@@ -90,7 +99,7 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
                 id,
                 sender,
                 receivers,
-                protobufMessage.getPayload().asReadOnlyByteBuffer(),
+                payload,
                 messageClassString,
                 messageQueueAffinityKey.isEmpty() ? null : messageQueueAffinityKey,
                 durable,
@@ -100,6 +109,11 @@ public final class InternalMessageDeserializer implements Deserializer<byte[],In
                 creationContext
             );
         }
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 
     private ImmutableList<ActorRef> getReceivers(Messaging.InternalMessage protobufMessage) throws IOException {

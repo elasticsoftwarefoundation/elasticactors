@@ -57,6 +57,6 @@ public final class AliasActor extends UntypedActor {
      */
     @Override
     public void onReceive(ActorRef sender, Object message) throws Exception {
-        getState(AliasActorState.class).getBody().getAliasedActor().tell(message,sender);
+        getState(AliasActorState.class).getAliasedActor().tell(message, sender);
     }
 }

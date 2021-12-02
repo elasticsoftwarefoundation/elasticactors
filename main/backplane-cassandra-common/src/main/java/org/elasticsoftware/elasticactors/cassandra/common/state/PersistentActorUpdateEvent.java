@@ -66,9 +66,14 @@ public final class PersistentActorUpdateEvent implements ThreadBoundEvent<Intege
         return persistentActorId;
     }
 
+    public boolean hasPersistentActorBytes() {
+        return persistentActorBytes != null;
+    }
+
     @Nullable
     public ByteBuffer getPersistentActorBytes() {
-        return persistentActorBytes;
+        // Using duplicate to give implementations a chance to access the internal byte array
+        return persistentActorBytes != null ? persistentActorBytes.duplicate() : null;
     }
 
     @Nullable

@@ -17,20 +17,17 @@
 package org.elasticsoftware.elasticactors.cassandra.serialization;
 
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
-import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class StringDeserializer implements Deserializer<ByteBuffer,String> {
-
-
+public final class OriginalStringDeserializer implements Deserializer<byte[],String> {
     @Override
-    public String deserialize(ByteBuffer serializedObject) throws IOException {
-        return ByteBufferUtils.decodeUtf8String(serializedObject);
+    public String deserialize(byte[] serializedObject) throws IOException {
+        return new String(serializedObject, StandardCharsets.UTF_8);
     }
 
     @Override

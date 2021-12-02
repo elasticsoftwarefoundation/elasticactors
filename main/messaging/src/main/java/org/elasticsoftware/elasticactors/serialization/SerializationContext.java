@@ -16,6 +16,8 @@
 
 package org.elasticsoftware.elasticactors.serialization;
 
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.IdentityHashMap;
@@ -26,8 +28,8 @@ import java.util.Map;
  * @author Joost van de Wijgerd
  */
 public final class SerializationContext {
-    private static final ThreadLocal<IdentityHashMap<Object,ByteBuffer>> serializationCache = new ThreadLocal<>();
-    private static final ThreadLocal<EvictingMap<DeserializationKey,Object>> deserializationCache = new ThreadLocal<>();
+    private static final ThreadLocal<IdentityHashMap<Object,ByteBuffer>> serializationCache = ThreadLocal.withInitial(IdentityHashMap::new);
+    private static final ThreadLocal<EvictingMap<DeserializationKey,Object>> deserializationCache = ThreadLocal.withInitial(EvictingMap::new);
     // keypool to avoid too much garbage being generated
     private static final ThreadLocal<DeserializationKey> keyPool = ThreadLocal.withInitial(() -> new DeserializationKey(null,null));
     private static final boolean deserializationCacheEnabled = Boolean.parseBoolean(System.getProperty("ea.deserializationCache.enabled", "false"));
@@ -35,75 +37,122 @@ public final class SerializationContext {
 
     private SerializationContext() {}
 
-    public static void initialize() {
-        // only create once per thread
-        if(serializationCacheEnabled && serializationCache.get() == null) {
-            serializationCache.set(new IdentityHashMap<>());
-        }
-        if(deserializationCacheEnabled && deserializationCache.get() == null) {
-            deserializationCache.set(new EvictingMap<>());
-        }
-    }
-
     public static void reset() {
-        if(serializationCache.get() != null) {
+        if (serializationCacheEnabled) {
             serializationCache.get().clear();
         }
     }
 
-    public static <T> T deserialize(final MessageDeserializer<T> deserializer,final ByteBuffer bytes) throws IOException {
-        final EvictingMap<DeserializationKey, Object> deserializationCache = (deserializationCacheEnabled) ? SerializationContext.deserializationCache.get() : null;
+    public static <T> T deserialize(MessageDeserializer<T> deserializer, ByteBuffer bytes)
+        throws IOException
+    {
+        if (deserializationCacheEnabled || serializationCacheEnabled) {
+            return deserializeWithCache(deserializer, bytes);
+        } else {
+            return deserializeWithoutCache(deserializer, bytes);
+        }
+    }
+
+    private static <T> T deserializeWithoutCache(
+        MessageDeserializer<T> deserializer,
+        ByteBuffer bytes)
+        throws IOException
+    {
+        if (deserializer.isSafe()) {
+            return deserializer.deserialize(bytes);
+        } else {
+            return ByteBufferUtils.throwingApplyAndReset(bytes, deserializer::deserialize);
+        }
+    }
+
+    private static <T> T deserializeWithCache(MessageDeserializer<T> deserializer, ByteBuffer bytes)
+        throws IOException
+    {
+        Map<DeserializationKey, Object> deserializationCache = deserializationCacheEnabled
+            ? SerializationContext.deserializationCache.get()
+            : null;
 
         // see if we already have the deserialized version cached
-        if(deserializationCache != null) {
-            Object message = deserializationCache.get(keyPool.get().populate(deserializer.getMessageClass(), bytes));
-            if(message != null) {
+        if (deserializationCache != null) {
+            DeserializationKey deserializationKey = keyPool.get();
+            deserializationKey.populate(deserializer.getMessageClass(), bytes);
+            Object message = deserializationCache.get(deserializationKey);
+            if (message != null) {
                 // pre cached
                 return (T) message;
             }
         }
-        bytes.mark();
-        final T message = deserializer.deserialize(bytes);
+        final T message = deserializeWithoutCache(deserializer, bytes);
+
         // check if the message is immutable
-        final Message immutableAnnotation = message.getClass().getAnnotation(Message.class);
-        if(immutableAnnotation != null && immutableAnnotation.immutable() && serializationCache.get() != null) {
-            // reset the bytebuffer back to mark before returning
-            bytes.reset();
+        final Message messageAnnotation = message.getClass().getAnnotation(Message.class);
+        if (messageAnnotation != null && messageAnnotation.immutable()) {
             // optimize serialization as well
-            serializationCache.get().put(message,bytes.asReadOnlyBuffer());
-            if(deserializationCache != null) {
+            Map<Object, ByteBuffer> serializationCache = serializationCacheEnabled
+                ? SerializationContext.serializationCache.get()
+                : null;
+            if (serializationCache != null) {
+                serializationCache.put(message, bytes);
+            }
+            if (deserializationCache != null) {
                 // this should speed up subsequent deserializations of the same bytes
-                deserializationCache.put(new DeserializationKey(deserializer.getMessageClass(),bytes.asReadOnlyBuffer()), message);
+                deserializationCache.put(
+                    new DeserializationKey(
+                        deserializer.getMessageClass(),
+                        bytes
+                    ),
+                    message
+                );
             }
         }
         return message;
     }
 
     public static ByteBuffer serialize(final MessageSerializer serializer, final Object message) throws IOException {
+
+        if (serializationCacheEnabled || deserializationCacheEnabled) {
+            return serializeWithCache(serializer, message);
+        } else {
+            return serializer.serialize(message);
+        }
+
+    }
+
+    private static ByteBuffer serializeWithCache(final MessageSerializer serializer, final Object message) throws IOException {
         // check if the message is immutable
-        //final Message messsageAnnotation = message.getClass().getAnnotation(Message.class);
-        final Message immutableAnnotation = message.getClass().getAnnotation(Message.class);
-        if(immutableAnnotation != null && immutableAnnotation.immutable() && serializationCache.get() != null) {
-            final EvictingMap<DeserializationKey, Object> deserializationCache = (deserializationCacheEnabled) ? SerializationContext.deserializationCache.get() : null;
-            ByteBuffer cachedBuffer = serializationCache.get().get(message);
-            if(cachedBuffer != null) {
+        final Message messageAnnotation = message.getClass().getAnnotation(Message.class);
+        if (messageAnnotation != null && messageAnnotation.immutable()) {
+            Map<Object, ByteBuffer> serializationCache = serializationCacheEnabled
+                ? SerializationContext.serializationCache.get()
+                : null;
+            ByteBuffer cachedBuffer = serializationCache != null
+                ? serializationCache.get(message)
+                : null;
+            if (cachedBuffer != null) {
                 // we have a cached version
                 // return a copy
-                return cachedBuffer.asReadOnlyBuffer();
+                return cachedBuffer;
             } else {
                 // didn't find a buffer, but the message is immutable
                 ByteBuffer serializedBuffer = serializer.serialize(message);
                 // store it
-                serializationCache.get().put(message,serializedBuffer.asReadOnlyBuffer());
-                if(deserializationCache != null) {
-                    deserializationCache.put(new DeserializationKey(message.getClass(),serializedBuffer.asReadOnlyBuffer()), message);
+                if (serializationCache != null) {
+                    serializationCache.put(message, serializedBuffer);
+                }
+                Map<DeserializationKey, Object> deserializationCache = deserializationCacheEnabled
+                    ? SerializationContext.deserializationCache.get()
+                    : null;
+                if (deserializationCache != null) {
+                    deserializationCache.put(new DeserializationKey(
+                        message.getClass(),
+                        serializedBuffer
+                    ), message);
                 }
                 return serializedBuffer;
             }
         }
         // message is not immutable, just serialize it
         return serializer.serialize(message);
-
     }
 
     private static final class DeserializationKey {
@@ -124,16 +173,11 @@ public final class SerializationContext {
         }
 
         /**
-         * Convenient method to populate the object with new values
-         *
-         * @param objectClass
-         * @param bytes
-         * @return
+         * Convenience method to populate the object with new values
          */
-        public DeserializationKey populate(Class<?> objectClass, ByteBuffer bytes) {
+        public void populate(Class<?> objectClass, ByteBuffer bytes) {
             this.objectClass = objectClass;
             this.bytes = bytes;
-            return this;
         }
 
         @Override

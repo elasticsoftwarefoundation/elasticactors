@@ -63,7 +63,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
             if(events.size() == 1) {
                 PersistentActorUpdateEvent event = events.get(0);
                 BoundStatement boundStatement;
-                if(event.getPersistentActorBytes() != null) {
+                if (event.hasPersistentActorBytes()) {
                     boundStatement = insertStatement.bind(event.getRowKey()[0], event.getRowKey()[1], event.getPersistentActorId(), event.getPersistentActorBytes());
                 } else {
                     // it's a delete
@@ -101,7 +101,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
     private void executeBatchV3AndUp(List<PersistentActorUpdateEvent> events) {
         BatchStatement batchStatement = BatchStatement.newInstance(UNLOGGED);
         for (PersistentActorUpdateEvent event : events) {
-            if (event.getPersistentActorBytes() != null) {
+            if (event.hasPersistentActorBytes()) {
                 batchStatement.add(insertStatement.bind(event.getRowKey()[0], event.getRowKey()[1], event.getPersistentActorId(), event.getPersistentActorBytes()));
             } else {
                 // it's a delete

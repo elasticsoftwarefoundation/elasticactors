@@ -18,6 +18,8 @@ package org.elasticsoftware.elasticactors.state;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
+import com.google.common.collect.ImmutableList;
+import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorBuilder;
@@ -28,11 +30,10 @@ import org.springframework.core.env.Environment;
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * @author Joost van de Wijgerd
@@ -40,8 +41,7 @@ import java.util.function.Consumer;
 public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateProcessor, ThreadBoundEventProcessor<ActorStateUpdateEvent> {
     private static final Logger logger = LoggerFactory.getLogger(DefaultActorStateUpdateProcessor.class);
     private final ThreadBoundExecutor<ActorStateUpdateEvent> executor;
-    private final List<ActorStateUpdateListener> listeners = new ArrayList<>();
-    private final Consumer<List<ActorStateUpdateEvent>> processingFunction;
+    private final ImmutableList<ActorStateUpdateListener> listeners;
 
     public DefaultActorStateUpdateProcessor(
         Collection<ActorStateUpdateListener> listeners,
@@ -49,7 +49,7 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
         @Nullable MeterRegistry meterRegistry,
         @Nullable MicrometerTagCustomizer tagCustomizer)
     {
-        this.listeners.addAll(listeners);
+        this.listeners = ImmutableList.copyOf(listeners);
         this.executor = ThreadBoundExecutorBuilder.buildBlockingQueueThreadBoundExecutor(
             env,
             this,
@@ -58,8 +58,6 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
             meterRegistry,
             tagCustomizer
         );
-        // optimize in the case of one listener, copy otherwise to avoid possible concurrency issues on the serializedState ByteBuffer
-        this.processingFunction = (listeners.size() == 1) ? this::processWithoutCopy : this::processWithCopy;
     }
 
     public DefaultActorStateUpdateProcessor(
@@ -70,7 +68,7 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
         @Nullable MeterRegistry meterRegistry,
         @Nullable MicrometerTagCustomizer tagCustomizer)
     {
-        this.listeners.addAll(listeners);
+        this.listeners = ImmutableList.copyOf(listeners);
         this.executor = ThreadBoundExecutorBuilder.buildBlockingQueueThreadBoundExecutor(
             env,
             this,
@@ -81,8 +79,6 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
             meterRegistry,
             tagCustomizer
         );
-        // optimize in the case of one listener, copy otherwise to avoid possible concurrency issues on the serializedState ByteBuffer
-        this.processingFunction = (listeners.size() == 1) ? this::processWithoutCopy : this::processWithCopy;
     }
 
     @PostConstruct
@@ -95,27 +91,23 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
         if(lifecycleStep == null && message == null) {
             throw new IllegalArgumentException("At least one of lifecycleStep or message needs to be not null");
         }
-        this.executor.execute(new ActorStateUpdateEvent(persistentActor.getActorClass(),
-                persistentActor.getSelf(),
-                persistentActor.getSerializedState() != null ?
-                        ByteBuffer.wrap(persistentActor.getSerializedState()).asReadOnlyBuffer() : null,
-                persistentActor.getCurrentActorStateVersion(),
-                lifecycleStep, message != null ? message.getClass() : null));
+        this.executor.execute(new ActorStateUpdateEvent(
+            persistentActor.getActorClass(),
+            persistentActor.getSelf(),
+            persistentActor.getSerializedState() != null
+                ? ByteBuffer.wrap(persistentActor.getSerializedState())
+                : null,
+            persistentActor.getCurrentActorStateVersion(),
+            lifecycleStep, message != null ? message.getClass() : null
+        ));
     }
 
     @Override
     public void process(List<ActorStateUpdateEvent> events) {
-        processingFunction.accept(events);
-    }
-
-    @Override
-    public void process(ActorStateUpdateEvent event) {
-        process(Collections.singletonList(event));
-    }
-
-    private void processWithoutCopy(List<ActorStateUpdateEvent> events) {
         for (ActorStateUpdateListener listener : listeners) {
             try {
+                // No need to copy events now that we made
+                // ActorStateUpdateEvent#getSerializedState safe
                 listener.onUpdate(events);
             } catch(Exception e) {
                 logger.error("Unexpected Exception while processing ActorStateUpdates on listener of type {}", listener.getClass().getSimpleName(), e);
@@ -123,17 +115,8 @@ public final class DefaultActorStateUpdateProcessor implements ActorStateUpdateP
         }
     }
 
-    private void processWithCopy(List<ActorStateUpdateEvent> events) {
-        for (ActorStateUpdateListener listener : listeners) {
-            try {
-                List<ActorStateUpdateEvent> list = new ArrayList<>(events.size());
-                for (ActorStateUpdateEvent event : events) {
-                    list.add(event.copyOf());
-                }
-                listener.onUpdate(list);
-            } catch(Exception e) {
-                logger.error("Unexpected Exception while processing ActorStateUpdates on listener of type {}", listener.getClass().getSimpleName(), e);
-            }
-        }
+    @Override
+    public void process(ActorStateUpdateEvent event) {
+        process(Collections.singletonList(event));
     }
 }

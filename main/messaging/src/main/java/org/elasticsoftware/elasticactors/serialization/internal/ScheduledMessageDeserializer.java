@@ -26,8 +26,10 @@ import org.elasticsoftware.elasticactors.serialization.internal.tracing.TraceCon
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClassHelper;
@@ -35,7 +37,8 @@ import static org.elasticsoftware.elasticactors.util.ClassLoadingHelper.getClass
 /**
  * @author Joost van de Wijgerd
  */
-public final class ScheduledMessageDeserializer implements Deserializer<byte[],ScheduledMessage> {
+public final class ScheduledMessageDeserializer implements Deserializer<ByteBuffer, ScheduledMessage> {
+
     private final ActorRefDeserializer actorRefDeserializer;
 
     public ScheduledMessageDeserializer(ActorRefDeserializer actorRefDeserializer) {
@@ -43,14 +46,16 @@ public final class ScheduledMessageDeserializer implements Deserializer<byte[],S
     }
 
     @Override
-    public ScheduledMessage deserialize(byte[] serializedObject) throws IOException {
+    public ScheduledMessage deserialize(ByteBuffer serializedObject) throws IOException {
         try {
-            Messaging.ScheduledMessage protobufMessage = Messaging.ScheduledMessage.parseFrom(serializedObject);
+            Messaging.ScheduledMessage protobufMessage = ByteBufferUtils.throwingApplyAndReset(
+                serializedObject,
+                Messaging.ScheduledMessage::parseFrom
+            );
             ActorRef sender = getSender(protobufMessage);
             ActorRef receiver = actorRefDeserializer.deserialize(protobufMessage.getReceiver());
             Class messageClass = getClassHelper().forName(protobufMessage.getMessageClass());
-            byte[] messageBytes = protobufMessage.getMessage().toByteArray();
-            UUID id = UUIDTools.toUUID(protobufMessage.getId().toByteArray());
+            UUID id = UUIDTools.fromByteString(protobufMessage.getId());
             long fireTime = protobufMessage.getFireTime();
             TraceContext traceContext = protobufMessage.hasTraceContext()
                     ? TraceContextDeserializer.deserialize(protobufMessage.getTraceContext())
@@ -67,7 +72,7 @@ public final class ScheduledMessageDeserializer implements Deserializer<byte[],S
                 sender,
                 receiver,
                 messageClass,
-                messageBytes,
+                protobufMessage.getMessage().asReadOnlyByteBuffer(),
                 messageQueueAffinityKey.isEmpty() ? null : messageQueueAffinityKey,
                 traceContext,
                 creationContext
@@ -86,5 +91,10 @@ public final class ScheduledMessageDeserializer implements Deserializer<byte[],S
         } else {
             return null;
         }
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 }

@@ -27,12 +27,12 @@ import java.io.IOException;
 /**
  * @author Joost van de Wijgerd
  */
-public final class DecompressingDeserializer<O> implements Deserializer<byte[],O> {
+public final class OriginalDecompressingDeserializer<O> implements Deserializer<byte[] ,O> {
     private static final LZ4FastDecompressor lz4Decompressor = LZ4Factory.fastestJavaInstance().fastDecompressor();
     private static final byte[] MAGIC_HEADER = {0x18,0x4D,0x22,0x04};
     private final Deserializer<byte[],O> delegate;
 
-    public DecompressingDeserializer(Deserializer<byte[], O> delegate) {
+    public OriginalDecompressingDeserializer(Deserializer<byte[], O> delegate) {
         this.delegate = delegate;
     }
 
@@ -56,5 +56,10 @@ public final class DecompressingDeserializer<O> implements Deserializer<byte[],O
             }
         }
         return true;
+    }
+
+    @Override
+    public boolean isSafe() {
+        return delegate.isSafe();
     }
 }

@@ -25,6 +25,7 @@ import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
 import org.elasticsoftware.elasticactors.messaging.AbstractTracedMessage;
+import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
@@ -34,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
@@ -107,7 +107,7 @@ public final class SimpleScheduler implements SchedulerService,ScheduledMessageR
             if (actorContainer instanceof ActorShard) {
                 ActorShard actorShard = (ActorShard) actorContainer;
                 if (actorShard.getOwningNode().isLocal()) {
-                    String id = UUID.randomUUID().toString();
+                    String id = UUIDTools.createRandomUUIDString();
                     ScheduledFuture scheduledFuture =
                         scheduledExecutorService.schedule(
                             new TellActorTask(id, sender, receiver, message),

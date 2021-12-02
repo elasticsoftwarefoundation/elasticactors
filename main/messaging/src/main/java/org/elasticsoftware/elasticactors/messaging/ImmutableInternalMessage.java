@@ -103,7 +103,8 @@ public final class ImmutableInternalMessage extends AbstractTracedMessage
 
     @Override
     public ByteBuffer getPayload() {
-        return payload != null ? payload.asReadOnlyBuffer() : null;
+        // Using duplicate to give implementations a chance to access the internal byte array
+        return payload.duplicate();
     }
 
     @Override
@@ -161,11 +162,6 @@ public final class ImmutableInternalMessage extends AbstractTracedMessage
             serializedForm = InternalMessageSerializer.get().serialize(this);
         }
         return serializedForm;
-    }
-
-    @Override
-    public InternalMessage copyOf() {
-        return this;
     }
 
     @Override

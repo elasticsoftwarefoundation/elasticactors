@@ -16,7 +16,6 @@
 
 package org.elasticsoftware.elasticactors.serialization.internal;
 
-import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
@@ -24,6 +23,7 @@ import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 import org.elasticsoftware.elasticactors.util.SerializationTools;
 
 import java.io.IOException;
@@ -43,7 +43,10 @@ public final class CreateActorMessageDeserializer implements MessageDeserializer
 
     @Override
     public CreateActorMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        Messaging.CreateActorMessage protobufMessage = Messaging.CreateActorMessage.parseFrom(ByteString.copyFrom(serializedObject));
+        Messaging.CreateActorMessage protobufMessage = ByteBufferUtils.throwingApplyAndReset(
+            serializedObject,
+            Messaging.CreateActorMessage::parseFrom
+        );
         return new CreateActorMessage(
             protobufMessage.getActorSystem(),
             protobufMessage.getActorClass(),
@@ -54,8 +57,13 @@ public final class CreateActorMessageDeserializer implements MessageDeserializer
         );
     }
 
+    @Override
+    public boolean isSafe() {
+        return true;
+    }
+
     private ActorState getDeserializedState(Messaging.CreateActorMessage protobufMessage) throws IOException {
-        return !protobufMessage.getInitialState().isEmpty()
+        return protobufMessage.hasInitialState() && !protobufMessage.getInitialState().isEmpty()
             ? getDeserializeState(protobufMessage)
             : null;
     }
@@ -63,11 +71,11 @@ public final class CreateActorMessageDeserializer implements MessageDeserializer
     private ActorState getDeserializeState(Messaging.CreateActorMessage protobufMessage) throws IOException {
         return deserializeState(
             protobufMessage.getActorClass(),
-            protobufMessage.getInitialState().toByteArray()
+            protobufMessage.getInitialState().asReadOnlyByteBuffer()
         );
     }
 
-    private ActorState deserializeState(String actorClass, byte[] serializedState) throws IOException {
+    private ActorState deserializeState(String actorClass, ByteBuffer serializedState) throws IOException {
         try {
             return SerializationTools.deserializeActorState(
                     serializationFrameworks,

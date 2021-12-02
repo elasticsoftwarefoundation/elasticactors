@@ -134,7 +134,9 @@ public final class ActorStateUpdateEvent implements ThreadBoundEvent<String>, Ac
     @Nullable
     @Override
     public ByteBuffer getSerializedState() {
-        return serializedState;
+        // Using duplicate to give implementations a chance to access the internal byte array
+        // Duplicate byte buffer, so it can be safely reused
+        return serializedState != null ? serializedState.duplicate() : null;
     }
 
     @Nullable
@@ -147,17 +149,5 @@ public final class ActorStateUpdateEvent implements ThreadBoundEvent<String>, Ac
     @Override
     public CreationContext getCreationContext() {
         return creationContext;
-    }
-
-    public ActorStateUpdateEvent copyOf() {
-        return new ActorStateUpdateEvent(
-                actorClass,
-                actorRef,
-                serializedState.duplicate(),
-                version,
-                lifecycleStep,
-                messageClass,
-                traceContext,
-                creationContext);
     }
 }

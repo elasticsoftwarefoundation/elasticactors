@@ -16,42 +16,58 @@
 
 package org.elasticsoftware.elasticactors.kafka.serialization;
 
-import com.google.common.io.ByteStreams;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4FastDecompressor;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 
-import java.io.DataInput;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * @author Joost van de Wijgerd
  */
-public final class DecompressingDeserializer<O> implements Deserializer<byte[] ,O> {
+public final class DecompressingDeserializer<O> implements Deserializer<byte[],O> {
     private static final LZ4FastDecompressor lz4Decompressor = LZ4Factory.fastestJavaInstance().fastDecompressor();
     private static final byte[] MAGIC_HEADER = {0x18,0x4D,0x22,0x04};
-    private final Deserializer<byte[],O> delegate;
+    private final Deserializer<ByteBuffer,O> delegate;
 
-    public DecompressingDeserializer(Deserializer<byte[], O> delegate) {
+    public DecompressingDeserializer(Deserializer<ByteBuffer, O> delegate) {
         this.delegate = delegate;
     }
 
     @Override
-    public O deserialize(byte[] serializedObject) throws IOException {
-        if(isCompressed(serializedObject)) {
-            DataInput dataInput = ByteStreams.newDataInput(serializedObject);
+    public O deserialize(byte[] serializedBuffer) throws IOException {
+        if(isCompressed(serializedBuffer)) {
+            ByteBuffer buffer = ByteBuffer.wrap(serializedBuffer);
             // skip the header
-            dataInput.skipBytes(4);
-            int uncompressedLength = dataInput.readInt();
-            return delegate.deserialize(lz4Decompressor.decompress(serializedObject, 8, uncompressedLength));
+            buffer.position(MAGIC_HEADER.length);
+            int uncompressedLength = buffer.getInt();
+            buffer.rewind();
+            ByteBuffer destination = ByteBuffer.allocate(uncompressedLength);
+            lz4Decompressor.decompress(
+                buffer,
+                MAGIC_HEADER.length + Integer.BYTES,
+                destination,
+                0,
+                uncompressedLength
+            );
+            return delegate.deserialize(destination);
         } else {
-            return delegate.deserialize(serializedObject);
+            return delegate.deserialize(ByteBuffer.wrap(serializedBuffer));
         }
     }
 
-    private boolean isCompressed(byte[] serializedObject) {
+    @Override
+    public boolean isSafe() {
+        return delegate.isSafe();
+    }
+
+    private boolean isCompressed(byte[] bytes) {
+        if (bytes.length < MAGIC_HEADER.length) {
+            return false;
+        }
         for (int i = 0; i < MAGIC_HEADER.length; i++) {
-            if(serializedObject[i] != MAGIC_HEADER[i]) {
+            if (bytes[i] != MAGIC_HEADER[i]) {
                 return false;
             }
         }

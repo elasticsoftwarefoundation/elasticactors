@@ -27,6 +27,8 @@ import org.elasticsoftware.elasticactors.serialization.MessageToStringConverter;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
 
+import java.nio.ByteBuffer;
+
 /**
  * This framework acts as a proxy for getting a {@link SerializedActorState}'s byte array and
  * passing it to the {@link org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage}
@@ -76,7 +78,7 @@ public final class SerializedActorStateSerializationFramework implements Seriali
     }
 
     @Override
-    public Deserializer<byte[], ActorState> getActorStateDeserializer(Class<?
+    public Deserializer<ByteBuffer, ActorState> getActorStateDeserializer(Class<?
             extends ElasticActor> actorClass) {
         throw new UnsupportedOperationException("Only actor state serialization is supported");
     }

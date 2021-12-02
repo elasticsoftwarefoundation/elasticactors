@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.elasticsoftware.elasticactors.base.state.JacksonActorState;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class NameActorState extends JacksonActorState<NameActorState> {
+public class NameActorState extends JacksonActorState {
 
     public static final String DEFAULT_NAME = "DEFAULT_NAME";
 
@@ -27,10 +27,5 @@ public class NameActorState extends JacksonActorState<NameActorState> {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    @Override
-    public NameActorState getBody() {
-        return this;
     }
 }

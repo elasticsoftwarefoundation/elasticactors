@@ -22,7 +22,7 @@ import org.elasticsoftware.elasticactors.base.state.JacksonActorState;
 
 import java.math.BigDecimal;
 
-public class VirtualCashAccountState extends JacksonActorState<VirtualCashAccountState> {
+public class VirtualCashAccountState extends JacksonActorState {
     private final String id;
     private final String currency;
     private final int decimals;
@@ -36,11 +36,6 @@ public class VirtualCashAccountState extends JacksonActorState<VirtualCashAccoun
         this.currency = currency;
         this.decimals = decimals;
         this.balance = BigDecimal.ZERO.setScale(decimals);
-    }
-
-    @Override
-    public VirtualCashAccountState getBody() {
-        return this;
     }
 
     public String getId() {

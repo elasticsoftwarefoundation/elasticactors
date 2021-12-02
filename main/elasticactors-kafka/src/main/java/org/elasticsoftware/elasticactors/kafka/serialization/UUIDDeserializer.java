@@ -33,7 +33,7 @@ public final class UUIDDeserializer implements Deserializer<UUID> {
         if(data == null) {
             return null;
         } else {
-            return UUIDTools.toUUID(data);
+            return UUIDTools.fromByteArray(data);
         }
     }
 

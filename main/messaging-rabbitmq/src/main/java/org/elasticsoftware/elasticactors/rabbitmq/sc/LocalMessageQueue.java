@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -254,7 +255,7 @@ final class LocalMessageQueue extends DefaultConsumer implements MessageQueue, C
             InternalMessage message = null;
             try {
                 // get the body data
-                message = internalMessageDeserializer.deserialize(body);
+                message = internalMessageDeserializer.deserialize(ByteBuffer.wrap(body));
                 messageHandler.handleMessage(message,listener);
             } catch(Exception e) {
                 logger.error("Unexpected exception on #handleMessage",e);

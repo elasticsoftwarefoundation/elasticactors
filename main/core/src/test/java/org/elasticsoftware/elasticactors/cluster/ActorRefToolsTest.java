@@ -23,9 +23,8 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
 import org.elasticsoftware.elasticactors.NodeKey;
 import org.elasticsoftware.elasticactors.ShardKey;
+import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.testng.annotations.Test;
-
-import java.util.UUID;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -84,7 +83,7 @@ public class ActorRefToolsTest {
 
     @Test
     public void testParseServiceActorRefWithSlashInActorId() {
-        String nodeId = UUID.randomUUID().toString();
+        String nodeId = UUIDTools.createRandomUUIDString();
         InternalActorSystems internalActorSystems = mock(InternalActorSystems.class);
         InternalActorSystem actorSystem = mock(InternalActorSystem.class);
         ActorNode node = mock(ActorNode.class);
@@ -132,7 +131,7 @@ public class ActorRefToolsTest {
 
     @Test
     public void testParseServiceActorRefWithMultipleSlashesInActorId() {
-        String nodeId = UUID.randomUUID().toString();
+        String nodeId = UUIDTools.createRandomUUIDString();
         InternalActorSystems internalActorSystems = mock(InternalActorSystems.class);
         InternalActorSystem actorSystem = mock(InternalActorSystem.class);
         ActorNode node = mock(ActorNode.class);

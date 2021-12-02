@@ -18,6 +18,7 @@ package org.elasticsoftware.elasticactors.cluster.scheduler;
 
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
+import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 
 import static java.lang.String.format;
@@ -33,7 +34,7 @@ public final class DisconnectedRemoteScheduledMessageRef implements ScheduledMes
     public DisconnectedRemoteScheduledMessageRef(String clusterName, String actorSystemName, int shardId, ScheduledMessageKey scheduledMessageKey) {
         this.clusterName = clusterName;
         this.scheduledMessageKey = scheduledMessageKey;
-        this.refSpec = "message://" + clusterName + "/" + actorSystemName + "/shards/" + shardId + "/" + scheduledMessageKey.getFireTime() + "/" + scheduledMessageKey.getId().toString();
+        this.refSpec = "message://" + clusterName + "/" + actorSystemName + "/shards/" + shardId + "/" + scheduledMessageKey.getFireTime() + "/" + UUIDTools.toString(scheduledMessageKey.getId());
     }
 
     @Override

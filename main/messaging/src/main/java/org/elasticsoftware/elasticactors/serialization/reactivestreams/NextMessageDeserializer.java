@@ -16,10 +16,10 @@
 
 package org.elasticsoftware.elasticactors.serialization.reactivestreams;
 
-import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.NextMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Reactivestreams;
+import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -31,12 +31,20 @@ public final class NextMessageDeserializer implements MessageDeserializer<NextMe
 
     @Override
     public NextMessage deserialize(ByteBuffer serializedObject) throws IOException {
-        Reactivestreams.NextMessage nextMessage = Reactivestreams.NextMessage.parseFrom(ByteString.copyFrom(serializedObject));
+        Reactivestreams.NextMessage nextMessage = ByteBufferUtils.throwingApplyAndReset(
+            serializedObject,
+            Reactivestreams.NextMessage::parseFrom
+        );
         return new NextMessage(nextMessage.getMessageName(), nextMessage.getMessageBytes().toByteArray());
     }
 
     @Override
     public Class<NextMessage> getMessageClass() {
         return NextMessage.class;
+    }
+
+    @Override
+    public boolean isSafe() {
+        return true;
     }
 }
