@@ -39,7 +39,7 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
     private final Channel consumerChannel;
     private final LinkedBlockingQueue<Tag> tagQueue = new LinkedBlockingQueue<>();
     private long lastAckedTag = -1;
-    private long highestDeliveredTag = -1;
+    private long highestAckedTag = -1;
     private final TreeSet<Long> pendingTags = new TreeSet<>();
     private final ThreadFactory threadFactory;
     private final CountDownLatch shutdownLatch = new CountDownLatch(1);
@@ -51,7 +51,7 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
 
     @Override
     public void deliver(long deliveryTag) {
-        tagQueue.offer(new Tag(TagType.DELIVERED,deliveryTag));
+        // Nothing to do here
     }
 
     @Override
@@ -85,12 +85,11 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
                 // need to trigger the flush
                 if(tag == null) {
                     flushAck();
-                } else if(tag.type == TagType.DELIVERED) {
-                    // register the last delivered tag
-                    highestDeliveredTag = Math.max(tag.value, highestDeliveredTag);
                 } else if(tag.type == TagType.ACK) {
                     // search from the beginning and delete
                     pendingTags.add(tag.value);
+                    // register the last acked tag
+                    highestAckedTag = Math.max(tag.value, highestAckedTag);
                 } else if(tag.type == TagType.STOP) {
                     // flush first
                     flushAck();
@@ -105,7 +104,7 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
 
     private void flushAck() {
         // we should only send an ack if something has change
-        if(lastAckedTag == highestDeliveredTag) {
+        if (lastAckedTag == highestAckedTag) {
             return;
         }
         // get the head of the deque
@@ -147,7 +146,6 @@ public final class BufferingMessageAcker implements Runnable, MessageAcker {
     }
 
     private enum TagType {
-        DELIVERED,
         ACK,
         STOP
     }
