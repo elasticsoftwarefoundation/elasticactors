@@ -69,19 +69,12 @@ public final class MicrometerConfiguration {
             String globalPrefix = env.getProperty("ea.metrics.micrometer.prefix", "");
             String prefix =
                 env.getProperty(format("ea.metrics.micrometer.%s.prefix", componentName), "");
-            String nodeId = env.getRequiredProperty("ea.node.id");
-            String clusterName = env.getRequiredProperty("ea.cluster");
-            Tags tags = Tags.of(
-                "elastic.actors.generated", "true",
-                "elastic.actors.component.name", componentName,
-                "elastic.actors.node.id", nodeId,
-                "elastic.actors.cluster.name", clusterName
-            );
             Map<String, String> configurationTagMap = getKeyValuePairsUnderPrefix(
                 env,
                 format("ea.metrics.micrometer.%s.tags", componentName),
                 String::trim
             );
+            Tags tags = Tags.empty();
             if (!configurationTagMap.isEmpty()) {
                 List<Tag> configurationTags = new ArrayList<>(configurationTagMap.size());
                 configurationTagMap.forEach((k, v) -> configurationTags.add(Tag.of(k, v)));
