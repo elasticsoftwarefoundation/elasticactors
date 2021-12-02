@@ -80,7 +80,7 @@ public class BufferingMessageAckerTest {
         }
 
         verify(channel, timeout(1000)).basicAck(999, true);
-        verify(channel, atMost(999 - 103)).basicAck(longThat(i -> i < 999), booleanThat(Boolean::booleanValue));
+        verify(channel, atMost(999 - 103)).basicAck(longThat(i -> i >= 103 && i < 999), booleanThat(Boolean::booleanValue));
 
         // deliver one more message
 
