@@ -283,8 +283,8 @@ ea.nodeCache.maximumSize=10240
 # scheduled executor thread that runs every N milliseconds and removed expired actors.
 # This key allows you to adjust how often this thread will run. There is no maximum value, but it 
 # enforces a minimum of 500ms so it can't be made to run so frequently.
-# Set it to 0 or lower to completely disable the periodic timeout checks. Expired actors will 
-# still be invalidated when something tries to communicate with them.
+# Set it to 0 or lower to completely disable the periodic timeout checks.
+# Expired actors will still be invalidated when being fetched from the cache.
 # Default: 30000
 # Minimum: 500
 ea.nodeCache.expirationCheckPeriod=30000
