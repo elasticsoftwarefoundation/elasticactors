@@ -19,7 +19,7 @@
 
     <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
     <artifactId>elasticactors-parent</artifactId>
-    <version>6.0.3</version>
+    <version>6.0.4-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -54,7 +54,7 @@
         <developerConnection>scm:git:git@github.com:elasticsoftwarefoundation/elasticactors.git
         </developerConnection>
         <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
-        <tag>v6.0.3</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
