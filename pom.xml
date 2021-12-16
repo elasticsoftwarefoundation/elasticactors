@@ -19,7 +19,7 @@
 
     <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
     <artifactId>elasticactors-parent</artifactId>
-    <version>3.1.0</version>
+    <version>3.1.1-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -59,7 +59,7 @@
         <aspectj.version>1.9.6</aspectj.version>
         <protobuf.version>3.15.3</protobuf.version>
         <grizzly.version>2.4.4</grizzly.version>
-        <log4j.version>2.14.1</log4j.version>
+        <log4j.version>2.16.0</log4j.version>
         <!-- the cassandra driver has a hard dependency on this version -->
         <guava.version>19.0</guava.version>
         <jackson.version>2.12.3</jackson.version>
