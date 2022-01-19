@@ -19,16 +19,12 @@ package org.elasticsoftware.elasticactors.kafka.testapp.configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ServiceActor;
+import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
 import org.elasticsoftware.elasticactors.configuration.ClusteringConfiguration;
 import org.elasticsoftware.elasticactors.kafka.configuration.NodeConfiguration;
 import org.elasticsoftware.elasticactors.spring.ActorAnnotationBeanNameGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableMBeanExport;
-import org.springframework.context.annotation.FilterType;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.*;
 import org.springframework.context.annotation.aspectj.EnableSpringConfigured;
 import org.springframework.core.env.Environment;
 
@@ -61,9 +57,9 @@ public class ContainerConfiguration {
         this.actorSystem = actorSystem;
     }
 
-    @Autowired
-    public void setObjectMapper(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    @Bean(name = {"objectMapper"})
+    public ObjectMapper createObjectMapper(ObjectMapperBuilder builder) {
+        return builder.build();
     }
 
     @PostConstruct

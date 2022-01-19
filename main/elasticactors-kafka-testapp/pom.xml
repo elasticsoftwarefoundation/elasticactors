@@ -43,6 +43,12 @@
             <artifactId>slf4j-simple</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>kafka</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 

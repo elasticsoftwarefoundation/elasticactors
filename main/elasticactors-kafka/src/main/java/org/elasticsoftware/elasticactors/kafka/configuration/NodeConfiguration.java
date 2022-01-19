@@ -42,11 +42,7 @@ import org.elasticsoftware.elasticactors.kafka.KafkaActorSystemInstance;
 import org.elasticsoftware.elasticactors.kafka.serialization.CompressingSerializer;
 import org.elasticsoftware.elasticactors.kafka.serialization.DecompressingDeserializer;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory;
-import org.elasticsoftware.elasticactors.runtime.DefaultConfiguration;
-import org.elasticsoftware.elasticactors.runtime.ElasticActorsNode;
-import org.elasticsoftware.elasticactors.runtime.ManagedActorsScanner;
-import org.elasticsoftware.elasticactors.runtime.MessagesScanner;
-import org.elasticsoftware.elasticactors.runtime.PluggableMessageHandlersScanner;
+import org.elasticsoftware.elasticactors.runtime.*;
 import org.elasticsoftware.elasticactors.serialization.Deserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.Serializer;
@@ -166,6 +162,11 @@ public class NodeConfiguration {
     @Bean(name = {"messageHandlersRegistry"})
     public PluggableMessageHandlersScanner createPluggableMessagesHandlersScanner(ApplicationContext applicationContext) {
         return new PluggableMessageHandlersScanner(applicationContext);
+    }
+
+    @Bean(name = {"actorLifecycleListenerRegistry"})
+    public ActorLifecycleListenerScanner createActorLifecycleListenerScanner(ApplicationContext applicationContext) {
+        return new ActorLifecycleListenerScanner(applicationContext);
     }
 
     @Bean(name = {"nodeSelectorFactory"})

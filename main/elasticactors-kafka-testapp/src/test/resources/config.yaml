@@ -1,0 +1,4 @@
+---
+name: kafkatest
+shards: 32
+shardHashSeed: 30803

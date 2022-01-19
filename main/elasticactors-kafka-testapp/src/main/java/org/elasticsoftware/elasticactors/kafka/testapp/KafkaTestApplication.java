@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class KafkaTestApplication {
     private static final Logger logger = LoggerFactory.getLogger(KafkaTestApplication.class);
@@ -114,7 +115,7 @@ public class KafkaTestApplication {
             logger.info(firstAccountId+" account balance: "+accountAdapter.getBalance());
 
             try {
-                waitLatch.await();
+                waitLatch.await(5, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 // do nothing
             }

@@ -21,10 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
 import org.apache.kafka.clients.CommonClientConfigs;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -356,7 +353,7 @@ public final class KafkaActorThread extends Thread {
                         offset.put(topicPartition, new OffsetAndMetadata(consumerRecord.offset() + 1));
                 }));
                 // commit the offsets
-                producer.sendOffsetsToTransaction(offset, clusterName);
+                producer.sendOffsetsToTransaction(offset, new ConsumerGroupMetadata(clusterName));
                 // commit the transaction
                 producer.commitTransaction();
             }

@@ -69,6 +69,7 @@
         <dependency>
             <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
             <artifactId>cluster-shoal</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
