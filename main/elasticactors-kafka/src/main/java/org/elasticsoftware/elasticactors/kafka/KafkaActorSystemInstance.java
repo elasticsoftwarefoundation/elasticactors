@@ -347,7 +347,7 @@ public final class KafkaActorSystemInstance implements InternalActorSystem, Shar
     }
 
     private KafkaActorShard shardFor(String actorId) {
-        return this.actorShards[actorShardHasher.hashStringToInt(actorId) % this.actorShards.length];
+        return this.actorShards[Math.abs(actorShardHasher.hashStringToInt(actorId)) % this.actorShards.length];
     }
 
     @Override
