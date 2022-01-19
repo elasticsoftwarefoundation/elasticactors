@@ -38,12 +38,12 @@ public final class ActorShardHasher implements Hasher {
 
     @Override
     public int hashStringToInt(String value) {
-        return Math.abs(hashFunction.hashString(value, StandardCharsets.UTF_8).asInt());
+        return hashFunction.hashString(value, StandardCharsets.UTF_8).asInt();
     }
 
     @Override
     public long hashStringToLong(String value) {
-        return Math.abs(hashFunction.hashString(value, StandardCharsets.UTF_8).asLong());
+        return hashFunction.hashString(value, StandardCharsets.UTF_8).asLong();
     }
 
 }
