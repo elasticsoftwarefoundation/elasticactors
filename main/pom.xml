@@ -30,7 +30,7 @@
     <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
     <properties>
-        <cassandra.version>3.11.10</cassandra.version>
+        <cassandra.version>3.11.11</cassandra.version>
         <hectorclient.version>2.0-0</hectorclient.version>
         <spring.version>5.3.14</spring.version>
         <aspectj.version>1.9.7</aspectj.version>
@@ -47,7 +47,7 @@
         <rabbitmq.version>5.13.1</rabbitmq.version>
         <lyra.version>0.5.5</lyra.version>
         <lz4.version>1.8.0</lz4.version>
-        <kafka.version>2.8.0</kafka.version>
+        <kafka.version>3.0.0</kafka.version>
         <cassandra-driver.version>3.11.0</cassandra-driver.version>
         <cassandra4-driver.version>4.13.0</cassandra4-driver.version>
         <servlet-api.version>3.1.0</servlet-api.version>
