@@ -38,11 +38,11 @@ public final class NodeSelectorHasher implements Hasher {
 
     @Override
     public int hashStringToInt(String value) {
-        return hashFunction.hashString(value, StandardCharsets.UTF_8).asInt();
+        return Math.abs(hashFunction.hashString(value, StandardCharsets.UTF_8).asInt());
     }
 
     @Override
     public long hashStringToLong(String value) {
-        return hashFunction.hashString(value, StandardCharsets.UTF_8).asLong();
+        return Math.abs(hashFunction.hashString(value, StandardCharsets.UTF_8).asLong());
     }
 }
