@@ -39,6 +39,7 @@ import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRefFa
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageRefTools;
 import org.elasticsoftware.elasticactors.health.InternalActorSystemHealthCheck;
 import org.elasticsoftware.elasticactors.kafka.KafkaActorSystemInstance;
+import org.elasticsoftware.elasticactors.kafka.runtime.ElasticActorsNode;
 import org.elasticsoftware.elasticactors.kafka.serialization.CompressingSerializer;
 import org.elasticsoftware.elasticactors.kafka.serialization.DecompressingDeserializer;
 import org.elasticsoftware.elasticactors.kafka.state.PersistentActorStoreFactory;

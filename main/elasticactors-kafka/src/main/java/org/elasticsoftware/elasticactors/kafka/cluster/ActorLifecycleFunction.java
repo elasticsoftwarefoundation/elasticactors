@@ -25,5 +25,9 @@ import org.elasticsoftware.elasticactors.state.PersistentActor;
 
 @FunctionalInterface
 public interface ActorLifecycleFunction {
-    Boolean apply(InternalActorSystem actorSystem, PersistentActor persistentActor, ElasticActor receiver, ActorRef receiverRef, InternalMessage internalMessage);
+    Boolean apply(InternalActorSystem actorSystem,
+                  PersistentActor persistentActor,
+                  ElasticActor receiver,
+                  ActorRef receiverRef,
+                  InternalMessage internalMessage);
 }

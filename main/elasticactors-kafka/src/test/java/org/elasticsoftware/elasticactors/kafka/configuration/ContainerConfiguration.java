@@ -19,7 +19,6 @@ package org.elasticsoftware.elasticactors.kafka.configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.ServiceActor;
-import org.elasticsoftware.elasticactors.configuration.ClusteringConfiguration;
 import org.elasticsoftware.elasticactors.spring.ActorAnnotationBeanNameGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
@@ -44,7 +43,7 @@ import javax.annotation.PostConstruct;
         basePackages = {"org.elasticsoftware.elasticactors.base.serialization","org.elasticsoftware.elasticactors.kafka"},
         nameGenerator = ActorAnnotationBeanNameGenerator.class,
         includeFilters = {@ComponentScan.Filter(value = {ServiceActor.class}, type = FilterType.ANNOTATION)})
-@Import(value = {ClusteringConfiguration.class, NodeConfiguration.class})
+@Import(value = {NodeConfiguration.class})
 public class ContainerConfiguration {
     private Environment environment;
     private ActorSystem actorSystem;

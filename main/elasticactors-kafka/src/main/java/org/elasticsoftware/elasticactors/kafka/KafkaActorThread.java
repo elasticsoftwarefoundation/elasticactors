@@ -455,7 +455,7 @@ public final class KafkaActorThread extends Thread {
 
     private void doSend(ProducerRecord<Object, Object> producerRecord, KafkaProducer<Object, Object> transactionalProducer) {
         if(transactionalProducer == null) {
-            // no transaction so hand over to the current thread (and send in it's own transaction)
+            // no transaction so hand over to the current thread (and send in its own transaction)
             runCommand((kafkaConsumer, kafkaProducer) -> {
                 try {
                     kafkaProducer.beginTransaction();

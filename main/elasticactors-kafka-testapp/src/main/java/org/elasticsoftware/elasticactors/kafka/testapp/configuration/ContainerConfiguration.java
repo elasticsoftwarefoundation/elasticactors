@@ -18,9 +18,12 @@ package org.elasticsoftware.elasticactors.kafka.testapp.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsoftware.elasticactors.ActorSystem;
+import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.ServiceActor;
 import org.elasticsoftware.elasticactors.base.serialization.ObjectMapperBuilder;
-import org.elasticsoftware.elasticactors.configuration.ClusteringConfiguration;
+import org.elasticsoftware.elasticactors.cluster.ClusterService;
+import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
+import org.elasticsoftware.elasticactors.kafka.cluster.KafkaClusterService;
 import org.elasticsoftware.elasticactors.kafka.configuration.NodeConfiguration;
 import org.elasticsoftware.elasticactors.spring.ActorAnnotationBeanNameGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +32,7 @@ import org.springframework.context.annotation.aspectj.EnableSpringConfigured;
 import org.springframework.core.env.Environment;
 
 import javax.annotation.PostConstruct;
+import java.net.InetAddress;
 
 /**
  * @author Joost van de Wijgerd
@@ -41,11 +45,10 @@ import javax.annotation.PostConstruct;
         basePackages = {"org.elasticsoftware.elasticactors.base.serialization","org.elasticsoftware.elasticactors.kafka"},
         nameGenerator = ActorAnnotationBeanNameGenerator.class,
         includeFilters = {@ComponentScan.Filter(value = {ServiceActor.class}, type = FilterType.ANNOTATION)})
-@Import(value = {ClusteringConfiguration.class, NodeConfiguration.class})
+@Import(value = {/*ClusteringConfiguration.class,*/ NodeConfiguration.class})
 public class ContainerConfiguration {
     private Environment environment;
     private ActorSystem actorSystem;
-    private ObjectMapper objectMapper;
 
     @Autowired
     public void setEnvironment(Environment environment) {
@@ -60,6 +63,17 @@ public class ContainerConfiguration {
     @Bean(name = {"objectMapper"})
     public ObjectMapper createObjectMapper(ObjectMapperBuilder builder) {
         return builder.build();
+    }
+
+    @Bean(name= "clusterService")
+    public ClusterService createClusterService() {
+        return new KafkaClusterService(
+                environment.getProperty("ea.cluster"),
+                new PhysicalNode(
+                environment.getProperty("ea.node.id"),
+                InetAddress.getLoopbackAddress(),
+                true
+        ), environment.getProperty("ea.kafka.bootstrapServers"));
     }
 
     @PostConstruct
