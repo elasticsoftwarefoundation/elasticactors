@@ -23,6 +23,7 @@ import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -42,7 +43,11 @@ public class SingleNodeClusterService implements ClusterService {
     @Override
     public void reportReady() {
         for (ClusterEventListener eventListener : eventListeners) {
-            //eventListener.onTopologyChanged(Arrays.asList(localNode));
+            try {
+                eventListener.onTopologyChanged(Collections.singletonList(localNode));
+            } catch (Exception e) {
+                logger.error("Exception in onTopologyChanged", e);
+            }
             try {
                 eventListener.onMasterElected(localNode);
             } catch (Exception e) {
