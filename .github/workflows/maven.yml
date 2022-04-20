@@ -13,6 +13,7 @@ on:
 
 jobs:
   build:
+    concurrency: ci
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
