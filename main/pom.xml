@@ -51,7 +51,7 @@
         <cassandra-driver.version>3.11.0</cassandra-driver.version>
         <cassandra4-driver.version>4.14.0</cassandra4-driver.version>
         <servlet-api.version>3.1.0</servlet-api.version>
-        <activemq-artemis.version>1.5.6</activemq-artemis.version>
+        <activemq-artemis.version>2.19.1</activemq-artemis.version>
         <disruptor.version>3.4.4</disruptor.version>
         <chronicle-bom.version>2.20.126</chronicle-bom.version>
         <!-- This is the last release with ASLv2-->
