@@ -36,6 +36,7 @@ jobs:
         mvn
         --show-version
         --batch-mode
+        --no-transfer-progress
         --activate-profiles ci
         --file pom.xml
         --settings $GITHUB_WORKSPACE/settings.xml
@@ -48,6 +49,7 @@ jobs:
         mvn
         --show-version
         --batch-mode
+        --no-transfer-progress
         --activate-profiles ci
         --file pom.xml
         --settings $GITHUB_WORKSPACE/settings.xml
