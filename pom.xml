@@ -106,7 +106,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>3.2.2</version>
+                    <version>3.4.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.simplify4u.plugins</groupId>
