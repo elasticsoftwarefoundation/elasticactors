@@ -17,6 +17,9 @@
 
 package org.elasticsoftware.elasticactors;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * @author Joost van de Wijgerd
  */
@@ -26,6 +29,7 @@ public interface ActorSystemConfiguration {
      *
      * @return the name of this {@link ActorSystem}
      */
+    @Nonnull
     String getName();
 
     /**
@@ -123,6 +127,7 @@ public interface ActorSystemConfiguration {
      *
      * @return the version of the ActorSystem
      */
+    @Nonnull
     String getVersion();
 
     /**
@@ -136,6 +141,7 @@ public interface ActorSystemConfiguration {
      * @return the property value associated with the given key, or {@code null} if the key cannot be resolved.
      * @see #getRequiredProperty(Class, String, Class)
      */
+    @Nullable
     <T> T getProperty(Class component,String key, Class<T> targetType);
 
     /**
@@ -150,6 +156,7 @@ public interface ActorSystemConfiguration {
      * @return the property value associated with the given key, or {@code defaultValue} if the key cannot be resolved.
      * @see #getRequiredProperty(Class,String, Class)
      */
+    @Nonnull
     <T> T getProperty(Class component,String key, Class<T> targetType, T defaultValue);
 
    	/**
@@ -163,7 +170,9 @@ public interface ActorSystemConfiguration {
      * @return the property value associated with the given key, converted to the given {@code targetType} (never {@code null}).
    	 * @throws IllegalStateException if the given key cannot be resolved
    	 */
-   	<T> T getRequiredProperty(Class component,String key, Class<T> targetType) throws IllegalStateException;
+       @SuppressWarnings("unused")
+       @Nonnull
+       <T> T getRequiredProperty(Class component,String key, Class<T> targetType) throws IllegalStateException;
 
 }
 

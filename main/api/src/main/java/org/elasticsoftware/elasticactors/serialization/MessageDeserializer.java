@@ -17,6 +17,7 @@
 
 package org.elasticsoftware.elasticactors.serialization;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -24,8 +25,10 @@ import java.nio.ByteBuffer;
  * @author Joost van de Wijgerd
  */
 public interface MessageDeserializer<O> extends Deserializer<ByteBuffer,O> {
+    @Nonnull
     @Override
-    O deserialize(ByteBuffer serializedObject) throws IOException;
+    O deserialize(@Nonnull ByteBuffer serializedObject) throws IOException;
 
+    @Nonnull
     Class<O> getMessageClass();
 }

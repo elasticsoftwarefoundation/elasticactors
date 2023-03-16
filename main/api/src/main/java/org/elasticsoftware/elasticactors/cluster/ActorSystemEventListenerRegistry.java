@@ -19,11 +19,14 @@ package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 
 /**
  * @author Joost van de Wijgerd
  */
+@ParametersAreNonnullByDefault
 public interface ActorSystemEventListenerRegistry {
     /**
      *
@@ -34,7 +37,7 @@ public interface ActorSystemEventListenerRegistry {
      * @throws java.lang.IllegalStateException when this method ios not called in the context of an actor
      * @throws IOException  when the message serialization fails
      */
-    public void register(ActorRef receiver, ActorSystemEvent event, Object message) throws IOException;
+    void register(ActorRef receiver, ActorSystemEvent event, Object message) throws IOException;
 
     /**
      * Deregisters the activation hook (if any) for the calling actor. Only works while being called in the context of
@@ -46,5 +49,5 @@ public interface ActorSystemEventListenerRegistry {
      * @param   event       The type of event to unsubscribe from
      * @throws java.lang.IllegalStateException when this method not called in the context of an actor
      */
-    public void deregister(ActorRef receiver, ActorSystemEvent event);
+    void deregister(ActorRef receiver, ActorSystemEvent event);
 }

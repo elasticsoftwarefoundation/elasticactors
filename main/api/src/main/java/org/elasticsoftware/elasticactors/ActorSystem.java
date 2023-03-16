@@ -20,6 +20,7 @@ package org.elasticsoftware.elasticactors;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRegistry;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 
@@ -40,6 +41,7 @@ public interface ActorSystem {
      *
      * @return the name of this {@link ActorSystem}
      */
+    @Nonnull
     String getName();
 
     /**
@@ -56,6 +58,7 @@ public interface ActorSystem {
      * @return              the {@link ActorRef} pointing to the newly created actor
      * @throws Exception    when something unexpected happens
      */
+    @Nonnull
     <T> ActorRef actorOf(String actorId, Class<T> actorClass) throws Exception;
 
 
@@ -78,6 +81,7 @@ public interface ActorSystem {
      * @return                  the {@link ActorRef} pointing to the newly created actor
      * @throws Exception        when something unexpected happens
      */
+    @Nonnull
     ActorRef actorOf(String actorId, String actorClassName) throws Exception;
 
     /**
@@ -95,6 +99,7 @@ public interface ActorSystem {
      * @return              the {@link ActorRef} pointing to the newly created actor
      * @throws Exception    when something unexpected happens
      */
+    @Nonnull
     <T> ActorRef actorOf(String actorId, Class<T> actorClass, ActorState initialState) throws Exception;
 
     /**
@@ -117,8 +122,10 @@ public interface ActorSystem {
      * @return                  the {@link ActorRef} pointing to the newly created actor
      * @throws Exception        when something unexpected happens
      */
+    @Nonnull
     ActorRef actorOf(String actorId, String actorClassName, ActorState initialState) throws Exception;
 
+    @Nonnull
     ActorRef actorOf(String actorId, String actorClassName, ActorState initialState, ActorRef creatorRef) throws Exception;
 
     /**
@@ -135,6 +142,7 @@ public interface ActorSystem {
      * @throws Exception    when something unexpected happens
      * @return              the {@link ActorRef} pointing to the newly created actor
      */
+    @Nonnull
     <T> ActorRef tempActorOf(Class<T> actorClass,@Nullable ActorState initialState) throws Exception;
 
     /**
@@ -148,6 +156,7 @@ public interface ActorSystem {
      * @param actorId   the id of the (Standard) Actor to reference
      * @return          the {@link ActorRef} to the Actor (not guaranteed to exist!)
      */
+    @Nonnull
     ActorRef actorFor(String actorId);
 
     /**
@@ -158,6 +167,7 @@ public interface ActorSystem {
      * @param actorId   the id of the Service Actor to reference
      * @return          the {@link ActorRef} to the Service Actor
      */
+    @Nonnull
     ActorRef serviceActorFor(String actorId);
 
     /**
@@ -171,6 +181,7 @@ public interface ActorSystem {
      * @param actorId the id of the Service Actor to reference
      * @return the {@link ActorRef} to the Service Actor
      */
+    @Nonnull
     ActorRef serviceActorFor(String nodeId, String actorId);
 
     /**
@@ -179,6 +190,7 @@ public interface ActorSystem {
      *
      * @return      the configured {@link Scheduler}
      */
+    @Nonnull
     Scheduler getScheduler();
 
     /**
@@ -187,6 +199,7 @@ public interface ActorSystem {
      *
      * @return the parent of this {@link ActorSystem}
      */
+    @Nonnull
     ActorSystems getParent();
 
     /**
@@ -204,6 +217,7 @@ public interface ActorSystem {
      *
      * @return      the configuration object
      */
+    @Nonnull
     ActorSystemConfiguration getConfiguration();
 
     /**
@@ -216,6 +230,7 @@ public interface ActorSystem {
      *
      * @return  the {@link org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRegistry} for this {@link org.elasticsoftware.elasticactors.ActorSystem}
      */
+    @Nonnull
     ActorSystemEventListenerRegistry getEventListenerRegistry();
 
     /**
@@ -230,6 +245,7 @@ public interface ActorSystem {
      * @throws IllegalArgumentException if one of the members is not a Persistent Actor
      * (i.e. not created with {@link #actorOf(String, Class, ActorState)}, {@link #actorOf(String, Class)} or {@link #actorFor(String)}   }
      */
+    @Nonnull
     ActorRefGroup groupOf(Collection<ActorRef> members) throws IllegalArgumentException;
 
 }

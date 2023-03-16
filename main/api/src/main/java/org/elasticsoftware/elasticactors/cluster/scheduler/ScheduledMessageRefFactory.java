@@ -19,9 +19,11 @@ package org.elasticsoftware.elasticactors.cluster.scheduler;
 
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 
+import javax.annotation.Nonnull;
+
 /**
  * @author Joost van de Wijgerd
  */
 public interface ScheduledMessageRefFactory {
-    ScheduledMessageRef create(String refSpec);
+    @Nonnull ScheduledMessageRef create(@Nonnull String refSpec);
 }

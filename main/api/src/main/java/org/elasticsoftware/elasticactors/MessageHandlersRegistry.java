@@ -17,6 +17,7 @@
 
 package org.elasticsoftware.elasticactors;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 
 /**
@@ -36,5 +37,6 @@ public interface MessageHandlersRegistry {
      * @param methodActor actor type for which to get {@link PluggableMessageHandlers} for
      * @return classes that are annotated with {@link PluggableMessageHandlers} for the actor type
      */
-    public List<Class<?>> getMessageHandlers(Class<? extends MethodActor> methodActor);
+    @Nonnull
+    List<Class<?>> getMessageHandlers(Class<? extends MethodActor> methodActor);
 }

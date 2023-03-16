@@ -19,11 +19,14 @@ package org.elasticsoftware.elasticactors.scheduler;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author Joost van de Wijgerd
  */
+@ParametersAreNonnullByDefault
 public interface Scheduler {
     /**
      * Schedules a particular message to be send once
@@ -34,6 +37,7 @@ public interface Scheduler {
      * @param timeUnit          the {@link TimeUnit} to interpret the delay parameter
      * @return                  the serializable reference to the scheduled message that can be stored and used to manage it
      */
+    @Nonnull
     ScheduledMessageRef scheduleOnce(
         Object message,
         ActorRef receiver,

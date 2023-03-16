@@ -24,9 +24,10 @@ package org.elasticsoftware.elasticactors.scheduler;
  * @author Joost van de Wijgerd
  */
 public interface ScheduledMessageRef {
+    @SuppressWarnings("unused")
     String REFSPEC_FORMAT = "message://%s/%s/shards/%d/%d/%s";
 
     void cancel() throws Exception;
 
-    public long getFireTime();
+    long getFireTime();
 }

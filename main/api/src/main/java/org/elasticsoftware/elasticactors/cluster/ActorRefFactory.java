@@ -19,9 +19,12 @@ package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 
+import javax.annotation.Nonnull;
+
 /**
  * @author Joost van de Wijgerd
  */
 public interface ActorRefFactory {
-    ActorRef create(String refSpec);
+    @Nonnull
+    ActorRef create(@Nonnull String refSpec);
 }

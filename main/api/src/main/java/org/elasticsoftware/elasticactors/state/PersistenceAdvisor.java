@@ -17,11 +17,13 @@
 
 package org.elasticsoftware.elasticactors.state;
 
+import javax.annotation.Nonnull;
+
 /**
  * @author Joost van de Wijgerd
  */
 public interface PersistenceAdvisor {
-    boolean shouldUpdateState(Object message);
+    boolean shouldUpdateState(@Nonnull Object message);
 
-    boolean shouldUpdateState(ActorLifecycleStep lifecycleStep);
+    boolean shouldUpdateState(@Nonnull ActorLifecycleStep lifecycleStep);
 }

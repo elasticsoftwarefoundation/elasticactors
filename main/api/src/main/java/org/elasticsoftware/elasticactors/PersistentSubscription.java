@@ -19,12 +19,16 @@ package org.elasticsoftware.elasticactors;
 
 import org.reactivestreams.Subscription;
 
+import javax.annotation.Nonnull;
+
 /**
  * @author Joost van de Wijgerd
  */
 public interface PersistentSubscription extends Subscription {
+    @Nonnull
     ActorRef getPublisherRef();
 
+    @Nonnull
     String getMessageName();
 
     boolean isCancelled();

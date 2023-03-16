@@ -17,6 +17,7 @@
 
 package org.elasticsoftware.elasticactors;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -30,7 +31,7 @@ public interface ActorRefGroup {
      * @param sender        the sender, this can be self, but it can also be another {@link ActorRef}
      * @throws              MessageDeliveryException when something is wrong with the Messaging Subsystem
      */
-    void tell(Object message, ActorRef sender) throws MessageDeliveryException;
+    void tell(Object message, @Nullable ActorRef sender) throws MessageDeliveryException;
 
     /**
      * Equivalent to calling ActorRefGroup.tell(message,getSelf())
@@ -41,9 +42,11 @@ public interface ActorRefGroup {
      */
     void tell(Object message) throws IllegalStateException, MessageDeliveryException;
 
+    @SuppressWarnings("unused")
     Collection<? extends ActorRef> getMembers();
 
+    @SuppressWarnings("unused")
     ActorRefGroup withMembersAdded(ActorRef... membersToAdd);
-
+    @SuppressWarnings("unused")
     ActorRefGroup withMembersRemoved(ActorRef... membersToRemove);
 }

@@ -17,17 +17,24 @@
 
 package org.elasticsoftware.elasticactors;
 
+import javax.annotation.Nonnull;
+
 /**
  * @author Joost van de Wijgerd
  */
 public interface SubscriberContext {
+    @Nonnull
     ActorRef getSelf();
 
+    @Nonnull
     ActorRef getPublisher();
 
+    @Nonnull
     <T extends ActorState> T getState(Class<T> stateClass);
 
+    @Nonnull
     ActorSystem getActorSystem();
 
+    @Nonnull
     PersistentSubscription getSubscription();
 }

@@ -17,13 +17,15 @@
 
 package org.elasticsoftware.elasticactors.serialization;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 
 /**
  * @author Joost van de Wijgerd
  */
 public interface Deserializer<I,O> {
-    O deserialize(I serializedObject) throws IOException;
+    @Nonnull
+    O deserialize(@Nonnull I serializedObject) throws IOException;
 
     /**
      * Whether this deserializer is safe from side effects on the serialized object.

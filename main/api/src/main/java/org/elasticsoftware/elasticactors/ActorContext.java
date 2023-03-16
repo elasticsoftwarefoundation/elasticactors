@@ -17,6 +17,7 @@
 
 package org.elasticsoftware.elasticactors;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
@@ -52,6 +53,7 @@ public interface ActorContext {
      *
      * @return  the {@link ActorRef} instance that references the Actor
      */
+    @Nonnull
     ActorRef getSelf();
 
     /**
@@ -74,12 +76,14 @@ public interface ActorContext {
      *
      * @param state     the new {@link ActorState} to set (and store)
      */
-    void setState(ActorState state);
+    @SuppressWarnings("rawtypes")
+    void setState(@Nonnull ActorState state);
 
     /**
      *
      * @return  the {@link ActorSystem} this actor is part of
      */
+    @Nonnull
     ActorSystem getActorSystem();
 
     /**
@@ -93,6 +97,7 @@ public interface ActorContext {
      *
      * @return  the collection of {@link PersistentSubscription}s or and empty collection if there are none
      */
+    @Nonnull
     Collection<PersistentSubscription> getSubscriptions();
 
     /**
@@ -103,5 +108,6 @@ public interface ActorContext {
      *          (class)Name and as a value the Set of subscribed actors. If there are no subscribers and empty Map will
      *          be returned
      */
+    @Nonnull
     Map<String, Set<ActorRef>> getSubscribers();
 }

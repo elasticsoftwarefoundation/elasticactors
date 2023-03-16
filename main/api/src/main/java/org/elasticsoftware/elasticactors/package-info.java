@@ -14,18 +14,7 @@
  *     limitations under the License.
  *
  */
+@ParametersAreNonnullByDefault
+package org.elasticsoftware.elasticactors;
 
-package org.elasticsoftware.elasticactors.serialization;
-
-import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
-/**
- * @author Joost van de Wijgerd
- */
-public interface MessageSerializer<I> extends Serializer<I,ByteBuffer> {
-    @Nonnull
-    @Override
-    ByteBuffer serialize(@Nonnull I object) throws IOException;
-}
+import javax.annotation.ParametersAreNonnullByDefault;

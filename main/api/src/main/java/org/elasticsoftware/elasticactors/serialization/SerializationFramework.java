@@ -20,11 +20,13 @@ package org.elasticsoftware.elasticactors.serialization;
 import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ElasticActor;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.nio.ByteBuffer;
 
 /**
  * @author Joost van de Wijgerd
  */
+@ParametersAreNonnullByDefault
 public interface SerializationFramework {
     /**
      * Register a message class with the framework

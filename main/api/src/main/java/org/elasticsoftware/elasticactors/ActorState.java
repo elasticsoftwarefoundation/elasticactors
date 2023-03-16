@@ -19,6 +19,9 @@ package org.elasticsoftware.elasticactors;
 
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * Tagging interface for the state object of an {@link ElasticActor}. The interface has a generic
  * type Body that should normally be the same type as the implementing class. The reason behind this
@@ -34,6 +37,7 @@ public interface ActorState<Body> {
      *
      * @return the body (the actual state)
      */
+    @Nonnull
     Body getBody();
 
     /**
@@ -41,6 +45,7 @@ public interface ActorState<Body> {
      *
      * @return the type of the SerializationFramework that should be used to serialize this state class
      */
+    @Nonnull
     Class<? extends SerializationFramework> getSerializationFramework();
 }
 

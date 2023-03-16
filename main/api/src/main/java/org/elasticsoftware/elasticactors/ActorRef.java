@@ -20,6 +20,9 @@ package org.elasticsoftware.elasticactors;
 import org.elasticsoftware.elasticactors.concurrent.ActorCompletableFuture;
 import org.reactivestreams.Publisher;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * This is the main entry point for the ElasticActors API. When a {@link org.elasticsoftware.elasticactors.serialization.Message}
  * needs to be send to an {@link ElasticActor} first the {@link ActorRef} needs to be obtained. An Actor Reference
@@ -41,6 +44,7 @@ import org.reactivestreams.Publisher;
  * @author Joost van de Wijgerd
  */
 public interface ActorRef {
+    @Nonnull
     String getActorCluster();
     /**
      * The path of an actor is the Shard (or Node) where the actor is located. It looks like:
@@ -48,6 +52,7 @@ public interface ActorRef {
      *
      * @return  the actor path as a string
      */
+    @Nonnull
     String getActorPath();
 
     /**
@@ -59,6 +64,7 @@ public interface ActorRef {
      * @see         ActorSystem#serviceActorFor(String)
      * @return      the actor id for this {@link ActorRef}
      */
+    @Nonnull
     String getActorId();
 
     /**
@@ -68,7 +74,7 @@ public interface ActorRef {
      * @param sender        the sender, this can be self, but it can also be another {@link ActorRef}
      * @throws              MessageDeliveryException when something is wrong with the Messaging Subsystem
      */
-    void tell(Object message, ActorRef sender) throws MessageDeliveryException;
+    void tell(@Nonnull Object message,@Nullable ActorRef sender) throws MessageDeliveryException;
 
     /**
      * Equivalent to calling ActorRef.tell(message,getSelf())
@@ -77,7 +83,7 @@ public interface ActorRef {
      * @throws              IllegalStateException if the method is not called withing a {@link ElasticActor} lifecycle or on(Message) method
      * @throws              MessageDeliveryException when somthing is wrong with the Messaging Subsystem
      */
-    void tell(Object message) throws IllegalStateException, MessageDeliveryException;
+    void tell(@Nonnull Object message) throws IllegalStateException, MessageDeliveryException;
 
     /**
      * Send a message to an {@link ElasticActor} and request a response.

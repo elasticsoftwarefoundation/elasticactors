@@ -17,6 +17,7 @@
 
 package org.elasticsoftware.elasticactors;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 
 /**
@@ -34,6 +35,7 @@ public interface ManagedActorsRegistry {
      *
      * @return the classes that are annotated with {@link SingletonActor}
      */
+    @Nonnull
     List<Class<? extends ElasticActor<?>>> getSingletonActorClasses();
 
     /**
@@ -41,5 +43,6 @@ public interface ManagedActorsRegistry {
      *
      * @return the classes that are annotated with {@link ManagedActor}
      */
+    @Nonnull
     List<Class<? extends ElasticActor<?>>> getManagedActorClasses();
 }

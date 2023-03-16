@@ -17,6 +17,8 @@
 
 package org.elasticsoftware.elasticactors;
 
+import javax.annotation.Nonnull;
+
 /**
  * Used to provide an actor's initial state for instances managed by the framework.
  * Implementations must have a no-args constructor.
@@ -33,6 +35,7 @@ public interface InitialStateProvider {
         }
     }
 
+    @Nonnull
     ActorState<?> getInitialState(String actorId, Class<? extends ActorState> stateClass) throws Exception;
 
 }

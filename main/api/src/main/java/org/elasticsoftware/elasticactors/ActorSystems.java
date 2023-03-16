@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors;
 
 import org.elasticsoftware.elasticactors.cluster.RebalancingEventListener;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -33,6 +34,7 @@ public interface ActorSystems {
      *
      * @return the name of the local ElasticActors cluster
      */
+    @Nonnull
     String getClusterName();
 
     /**
@@ -41,6 +43,7 @@ public interface ActorSystems {
      * @param actorSystemName   the name of the {@link ActorSystem} or null to get the default
      * @return                  the local {@link ActorSystem} instance
      */
+    @Nonnull
     ActorSystem get(@Nullable String actorSystemName);
 
     /**
@@ -51,6 +54,7 @@ public interface ActorSystems {
      * @param actorSystemName   the {@link ActorSystem} name in the remote cluster or null to get the default
      * @return                  the remote {@link ActorSystem} instance or null if it doesn't exist / is not configured
      */
+    @Nullable
     ActorSystem getRemote(String clusterName,@Nullable String actorSystemName);
 
     /**
@@ -62,6 +66,7 @@ public interface ActorSystems {
      * @return                  the remote {@link ActorSystem} instance or null if it doesn't exist / is not configured
      * @throws IllegalArgumentException if there is more than one match
      */
+    @Nullable
     ActorSystem getRemote(String actorSystemName);
 
     /**

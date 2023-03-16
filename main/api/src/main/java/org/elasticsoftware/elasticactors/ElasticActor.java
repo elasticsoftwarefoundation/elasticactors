@@ -20,6 +20,7 @@ package org.elasticsoftware.elasticactors;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.reactivestreams.Subscriber;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -60,6 +61,8 @@ public interface ElasticActor<T> {
      * @return                          the {@link ActorState} object after being processed
      * @throws Exception                when something unexpected happens
      */
+    @SuppressWarnings("rawtypes")
+    @Nonnull
     ActorState preActivate(String previousVersion,String currentVersion,byte[] serializedForm,SerializationFramework serializationFramework) throws Exception;
 
     /**
