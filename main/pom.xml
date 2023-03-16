@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
         <artifactId>elasticactors-parent</artifactId>
-        <version>6.1.5-SNAPSHOT</version>
+        <version>6.2.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>elasticactors-main</artifactId>
@@ -30,48 +30,50 @@
     <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
     <properties>
-        <cassandra.version>3.11.11</cassandra.version>
+        <cassandra.version>3.11.14</cassandra.version>
         <hectorclient.version>2.0-0</hectorclient.version>
-        <spring.version>5.3.20</spring.version>
+        <spring.version>5.3.25</spring.version>
         <aspectj.version>1.9.7</aspectj.version>
-        <protobuf.version>3.16.3</protobuf.version>
+        <protobuf.version>3.22.2</protobuf.version>
         <grizzly.version>2.4.4</grizzly.version>
-        <log4j.version>2.17.2</log4j.version>
-        <guava.version>30.1.1-jre</guava.version>
-        <jackson.version>2.12.6.20220326</jackson.version>
+        <log4j.version>2.20.0</log4j.version>
+        <guava.version>31.1-jre</guava.version>
+        <jackson.version>2.14.2</jackson.version>
         <shoal.version>1.6.52</shoal.version>
-        <slf4j.version>1.7.32</slf4j.version>
+        <slf4j.version>1.7.36</slf4j.version>
         <reflections.version>0.10.2</reflections.version>
-        <javassist.version>3.28.0-GA</javassist.version>
+        <javassist.version>3.29.2-GA</javassist.version>
         <typetools.version>0.6.3</typetools.version>
-        <rabbitmq.version>5.13.1</rabbitmq.version>
+        <rabbitmq.version>5.16.0</rabbitmq.version>
         <lyra.version>0.5.5</lyra.version>
         <lz4.version>1.8.0</lz4.version>
-        <kafka.version>3.0.0</kafka.version>
-        <cassandra-driver.version>3.11.0</cassandra-driver.version>
-        <cassandra4-driver.version>4.14.0</cassandra4-driver.version>
+        <kafka.version>3.4.0</kafka.version>
+        <cassandra-driver.version>3.11.3</cassandra-driver.version>
+        <cassandra4-driver.version>4.15.0</cassandra4-driver.version>
         <servlet-api.version>3.1.0</servlet-api.version>
-        <activemq-artemis.version>2.19.1</activemq-artemis.version>
+        <activemq-artemis.version>2.28.0</activemq-artemis.version>
         <disruptor.version>3.4.4</disruptor.version>
-        <chronicle-bom.version>2.20.126</chronicle-bom.version>
+        <chronicle-bom.version>2.24ea45</chronicle-bom.version>
+        <!-- this is needed to fix issue with chronicle-bom -->
+        <jna.version>5.8.0</jna.version>
         <!-- This is the last release with ASLv2-->
         <elasticsearch.version>7.10.2</elasticsearch.version>
         <kubernetes-client.version>4.13.3</kubernetes-client.version>
-        <java-uuid-generator.version>4.0.1</java-uuid-generator.version>
+        <java-uuid-generator.version>4.1.0</java-uuid-generator.version>
         <!-- testing -->
-        <testng-version>7.4.0</testng-version>
-        <mockito.version>3.9.0</mockito.version>
+        <testng-version>7.7.1</testng-version>
+        <mockito.version>3.12.4</mockito.version>
         <!-- java 11+ -->
         <java.version>11</java.version>
         <javax-annotation-api.version>1.3.2</javax-annotation-api.version>
-        <spring-data-redis.version>2.5.6</spring-data-redis.version>
-        <awaitility.version>4.0.3</awaitility.version>
-        <reactive-streams.version>1.0.3</reactive-streams.version>
+        <spring-data-redis.version>2.7.9</spring-data-redis.version>
+        <awaitility.version>4.2.0</awaitility.version>
+        <reactive-streams.version>1.0.4</reactive-streams.version>
         <jsr305.version>3.0.2</jsr305.version>
         <persistence-api.version>2.2</persistence-api.version>
-        <plexus-utils.version>3.0.24</plexus-utils.version>
-        <netty.version>4.1.70.Final</netty.version>
-        <micrometer.version>1.5.17</micrometer.version>
+        <plexus-utils.version>3.5.1</plexus-utils.version>
+        <netty.version>4.1.90.Final</netty.version>
+        <micrometer.version>1.10.5</micrometer.version>
         <fast-uuid.version>0.2.0</fast-uuid.version>
     </properties>
 
@@ -144,6 +146,17 @@
                 <version>${micrometer.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
+            </dependency>
+            <!-- need to specify this here because of an issue in the chronicle bom (enforcer pluging chokes otherwise)-->
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna</artifactId>
+                <version>${jna.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna-platform</artifactId>
+                <version>${jna.version}</version>
             </dependency>
             <dependency>
                 <groupId>javax.inject</groupId>
