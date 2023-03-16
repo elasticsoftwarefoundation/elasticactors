@@ -56,7 +56,7 @@
         <disruptor.version>3.4.4</disruptor.version>
         <chronicle-bom.version>2.24ea45</chronicle-bom.version>
         <!-- this is needed to fix issue with chronicle-bom -->
-        <jna.version>5.8.0</jna.version>
+        <jna.version>5.13.0</jna.version>
         <!-- This is the last release with ASLv2-->
         <elasticsearch.version>7.10.2</elasticsearch.version>
         <kubernetes-client.version>4.13.3</kubernetes-client.version>
