@@ -779,6 +779,11 @@ log4j2.garbagefree.threadContextMap=true
 
 ### Release process
 
+make sure you select the right branch: `master` `7.x (Java 17)` and `elasticactors-v6` for `v6.x (Java 8)` releases
+
+also make sure to use the correct JDK version for the release. The `elasticactors-v6` branch requires JDK 11. 
+On `master` JDK 17 is required.
+
 This project uses the Maven Release Plugin and GitHub Actions to create releases.\
 Just run `mvn release:prepare release:perform` to select the version to be released and create a 
 VCS tag. 
