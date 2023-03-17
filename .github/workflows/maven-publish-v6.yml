@@ -6,7 +6,7 @@ name: Release
 on:
   push:
     tags:
-      - v7*
+      - v6*
 
 jobs:
   build:
