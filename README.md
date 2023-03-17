@@ -3,8 +3,17 @@ Elastic Actors
 
 Persistent Stateful Actor System
 
+Starting from March 2023 we maintain 2 branches: `v6.x` and `v7.x`. The `v6.x` branch is compatible with Java 8, 
+while the `v7.x` branch is compatible with Java 17 and higher.
 
-## Current released version (v6.x Java 8 compatible)
+## Current v7.x version (v7.x Java 17 compatible)
+
+[![CI](https://github.com/elasticsoftwarefoundation/elasticactors/actions/workflows/maven.yml/badge.svg)](https://github.com/elasticsoftwarefoundation/elasticactors/actions/workflows/maven.yml)
+[![License: Apache 2](https://img.shields.io/badge/LICENSE-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.txt)
+[![Maven Central](https://img.shields.io/maven-central/v/org.elasticsoftwarefoundation.elasticactors/elasticactors-parent.svg?label=Maven%20Central&versionPrefix=7)](https://search.maven.org/search?q=g:%22org.elasticsoftwarefoundation.elasticactors%22)
+
+
+## Current v6.x version (v6.x Java 8 compatible)
 
 [![CI](https://github.com/elasticsoftwarefoundation/elasticactors/actions/workflows/maven-v6.yml/badge.svg)](https://github.com/elasticsoftwarefoundation/elasticactors/actions/workflows/maven-v6.yml)
 [![License: Apache 2](https://img.shields.io/badge/LICENSE-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.txt)
