@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    concurrency: release
+    concurrency: release-v6
     name: Release to Maven Central
     runs-on: ubuntu-latest
     steps:
