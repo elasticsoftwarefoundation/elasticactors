@@ -18,6 +18,7 @@
 package org.elasticsoftware.elasticactors.cluster.scheduler;
 
 import io.micrometer.core.instrument.binder.jvm.ExecutorServiceMetrics;
+import jakarta.inject.Inject;
 import org.elasticsoftware.elasticactors.ActorContainer;
 import org.elasticsoftware.elasticactors.ActorContainerRef;
 import org.elasticsoftware.elasticactors.ActorContextHolder;
@@ -41,7 +42,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;

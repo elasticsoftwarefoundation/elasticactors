@@ -17,7 +17,8 @@
 
 package org.elasticsoftware.elasticactors;
 
-import javax.inject.Named;
+import jakarta.inject.Named;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

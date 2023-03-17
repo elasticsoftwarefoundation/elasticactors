@@ -17,12 +17,12 @@
 
 package org.elasticsoftware.elasticactors.spring;
 
+import jakarta.servlet.ServletContextEvent;
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.context.ContextLoaderListener;
 
-import javax.servlet.ServletContextEvent;
 
 /**
  * @author Joost van de Wijgerd
