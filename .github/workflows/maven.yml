@@ -6,10 +6,16 @@ name: CI
 on:
   push:
     branches:
-    - master
+      - master
+    paths-ignore:
+      - '*.md'
+      - 'LICENSE.txt'
   pull_request:
     branches:
-    - master
+      - master
+    paths-ignore:
+      - '*.md'
+      - 'LICENSE.txt'
 
 jobs:
   build:

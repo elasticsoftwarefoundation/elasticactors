@@ -6,10 +6,16 @@ name: CI V6 Branch
 on:
   push:
     branches:
-    - elasticactors-v6
+      - elasticactors-v6
+    paths-ignore:
+      - '*.md'
+      - 'LICENSE.txt'
   pull_request:
     branches:
-    - elasticactors-v6
+      - elasticactors-v6
+    paths-ignore:
+      - '*.md'
+      - 'LICENSE.txt'
 
 jobs:
   build:
