@@ -64,7 +64,7 @@
         <!-- this dependency is only here for compilation purposes -->
         <dependency>
             <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
-            <artifactId>backplane-cassandra</artifactId>
+            <artifactId>backplane-cassandra4</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
