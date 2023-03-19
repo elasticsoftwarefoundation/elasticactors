@@ -28,62 +28,28 @@ import java.nio.ByteBuffer;
 /**
  * @author Joost van de Wijgerd
  */
-public final class PersistentActorUpdateEvent implements ThreadBoundEvent<Integer> {
-    private final String[] rowKey;
-    private final ShardKey shardKey;
-    private final String persistentActorId;
-    private final ByteBuffer persistentActorBytes;
-    private final InternalMessage message;
-    private final MessageHandlerEventListener eventListener;
-
-    public PersistentActorUpdateEvent(String[] rowKey,
-                                      ShardKey shardKey,
-                                      String persistentActorId,
-                                      @Nullable ByteBuffer persistentActorBytes,
-                                      @Nullable InternalMessage message,
-                                      @Nullable MessageHandlerEventListener eventListener) {
-        this.rowKey = rowKey;
-        this.shardKey = shardKey;
-        this.persistentActorId = persistentActorId;
-        this.persistentActorBytes = persistentActorBytes;
-        this.message = message;
-        this.eventListener = eventListener;
-    }
+public record PersistentActorUpdateEvent(
+        String[] rowKey,
+        ShardKey shardKey,
+        String persistentActorId,
+        @Nullable ByteBuffer persistentActorBytes,
+        @Nullable InternalMessage message,
+        @Nullable MessageHandlerEventListener eventListener
+) implements ThreadBoundEvent<Integer> {
 
     @Override
     public Integer getKey() {
         return shardKey.getShardId();
     }
 
-    public String[] getRowKey() {
-        return rowKey;
-    }
-
-    public ShardKey getShardKey() {
-        return shardKey;
-    }
-
-    public String getPersistentActorId() {
-        return persistentActorId;
-    }
-
     public boolean hasPersistentActorBytes() {
         return persistentActorBytes != null;
     }
 
+    @Override
     @Nullable
-    public ByteBuffer getPersistentActorBytes() {
+    public ByteBuffer persistentActorBytes() {
         // Using duplicate to give implementations a chance to access the internal byte array
         return persistentActorBytes != null ? persistentActorBytes.duplicate() : null;
-    }
-
-    @Nullable
-    public InternalMessage getMessage() {
-        return message;
-    }
-
-    @Nullable
-    public MessageHandlerEventListener getEventListener() {
-        return eventListener;
     }
 }

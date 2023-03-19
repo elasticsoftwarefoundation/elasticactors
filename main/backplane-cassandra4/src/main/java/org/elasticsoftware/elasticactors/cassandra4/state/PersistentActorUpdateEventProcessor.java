@@ -65,10 +65,10 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
                 PersistentActorUpdateEvent event = events.get(0);
                 BoundStatement boundStatement;
                 if (event.hasPersistentActorBytes()) {
-                    boundStatement = insertStatement.bind(event.getRowKey()[0], event.getRowKey()[1], event.getPersistentActorId(), event.getPersistentActorBytes());
+                    boundStatement = insertStatement.bind(event.rowKey()[0], event.rowKey()[1], event.persistentActorId(), event.persistentActorBytes());
                 } else {
                     // it's a delete
-                    boundStatement = deleteStatement.bind(event.getRowKey()[0], event.getRowKey()[1], event.getPersistentActorId());
+                    boundStatement = deleteStatement.bind(event.rowKey()[0], event.rowKey()[1], event.persistentActorId());
                 }
                 // execute the statement
                 executeWithRetry(cassandraSession, boundStatement, logger);
@@ -79,11 +79,11 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
             executionException = e;
         } finally {
             for (PersistentActorUpdateEvent event : events) {
-                if(event.getEventListener() != null) {
+                if(event.eventListener() != null) {
                     if (executionException == null) {
-                        event.getEventListener().onDone(event.getMessage());
+                        event.eventListener().onDone(event.message());
                     } else {
-                        event.getEventListener().onError(event.getMessage(), executionException);
+                        event.eventListener().onError(event.message(), executionException);
                     }
                 }
             }
@@ -103,10 +103,10 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
         BatchStatement batchStatement = BatchStatement.newInstance(UNLOGGED);
         for (PersistentActorUpdateEvent event : events) {
             if (event.hasPersistentActorBytes()) {
-                batchStatement.add(insertStatement.bind(event.getRowKey()[0], event.getRowKey()[1], event.getPersistentActorId(), event.getPersistentActorBytes()));
+                batchStatement.add(insertStatement.bind(event.rowKey()[0], event.rowKey()[1], event.persistentActorId(), event.persistentActorBytes()));
             } else {
                 // it's a delete
-                batchStatement.add(deleteStatement.bind(event.getRowKey()[0], event.getRowKey()[1], event.getPersistentActorId()));
+                batchStatement.add(deleteStatement.bind(event.rowKey()[0], event.rowKey()[1], event.persistentActorId()));
             }
         }
         executeWithRetry(cassandraSession, batchStatement, logger);
