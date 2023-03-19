@@ -133,9 +133,9 @@
                 </executions>
                 <configuration>
                     <Xlint>warning</Xlint>
-                    <complianceLevel>1.8</complianceLevel>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <complianceLevel>${java.version}</complianceLevel>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                     <showWeaveInfo>true</showWeaveInfo>
                     <weaveDependencies>
 
