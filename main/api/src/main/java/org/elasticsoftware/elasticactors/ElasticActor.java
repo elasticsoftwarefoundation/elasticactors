@@ -20,8 +20,8 @@ package org.elasticsoftware.elasticactors;
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.reactivestreams.Subscriber;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Main interface to implement to create an Actor in the ElasticActors Framework. Defines Actor lifecycle methods

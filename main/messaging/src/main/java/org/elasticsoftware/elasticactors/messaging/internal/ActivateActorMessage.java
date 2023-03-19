@@ -20,7 +20,7 @@ package org.elasticsoftware.elasticactors.messaging.internal;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.io.Serializable;
 
 /**

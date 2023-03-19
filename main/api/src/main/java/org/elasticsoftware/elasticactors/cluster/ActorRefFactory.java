@@ -19,7 +19,7 @@ package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 /**
  * @author Joost van de Wijgerd

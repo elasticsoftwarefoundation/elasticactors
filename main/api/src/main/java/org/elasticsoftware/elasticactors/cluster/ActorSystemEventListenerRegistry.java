@@ -19,14 +19,13 @@ package org.elasticsoftware.elasticactors.cluster;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 
-import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNonnullByDefault;
+import jakarta.annotation.Nonnull;
 import java.io.IOException;
 
 /**
  * @author Joost van de Wijgerd
  */
-@ParametersAreNonnullByDefault
+
 public interface ActorSystemEventListenerRegistry {
     /**
      *

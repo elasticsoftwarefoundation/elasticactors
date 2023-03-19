@@ -19,7 +19,7 @@ package org.elasticsoftware.elasticactors.tracing;
 
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 public interface LogContextProcessor {
 

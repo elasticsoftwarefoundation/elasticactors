@@ -20,8 +20,8 @@ package org.elasticsoftware.elasticactors;
 import org.elasticsoftware.elasticactors.concurrent.ActorCompletableFuture;
 import org.reactivestreams.Publisher;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * This is the main entry point for the ElasticActors API. When a {@link org.elasticsoftware.elasticactors.serialization.Message}

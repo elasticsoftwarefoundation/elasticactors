@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.aspectj.EnableSpringConfigured;
 import org.springframework.core.env.Environment;
 
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PreDestroy;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;

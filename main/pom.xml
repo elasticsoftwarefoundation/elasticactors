@@ -59,18 +59,17 @@
         <jna.version>5.8.0</jna.version>
         <!-- This is the last release with ASLv2-->
         <elasticsearch.version>7.10.2</elasticsearch.version>
-        <kubernetes-client.version>4.13.3</kubernetes-client.version>
+        <kubernetes-client.version>6.5.0</kubernetes-client.version>
         <java-uuid-generator.version>4.1.0</java-uuid-generator.version>
         <!-- testing -->
         <testng-version>7.7.1</testng-version>
         <mockito.version>5.2.0</mockito.version>
         <!-- java 17+ -->
         <java.version>17</java.version>
-        <javax-annotation-api.version>1.3.2</javax-annotation-api.version>
+        <jakarta-annotation-api.version>2.1.1</jakarta-annotation-api.version>
         <spring-data-redis.version>2.7.9</spring-data-redis.version>
         <awaitility.version>4.2.0</awaitility.version>
         <reactive-streams.version>1.0.4</reactive-streams.version>
-        <jsr305.version>3.0.2</jsr305.version>
         <persistence-api.version>2.2</persistence-api.version>
         <plexus-utils.version>3.5.1</plexus-utils.version>
         <netty.version>4.1.90.Final</netty.version>
@@ -170,11 +169,6 @@
                 <groupId>org.reactivestreams</groupId>
                 <artifactId>reactive-streams</artifactId>
                 <version>${reactive-streams.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.code.findbugs</groupId>
-                <artifactId>jsr305</artifactId>
-                <version>${jsr305.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.lz4</groupId>
@@ -423,9 +417,9 @@
                 <version>${plexus-utils.version}</version>
             </dependency>
             <dependency>
-                <groupId>javax.annotation</groupId>
-                <artifactId>javax.annotation-api</artifactId>
-                <version>${javax-annotation-api.version}</version>
+                <groupId>jakarta.annotation</groupId>
+                <artifactId>jakarta.annotation-api</artifactId>
+                <version>${jakarta-annotation-api.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.testng</groupId>

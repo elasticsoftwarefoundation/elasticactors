@@ -21,7 +21,7 @@ import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 

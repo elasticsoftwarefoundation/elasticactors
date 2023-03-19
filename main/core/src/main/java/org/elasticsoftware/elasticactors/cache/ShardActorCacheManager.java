@@ -22,7 +22,7 @@ import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * @author Joost van de Wijgerd

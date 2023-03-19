@@ -17,7 +17,7 @@
 
 package org.elasticsoftware.elasticactors.state;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * @author Joost van de Wijgerd

@@ -20,7 +20,7 @@ package org.elasticsoftware.elasticactors.cluster.scheduler;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.tracing.TracedMessage;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 import java.util.concurrent.Delayed;

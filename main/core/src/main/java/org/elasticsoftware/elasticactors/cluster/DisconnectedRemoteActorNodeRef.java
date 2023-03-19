@@ -17,7 +17,7 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import static java.lang.String.format;
 

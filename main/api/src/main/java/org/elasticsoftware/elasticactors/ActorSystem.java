@@ -20,8 +20,8 @@ package org.elasticsoftware.elasticactors;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEventListenerRegistry;
 import org.elasticsoftware.elasticactors.scheduler.Scheduler;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import java.util.Collection;
 
 /**

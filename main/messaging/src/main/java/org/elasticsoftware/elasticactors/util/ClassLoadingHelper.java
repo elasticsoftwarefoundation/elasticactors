@@ -20,7 +20,7 @@ package org.elasticsoftware.elasticactors.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.ServiceLoader;

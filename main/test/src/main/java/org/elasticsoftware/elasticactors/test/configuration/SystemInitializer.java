@@ -22,7 +22,7 @@ import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.elasticsoftware.elasticactors.cluster.LocalActorSystemInstance;
 import org.elasticsoftware.elasticactors.cluster.strategies.SingleNodeScaleUpStrategy;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.util.Collections;
 import java.util.List;
 

@@ -19,7 +19,7 @@ package org.elasticsoftware.elasticactors.tracing;
 
 import org.elasticsoftware.elasticactors.ActorContext;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;

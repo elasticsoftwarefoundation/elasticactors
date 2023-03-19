@@ -20,7 +20,7 @@ package org.elasticsoftware.elasticactors.cluster.metrics;
 import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.springframework.core.env.Environment;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import static java.lang.String.format;
 

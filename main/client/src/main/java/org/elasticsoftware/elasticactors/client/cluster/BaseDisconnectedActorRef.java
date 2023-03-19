@@ -23,7 +23,7 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.concurrent.ActorCompletableFuture;
 import org.reactivestreams.Publisher;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 abstract class BaseDisconnectedActorRef implements ActorRef, ActorContainerRef {
 

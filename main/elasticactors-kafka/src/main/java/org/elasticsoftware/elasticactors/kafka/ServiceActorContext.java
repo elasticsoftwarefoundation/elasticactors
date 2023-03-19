@@ -23,7 +23,7 @@ import org.elasticsoftware.elasticactors.ActorState;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.PersistentSubscription;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;

@@ -23,7 +23,7 @@ import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.elasticsoftware.elasticactors.util.concurrent.WrapperThreadBoundRunnable;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 

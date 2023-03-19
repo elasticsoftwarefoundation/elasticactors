@@ -19,8 +19,8 @@ package org.elasticsoftware.elasticactors;
 
 import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Tagging interface for the state object of an {@link ElasticActor}. The interface has a generic

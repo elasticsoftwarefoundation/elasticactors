@@ -24,7 +24,7 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorShard;
 import org.elasticsoftware.elasticactors.MessageDeliveryException;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * {@link org.elasticsoftware.elasticactors.ActorRef} that references an actor in the local cluster

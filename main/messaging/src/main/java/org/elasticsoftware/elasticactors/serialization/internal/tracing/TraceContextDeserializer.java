@@ -20,7 +20,7 @@ package org.elasticsoftware.elasticactors.serialization.internal.tracing;
 import org.elasticsoftware.elasticactors.serialization.protobuf.Messaging;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.util.Map;
 
 public final class TraceContextDeserializer {

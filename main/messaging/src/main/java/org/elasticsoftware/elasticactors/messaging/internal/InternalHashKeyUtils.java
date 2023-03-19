@@ -17,7 +17,7 @@
 
 package org.elasticsoftware.elasticactors.messaging.internal;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 public final class InternalHashKeyUtils {
 

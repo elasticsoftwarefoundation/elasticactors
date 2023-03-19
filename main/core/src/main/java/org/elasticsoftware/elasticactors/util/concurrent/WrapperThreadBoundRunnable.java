@@ -17,7 +17,7 @@
 
 package org.elasticsoftware.elasticactors.util.concurrent;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 public interface WrapperThreadBoundRunnable<T> extends ThreadBoundRunnable<T> {
 

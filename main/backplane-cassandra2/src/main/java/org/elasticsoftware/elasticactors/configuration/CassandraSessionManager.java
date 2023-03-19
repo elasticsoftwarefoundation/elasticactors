@@ -30,7 +30,7 @@ import com.datastax.driver.core.policies.RoundRobinPolicy;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PreDestroy;
 import java.util.Set;
 
 public class CassandraSessionManager {

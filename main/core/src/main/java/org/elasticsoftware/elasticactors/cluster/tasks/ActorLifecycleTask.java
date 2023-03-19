@@ -42,7 +42,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.util.List;
 
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;

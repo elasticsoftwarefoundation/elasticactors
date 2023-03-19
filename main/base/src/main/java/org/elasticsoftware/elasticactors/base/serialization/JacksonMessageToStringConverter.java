@@ -20,7 +20,7 @@ package org.elasticsoftware.elasticactors.base.serialization;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsoftware.elasticactors.serialization.MessageToStringConverter;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 

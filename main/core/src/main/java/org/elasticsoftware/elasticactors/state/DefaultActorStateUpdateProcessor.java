@@ -28,8 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
-import javax.annotation.Nullable;
-import javax.annotation.PostConstruct;
+import jakarta.annotation.Nullable;
+import jakarta.annotation.PostConstruct;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;

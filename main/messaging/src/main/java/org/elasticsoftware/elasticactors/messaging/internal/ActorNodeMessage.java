@@ -21,7 +21,7 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializationFramework;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * This message is used to call a Temp or a Service actor ref from a remote cluster

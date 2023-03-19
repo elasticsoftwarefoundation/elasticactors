@@ -26,8 +26,8 @@ import org.elasticsoftware.elasticactors.tracing.NoopMessagingScope;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 import org.elasticsoftware.elasticactors.tracing.TracedMessage;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.Deque;

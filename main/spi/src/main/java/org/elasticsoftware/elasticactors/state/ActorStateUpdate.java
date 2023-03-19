@@ -22,7 +22,7 @@ import org.elasticsoftware.elasticactors.ElasticActor;
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.nio.ByteBuffer;
 
 /**

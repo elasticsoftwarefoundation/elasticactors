@@ -17,7 +17,7 @@
 
 package org.elasticsoftware.elasticactors.tracing;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 public interface Traceable {
 

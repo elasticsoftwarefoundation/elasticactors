@@ -19,8 +19,8 @@ package org.elasticsoftware.elasticactors.util.concurrent.metrics;
 
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import java.util.concurrent.atomic.LongAdder;
 
 public abstract class CountingTimedThreadBoundExecutor extends TimedThreadBoundExecutor {

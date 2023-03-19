@@ -25,8 +25,8 @@ import io.micrometer.core.instrument.util.StringUtils;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.core.env.Environment;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

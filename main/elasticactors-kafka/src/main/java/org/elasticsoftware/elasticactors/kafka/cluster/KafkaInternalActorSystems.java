@@ -39,7 +39,7 @@ import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
 import org.elasticsoftware.elasticactors.serialization.SystemDeserializers;
 import org.elasticsoftware.elasticactors.serialization.SystemSerializers;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 public final class KafkaInternalActorSystems implements InternalActorSystems, ActorRefFactory {
     private final InternalActorSystems delegate;

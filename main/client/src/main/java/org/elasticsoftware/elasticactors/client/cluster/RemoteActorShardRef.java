@@ -25,7 +25,7 @@ import org.elasticsoftware.elasticactors.MessageDeliveryException;
 import org.elasticsoftware.elasticactors.concurrent.ActorCompletableFuture;
 import org.reactivestreams.Publisher;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 final class RemoteActorShardRef implements ActorRef, ActorContainerRef {
 

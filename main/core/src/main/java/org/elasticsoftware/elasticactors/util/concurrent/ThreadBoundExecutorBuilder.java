@@ -23,8 +23,8 @@ import org.elasticsoftware.elasticactors.util.concurrent.disruptor.DisruptorThre
 import org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundExecutorMonitor;
 import org.springframework.core.env.Environment;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.String.format;

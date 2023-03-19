@@ -21,8 +21,8 @@ import org.elasticsoftware.elasticactors.ActorContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.Optional;

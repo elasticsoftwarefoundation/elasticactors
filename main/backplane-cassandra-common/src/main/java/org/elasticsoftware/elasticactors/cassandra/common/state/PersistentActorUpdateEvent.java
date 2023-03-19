@@ -22,7 +22,7 @@ import org.elasticsoftware.elasticactors.messaging.InternalMessage;
 import org.elasticsoftware.elasticactors.messaging.MessageHandlerEventListener;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEvent;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.nio.ByteBuffer;
 
 /**

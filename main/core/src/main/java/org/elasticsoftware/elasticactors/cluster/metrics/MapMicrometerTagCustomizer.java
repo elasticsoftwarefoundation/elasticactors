@@ -20,7 +20,7 @@ package org.elasticsoftware.elasticactors.cluster.metrics;
 import com.google.common.collect.ImmutableMap;
 import io.micrometer.core.instrument.Tags;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 import java.util.Map;
 import java.util.Objects;
 

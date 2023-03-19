@@ -19,8 +19,8 @@ package org.elasticsoftware.elasticactors;
 
 import org.elasticsoftware.elasticactors.cluster.RebalancingEventListener;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Parent class for the local {@link ActorSystem} instance. Can be used to obtain references to remote

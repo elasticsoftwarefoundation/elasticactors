@@ -19,7 +19,7 @@ package org.elasticsoftware.elasticactors.kafka.cluster;
 
 import org.elasticsoftware.elasticactors.cluster.BaseDisconnectedActorRef;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import static java.lang.String.format;
 

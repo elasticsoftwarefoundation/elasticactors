@@ -17,8 +17,8 @@
 
 package org.elasticsoftware.elasticactors.tracing;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import java.time.Clock;
 import java.util.Collections;
 import java.util.HashMap;

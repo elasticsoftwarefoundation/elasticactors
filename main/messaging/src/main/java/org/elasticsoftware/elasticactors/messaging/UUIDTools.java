@@ -24,7 +24,7 @@ import com.fasterxml.uuid.impl.UUIDUtil;
 import com.google.protobuf.ByteString;
 import org.elasticsoftware.elasticactors.util.ByteBufferUtils;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 import java.nio.ByteBuffer;
 import java.util.Comparator;
 import java.util.UUID;

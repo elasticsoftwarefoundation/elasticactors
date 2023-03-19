@@ -19,7 +19,7 @@ package org.elasticsoftware.elasticactors;
 
 import org.reactivestreams.Subscription;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 /**
  * @author Joost van de Wijgerd

@@ -18,11 +18,9 @@
 package org.elasticsoftware.elasticactors.kubernetes.cluster;
 
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.kubernetes.client.*;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import org.elasticsoftware.elasticactors.PhysicalNode;
 import org.elasticsoftware.elasticactors.cluster.ClusterEventListener;
 import org.elasticsoftware.elasticactors.cluster.ClusterMessageHandler;
@@ -30,8 +28,6 @@ import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -200,10 +196,10 @@ public final class KubernetesClusterService implements ClusterService {
         }
 
         @Override
-        public void onClose(KubernetesClientException cause) {
+        public void onClose(WatcherException cause) {
             // try to re-add it if it's an abnormal close
             if (cause != null) {
-                if (cause.getCode() == HTTP_GONE) {
+                if (cause.asClientException().getCode() == HTTP_GONE) {
                     logger.info(
                             "Watcher on StatefulSet {} was closed. Reason: {} ",
                             name,

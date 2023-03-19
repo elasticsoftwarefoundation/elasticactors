@@ -19,14 +19,12 @@ package org.elasticsoftware.elasticactors.scheduler;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 
-import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNonnullByDefault;
+import jakarta.annotation.Nonnull;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author Joost van de Wijgerd
  */
-@ParametersAreNonnullByDefault
 public interface Scheduler {
     /**
      * Schedules a particular message to be send once

@@ -17,7 +17,7 @@
 
 package org.elasticsoftware.elasticactors.messaging.internal;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * This interface is used to allow messages sent to a container to still be hashed to

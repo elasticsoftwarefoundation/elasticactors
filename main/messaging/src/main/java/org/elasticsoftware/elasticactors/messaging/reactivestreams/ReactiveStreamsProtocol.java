@@ -17,7 +17,7 @@
 
 package org.elasticsoftware.elasticactors.messaging.reactivestreams;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 /**
  * Tagging interface to signal that the message is part of the Reactive Streams protocol

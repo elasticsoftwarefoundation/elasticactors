@@ -28,7 +28,7 @@ import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageS
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;

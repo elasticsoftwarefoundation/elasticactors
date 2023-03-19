@@ -24,7 +24,7 @@ import org.elasticsoftware.elasticactors.messaging.internal.InternalHashKeyUtils
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 import java.util.concurrent.Delayed;

@@ -19,7 +19,7 @@ package org.elasticsoftware.elasticactors.cluster.scheduler;
 
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 /**
  * @author Joost van de Wijgerd

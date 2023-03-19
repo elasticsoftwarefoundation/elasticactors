@@ -19,7 +19,7 @@ package org.elasticsoftware.elasticactors.cluster.metrics;
 
 import io.micrometer.core.instrument.Tags;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 /**
  * Type used to customize tags for the various metrics in the Elastic Actors framework

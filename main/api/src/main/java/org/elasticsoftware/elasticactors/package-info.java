@@ -14,7 +14,4 @@
  *     limitations under the License.
  *
  */
-@ParametersAreNonnullByDefault
 package org.elasticsoftware.elasticactors;
-
-import javax.annotation.ParametersAreNonnullByDefault;

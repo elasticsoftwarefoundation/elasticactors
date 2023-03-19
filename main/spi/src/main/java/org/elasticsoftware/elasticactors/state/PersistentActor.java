@@ -32,7 +32,7 @@ import org.elasticsoftware.elasticactors.reactivestreams.InternalPersistentSubsc
 import org.elasticsoftware.elasticactors.reactivestreams.ProcessorContext;
 import org.reactivestreams.Subscription;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;

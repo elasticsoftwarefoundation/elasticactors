@@ -19,7 +19,7 @@ package org.elasticsoftware.elasticactors.tracing;
 
 import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.lang.reflect.Method;
 
 public final class NoopMessagingScope implements MessagingScope {

@@ -17,13 +17,11 @@
 
 package org.elasticsoftware.elasticactors;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
+import jakarta.annotation.Nullable;
 
 /**
  * @author Joost van de Wijgerd
  */
-@ParametersAreNonnullByDefault
 public interface ActorLifecycleListener<T extends ActorState> {
     Class<? extends ElasticActor> getActorClass();
 

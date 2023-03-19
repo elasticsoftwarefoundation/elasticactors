@@ -17,7 +17,7 @@
 
 package org.elasticsoftware.elasticactors;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 /**
  * @author Joost van de Wijgerd

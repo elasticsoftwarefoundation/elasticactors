@@ -19,7 +19,7 @@ package org.elasticsoftware.elasticactors.cluster.scheduler;
 
 import org.elasticsoftware.elasticactors.scheduler.ScheduledMessageRef;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.util.concurrent.ScheduledFuture;
 
 /**

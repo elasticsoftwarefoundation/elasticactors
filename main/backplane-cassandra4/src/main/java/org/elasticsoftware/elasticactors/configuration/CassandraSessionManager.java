@@ -24,7 +24,7 @@ import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PreDestroy;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Arrays;

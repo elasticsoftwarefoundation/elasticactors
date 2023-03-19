@@ -17,7 +17,7 @@
 
 package org.elasticsoftware.elasticactors;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 /**
  * Used to provide an actor's initial state for instances managed by the framework.

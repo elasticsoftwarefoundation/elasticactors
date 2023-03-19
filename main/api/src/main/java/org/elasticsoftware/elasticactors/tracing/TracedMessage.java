@@ -19,7 +19,7 @@ package org.elasticsoftware.elasticactors.tracing;
 
 import org.elasticsoftware.elasticactors.ActorRef;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 public interface TracedMessage extends Traceable {
 

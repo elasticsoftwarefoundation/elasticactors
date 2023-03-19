@@ -32,7 +32,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.aspectj.EnableSpringConfigured;
 import org.springframework.core.env.Environment;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 /**
  * @author Joost van de Wijgerd
