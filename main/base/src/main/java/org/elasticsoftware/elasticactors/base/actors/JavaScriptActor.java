@@ -53,7 +53,7 @@ public final class JavaScriptActor extends UntypedActor {
         // need to compile the source (if not already done)
         JavaScriptActorState state = getState(JavaScriptActorState.class);
         if(state.getCompiledScript() == null && state.getScript() != null) {
-            ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName("nashorn");
+            ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName("graal.js");
             if(scriptEngine != null) {
                 // nashorn is compilable
                 try {
@@ -66,7 +66,8 @@ public final class JavaScriptActor extends UntypedActor {
                     logger.error("Problem compiling script for actor with id [{}]", getSelf().getActorId(), e);
                 }
             } else {
-                logger.error("Nashorn ScriptEngine not found. Make sure you are running on Java 8");
+                logger.error("GraalVM JavaScript ScriptEngine not found. Make sure you have the GraalVM JavaScript engine dependencies on the classpath");
+                throw new IllegalStateException("GraalVM JavaScript ScriptEngine not found. Make sure you have the GraalVM JavaScript engine dependencies on the classpath");
             }
         }
     }

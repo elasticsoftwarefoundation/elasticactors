@@ -75,6 +75,17 @@
             <groupId>net.jodah</groupId>
             <artifactId>typetools</artifactId>
         </dependency>
+        <!-- This is to test the Javascript Actor, Nashorn is deprecated in Java 11 -->
+        <dependency>
+            <groupId>org.graalvm.js</groupId>
+            <artifactId>js</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.js</groupId>
+            <artifactId>js-scriptengine</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
