@@ -34,11 +34,6 @@
         <dependencies>
             <dependency>
                 <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
-                <artifactId>backplane-cassandra</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
                 <artifactId>backplane-cassandra-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
