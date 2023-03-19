@@ -74,6 +74,7 @@ jobs:
         SIGN_KEY_PASS: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
         MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
         MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
+        MAVEN_OPTS: "--add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.text=ALL-UNNAMED --add-opens=java.desktop/java.awt.font=ALL-UNNAMED"
     - name: Create an automatic release
       uses: marvinpinto/action-automatic-releases@v1.2.1
       with:
