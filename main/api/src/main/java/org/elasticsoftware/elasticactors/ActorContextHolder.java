@@ -49,6 +49,11 @@ public class ActorContextHolder {
         return actorContext.getState(stateClass);
     }
 
+    public static <T extends ActorState> void setState(T state) {
+        ActorContext actorContext = threadContext.get();
+        actorContext.setState(state);
+    }
+
     /**
      *
      * @return      the {@link ActorRef} to the current executing {@link ElasticActor}
