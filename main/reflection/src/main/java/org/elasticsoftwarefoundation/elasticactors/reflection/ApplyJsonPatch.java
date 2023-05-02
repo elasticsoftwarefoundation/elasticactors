@@ -12,13 +12,22 @@ import org.elasticsoftware.elasticactors.serialization.Message;
     immutable = true)
 public class ApplyJsonPatch {
     private final JsonPatch patch;
+    private final boolean dryRun;
 
     @JsonCreator
-    public ApplyJsonPatch(@JsonProperty("patch") JsonPatch patch) {
+    public ApplyJsonPatch(
+        @JsonProperty("patch") JsonPatch patch,
+        @JsonProperty("dryRun") boolean dryRun
+    ) {
         this.patch = patch;
+        this.dryRun = dryRun;
     }
 
     public JsonPatch getPatch() {
         return patch;
+    }
+
+    public boolean isDryRun() {
+        return dryRun;
     }
 }

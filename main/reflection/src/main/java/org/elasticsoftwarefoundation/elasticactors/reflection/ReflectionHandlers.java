@@ -50,7 +50,9 @@ public class ReflectionHandlers {
         JacksonActorState jacksonActorState =
             objectMapper.readValue(patchedBytes, state.getClass());
 
-        ActorContextHolder.setState(jacksonActorState);
+        if (!patch.isDryRun()) {
+            ActorContextHolder.setState(jacksonActorState);
+        }
 
         sender.tell(new SerializedStateResponse(
             new String(patchedBytes, StandardCharsets.UTF_8)));

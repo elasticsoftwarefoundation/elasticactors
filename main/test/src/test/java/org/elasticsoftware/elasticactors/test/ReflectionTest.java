@@ -20,88 +20,66 @@ package org.elasticsoftware.elasticactors.test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
-import org.elasticsoftware.elasticactors.base.actors.ActorDelegate;
-import org.elasticsoftware.elasticactors.base.actors.ReplyActor;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.cluster.InternalActorSystem;
 import org.elasticsoftware.elasticactors.test.common.NameActor;
 import org.elasticsoftware.elasticactors.test.common.NameActorState;
-import org.elasticsoftware.elasticactors.test.messaging.LocalMessageQueue;
 import org.elasticsoftwarefoundation.elasticactors.reflection.ApplyJsonPatch;
 import org.elasticsoftwarefoundation.elasticactors.reflection.SerializedStateRequest;
 import org.elasticsoftwarefoundation.elasticactors.reflection.SerializedStateResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 
 public class ReflectionTest {
 
     private static final Logger logger = LoggerFactory.getLogger(ReflectionTest.class);
 
-    @Test
-    public void testGetActorName() throws Exception {
+    private TestActorSystem testActorSystem;
 
-        logger.info("Starting ReflectionTest");
-
-        TestActorSystem testActorSystem = new TestActorSystem();
+    @BeforeMethod
+    public void setUp() {
+        testActorSystem = new TestActorSystem();
         testActorSystem.initialize();
+    }
 
-        ActorSystem actorSystem = testActorSystem.getActorSystem();
-        ActorRef actorRef =
-            actorSystem.actorOf("test", NameActor.class, new NameActorState("Bob"));
-
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-
-        ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
-                .onReceive(
-                        SerializedStateResponse.class,
-                        m -> {
-                            logger.info("Got current actor state '{}'", m.getState());
-
-                            ByteBuffer serializedObject = ByteBuffer
-                                .wrap(m.getState().getBytes(StandardCharsets.UTF_8));
-
-                            NameActorState nameActorState =
-                                (NameActorState) ((InternalActorSystem) actorSystem)
-                                    .getParent()
-                                    .getSerializationFramework(JacksonSerializationFramework.class)
-                                    .getActorStateDeserializer(NameActor.class)
-                                    .deserialize(serializedObject);
-
-                            assertEquals(nameActorState.getName(), "Bob");
-                        })
-                .postReceive(countDownLatch::countDown)
-                .build());
-
-        actorRef.tell(SerializedStateRequest.INSTANCE, replyActor);
-
-        assertTrue(countDownLatch.await(5, TimeUnit.SECONDS));
-        assertTrue(LocalMessageQueue.getThrownExceptions().isEmpty());
-
+    @AfterMethod
+    public void tearDown() {
         testActorSystem.destroy();
     }
 
     @Test
-    public void testPatchState() throws Exception {
-
-        logger.info("Starting ReflectionTest");
-
-        TestActorSystem testActorSystem = new TestActorSystem();
-        testActorSystem.initialize();
-
+    public void shouldGetActorState() throws Exception {
+        // Given
         ActorSystem actorSystem = testActorSystem.getActorSystem();
         ActorRef actorRef =
             actorSystem.actorOf("test", NameActor.class, new NameActorState("Bob"));
 
+        // When
+        SerializedStateResponse response =
+            actorRef.ask(SerializedStateRequest.INSTANCE, SerializedStateResponse.class)
+                .get();
 
+        // Then
+        logger.info("Received state: {}", response.getState());
+
+        NameActorState nameActorState =
+            getObjectMapper(testActorSystem).readValue(response.getState(), NameActorState.class);
+
+        assertEquals(nameActorState.getName(), "Bob");
+    }
+
+    @Test
+    public void shouldPatchState() throws Exception {
+        // Given
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+        ActorRef actorRef =
+            actorSystem.actorOf("test", NameActor.class, new NameActorState("Bob"));
 
         ApplyJsonPatch message = getObjectMapper(testActorSystem).readValue("{\n"
             + "    \"patch\": [\n"
@@ -110,47 +88,70 @@ public class ReflectionTest {
             + "            \"path\": \"/name\",\n"
             + "            \"value\": \"Alice\"\n"
             + "        }\n"
-            + "    ]\n"
+            + "    ],\n"
+            + "    \"dryRun\": false\n"
             + "}", ApplyJsonPatch.class);
 
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        // When
+        SerializedStateResponse patchResponse =
+            actorRef.ask(message, SerializedStateResponse.class).get();
 
-        ActorRef replyActor = actorSystem.tempActorOf(ReplyActor.class, ActorDelegate.builder()
-            .onReceive(
-                SerializedStateResponse.class,
-                m -> {
-                    logger.info("Got current actor state '{}'", m.getState());
+        // Then
+        logger.info("Received patched state: {}", patchResponse.getState());
 
-                    ByteBuffer serializedObject = ByteBuffer
-                        .wrap(m.getState().getBytes(StandardCharsets.UTF_8));
-
-                    NameActorState nameActorState =
-                        (NameActorState) ((InternalActorSystem) actorSystem)
-                            .getParent()
-                            .getSerializationFramework(JacksonSerializationFramework.class)
-                            .getActorStateDeserializer(NameActor.class)
-                            .deserialize(serializedObject);
-
-                    assertEquals(nameActorState.getName(), "Alice");
-                })
-            .postReceive(countDownLatch::countDown)
-            .build());
-
-        actorRef.tell(message, replyActor);
-
-        assertTrue(countDownLatch.await(5, TimeUnit.SECONDS));
-        assertTrue(LocalMessageQueue.getThrownExceptions().isEmpty());
+        NameActorState patchedState = getObjectMapper(testActorSystem)
+            .readValue(patchResponse.getState(), NameActorState.class);
+        assertEquals(patchedState.getName(), "Alice");
 
         SerializedStateResponse stateResponse =
             actorRef.ask(SerializedStateRequest.INSTANCE, SerializedStateResponse.class)
                 .get();
 
+        // Double check that state is indeed changed
         NameActorState nameActorState = getObjectMapper(testActorSystem).readValue(
             stateResponse.getState(),
             NameActorState.class);
-        assertEquals(nameActorState.getName(), "Alice");
+        Assert.assertEquals(nameActorState.getName(), "Alice");
+    }
 
-        testActorSystem.destroy();
+    @Test
+    public void shouldDryRunPatchState() throws Exception {
+        // Given
+        ActorSystem actorSystem = testActorSystem.getActorSystem();
+        ActorRef actorRef =
+            actorSystem.actorOf("test", NameActor.class, new NameActorState("Bob"));
+
+        ApplyJsonPatch message = getObjectMapper(testActorSystem).readValue("{\n"
+            + "    \"patch\": [\n"
+            + "        {\n"
+            + "            \"op\": \"replace\",\n"
+            + "            \"path\": \"/name\",\n"
+            + "            \"value\": \"Alice\"\n"
+            + "        }\n"
+            + "    ],\n"
+            + "    \"dryRun\": true\n"
+            + "}", ApplyJsonPatch.class);
+
+        // When
+        SerializedStateResponse patchResponse =
+            actorRef.ask(message, SerializedStateResponse.class).get();
+
+        // Then
+        logger.info("Received patched state: {}", patchResponse.getState());
+
+        NameActorState patchedState = getObjectMapper(testActorSystem)
+            .readValue(patchResponse.getState(), NameActorState.class);
+        assertEquals(patchedState.getName(), "Alice");
+
+        SerializedStateResponse stateResponse =
+            actorRef.ask(SerializedStateRequest.INSTANCE, SerializedStateResponse.class)
+                .get();
+
+        // Double check that state is indeed changed
+        NameActorState nameActorState = getObjectMapper(testActorSystem).readValue(
+            stateResponse.getState(),
+            NameActorState.class);
+        Assert.assertEquals(nameActorState.getName(), "Bob");
     }
 
     private ObjectMapper getObjectMapper(TestActorSystem testActorSystem) {
