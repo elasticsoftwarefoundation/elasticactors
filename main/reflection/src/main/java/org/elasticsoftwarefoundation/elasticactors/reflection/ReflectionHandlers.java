@@ -26,9 +26,7 @@ public class ReflectionHandlers {
         ActorSystem actorSystem,
         ActorRef sender) throws IOException {
 
-        byte[] serializedBytes = ((InternalActorSystem) actorSystem).getParent()
-            .getSerializationFramework(state.getSerializationFramework())
-            .getActorStateSerializer(state).serialize(state);
+        byte[] serializedBytes = serializeState(actorSystem, state);
 
         sender.tell(new SerializedStateResponse(
             new String(serializedBytes, StandardCharsets.UTF_8)));
@@ -42,7 +40,7 @@ public class ReflectionHandlers {
         ActorRef sender) throws IOException, JsonPatchException {
 
         byte[] serializedBytes = serializeState(actorSystem, state);
-        ObjectMapper objectMapper = getObjectMapper(actorSystem, state);
+        ObjectMapper objectMapper = getObjectMapper(actorSystem);
         JsonNode jsonNode = objectMapper.readTree(serializedBytes);
         jsonNode = patch.getPatch().apply(jsonNode);
 
@@ -58,18 +56,19 @@ public class ReflectionHandlers {
             new String(patchedBytes, StandardCharsets.UTF_8)));
     }
 
+    private JacksonSerializationFramework getSerializationFramework(ActorSystem actorSystem) {
+        return (JacksonSerializationFramework) ((InternalActorSystem) actorSystem).getParent()
+            .getSerializationFramework(JacksonSerializationFramework.class);
+    }
+
     private byte[] serializeState(ActorSystem actorSystem, JacksonActorState state)
         throws IOException {
 
-        return ((InternalActorSystem) actorSystem).getParent()
-            .getSerializationFramework(state.getSerializationFramework())
+        return getSerializationFramework(actorSystem)
             .getActorStateSerializer(state).serialize(state);
     }
 
-    private ObjectMapper getObjectMapper(ActorSystem actorSystem, JacksonActorState state) {
-        JacksonSerializationFramework serializationFramework =
-            (JacksonSerializationFramework) ((InternalActorSystem) actorSystem).getParent()
-                .getSerializationFramework(state.getSerializationFramework());
-        return serializationFramework.getObjectMapper();
+    private ObjectMapper getObjectMapper(ActorSystem actorSystem) {
+        return getSerializationFramework(actorSystem).getObjectMapper();
     }
 }
