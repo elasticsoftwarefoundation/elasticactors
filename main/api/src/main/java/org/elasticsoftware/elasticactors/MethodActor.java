@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -90,6 +91,17 @@ public abstract class MethodActor extends TypedActor<Object> implements Persiste
                 }
             }
         }
+
+        try {
+            Class<?> reflectionHandlersClass =
+                Class.forName("org.elasticsoftwarefoundation.elasticactors.reflection.ReflectionHandlers");
+            Field instanceField = reflectionHandlersClass.getField("INSTANCE");
+            updateHandlerCache(reflectionHandlersClass, instanceField.get(null));
+
+            logger.debug("Reflection is enabled for actor: {}", getSelf());
+        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException ignore) {
+        }
+
         // order the MessageHandlers
         orderHandlerCache();
     }

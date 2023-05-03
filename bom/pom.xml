@@ -162,6 +162,11 @@
                 <artifactId>messaging-rabbitmq</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
+                <artifactId>elasticactors-reflection</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>

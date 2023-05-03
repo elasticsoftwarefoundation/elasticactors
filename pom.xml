@@ -166,11 +166,14 @@
                     <fork>false</fork>
                     <source>1.8</source>
                     <target>1.8</target>
+
+                    <!-- See https://openjdk.org/jeps/247 -->
+                    <release>8</release>
+
                     <encoding>UTF-8</encoding>
                     <compilerArgs>
                         <arg>-parameters</arg>
                     </compilerArgs>
-                    <!--<release>${java.version}</release>-->
                 </configuration>
             </plugin>
             <plugin>
