@@ -32,7 +32,7 @@
 
     <properties>
         <cassandra.version>3.11.14</cassandra.version>
-        <spring.version>6.0.13</spring.version>
+        <spring.version>6.1.1</spring.version>
         <aspectj.version>1.9.19</aspectj.version>
         <protobuf.version>3.25.1</protobuf.version>
         <grizzly.version>4.0.0</grizzly.version>
