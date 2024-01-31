@@ -60,21 +60,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
         Exception executionException = null;
         final long startTime = logger.isTraceEnabled() ? System.nanoTime() : 0L;
         try {
-            // optimized to use the prepared statement
-            if(events.size() == 1) {
-                PersistentActorUpdateEvent event = events.get(0);
-                BoundStatement boundStatement;
-                if (event.hasPersistentActorBytes()) {
-                    boundStatement = insertStatement.bind(event.rowKey()[0], event.rowKey()[1], event.persistentActorId(), event.persistentActorBytes());
-                } else {
-                    // it's a delete
-                    boundStatement = deleteStatement.bind(event.rowKey()[0], event.rowKey()[1], event.persistentActorId());
-                }
-                // execute the statement
-                executeWithRetry(cassandraSession, boundStatement, logger);
-            } else {
-                executeBatchV3AndUp(events);
-            }
+            processEvents(events);
         } catch(Exception e) {
             executionException = e;
         } finally {
@@ -99,6 +85,24 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
         }
     }
 
+    private void processEvents(List<PersistentActorUpdateEvent> events) {
+        // optimized to use the prepared statement
+        if(events.size() == 1) {
+            PersistentActorUpdateEvent event = events.get(0);
+            BoundStatement boundStatement;
+            if (event.hasPersistentActorBytes()) {
+                boundStatement = insertStatement.bind(event.rowKey()[0], event.rowKey()[1], event.persistentActorId(), event.persistentActorBytes());
+            } else {
+                // it's a delete
+                boundStatement = deleteStatement.bind(event.rowKey()[0], event.rowKey()[1], event.persistentActorId());
+            }
+            // execute the statement
+            executeWithRetry(cassandraSession, boundStatement, logger);
+        } else if(!events.isEmpty()) {
+            executeBatchV3AndUp(events);
+        }
+    }
+
     private void executeBatchV3AndUp(List<PersistentActorUpdateEvent> events) {
         BatchStatement batchStatement = BatchStatement.newInstance(UNLOGGED);
         for (PersistentActorUpdateEvent event : events) {
@@ -109,9 +113,18 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
                 batchStatement.add(deleteStatement.bind(event.rowKey()[0], event.rowKey()[1], event.persistentActorId()));
             }
         }
-        executeWithRetry(cassandraSession, batchStatement, logger);
+        try {
+            executeWithRetry(cassandraSession, batchStatement, logger);
+        } catch (BatchTooLargeException e) {
+            int half = events.size() / 2;
+            // batch is too large, so we need to split it up
+            logger.warn(
+                    "Batch of byteSize {} is too large, splitting up in 2 batches. 1 of {} events and 1 of {} events",
+                    e.getBatchSize(),
+                    half,
+                    events.size() - half);
+            processEvents(events.subList(0, half));
+            processEvents(events.subList(half, events.size()));
+        }
     }
-
-
-
 }
