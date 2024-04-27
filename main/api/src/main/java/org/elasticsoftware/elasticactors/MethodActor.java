@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2024 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 
 package org.elasticsoftware.elasticactors;
 
+import jakarta.annotation.Nullable;
 import org.elasticsoftware.elasticactors.logging.LogLevel;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.elasticsoftware.elasticactors.serialization.MessageToStringConverter;
@@ -28,20 +29,14 @@ import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.Messagi
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
-
 import static java.lang.String.format;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;
 
 /**
  * @author Joost van de Wijgerd

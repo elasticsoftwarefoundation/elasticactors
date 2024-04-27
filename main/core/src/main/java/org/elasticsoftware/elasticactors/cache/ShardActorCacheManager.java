@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2024 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -17,12 +17,11 @@
 
 package org.elasticsoftware.elasticactors.cache;
 
+import jakarta.annotation.Nullable;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ShardKey;
 import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
 import org.elasticsoftware.elasticactors.state.PersistentActor;
-
-import jakarta.annotation.Nullable;
 
 /**
  * @author Joost van de Wijgerd

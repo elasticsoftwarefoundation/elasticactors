@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2024 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 
 package org.elasticsoftware.elasticactors.messaging;
 
+import jakarta.annotation.Nullable;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessage;
 import org.elasticsoftware.elasticactors.cluster.scheduler.ScheduledMessageKey;
@@ -24,7 +25,6 @@ import org.elasticsoftware.elasticactors.messaging.internal.InternalHashKeyUtils
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
-import jakarta.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 import java.util.concurrent.Delayed;

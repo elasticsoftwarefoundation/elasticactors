@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2024 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -20,13 +20,7 @@ package org.elasticsoftware.elasticactors.cassandra2.util;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
-import com.datastax.driver.core.exceptions.BootstrappingException;
-import com.datastax.driver.core.exceptions.ConnectionException;
-import com.datastax.driver.core.exceptions.CoordinatorException;
-import com.datastax.driver.core.exceptions.DriverException;
-import com.datastax.driver.core.exceptions.OverloadedException;
-import com.datastax.driver.core.exceptions.QueryConsistencyException;
-import com.datastax.driver.core.exceptions.UnavailableException;
+import com.datastax.driver.core.exceptions.*;
 import org.slf4j.Logger;
 
 import java.net.InetAddress;

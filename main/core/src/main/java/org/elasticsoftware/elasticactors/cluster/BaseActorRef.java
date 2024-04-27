@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2024 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 
 package org.elasticsoftware.elasticactors.cluster;
 
+import jakarta.annotation.Nullable;
 import org.elasticsoftware.elasticactors.ActorContextHolder;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.TypedSubscriber;
@@ -29,8 +30,6 @@ import org.elasticsoftware.elasticactors.messaging.reactivestreams.SubscribeMess
 import org.elasticsoftware.elasticactors.reactivestreams.PersistentSubscriptionImpl;
 import org.elasticsoftware.elasticactors.serialization.Message;
 import org.reactivestreams.Publisher;
-
-import jakarta.annotation.Nullable;
 
 import static org.elasticsoftware.elasticactors.cluster.tasks.InternalActorContext.getAsProcessorContext;
 

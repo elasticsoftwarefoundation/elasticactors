@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2024 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -21,10 +21,10 @@ import com.datastax.oss.driver.api.core.ConsistencyLevel;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
+import jakarta.annotation.PreDestroy;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 
-import jakarta.annotation.PreDestroy;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Arrays;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2024 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -18,38 +18,15 @@
 package org.elasticsoftware.elasticactors.cluster;
 
 import com.google.common.collect.ImmutableListMultimap;
-import org.elasticsoftware.elasticactors.Actor;
-import org.elasticsoftware.elasticactors.ActorContainer;
-import org.elasticsoftware.elasticactors.ActorContainerRef;
-import org.elasticsoftware.elasticactors.ActorContextHolder;
-import org.elasticsoftware.elasticactors.ActorLifecycleListener;
-import org.elasticsoftware.elasticactors.ActorLifecycleListenerRegistry;
-import org.elasticsoftware.elasticactors.ActorNode;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ActorRefGroup;
-import org.elasticsoftware.elasticactors.ActorShard;
-import org.elasticsoftware.elasticactors.ActorState;
-import org.elasticsoftware.elasticactors.ElasticActor;
-import org.elasticsoftware.elasticactors.InitialStateProvider;
-import org.elasticsoftware.elasticactors.InternalActorSystemConfiguration;
-import org.elasticsoftware.elasticactors.ManagedActor;
-import org.elasticsoftware.elasticactors.ManagedActorsRegistry;
-import org.elasticsoftware.elasticactors.NodeKey;
-import org.elasticsoftware.elasticactors.PhysicalNode;
-import org.elasticsoftware.elasticactors.ShardKey;
-import org.elasticsoftware.elasticactors.SingletonActor;
-import org.elasticsoftware.elasticactors.TempActor;
+import jakarta.annotation.Nullable;
+import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cache.NodeActorCacheManager;
 import org.elasticsoftware.elasticactors.cache.ShardActorCacheManager;
 import org.elasticsoftware.elasticactors.cluster.logging.LoggingSettings;
 import org.elasticsoftware.elasticactors.cluster.metrics.MetricsSettings;
 import org.elasticsoftware.elasticactors.cluster.scheduler.InternalScheduler;
 import org.elasticsoftware.elasticactors.cluster.scheduler.SchedulerService;
-import org.elasticsoftware.elasticactors.messaging.ActorShardHasher;
-import org.elasticsoftware.elasticactors.messaging.Hasher;
-import org.elasticsoftware.elasticactors.messaging.InternalMessage;
-import org.elasticsoftware.elasticactors.messaging.MessageQueueFactory;
-import org.elasticsoftware.elasticactors.messaging.UUIDTools;
+import org.elasticsoftware.elasticactors.messaging.*;
 import org.elasticsoftware.elasticactors.messaging.internal.ActivateActorMessage;
 import org.elasticsoftware.elasticactors.messaging.internal.ActorType;
 import org.elasticsoftware.elasticactors.messaging.internal.CreateActorMessage;
@@ -67,16 +44,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
-import jakarta.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -86,11 +54,10 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
-import static org.elasticsoftware.elasticactors.cluster.ActorSystemEvent.ACTOR_SHARD_INITIALIZED;
-
 import static java.lang.String.format;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
+import static org.elasticsoftware.elasticactors.cluster.ActorSystemEvent.ACTOR_SHARD_INITIALIZED;
 
 /**
  * @author Joost van de Wijgerd

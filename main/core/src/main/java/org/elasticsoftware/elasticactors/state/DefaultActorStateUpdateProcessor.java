@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2024 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -17,10 +17,11 @@
 
 package org.elasticsoftware.elasticactors.state;
 
-import io.micrometer.core.instrument.MeterRegistry;
-import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
 import com.google.common.collect.ImmutableList;
-import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
+import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.Nullable;
+import jakarta.annotation.PostConstruct;
+import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutorBuilder;
@@ -28,10 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
-import jakarta.annotation.Nullable;
-import jakarta.annotation.PostConstruct;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;

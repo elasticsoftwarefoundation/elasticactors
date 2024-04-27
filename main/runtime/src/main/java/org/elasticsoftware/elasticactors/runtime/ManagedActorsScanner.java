@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2024 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -18,12 +18,8 @@
 package org.elasticsoftware.elasticactors.runtime;
 
 import com.google.common.collect.ImmutableList;
-import org.elasticsoftware.elasticactors.Actor;
-import org.elasticsoftware.elasticactors.ElasticActor;
-import org.elasticsoftware.elasticactors.ManagedActor;
-import org.elasticsoftware.elasticactors.ManagedActorsRegistry;
-import org.elasticsoftware.elasticactors.ServiceActor;
-import org.elasticsoftware.elasticactors.SingletonActor;
+import jakarta.annotation.PostConstruct;
+import org.elasticsoftware.elasticactors.*;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
@@ -31,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
-import jakarta.annotation.PostConstruct;
 import java.util.stream.Collectors;
 
 /**

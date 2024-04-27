@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2024 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -34,11 +34,7 @@ import org.elasticsoftware.elasticactors.test.configuration.MessagingConfigurati
 import org.elasticsoftware.elasticactors.test.configuration.TestConfiguration;
 import org.elasticsoftware.elasticactors.test.messaging.UnsupportedMessageQueueFactoryFactory;
 import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundExecutor;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.*;
 
 import java.net.InetAddress;
 
