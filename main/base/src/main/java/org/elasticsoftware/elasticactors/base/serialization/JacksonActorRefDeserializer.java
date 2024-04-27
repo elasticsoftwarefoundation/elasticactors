@@ -44,6 +44,7 @@ public final class JacksonActorRefDeserializer extends StdScalarDeserializer<Act
         if (curr == JsonToken.VALUE_STRING) {
             return actorRefFactory.create(jp.getText());
         }
-        throw ctxt.mappingException(_valueClass, curr);
+        ctxt.handleUnexpectedToken(_valueClass, jp);
+        return null; // never gets here
     }
 }

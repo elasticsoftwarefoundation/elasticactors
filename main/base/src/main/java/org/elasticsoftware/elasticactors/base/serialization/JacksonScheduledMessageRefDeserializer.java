@@ -44,6 +44,7 @@ public final class JacksonScheduledMessageRefDeserializer extends StdScalarDeser
         if (curr == JsonToken.VALUE_STRING) {
             return scheduledMessageRefFactory.create(jp.getText());
         }
-        throw ctxt.mappingException(_valueClass, curr);
+        ctxt.handleUnexpectedToken(_valueClass, jp);
+        return null; // never gets here
     }
 }
