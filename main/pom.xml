@@ -49,7 +49,7 @@
         <lz4.version>1.8.0</lz4.version>
         <kafka.version>3.7.0</kafka.version>
         <!-- the latest v3 version (3.11.5) has a dependency problem with the jnr libs causing the enforcer plugin to fail-->
-        <cassandra-driver.version>3.11.3</cassandra-driver.version>
+        <cassandra-driver.version>3.11.5</cassandra-driver.version>
         <cassandra4-driver.version>4.17.0</cassandra4-driver.version>
         <servlet-api.version>3.1.0</servlet-api.version>
         <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
