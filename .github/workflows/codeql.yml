@@ -22,6 +22,7 @@ on:
 
 jobs:
   analyze:
+    if: "!contains(github.event.head_commit.message, '[maven-release-plugin]')"
     name: Analyze
     # Runner size impacts CodeQL analysis time. To learn more, please see:
     #   - https://gh.io/recommended-hardware-resources-for-running-codeql
