@@ -59,7 +59,7 @@
         <!-- this is needed to fix issue with chronicle-bom -->
         <jna.version>5.13.0</jna.version>
         <!-- This is the last release with ASLv2-->
-        <elasticsearch.version>7.10.2</elasticsearch.version>
+        <elasticsearch.version>7.17.21</elasticsearch.version>
         <kubernetes-client.version>6.12.1</kubernetes-client.version>
         <java-uuid-generator.version>5.0.0</java-uuid-generator.version>
         <!-- testing -->
