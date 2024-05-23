@@ -71,6 +71,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.scm-api.version>2.1.0</maven.scm-api.version>
     </properties>
 
     <modules>
@@ -252,12 +253,12 @@
                     <dependency>
                         <groupId>org.apache.maven.scm</groupId>
                         <artifactId>maven-scm-provider-gitexe</artifactId>
-                        <version>1.11.2</version>
+                        <version>${maven.scm-api.version}</version>
                     </dependency>
                     <dependency>
                         <groupId>org.apache.maven.scm</groupId>
                         <artifactId>maven-scm-api</artifactId>
-                        <version>1.11.2</version>
+                        <version>${maven.scm-api.version}</version>
                     </dependency>
                 </dependencies>
                 <configuration>
