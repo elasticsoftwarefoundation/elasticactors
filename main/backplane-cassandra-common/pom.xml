@@ -20,7 +20,7 @@
     <parent>
         <artifactId>elasticactors-main</artifactId>
         <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
-        <version>6.3.0-SNAPSHOT</version>
+        <version>6.3.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
