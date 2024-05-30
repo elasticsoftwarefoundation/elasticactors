@@ -55,7 +55,7 @@
         <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
         <activemq-artemis.version>2.33.0</activemq-artemis.version>
         <disruptor.version>3.4.4</disruptor.version>
-        <chronicle-bom.version>2.25ea51</chronicle-bom.version>
+        <chronicle-bom.version>2.26ea1</chronicle-bom.version>
         <!-- this is needed to fix issue with chronicle-bom -->
         <jna.version>5.13.0</jna.version>
         <!-- This is the last release with ASLv2-->
