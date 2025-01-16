@@ -52,7 +52,7 @@ public final class ChronicleMapPersistentActorStore implements PersistentActorSt
                 .averageKeySize(averageKeySize)
                 .averageValueSize(averageValueSize)
                 .entries(maxEntries)
-                .createOrRecoverPersistedTo(backingFile, false);
+                .recoverPersistedTo(backingFile, false);
         // see if we can recover the offset
         byte[] offsetBytes = backingMap.get(OFFSET_KEY);
         if(offsetBytes != null) {
