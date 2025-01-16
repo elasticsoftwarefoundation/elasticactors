@@ -75,7 +75,11 @@ jobs:
         MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
         MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
     - name: Create an automatic release
-      uses: marvinpinto/action-automatic-releases@v1.2.1
+      uses: release-drafter/release-drafter@v6
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
         prerelease: false
+        publish: true
+        latest: true
+        version: ${{ github.ref_name }}

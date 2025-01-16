@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2024 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -168,7 +168,6 @@ public final class Elasticactors {
             e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -1266,7 +1265,6 @@ public final class Elasticactors {
           subscriptions_ = java.util.Collections.unmodifiableList(subscriptions_);
         }
         this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -3051,8 +3049,7 @@ public final class Elasticactors {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
+        this.unknownFields = unknownFields.build();;
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -3888,7 +3885,6 @@ public final class Elasticactors {
             e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -4666,7 +4662,7 @@ public final class Elasticactors {
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-        }, assigner);
+        });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ActorSystemEventListener_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_ActorSystemEventListener_fieldAccessorTable = new

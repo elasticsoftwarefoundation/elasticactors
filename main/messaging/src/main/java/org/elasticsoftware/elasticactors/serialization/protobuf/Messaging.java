@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2024 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -299,7 +299,7 @@ public final class Messaging {
             e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
+
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -1501,7 +1501,6 @@ public final class Messaging {
             e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -2605,7 +2604,6 @@ public final class Messaging {
             e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -4422,7 +4420,6 @@ public final class Messaging {
           receivers_ = receivers_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -6418,7 +6415,6 @@ public final class Messaging {
             e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -7586,7 +7582,6 @@ public final class Messaging {
             e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -8212,7 +8207,6 @@ public final class Messaging {
             e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -9032,7 +9026,6 @@ public final class Messaging {
             e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -9699,7 +9692,6 @@ public final class Messaging {
             e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -10358,7 +10350,6 @@ public final class Messaging {
             e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -11377,7 +11368,6 @@ public final class Messaging {
             e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
@@ -12009,7 +11999,7 @@ public final class Messaging {
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-        }, assigner);
+        });
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceContext_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_org_elasticsoftware_elasticactors_serialization_protobuf_TraceContext_fieldAccessorTable = new

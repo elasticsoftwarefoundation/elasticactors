@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2013 - 2024 The Original Authors
+  ~ Copyright 2013 - 2025 The Original Authors
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~     you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
     <parent>
         <artifactId>elasticactors-main</artifactId>
         <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
-        <version>7.1.1-SNAPSHOT</version>
+        <version>7.2.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
