@@ -58,8 +58,7 @@
         <chronicle-bom.version>2.27ea8</chronicle-bom.version>
         <!-- this is needed to fix issue with chronicle-bom -->
         <jna.version>5.13.0</jna.version>
-        <!-- This is the last release with ASLv2-->
-        <elasticsearch.version>7.10.2</elasticsearch.version>
+        <elasticsearch.version>7.17.27</elasticsearch.version>
         <kubernetes-client.version>7.0.1</kubernetes-client.version>
         <java-uuid-generator.version>5.1.0</java-uuid-generator.version>
         <!-- testing -->
@@ -387,6 +386,10 @@
                     <exclusion>
                         <groupId>org.hdrhistogram</groupId>
                         <artifactId>HdrHistogram</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.yaml</groupId>
+                        <artifactId>snakeyaml</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
