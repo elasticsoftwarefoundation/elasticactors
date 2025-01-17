@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
         <artifactId>elasticactors-parent</artifactId>
-        <version>6.4.4-SNAPSHOT</version>
+        <version>6.5.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>elasticactors-main</artifactId>
@@ -58,8 +58,7 @@
         <chronicle-bom.version>2.27ea8</chronicle-bom.version>
         <!-- this is needed to fix an issue with cassandra-driver-core 3.11.5 -->
         <jnr.version>2.2.16</jnr.version>
-        <!-- This is the last release with ASLv2-->
-        <elasticsearch.version>7.10.2</elasticsearch.version>
+        <elasticsearch.version>7.17.27</elasticsearch.version>
         <kubernetes-client.version>7.0.1</kubernetes-client.version>
         <java-uuid-generator.version>5.1.0</java-uuid-generator.version>
         <!-- testing -->
@@ -79,6 +78,9 @@
         <fast-uuid.version>0.2.0</fast-uuid.version>
         <!-- needed to fix an issue with cassandra java-driver-core v4.17.0 and micrometer-core v1.13.0 -->
         <hdrhistogram.version>2.2.1</hdrhistogram.version>
+        <!-- needed to fix sbom cve issues -->
+        <libthrift.version>0.21.0</libthrift.version>
+        <commons-lang3.version>3.17.0</commons-lang3.version>
     </properties>
 
     <scm>
@@ -212,6 +214,16 @@
                 </exclusions>
             </dependency>
             <dependency>
+                <groupId>org.apache.thrift</groupId>
+                <artifactId>libthrift</artifactId>
+                <version>${libthrift.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.cassandra</groupId>
                 <artifactId>cassandra-thrift</artifactId>
                 <version>${cassandra.version}</version>
@@ -219,6 +231,10 @@
                     <exclusion>
                         <groupId>javax.servlet</groupId>
                         <artifactId>servlet-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.commons</groupId>
+                        <artifactId>commons-lang3</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -414,6 +430,10 @@
                     <exclusion>
                         <groupId>org.hdrhistogram</groupId>
                         <artifactId>HdrHistogram</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.yaml</groupId>
+                        <artifactId>snakeyaml</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
