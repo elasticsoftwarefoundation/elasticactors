@@ -31,8 +31,7 @@
     <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
     <properties>
-        <cassandra.version>3.11.17</cassandra.version>
-        <spring.version>6.2.1</spring.version>
+        <spring.version>6.2.3</spring.version>
         <aspectj.version>1.9.22.1</aspectj.version>
         <protobuf.version>4.29.3</protobuf.version>
         <grizzly.version>4.0.2</grizzly.version>
