@@ -23,8 +23,8 @@ jobs:
         java-version: 17
         check-latest: true
         server-id: central # Value of the distributionManagement/repository/id field of the pom.xml
-        server-username: CENTRAL_PUBLISHER_MAVEN_USERNAME # env variable for username in deploy
-        server-password: CENTRAL_PUBLISHER_MAVEN_CENTRAL_TOKEN # env variable for token in deploy
+        server-username: MAVEN_USERNAME # env variable for username in deploy
+        server-password: MAVEN_CENTRAL_TOKEN # env variable for token in deploy
         settings-path: ${{ github.workspace }}
     - name: Cache Maven packages
       uses: actions/cache@v4
