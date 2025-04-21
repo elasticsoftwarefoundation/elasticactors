@@ -22,7 +22,7 @@ jobs:
         distribution: temurin
         java-version: 17
         check-latest: true
-        server-id: ossrh # Value of the distributionManagement/repository/id field of the pom.xml
+        server-id: central # Value of the distributionManagement/repository/id field of the pom.xml
         server-username: MAVEN_USERNAME # env variable for username in deploy
         server-password: MAVEN_CENTRAL_TOKEN # env variable for token in deploy
         settings-path: ${{ github.workspace }}

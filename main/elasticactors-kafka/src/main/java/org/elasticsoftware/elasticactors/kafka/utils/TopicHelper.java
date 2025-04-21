@@ -40,7 +40,7 @@ import static org.apache.kafka.common.config.TopicConfig.RETENTION_MS_CONFIG;
 import static org.apache.kafka.common.config.TopicConfig.SEGMENT_MS_CONFIG;
 
 public final class TopicHelper {
-    private static final Short DEFAULT_REPLICATION_FACTOR = new Short("3");
+    private static final Short DEFAULT_REPLICATION_FACTOR = Short.valueOf("3");
 
     private TopicHelper() {
 

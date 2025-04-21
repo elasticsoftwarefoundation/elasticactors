@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
         <artifactId>elasticactors-main</artifactId>
-        <version>7.3.2-SNAPSHOT</version>
+        <version>7.4.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -78,7 +78,7 @@
         <!-- This is to test the Javascript Actor, Nashorn is deprecated in Java 11 -->
         <dependency>
             <groupId>org.graalvm.js</groupId>
-            <artifactId>js</artifactId>
+            <artifactId>js-language</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
