@@ -357,6 +357,7 @@
                         <configuration>
                             <publishingServerId>central</publishingServerId>
                             <autoPublish>true</autoPublish>
+                            <deploymentName>ElasticActors</deploymentName>
                         </configuration>
                     </plugin>
                     <plugin>
