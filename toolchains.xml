@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<toolchains xmlns="http://maven.apache.org/TOOLCHAINS/1.1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/TOOLCHAINS/1.1.0 https://maven.apache.org/xsd/toolchains-1.1.0.xsd">
+  <toolchain>
+    <type>jdk</type>
+    <provides>
+      <version>17</version>
+      <vendor>temurin</vendor>
+      <id>temurin_17</id>
+    </provides>
+    <configuration>
+      <jdkHome>/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.17-10/x64</jdkHome>
+    </configuration>
+  </toolchain>
+</toolchains>
