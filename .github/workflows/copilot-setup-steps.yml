@@ -48,5 +48,6 @@ jobs:
           --activate-profiles ci
           --file pom.xml
           --settings $GITHUB_WORKSPACE/settings.xml
-          dependency:resolve
+          package
+          -DskipTests
           -U
