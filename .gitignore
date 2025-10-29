@@ -21,3 +21,7 @@ target/
 *.versionsBackup
 *.releaseBackup
 release.properties
+
+# Local Maven configuration files
+settings.xml
+toolchains.xml
