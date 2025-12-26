@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package org.elasticsoftware.elasticactors.messaging;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import jakarta.annotation.Nullable;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.messaging.internal.InternalHashKeyUtils;
 import org.elasticsoftware.elasticactors.messaging.reactivestreams.ReactiveStreamsProtocol;
@@ -28,7 +29,6 @@ import org.elasticsoftware.elasticactors.serialization.internal.InternalMessageS
 import org.elasticsoftware.elasticactors.tracing.CreationContext;
 import org.elasticsoftware.elasticactors.tracing.TraceContext;
 
-import jakarta.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;

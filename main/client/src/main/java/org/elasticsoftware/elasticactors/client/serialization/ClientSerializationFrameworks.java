@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -18,12 +18,7 @@
 package org.elasticsoftware.elasticactors.client.serialization;
 
 import org.elasticsoftware.elasticactors.cluster.ActorRefFactory;
-import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.MessageSerializer;
-import org.elasticsoftware.elasticactors.serialization.SerializationFramework;
-import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
-import org.elasticsoftware.elasticactors.serialization.SystemDeserializers;
-import org.elasticsoftware.elasticactors.serialization.SystemSerializers;
+import org.elasticsoftware.elasticactors.serialization.*;
 
 import java.util.List;
 import java.util.Map;

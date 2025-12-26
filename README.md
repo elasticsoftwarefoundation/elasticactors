@@ -785,7 +785,7 @@ also make sure to use the correct JDK version for the release. The `elasticactor
 On `master` JDK 17 is required.
 
 This project uses the Maven Release Plugin and GitHub Actions to create releases.\
-Just run `mvn release:prepare release:perform` to select the version to be released and create a 
+Just run `mvn release:prepare release:perform && git push` to select the version to be released and create a 
 VCS tag. 
 
 GitHub Actions will start [the build process](https://github.com/elasticsoftwarefoundation/elasticactors/actions/workflows/maven-publish.yml). 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -17,13 +17,9 @@
 
 package org.elasticsoftware.elasticactors.kafka;
 
-import org.elasticsoftware.elasticactors.ActorContext;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ActorState;
-import org.elasticsoftware.elasticactors.ActorSystem;
-import org.elasticsoftware.elasticactors.PersistentSubscription;
-
 import jakarta.annotation.Nullable;
+import org.elasticsoftware.elasticactors.*;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -17,10 +17,10 @@
 
 package org.elasticsoftware.elasticactors.util.concurrent.metrics;
 
-import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
-
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import org.elasticsoftware.elasticactors.util.concurrent.ThreadBoundEventProcessor;
+
 import java.util.concurrent.atomic.LongAdder;
 
 public abstract class CountingTimedThreadBoundExecutor extends TimedThreadBoundExecutor {

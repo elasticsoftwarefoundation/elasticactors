@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -21,11 +21,7 @@ import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.base.actors.ActorDelegate;
 import org.elasticsoftware.elasticactors.base.actors.ReplyActor;
-import org.elasticsoftware.elasticactors.test.common.CurrentActorName;
-import org.elasticsoftware.elasticactors.test.common.GetActorName;
-import org.elasticsoftware.elasticactors.test.common.NameActorState;
-import org.elasticsoftware.elasticactors.test.common.SetActorName;
-import org.elasticsoftware.elasticactors.test.common.SingletonNameActor;
+import org.elasticsoftware.elasticactors.test.common.*;
 import org.elasticsoftware.elasticactors.test.messaging.LocalMessageQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

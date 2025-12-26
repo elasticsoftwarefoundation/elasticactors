@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -26,11 +26,7 @@ import org.elasticsoftware.elasticactors.messaging.internal.DestroyActorMessage;
 import org.elasticsoftware.elasticactors.serialization.MessageDeserializer;
 import org.elasticsoftware.elasticactors.serialization.SerializationFrameworks;
 import org.elasticsoftware.elasticactors.serialization.SystemDeserializers;
-import org.elasticsoftware.elasticactors.serialization.internal.ActivateActorMessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.internal.ActorRefDeserializer;
-import org.elasticsoftware.elasticactors.serialization.internal.CancelScheduledMessageMessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.internal.CreateActorMessageDeserializer;
-import org.elasticsoftware.elasticactors.serialization.internal.DestroyActorMessageDeserializer;
+import org.elasticsoftware.elasticactors.serialization.internal.*;
 
 public final class ClientSystemDeserializers implements SystemDeserializers {
 

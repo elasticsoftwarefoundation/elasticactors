@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ public final class JacksonActorRefDeserializer extends StdScalarDeserializer<Act
         if (curr == JsonToken.VALUE_STRING) {
             return actorRefFactory.create(jp.getText());
         }
-        throw ctxt.mappingException(_valueClass, curr);
+        ctxt.handleUnexpectedToken(_valueClass, jp);
+        return null; // never gets here
     }
 }

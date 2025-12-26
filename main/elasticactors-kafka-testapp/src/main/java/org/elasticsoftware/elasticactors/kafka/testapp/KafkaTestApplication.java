@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -22,12 +22,7 @@ import org.elasticsoftware.elasticactors.ActorSystem;
 import org.elasticsoftware.elasticactors.cluster.ClusterService;
 import org.elasticsoftware.elasticactors.kafka.testapp.actors.VirtualCashAccountActor;
 import org.elasticsoftware.elasticactors.kafka.testapp.configuration.ContainerConfiguration;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.BalanceQuery;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.CreditAccountEvent;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.DebitAccountEvent;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.ScheduleDebitCommand;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.TransferCommand;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.VirtualCashAccountAdapter;
+import org.elasticsoftware.elasticactors.kafka.testapp.messages.*;
 import org.elasticsoftware.elasticactors.kafka.testapp.state.VirtualCashAccountState;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
 import org.elasticsoftware.elasticactors.spring.AnnotationConfigApplicationContext;

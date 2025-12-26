@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -18,13 +18,12 @@
 package org.elasticsoftware.elasticactors.util.concurrent;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerTagCustomizer;
 import org.elasticsoftware.elasticactors.util.concurrent.disruptor.DisruptorThreadBoundExecutor;
 import org.elasticsoftware.elasticactors.util.concurrent.metrics.ThreadBoundExecutorMonitor;
 import org.springframework.core.env.Environment;
-
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.String.format;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -17,35 +17,20 @@
 
 package org.elasticsoftware.elasticactors.tracing.service;
 
-import org.elasticsoftware.elasticactors.tracing.CreationContext;
-import org.elasticsoftware.elasticactors.tracing.LogContextProcessor;
-import org.elasticsoftware.elasticactors.tracing.MessageHandlingContext;
-import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MessagingScope;
-import org.elasticsoftware.elasticactors.tracing.TraceContext;
-import org.elasticsoftware.elasticactors.tracing.TracingUtils;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+import org.elasticsoftware.elasticactors.tracing.*;
+import org.elasticsoftware.elasticactors.tracing.MessagingContextManager.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.CREATOR_KEY;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.CREATOR_METHOD_KEY;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.CREATOR_TYPE_KEY;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.MESSAGE_TYPE_KEY;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.PARENT_SPAN_ID_KEY;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.RECEIVER_KEY;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.RECEIVER_METHOD_KEY;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.RECEIVER_TYPE_KEY;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.SCHEDULED_KEY;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.SENDER_KEY;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.SPAN_ID_KEY;
-import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.TRACE_ID_KEY;
+import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.*;
 import static org.elasticsoftware.elasticactors.tracing.TracingUtils.safeToString;
 
 public final class Slf4jLogContextProcessor implements LogContextProcessor {

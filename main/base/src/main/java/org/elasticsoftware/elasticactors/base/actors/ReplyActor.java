@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -17,13 +17,12 @@
 
 package org.elasticsoftware.elasticactors.base.actors;
 
+import jakarta.annotation.Nullable;
 import org.elasticsoftware.elasticactors.ActorRef;
 import org.elasticsoftware.elasticactors.TempActor;
 import org.elasticsoftware.elasticactors.TypedActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import jakarta.annotation.Nullable;
 
 /**
  * @author Joost van de Wijgerd

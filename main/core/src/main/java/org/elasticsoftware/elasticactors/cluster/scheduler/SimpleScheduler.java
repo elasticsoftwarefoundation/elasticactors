@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -18,12 +18,10 @@
 package org.elasticsoftware.elasticactors.cluster.scheduler;
 
 import io.micrometer.core.instrument.binder.jvm.ExecutorServiceMetrics;
-import org.elasticsoftware.elasticactors.ActorContainer;
-import org.elasticsoftware.elasticactors.ActorContainerRef;
-import org.elasticsoftware.elasticactors.ActorContextHolder;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ActorShard;
-import org.elasticsoftware.elasticactors.ShardKey;
+import jakarta.annotation.Nullable;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.cluster.metrics.MicrometerConfiguration;
 import org.elasticsoftware.elasticactors.messaging.AbstractTracedMessage;
 import org.elasticsoftware.elasticactors.messaging.UUIDTools;
@@ -33,15 +31,7 @@ import org.elasticsoftware.elasticactors.util.concurrent.DaemonThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.annotation.Nullable;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static org.elasticsoftware.elasticactors.tracing.CreationContext.forScheduling;
 import static org.elasticsoftware.elasticactors.tracing.MessagingContextManager.getManager;

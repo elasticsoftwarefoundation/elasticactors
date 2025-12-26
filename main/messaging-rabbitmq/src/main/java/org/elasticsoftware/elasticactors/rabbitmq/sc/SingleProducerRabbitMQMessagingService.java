@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -18,12 +18,11 @@
 package org.elasticsoftware.elasticactors.rabbitmq.sc;
 
 import com.google.common.base.Throwables;
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.MetricsCollector;
+import com.rabbitmq.client.*;
 import com.rabbitmq.client.impl.MicrometerMetricsCollector;
+import jakarta.annotation.Nullable;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import net.jodah.lyra.ConnectionOptions;
 import net.jodah.lyra.Connections;
 import net.jodah.lyra.config.Config;
@@ -50,9 +49,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
-import jakarta.annotation.Nullable;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
@@ -61,11 +57,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.ASYNC;
-import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.BUFFERED;
-import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.WRITE_BEHIND;
-
 import static java.lang.String.format;
+import static org.elasticsoftware.elasticactors.rabbitmq.MessageAcker.Type.*;
 
 /**
  * @author Joost van de Wijgerd

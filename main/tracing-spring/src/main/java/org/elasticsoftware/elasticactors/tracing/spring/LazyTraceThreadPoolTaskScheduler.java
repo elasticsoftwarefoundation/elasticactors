@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ import java.util.concurrent.ThreadFactory;
 
 import static org.springframework.util.ReflectionUtils.invokeMethod;
 
+@SuppressWarnings({"deprecation", "removal"})
 class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
 
     private final ThreadPoolTaskScheduler delegate;
@@ -57,23 +58,23 @@ class LazyTraceThreadPoolTaskScheduler extends ThreadPoolTaskScheduler {
     LazyTraceThreadPoolTaskScheduler(ThreadPoolTaskScheduler delegate) {
         this.delegate = delegate;
         this.initializeExecutor = ReflectionUtils
-                .findMethod(ThreadPoolTaskScheduler.class, "initializeExecutor", null);
+                .findMethod(ThreadPoolTaskScheduler.class, "initializeExecutor");
         makeAccessibleIfNotNull(this.initializeExecutor);
         this.createExecutor = ReflectionUtils.findMethod(ThreadPoolTaskScheduler.class,
-                "createExecutor", null);
+                "createExecutor");
         makeAccessibleIfNotNull(this.createExecutor);
         this.cancelRemainingTask = ReflectionUtils
-                .findMethod(ThreadPoolTaskScheduler.class, "cancelRemainingTask", null);
+                .findMethod(ThreadPoolTaskScheduler.class, "cancelRemainingTask");
         makeAccessibleIfNotNull(this.cancelRemainingTask);
         this.nextThreadName = ReflectionUtils.findMethod(ThreadPoolTaskScheduler.class,
-                "nextThreadName", null);
+                "nextThreadName");
         makeAccessibleIfNotNull(this.nextThreadName);
         this.getDefaultThreadNamePrefix = ReflectionUtils.findMethod(
-                CustomizableThreadCreator.class, "getDefaultThreadNamePrefix", null);
+                CustomizableThreadCreator.class, "getDefaultThreadNamePrefix");
         makeAccessibleIfNotNull(this.getDefaultThreadNamePrefix);
     }
 
-    private void makeAccessibleIfNotNull(Method method) {
+    private void makeAccessibleIfNotNull(@Nullable Method method) {
         if (method != null) {
             ReflectionUtils.makeAccessible(method);
         }

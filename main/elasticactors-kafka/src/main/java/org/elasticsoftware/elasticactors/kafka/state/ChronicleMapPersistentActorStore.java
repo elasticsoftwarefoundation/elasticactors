@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ public final class ChronicleMapPersistentActorStore implements PersistentActorSt
                 .averageKeySize(averageKeySize)
                 .averageValueSize(averageValueSize)
                 .entries(maxEntries)
-                .createOrRecoverPersistedTo(backingFile, false);
+                .recoverPersistedTo(backingFile, false);
         // see if we can recover the offset
         byte[] offsetBytes = backingMap.get(OFFSET_KEY);
         if(offsetBytes != null) {

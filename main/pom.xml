@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright 2013 - 2023 The Original Authors
+  ~ Copyright 2013 - 2025 The Original Authors
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~     you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.elasticsoftwarefoundation.elasticactors</groupId>
         <artifactId>elasticactors-parent</artifactId>
-        <version>7.0.2-SNAPSHOT</version>
+        <version>7.5.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>elasticactors-main</artifactId>
@@ -31,52 +31,54 @@
     <url>https://github.com/elasticsoftwarefoundation/elasticactors</url>
 
     <properties>
-        <cassandra.version>3.11.14</cassandra.version>
-        <spring.version>6.0.14</spring.version>
-        <aspectj.version>1.9.19</aspectj.version>
-        <protobuf.version>3.25.1</protobuf.version>
-        <grizzly.version>4.0.0</grizzly.version>
-        <log4j.version>2.20.0</log4j.version>
-        <guava.version>31.1-jre</guava.version>
-        <jackson.version>2.14.2</jackson.version>
-        <shoal.version>3.0.1</shoal.version>
-        <slf4j.version>2.0.7</slf4j.version>
+        <spring.version>6.2.15</spring.version>
+        <aspectj.version>1.9.25.1</aspectj.version>
+        <protobuf.version>4.33.2</protobuf.version>
+        <grizzly.version>4.0.2</grizzly.version>
+        <log4j.version>2.25.3</log4j.version>
+        <guava.version>33.5.0-jre</guava.version>
+        <jackson.version>2.20.1</jackson.version>
+        <shoal.version>3.1.0</shoal.version>
+        <slf4j.version>2.0.17</slf4j.version>
         <reflections.version>0.10.2</reflections.version>
-        <javassist.version>3.29.2-GA</javassist.version>
+        <javassist.version>3.30.2-GA</javassist.version>
         <typetools.version>0.6.3</typetools.version>
-        <rabbitmq.version>5.20.0</rabbitmq.version>
+        <rabbitmq.version>5.28.0</rabbitmq.version>
+        <spring-rabbit.version>3.2.8</spring-rabbit.version>
         <lyra.version>0.5.5</lyra.version>
-        <lz4.version>1.8.0</lz4.version>
-        <kafka.version>3.4.0</kafka.version>
-        <cassandra-driver.version>3.11.3</cassandra-driver.version>
-        <cassandra4-driver.version>4.15.0</cassandra4-driver.version>
+        <lz4.version>1.8.1</lz4.version>
+        <kafka.version>3.9.1</kafka.version>
+        <!-- the latest v3 version (3.11.5) has a dependency problem with the jnr libs causing the enforcer plugin to fail-->
+        <cassandra-driver.version>3.11.5</cassandra-driver.version>
+        <cassandra4-driver.version>4.19.2</cassandra4-driver.version>
         <servlet-api.version>3.1.0</servlet-api.version>
         <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
-        <activemq-artemis.version>2.28.0</activemq-artemis.version>
-        <disruptor.version>3.4.4</disruptor.version>
-        <chronicle-bom.version>2.25ea0</chronicle-bom.version>
+        <activemq-artemis.version>2.44.0</activemq-artemis.version>
+        <disruptor.version>4.0.0</disruptor.version>
+        <chronicle-bom.version>2.27ea34</chronicle-bom.version>
         <!-- this is needed to fix issue with chronicle-bom -->
-        <jna.version>5.13.0</jna.version>
-        <!-- This is the last release with ASLv2-->
-        <elasticsearch.version>7.10.2</elasticsearch.version>
-        <kubernetes-client.version>6.5.0</kubernetes-client.version>
-        <java-uuid-generator.version>4.1.0</java-uuid-generator.version>
+        <jna.version>5.18.1</jna.version>
+        <elasticsearch.version>7.17.29</elasticsearch.version>
+        <kubernetes-client.version>7.4.0</kubernetes-client.version>
+        <java-uuid-generator.version>5.2.0</java-uuid-generator.version>
         <!-- testing -->
-        <testng-version>7.7.1</testng-version>
-        <mockito.version>5.2.0</mockito.version>
-        <!-- java 17+ -->
-        <java.version>17</java.version>
+        <testng-version>7.11.0</testng-version>
+        <mockito.version>5.21.0</mockito.version>
         <jakarta-annotation-api.version>2.1.1</jakarta-annotation-api.version>
-        <spring-data-redis.version>2.7.9</spring-data-redis.version>
-        <awaitility.version>4.2.0</awaitility.version>
+        <spring-data-redis.version>3.5.7</spring-data-redis.version>
+        <awaitility.version>4.3.0</awaitility.version>
         <reactive-streams.version>1.0.4</reactive-streams.version>
         <persistence-api.version>2.2</persistence-api.version>
-        <plexus-utils.version>3.5.1</plexus-utils.version>
-        <netty.version>4.1.90.Final</netty.version>
-        <micrometer.version>1.10.5</micrometer.version>
+        <plexus-utils.version>4.0.2</plexus-utils.version>
+        <netty.version>4.1.119.Final</netty.version>
+        <micrometer.version>1.16.1</micrometer.version>
         <fast-uuid.version>0.2.0</fast-uuid.version>
         <jakarta.inject-api.version>2.0.1</jakarta.inject-api.version>
-        <graalvm.version>22.3.1</graalvm.version>
+        <graalvm-js.version>24.2.2</graalvm-js.version>
+        <!-- needed to fix an issue with cassandra java-driver-core v4.18.1 and micrometer-core v1.14.3 -->
+        <hdrhistogram.version>2.2.2</hdrhistogram.version>
+        <!-- this is needed to fix an issue with cassandra-driver-core 3.11.5 -->
+        <jnr.version>2.2.18</jnr.version>
     </properties>
 
     <scm>
@@ -89,12 +91,12 @@
 
     <distributionManagement>
         <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+            <id>central</id>
+            <url>https://central.sonatype.com/content/repositories/snapshots</url>
         </snapshotRepository>
         <repository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>central</id>
+            <url>https://central.sonatype.comservice/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
 
@@ -155,6 +157,18 @@
                 <artifactId>jna</artifactId>
                 <version>${jna.version}</version>
             </dependency>
+            <!-- need to specify this because of an issue between cassandra java-driver-core v4.18.1 and micrometer-core v1.14.3 -->
+            <dependency>
+                <groupId>org.hdrhistogram</groupId>
+                <artifactId>HdrHistogram</artifactId>
+                <version>${hdrhistogram.version}</version>
+            </dependency>
+            <!-- need to specify this because of an issue with cassandra-driver-core v3.11.5 library -->
+            <dependency>
+                <groupId>com.github.jnr</groupId>
+                <artifactId>jnr-ffi</artifactId>
+                <version>${jnr.version}</version>
+            </dependency>
             <dependency>
                 <groupId>net.java.dev.jna</groupId>
                 <artifactId>jna-platform</artifactId>
@@ -205,7 +219,7 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>com.datastax.oss</groupId>
+                <groupId>org.apache.cassandra</groupId>
                 <artifactId>java-driver-core</artifactId>
                 <version>${cassandra4-driver.version}</version>
                 <exclusions>
@@ -373,6 +387,10 @@
                         <groupId>org.hdrhistogram</groupId>
                         <artifactId>HdrHistogram</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>org.yaml</groupId>
+                        <artifactId>snakeyaml</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
@@ -395,6 +413,11 @@
                 <groupId>com.rabbitmq</groupId>
                 <artifactId>amqp-client</artifactId>
                 <version>${rabbitmq.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.amqp</groupId>
+                <artifactId>spring-rabbit</artifactId>
+                <version>${spring-rabbit.version}</version>
             </dependency>
             <dependency>
                 <groupId>net.jodah</groupId>
@@ -456,13 +479,13 @@
             <!-- This is needed for Javascript support in Java 17 -->
             <dependency>
                 <groupId>org.graalvm.js</groupId>
-                <artifactId>js</artifactId>
-                <version>${graalvm.version}</version>
+                <artifactId>js-language</artifactId>
+                <version>${graalvm-js.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.graalvm.js</groupId>
                 <artifactId>js-scriptengine</artifactId>
-                <version>${graalvm.version}</version>
+                <version>${graalvm-js.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

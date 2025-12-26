@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -34,10 +34,9 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.util.function.Function;
 
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static org.elasticsoftware.elasticactors.tracing.TracingUtils.shorten;
 import static org.elasticsoftware.elasticactors.util.ArrayUtils.contains;
-
-import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 public final class MessageLogger {
 

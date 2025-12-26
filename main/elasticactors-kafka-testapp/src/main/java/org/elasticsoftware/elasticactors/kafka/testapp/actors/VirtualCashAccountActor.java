@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -17,20 +17,10 @@
 
 package org.elasticsoftware.elasticactors.kafka.testapp.actors;
 
-import org.elasticsoftware.elasticactors.Actor;
-import org.elasticsoftware.elasticactors.ActorRef;
-import org.elasticsoftware.elasticactors.ActorSystem;
-import org.elasticsoftware.elasticactors.MessageHandler;
-import org.elasticsoftware.elasticactors.MethodActor;
+import org.elasticsoftware.elasticactors.*;
 import org.elasticsoftware.elasticactors.base.serialization.JacksonSerializationFramework;
 import org.elasticsoftware.elasticactors.cluster.ActorSystemEvent;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.ActivateAccountCommand;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.BalanceQuery;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.CreditAccountEvent;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.DebitAccountEvent;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.ScheduleDebitCommand;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.TransferCommand;
-import org.elasticsoftware.elasticactors.kafka.testapp.messages.VirtualCashAccountAdapter;
+import org.elasticsoftware.elasticactors.kafka.testapp.messages.*;
 import org.elasticsoftware.elasticactors.kafka.testapp.state.VirtualCashAccountState;
 import org.elasticsoftware.elasticactors.state.PersistenceConfig;
 

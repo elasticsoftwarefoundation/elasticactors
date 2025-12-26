@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 - 2023 The Original Authors
+ * Copyright 2013 - 2025 The Original Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *     you may not use this file except in compliance with the License.
@@ -36,9 +36,8 @@ import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 
-import static org.elasticsoftware.elasticactors.cassandra4.util.ExecutionUtils.executeWithRetry;
-
 import static java.util.Objects.requireNonNull;
+import static org.elasticsoftware.elasticactors.cassandra4.util.ExecutionUtils.executeWithRetry;
 
 /**
  * @author Joost van de Wijgerd
