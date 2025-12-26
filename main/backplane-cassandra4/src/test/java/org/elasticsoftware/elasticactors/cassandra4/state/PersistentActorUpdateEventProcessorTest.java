@@ -213,11 +213,11 @@ public class PersistentActorUpdateEventProcessorTest {
         PersistentActorUpdateEvent event8 = mock(PersistentActorUpdateEvent.class);
         PersistentActorUpdateEvent event9 = mock(PersistentActorUpdateEvent.class);
 
-        for (PersistentActorUpdateEvent event : List.of(event1, event2, event3, event4, event5, event6, event7, event8, event9)) {
-            when(event.hasPersistentActorBytes()).thenReturn(true);
-            when(event.rowKey()).thenReturn(new String[]{"key1", "key2"});
-            when(event.persistentActorId()).thenReturn("actorId");
-            when(event.persistentActorBytes()).thenReturn(ByteBuffer.wrap(new byte[1024]));
+        for (PersistentActorUpdateEvent e : List.of(event1, event2, event3, event4, event5, event6, event7, event8, event9)) {
+            when(e.hasPersistentActorBytes()).thenReturn(true);
+            when(e.rowKey()).thenReturn(new String[]{"key1", "key2"});
+            when(e.persistentActorId()).thenReturn("actorId");
+            when(e.persistentActorBytes()).thenReturn(ByteBuffer.wrap(new byte[1024]));
         }
 
         BoundStatement boundStatement = mock(BoundStatement.class);
