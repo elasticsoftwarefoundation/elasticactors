@@ -44,6 +44,7 @@
         <javassist.version>3.30.2-GA</javassist.version>
         <typetools.version>0.6.3</typetools.version>
         <rabbitmq.version>5.28.0</rabbitmq.version>
+        <spring-rabbit.version>3.2.8</spring-rabbit.version>
         <lyra.version>0.5.5</lyra.version>
         <lz4.version>1.8.1</lz4.version>
         <kafka.version>3.9.1</kafka.version>
@@ -412,6 +413,11 @@
                 <groupId>com.rabbitmq</groupId>
                 <artifactId>amqp-client</artifactId>
                 <version>${rabbitmq.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.amqp</groupId>
+                <artifactId>spring-rabbit</artifactId>
+                <version>${spring-rabbit.version}</version>
             </dependency>
             <dependency>
                 <groupId>net.jodah</groupId>
