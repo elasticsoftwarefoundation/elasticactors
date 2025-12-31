@@ -45,7 +45,7 @@ public final class ExecutionUtils {
                         Optional.ofNullable(e.getEndPoint()).map(endPoint -> endPoint.resolve().toString()).orElse("UNKNOWN"));
                 throw e;
             } catch(InvalidQueryException e) {
-                logger.error("InvalidQueryException with message {} on node {} while executing statement, will retry in case of BatchStatement",
+                logger.error("InvalidQueryException with message {} on node {} while executing statement, will be handled specially in case of BatchStatement",
                         e.getMessage(),
                         Optional.of(e.getEndPoint()).map(endPoint -> endPoint.resolve().toString()).orElse("UNKNOWN"));
                 if(statement instanceof BatchStatement batch) {
