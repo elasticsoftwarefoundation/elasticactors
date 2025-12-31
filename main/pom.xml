@@ -73,7 +73,7 @@
         <netty.version>4.1.119.Final</netty.version>
         <micrometer.version>1.16.1</micrometer.version>
         <fast-uuid.version>0.2.0</fast-uuid.version>
-        <jakarta.inject-api.version>2.0.1</jakarta.inject-api.version>
+        <jakarta.inject-api.version>2.0.1.MR</jakarta.inject-api.version>
         <graalvm-js.version>24.2.2</graalvm-js.version>
         <!-- needed to fix an issue with cassandra java-driver-core v4.18.1 and micrometer-core v1.14.3 -->
         <hdrhistogram.version>2.2.2</hdrhistogram.version>
