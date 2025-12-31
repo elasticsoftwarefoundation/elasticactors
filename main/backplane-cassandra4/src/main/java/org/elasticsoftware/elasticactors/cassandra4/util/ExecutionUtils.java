@@ -19,10 +19,15 @@ package org.elasticsoftware.elasticactors.cassandra4.util;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.DriverException;
+import com.datastax.oss.driver.api.core.cql.BatchStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Statement;
 import com.datastax.oss.driver.api.core.servererrors.*;
+import com.datastax.oss.protocol.internal.request.Batch;
+import org.elasticsoftware.elasticactors.cassandra4.state.BatchTooLargeException;
 import org.slf4j.Logger;
+
+import java.util.Optional;
 
 import static java.util.Optional.ofNullable;
 
@@ -48,9 +53,19 @@ public final class ExecutionUtils {
                 logger.error("node {} is reporting not enough replicas available, will not retry",
                         ofNullable(e.getExecutionInfo().getCoordinator()).map(node -> node.getEndPoint().resolve().toString()).orElse("UNKNOWN"));
                 throw e;
+            } catch(InvalidQueryException e) {
+                logger.error("InvalidQueryException with message {} on node {} while executing statement, will retry in case of BatchStatement",
+                        e.getMessage(),
+                        Optional.of(e.getCoordinator()).map(node -> node.getEndPoint().resolve().toString()).orElse("UNKNOWN"));
+                if(statement instanceof BatchStatement batch) {
+                    throw new BatchTooLargeException(batch,batch.computeSizeInBytes(cassandraSession.getContext()));
+                } else {
+                    throw e;
+                }
             } catch(CoordinatorException e) {
-                logger.error("{} on node {} while executing statement, will not retry",
+                logger.error("{} with message {} on node {} while executing statement, will not retry",
                         e.getClass().getSimpleName(),
+                        e.getMessage(),
                         ofNullable(e.getExecutionInfo().getCoordinator()).map(node -> node.getEndPoint().resolve().toString()).orElse("UNKNOWN"));
                 throw e;
             } catch(RuntimeException e) {
