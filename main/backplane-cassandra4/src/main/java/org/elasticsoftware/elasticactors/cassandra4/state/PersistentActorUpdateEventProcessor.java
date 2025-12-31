@@ -116,6 +116,11 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
         try {
             executeWithRetry(cassandraSession, batchStatement, logger);
         } catch (BatchTooLargeException e) {
+            // Guard against infinite recursion: if we can't split further, fail with a clear error
+            if(events.size() <= 1) {
+                logger.error("Single event of byteSize {} is too large to execute", e.getBatchSize());
+                throw new IllegalStateException("Single event is too large to process", e);
+            }
             int half = events.size() / 2;
             // batch is too large, so we need to split it up
             logger.warn(
