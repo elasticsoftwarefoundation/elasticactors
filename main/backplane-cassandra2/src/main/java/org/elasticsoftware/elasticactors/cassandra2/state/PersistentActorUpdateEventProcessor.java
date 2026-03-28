@@ -49,6 +49,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
     private final PreparedStatement deleteStatement;
     private final Map<Integer,PreparedStatement> batchStatements = new HashMap<>();
     private final boolean optimizedV1Batches;
+    private final ProtocolVersion protocolVersion;
 
     public PersistentActorUpdateEventProcessor(Session cassandraSession, int maxBatchSize) {
         this(cassandraSession, maxBatchSize, true);
@@ -62,6 +63,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
             prepareBatchIfNeeded(maxBatchSize);
         }
         this.optimizedV1Batches = optimizedV1Batches;
+        this.protocolVersion = cassandraSession.getCluster().getConfiguration().getProtocolOptions().getProtocolVersion();
     }
 
     /**
@@ -96,30 +98,7 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
         final long startTime = logger.isTraceEnabled() ? System.nanoTime() : 0L;
         try {
             // optimized to use the prepared statement
-            if(events.size() == 1) {
-                PersistentActorUpdateEvent event = events.get(0);
-                BoundStatement boundStatement;
-                if (event.hasPersistentActorBytes()) {
-                    boundStatement = insertStatement.bind(event.rowKey()[0], event.rowKey()[1], event.persistentActorId(), event.persistentActorBytes());
-                } else {
-                    // it's a delete
-                    boundStatement = deleteStatement.bind(event.rowKey()[0], event.rowKey()[1], event.persistentActorId());
-                }
-                // execute the statement
-                executeWithRetry(cassandraSession, boundStatement, logger);
-            } else {
-                // check the protocol to see if BatchStatements are supported
-                ProtocolVersion protocolVersion = cassandraSession.getCluster().getConfiguration().getProtocolOptions().getProtocolVersion();
-                if(ProtocolVersion.V1.equals(protocolVersion)) {
-                    if(this.optimizedV1Batches) {
-                        executeBatchV1Optimized(events);
-                    } else {
-                        executeBatchV1(events);
-                    }
-                } else {
-                    executeBatchV2AndUp(events);
-                }
-            }
+            processEvents(events);
         } catch(Exception e) {
             executionException = e;
         } finally {
@@ -140,6 +119,32 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
                     events.size(),
                     duration
                 );
+            }
+        }
+    }
+
+    private void processEvents(List<PersistentActorUpdateEvent> events) {
+        if(events.size() == 1) {
+            PersistentActorUpdateEvent event = events.get(0);
+            BoundStatement boundStatement;
+            if (event.hasPersistentActorBytes()) {
+                boundStatement = insertStatement.bind(event.rowKey()[0], event.rowKey()[1], event.persistentActorId(), event.persistentActorBytes());
+            } else {
+                // it's a delete
+                boundStatement = deleteStatement.bind(event.rowKey()[0], event.rowKey()[1], event.persistentActorId());
+            }
+            // execute the statement
+            executeWithRetry(cassandraSession, boundStatement, logger);
+        } else {
+            // check the protocol to see if BatchStatements are supported
+            if(ProtocolVersion.V1.equals(protocolVersion)) {
+                if(this.optimizedV1Batches) {
+                    executeBatchV1Optimized(events);
+                } else {
+                    executeBatchV1(events);
+                }
+            } else {
+                executeBatchV2AndUp(events);
             }
         }
     }
@@ -170,7 +175,19 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
         batchBuilder.append("APPLY BATCH");
         // @todo: this causes a warning, but doing it without seems to fail with binary values!
         PreparedStatement batchStatement = cassandraSession.prepare(batchBuilder.toString());
-        executeWithRetry(cassandraSession, batchStatement.bind(arguments.toArray()), logger);
+        try {
+            executeWithRetry(cassandraSession, batchStatement.bind(arguments.toArray()), logger);
+        } catch(BatchTooLargeException e) {
+            int half = events.size() / 2;
+            // batch is too large, so we need to split it up
+            logger.warn(
+                    "Batch of byteSize {} is too large, splitting up in 2 batches. 1 of {} events and 1 of {} events",
+                    e.getBatchSize(),
+                    half,
+                    events.size() - half);
+            processEvents(events.subList(0, half));
+            processEvents(events.subList(half, events.size()));
+        }
     }
 
     private void executeBatchV1Optimized(List<PersistentActorUpdateEvent> events) {
@@ -195,7 +212,19 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
             batchStatement = batchStatements.get(batchSize);
         }
         if(batchStatement != null) {
-            executeWithRetry(cassandraSession, batchStatement.bind(arguments.toArray()), logger);
+            try {
+                executeWithRetry(cassandraSession, batchStatement.bind(arguments.toArray()), logger);
+            } catch(BatchTooLargeException e) {
+                int half = events.size() / 2;
+                // batch is too large, so we need to split it up
+                logger.warn(
+                        "Batch of byteSize {} is too large, splitting up in 2 batches. 1 of {} events and 1 of {} events",
+                        e.getBatchSize(),
+                        half,
+                        events.size() - half);
+                processEvents(events.subList(0, half));
+                processEvents(events.subList(half, events.size()));
+            }
         } else {
             // fallback to non-optimized version
             executeBatchV1(events);
@@ -212,7 +241,19 @@ public final class PersistentActorUpdateEventProcessor implements ThreadBoundEve
                 batchStatement.add(deleteStatement.bind(event.rowKey()[0], event.rowKey()[1], event.persistentActorId()));
             }
         }
-        executeWithRetry(cassandraSession, batchStatement, logger);
+        try {
+            executeWithRetry(cassandraSession, batchStatement, logger);
+        } catch(BatchTooLargeException e) {
+            int half = events.size() / 2;
+            // batch is too large, so we need to split it up
+            logger.warn(
+                    "Batch of byteSize {} is too large, splitting up in 2 batches. 1 of {} events and 1 of {} events",
+                    e.getBatchSize(),
+                    half,
+                    events.size() - half);
+            processEvents(events.subList(0, half));
+            processEvents(events.subList(half, events.size()));
+        }
     }
 
 
