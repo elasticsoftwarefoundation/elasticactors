@@ -17,13 +17,13 @@
 
 package org.elasticsoftware.elasticactors.cassandra2.util;
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.Statement;
+import com.datastax.driver.core.*;
 import com.datastax.driver.core.exceptions.*;
+import org.elasticsoftware.elasticactors.cassandra2.state.BatchTooLargeException;
 import org.slf4j.Logger;
 
 import java.net.InetAddress;
+import java.util.Optional;
 
 /**
  * @author Joost van de Wijgerd
@@ -38,13 +38,29 @@ public final class ExecutionUtils {
             try {
                 return cassandraSession.execute(statement);
             } catch (ConnectionException | OverloadedException | QueryConsistencyException | BootstrappingException e) {
-                logger.warn("{} on node {} while executing statement, retry attempt {}", e.getClass().getSimpleName(), e.getHost(), attempts);
+                logger.warn("{} on node {} while executing statement, retry attempt {}", e.getClass().getSimpleName(), e.getEndPoint(), attempts);
                 latestException = e;
             }  catch(UnavailableException e) {
-                logger.error("node {} is reporting not enough replicas available, will not retry", e.getHost());
+                logger.error("node {} is reporting not enough replicas available, will not retry",
+                        Optional.ofNullable(e.getEndPoint()).map(endPoint -> endPoint.resolve().toString()).orElse("UNKNOWN"));
                 throw e;
+            } catch(InvalidQueryException e) {
+                logger.error("InvalidQueryException with message {} on node {} while executing statement, will be handled specially in case of BatchStatement",
+                        e.getMessage(),
+                        Optional.of(e.getEndPoint()).map(endPoint -> endPoint.resolve().toString()).orElse("UNKNOWN"));
+                if(statement instanceof BatchStatement batch) {
+                    Configuration cassandraConfiguration = cassandraSession.getCluster().getConfiguration();
+                    throw new BatchTooLargeException(batch,batch.requestSizeInBytes(
+                            cassandraConfiguration.getProtocolOptions().getProtocolVersion(),
+                            cassandraConfiguration.getCodecRegistry() ));
+                } else {
+                    throw e;
+                }
             } catch(RuntimeException e) {
-                InetAddress node = (e instanceof CoordinatorException) ? ((CoordinatorException)e).getHost() : null;
+                InetAddress node = (e instanceof CoordinatorException) ?
+                        Optional.ofNullable(((CoordinatorException)e).getEndPoint())
+                                .map(endPoint -> endPoint.resolve().getAddress()).orElse(null)
+                        : null;
                 logger.error("{} on node {} while executing statement, will not retry", e.getClass().getSimpleName(), node);
                 throw e;
             }
