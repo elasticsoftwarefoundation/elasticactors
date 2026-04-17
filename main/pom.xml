@@ -35,7 +35,7 @@
         <aspectj.version>1.9.25.1</aspectj.version>
         <protobuf.version>4.33.2</protobuf.version>
         <grizzly.version>4.0.2</grizzly.version>
-        <log4j.version>2.25.3</log4j.version>
+        <log4j.version>2.25.4</log4j.version>
         <guava.version>33.5.0-jre</guava.version>
         <jackson.version>2.20.1</jackson.version>
         <shoal.version>3.1.0</shoal.version>
